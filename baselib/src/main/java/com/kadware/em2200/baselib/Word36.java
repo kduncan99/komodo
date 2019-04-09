@@ -1,0 +1,1646 @@
+/*
+ * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.kadware.em2200.baselib;
+
+import com.kadware.em2200.baselib.exceptions.*;
+
+/**
+ * Library for doing architecturally-correct 36-bit operations on integers
+ * <p>
+ * Note that we have designed this to provide static operations against long values, which are presumed to contain
+ * ones-complement 36-bit values with the high-order 28 bits set to zero.  This is purposeful, as most of the emulated
+ * main storage consists of slices of arrays of long integers, *not* Word36 objects (because the latter would take a
+ * stupid amount of storage).  Thus, we do have non-static operations implemented against object instances, but they
+ * all invoke the static functions which operate against longs.
+ * Do NOT change this.
+ */
+public class Word36 {
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Nested classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public static class Flags {
+        public final boolean _carry;
+        public final boolean _overflow;
+
+        public Flags(
+            final boolean carry,
+            final boolean overflow
+        ) {
+            _carry = carry;
+            _overflow = overflow;
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Constants
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public static final Word36 NEGATIVE_ONE = new Word36(0_777777_777776l);
+    public static final Word36 NEGATIVE_ZERO = new Word36(0_777777_777777l);
+    public static final Word36 POSITIVE_ONE = new Word36(1);
+    public static final Word36 POSITIVE_ZERO = new Word36(0);
+
+    public static final long MASK_B0         = 1l << 35;
+    public static final long MASK_B1         = 1l << 34;
+    public static final long MASK_B2         = 1l << 33;
+    public static final long MASK_B3         = 1l << 32;
+    public static final long MASK_B4         = 1l << 31;
+    public static final long MASK_B5         = 1l << 30;
+    public static final long MASK_B6         = 1l << 29;
+    public static final long MASK_B7         = 1l << 28;
+    public static final long MASK_B8         = 1l << 27;
+    public static final long MASK_B9         = 1l << 26;
+    public static final long MASK_B10        = 1l << 25;
+    public static final long MASK_B11        = 1l << 24;
+    public static final long MASK_B12        = 1l << 23;
+    public static final long MASK_B13        = 1l << 22;
+    public static final long MASK_B14        = 1l << 21;
+    public static final long MASK_B15        = 1l << 20;
+    public static final long MASK_B16        = 1l << 19;
+    public static final long MASK_B17        = 1l << 18;
+    public static final long MASK_B18        = 1l << 17;
+    public static final long MASK_B19        = 1l << 16;
+    public static final long MASK_B20        = 1l << 15;
+    public static final long MASK_B21        = 1l << 14;
+    public static final long MASK_B22        = 1l << 13;
+    public static final long MASK_B23        = 1l << 12;
+    public static final long MASK_B24        = 1l << 11;
+    public static final long MASK_B25        = 1l << 10;
+    public static final long MASK_B26        = 1l << 9;
+    public static final long MASK_B27        = 1l << 8;
+    public static final long MASK_B28        = 1l << 7;
+    public static final long MASK_B29        = 1l << 6;
+    public static final long MASK_B30        = 1l << 5;
+    public static final long MASK_B31        = 1l << 4;
+    public static final long MASK_B32        = 1l << 3;
+    public static final long MASK_B33        = 1l << 2;
+    public static final long MASK_B34        = 1l << 1;
+    public static final long MASK_B35        = 1l;
+
+    private static final long MASK = OnesComplement.BIT_MASK_36;
+    public static final long MASK_NOT_B0     = MASK ^ MASK_B0;
+    public static final long MASK_NOT_B1     = MASK ^ MASK_B1;
+    public static final long MASK_NOT_B2     = MASK ^ MASK_B2;
+    public static final long MASK_NOT_B3     = MASK ^ MASK_B3;
+    public static final long MASK_NOT_B4     = MASK ^ MASK_B4;
+    public static final long MASK_NOT_B5     = MASK ^ MASK_B5;
+    public static final long MASK_NOT_B6     = MASK ^ MASK_B6;
+    public static final long MASK_NOT_B7     = MASK ^ MASK_B7;
+    public static final long MASK_NOT_B8     = MASK ^ MASK_B8;
+    public static final long MASK_NOT_B9     = MASK ^ MASK_B9;
+    public static final long MASK_NOT_B10    = MASK ^ MASK_B10;
+    public static final long MASK_NOT_B11    = MASK ^ MASK_B11;
+    public static final long MASK_NOT_B12    = MASK ^ MASK_B12;
+    public static final long MASK_NOT_B13    = MASK ^ MASK_B13;
+    public static final long MASK_NOT_B14    = MASK ^ MASK_B14;
+    public static final long MASK_NOT_B15    = MASK ^ MASK_B15;
+    public static final long MASK_NOT_B16    = MASK ^ MASK_B16;
+    public static final long MASK_NOT_B17    = MASK ^ MASK_B17;
+    public static final long MASK_NOT_B18    = MASK ^ MASK_B18;
+    public static final long MASK_NOT_B19    = MASK ^ MASK_B19;
+    public static final long MASK_NOT_B20    = MASK ^ MASK_B20;
+    public static final long MASK_NOT_B21    = MASK ^ MASK_B21;
+    public static final long MASK_NOT_B22    = MASK ^ MASK_B22;
+    public static final long MASK_NOT_B23    = MASK ^ MASK_B23;
+    public static final long MASK_NOT_B24    = MASK ^ MASK_B24;
+    public static final long MASK_NOT_B25    = MASK ^ MASK_B25;
+    public static final long MASK_NOT_B26    = MASK ^ MASK_B26;
+    public static final long MASK_NOT_B27    = MASK ^ MASK_B27;
+    public static final long MASK_NOT_B28    = MASK ^ MASK_B28;
+    public static final long MASK_NOT_B29    = MASK ^ MASK_B29;
+    public static final long MASK_NOT_B30    = MASK ^ MASK_B30;
+    public static final long MASK_NOT_B31    = MASK ^ MASK_B31;
+    public static final long MASK_NOT_B32    = MASK ^ MASK_B32;
+    public static final long MASK_NOT_B33    = MASK ^ MASK_B33;
+    public static final long MASK_NOT_B34    = MASK ^ MASK_B34;
+    public static final long MASK_NOT_B35    = MASK ^ MASK_B35;
+
+    // general partial-word masks
+    public static final long MASK_H1         = 0_777777_000000l;
+    public static final long MASK_H2         = 0_000000_777777l;
+    public static final long MASK_Q1         = 0_777_000_000_000l;
+    public static final long MASK_Q2         = 0_000_777_000_000l;
+    public static final long MASK_Q3         = 0_000_000_777_000l;
+    public static final long MASK_Q4         = 0_000_000_000_777l;
+    public static final long MASK_S1         = 0_77_00_00_00_00_00l;
+    public static final long MASK_S2         = 0_00_77_00_00_00_00l;
+    public static final long MASK_S3         = 0_00_00_77_00_00_00l;
+    public static final long MASK_S4         = 0_00_00_00_77_00_00l;
+    public static final long MASK_S5         = 0_00_00_00_00_77_00l;
+    public static final long MASK_S6         = 0_00_00_00_00_00_77l;
+    public static final long MASK_T1         = 0_7777_0000_0000l;
+    public static final long MASK_T2         = 0_0000_7777_0000l;
+    public static final long MASK_T3         = 0_0000_0000_7777l;
+
+    public static final long MASK_NOT_H1     = 0_000000_777777l;
+    public static final long MASK_NOT_H2     = 0_777777_000000l;
+    public static final long MASK_NOT_Q1     = 0_000_777_777_777l;
+    public static final long MASK_NOT_Q2     = 0_777_000_777_777l;
+    public static final long MASK_NOT_Q3     = 0_777_777_000_777l;
+    public static final long MASK_NOT_Q4     = 0_777_777_777_000l;
+    public static final long MASK_NOT_S1     = 0_00_77_77_77_77_77l;
+    public static final long MASK_NOT_S2     = 0_77_00_77_77_77_77l;
+    public static final long MASK_NOT_S3     = 0_77_77_00_77_77_77l;
+    public static final long MASK_NOT_S4     = 0_77_77_77_00_77_77l;
+    public static final long MASK_NOT_S5     = 0_77_77_77_77_00_77l;
+    public static final long MASK_NOT_S6     = 0_77_77_77_77_77_00l;
+    public static final long MASK_NOT_T1     = 0_0000_7777_7777l;
+    public static final long MASK_NOT_T2     = 0_7777_0000_7777l;
+    public static final long MASK_NOT_T3     = 0_7777_7777_0000l;
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Character conversion tables
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Using the Fieldata character as an index into this table, one gets the corresponding ASCII character
+     */
+    public static final char ASCII_FROM_FIELDATA[] =
+    {
+        '@',	'[',	']',	'#',	'^',	' ',	'A',	'B',
+        'C',	'D',	'E',	'F',	'G',	'H',	'I',	'J',
+        'K',	'L',	'M',	'N',	'O',	'P',	'Q',	'R',
+        'S',	'T',	'U',	'V',	'W',	'X',	'Y',	'Z',
+        ')',	'-',	'+',	'<',	'=',	'>',	'&',	'$',
+        '*',	'(',	'%',	':',	'?',	'!',	',',	'\\',
+        '0',	'1',	'2',	'3',	'4',	'5',	'6',	'7',
+        '8',	'9',	'\'',	';',	'/',	'.',	'"',	'_',
+    };
+
+    /**
+     * Using the integer value corresponding to an ASCII character, one gets the corresponding Fieldata character
+     */
+    public static final short FIELDATA_FROM_ASCII[] =
+    {
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        005, 055, 076, 003, 047, 052, 046, 072, 051, 040, 050, 042, 056, 041, 075, 074,
+        060, 061, 062, 063, 064, 065, 066, 067, 070, 071, 053, 073, 043, 044, 045, 054,
+        000, 006, 007, 010, 011, 012, 013, 014, 015, 016, 017, 020, 021, 022, 023, 024,
+        025, 026, 027, 030, 031, 032, 033, 034, 035, 036, 037, 001, 057, 002, 004, 077,
+        077, 006, 007, 010, 011, 012, 013, 014, 015, 016, 017, 020, 021, 022, 023, 024,
+        025, 026, 027, 030, 031, 032, 033, 034, 035, 036, 037, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+        077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
+    };
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Data items (not much here)
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    protected long _value = 0;
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Constructors
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Standard constructor
+     */
+    public Word36(
+    ) {
+        _value = 0;
+    }
+
+    /**
+     * Creates a new object given the ones-complement parameter value
+     * <p>
+     * @param value ones-complement value to be stored in this object
+     */
+    public Word36(
+        final long value
+    ) {
+        _value = value & MASK;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Non-Static methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Test for equality
+     * <p>
+     * @param obj
+     * <p>
+     * @return
+     */
+    @Override
+    public boolean equals(
+        final Object obj
+    ) {
+        return (obj != null) && (obj instanceof Word36) && (_value == ((Word36)obj)._value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getH1(
+    ) {
+        return getH1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getH2(
+    ) {
+        return getH2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getQ1(
+    ) {
+        return getQ1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getQ2(
+    ) {
+        return getQ2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getQ3(
+    ) {
+        return getQ3(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getQ4(
+    ) {
+        return getQ4(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS1(
+    ) {
+        return getS1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS2(
+    ) {
+        return getS2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS3(
+    ) {
+        return getS3(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS4(
+    ) {
+        return getS4(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS5(
+    ) {
+        return getS5(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getS6(
+    ) {
+        return getS6(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getT1(
+    ) {
+        return getT1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getT2(
+    ) {
+        return getT2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getT3(
+    ) {
+        return getT3(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @param index - 0 to 11 indicating which twelfth we want (0 == TW1, 11 == TW12)
+     * <p>
+     * @return
+     */
+    public long getTwelfth(
+        final int index
+    ) {
+        return getTwelfth(_value, index);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getXH1(
+    ) {
+        return getXH1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getXH2(
+    ) {
+        return getXH2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getXT1(
+    ) {
+        return getXT1(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getXT2(
+    ) {
+        return getXT2(_value);
+    }
+
+    /**
+     * Partial-word getter
+     * <p>
+     * @return
+     */
+    public long getXT3(
+    ) {
+        return getXT3(_value);
+    }
+
+    /**
+     * Getter
+     * <p>
+     * @return
+     */
+    public long getW(
+    ) {
+        return _value;
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setH1(
+        final long partialValue
+    ) {
+        _value = setH1(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setH2(
+        final long partialValue
+    ) {
+        _value = setH2(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setQ1(
+        final long partialValue
+    ) {
+        _value = setQ1(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setQ2(
+        final long partialValue
+    ) {
+        _value = setQ2(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setQ3(
+        final long partialValue
+    ) {
+        _value = setQ3(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setQ4(
+        final long partialValue
+    ) {
+        _value = setQ4(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS1(
+        final long partialValue
+    ) {
+        _value = setS1(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS2(
+        final long partialValue
+    ) {
+        _value = setS2(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS3(
+        final long partialValue
+    ) {
+        _value = setS3(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS4(
+        final long partialValue
+    ) {
+        _value = setS4(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS5(
+        final long partialValue
+    ) {
+        _value = setS5(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setS6(
+        final long partialValue
+    ) {
+        _value = setS6(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setT1(
+        final long partialValue
+    ) {
+        _value = setT1(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setT2(
+        final long partialValue
+    ) {
+        _value = setT2(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     */
+    public void setT3(
+        final long partialValue
+    ) {
+        _value = setT3(_value, partialValue);
+    }
+
+    /**
+     * Partial-word setter
+     * <p>
+     * @param partialValue
+     * @param index 0==TW1, 11=TW12, etc
+     */
+    public void setTwelfth(
+        final long partialValue,
+        final int index
+    ) {
+        _value = setTwelfth(_value, partialValue, index);
+    }
+
+    /**
+     * Setter
+     * <p>
+     * @param value
+     */
+    public void setW(
+        final long value
+    ) {
+        _value = value & MASK;
+    }
+
+
+    //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
+
+    /**
+     * Determines if the value of this object is negative (sign bit is set)
+     * <p>
+     * @return
+     */
+    public boolean isNegative(
+    ) {
+        return OnesComplement.isNegative36(_value);
+    }
+
+    /**
+     * Determines if the value of this object is positive (sign bit is clear)
+     * <p>
+     * @return
+     */
+    public boolean isPositive(
+    ) {
+        return OnesComplement.isPositive36(_value);
+    }
+
+    /**
+     * Determines if the value of this object is zero (positive or negative)
+     * <p>
+     * @return
+     */
+    public boolean isZero(
+    ) {
+        return OnesComplement.isZero36(_value);
+    }
+
+
+    //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
+
+    /**
+     * Adds a 36-bit values to our own value, and produces that result along with carry and overflow flags
+     * <p>
+     * @param addend 36-bit ones-complement addend
+     * <p>
+     * @return carry/overflow flags object
+     */
+    public Flags add(
+        final long addend
+    ) {
+        OnesComplement.Add36Result addResult = new OnesComplement.Add36Result();
+        OnesComplement.add36(_value, addend, addResult);
+        _value = addResult._sum;
+        return new Flags(addResult._carry, addResult._overflow);
+    }
+
+
+    //  Conversion from Word36 to String -------------------------------------------------------------------------------------------
+
+    /**
+     * Populates this object with quarter-words derived from the ASCII characters in the source string.
+     * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
+     * Any characters in the string beyond the fourth are ignored.
+     * <p>
+     * @param source
+     * <p>
+     * @return
+     */
+    public static Word36 stringToWord36ASCII(
+        final String source
+    ) {
+        Word36 w = new Word36(0_040_040_040_040l);
+        switch (source.length() > 4 ? 4 : source.length()) {
+            case 4:
+                w.setQ4(source.charAt(3) & 0xff);
+            case 3:
+                w.setQ3(source.charAt(2) & 0xff);
+            case 2:
+                w.setQ2(source.charAt(1) & 0xff);
+            case 1:
+                w.setQ1(source.charAt(0) & 0xff);
+        }
+
+        return w;
+    }
+
+    /**
+     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
+     * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
+     * blanks as necessary. Any characters in the string beyond the sixth are ignored.
+     * <p>
+     * @param source
+     * <p>
+     * @return
+     */
+    public static Word36 stringToWord36Fieldata(
+        final String source
+    ) {
+        Word36 w = new Word36(0_050505_050505l);
+        switch (source.length() > 6 ? 6 : source.length()) {
+            case 6:
+                w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
+            case 5:
+                w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
+            case 4:
+                w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
+            case 3:
+                w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
+            case 2:
+                w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
+            case 1:
+                w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
+        }
+        return w;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Static methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    //  Partial-word extraction ----------------------------------------------------------------------------------------------------
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getH1(
+        final long value
+    ) {
+        return (value & Word36.MASK_H1) >> 18;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getH2(
+        final long value
+    ) {
+        return value & Word36.MASK_H2;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getQ1(
+        final long value
+    ) {
+        return (value & Word36.MASK_Q1) >> 27;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getQ2(
+        final long value
+    ) {
+        return (value & Word36.MASK_Q2) >> 18;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getQ3(
+        final long value
+    ) {
+        return (value & Word36.MASK_Q3) >> 9;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getQ4(
+        final long value
+    ) {
+        return value & Word36.MASK_Q4;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS1(
+        final long value
+    ) {
+        return (value & Word36.MASK_S1) >> 30;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS2(
+        final long value
+    ) {
+        return (value & Word36.MASK_S2) >> 24;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS3(
+        final long value
+    ) {
+        return (value & Word36.MASK_S3) >> 18;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS4(
+        final long value
+    ) {
+        return (value & Word36.MASK_S4) >> 12;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS5(
+        final long value
+    ) {
+        return (value & Word36.MASK_S5) >> 6;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getS6(
+        final long value
+    ) {
+        return value & Word36.MASK_S6;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getT1(
+        final long value
+    ) {
+        return (value & Word36.MASK_T1) >> 24;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getT2(
+        final long value
+    ) {
+        return (value & Word36.MASK_T2) >> 12;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getT3(
+        final long value
+    ) {
+        return value & Word36.MASK_T3;
+    }
+
+    /**
+     * Extracts a partial word (sign-unextended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * @param twelfthIndex indicates which twelfth to get (0 through 11, 0 containing the most-significat / negative bit)
+     * <p>
+     * @return
+     */
+    public static long getTwelfth(
+        final long value,
+        final int twelfthIndex
+    ) {
+        if ((twelfthIndex < 0) || (twelfthIndex > 11)) {
+            throw new InvalidArgumentRuntimeException(String.format("Twelfth index %d out of range", twelfthIndex));
+        }
+
+        int tx = twelfthIndex % 12;
+        int shift = (11 - tx) * 3;
+        return (value >> shift) & 07;
+    }
+
+    /**
+     * Extracts a partial word (sign-extended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getXH1(
+        final long value
+    ) {
+        long result = getH1(value);
+        if ((result & 0400000) != 0)
+            result |= 0777777_000000l;
+        return result;
+    }
+
+    /**
+     * Extracts a partial word (sign-extended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getXH2(
+        final long value
+    ) {
+        long result = getH2(value);
+        if ((result & 0400000) != 0)
+            result |= 0777777_000000l;
+        return result;
+    }
+
+    /**
+     * Extracts a partial word (sign-extended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getXT1(
+        final long value
+    ) {
+        long result = getT1(value);
+        if ((result & 04000) != 0)
+            result |= 07777_7777_0000l;
+        return result;
+    }
+
+    /**
+     * Extracts a partial word (sign-extended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getXT2(
+        final long value
+    ) {
+        long result = getT2(value);
+        if ((result & 04000) != 0)
+            result |= 07777_7777_0000l;
+        return result;
+    }
+
+    /**
+     * Extracts a partial word (sign-extended) from the given parameter
+     * <p>
+     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
+     * <p>
+     * @return
+     */
+    public static long getXT3(
+        final long value
+    ) {
+        long result = getT3(value);
+        if ((result & 04000) != 0)
+            result |= 07777_7777_0000l;
+        return result;
+    }
+
+
+    //  Partial-word injection -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setH1(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777777l) | ((partialValue & 0_777777l) << 18);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setH2(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777777_000000l) | (partialValue & 0_777777l);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setQ1(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_000_777_777_777l) | ((partialValue & 0_777l) << 27);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setQ2(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777_000_777_777l) | ((partialValue & 0_777l) << 18);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setQ3(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777_777_000_777l) | ((partialValue & 0_777l) << 9);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setQ4(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777_777_777_000l) | (partialValue & 0_777l);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS1(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_007777_777777l) | ((partialValue & 0_77l) << 30);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS2(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_770077_777777l) | ((partialValue & 0_77l) << 24);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS3(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777700_777777l) | ((partialValue & 0_77l) << 18);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS4(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777777_007777l) | ((partialValue & 0_77l) << 12);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS5(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777777_770077l) | ((partialValue & 0_77l) << 6);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setS6(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_777777_777700l) | (partialValue & 0_77l);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setT1(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_0000_7777_7777l) | ((partialValue & 0_7777l) << 24);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setT2(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_7777_0000_7777l) | ((partialValue & 0_7777l) << 12);
+    }
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * <p>
+     * @return resulting value
+     */
+    public static long setT3(
+        final long existingValue,
+        final long partialValue
+    ) {
+        return (existingValue & 0_7777_7777_0000l) | (partialValue & 0_7777l);
+    }
+
+
+    /**
+     * Injects a new value into a particular partial-value subset of a given existing value
+     * <p>
+     * @param existingValue target of the injection
+     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param twelfthIndex indicates which twelfth (0 = left-most, 11 = right-most) is to be affected
+     * <p>
+     * @return resulting value
+     */
+    public static long setTwelfth(
+        final long existingValue,
+        final long partialValue,
+        final int twelfthIndex
+    ) {
+        if ((twelfthIndex < 0) || (twelfthIndex > 11)) {
+            throw new InvalidArgumentRuntimeException(String.format("Twelfth index %d out of range", twelfthIndex));
+        }
+
+        int shift = (11 - (twelfthIndex % 12)) * 3;
+        long maskOut = ~(07l << shift);
+        long result = (existingValue & maskOut) | ((partialValue & 07) << shift);
+        return (existingValue & maskOut) | ((partialValue & 07) << shift);
+    }
+
+
+    //  Bit getters and setters ----------------------------------------------------------------------------------------------------
+
+    /**
+     * Bit getter
+     * <p>
+     * @param value the value to be interrogated
+     * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
+     * <p>
+     * @return true if the bit is set, false if clear
+     */
+    public static boolean getBit(
+        final long value,
+        final long bit
+    ) {
+        if ((bit < 1) || (bit > 36)) {
+            throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
+        }
+
+        long mask = 01_000000_000000l >> bit;
+        return (value & mask) > 0;
+    }
+
+    /**
+     * Bit setter
+     * <p>
+     * @param value the value to be modified
+     * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
+     * @param flag true to set the bit, false to clear it
+     * <p>
+     * @return the modified value
+     */
+    public static long setBit(
+        final long value,
+        final long bit,
+        final boolean flag
+    ) {
+        if ((bit < 1) || (bit > 36)) {
+            throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
+        }
+
+        long mask = 01_000000_000000l >> bit;
+        long notMask = ~mask & 0_777777_777777l;
+        long result = value & notMask;
+        if (flag) {
+            result |= mask;
+        }
+        return result;
+    }
+
+
+    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
+     * Actual implementation may not involve iterative shifting.
+     * <p>
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * <p>
+     * @return resulting value
+     */
+    public static long leftShiftCircular(
+        final long value,
+        final int count
+    ) {
+        int actualCount = count % 36;
+        long residue = value >> (36 - actualCount); // end-around shifted portion
+        return ((value << actualCount) & MASK) | residue;
+    }
+
+    /**
+     * Shifts the given 36-bit value left by a number of bits
+     * <p>
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * <p>
+     * @return resulting value
+     */
+    public static long leftShiftLogical(
+        final long value,
+        final int count
+    ) {
+        return (count > 35) ? 0 : (value << count) & MASK;
+    }
+
+    /**
+     * Logical AND operation (in this context, logical means bitwise)
+     * <p>
+     * @param operand1 left hand operand
+     * @param operand2 right hand operand
+     * <p>
+     * @return bitwise AND of the two operands
+     */
+    public static long logicalAnd(
+        final long operand1,
+        final long operand2
+    ) {
+        return operand1 & operand2;
+    }
+
+    /**
+     * Logical NOT operation (in this context, logical means bitwise)
+     * <p>
+     * @param operand value to be affected
+     * <p>
+     * @return bitwise NOT of the given value
+     */
+    public static long logicalNot(
+        final long operand
+    ) {
+        return operand ^ MASK;
+    }
+
+    /**
+     * Logical OR operation (in this context, logical means bitwise)
+     * <p>
+     * @param operand1 left hand operand
+     * @param operand2 right hand operand
+     * <p>
+     * @return bitwise OR of the two operands
+     */
+    public static long logicalOr(
+        final long operand1,
+        final long operand2
+    ) {
+        return operand1 | operand2;
+    }
+
+    /**
+     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
+     * <p>
+     * @param value 36-bit value to be shifted
+     * @param count number of bits to be shifted
+     * <p>
+     * @return resulting value
+     */
+    public static long rightShiftAlgebraic(
+        final long value,
+        final int count
+    ) {
+        boolean wasNegative = OnesComplement.isNegative36(value);
+        if ( count > 35 ) {
+            return wasNegative ? OnesComplement.NEGATIVE_ZERO_36 : 0;
+        } else {
+            long result = value >> count;
+            if ( wasNegative )
+                result |= ((~(MASK >> count)) & MASK);
+            return result;
+        }
+    }
+
+    /**
+     * Shifts the given 36-bit value right, with bit[36] rotating to bit[1] at each iteration.
+     * Actual implementation may not involve iterative shifting.
+     * <p>
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * <p>
+     * @return resulting value
+     */
+    public static long rightShiftCircular(
+        final long value,
+        final int count
+    ) {
+        int actualCount = (count % 36);
+        long mask = MASK >> (36 - actualCount);
+        long residue = (value & mask) << (36 - actualCount);
+        return ((value >> actualCount) | residue);
+    }
+
+    /**
+     * Shifts the given 36-bit value right by a number of bits
+     * <p>
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * <p>
+     * @return resulting value
+     */
+    public static long rightShiftLogical(
+        final long value,
+        final int count
+    ) {
+        return (count > 35) ? 0 : value >> count;
+    }
+
+
+    //  Sign extension of several important partial-words --------------------------------------------------------------------------
+
+    /**
+     * Presuming the given value is a signed 12-bit value, we turn it into a 36-bit signed value
+     * <p>
+     * @param value
+     * <p>
+     * @return
+     */
+    public static long getSignExtended12(
+        final long value
+    ) {
+        if ((value & 04000) == 0) {
+            return value;
+        } else {
+            return value | 0_777777_770000l;
+        }
+    }
+
+    /**
+     * Presuming the given value is a signed 18-bit value, we turn it into a 36-bit signed value
+     * <p>
+     * @param value
+     * <p>
+     * @return
+     */
+    public static long getSignExtended18(
+        final long value
+    ) {
+        if ((value & 0_400000) == 0) {
+            return value;
+        } else {
+            return value | 0_777777_000000l;
+        }
+    }
+
+    /**
+     * Presuming the given value is a signed 24-bit value, we turn it into a 36-bit signed value
+     * <p>
+     * @param value
+     * <p>
+     * @return
+     */
+    public static long getSignExtended24(
+        final long value
+    ) {
+        if ((value & 0_000040_000000) == 0) {
+            return value;
+        } else {
+            return value | 0_777700_000000l;
+        }
+    }
+
+
+    //  Formatting for display -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Given an integer which represents an ASCII character, we return the corresponding char if it is displayable,
+     * or else the alternate character.
+     * <p>
+     * @param value value to be converted
+     * @param alternate character to be returned if the value presentes an undisplayable character
+     * <p>
+     * @return
+     */
+    private static char getASCIIForDisplay(
+        final int value,
+        final char alternate
+    ) {
+        if ((value < 32) || (value >= 127)) {
+            return alternate;
+        } else {
+            return (char) value;
+        }
+    }
+
+    /**
+     * Interprets the given 36-bit value as a sequence of 4 ASCII characters, and produces those characters as a result
+     * <p>
+     * @param value 36-bit value
+     * <p>
+     * @return displayable result
+     */
+    public static String toASCII(
+        final long value
+    ) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(getASCIIForDisplay((int)getQ1(value), '.'));
+        builder.append(getASCIIForDisplay((int)getQ2(value), '.'));
+        builder.append(getASCIIForDisplay((int)getQ3(value), '.'));
+        builder.append(getASCIIForDisplay((int)getQ4(value), '.'));
+
+        return builder.toString();
+    }
+
+    /**
+     * Interprets the given 36-bit value as a sequence of 6 Fieldata characters, and produces those characters as a result
+     * <p>
+     * @param value 36-bit value
+     * <p>
+     * @return displayable result
+     */
+    public static String toFieldata(
+        final long value
+    ) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(ASCII_FROM_FIELDATA[(int)getS1(value)]);
+        builder.append(ASCII_FROM_FIELDATA[(int)getS2(value)]);
+        builder.append(ASCII_FROM_FIELDATA[(int)getS3(value)]);
+        builder.append(ASCII_FROM_FIELDATA[(int)getS4(value)]);
+        builder.append(ASCII_FROM_FIELDATA[(int)getS5(value)]);
+        builder.append(ASCII_FROM_FIELDATA[(int)getS6(value)]);
+
+        return builder.toString();
+    }
+
+    /**
+     * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
+     * <p>
+     * @param value 36-bit value
+     * <p>
+     * @return displayable result
+     */
+    public static String toOctal(
+        final long value
+    ) {
+        return String.format("%012o", value);
+    }
+}
