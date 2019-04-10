@@ -1,0 +1,5 @@
+All Device objects: add Builder class, make constructors private
+
+Device.IoInfo objects: add Builder class, make constructors private
+
+Convert IP unit tests from octal to assembler and mina them

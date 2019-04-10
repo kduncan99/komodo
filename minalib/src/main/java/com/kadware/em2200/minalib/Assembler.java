@@ -51,6 +51,11 @@ public class Assembler {
 
             _diagnostics.append(line.getDiagnostics());
         }
+
+        //  Next step - assemble all the things
+        for (TextLine line : _sourceCode) {
+            //????
+        }
     }
 
     /**

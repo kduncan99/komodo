@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="baselib" />
         <module name="minalib" />
+        <module name="hardwarelib" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8" />
