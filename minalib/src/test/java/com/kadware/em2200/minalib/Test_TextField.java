@@ -26,7 +26,49 @@ public class Test_TextField {
     }
 
     @Test
-    public void parseSubfields_normal() {
+    public void parseSubFields_normal1() {
+        String code = "LABEL";
+        Locale loc = new Locale(1, 1);
+        TextField fld = new TextField(loc, code);
+        Diagnostics diag = fld.parseSubfields();
+        assertEquals(0, diag.getDiagnostics().length);
+
+        int sfCount = fld.getSubfieldCount();
+        assertEquals(1, sfCount);
+
+        TextSubfield sf0 = fld.getSubfield(0);
+        Locale expLoc0 = new Locale(1, 1);
+        assertEquals(expLoc0, sf0.getLocale());
+        assertFalse(sf0.isFlagged());
+        assertEquals("LABEL", sf0.getText());
+    }
+
+    @Test
+    public void parseSubFields_normal2() {
+        String code = "Subfield1,  Subfield2";
+        Locale loc = new Locale(1, 8);
+        TextField fld = new TextField(loc, code);
+        Diagnostics diag = fld.parseSubfields();
+        assertEquals(0, diag.getDiagnostics().length);
+
+        int sfCount = fld.getSubfieldCount();
+        assertEquals(2, sfCount);
+
+        TextSubfield sf0 = fld.getSubfield(0);
+        Locale expLoc0 = new Locale(1, 8);
+        assertEquals(expLoc0, sf0.getLocale());
+        assertFalse(sf0.isFlagged());
+        assertEquals("Subfield1", sf0.getText());
+
+        TextSubfield sf1 = fld.getSubfield(1);
+        Locale expLoc1 = new Locale(1, 20);
+        assertEquals(expLoc1, sf1.getLocale());
+        assertFalse(sf1.isFlagged());
+        assertEquals("Subfield2", sf1.getText());
+    }
+
+    @Test
+    public void parseSubfields_normal3() {
         String code = "A0,0112,  *X5,";
         Locale loc = new Locale(10, 21);
         TextField fld = new TextField(loc, code);
@@ -34,7 +76,7 @@ public class Test_TextField {
         assertEquals(0, diag.getDiagnostics().length);
 
         int sfCount = fld.getSubfieldCount();
-        assertEquals(3, sfCount);
+        assertEquals(4, sfCount);
 
         TextSubfield sf0 = fld.getSubfield(0);
         Locale expLoc0 = new Locale(10, 21);
@@ -53,6 +95,12 @@ public class Test_TextField {
         assertEquals(expLoc2, sf2.getLocale());
         assertTrue(sf2.isFlagged());
         assertEquals("X5", sf2.getText());
+
+        TextSubfield sf3 = fld.getSubfield(3);
+        Locale expLoc3 = new Locale(10, 35);
+        assertEquals(expLoc3, sf3.getLocale());
+        assertFalse(sf3.isFlagged());
+        assertEquals("", sf3.getText());
     }
 
     @Test

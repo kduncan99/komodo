@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test;
@@ -19,17 +19,17 @@ import com.kadware.em2200.hardwarelib.misc.VirtualAddress;
 /**
  * Base class for all Test_InstructionProcessor_* classes
  */
-public class Test_InstructionProcessor {
+class Test_InstructionProcessor {
 
-    protected static class LoadBankInfo {
+    static class LoadBankInfo {
 
-        public long[] _source;
-        public AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
-        public AccessPermissions _generalAccessPermissions = ALL_ACCESS;
-        public AccessPermissions _specialAccessPermissions = ALL_ACCESS;
-        public int _lowerLimit = 0;
+        long[] _source;
+        AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
+        AccessPermissions _generalAccessPermissions = ALL_ACCESS;
+        AccessPermissions _specialAccessPermissions = ALL_ACCESS;
+        int _lowerLimit = 0;
 
-        public LoadBankInfo(
+        LoadBankInfo(
             final long[] source
         ) {
             _source = source;
@@ -40,13 +40,11 @@ public class Test_InstructionProcessor {
 
     /**
      * Retrieves the contents of a bank represented by a base register
-     * <p>
-     * @param ip
-     * @param baseRegisterIndex
-     * <p>
-     * @return
+     * @param ip reference to IP containing the desired BR
+     * @param baseRegisterIndex index of the desired BR
+     * @return reference to array of values constituting the bank
      */
-    public static long[] getBank(
+    static long[] getBank(
         final InstructionProcessor ip,
         final int baseRegisterIndex
     ) {
@@ -62,11 +60,10 @@ public class Test_InstructionProcessor {
      * Given an array of LoadBankInfo objects, we load the described data as individual banks, into consecutive locations
      * into the given MainStorageProcessor.  For each bank, we create a BankRegister and establish that bank register
      * of the given InstructionProcessor as B0, B1, ...
-     * <p>
-     * @param ip
-     * @param msp
+     * @param ip reference to an IP to be used
+     * @param msp reference to an MSP to be used
      * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
-     * @param bankInfos
+     * @param bankInfos contains the various banks to be loaded
      */
     public static void loadBanks(
         final InstructionProcessor ip,
@@ -107,19 +104,18 @@ public class Test_InstructionProcessor {
      * subsequently be considered a bank.  Each successive source array loaded into unique non-overlapping areas of
      * storage in the given MainStorageProcessor, and for each, a BankRegister is created and established in the given
      * InstructionProcessor at B0, B1, etc..
-     * <p>
-     * @param ip
-     * @param msp
+     * @param ip reference to an IP to be used
+     * @param msp reference to an MSP to be used
      * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
-     * @param sourceData
+     * @param sourceData array of source data arrays to be loaded
      */
     public static void loadBanks(
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int brIndex,
-        final long sourceData[][]
+        final long[][] sourceData
     ) {
-        LoadBankInfo bankInfos[] = new LoadBankInfo[sourceData.length];
+        LoadBankInfo[] bankInfos = new LoadBankInfo[sourceData.length];
         for (int sx = 0; sx < sourceData.length; ++sx) {
             bankInfos[sx] = new LoadBankInfo(sourceData[sx]);
         }
@@ -153,16 +149,14 @@ public class Test_InstructionProcessor {
      *                      of the interrupt which the code handles.  If any major reference is null, it is assumed that the
      *                      caller has no preference for handling the particular interrupt, and we will set the interrupt vectort
      *                      to point to a generic interrupt handler that we will create here.
-     * <p>
      * @return size of allocated memory in the MSP, starting at mspOffset
-     * <p>
-     * @throws MachineInterrupt
+     * @throws MachineInterrupt if the IP throws one
      */
-    public int setupInterrupts(
+    int setupInterrupts(
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int mspOffset,
-        final long interruptCode[][]
+        final long[][] interruptCode
     ) throws MachineInterrupt {
         //  Stake out slices of the level 0 bank descriptor table
         Word36ArraySlice interruptVector = new Word36ArraySlice(msp.getStorage(), mspOffset, 64);
@@ -263,7 +257,7 @@ public class Test_InstructionProcessor {
     /**
      * Starts an IP and waits for it to stop on its own
      * <p>
-     * @param ip
+     * @param ip IP of interest
      */
     public static void startAndWait(
         final InstructionProcessor ip

@@ -40,8 +40,11 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            " LA,U   A0,01000",
-            " IAR    0,0,0 . IAR is not valid for BASIC mode - do something different"
+            "START*",
+            "START*",
+            "          LA,U      A0,01000",
+            "          IAR       0,0,0 . IAR is not valid for BASIC mode - do something different",
+            "          J         START",//????
         };
 
         Assembler asm = new Assembler("Test", source);

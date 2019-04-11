@@ -1,28 +1,25 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.Locale;
-
 /**
  * Represents a (possibly empty) subfield of text, parsed from a line of assembly code.
  */
-public class TextSubfield {
+class TextSubfield {
 
     private final boolean _flagged;     //  true if the subfield is prefixed with an asterisk
     private final Locale _locale;       //  linenumber/column of this subfield within the source code set
-    private final String _text;       //  text of the field, not including the prefixing asterisk (if it exists)
+    private final String _text;         //  text of the field, not including the prefixing asterisk (if it exists)
 
     /**
      * Constructor
-     * <p>
      * @param locale location of this subfield of text within the source code set
      * @param flagged true if this subfield is prefixed with an asterisk, else false
      * @param text text of this subfield, not including the prefix asterisk (if it exists)
      */
-    public TextSubfield(
+    TextSubfield(
         final Locale locale,
         final boolean flagged,
         final String text
@@ -34,8 +31,7 @@ public class TextSubfield {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return locale of this subfield
      */
     public Locale getLocale(
     ) {
@@ -44,8 +40,7 @@ public class TextSubfield {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return raw text for this subfield
      */
     public String getText(
     ) {
@@ -54,10 +49,9 @@ public class TextSubfield {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return true if this subfield is flagged, else false
      */
-    public boolean isFlagged(
+    boolean isFlagged(
     ) {
         return _flagged;
     }
@@ -65,9 +59,9 @@ public class TextSubfield {
     /**
      * Retrieves a locale representing the lineNumber/column of the position
      * immediately following this subfield in the source code.
-     * @return
+     * @return locale per above description
      */
-    public Locale getLocaleLimit(
+    Locale getLocaleLimit(
     ) {
         return new Locale(_locale.getLineNumber(), _locale.getColumn() + _text.length());
     }

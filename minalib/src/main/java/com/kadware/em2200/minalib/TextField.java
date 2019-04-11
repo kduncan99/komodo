@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
+
 package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.minalib.diagnostics.ErrorDiagnostic;
@@ -21,42 +22,13 @@ public class TextField {
     //  Subfield objects which comprise this field
     private final ArrayList<TextSubfield> _subfields = new ArrayList<>();
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  private methods (may be protected for unit testing)
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Advances a text index from its current position to a further position to effectively skip any whitespace.
-     * <p>
-     * @param text
-     * @param index
-     * <p>
-     * @return
-     */
-    protected static int skipWhiteSpace(
-        final String text,
-        final int index
-    ) {
-        int tx = index;
-        while ((tx < text.length()) && (text.charAt(tx) == ' ')) {
-            ++tx;
-        }
-        return tx;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  constructor
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Constructor
-     * <p>
      * @param locale location of this subfield of text within the source code set
      * @param text text of this field, including all the textual tokens of all the contained subfields
      *              as well as (potentially) embedded blanks following commas
      */
-    public TextField(
+    TextField(
         final Locale locale,
         final String text
     ) {
@@ -64,15 +36,24 @@ public class TextField {
         _text = text;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  public methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    /**
+     * Adds a subfield to this field, at the given columne
+     * @param text text of the subfield
+     * @param column column of the subfield
+     */
+    private void addSubfield(
+        final String text,
+        final int column
+    ) {
+        boolean flagged = text.startsWith("*");
+        Locale loc = new Locale(_locale.getLineNumber(), column);
+        TextSubfield subfield = new TextSubfield(loc, flagged, text.substring(flagged ? 1 : 0));
+        _subfields.add(subfield);
+    }
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return locale for this field
      */
     public Locale getLocale(
     ) {
@@ -80,33 +61,21 @@ public class TextField {
     }
 
     /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public String getText(
-    ) {
-        return _text;
-    }
-
-    /**
      * Retrieves a locale representing the lineNumber/column of the position
      * immediately following this field in the source code.
-     * @return
+     * @return locale entity reflecting the position following this field
      */
-    public Locale getLocaleLimit(
+    Locale getLocaleLimit(
     ) {
         return new Locale(_locale.getLineNumber(), _locale.getColumn() + _text.length());
     }
 
     /**
      * Retrieves a particular TextSubfield object by index
-     * <p>
-     * @param index
-     * <p>
+     * @param index indicates which subfield to retrieve
      * @return TextSubfield object if it exists, null if there is no subfield at the given index
      */
-    public TextSubfield getSubfield(
+    TextSubfield getSubfield(
         final int index
     ) {
         if (index < _subfields.size()) {
@@ -118,12 +87,20 @@ public class TextField {
     /**
      * Retrieves the number of TextSubfield object that exist, plus any void spaces within the array.
      * That is, if subfields exist at indices 0, 1, and 3, we return 4.
-     * <p>
-     * @return
+     * @return number of subfields in this field
      */
-    public int getSubfieldCount(
+    int getSubfieldCount(
     ) {
         return _subfields.size();
+    }
+
+    /**
+     * Getter
+     * @return raw text for this field
+     */
+    public String getText(
+    ) {
+        return _text;
     }
 
     /**
@@ -131,15 +108,15 @@ public class TextField {
      * <p>
      * @return Diagnostics object containing any diagnostics generated during the parse procedure
      */
-    public Diagnostics parseSubfields(
+    Diagnostics parseSubfields(
     ) {
         Diagnostics diagnostics = new Diagnostics();
         _subfields.clear();
 
-        Locale locale = new Locale(_locale.getLineNumber(), _locale.getColumn());
         int parenLevel = 0;
         boolean quoted = false;
         int tx = 0;
+        int baseColumn = _locale.getColumn();
         StringBuilder sb = new StringBuilder();
         while (tx < _text.length()) {
             //  We presume here, that the index is not sitting on whitespace
@@ -148,25 +125,12 @@ public class TextField {
                 sb.append(ch);
             } else {
                 if ((parenLevel == 0) && (ch == ',')) {
-                    String sfText = sb.toString();
-                    if (sfText.isEmpty()) {
-                        //  empty subfield - create a null entry in the array
-                        _subfields.add(null);
-                    } else {
-                        //  non-empty subfield - create a new TextSubfield object and append it to the array
-                        boolean flagged = sfText.startsWith("*");
-                        if (flagged) {
-                            sfText = sfText.substring(1);
-                        }
-
-                        TextSubfield subfield = new TextSubfield(locale, flagged, sfText);
-                        _subfields.add(subfield);
-                    }
+                    addSubfield(sb.toString(), baseColumn);
 
                     //  Comma delimiter may be followed by whitespace for clarity in coding.  Skip such whitespace.
                     tx = skipWhiteSpace(_text, tx);
+                    baseColumn = _locale.getColumn() + tx;
                     sb = new StringBuilder();
-                    locale = new Locale(_locale.getLineNumber(), _locale.getColumn() + tx);
                 } else {
                     sb.append(ch);
 
@@ -175,7 +139,7 @@ public class TextField {
                         ++parenLevel;
                     } else if (ch == ')') {
                         if (parenLevel == 0) {
-                            Locale diagLoc = new Locale(locale.getLineNumber(), tx);
+                            Locale diagLoc = new Locale(_locale.getLineNumber(), baseColumn);
                             diagnostics.append(new ErrorDiagnostic(diagLoc, "Too many closing parentheses"));
                             return diagnostics;
                         }
@@ -189,6 +153,24 @@ public class TextField {
             }
         }
 
+        addSubfield(sb.toString(), baseColumn);
         return diagnostics;
+    }
+
+    /**
+     * Advances a text index from its current position to a further position to effectively skip any whitespace.
+     * @param text base text
+     * @param index starting index
+     * @return ending index
+     */
+    static int skipWhiteSpace(
+        final String text,
+        final int index
+    ) {
+        int tx = index;
+        while ((tx < text.length()) && (text.charAt(tx) == ' ')) {
+            ++tx;
+        }
+        return tx;
     }
 }

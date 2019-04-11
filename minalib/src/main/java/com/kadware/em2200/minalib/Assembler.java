@@ -51,27 +51,29 @@ public class Assembler {
                 label = null;
                 textLine._diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
                                                                  "Invalid label"));
-            }
+            } else {
+                if ( labelField.getSubfieldCount() > 1 ) {
+                    textLine._diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
+                                                                     "Extraneous subfields in label field"));
+                }
 
-            if (labelField.getSubfieldCount() > 1) {
-                textLine._diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
-                                                                 "Extraneous subfields in label field"));
-            }
-
-            //  If there are no further fields, then this is a stand-alone label.
-            //  Process it as such...
-            if (textLine._fields.size() == 1) {
-                Dictionary d = _context._dictionary;
-                if (d.hasValue(label)) {
-                    textLine._diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
-                                                                         "Duplicate label"));
-                } else {
-                    d.addValue(labelLevel, label, getCurrentLocation());
+                //  If there are no further fields, then this is a stand-alone label.
+                //  Process it as such...
+                if ( textLine._fields.size() == 1 ) {
+                    Dictionary d = _context._dictionary;
+                    if ( d.hasValue(label) ) {
+                        textLine._diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
+                                                                             "Duplicate label"));
+                    } else {
+                        d.addValue(labelLevel, label, getCurrentLocation());
+                    }
                 }
 
                 return;
             }
         }
+
+        //  More to look at...
     }
 
     /**
@@ -102,8 +104,8 @@ public class Assembler {
 
     /**
      * Create an Assembler object and load it with text from the given array of source lines
-     * @param moduleName
-     * @param source
+     * @param moduleName name of the module
+     * @param source array of strings comprising the source code to be assembled
      */
     public Assembler(
         final String moduleName,

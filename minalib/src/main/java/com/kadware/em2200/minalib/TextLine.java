@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
+
 package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.minalib.diagnostics.ErrorDiagnostic;
@@ -30,7 +31,7 @@ class TextLine {
      * @param lineNumber line number of this object
      * @param text original text for this object
      */
-    public TextLine(
+    TextLine(
         final int lineNumber,
         final String text
     ) {
@@ -43,7 +44,7 @@ class TextLine {
      * @param index index of field
      * @return text field
      */
-    public TextField getField(
+    TextField getField(
         final int index
     ) {
         if (index < _fields.size()) {
@@ -55,7 +56,7 @@ class TextLine {
     /**
      * Parses the text into TextField objects
      */
-    public void parseFields(
+    void parseFields(
     ) {
         //  We should only ever be called once, but just in case...
         _diagnostics.clear();
@@ -93,10 +94,6 @@ class TextLine {
             if (quoted) {
                 sb.append(ch);
             } else {
-                //  Look for a leading sign '+' or '-'...
-                //  If found, skip any whitespace - it does NOT delimit this field
-                //????TODO
-
                 if ((parenLevel == 0) && (ch == ' ')) {
                     //  We have found an unquoted blank.  If the previous character was a comma,
                     //  this is whitespace embedded within a field, and should *not* terminate the field.
@@ -117,7 +114,7 @@ class TextLine {
                     } else {
                         //  We've reached the end of the current field.
                         //  Create a TextField object, then parse the field text into subfields.
-                        String fieldText = sb.toString();
+                        String fieldText = sb.toString().trim();
                         TextField field = new TextField(locale, fieldText);
                         _fields.add(field);
                         Diagnostics parseDiags = field.parseSubfields();
@@ -132,6 +129,14 @@ class TextLine {
                     }
                 } else {
                     sb.append(ch);
+
+                    //  Is this a leading '+' or '-'?  If so, skip whitespace
+                    if ((sb.length() ==1) && ((ch == '+') || (ch == '-'))) {
+                        while ((tx < cleanText.length()) && (cleanText.charAt(tx) == ' ')) {
+                            sb.append(" ");
+                            ++tx;
+                        }
+                    }
 
                     //  Handle opening-closing parentheses
                     if (ch == '(') {
@@ -156,6 +161,7 @@ class TextLine {
         }
 
         String fieldText = sb.toString();
+        fieldText = fieldText.trim();
         if (fieldText.length() > 0) {
             TextField field = new TextField(locale, fieldText);
             _fields.add(field);
@@ -175,12 +181,10 @@ class TextLine {
      * Remove comment from assembler text, if it exists.
      * Comments are signaled by space-period-space, or a period-space in the first two columns,
      * or a space-period in the last two columns, or by a single column containing a space.
-     * <p>
      * @param text input text to be scanned
-     * <p>
      * @return copy of input text with commentary removed, or the original text if no comment was found.
      */
-    protected static String removeComments(
+    static String removeComments(
         final String text
     ) {
         if (text.equals(".") || text.startsWith(". ")) {
