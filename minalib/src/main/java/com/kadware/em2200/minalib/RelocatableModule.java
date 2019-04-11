@@ -12,7 +12,7 @@ import com.kadware.em2200.minalib.exceptions.*;
  * Represents the assembly of a particular set of lines of source code,
  * generally accepted as representing a symbolic element or file.
  */
-public class RelocatableModule {
+class RelocatableModule {
 
     private final String _name;
     private final Map<Integer, LocationCounterPool> _locationCounters = new HashMap<>();
@@ -20,9 +20,9 @@ public class RelocatableModule {
     /**
      * Constructor
      * <p>
-     * @param name
+     * @param name name of the module
      */
-    public RelocatableModule(
+    RelocatableModule(
         final String name
     ) {
         _name = name;
@@ -36,9 +36,9 @@ public class RelocatableModule {
      * <p>
      * @return
      * <p>
-     * @throws InvalidParameterException
+     * @throws InvalidParameterException if the index is out of range
      */
-    public LocationCounterPool getLocationCounter(
+    LocationCounterPool getLocationCounterPool(
         final int index
     ) throws InvalidParameterException {
         if ((index < 0) || (index > 63)) {

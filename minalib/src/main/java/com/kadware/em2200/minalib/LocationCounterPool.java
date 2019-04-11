@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class LocationCounterPool {
 
-    private int _index = 0;
+    private int _nextOffset = 0;
     private final ArrayList<RelocatableWord36> _storage = new ArrayList<>();
 
     /**
@@ -22,17 +22,16 @@ public class LocationCounterPool {
         final RelocatableWord36 word
     ) {
         _storage.add(word);
-        ++_index;
+        ++_nextOffset;
     }
 
     /**
      * Getter
-     * <p>
      * @return
      */
-    public int getIndex(
+    public int getNextOffset(
     ) {
-        return _index;
+        return _nextOffset;
     }
 
     /**

@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
 
+import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
-import com.kadware.em2200.minalib.dictionary.Dictionary;
+import com.kadware.em2200.minalib.dictionary.*;
+import com.kadware.em2200.minalib.exceptions.*;
+import java.util.Map;
 
 /**
  * Assembler for minalib
@@ -13,7 +16,7 @@ import com.kadware.em2200.minalib.dictionary.Dictionary;
 public class Assembler {
 
     private final Context _context = new Context();
-    private final Diagnostics _diagnostics = new Diagnostics();
+    private final Diagnostics _diagnostics = new Diagnostics();     //  cumulative of all textLine diagnostics
     private final RelocatableModule _module;
     private final TextLine[] _sourceCode;
 
@@ -21,42 +24,77 @@ public class Assembler {
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Assemble a single TextLine object into the Relocatable Module
+     * @param textLine entity to be assembled
+     */
     private void assemble(
         final TextLine textLine
     ) {
-        if (textLine.getFieldCount() > 0) {
-            if (textLine.getFieldCount() == 1) {
-                //  Line has only a label
-                establishLabel(textLine.getField(0).getSubfield(0));
-            } else {
-                //???? okay, what kind of thing are we doing here?
+        if (textLine._fields.size() == 0) {
+            return;
+        }
+
+        //  Examine field 0 which contains at most one subfield which we presume is a label.
+        String label = null;
+        int labelLevel = 0;
+        TextField labelField = textLine.getField(0);
+        if ((labelField != null) && (labelField.getSubfieldCount() > 0)) {
+            TextSubfield labelSubfield = labelField.getSubfield(0);
+            label = labelSubfield.getText();
+            while (label.endsWith("*")) {
+                label = label.substring(0, label.length() - 1);
+                ++labelLevel;
+            }
+
+            if (!Dictionary.isValidLabel(label)) {
+                label = null;
+                textLine._diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
+                                                                 "Invalid label"));
+            }
+
+            if (labelField.getSubfieldCount() > 1) {
+                textLine._diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
+                                                                 "Extraneous subfields in label field"));
+            }
+
+            //  If there are no further fields, then this is a stand-alone label.
+            //  Process it as such...
+            if (textLine._fields.size() == 1) {
+                Dictionary d = _context._dictionary;
+                if (d.hasValue(label)) {
+                    textLine._diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
+                                                                         "Duplicate label"));
+                } else {
+                    d.addValue(labelLevel, label, getCurrentLocation());
+                }
+
+                return;
             }
         }
     }
 
     /**
-     * Establishes the given subfield text as a label at the current location in the current location counter pool.
-     * Does not allow an existing label to be overwritten.
-     * @param subfield
+     * Creates an IntegerValue object with appropriate reloc info, to represent the current location of the
+     * current generation location counter (e.g., for interpreting '$' or whatever).
+     * @return IntegerValue object as described
      */
-    private void establishLabel(
-        final TextSubfield subfield
+    private IntegerValue getCurrentLocation(
     ) {
-        String rawText = subfield.getText();
-        int level = 0;
-        while (rawText.startsWith("*")) {
-            ++level;
-            rawText = rawText.substring(1);
-        }
-
-        Dictionary d = _context.getDictionary();
-        if (d.hasValue(rawText)) {
-            _diagnostics.append(new ErrorDiagnostic(subfield.getLocale(),
-                                                    String.format("Label '%s' is already defined", rawText)));
-        } else {
-            //????
+        //  Find the current generation lc index.
+        //  If it doesn't exist, it will be created.
+        try {
+            LocationCounterPool lcPool = _module.getLocationCounterPool(_context._currentGenerationLCIndex);
+            LocationCounterRelocationInfo lcri =
+                new LocationCounterRelocationInfo(FieldDescriptor.W, _context._currentGenerationLCIndex);
+            return new IntegerValue.Builder().setValue(lcPool.getNextOffset())
+                                             .setRelocationInfo(lcri)
+                                             .build();
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Internal Error: Caught " + ex.getMessage());
         }
     }
+
 
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Public methods
@@ -64,7 +102,6 @@ public class Assembler {
 
     /**
      * Create an Assembler object and load it with text from the given array of source lines
-     * <p>
      * @param moduleName
      * @param source
      */
@@ -87,33 +124,63 @@ public class Assembler {
     public void assemble(
     ) {
         //  setup
-        _context.setCharacterMode(CharacterMode.ASCII);
-        _context.setCodeMode(CodeMode.Basic);
+        _context._characterMode = CharacterMode.ASCII;
+        _context._codeMode = CodeMode.Basic;
         _diagnostics.clear();
 
         //  First step - parse all the source code into fields/subfields.
         for (TextLine line : _sourceCode) {
             line.parseFields();
-            if (line.getDiagnostics().hasFatal()) {
+            if (line._diagnostics.hasFatal()) {
                 return;
             }
-
-            _diagnostics.append(line.getDiagnostics());
+            _diagnostics.append(line._diagnostics);
         }
 
         //  Next step - assemble all the things
         for (TextLine line : _sourceCode) {
             assemble(line);
             if (_diagnostics.hasFatal()) {
-                break;
+                return;
+            }
+            _diagnostics.append(line._diagnostics);
+        }
+
+        //???? what else
+    }
+
+    /**
+     * Displays output upon the console
+     */
+    public void displayResults(
+    ) {
+        for (TextLine line : _sourceCode) {
+            System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
+            for (Diagnostic d : line._diagnostics.getDiagnostics()) {
+                System.out.println(String.format("%c[%d]:%s",
+                                                 d.getLevelIndicator(),
+                                                 d.getLocale().getColumn(),
+                                                 d.getMessage()));
             }
         }
+
+        System.out.println();
+        System.out.println("Dictionary");
+
+        System.out.println();
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Summary: Lines=%d", _sourceCode.length));
+        for (Map.Entry<Diagnostic.Level, Integer> entry : _diagnostics.getCounters().entrySet()) {
+            if (entry.getValue() > 0) {
+                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+            }
+        }
+        System.out.println(sb.toString());
     }
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return Diagnostics object produced during assembly
      */
     public Diagnostics getDiagnostics(
     ) {
@@ -122,11 +189,19 @@ public class Assembler {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return array of TextLine objects comprising the source code
      */
     public TextLine[] getParsedCode(
     ) {
         return _sourceCode;
+    }
+
+    /**
+     * Getter
+     * @return RelocatableModule object produced as a result of the assemble() method
+     */
+    public RelocatableModule getRelocatableModule(
+    ) {
+        return _module;
     }
 }

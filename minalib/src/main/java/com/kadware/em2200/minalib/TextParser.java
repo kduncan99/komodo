@@ -8,7 +8,7 @@ import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import java.util.ArrayList;
 
 /**
- * TextParser for jkasm library.
+ * TextParser for minalib library.
  * Splits a line of assembler code into fields and subfields.
  */
 public class TextParser {
@@ -73,7 +73,7 @@ public class TextParser {
         int lineNumber = 1;
         for (TextLine textLine : _sourceCodeSet) {
             textLine.parseFields();
-            if (textLine.getDiagnostics().hasFatal()) {
+            if (textLine._diagnostics.hasFatal()) {
                 break;
             }
         }

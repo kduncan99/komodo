@@ -11,9 +11,11 @@ import com.kadware.em2200.minalib.dictionary.*;
  */
 public class Context {
 
-    private CharacterMode _characterMode = CharacterMode.ASCII;
-    private CodeMode _codeMode = CodeMode.Extended;
-    private final Dictionary _dictionary;
+    public CharacterMode _characterMode = CharacterMode.ASCII;
+    public CodeMode _codeMode = CodeMode.Extended;
+    public int _currentGenerationLCIndex = 1;
+    public int _currentLitLCIndex = 0;
+    public final Dictionary _dictionary;
 
     /**
      * General constructor
@@ -21,57 +23,5 @@ public class Context {
     public Context(
     ) {
         _dictionary = new MainLevelDictionary(new Dictionary());
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public CharacterMode getCharacterMode(
-    ) {
-        return _characterMode;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public CodeMode getCodeMode(
-    ) {
-        return _codeMode;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Dictionary getDictionary(
-    ) {
-        return _dictionary;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param mode
-     */
-    public void setCharacterMode(
-        final CharacterMode mode
-    ) {
-        _characterMode = mode;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param mode
-     */
-    public void setCodeMode(
-        final CodeMode mode
-    ) {
-        _codeMode = mode;
     }
 }

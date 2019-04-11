@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.diagnostics;
@@ -20,6 +20,7 @@ public class Diagnostics {
     public Diagnostics(
     ) {
         _counters.put(Diagnostic.Level.Directive, 0);
+        _counters.put(Diagnostic.Level.Duplicate, 0);
         _counters.put(Diagnostic.Level.Error, 0);
         _counters.put(Diagnostic.Level.Fatal, 0);
         _counters.put(Diagnostic.Level.Quote, 0);
@@ -31,7 +32,6 @@ public class Diagnostics {
 
     /**
      * Appends a Diagnostic object to our container, updating our counters as appropriate
-     * <p>
      * @param diagnostic
      */
     public void append(
@@ -47,7 +47,6 @@ public class Diagnostics {
 
     /**
      * Appends all the Diagnostic objects from one container into this container, updating our counters as appropriate
-     * <p>
      * @param diagnostics
      */
     public void append(
@@ -69,8 +68,7 @@ public class Diagnostics {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return array of all diagnostics
      */
     public Diagnostic[] getDiagnostics(
     ) {
@@ -78,9 +76,34 @@ public class Diagnostics {
     }
 
     /**
+     * Getter
+     * @return array of all diagnostics pertaining to a given line number
+     */
+    public Diagnostic[] getDiagnostics(
+        final int lineNumber
+    ) {
+        List<Diagnostic> diags = new LinkedList<>();
+        for (Diagnostic d : _diagnostics) {
+            if (d.getLocale().getLineNumber() == lineNumber) {
+                diags.add(d);
+            }
+        }
+
+        return diags.toArray(new Diagnostic[diags.size()]);
+    }
+
+    /**
+     * Returns counters map
+     * @return as above
+     */
+    public Map<Diagnostic.Level, Integer> getCounters(
+    ) {
+        return _counters;
+    }
+
+    /**
      * Returns true if we have at least one Fatal level diagnostic
-     * <p>
-     * @return
+     * @return as above
      */
     public boolean hasFatal(
     ) {
@@ -90,8 +113,7 @@ public class Diagnostics {
 
     /**
      * Returns true if the container is empty
-     * <p>
-     * @return
+     * @return as above
      */
     public boolean isEmpty(
     ) {

@@ -38,7 +38,7 @@ public class Test_Assembler {
         TextLine[] parsedCode = asm.getParsedCode();
         assertEquals(4, parsedCode.length);
         for (TextLine tl : parsedCode) {
-            assertEquals(0, tl.getFieldCount());
+            assertEquals(0, tl._fields.size());
         }
     }
 }

@@ -1,5 +1,22 @@
+minalib - need to finish code to generate Relocatable objects
+* Flesh out references for Value object
+** Location counter reference
+** Undefined reference
+
+Convert IP unit tests from octal to assembler and mina them
+
 All Device objects: add Builder class, make constructors private
 
 Device.IoInfo objects: add Builder class, make constructors private
 
-Convert IP unit tests from octal to assembler and mina them
+Finish adding instructions to IP
+
+Recode disk (and maybe tape devices) using async IO
+
+Figure out how to do channel programs - more specifically, do we need a cleaner IO path?
+
+minalib - finish up various functions and directives
+
+Mina - wrapper around minalib
+
+Exec - using Mina

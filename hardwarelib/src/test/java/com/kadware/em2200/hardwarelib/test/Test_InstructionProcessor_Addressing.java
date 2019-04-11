@@ -10,6 +10,7 @@ import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
+import com.kadware.em2200.minalib.diagnostics.*;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -43,9 +44,11 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
             " IAR    0,0,0 . IAR is not valid for BASIC mode - do something different"
         };
 
-        Assembler asm = new Assembler(source);
+        Assembler asm = new Assembler("Test", source);
         asm.assemble();
-        assert(!asm.getDiagnostics().hasFatal());
+        asm.displayResults();//????
+
+        //????
     }
 
     @Test

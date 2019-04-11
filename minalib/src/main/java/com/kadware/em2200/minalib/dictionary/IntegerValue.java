@@ -369,4 +369,32 @@ public class IntegerValue extends Value {
                                         .setPrecision(getPrecision())
                                         .build();
     }
+
+    /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString() {
+        Word36 w0 = new Word36(_value[0]);
+        Word36 w1 = new Word36(_value[1]);
+        if (getSigned() == Signed.Negative) {
+            w0.setW(Word36.logicalNot(w0.getW()));
+            w1.setW(Word36.logicalNot(w1.getW()));
+        }
+
+        String str = String.format("%s%s", Word36.toOctal(w0.getW()), Word36.toOctal(w1.getW()));
+        while (str.startsWith("0")) {
+            str = str.substring(1);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("0");
+        sb.append(str);
+        if (getRelocationInfo() != null) {
+            sb.append(getRelocationInfo().toString());
+        }
+
+        return sb.toString();
+    }
 }

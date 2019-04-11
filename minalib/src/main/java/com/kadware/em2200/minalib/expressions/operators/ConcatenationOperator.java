@@ -66,8 +66,8 @@ public class ConcatenationOperator extends Operator {
         Value[] operands = getOperands(valueStack);
 
         try {
-            StringValue leftValue = operands[0].toStringValue(getLocale(), context.getCharacterMode(), diagnostics);
-            StringValue rightValue = operands[1].toStringValue(getLocale(), context.getCharacterMode(), diagnostics);
+            StringValue leftValue = operands[0].toStringValue(getLocale(), context._characterMode, diagnostics);
+            StringValue rightValue = operands[1].toStringValue(getLocale(), context._characterMode, diagnostics);
             String newValue = leftValue.getValue() + rightValue.getValue();
 
             boolean ascii = (leftValue.getCharacterMode() == CharacterMode.ASCII)

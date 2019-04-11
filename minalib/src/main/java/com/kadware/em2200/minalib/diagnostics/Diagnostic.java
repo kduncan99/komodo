@@ -13,6 +13,7 @@ public abstract class Diagnostic {
 
     public enum Level {
         Directive,
+        Duplicate,
         Error,
         Fatal,
         Quote,
@@ -89,6 +90,7 @@ public abstract class Diagnostic {
     ) {
         switch (level) {
             case Directive:             return 'I';
+            case Duplicate:             return 'D';
             case Error:                 return 'E';
             case Fatal:                 return 'F';
             case Quote:                 return 'Q';

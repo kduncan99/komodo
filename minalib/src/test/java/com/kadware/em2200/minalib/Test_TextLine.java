@@ -22,9 +22,9 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015  . This is a comment.");
         tline.parseFields();
-        assertTrue(tline.getDiagnostics().isEmpty());
+        assertTrue(tline._diagnostics.isEmpty());
 
-        assertEquals(3, tline.getFieldCount());
+        assertEquals(3, tline._fields.size());
 
         TextField tf0 = tline.getField(0);
         Locale loc0 = tf0.getLocale();
@@ -49,9 +49,9 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015");
         tline.parseFields();
-        assertTrue(tline.getDiagnostics().isEmpty());
+        assertTrue(tline._diagnostics.isEmpty());
 
-        assertEquals(3, tline.getFieldCount());
+        assertEquals(3, tline._fields.size());
 
         TextField tf0 = tline.getField(0);
         Locale loc0 = tf0.getLocale();
@@ -76,9 +76,9 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "          LA,U      A0,015  . This is a comment.");
         tline.parseFields();
-        assertTrue(tline.getDiagnostics().isEmpty());
+        assertTrue(tline._diagnostics.isEmpty());
 
-        assertEquals(3, tline.getFieldCount());
+        assertEquals(3, tline._fields.size());
         assertNull(tline.getField(0));
 
         TextField tf1 = tline.getField(1);
@@ -99,7 +99,7 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "          LA,U      A0,('@ASG  '");
         tline.parseFields();
-        Diagnostic[] diags = tline.getDiagnostics().getDiagnostics();
+        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
         assertEquals(1, diags.length);
         assertEquals(Diagnostic.Level.Error, diags[0].getLevel());
     }
@@ -109,7 +109,7 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "          LA,U      A0,'@ASG  ')");
         tline.parseFields();
-        Diagnostic[] diags = tline.getDiagnostics().getDiagnostics();
+        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
         assertEquals(1, diags.length);
         assertEquals(Diagnostic.Level.Error, diags[0].getLevel());
     }
@@ -119,7 +119,7 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "TAG       $EQU      '@ASG  .");
         tline.parseFields();
-        Diagnostic[] diags = tline.getDiagnostics().getDiagnostics();
+        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
         assertEquals(1, diags.length);
         assertEquals(Diagnostic.Level.Quote, diags[0].getLevel());
     }
@@ -129,9 +129,9 @@ public class Test_TextLine {
     ) {
         TextLine tline = new TextLine(10, "          + (100, 100)  . This should be ONE field");
         tline.parseFields();
-        assertTrue(tline.getDiagnostics().isEmpty());
+        assertTrue(tline._diagnostics.isEmpty());
 
-        assertEquals(2, tline.getFieldCount());
+        assertEquals(2, tline._fields.size());
 
         TextField tf0 = tline.getField(0);
         assertNull(tf0);

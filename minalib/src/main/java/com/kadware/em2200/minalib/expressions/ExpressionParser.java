@@ -324,7 +324,7 @@ public class ExpressionParser {
         //  Function refs cannot be forward-referenced...
         Value value;
         try {
-            value = context.getDictionary().getValue(name);
+            value = context._dictionary.getValue(name);
         } catch (NotFoundException ex) {
             diagnostics.append(new ErrorDiagnostic(funcLocale, String.format("Function %s not defined", name)));
             throw new ExpressionException();
@@ -684,7 +684,7 @@ public class ExpressionParser {
         }
 
         return new ValueItem(new StringValue.Builder().setValue(sb.toString())
-                                                      .setCharacterMode(context.getCharacterMode())
+                                                      .setCharacterMode(context._characterMode)
                                                       .build());
     }
 

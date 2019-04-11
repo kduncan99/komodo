@@ -34,13 +34,13 @@ public class Test_Parser {
 
         ArrayList<TextLine> scset = parser.getSourceCodeSet();
         assertEquals(7, scset.size());
-        assertEquals(2, scset.get(0).getFieldCount());
-        assertEquals(2, scset.get(1).getFieldCount());
-        assertEquals(2, scset.get(2).getFieldCount());
-        assertEquals(1, scset.get(3).getFieldCount());
-        assertEquals(3, scset.get(4).getFieldCount());
-        assertEquals(3, scset.get(5).getFieldCount());
-        assertEquals(3, scset.get(6).getFieldCount());
+        assertEquals(2, scset.get(0)._fields.size());
+        assertEquals(2, scset.get(1)._fields.size());
+        assertEquals(2, scset.get(2)._fields.size());
+        assertEquals(1, scset.get(3)._fields.size());
+        assertEquals(3, scset.get(4)._fields.size());
+        assertEquals(3, scset.get(5)._fields.size());
+        assertEquals(3, scset.get(6)._fields.size());
 
         assertNull(scset.get(0).getField(0));
 

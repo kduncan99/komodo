@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 package com.kadware.em2200.minalib;
 
@@ -11,25 +11,24 @@ import java.util.ArrayList;
 /**
  * Represents a line of source code
  */
-public class TextLine {
+class TextLine {
 
     //  line number of this line of text
-    private final int _lineNumber;
+    final int _lineNumber;
 
     //  source code for this line of text
-    private final String _text;
+    final String _text;
 
     //  parsed TextField objects parsed from the line of text - may be empty
-    private final ArrayList<TextField> _fields = new ArrayList<>();
+    final ArrayList<TextField> _fields = new ArrayList<>();
 
     //  Diagnostic objects pertaining to this line of text
-    private final Diagnostics _diagnostics = new Diagnostics();
+    final Diagnostics _diagnostics = new Diagnostics();
 
     /**
      * Constructor
-     * <p>
-     * @param lineNumber
-     * @param text
+     * @param lineNumber line number of this object
+     * @param text original text for this object
      */
     public TextLine(
         final int lineNumber,
@@ -41,20 +40,8 @@ public class TextLine {
 
     /**
      * Getter
-     * <p>
-     * @return
-     */
-    public Diagnostics getDiagnostics(
-    ) {
-        return _diagnostics;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @param index
-     * <p>
-     * @return
+     * @param index index of field
+     * @return text field
      */
     public TextField getField(
         final int index
@@ -63,16 +50,6 @@ public class TextLine {
             return _fields.get(index);
         }
         return null;
-    }
-
-    /**
-     * Returns number of fields, including inner void fields
-     * <p>
-     * @return
-     */
-    public int getFieldCount(
-    ) {
-        return _fields.size();
     }
 
     /**

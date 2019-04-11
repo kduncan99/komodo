@@ -7,7 +7,7 @@ package com.kadware.em2200.minalib.diagnostics;
 import com.kadware.em2200.minalib.Locale;
 
 /**
- * Class for reporting undefined references diagnostic messages
+ * Class for reporting invalid value diagnostic messages
  */
 public class ValueDiagnostic extends Diagnostic {
 

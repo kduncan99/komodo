@@ -50,7 +50,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.Fieldata).build());
 
         Context context = new Context();
-        context.setCharacterMode(CharacterMode.Fieldata);
+        context._characterMode = CharacterMode.Fieldata;
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -123,7 +123,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new IntegerValue.Builder().setValue(0_14_15_16_17_20_21l).setPrecision(Precision.Double).build());
 
         Context context = new Context();
-        context.setCharacterMode(CharacterMode.Fieldata);
+        context._characterMode = CharacterMode.Fieldata;
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -153,7 +153,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new IntegerValue.Builder().setValue(doubleWord).setPrecision(Precision.Single).build());
 
         Context context = new Context();
-        context.setCharacterMode(CharacterMode.Fieldata);
+        context._characterMode = CharacterMode.Fieldata;
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
