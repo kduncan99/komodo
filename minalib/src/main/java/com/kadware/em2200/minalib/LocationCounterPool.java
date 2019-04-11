@@ -6,13 +6,12 @@ package com.kadware.em2200.minalib;
 import java.util.ArrayList;
 
 /**
- * Represents the storage controlled by a particular LocationCounter, within a particular Module
+ * Represents the storage controlled by a particular LocationCounterPool, within a particular Module
  */
-public class LocationCounter {
+public class LocationCounterPool {
 
     private int _index = 0;
     private final ArrayList<RelocatableWord36> _storage = new ArrayList<>();
-    //???? need to store value modifiers somehow (i.e., LC ctr offset, external ref's, etc)
 
     /**
      * Appends a value to this location counter's storage

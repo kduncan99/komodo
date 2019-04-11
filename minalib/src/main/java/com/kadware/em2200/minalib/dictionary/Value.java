@@ -20,33 +20,6 @@ public abstract class Value {
     private final RelocationInfo _relocatableInfo;
 
     /**
-     * Default constructor
-     */
-    public Value(
-    ) {
-        _flagged = false;
-        _signed = Signed.None;
-        _form = null;
-        _precision = Precision.None;
-        _relocatableInfo = null;
-    }
-
-    /**
-     * Flagging constructor
-     * <p>
-     * @param flagged
-     */
-    public Value(
-        final boolean flagged
-    ) {
-        _flagged = flagged;
-        _signed = Signed.None;
-        _form = null;
-        _precision = Precision.None;
-        _relocatableInfo = null;
-    }
-
-    /**
      * Normal constructor
      * <p>
      * @param flagged (i.e., has leading asterisk)

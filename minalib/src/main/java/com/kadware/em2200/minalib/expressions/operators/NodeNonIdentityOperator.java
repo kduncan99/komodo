@@ -56,6 +56,7 @@ public class NodeNonIdentityOperator extends RelationalOperator {
         NodeValue leftValue = (NodeValue)operands[0];
         NodeValue rightValue = (NodeValue)operands[1];
         int result = (leftValue != rightValue) ? 1 : 0;
-        valueStack.push(new IntegerValue(result, false, Signed.None, Precision.None, null, null));
+        valueStack.push(new IntegerValue.Builder().setValue(result)
+                                                  .build());
     }
 }

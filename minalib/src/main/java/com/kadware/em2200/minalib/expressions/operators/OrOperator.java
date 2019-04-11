@@ -73,7 +73,11 @@ public class OrOperator extends LogicalOperator {
             Precision precision = resolvePrecision(leftValue, rightValue);
             Form form = selectMatchingOrOnlyForm(leftValue, rightValue);
 
-            valueStack.push(new IntegerValue(result, false, signed, precision, form, null));
+            valueStack.push(new IntegerValue.Builder().setValue(result)
+                                                      .setSigned(signed)
+                                                      .setPrecision(precision)
+                                                      .setForm(form)
+                                                      .build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

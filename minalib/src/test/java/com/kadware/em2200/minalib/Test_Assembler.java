@@ -3,7 +3,6 @@
  */
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.textParser.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -17,7 +16,7 @@ public class Test_Assembler {
     ) {
         String[] source = {};
 
-        Assembler asm = new Assembler(source);
+        Assembler asm = new Assembler("Test", source);
         asm.assemble();
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(0, asm.getParsedCode().length);
@@ -33,7 +32,7 @@ public class Test_Assembler {
             ". Blah blah blah",
         };
 
-        Assembler asm = new Assembler(source);
+        Assembler asm = new Assembler("Test", source);
         asm.assemble();
         assertTrue(asm.getDiagnostics().isEmpty());
         TextLine[] parsedCode = asm.getParsedCode();

@@ -56,7 +56,6 @@ public class DivisionCoveredQuotientOperator extends ArithmeticOperator {
     ) throws ExpressionException {
         try {
             Value[] operands = getTransformedOperands(valueStack, false, diagnostics);
-            Value opResult;
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
@@ -110,8 +109,8 @@ public class DivisionCoveredQuotientOperator extends ArithmeticOperator {
                 diagnostics.append(new TruncationDiagnostic(getLocale(), "Result larger than 36 bits"));
             }
 
-            opResult = new IntegerValue(ocResult._result, false, Signed.None, precision, null, null);
-            valueStack.push(opResult);
+            valueStack.push(new IntegerValue.Builder().setValue(ocResult._result)
+                                                      .build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

@@ -13,22 +13,62 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class FloatingPointValue extends Value {
 
+    public static class Builder {
+        private boolean _flagged = false;
+        private Precision _precision = Precision.None;
+        private Signed _signed = Signed.None;
+        private double _value;
+
+        public Builder setFlagged(
+            final boolean flagged
+        ) {
+            _flagged = flagged;
+            return this;
+        }
+
+        public Builder setPrecision(
+            final Precision precision
+        ) {
+            _precision = precision;
+            return this;
+        }
+
+        public Builder setSigned(
+            final Signed signed
+        ) {
+            _signed = signed;
+            return this;
+        }
+
+        public Builder setValue(
+            final double value
+        ) {
+            _value = value;
+            return this;
+        }
+
+        public FloatingPointValue build(
+        ) {
+            return new FloatingPointValue(_flagged, _signed, _precision, _value);
+        }
+    }
+
     //???? TODO  - how do we really store these?
     private final double _value;
 
     /**
      * constructor
      * <p>
-     * @param value - native floating point value
      * @param flagged - leading asterisk
      * @param signed - is this signed? pos or neg?
      * @param precision - only affects things at value generation time
+     * @param value - native floating point value
      */
-    public FloatingPointValue(
-        final double value,
+    private FloatingPointValue(
         final boolean flagged,
         final Signed signed,
-        final Precision precision
+        final Precision precision,
+        final double value
     ) {
         super(flagged, signed, precision, null, null);
         _value = value;
@@ -75,7 +115,7 @@ public class FloatingPointValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new FloatingPointValue(_value, newFlagged, getSigned(), getPrecision());
+        return new FloatingPointValue(newFlagged, getSigned(), getPrecision(), _value);
     }
 
     /**
@@ -89,7 +129,7 @@ public class FloatingPointValue extends Value {
     public Value copy(
         final Signed newSigned
     ) {
-        return new FloatingPointValue(_value, getFlagged(), newSigned, getPrecision());
+        return new FloatingPointValue(getFlagged(), newSigned, getPrecision(), _value);
     }
 
     /**
@@ -103,7 +143,7 @@ public class FloatingPointValue extends Value {
     public Value copy(
         final Precision newPrecision
     ) {
-        return new FloatingPointValue(_value, getFlagged(), getSigned(), newPrecision);
+        return new FloatingPointValue(getFlagged(), getSigned(), newPrecision, _value);
     }
 
     /**
@@ -174,7 +214,7 @@ public class FloatingPointValue extends Value {
         Diagnostics diagnostics
     ) {
         //????TODO Fix this later
-        return new IntegerValue(0, false, Signed.None, Precision.None, null, null);
+        return new IntegerValue.Builder().build();
     }
 
     /**

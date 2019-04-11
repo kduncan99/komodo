@@ -15,7 +15,7 @@ import com.kadware.em2200.minalib.exceptions.*;
 public class RelocatableModule {
 
     private final String _name;
-    private final Map<Integer, LocationCounter> _locationCounters = new HashMap<>();
+    private final Map<Integer, LocationCounterPool> _locationCounters = new HashMap<>();
 
     /**
      * Constructor
@@ -29,7 +29,7 @@ public class RelocatableModule {
     }
 
     /**
-     * Retrieves the LocationCounter associated with the given index.
+     * Retrieves the LocationCounterPool associated with the given index.
      * If one does not exist, it is created and returned.
      * <p>
      * @param index
@@ -38,16 +38,16 @@ public class RelocatableModule {
      * <p>
      * @throws InvalidParameterException
      */
-    public LocationCounter getLocationCounter(
+    public LocationCounterPool getLocationCounter(
         final int index
     ) throws InvalidParameterException {
         if ((index < 0) || (index > 63)) {
             throw new InvalidParameterException(String.format("Location Counter Index %d is out of range", index));
         }
 
-        LocationCounter lc = _locationCounters.get(index);
+        LocationCounterPool lc = _locationCounters.get(index);
         if (lc == null) {
-            lc = new LocationCounter();
+            lc = new LocationCounterPool();
             _locationCounters.put(index, lc);
         }
 

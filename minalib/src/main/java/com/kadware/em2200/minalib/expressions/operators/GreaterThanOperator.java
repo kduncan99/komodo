@@ -44,7 +44,8 @@ public class GreaterThanOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, diagnostics);
             int result = (operands[0].compareTo(operands[1]) > 0) ? 1 : 0;
-            valueStack.push(new IntegerValue(result, false, Signed.None, Precision.None, null, null));
+            valueStack.push(new IntegerValue.Builder().setValue(result)
+                                                      .build());
         } catch (RelocationException ex) {
             //  thrown by compareTo() - we need to post a diag
             diagnostics.append(new RelocationDiagnostic(getLocale()));

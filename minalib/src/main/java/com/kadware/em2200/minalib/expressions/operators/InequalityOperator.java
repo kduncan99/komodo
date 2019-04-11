@@ -44,7 +44,8 @@ public class InequalityOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, diagnostics);
             int result = (!operands[0].equals(operands[1])) ? 1 : 0;
-            valueStack.push(new IntegerValue(result, false, Signed.None, Precision.None, null, null));
+            valueStack.push(new IntegerValue.Builder().setValue(result)
+                                                      .build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

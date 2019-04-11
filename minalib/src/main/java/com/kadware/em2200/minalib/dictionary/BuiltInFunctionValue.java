@@ -23,7 +23,7 @@ public class BuiltInFunctionValue extends Value {
     public BuiltInFunctionValue(
         final Class clazz
     ) {
-        super();
+        super(false, Signed.None, Precision.None, null, null);
         _clazz = clazz;
     }
 

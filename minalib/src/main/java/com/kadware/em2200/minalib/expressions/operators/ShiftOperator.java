@@ -56,7 +56,6 @@ public class ShiftOperator extends ArithmeticOperator {
     ) throws ExpressionException {
         try {
             Value[] operands = getTransformedOperands(valueStack, false, diagnostics);
-            Value opResult;
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
@@ -99,8 +98,10 @@ public class ShiftOperator extends ArithmeticOperator {
                 }
             }
 
-            opResult = new IntegerValue(result, false, Signed.None, precision, null, relocInfo);
-            valueStack.push(opResult);
+            valueStack.push(new IntegerValue.Builder().setValue(result)
+                                                      .setPrecision(precision)
+                                                      .setRelocationInfo(relocInfo)
+                                                      .build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

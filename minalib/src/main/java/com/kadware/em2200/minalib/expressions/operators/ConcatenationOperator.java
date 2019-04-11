@@ -75,7 +75,9 @@ public class ConcatenationOperator extends Operator {
             CharacterMode charMode = ascii ? CharacterMode.ASCII : CharacterMode.Fieldata;
 
             Precision precision = resolvePrecision(leftValue, rightValue);
-            valueStack.push(new StringValue(newValue, false, Signed.None, Precision.None, charMode));
+            valueStack.push(new StringValue.Builder().setValue(newValue)
+                                                     .setCharacterMode(charMode)
+                                                     .build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

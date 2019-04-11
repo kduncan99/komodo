@@ -102,7 +102,9 @@ public class MultiplicationOperator extends ArithmeticOperator {
                     diagnostics.append(new TruncationDiagnostic(getLocale(), "Result larger than 36 bits"));
                 }
 
-                opResult = new IntegerValue(ocResult._result, false, Signed.None, precision, null, null);
+                opResult = new IntegerValue.Builder().setValue(ocResult._result)
+                                                     .setPrecision(precision)
+                                                     .build();
             } else {
                 //  must be floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
@@ -119,7 +121,9 @@ public class MultiplicationOperator extends ArithmeticOperator {
                 double opLeft = iopLeft.getSigned() == Signed.Negative ? (0 - iopLeft.getValue()) : iopLeft.getValue();
                 double opRight = iopRight.getSigned() == Signed.Negative ? (0 - iopRight.getValue()) : iopRight.getValue();
                 double result = opLeft * opRight;
-                opResult = new FloatingPointValue(result, false, Signed.None, precision);
+                opResult = new FloatingPointValue.Builder().setValue(result)
+                                                           .setPrecision(precision)
+                                                           .build();
             }
 
             valueStack.push(opResult);

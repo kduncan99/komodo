@@ -22,8 +22,8 @@ public class Test_ConcatenationOperator {
     public void simple_ASCII(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue("ABC"));
-        valueStack.push(new StringValue("DEF"));
+        valueStack.push(new StringValue.Builder().setValue("ABC").build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").build());
 
         Context context = new Context();
         Diagnostics diags = new Diagnostics();
@@ -46,8 +46,8 @@ public class Test_ConcatenationOperator {
     public void simple_Fdata(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue("ABC", CharacterMode.Fieldata));
-        valueStack.push(new StringValue("DEF", CharacterMode.Fieldata));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.Fieldata).build());
 
         Context context = new Context();
         context.setCharacterMode(CharacterMode.Fieldata);
@@ -71,8 +71,8 @@ public class Test_ConcatenationOperator {
     public void simple_mixed(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue("ABC", CharacterMode.Fieldata));
-        valueStack.push(new StringValue("DEF", CharacterMode.ASCII));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.ASCII).build());
 
         Context context = new Context();
         Diagnostics diags = new Diagnostics();
@@ -95,8 +95,8 @@ public class Test_ConcatenationOperator {
     public void integer_ASCII(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue(0_101_102_103_104l));
-        valueStack.push(new IntegerValue(0_105_106_107_110l));
+        valueStack.push(new IntegerValue.Builder().setValue(0_101_102_103_104l).build());
+        valueStack.push(new IntegerValue.Builder().setValue(0_105_106_107_110l).build());
 
         Context context = new Context();
         Diagnostics diags = new Diagnostics();
@@ -119,8 +119,8 @@ public class Test_ConcatenationOperator {
     public void integer_Fdata(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue(0_06_07_10_11_12_13l, false, Signed.None, Precision.None, null, null));
-        valueStack.push(new IntegerValue(0_14_15_16_17_20_21l, false, Signed.None, Precision.Double, null, null));
+        valueStack.push(new IntegerValue.Builder().setValue(0_06_07_10_11_12_13l).build());
+        valueStack.push(new IntegerValue.Builder().setValue(0_14_15_16_17_20_21l).setPrecision(Precision.Double).build());
 
         Context context = new Context();
         context.setCharacterMode(CharacterMode.Fieldata);
@@ -149,8 +149,8 @@ public class Test_ConcatenationOperator {
         };
 
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue(0_06_07_10_11_12_13l, false, Signed.None, Precision.None, null, null));
-        valueStack.push(new IntegerValue(doubleWord, false, Signed.None, Precision.Single, null, null));
+        valueStack.push(new IntegerValue.Builder().setValue(0_06_07_10_11_12_13l).build());
+        valueStack.push(new IntegerValue.Builder().setValue(doubleWord).setPrecision(Precision.Single).build());
 
         Context context = new Context();
         context.setCharacterMode(CharacterMode.Fieldata);
@@ -177,8 +177,8 @@ public class Test_ConcatenationOperator {
     public void incompatibleType(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue("ABC", false, Signed.None, Precision.None, CharacterMode.ASCII));
-        valueStack.push(new FloatingPointValue(1.0, false, Signed.None, Precision.None));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.ASCII).build());
+        valueStack.push(new FloatingPointValue.Builder().setValue(1.0).build());
 
         Context context = new Context();
         Diagnostics diags = new Diagnostics();

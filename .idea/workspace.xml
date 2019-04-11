@@ -2,249 +2,57 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9b880716-c31f-448c-9c99-d38ba345c67e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ByteDiskController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ChannelModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/Controller.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/Device.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/DiskDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/FileSystemDiskDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/FileSystemTapeDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InputOutputProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InstructionProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InventoryManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/MainStorageProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/Node.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/Processor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/SoftwareChannelModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/TapeController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/TapeDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/WordDiskController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/AddressLimitsException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/CannotConnectException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/InvalidBlockSizeException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/InvalidTrackCountException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/MaxNodesException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/NodeNameConflictException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/StorageLockException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/UPIConflictException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/UPINotAssignedException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/UPIProcessorTypeException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/exceptions/UnresolvedAddressException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/FunctionTable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/SubFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/SubSubFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/AAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ADD1FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/AHFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/AMAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANHFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANMAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANTFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANUFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ANXFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ATFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/AUFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/AXFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DANFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DEC2FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DECFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DFFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/DSFFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/ENZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/INC2FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/INCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/MFFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/MIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/MSIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/fixedPointBinary/SUB1FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/DLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/DLMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/DLNFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LAQWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LMAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LNAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LNMAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LRFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LRSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LSBLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LSBOFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LXFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LXIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LXLMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LXMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalLoad/LXSIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/DSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SAQWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SASFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SAZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SFSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SFZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SMAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SN1FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SNAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SNZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SP1FunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SRFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SRSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SXFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/DJZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/HJFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/HLTJFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JDFFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JFOFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JFUFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JGDFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JKFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JMGIFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNDFFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNFOFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNFUFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNOFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JNZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JOFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JPSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/JZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/LMJFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/jump/SLJFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/logical/ANDFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/logical/MLUFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/logical/ORFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/logical/XORFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/DLSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/DSAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/DSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/DSLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/LDSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/LDSLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/LSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/LSSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/LSSLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/SSAFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/SSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/shift/SSLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/special/NOPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/systemControl/IARFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/systemControl/IPCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/systemControl/SPIDFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/systemControl/SYSCFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/DTEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/DTGMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MATGFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MATLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTGFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTLEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTNEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTNWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/MTWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TCSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TEPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TGFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TGMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TGZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TLEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TLEMFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TLZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TMZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TMZGFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNEFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNGZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNLZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNMZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNOPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNPZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TNZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TOPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TPZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TPZLFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TSKPFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TSSFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TWFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/test/TZFunctionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/AddressingExceptionInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/ArithmeticExceptionInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/BreakpointInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/DataExceptionInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/DayclockInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/DiagnosticInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/HardwareCheckInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/HardwareDefaultInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/InitialProgramLoadInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/InvalidInstructionInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/JumpHistoryFullInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/MachineInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/OperationTrapInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/QuantumTimerInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/RCSGenericStackUnderflowOverflowInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/ReferenceViolationInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/SignalInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/SoftwareBreakInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/TerminalAddressingExceptionInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/TestAndSetInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/UPIInitialInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/UPINormalInterrupt.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AbsoluteAddress.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AccessInfo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AccessPermissions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/BankDescriptor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/BaseRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/BreakpointRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/DesignatorRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/IndicatorKeyRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/ProgramAddressRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/VirtualAddress.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/TestProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_AbsoluteAddress.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteChannelModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteDiskController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_Controller.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_Device.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_DiskDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_FileSystemDiskDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_IndicatorKeyRegister.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Basic.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_FixedPointBinaryInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_GeneralLoadInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_GeneralStoreInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_JumpInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_LogicalInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_ShiftInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_TestInstructions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_Node.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_Processor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_TapeController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_WordChannelModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_WordDiskController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounter.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounterPool.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/NodeValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/NodeValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SLFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SLFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SRFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SRFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SSFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SSFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/TYPEFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/TYPEFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessThanOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessThanOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NotOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NotOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/textParser/TextField.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/textParser/TextLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/textParser/TextParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/textParser/TextSubfield.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextSubfield.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Assembler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_SLFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_SLFunction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_AdditionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_AdditionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/textParser/Test_Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/textParser/Test_TextField.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/textParser/Test_TextLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/textParser/Test_TextSubfield.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextSubfield.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -279,7 +87,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Notes.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
+            <state>
               <caret line="5" selection-start-line="5" selection-end-line="5" />
             </state>
           </provider>
@@ -288,8 +96,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InstructionProcessor.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="97">
-              <caret line="1236" lean-forward="true" selection-start-line="1236" selection-end-line="1236" />
+            <state relative-caret-position="-7">
+              <caret line="1236" selection-start-line="1236" selection-end-line="1236" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -300,7 +108,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3955">
+            <state relative-caret-position="-7">
               <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
             </state>
           </provider>
@@ -309,8 +117,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="45" column="46" lean-forward="true" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
+            <state relative-caret-position="-7">
+              <caret line="45" column="46" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -318,20 +126,14 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="17" selection-start-line="17" selection-end-line="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounter.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="32" column="7" lean-forward="true" selection-start-line="32" selection-start-column="7" selection-end-line="32" selection-end-column="7" />
+            <state relative-caret-position="480">
+              <caret line="59" selection-start-line="59" selection-end-line="59" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -366,20 +168,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/GeneralRegisterSet.java" />
-        <option value="$PROJECT_DIR$/baselib/src/test/java/com/kadware/em2200/baselib/test/Test_InstructionWord.java" />
-        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java" />
-        <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/baselib/pom.xml" />
-        <option value="$PROJECT_DIR$/minalib/pom.xml" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InputOutputProcessor.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ChannelModule.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/ChannelProgram.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ByteDiskController.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/TapeController.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/WordDiskController.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_WordChannelModule.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/pom.xml" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteChannelModule.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteDiskController.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_TapeController.java" />
@@ -390,7 +178,47 @@
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_FileSystemDiskDevice.java" />
         <option value="$PROJECT_DIR$/Notes.txt" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounterPool.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/NodeValue.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SLFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SRFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SSFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/TYPEFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessThanOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NotOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_AdditionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Assembler.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_SLFunction.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java" />
+        <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java" />
       </list>
     </option>
   </component>
@@ -424,110 +252,6 @@
             <path>
               <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
               <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="misc" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200" type="462c0819:PsiDirectoryNode" />
               <item name="minalib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -559,6 +283,68 @@
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="minalib" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="diagnostics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="dictionary" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="exceptions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+              <item name="builtInFunctions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+              <item name="operators" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="em2200" type="b2602c69:ProjectViewProjectNode" />
@@ -617,7 +403,12 @@
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Java" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.kadware.em2200.minalib" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -631,64 +422,64 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode">
-    <configuration name="Test_FileSystemDiskDevice" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
+  <component name="RunManager" selected="JUnit.com.kadware.em2200.minalib in minalib">
+    <configuration name="Test_Assembler" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_FileSystemDiskDevice" />
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_Assembler" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_FileSystemDiskDevice.ioReset_successful" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
+    <configuration name="Test_Assembler.noSource" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_FileSystemDiskDevice" />
-      <option name="METHOD_NAME" value="ioReset_successful" />
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_Assembler" />
+      <option name="METHOD_NAME" value="noSource" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
+    <configuration name="Test_Parser" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="immediateUnsigned_BasicMode" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_Parser" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="com.kadware.em2200.hardwarelib.test in hardwarelib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
+    <configuration name="Test_TextSubfield" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="TEST_OBJECT" value="package" />
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_TextSubfield" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -709,11 +500,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" />
         <item itemvalue="JUnit.com.kadware.em2200.minalib in minalib" />
-        <item itemvalue="JUnit.Test_FileSystemDiskDevice" />
-        <item itemvalue="JUnit.com.kadware.em2200.hardwarelib.test in hardwarelib" />
-        <item itemvalue="JUnit.Test_FileSystemDiskDevice.ioReset_successful" />
+        <item itemvalue="JUnit.Test_Parser" />
+        <item itemvalue="JUnit.Test_Assembler" />
+        <item itemvalue="JUnit.Test_Assembler.noSource" />
+        <item itemvalue="JUnit.Test_TextSubfield" />
       </list>
     </recent_temporary>
   </component>
@@ -728,23 +519,11 @@
       <option name="presentableId" value="Default" />
       <updated>1554841606330</updated>
       <workItem from="1554841611232" duration="2306000" />
-      <workItem from="1554844018642" duration="19655000" />
+      <workItem from="1554844018642" duration="33112000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test_FileSystemDiskDevice_ioReset_successful - 2019.04.10 at 11h 04m 30s.xml">
-      <configuration name="Test_FileSystemDiskDevice.ioReset_successful" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_FileSystemDiskDevice - 2019.04.10 at 11h 21m 54s.xml">
-      <configuration name="Test_FileSystemDiskDevice" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_FileSystemDiskDevice - 2019.04.10 at 11h 40m 11s.xml">
-      <configuration name="Test_FileSystemDiskDevice" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_FileSystemDiskDevice - 2019.04.10 at 11h 40m 58s.xml">
-      <configuration name="Test_FileSystemDiskDevice" configurationId="JUnit" />
-    </history-entry>
     <history-entry file="com_kadware_em2200_hardwarelib_test_in_hardwarelib - 2019.04.10 at 11h 48m 47s.xml">
       <configuration name="com.kadware.em2200.hardwarelib.test in hardwarelib" configurationId="JUnit" />
     </history-entry>
@@ -763,15 +542,27 @@
     <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.10 at 12h 02m 03s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
+    <history-entry file="Test_Assembler_noSource - 2019.04.10 at 18h 59m 42s.xml">
+      <configuration name="Test_Assembler.noSource" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_Assembler - 2019.04.10 at 19h 00m 01s.xml">
+      <configuration name="Test_Assembler" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_Parser - 2019.04.10 at 19h 00m 17s.xml">
+      <configuration name="Test_Parser" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="com_kadware_em2200_minalib_in_minalib - 2019.04.10 at 19h 00m 28s.xml">
+      <configuration name="com.kadware.em2200.minalib in minalib" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21961000" />
+    <option name="totallyTimeSpent" value="35418000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="178" y="0" width="1557" height="1016" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23246492" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2765531" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -807,305 +598,352 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="uml://MODULES/mdl-baselib">
-      <provider selected="true" editor-type-id="UmlEditorProvider">
-        <state>
-          <ID>MODULES</ID>
-          <OriginalElement>mdl-baselib</OriginalElement>
-          <nodes>
-            <node x="" y="">mdl-baselib</node>
-          </nodes>
-          <notes />
-          <edges />
-          <settings layout="Hierarchic Group" zoom="1.0" x="55.0" y="10.0" />
-          <SelectedNodes />
-          <Categories />
-          <SCOPE>All</SCOPE>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/GeneralRegisterSet.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="157" selection-start-line="157" selection-end-line="157" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baselib/src/test/java/com/kadware/em2200/baselib/test/Test_InstructionWord.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baselib/src/test/java/com/kadware/em2200/baselib/test/Test_IndexRegister.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="15" selection-start-line="15" selection-end-line="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/CASFunction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-693">
-          <caret line="15" column="13" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="25" selection-start-line="25" selection-end-line="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="31" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baselib/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="86">
-          <caret line="6" column="35" selection-start-line="6" selection-start-column="35" selection-end-line="6" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="479">
-          <caret line="42" selection-start-line="25" selection-end-line="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/generalStore/SAZFunctionHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="23" column="48" selection-start-line="23" selection-start-column="48" selection-end-line="23" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InputOutputProcessor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/ChannelProgram.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-          <folding>
-            <element signature="e#0#145#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/SoftwareByteChannelModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="71" lean-forward="true" selection-start-line="71" selection-end-line="71" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/SoftwareWordChannelModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="4" lean-forward="true" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/WordDiskController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="67" column="27" selection-start-line="67" selection-start-column="27" selection-end-line="67" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/TapeController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="69" column="21" selection-start-line="69" selection-start-column="21" selection-end-line="69" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ByteDiskController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="69" column="21" selection-start-line="69" selection-start-column="21" selection-end-line="69" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/ChannelModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="40" lean-forward="true" selection-start-line="40" selection-end-line="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_WordChannelModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="423">
-          <caret line="132" selection-start-line="20" selection-end-line="132" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_Processor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="13" column="13" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AccessPermissions.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AccessInfo.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_WordDiskController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="32" lean-forward="true" selection-start-line="32" selection-end-line="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_TapeController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="26" column="10" selection-start-line="26" selection-start-column="10" selection-end-line="26" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteDiskController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="45" column="14" selection-start-line="45" selection-start-column="14" selection-end-line="45" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_ByteChannelModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="582" lean-forward="true" selection-start-line="582" selection-end-line="582" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="36" column="20" lean-forward="true" selection-start-line="36" selection-start-column="20" selection-end-line="36" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/misc/AbsoluteAddress.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-816">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/FileSystemDiskDevice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-425">
-          <caret line="112" selection-start-line="112" selection-end-line="112" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/util/TreeMap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="348" selection-start-line="348" selection-end-line="348" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/Device.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="552" selection-start-line="552" selection-end-line="552" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_FileSystemDiskDevice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="1157" selection-start-line="1157" selection-end-line="1157" />
-          <folding>
-            <element signature="e#0#42898#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Notes.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" selection-start-line="5" selection-end-line="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InstructionProcessor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="97">
-          <caret line="1236" lean-forward="true" selection-start-line="1236" selection-end-line="1236" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3955">
+        <state relative-caret-position="-7">
           <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="45" column="46" lean-forward="true" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
+        <state relative-caret-position="-7">
+          <caret line="45" column="46" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/Word36.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounterPool.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="18" column="18" lean-forward="true" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Locale.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="802">
+          <caret line="62" selection-start-line="62" selection-end-line="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/RelocationInfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="20" selection-start-line="15" selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="745">
+          <caret line="371" selection-start-line="371" selection-end-line="371" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="711">
+          <caret line="240" selection-start-line="240" selection-end-line="240" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/NodeValue.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/FatalDiagnostic.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/QuoteDiagnostic.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/TYPEFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="346">
+          <caret line="91" selection-start-line="91" selection-end-line="91" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SSFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="346">
+          <caret line="139" selection-start-line="139" selection-end-line="139" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SRFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="410">
+          <caret line="110" selection-start-line="110" selection-end-line="110" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SLFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="86" selection-start-line="86" selection-end-line="86" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="385">
+          <caret line="58" column="60" selection-start-line="58" selection-start-column="60" selection-end-line="58" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="58" column="12" selection-start-line="58" selection-start-column="12" selection-end-line="58" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="449">
+          <caret line="61" selection-start-line="61" selection-end-line="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="426">
+          <caret line="135" selection-start-line="135" selection-end-line="135" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="78" selection-start-line="78" selection-end-line="78" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="394">
+          <caret line="81" selection-start-line="81" selection-end-line="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1146">
+          <caret line="118" selection-start-line="118" selection-end-line="118" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="426">
+          <caret line="137" selection-start-line="137" selection-end-line="137" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="346">
+          <caret line="47" column="54" selection-start-line="47" selection-start-column="54" selection-end-line="47" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessThanOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="108" selection-start-line="108" selection-end-line="108" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NegativeOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="81" selection-start-line="81" selection-end-line="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NotOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="81" selection-start-line="81" selection-end-line="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="449">
+          <caret line="81" selection-start-line="81" selection-end-line="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="337">
+          <caret line="100" selection-start-line="100" selection-end-line="100" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="394">
+          <caret line="122" selection-start-line="122" selection-end-line="122" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="79" column="54" selection-start-line="79" selection-start-column="54" selection-end-line="79" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="426">
+          <caret line="722" selection-start-line="722" selection-end-line="722" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_CASFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="362">
+          <caret line="39" column="31" selection-start-line="39" selection-start-column="31" selection-end-line="39" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/builtInFunctions/Test_SLFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="385">
+          <caret line="39" selection-start-line="39" selection-end-line="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="22" column="46" selection-start-line="22" selection-start-column="46" selection-end-line="22" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_AdditionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="317">
+          <caret line="97" column="79" selection-start-line="97" selection-start-column="79" selection-end-line="97" selection-end-column="79" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="175" column="9" lean-forward="true" selection-start-line="175" selection-start-column="9" selection-end-line="175" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Assembler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
+        <state relative-caret-position="128">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="55" selection-start-line="55" selection-end-line="55" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="32" column="7" lean-forward="true" selection-start-line="32" selection-start-column="7" selection-end-line="32" selection-end-column="7" />
+        <state relative-caret-position="480">
+          <caret line="59" selection-start-line="59" selection-end-line="59" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

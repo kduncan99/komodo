@@ -2,10 +2,10 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.minalib.textParser;
+package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.textParser.TextField;
-import com.kadware.em2200.minalib.textParser.TextSubfield;
+import com.kadware.em2200.minalib.TextField;
+import com.kadware.em2200.minalib.TextSubfield;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.Locale;
 import org.junit.Test;

@@ -2,9 +2,11 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.minalib.textParser;
+package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.minalib.Locale;
+import com.kadware.em2200.minalib.TextField;
+import com.kadware.em2200.minalib.TextLine;
 import com.kadware.em2200.minalib.diagnostics.*;
 import org.junit.Test;
 import static org.junit.Assert.*;

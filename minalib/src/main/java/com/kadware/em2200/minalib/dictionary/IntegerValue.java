@@ -17,81 +17,97 @@ import java.math.BigInteger;
  */
 public class IntegerValue extends Value {
 
+    public static class Builder {
+        private boolean _flagged = false;
+        private Form _form = null;
+        private Precision _precision = Precision.None;
+        private Signed _signed = Signed.None;
+        private RelocationInfo _relocatableInfo = null;
+        private long[] _value = new long[2];
+
+        public Builder setFlagged(
+            final boolean flagged
+        ) {
+            _flagged = flagged;
+            return this;
+        }
+
+        public Builder setForm(
+            final Form form
+        ) {
+            _form = form;
+            return this;
+        }
+
+        public Builder setPrecision(
+            final Precision precision
+        ) {
+            _precision = precision;
+            return this;
+        }
+
+        public Builder setSigned(
+            final Signed signed
+        ) {
+            _signed = signed;
+            return this;
+        }
+
+        public Builder setRelocationInfo(
+            final RelocationInfo relocationInfo
+        ) {
+            _relocatableInfo = relocationInfo;
+            return this;
+        }
+
+        public Builder setValue(
+            final long value
+        ) {
+            _value[0] = (value >> 36);
+            _value[1] = value & 0_777777_777777l;
+            return this;
+        }
+
+        public Builder setValue(
+            final long[] value
+        ) {
+            assert(value.length == 2);
+            _value[0] = value[0];
+            _value[1] = value[1];
+            return this;
+        }
+
+        public IntegerValue build(
+        ) {
+            return new IntegerValue(_flagged, _signed, _precision, _form, _relocatableInfo, _value);
+        }
+    }
+
     // [0] is MS 36-bit Word, [1] is LS 36-bit Word
     private final long[] _value;
 
     /**
-     * Simple constructor - good for many purposes
+     * constructor
      * <p>
-     * @param value
+     * @param flagged - leading asterisk
+     * @param signed - is this signed? pos or neg?
+     * @param precision - only affects things at value generation time
+     * @param form - null if no Form is attached
+     * @param relInfo - null if no Relocation information is attached
+     * @param value - two 36-bit values making up the 72-bit value
      */
-    public IntegerValue(
+    private IntegerValue(
+        final boolean flagged,
+        final Signed signed,
+        final Precision precision,
+        final Form form,
+        final RelocationInfo relInfo,
         final long[] value
     ) {
-        super(false, Signed.None, Precision.None, null, null);
-        _value = new long[2];
-        OnesComplement.copy72(value, _value);
-    }
-
-    /**
-     * As above, even simpler for positive integers which fit within 64 bits
-     * <p>
-     * @param value
-     */
-    public IntegerValue(
-        final long value
-    ) {
-        super(false, Signed.None, Precision.None, null, null);
-        _value = new long[2];
-        _value[0] = (value >> 36);
-        _value[1] = value & 0_777777_777777l;
-    }
-
-    /**
-     * constructor
-     * <p>
-     * @param value - 72-bit value
-     * @param flagged - leading asterisk
-     * @param signed - is this signed? pos or neg?
-     * @param precision - only affects things at value generation time
-     * @param form - null if no Form is attached
-     * @param relInfo - null if no Relocation information is attached
-     */
-    public IntegerValue(
-        final long[] value,
-        final boolean flagged,
-        final Signed signed,
-        final Precision precision,
-        final Form form,
-        final RelocationInfo relInfo
-    ) {
         super(flagged, signed, precision, form, relInfo);
         _value = new long[2];
-        OnesComplement.copy72(value, _value);
-    }
-
-    /**
-     * constructor
-     * <p>
-     * @param value - 64 bit value - don't let it go negative, your results will be sketchy
-     * @param flagged - leading asterisk
-     * @param signed - is this signed? pos or neg?
-     * @param precision - only affects things at value generation time
-     * @param form - null if no Form is attached
-     * @param relInfo - null if no Relocation information is attached
-     */
-    public IntegerValue(
-        final long value,
-        final boolean flagged,
-        final Signed signed,
-        final Precision precision,
-        final Form form,
-        final RelocationInfo relInfo
-    ) {
-        super(flagged, signed, precision, form, relInfo);
-        _value = new long[2];
-        _value[0] = (value >> 36);
-        _value[1] = value & 0_777777_777777l;
+        _value[0] = value[0];
+        _value[1] = value[1];
     }
 
     /**
@@ -143,7 +159,7 @@ public class IntegerValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new IntegerValue(_value, newFlagged, getSigned(), getPrecision(), getForm(), getRelocationInfo());
+        return new IntegerValue(newFlagged, getSigned(), getPrecision(), getForm(), getRelocationInfo(), _value);
     }
 
     /**
@@ -157,7 +173,7 @@ public class IntegerValue extends Value {
     public Value copy(
         final Signed newSigned
     ) {
-        return new IntegerValue(_value, getFlagged(), newSigned, getPrecision(), getForm(), getRelocationInfo());
+        return new IntegerValue(getFlagged(), newSigned, getPrecision(), getForm(), getRelocationInfo(), _value);
     }
 
     /**
@@ -171,7 +187,7 @@ public class IntegerValue extends Value {
     public Value copy(
         final Precision newPrecision
     ) {
-        return new IntegerValue(_value, getFlagged(), getSigned(), newPrecision, getForm(), getRelocationInfo());
+        return new IntegerValue(getFlagged(), getSigned(), newPrecision, getForm(), getRelocationInfo(), _value);
     }
 
     /**
@@ -281,7 +297,8 @@ public class IntegerValue extends Value {
     ) {
         //????TODO - Not sure how we're going to do this, but this *might* work
         BigInteger bi = OnesComplement.getNative72(_value);
-        return new FloatingPointValue(bi.doubleValue(), false, Signed.None, Precision.None);
+        return new FloatingPointValue.Builder().setValue(bi.doubleValue())
+                                               .build();
     }
 
     /**
@@ -347,6 +364,9 @@ public class IntegerValue extends Value {
             }
         }
 
-        return new StringValue(str, false, Signed.None, getPrecision(), characterMode);
+        return new StringValue.Builder().setValue(str)
+                                        .setCharacterMode(characterMode)
+                                        .setPrecision(getPrecision())
+                                        .build();
     }
 }

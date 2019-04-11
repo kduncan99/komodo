@@ -90,6 +90,7 @@ public class TYPEFunction extends BuiltInFunction {
             case BuiltInFunction:   iType = 9; break;
         }
 
-        return new IntegerValue(iType, false, Signed.None, Precision.None, null, null);
+        return new IntegerValue.Builder().setValue(iType)
+                                         .build();
     }
 }

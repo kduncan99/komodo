@@ -17,52 +17,72 @@ import java.math.BigInteger;
  */
 public class StringValue extends Value {
 
+    public static class Builder {
+        private CharacterMode _characterMode = CharacterMode.ASCII;
+        private boolean _flagged = false;
+        private Precision _precision = Precision.None;
+        private Signed _signed = Signed.None;
+        private String _value;
+
+        public Builder setCharacterMode(
+            final CharacterMode characterMode
+        ) {
+            _characterMode = characterMode;
+            return this;
+        }
+
+        public Builder setFlagged(
+            final boolean flagged
+        ) {
+            _flagged = flagged;
+            return this;
+        }
+
+        public Builder setPrecision(
+            final Precision precision
+        ) {
+            _precision = precision;
+            return this;
+        }
+
+        public Builder setSigned(
+            final Signed signed
+        ) {
+            _signed = signed;
+            return this;
+        }
+
+        public Builder setValue(
+            final String value
+        ) {
+            _value = value;
+            return this;
+        }
+
+        public StringValue build(
+        ) {
+            return new StringValue(_flagged, _signed, _precision, _characterMode, _value);
+        }
+    }
+
     private final CharacterMode _characterMode;
     private final String _value;
 
     /**
-     * Simple constructor, useful in many areas
-     * <p>
-     * @param value
-     * @param characterMode
-     */
-    public StringValue(
-        final String value,
-        final CharacterMode characterMode
-    ) {
-        super(false, Signed.None, Precision.None, null, null);
-        _characterMode = characterMode;
-        _value = value;
-    }
-
-    /**
-     * Simpler constructor, but be careful that you realize it defaults to ASCII
-     * <p>
-     * @param value
-     */
-    public StringValue(
-        final String value
-    ) {
-        super(false, Signed.None, Precision.None, null, null);
-        _characterMode = CharacterMode.ASCII;
-        _value = value;
-    }
-
-    /**
      * constructor
      * <p>
-     * @param value actual string content
      * @param flagged (leading asterisk)
      * @param signed
      * @param precision
      * @param characterMode ASCII or Fieldata
+     * @param value actual string content
      */
-    public StringValue(
-        final String value,
+    private StringValue(
         final boolean flagged,
         final Signed signed,
         final Precision precision,
-        final CharacterMode characterMode
+        final CharacterMode characterMode,
+        final String value
     ) {
         super(flagged, signed, precision, null, null);
         _characterMode = characterMode;
@@ -104,7 +124,7 @@ public class StringValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new StringValue(_value, newFlagged, getSigned(), getPrecision(), _characterMode);
+        return new StringValue(newFlagged, getSigned(), getPrecision(), _characterMode, _value);
     }
 
     /**
@@ -118,7 +138,7 @@ public class StringValue extends Value {
     public Value copy(
         final Signed newSigned
     ) {
-        return new StringValue(_value, getFlagged(), newSigned, getPrecision(), _characterMode);
+        return new StringValue(getFlagged(), newSigned, getPrecision(), _characterMode, _value);
     }
 
     /**
@@ -132,7 +152,7 @@ public class StringValue extends Value {
     public Value copy(
         final Precision newPrecision
     ) {
-        return new StringValue(_value, getFlagged(), getSigned(), newPrecision, _characterMode);
+        return new StringValue(getFlagged(), getSigned(), newPrecision, _characterMode, _value);
     }
 
     /**
@@ -145,7 +165,7 @@ public class StringValue extends Value {
     public Value copy(
         final CharacterMode newMode
     ) {
-        return new StringValue(_value, getFlagged(), getSigned(), getPrecision(), newMode);
+        return new StringValue(getFlagged(), getSigned(), getPrecision(), newMode, _value);
     }
 
     /**
@@ -270,7 +290,9 @@ public class StringValue extends Value {
         }
 
         BigInteger bi = OnesComplement.getNative72(result);
-        return new FloatingPointValue(bi.doubleValue(), false, Signed.None, getPrecision());
+        return new FloatingPointValue.Builder().setValue(bi.doubleValue())
+                                               .setPrecision(getPrecision())
+                                               .build();
     }
 
     /**
@@ -310,7 +332,9 @@ public class StringValue extends Value {
             }
         }
 
-        return new IntegerValue(result, false, Signed.None, getPrecision(), null, null);
+        return new IntegerValue.Builder().setValue(result)
+                                         .setPrecision(getPrecision())
+                                         .build();
     }
 
     /**

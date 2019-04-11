@@ -111,7 +111,9 @@ public class AdditionOperator extends ArithmeticOperator {
                     diagnostics.append(new TruncationDiagnostic(getLocale(), "Result larger than 36 bits"));
                 }
 
-                opResult = new IntegerValue(ocResult._sum, false, Signed.None, precision, null, relocInfo);
+                opResult = new IntegerValue.Builder().setValue(ocResult._sum)
+                                                     .setRelocationInfo(relocInfo)
+                                                     .build();
             } else {
                 //  must be floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
@@ -128,7 +130,8 @@ public class AdditionOperator extends ArithmeticOperator {
                 double opLeft = iopLeft.getSigned() == Signed.Negative ? (0 - iopLeft.getValue()) : iopLeft.getValue();
                 double opRight = iopRight.getSigned() == Signed.Negative ? (0 - iopRight.getValue()) : iopRight.getValue();
                 double result = opLeft + opRight;
-                opResult = new FloatingPointValue(result, false, Signed.None, Precision.None);
+                opResult = new FloatingPointValue.Builder().setValue(result)
+                                                           .build();
             }
 
             valueStack.push(opResult);

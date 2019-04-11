@@ -72,12 +72,12 @@ public class NotOperator extends Operator {
                 case String:
                     IntegerValue interim = operand.toIntegerValue(getLocale(), diagnostics);
                     long newValue = OnesComplement.isZero72(interim.getValue()) ? 1 : 0;
-                    valueStack.push(new IntegerValue(newValue,
-                                                     false,
-                                                     interim.getSigned(),
-                                                     interim.getPrecision(),
-                                                     interim.getForm(),
-                                                     interim.getRelocationInfo()));
+                    valueStack.push(new IntegerValue.Builder().setValue(newValue)
+                                                              .setSigned(interim.getSigned())
+                                                              .setPrecision(interim.getPrecision())
+                                                              .setForm(interim.getForm())
+                                                              .setRelocationInfo(interim.getRelocationInfo())
+                                                              .build());
                     break;
 
                 default:

@@ -46,7 +46,7 @@ public class NodeValue extends Value {
     public NodeValue(
         final boolean flagged
     ) {
-        super(flagged);
+        super(flagged, Signed.None, Precision.None, null, null);
     }
 
     /**

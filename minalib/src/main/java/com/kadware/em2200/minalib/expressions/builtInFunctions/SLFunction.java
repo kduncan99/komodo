@@ -83,6 +83,7 @@ public class SLFunction extends BuiltInFunction {
         }
 
         StringValue sarg = (StringValue)arguments[0];
-        return new IntegerValue(sarg.getValue().length(), false, Signed.None, Precision.None, null, null);
+        return new IntegerValue.Builder().setValue(sarg.getValue().length())
+                                         .build();
     }
 }

@@ -466,7 +466,8 @@ public class ExpressionParser {
             diagnostics.append(new TruncationDiagnostic(getLocale(), "Integer literal is too large"));
         }
 
-        return new ValueItem(new IntegerValue(ocResult._result, false, Signed.None, Precision.None, null, null));
+        return new ValueItem(new IntegerValue.Builder().setValue(ocResult._result)
+                                                       .build());
     }
 
     /**
@@ -682,8 +683,9 @@ public class ExpressionParser {
             throw new ExpressionException();
         }
 
-        Value v = new StringValue(sb.toString(), false, Signed.None, Precision.None, context.getCharacterMode());
-        return new ValueItem(v);
+        return new ValueItem(new StringValue.Builder().setValue(sb.toString())
+                                                      .setCharacterMode(context.getCharacterMode())
+                                                      .build());
     }
 
 

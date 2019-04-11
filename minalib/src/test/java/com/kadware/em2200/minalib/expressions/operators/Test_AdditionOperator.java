@@ -25,9 +25,9 @@ public class Test_AdditionOperator {
         long[] value2 = { 0, 02 };
         long[] expValue = { 0, 03 };
 
-        Value addend1 = new IntegerValue(value1);
-        Value addend2 = new IntegerValue(value2);
-        Value expected = new IntegerValue(expValue);
+        Value addend1 = new IntegerValue.Builder().setValue(value1).build();
+        Value addend2 = new IntegerValue.Builder().setValue(value2).build();
+        Value expected = new IntegerValue.Builder().setValue(expValue).build();
 
         Stack<Value> values = new Stack<>();
         values.push(addend1);
@@ -59,9 +59,9 @@ public class Test_AdditionOperator {
         long[] value2 = { 0_777777_777777l, 0_777777_777770l };
         long[] expValue = { 0, 010 };
 
-        Value addend1 = new IntegerValue(value1);
-        Value addend2 = new IntegerValue(value2);
-        Value expected = new IntegerValue(expValue);
+        Value addend1 = new IntegerValue.Builder().setValue(value1).build();
+        Value addend2 = new IntegerValue.Builder().setValue(value2).build();
+        Value expected = new IntegerValue.Builder().setValue(expValue).build();
 
         Stack<Value> values = new Stack<>();
         values.push(addend1);
@@ -93,9 +93,9 @@ public class Test_AdditionOperator {
         long[] value2 = { 0_777777_777777l, 0_777777_777770l };
         long[] expValue = { 0_777777_777777l, 0_777777_777767l };
 
-        Value addend1 = new IntegerValue(value1, false, Signed.Negative, Precision.None, null, null);
-        Value addend2 = new IntegerValue(value2, false, Signed.Negative, Precision.None, null, null);
-        Value expected = new IntegerValue(expValue);
+        Value addend1 = new IntegerValue.Builder().setValue(value1).setSigned(Signed.Negative).build();
+        Value addend2 = new IntegerValue.Builder().setValue(value2).setSigned(Signed.Negative).build();
+        Value expected = new IntegerValue.Builder().setValue(expValue).build();
 
         Stack<Value> values = new Stack<>();
         values.push(addend1);

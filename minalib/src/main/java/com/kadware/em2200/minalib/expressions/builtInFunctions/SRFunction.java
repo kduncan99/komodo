@@ -104,10 +104,8 @@ public class SRFunction extends BuiltInFunction {
             sb.append(sarg.getValue());
         }
 
-        return new StringValue(sb.toString(),
-                               false,
-                               Signed.None,
-                               Precision.None,
-                               sarg.getCharacterMode());
+        return new StringValue.Builder().setValue(sb.toString())
+                                        .setCharacterMode(sarg.getCharacterMode())
+                                        .build();
     }
 }

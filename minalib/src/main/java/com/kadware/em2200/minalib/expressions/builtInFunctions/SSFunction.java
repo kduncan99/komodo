@@ -133,11 +133,9 @@ public class SSFunction extends BuiltInFunction {
                 } while (sb.length() < ival2);
             }
 
-            return new StringValue(sb.toString(),
-                                   false,
-                                   Signed.None,
-                                   Precision.None,
-                                   sarg.getCharacterMode());
+            return new StringValue.Builder().setValue(sb.toString())
+                                            .setCharacterMode(sarg.getCharacterMode())
+                                            .build();
         } catch (ExpressionException ex) {
             diagnostics.append(new ErrorDiagnostic(getLocale(), ex.getMessage()));
             throw ex;

@@ -20,7 +20,7 @@ public class Test_Expression {
     public void parseSimpleValue(
     ) throws ExpressionException,
              NotFoundException {
-        Value val = new IntegerValue(42);
+        Value val = new IntegerValue.Builder().setValue(42).build();
         List<ExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(val));
         Expression exp = new Expression(items);
@@ -37,9 +37,9 @@ public class Test_Expression {
     public void parseSimpleMath(
     ) throws ExpressionException,
              NotFoundException {
-        Value addend1 = new IntegerValue(42);
-        Value addend2 = new IntegerValue(112);
-        Value expected = new IntegerValue(154);
+        Value addend1 = new IntegerValue.Builder().setValue(42).build();
+        Value addend2 = new IntegerValue.Builder().setValue(112).build();
+        Value expected = new IntegerValue.Builder().setValue(154).build();
 
         List<ExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(addend1));
@@ -60,10 +60,10 @@ public class Test_Expression {
     ) throws ExpressionException,
              NotFoundException {
         //  expression is 5 + 7 * 12...  it should be evaluated at 5 + (7 * 12) == 89
-        Value term1 = new IntegerValue(5);
-        Value term2 = new IntegerValue(7);
-        Value term3 = new IntegerValue(12);
-        Value expected = new IntegerValue(89);
+        Value term1 = new IntegerValue.Builder().setValue(5).build();
+        Value term2 = new IntegerValue.Builder().setValue(7).build();
+        Value term3 = new IntegerValue.Builder().setValue(12).build();
+        Value expected = new IntegerValue.Builder().setValue(89).build();
 
         List<ExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(term1));
