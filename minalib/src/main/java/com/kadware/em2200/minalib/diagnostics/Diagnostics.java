@@ -32,7 +32,7 @@ public class Diagnostics {
 
     /**
      * Appends a Diagnostic object to our container, updating our counters as appropriate
-     * @param diagnostic
+     * @param diagnostic Diagnostic to be appended
      */
     public void append(
         final Diagnostic diagnostic
@@ -41,13 +41,15 @@ public class Diagnostics {
         Integer counter = _counters.get(diagnostic.getLevel());
         if (counter == null) {
             counter = 1;
+        } else {
+            ++counter;
         }
         _counters.put(diagnostic.getLevel(), counter);
     }
 
     /**
      * Appends all the Diagnostic objects from one container into this container, updating our counters as appropriate
-     * @param diagnostics
+     * @param diagnostics Diagnostics object which has individual Diagnostic objects to be appended
      */
     public void append(
         final Diagnostics diagnostics
@@ -72,24 +74,7 @@ public class Diagnostics {
      */
     public Diagnostic[] getDiagnostics(
     ) {
-        return _diagnostics.toArray(new Diagnostic[_diagnostics.size()]);
-    }
-
-    /**
-     * Getter
-     * @return array of all diagnostics pertaining to a given line number
-     */
-    public Diagnostic[] getDiagnostics(
-        final int lineNumber
-    ) {
-        List<Diagnostic> diags = new LinkedList<>();
-        for (Diagnostic d : _diagnostics) {
-            if (d.getLocale().getLineNumber() == lineNumber) {
-                diags.add(d);
-            }
-        }
-
-        return diags.toArray(new Diagnostic[diags.size()]);
+        return _diagnostics.toArray(new Diagnostic[0]);
     }
 
     /**

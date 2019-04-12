@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.dictionary;
 
 import com.kadware.em2200.minalib.exceptions.*;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a collection of values, tagged with a label
@@ -26,10 +28,9 @@ public class Dictionary {
 
     /**
      * Constructor for any other dictionary
-     * <p>
-     * @param upperLevelDictionary
+     * @param upperLevelDictionary reference to higher level dictionary
      */
-    public Dictionary(
+    Dictionary(
         final Dictionary upperLevelDictionary
     ) {
         _upperLevelDictionary = upperLevelDictionary;
@@ -39,10 +40,9 @@ public class Dictionary {
      * Adds or replaces a value corresponding to the given label, in either this dictionary
      * or some higher-level dictionary.
      * The label will be folded to uppercase.
-     * <p>
      * @param level - zero means this dictionary, one means the next higher-level, etc.
-     * @param label
-     * @param value
+     * @param label label to be used
+     * @param value value to be associated with the label
      */
     public void addValue(
         final int level,
@@ -57,12 +57,23 @@ public class Dictionary {
     }
 
     /**
+     * Getter
+     * @return list of labels
+     */
+    public Set<String> getLabels(
+    ) {
+        Set<String> result = new TreeSet<>();
+        if (_upperLevelDictionary != null) {
+            result.addAll(_upperLevelDictionary.getLabels());
+        }
+        result.addAll(_values.keySet());
+        return result;
+    }
+
+    /**
      * Retrieves a particular Value object
-     * <p>
-     * @param label
-     * <p>
+     * @param label label to be retrieved
      * @return object if found
-     * <p>
      * @throws NotFoundException if the value is not found in this, or any upper-level dictionary
      */
     public Value getValue(
@@ -80,9 +91,7 @@ public class Dictionary {
 
     /**
      * Checks for the existence of a particular Value object
-     * <p>
-     * @param label
-     * <p>
+     * @param label label to be queried
      * @return true if object exists, else false
      */
     public boolean hasValue(
@@ -98,10 +107,8 @@ public class Dictionary {
      *      digits (but cannot start with a digit)
      *      '$'
      *      '_'
-     * <p>
-     * @param label
-     * <p>
-     * @return
+     * @param label label to be checked
+     * @return true if label is valid
      */
     public static boolean isValidLabel(
         final String label
@@ -115,10 +122,8 @@ public class Dictionary {
      *      digits (but cannot start with a digit)
      *      '$' (but cannot start with '$')
      *      '_'
-     * <p>
-     * @param label
-     * <p>
-     * @return
+     * @param label checks whether the label is valid
+     * @return true if label is valid
      */
     public static boolean isValidUserLabel(
         final String label

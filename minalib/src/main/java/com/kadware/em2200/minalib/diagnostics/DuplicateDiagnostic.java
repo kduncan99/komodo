@@ -25,6 +25,6 @@ public class DuplicateDiagnostic extends Diagnostic {
     @Override
     public Level getLevel(
     ) {
-        return Level.Error;
+        return Level.Duplicate;
     }
 }

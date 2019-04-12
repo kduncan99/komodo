@@ -2,13 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9b880716-c31f-448c-9c99-d38ba345c67e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextSubfield.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextSubfield.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -40,11 +40,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Notes.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="64">
-              <caret line="4" selection-start-line="4" selection-end-line="4" />
+            <state relative-caret-position="160">
+              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
             </state>
           </provider>
         </entry>
@@ -76,8 +76,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="277">
-              <caret line="43" column="21" lean-forward="true" selection-start-line="43" selection-start-column="21" selection-end-line="43" selection-end-column="21" />
+            <state relative-caret-position="373">
+              <caret line="43" column="32" lean-forward="true" selection-start-line="43" selection-start-column="32" selection-end-line="43" selection-end-column="32" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -97,24 +97,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="384">
-              <caret line="24" selection-start-line="24" selection-end-line="24" />
-              <folding>
-                <element signature="e#0#7630#0" expanded="true" />
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="25">
-              <caret line="38" selection-start-line="38" selection-end-line="38" />
+            <state relative-caret-position="537">
+              <caret line="71" selection-start-line="71" selection-end-line="71" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -142,6 +129,7 @@
       <find>private</find>
       <find>sValid</find>
       <find>.getFieldCount()</find>
+      <find>isValid</find>
     </findStrings>
     <replaceStrings>
       <replace>HashSet</replace>
@@ -160,7 +148,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" />
@@ -185,13 +172,11 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/Word36.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" />
-        <option value="$PROJECT_DIR$/Notes.txt" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Context.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LocationCounterPool.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/ValueDiagnostic.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostic.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextParser.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java" />
@@ -200,17 +185,20 @@
         <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Parser.java" />
         <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextLine.java" />
         <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/LocationCounterRelocationInfo.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/RelocationInfo.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
         <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextSubfield.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java" />
+        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
+        <option value="$PROJECT_DIR$/Notes.txt" />
       </list>
     </option>
   </component>
@@ -503,8 +491,24 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.com.kadware.em2200.minalib in minalib">
-    <configuration name="Test_TextField.parseSubFields_normal1" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode">
+    <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
+      <option name="METHOD_NAME" value="immediateUnsigned_BasicMode" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_TextField" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="minalib" />
       <extension name="coverage">
         <pattern>
@@ -514,8 +518,7 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_TextField" />
-      <option name="METHOD_NAME" value="parseSubFields_normal1" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -531,22 +534,6 @@
       <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_TextField" />
       <option name="METHOD_NAME" value="parseSubFields_normal2" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_TextField.parseSubfields_normal2" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="minalib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_TextField" />
-      <option name="METHOD_NAME" value="parseSubfields_normal2" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -584,11 +571,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" />
+        <item itemvalue="JUnit.Test_TextField" />
         <item itemvalue="JUnit.com.kadware.em2200.minalib in minalib" />
         <item itemvalue="JUnit.Test_TextField.parseSubfields_normal3" />
         <item itemvalue="JUnit.Test_TextField.parseSubFields_normal2" />
-        <item itemvalue="JUnit.Test_TextField.parseSubFields_normal1" />
-        <item itemvalue="JUnit.Test_TextField.parseSubfields_normal2" />
       </list>
     </recent_temporary>
   </component>
@@ -604,50 +591,49 @@
       <updated>1554841606330</updated>
       <workItem from="1554841611232" duration="2306000" />
       <workItem from="1554844018642" duration="49961000" />
-      <workItem from="1555022782058" duration="3865000" />
+      <workItem from="1555022782058" duration="7143000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test_TextField_parseSubFields_normal2 - 2019.04.11 at 17h 23m 22s.xml">
-      <configuration name="Test_TextField.parseSubFields_normal2" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 18h 33m 05s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubfields_normal3 - 2019.04.11 at 17h 24m 05s.xml">
-      <configuration name="Test_TextField.parseSubfields_normal3" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 18h 36m 12s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubFields_normal2 - 2019.04.11 at 17h 29m 28s.xml">
-      <configuration name="Test_TextField.parseSubFields_normal2" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 18h 36m 20s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubFields_normal2 - 2019.04.11 at 17h 31m 55s.xml">
-      <configuration name="Test_TextField.parseSubFields_normal2" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 18h 59m 43s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubFields_normal1 - 2019.04.11 at 17h 34m 13s.xml">
-      <configuration name="Test_TextField.parseSubFields_normal1" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 05m 07s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubFields_normal2 - 2019.04.11 at 17h 34m 27s.xml">
-      <configuration name="Test_TextField.parseSubFields_normal2" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 06m 59s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_TextField_parseSubfields_normal3 - 2019.04.11 at 17h 34m 37s.xml">
-      <configuration name="Test_TextField.parseSubfields_normal3" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 07m 35s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="com_kadware_em2200_minalib_in_minalib - 2019.04.11 at 17h 35m 50s.xml">
-      <configuration name="com.kadware.em2200.minalib in minalib" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 11m 50s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="com_kadware_em2200_minalib_in_minalib - 2019.04.11 at 17h 39m 10s.xml">
-      <configuration name="com.kadware.em2200.minalib in minalib" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 12m 56s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="com_kadware_em2200_minalib_in_minalib - 2019.04.11 at 17h 44m 51s.xml">
-      <configuration name="com.kadware.em2200.minalib in minalib" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.11 at 19h 13m 18s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="56132000" />
+    <option name="totallyTimeSpent" value="59410000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="178" y="0" width="1557" height="1016" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.28056112" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.28056112" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -656,7 +642,7 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32918552" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32352942" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32352942" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39932126" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -690,12 +676,6 @@
           <url>file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java</url>
           <properties />
           <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java</url>
-          <line>38</line>
-          <properties />
-          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -880,13 +860,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="261">
-          <caret line="110" lean-forward="true" selection-start-line="110" selection-end-line="110" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/ErrorDiagnostic.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -901,27 +874,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="1" column="20" lean-forward="true" selection-start-line="1" selection-start-column="20" selection-end-line="1" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostic.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="250">
           <caret line="92" column="51" lean-forward="true" selection-start-line="92" selection-start-column="51" selection-end-line="92" selection-end-column="51" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextParser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="75" column="37" selection-start-line="75" selection-start-column="37" selection-end-line="75" selection-end-column="37" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -960,16 +916,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="463">
-          <caret line="99" selection-start-line="99" selection-end-line="99" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/RelocationInfo.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="416">
@@ -991,13 +937,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="640">
           <caret line="43" selection-start-line="43" selection-end-line="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Notes.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
         </state>
       </provider>
     </entry>
@@ -1028,47 +967,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="277">
-          <caret line="43" column="21" lean-forward="true" selection-start-line="43" selection-start-column="21" selection-end-line="43" selection-end-column="21" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="25">
-          <caret line="38" selection-start-line="38" selection-end-line="38" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextLine.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="186">
           <caret line="84" selection-start-line="84" selection-end-line="84" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="91" selection-start-line="91" selection-end-line="91" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret lean-forward="true" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1077,6 +979,64 @@
         <state>
           <folding>
             <element signature="e#0#1773#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextField.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="864">
+          <caret line="91" selection-start-line="91" selection-end-line="91" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="75" column="37" selection-start-line="75" selection-start-column="37" selection-end-line="75" selection-end-column="37" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextField.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="112" selection-start-line="112" selection-end-line="112" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="156">
+          <caret line="167" selection-start-line="167" selection-end-line="167" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Dictionary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="42" selection-start-line="42" selection-end-line="42" />
+          <folding>
+            <element signature="e#0#3446#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/Diagnostics.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="448">
+          <caret line="47" selection-start-line="47" selection-end-line="47" />
+          <folding>
+            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1091,14 +1051,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/diagnostics/DuplicateDiagnostic.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="384">
-          <caret line="24" selection-start-line="24" selection-end-line="24" />
+        <state relative-caret-position="432">
+          <caret line="27" column="30" selection-start-line="27" selection-start-column="30" selection-end-line="27" selection-end-column="30" />
           <folding>
-            <element signature="e#0#7630#0" expanded="true" />
+            <element signature="e#0#644#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="537">
+          <caret line="71" selection-start-line="71" selection-end-line="71" />
+          <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="373">
+          <caret line="43" column="32" lean-forward="true" selection-start-line="43" selection-start-column="32" selection-end-line="43" selection-end-column="32" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Notes.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
         </state>
       </provider>
     </entry>

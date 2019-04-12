@@ -165,6 +165,8 @@ class TextLine {
         if (fieldText.length() > 0) {
             TextField field = new TextField(locale, fieldText);
             _fields.add(field);
+            Diagnostics parseDiags = field.parseSubfields();
+            _diagnostics.append(parseDiags);
         }
 
         Locale endloc = new Locale(_lineNumber, tx - 1);

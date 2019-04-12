@@ -47,7 +47,7 @@ public class Assembler {
                 ++labelLevel;
             }
 
-            if (!Dictionary.isValidLabel(label)) {
+            if (!Dictionary.isValidUserLabel(label)) {
                 label = null;
                 textLine._diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
                                                                  "Invalid label"));
@@ -148,7 +148,7 @@ public class Assembler {
             _diagnostics.append(line._diagnostics);
         }
 
-        //???? what else
+        //???? TODO
     }
 
     /**
@@ -159,15 +159,20 @@ public class Assembler {
         for (TextLine line : _sourceCode) {
             System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
             for (Diagnostic d : line._diagnostics.getDiagnostics()) {
-                System.out.println(String.format("%c[%d]:%s",
-                                                 d.getLevelIndicator(),
-                                                 d.getLocale().getColumn(),
-                                                 d.getMessage()));
+                System.out.println(d.getMessage());
             }
         }
 
         System.out.println();
         System.out.println("Dictionary");
+        for (String label : _context._dictionary.getLabels()) {
+            try {
+                Value value = _context._dictionary.getValue(label);
+                System.out.println(String.format("%s: %s", label, value.toString()));
+            } catch (NotFoundException ex) {
+                //  can't happen
+            }
+        }
 
         System.out.println();
         StringBuilder sb = new StringBuilder();

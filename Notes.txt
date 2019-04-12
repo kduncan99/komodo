@@ -1,7 +1,7 @@
 minalib - need to finish code to generate Relocatable objects
-* Flesh out references for Value object
-** Location counter reference
-** Undefined reference
+* Flesh out relocInfo for Value object
+** Need Undefined Reference relocInfo
+** Do we need more than one Reloc info for Value objects?  I think so...
 
 Convert IP unit tests from octal to assembler and mina them
 
