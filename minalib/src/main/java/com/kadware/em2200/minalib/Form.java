@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
+
 package com.kadware.em2200.minalib;
 
 import java.util.Arrays;
@@ -20,8 +21,7 @@ public class Form {
 
     /**
      * Constructor
-     * <p>
-     * @param fieldSizes
+     * @param fieldSizes sizes of the various bitfields
      */
     public Form(
         final int[] fieldSizes
@@ -36,10 +36,8 @@ public class Form {
 
     /**
      * check for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if objects are equal
      */
     @Override
     public boolean equals(
@@ -55,8 +53,7 @@ public class Form {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return number of field definitions
      */
     public int getFieldCount(
     ) {
@@ -65,8 +62,7 @@ public class Form {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return array of bit field sizes
      */
     public int[] getFieldSizes(
     ) {
@@ -75,8 +71,7 @@ public class Form {
 
     /**
      * Getter
-     * <p.
-     * @return
+     * @return slop - i.e., bits not accounted for
      */
     public int getLeftSlop(
     ) {

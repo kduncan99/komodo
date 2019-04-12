@@ -264,4 +264,16 @@ public class NodeValue extends Value {
             _values.remove(sel);
         }
     }
+
+    /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        //TODO what to do here? sb.append(_value);
+        super.appendAttributes(sb);
+        return sb.toString();
+    }
 }

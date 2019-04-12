@@ -73,7 +73,11 @@ public class Assembler {
             }
         }
 
-        //  More to look at...
+        //TODO is this a mnemonic?
+
+        //TODO Look up the opcode in the dictionary
+
+        //TODO Is it an expression?
     }
 
     /**

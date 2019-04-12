@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.dictionary;
@@ -22,7 +22,7 @@ public class StringValue extends Value {
         private boolean _flagged = false;
         private Precision _precision = Precision.None;
         private Signed _signed = Signed.None;
-        private String _value;
+        private String _value = null;
 
         public Builder setCharacterMode(
             final CharacterMode characterMode
@@ -70,10 +70,9 @@ public class StringValue extends Value {
 
     /**
      * constructor
-     * <p>
      * @param flagged (leading asterisk)
-     * @param signed
-     * @param precision
+     * @param signed Signed value
+     * @param precision Precision value
      * @param characterMode ASCII or Fieldata
      * @param value actual string content
      */
@@ -91,13 +90,10 @@ public class StringValue extends Value {
 
     /**
      * Compares an object to this object
-     * <p>
-     * @param obj
-     * <p>
+     * @param obj comparison object
      * @return -1 if this object sorts before (is less than) the given object
      *         +1 if this object sorts after (is greater than) the given object,
      *          0 if both objects sort to the same position (are equal)
-     * <p>
      * @throws TypeException if there is no reasonable way to compare the objects
      */
     @Override
@@ -115,10 +111,8 @@ public class StringValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
-     * <p>
-     * @param newFlagged
-     * <p>
-     * @return
+     * @param newFlagged new value for Flagged attribute
+     * @return new Value
      */
     @Override
     public Value copy(
@@ -129,10 +123,8 @@ public class StringValue extends Value {
 
     /**
      * Create a new copy of this object, with the given signed value
-     * <p>
-     * @param newSigned
-     * <p>
-     * @return
+     * @param newSigned new value for Signed attribute
+     * @return new Value
      */
     @Override
     public Value copy(
@@ -143,10 +135,8 @@ public class StringValue extends Value {
 
     /**
      * Create a new copy of this object, with the given precision value
-     * <p>
-     * @param newPrecision
-     * <p>
-     * @return
+     * @param newPrecision new value for Precision attribute
+     * @return new Value
      */
     @Override
     public Value copy(
@@ -157,10 +147,8 @@ public class StringValue extends Value {
 
     /**
      * Creates a new copy of this object, with the given character mode
-     * <p>
-     * @param newMode
-     * <p>
-     * @return
+     * @param newMode new value for Mode attribute
+     * @return new Value
      */
     public Value copy(
         final CharacterMode newMode
@@ -170,10 +158,8 @@ public class StringValue extends Value {
 
     /**
      * Check for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if the objects are equal, else false
      */
     @Override
     public boolean equals(
@@ -186,8 +172,7 @@ public class StringValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return character mode attribute
      */
     public CharacterMode getCharacterMode(
     ) {
@@ -196,8 +181,7 @@ public class StringValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value type
      */
     @Override
     public ValueType getType(
@@ -207,8 +191,7 @@ public class StringValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public String getValue(
     ) {
@@ -218,10 +201,9 @@ public class StringValue extends Value {
     /**
      * Checks to see whether two words should be generated for this value, when it is interpreted as an integer.
      * Yes if Double precision, No if Single, and Yes if None and MSWord is non-zero.
-     * <p>
-     * @return
+     * @return true if two words should be generated, else false
      */
-    public boolean generateDoublePrecision(
+    private boolean generateDoublePrecision(
     ) {
         switch (getPrecision()) {
             case Double:    return true;
@@ -237,10 +219,9 @@ public class StringValue extends Value {
     /**
      * Checks to see if the precision setting is valid, given the length of the string value
      * and the character mode.
-     * <p>
-     * @return
+     * @return true if precision setting is valid for the string value and character mode, else false
      */
-    public boolean isPrecisionValid(
+    private boolean isPrecisionValid(
     ) {
         int bytesPerWord = _characterMode == CharacterMode.ASCII ? 4 : 6;
         switch (getPrecision()) {
@@ -254,11 +235,9 @@ public class StringValue extends Value {
 
     /**
      * Transform the value to an FloatingPointValue, if possible
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post any necessary diagnostics
+     * @return new Value
      */
     @Override
     public FloatingPointValue toFloatingPointValue(
@@ -281,7 +260,6 @@ public class StringValue extends Value {
                 result[1] = Word36.stringToWord36Fieldata(s2).getW();
             }
         } else {
-            result[0] = 0;
             if (_characterMode == CharacterMode.ASCII) {
                 result[1] = Word36.stringToWord36ASCII(_value).getW();
             } else {
@@ -297,11 +275,9 @@ public class StringValue extends Value {
 
     /**
      * Transform the value to an IntegerValue, if possible
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post any necessary diagnostics
+     * @return new Value
      */
     @Override
     public IntegerValue toIntegerValue(
@@ -324,7 +300,6 @@ public class StringValue extends Value {
                 result[1] = Word36.stringToWord36Fieldata(s2).getW();
             }
         } else {
-            result[0] = 0;
             if (_characterMode == CharacterMode.ASCII) {
                 result[1] = Word36.stringToWord36ASCII(_value).getW();
             } else {
@@ -339,12 +314,10 @@ public class StringValue extends Value {
 
     /**
      * Transform the value to a StringValue, if possible
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param characterMode desired character mode - we ignore this, as this applies only to conversions of something else
      * @param diagnostics where we post any necessary diagnostics
-     * <p>
-     * @return
+     * @return new Value
      */
     @Override
     public StringValue toStringValue(
@@ -353,5 +326,17 @@ public class StringValue extends Value {
         Diagnostics diagnostics
     ) {
         return this;
+    }
+
+    /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(_value);
+        super.appendAttributes(sb);
+        return sb.toString();
     }
 }

@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.dictionary;
 
+import com.kadware.em2200.baselib.Word36;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;
@@ -236,5 +237,17 @@ public class FloatingPointValue extends Value {
     ) throws TypeException {
         diagnostics.append(new ValueDiagnostic(locale, "Cannot convert floating point to a string"));
         throw new TypeException();
+    }
+
+    /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(_value);
+        super.appendAttributes(sb);
+        return sb.toString();
     }
 }

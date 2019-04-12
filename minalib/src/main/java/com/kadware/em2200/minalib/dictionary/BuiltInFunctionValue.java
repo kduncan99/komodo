@@ -188,4 +188,13 @@ public class BuiltInFunctionValue extends Value {
     ) {
         return _clazz;
     }
+
+    /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString() {
+        return "<function>";
+    }
 }

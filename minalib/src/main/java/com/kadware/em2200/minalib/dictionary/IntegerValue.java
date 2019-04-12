@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.dictionary;
@@ -391,10 +391,7 @@ public class IntegerValue extends Value {
         StringBuilder sb = new StringBuilder();
         sb.append("0");
         sb.append(str);
-        if (getRelocationInfo() != null) {
-            sb.append(getRelocationInfo().toString());
-        }
-
+        super.appendAttributes(sb);
         return sb.toString();
     }
 }

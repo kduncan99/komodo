@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
+import com.kadware.em2200.minalib.Form;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 
 /**
@@ -33,6 +34,19 @@ public class MainLevelDictionary extends Dictionary {
         addValue(0, "$SR", new BuiltInFunctionValue(SRFunction.class));
         addValue(0, "$SS", new BuiltInFunctionValue(SSFunction.class));
         addValue(0, "$TYPE", new BuiltInFunctionValue(TYPEFunction.class));
+
+        //  Initialize Forms
+        int[] ifjaxhiu = { 6, 4, 4, 4, 1, 1, 16 };
+        Value vfjaxhiu = new IntegerValue.Builder().setForm(new Form(ifjaxhiu)).build();
+        addValue(0, "PF$FJAXHIU", vfjaxhiu);
+
+        int[] ifjaxu = { 6, 4, 4, 4, 18 };
+        Value vfjaxu = new IntegerValue.Builder().setForm(new Form(ifjaxu)).build();
+        addValue(0, "PF$FJAXU", vfjaxhiu);
+
+        int[] ifjaxhibd = { 6, 4, 4, 4, 1, 1, 4, 12 };
+        Value vfjaxhibd = new IntegerValue.Builder().setForm(new Form(ifjaxhibd)).build();
+        addValue(0, "PF$FJAXHIBD", vfjaxhibd);
 
         //  Initialize directive names
         //????
