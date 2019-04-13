@@ -571,7 +571,7 @@ public class InstructionWord extends Word36 {
     /**
      * Mnemonics representing the various values for the j-field when it represents a partial-word
      */
-    private static final String J_FIELD_NAMES[] =
+    public static final String J_FIELD_NAMES[] =
     {
         "W",        "H2",       "H1",       "XH2",
         "XH1/Q2",   "T3/Q4",    "T2/Q3",    "T1/Q1",

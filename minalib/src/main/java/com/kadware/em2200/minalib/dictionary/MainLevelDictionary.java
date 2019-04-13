@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
+import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.minalib.Form;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 
@@ -50,5 +51,10 @@ public class MainLevelDictionary extends Dictionary {
 
         //  Initialize directive names
         //????
+
+        //  Initialize j-field values
+        for (int sx = 0; sx < InstructionWord.J_FIELD_NAMES.length; ++sx) {
+            addValue(0, InstructionWord.J_FIELD_NAMES[sx], new IntegerValue.Builder().setValue(sx).build());
+        }
     }
 }

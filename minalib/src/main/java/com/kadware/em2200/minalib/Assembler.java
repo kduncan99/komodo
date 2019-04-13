@@ -8,6 +8,7 @@ import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.em2200.minalib.expressions.*;
 import java.util.Map;
 
 /**
@@ -24,6 +25,55 @@ public class Assembler {
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
 
+    private boolean processMnemonic(
+            final TextField labelField,
+            final TextField operationField,
+            final TextField operandField,
+            final Diagnostics diagnostics
+    ) {
+        if ( operationField != null ) {
+            try {
+                String mnemonic = operationField.getSubfield(0).getText();
+                InstructionWord.Mode imode =
+                        _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
+                InstructionWord.InstructionInfo iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+
+                //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
+                int jField = 0;
+                if (iinfo._jFlag) {
+                    jField = iinfo._jField;
+                    if (operationField.getSubfieldCount() > 1) {
+                        diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
+                                                              "Extraneous subfields in operation field"));
+                    }
+                } else if (operationField.getSubfieldCount() > 1) {
+                    TextSubfield jSubField = operationField.getSubfield(1);
+                    ExpressionParser p = new ExpressionParser(jSubField.getText(), jSubField.getLocale());
+                    try {
+                        p.parse(_context, diagnostics);
+                    } catch (ExpressionException ex) {
+                        diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(), ex.getMessage()));
+                        //TODO something
+                    } catch (NotFoundException ex) {
+                        //TODO something else
+                    }
+
+                    if (operationField.getSubfieldCount() > 2) {
+                        diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
+                                                              "Extraneous subfields in operation field"));
+                    }
+                }
+
+                //TODO lots more
+                System.out.println(String.format("f=%02o j=%02o", iinfo._fField, jField));//????
+            } catch (com.kadware.em2200.baselib.exceptions.NotFoundException ex) {
+                //  Mnemonic not found - fall through to return false
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Assemble a single TextLine object into the Relocatable Module
      * @param textLine entity to be assembled
@@ -31,23 +81,32 @@ public class Assembler {
     private void assemble(
         final TextLine textLine
     ) {
-        if (textLine._fields.size() == 0) {
+        if ( textLine._fields.size() == 0 ) {
             return;
         }
+
+        TextField labelField = textLine.getField(0);
+        TextField operationField = textLine.getField(1);
+        TextField operandField = textLine.getField(2);
+
+        if (processMnemonic(labelField, operationField, operandField, textLine._diagnostics)) {
+            return;
+        }
+
+        Dictionary d = _context._dictionary;
 
         //  Examine field 0 which contains at most one subfield which we presume is a label.
         String label = null;
         int labelLevel = 0;
-        TextField labelField = textLine.getField(0);
-        if ((labelField != null) && (labelField.getSubfieldCount() > 0)) {
+        if ( (labelField != null) && (labelField.getSubfieldCount() > 0) ) {
             TextSubfield labelSubfield = labelField.getSubfield(0);
             label = labelSubfield.getText();
-            while (label.endsWith("*")) {
+            while ( label.endsWith("*") ) {
                 label = label.substring(0, label.length() - 1);
                 ++labelLevel;
             }
 
-            if (!Dictionary.isValidUserLabel(label)) {
+            if ( !Dictionary.isValidUserLabel(label) ) {
                 label = null;
                 textLine._diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
                                                                  "Invalid label"));
@@ -60,7 +119,6 @@ public class Assembler {
                 //  If there are no further fields, then this is a stand-alone label.
                 //  Process it as such...
                 if ( textLine._fields.size() == 1 ) {
-                    Dictionary d = _context._dictionary;
                     if ( d.hasValue(label) ) {
                         textLine._diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
                                                                              "Duplicate label"));
@@ -75,7 +133,7 @@ public class Assembler {
 
         //TODO is this a mnemonic?
 
-        //TODO Look up the opcode in the dictionary
+        //  Look up the opcode in the dictionary
 
         //TODO Is it an expression?
     }
