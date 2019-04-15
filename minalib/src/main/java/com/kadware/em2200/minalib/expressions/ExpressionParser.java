@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions;
 
 import com.kadware.em2200.baselib.OnesComplement;
+import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -46,8 +47,7 @@ public class ExpressionParser {
 
     /**
      * Are we at the end of the expression text?
-     * <p>
-     * @return
+     * @return true if we've reached the end of the text, else false
      */
     private boolean atEnd(
     ) {
@@ -56,8 +56,7 @@ public class ExpressionParser {
 
     /**
      * Generates a new Locale object to reflect the location of the text at _index
-     * <p>
-     * @return
+     * @return generated locale object
      */
     private Locale getLocale(
     ) {
@@ -66,7 +65,6 @@ public class ExpressionParser {
 
     /**
      * Retrieves the next character and advances the index
-     * <p>
      * @return the character in text, indexed by _index
      */
     private char getNextChar(
@@ -79,7 +77,6 @@ public class ExpressionParser {
 
     /**
      * Peek at the next character
-     * <p>
      * @return the character in text, indexed by _index
      */
     private char nextChar(
@@ -104,10 +101,8 @@ public class ExpressionParser {
 
     /**
      * Skips a fixed token if it exists in the source code at _index
-     * <p>
      * @param token token to be parsed
      * @param caseSensitive true if we are sensitive to case, else false
-     * <p>
      * @return true if token was found and skipped, else false
      */
     private boolean skipToken(
@@ -143,12 +138,9 @@ public class ExpressionParser {
     /**
      * Parses an expression - starts at the current _index, and continues until we find something that doesn't
      * belong in the expression.
-     * <p>
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * <p>
      * @return a parsed Expression object
-     * <p>
      * @throws ExpressionException if we detect an obvious error
      * @throws NotFoundException if we do not find such a structure
      */
@@ -272,16 +264,13 @@ public class ExpressionParser {
 
     /**
      * Parses a function specification from _index
-     * <p>
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * <p>
-     * @return
-     * <p>
-     * @throws ExpressionException
-     * @throws NotFoundException
+     * @return newly created FunctionItem object
+     * @throws ExpressionException if something is syntactically wrong
+     * @throws NotFoundException if we didn't find anything resembling a function reference
      */
-    protected FunctionItem parseFunction(
+    FunctionItem parseFunction(
         final Context context,
         Diagnostics diagnostics
     ) throws ExpressionException,
@@ -349,7 +338,7 @@ public class ExpressionParser {
 
         //  Is it a user function reference?
         if (value.getType() == ValueType.FuncName) {
-            //????
+            //TODO user function lookup
         }
 
         diagnostics.append(new ErrorDiagnostic(getLocale(), String.format("%s is not defined as a function", name)));
@@ -358,27 +347,23 @@ public class ExpressionParser {
 
     /**
      * Parses a floating point literal value
-     * <p>
-     * @return
-     * <p>
+     * @return floating point value OperandItem
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      * @throws NotFoundException if we do not find anything which looks like an integer literal
      */
-    protected OperandItem parseFloatingPointLiteral(
+    private OperandItem parseFloatingPointLiteral(
     ) throws ExpressionException,
              NotFoundException {
-        //????
+        //TODO parse the flpt thing
         throw new NotFoundException();
     }
 
     /**
      * If _index points to an infix operator, we construct an Operator object and return it.
-     * <p>
      * @return Operator object
-     * <p>
      * @throws NotFoundException if no post-fix operator was discovered
      */
-    protected OperatorItem parseInfixOperator(
+    private OperatorItem parseInfixOperator(
     ) throws NotFoundException {
         Locale locale = new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
 
@@ -428,15 +413,12 @@ public class ExpressionParser {
 
     /**
      * Parses an integer literal value
-     * <p>
-     * @param diagnostics
-     * <p>
-     * @return
-     * <p>
+     * @param diagnostics where we post diagnostics if appropriate
+     * @return integer literal OperandItem
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      * @throws NotFoundException if we do not find anything which looks like an integer literal
      */
-    protected OperandItem parseIntegerLiteral(
+    private OperandItem parseIntegerLiteral(
         Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
@@ -472,15 +454,12 @@ public class ExpressionParser {
 
     /**
      * Parses a label from _index
-     * <p>
-     * @param diagnostics
-     * <p>
-     * @return
-     * <p>
-     * @throws ExpressionException
-     * @throws NotFoundException
+     * @param diagnostics where we post diagnostics if appropriate
+     * @return the label, if found
+     * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
+     * @throws NotFoundException if we do not find anything which looks like a label
      */
-    protected String parseLabel(
+    String parseLabel(
         Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
@@ -519,16 +498,13 @@ public class ExpressionParser {
 
     /**
      * Parses a literal
-     * <p>
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * <p>
      * @return OperandItem representing the integer literal
-     * <p>
-     * @throws ExpressionException
-     * @throws NotFoundException
+     * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
+     * @throws NotFoundException if we do not find anything which looks like a string literal
      */
-    protected OperandItem parseLiteral(
+    private OperandItem parseLiteral(
         final Context context,
         Diagnostics diagnostics
     ) throws ExpressionException,
@@ -539,7 +515,7 @@ public class ExpressionParser {
             //  keep going
         }
 
-        //???? parse float literal here
+        //TODO parse float literal here
 
         try {
             return parseIntegerLiteral(diagnostics);
@@ -552,14 +528,11 @@ public class ExpressionParser {
 
     /**
      * Parses anything which could be an operand
-     * <p>
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * <p>
-     * @return
-     * <p>
-     * @throws ExpressionException
-     * @throws NotFoundException
+     * @return parsed OperandItem
+     * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
+     * @throws NotFoundException if we do not find anything which looks like an operand
      */
     protected OperandItem parseOperand(
         final Context context,
@@ -590,9 +563,7 @@ public class ExpressionParser {
     /**
      * If _index points to a postfix operator, we construct an Operator object and return it.
      * Since StringValue doesn't like justification, we do not support L and R post-fix operators.
-     * <p>
      * @return Operator object
-     * <p>
      * @throws NotFoundException if no post-fix operator was discovered
      */
     protected OperatorItem parsePostfixOperator(
@@ -610,9 +581,7 @@ public class ExpressionParser {
 
     /**
      * If _index points to a prefix operator, we construct an Operator object and return it.
-     * <p>
      * @return Operator object
-     * <p>
      * @throws NotFoundException if no post-fix operator was discovered
      */
     protected OperatorItem parsePrefixOperator(
@@ -631,10 +600,16 @@ public class ExpressionParser {
         throw new NotFoundException();
     }
 
+    /**
+     * Parses a reference of one type or another
+     * @return OperandItem representing the reference
+     * @throws ExpressionException if there is some syntactic error
+     * @throws NotFoundException if we don't find anything resembling a reference
+     */
     protected OperandItem parseReference(
     ) throws ExpressionException,
              NotFoundException {
-        //????
+        //TODO fix this
         throw new ExpressionException();//????
     }
 

@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
-import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.em2200.baselib.exceptions.*;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Map;

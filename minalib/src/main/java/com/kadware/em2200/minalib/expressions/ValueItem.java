@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions;
@@ -17,7 +17,6 @@ public class ValueItem extends OperandItem {
 
     /**
      * Constructor
-     * <p>
      * @param value Value which we represent
      */
     public ValueItem(
@@ -28,8 +27,7 @@ public class ValueItem extends OperandItem {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return ValueItem object associated with this item
      */
     public Value getValue(
     ) {
@@ -38,10 +36,8 @@ public class ValueItem extends OperandItem {
 
     /**
      * Resolves the value of this item - basically, we just return the Value object
-     * <p>
      * @param context assembler context - we don't need this
      * @param diagnostics where we store any diagnostics we need to generate - we don't need this either
-     * <p>
      * @return a Value representing this operand
      */
     @Override

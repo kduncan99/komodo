@@ -5,6 +5,7 @@
 package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.baselib.exceptions.NotFoundException;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
@@ -32,43 +33,60 @@ public class Assembler {
             final Diagnostics diagnostics
     ) {
         if ( operationField != null ) {
+            TextSubfield mnemonicSubfield = operationField.getSubfield(0);
+            String mnemonic = mnemonicSubfield.getText();
+            InstructionWord.InstructionInfo iinfo;
             try {
-                String mnemonic = operationField.getSubfield(0).getText();
                 InstructionWord.Mode imode =
                         _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
-                InstructionWord.InstructionInfo iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+                iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+            } catch (NotFoundException ex) {
+                //  Mnemonic not found - is it dependent on code mode?
+                //  If so, coder is asking for a mnemonic in a mode it doesn't exist in; raise a diagnostic and
+                //  return true so the assemble method doesn't go any further with this line.
+                //  Otherwise, it's just flat not a mnemonic, so return false and let the assemble method do
+                //  something else.
+                try {
+                    InstructionWord.Mode imode =
+                        _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
+                    iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+                    diagnostics.append(new ErrorDiagnostic(mnemonicSubfield.getLocale(),
+                                                           "Opcode not valid for the current code mode"));
+                    return true;
+                } catch (NotFoundException ex2) {
+                    //  The mnemonic truly isn't found - return false, this is not an instruction operation
+                    return false;
+                }
+            }
 
-                //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
-                int jField = 0;
-                if (iinfo._jFlag) {
-                    jField = iinfo._jField;
-                    if (operationField.getSubfieldCount() > 1) {
-                        diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
-                                                              "Extraneous subfields in operation field"));
-                    }
-                } else if (operationField.getSubfieldCount() > 1) {
-                    TextSubfield jSubField = operationField.getSubfield(1);
-                    ExpressionParser p = new ExpressionParser(jSubField.getText(), jSubField.getLocale());
-                    try {
-                        p.parse(_context, diagnostics);
-                    } catch (ExpressionException ex) {
-                        diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(), ex.getMessage()));
-                        //TODO something
-                    } catch (NotFoundException ex) {
-                        //TODO something else
-                    }
-
-                    if (operationField.getSubfieldCount() > 2) {
-                        diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
-                                                              "Extraneous subfields in operation field"));
-                    }
+            //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
+            int jField = 0;
+            if (iinfo._jFlag) {
+                jField = iinfo._jField;
+                if (operationField.getSubfieldCount() > 1) {
+                    diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
+                                                          "Extraneous subfields in operation field"));
+                }
+            } else if (operationField.getSubfieldCount() > 1) {
+                TextSubfield jSubField = operationField.getSubfield(1);
+                try {
+                    jField = InstructionWord.getJFieldValue(jSubField.getText());
+                } catch ( NotFoundException e ) {
+                    diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(),
+                                                           "Invalid text for j-field of instruction"));
                 }
 
-                //TODO lots more
-                System.out.println(String.format("f=%02o j=%02o", iinfo._fField, jField));//????
-            } catch (com.kadware.em2200.baselib.exceptions.NotFoundException ex) {
-                //  Mnemonic not found - fall through to return false
+                if ( operationField.getSubfieldCount() > 2 ) {
+                    diagnostics.append(new ErrorDiagnostic(
+                        operationField.getSubfield(1).getLocale(),
+                        "Extraneous subfields in operation field"));
+                }
             }
+
+            //TODO make sense of the operand field
+
+            System.out.println(String.format("f=%02o j=%02o", iinfo._fField, jField));//TODO temporary
+            return true;
         }
 
         return false;

@@ -6,8 +6,11 @@ package com.kadware.em2200.baselib.exceptions;
 
 /**
  * Exception thrown by a method when it is asked to do a lookup given a partial or full key, and the lookup fails.
+ * Also used for parsing, when a particular type of something is asked for but doesn't exist at the parse point.
  */
 public class NotFoundException extends Exception {
+
+    public NotFoundException(){}
 
     public NotFoundException(
         final String key

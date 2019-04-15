@@ -6,7 +6,7 @@ package com.kadware.em2200.minalib.exceptions;
 
 /**
  * Thrown when some operation is requested (usually on a value or values)
- * which cannot be completed due to incompatabilities in relocation information.
+ * which cannot be completed due to incompatibilities in relocation information.
  */
 public class RelocationException extends AssemblerException {
 

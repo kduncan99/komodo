@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.dictionary;
@@ -51,10 +51,5 @@ public class MainLevelDictionary extends Dictionary {
 
         //  Initialize directive names
         //????
-
-        //  Initialize j-field values
-        for (int sx = 0; sx < InstructionWord.J_FIELD_NAMES.length; ++sx) {
-            addValue(0, InstructionWord.J_FIELD_NAMES[sx], new IntegerValue.Builder().setValue(sx).build());
-        }
     }
 }
