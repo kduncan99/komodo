@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
@@ -157,11 +157,27 @@ public class GeneralRegisterSet {
     }
 
     /**
+     * Given a string, we return the GRS address of the indicated register if it is in fact a register name
+     * @param registerName for which we search
+     * @return GRS address of the register
+     * @throws NotFoundException if the given name isn't a register name
+     */
+    public static int getGRSIndex(
+        final String registerName
+    ) throws NotFoundException {
+        for (int rx = 0; rx < NAMES.length; rx++) {
+            if (registerName.equals( NAMES[rx] )) {
+                return rx;
+            }
+        }
+
+        throw new NotFoundException( registerName );
+    }
+
+    /**
      * Retrieves a reference to a particular GeneralRegister object according to the given register index
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * @param registerIndex index of the requested register
+     * @return reference as indicated above
      */
     public GeneralRegister getRegister(
         final int registerIndex
@@ -175,7 +191,6 @@ public class GeneralRegisterSet {
 
     /**
      * Sets the value of a particular GeneralRegister to the value of the provided GeneralRegister value parameter
-     * <p>
      * @param registerIndex indicates which GR is to be set
      * @param value contains the value to which the GR is to be set
      */
@@ -192,7 +207,6 @@ public class GeneralRegisterSet {
 
     /**
      * Sets the value of a particular GeneralRegister to the given 36-bit value
-     * <p>
      * @param registerIndex indicates which GR is to be set
      * @param value 36-bit value to which the GR is to be set
      */
@@ -213,11 +227,9 @@ public class GeneralRegisterSet {
 
     /**
      * Indicates whether the requested access is allowed for a particular register
-     * <p>
      * @param registerIndex Indicates the register of interest
      * @param processorPrivilege Indicates the processor privilege for which the access is being made
      * @param writeAccess If true, indicates write access - otherwise, read access
-     * <p>
      * @return true if access is allowed, else false
      */
     public static boolean isAccessAllowed(
@@ -238,7 +250,6 @@ public class GeneralRegisterSet {
 
     /**
      * Writes the content of this GRS to the given buffered writer
-     * <p>
      * @param writer
      */
     public void log(

@@ -40,10 +40,12 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
+            "START* .",
+            "          LA,U      A5,01000 . 010, 016, 0, 0, 01000",
 //            "          PF$FJAXU  010,016,0,0,01000",//????
-            "          IAR       0,0,0 . IAR is not valid for BASIC mode - do something different",
-//            "          PF$FJAXHIBD 073,017,06,0,0,0,0,0",//????
+            "END .",
+            "          HALT      0",
+//            "          PF$FJAXU 077,017,017,0,0",//????
         };
 
         Assembler asm = new Assembler("Test", source);

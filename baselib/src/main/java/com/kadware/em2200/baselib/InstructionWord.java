@@ -874,6 +874,7 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   076, 015, 000, true,  false, true,  false, ASemantics.A,     "DLCF",  false),
         new InstructionInfo(Mode.EITHER,   076, 016, 000, true,  false, true,  false, ASemantics.A,     "FEL",   false),
         new InstructionInfo(Mode.EITHER,   076, 017, 000, true,  false, true,  false, ASemantics.A,     "FCL",   false),
+        new InstructionInfo(Mode.EITHER,   077, 017, 017, true,  true,  false, false, ASemantics.NONE,  "HALT",  false),
     };
 
     //  j-field values
