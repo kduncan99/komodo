@@ -43,7 +43,7 @@ public class MainLevelDictionary extends Dictionary {
 
         int[] ifjaxu = { 6, 4, 4, 4, 18 };
         Value vfjaxu = new IntegerValue.Builder().setForm(new Form(ifjaxu)).build();
-        addValue(0, "PF$FJAXU", vfjaxhiu);
+        addValue(0, "PF$FJAXU", vfjaxu);
 
         int[] ifjaxhibd = { 6, 4, 4, 4, 1, 1, 4, 12 };
         Value vfjaxhibd = new IntegerValue.Builder().setForm(new Form(ifjaxhibd)).build();

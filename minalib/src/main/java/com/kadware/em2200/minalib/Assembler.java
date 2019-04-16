@@ -26,70 +26,229 @@ public class Assembler {
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
 
-    private boolean processMnemonic(
-            final TextField labelField,
-            final TextField operationField,
-            final TextField operandField,
-            final Diagnostics diagnostics
+    /**
+     * Interprets a subfield as an expression
+     * @param subfield subfield to be interpreted
+     * @param diagnostics where we post any appropriate diagnostics
+     * @return interpreted value (may be zero with no other information)
+     */
+    private Value interpretSubfield(
+        final TextSubfield subfield,
+        final Diagnostics diagnostics
     ) {
-        if ( operationField != null ) {
-            TextSubfield mnemonicSubfield = operationField.getSubfield(0);
-            String mnemonic = mnemonicSubfield.getText();
-            InstructionWord.InstructionInfo iinfo;
-            try {
-                InstructionWord.Mode imode =
-                        _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
-                iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
-            } catch (NotFoundException ex) {
-                //  Mnemonic not found - is it dependent on code mode?
-                //  If so, coder is asking for a mnemonic in a mode it doesn't exist in; raise a diagnostic and
-                //  return true so the assemble method doesn't go any further with this line.
-                //  Otherwise, it's just flat not a mnemonic, so return false and let the assemble method do
-                //  something else.
-                try {
-                    InstructionWord.Mode imode =
-                        _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
-                    iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
-                    diagnostics.append(new ErrorDiagnostic(mnemonicSubfield.getLocale(),
-                                                           "Opcode not valid for the current code mode"));
-                    return true;
-                } catch (NotFoundException ex2) {
-                    //  The mnemonic truly isn't found - return false, this is not an instruction operation
-                    return false;
-                }
+        try {
+            ExpressionParser p = new ExpressionParser( subfield.getText(), subfield.getLocale() );
+            Expression e = p.parse( _context, diagnostics );
+            return e.evaluate( _context, diagnostics );
+        } catch ( ExpressionException eex ) {
+            diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
+                                                     "Cannot evaluate expression:" + eex.getMessage() ) );
+            return new IntegerValue.Builder().build();
+        } catch ( NotFoundException nfex ) {
+            diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
+                                                     "Expected an expression" ) );
+            return new IntegerValue.Builder().build();
+        }
+    }
+
+    /**
+     * For textlines which contain a label intended to actually *be* a label - that is, to represent the current
+     * address in the current generation location counter...
+     * @param labelField label field
+     * @param diagnostics where we post any appropriate diagnostics
+     */
+    private void processLabel(
+        final TextField labelField,
+        final Diagnostics diagnostics
+    ) {
+        if ( (labelField != null) && (labelField.getSubfieldCount() > 0) ) {
+            TextSubfield labelSubfield = labelField.getSubfield(0);
+            String label = labelSubfield.getText();
+            int labelLevel = 0;
+            while ( label.endsWith("*") ) {
+                label = label.substring(0, label.length() - 1);
+                ++labelLevel;
             }
 
-            //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
-            int jField = 0;
-            if (iinfo._jFlag) {
-                jField = iinfo._jField;
-                if (operationField.getSubfieldCount() > 1) {
-                    diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
-                                                          "Extraneous subfields in operation field"));
-                }
-            } else if (operationField.getSubfieldCount() > 1) {
-                TextSubfield jSubField = operationField.getSubfield(1);
-                try {
-                    jField = InstructionWord.getJFieldValue(jSubField.getText());
-                } catch ( NotFoundException e ) {
-                    diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(),
-                                                           "Invalid text for j-field of instruction"));
+            if ( !Dictionary.isValidUserLabel(label) ) {
+                label = null;
+                diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
+                                                       "Invalid label"));
+            } else {
+                if ( labelField.getSubfieldCount() > 1 ) {
+                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
+                                                           "Extraneous subfields in label field"));
                 }
 
-                if ( operationField.getSubfieldCount() > 2 ) {
-                    diagnostics.append(new ErrorDiagnostic(
-                        operationField.getSubfield(1).getLocale(),
-                        "Extraneous subfields in operation field"));
+                if ( _context._dictionary.hasValue(label) ) {
+                    diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
+                                                               "Duplicate label"));
+                } else {
+                    _context._dictionary.addValue(labelLevel, label, getCurrentLocation());
                 }
             }
+        }
+    }
 
-            //TODO make sense of the operand field
-
-            System.out.println(String.format("f=%02o j=%02o", iinfo._fField, jField));//TODO temporary
+    /**
+     * Handles instruction mnemonic lines of code, and blank lines
+     * @param labelField represents the label field, if any
+     * @param operationField represents the operation field, if any
+     * @param operandField represents the operand field, if any
+     * @param diagnostics where we post diagnostics if needed
+     * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
+     */
+    private boolean processMnemonic(
+        final TextField labelField,
+        final TextField operationField,
+        final TextField operandField,
+        final Diagnostics diagnostics
+    ) {
+        if ( operationField == null ) {
+            //  This is a no-op line - but it might have a label.
+            //  Do label stuff, then return true indicating that the line has been processed.
+            processLabel(labelField, diagnostics);
             return true;
         }
 
-        return false;
+        //  Deal with the operation field
+        TextSubfield mnemonicSubfield = operationField.getSubfield(0);
+        String mnemonic = mnemonicSubfield.getText();
+        InstructionWord.InstructionInfo iinfo;
+        try {
+            InstructionWord.Mode imode =
+                    _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
+            iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+        } catch (NotFoundException ex) {
+            //  Mnemonic not found - is it dependent on code mode?
+            //  If so, coder is asking for a mnemonic in a mode it doesn't exist in; raise a diagnostic and
+            //  return true so the assemble method doesn't go any further with this line.
+            //  Otherwise, it's just flat not a mnemonic, so return false and let the assemble method do
+            //  something else.
+            try {
+                InstructionWord.Mode imode =
+                    _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
+                iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+                diagnostics.append(new ErrorDiagnostic(mnemonicSubfield.getLocale(),
+                                                       "Opcode not valid for the current code mode"));
+                return true;
+            } catch (NotFoundException ex2) {
+                //  The mnemonic truly isn't found - return false, this is not an instruction operation
+                return false;
+            }
+        }
+
+        //  We've found an iinfo - from here on, we are sure this is a mnemonic text line.
+        //  It might have all kinds of errors in it (or not), but it's a mnemonic line.
+        //  So, a) the label field is to be processed as such, and b) we return true from here onward.
+        processLabel(labelField, diagnostics);
+
+        //  Is this a special instruction? (such as JGD, BT, etc)
+        //TODO
+
+        //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
+        int jField = 0;
+        if (iinfo._jFlag) {
+            jField = iinfo._jField;
+            if (operationField.getSubfieldCount() > 1) {
+                diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
+                                                      "Extraneous subfields in operation field"));
+            }
+        } else if (operationField.getSubfieldCount() > 1) {
+            TextSubfield jSubField = operationField.getSubfield(1);
+            try {
+                jField = InstructionWord.getJFieldValue(jSubField.getText());
+            } catch ( NotFoundException e ) {
+                diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(),
+                                                       "Invalid text for j-field of instruction"));
+            }
+
+            if ( operationField.getSubfieldCount() > 2 ) {
+                diagnostics.append(new ErrorDiagnostic(
+                    operationField.getSubfield(1).getLocale(),
+                    "Extraneous subfields in operation field"));
+            }
+        }
+
+        //  Deal with the operand field
+        int aField = 0;
+        int xField = 0;
+        int hField = 0;
+        int iField = 0;
+        int uField = 0;
+        int bField = 0;
+        int dField = 0;
+        if (operandField == null) {
+            diagnostics.append(new ErrorDiagnostic( operationField.getLocale(), "Mnemonic requires an operand field"));
+        } else {
+            //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
+            //  a field, and there isn't one in the syntax for the operand field.
+            //  If the flag is clear, then the first subfield is a register specification... which can get a bit
+            //  complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
+            TextSubfield registerSubField = null;
+            TextSubfield addressSubField = null;
+            TextSubfield indexSubField = null;
+            TextSubfield baseSubField = null;
+
+            boolean baseSubFieldAllowed = (_context._codeMode == CodeMode.Extended) && !iinfo._useBMSemantics;
+            int sfx = 0;
+            int sfc = operandField.getSubfieldCount();
+            if (!iinfo._aFlag && (sfc > sfx)) {
+                registerSubField = operandField.getSubfield( sfx++ );
+            }
+            if (sfc > sfx) {
+                addressSubField = operandField.getSubfield( sfx++ );
+            }
+            if (sfc > sfx) {
+                indexSubField = operandField.getSubfield( sfx++ );
+            }
+            if ((sfc > sfx) && baseSubFieldAllowed) {
+                baseSubField = operandField.getSubfield( sfx++ );
+            }
+
+            if (sfc > sfx) {
+                diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx ).getLocale(),
+                                                         "Extreanous subfields in operand field ignored") );
+            }
+
+            //  Interpret the subfields
+            if (!iinfo._aFlag)
+                if (registerSubField == null) {
+                    diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
+                                                             "Missing register specification" ) );
+                } else {
+                    try {
+                        switch (iinfo._aSemantics) {
+                            case A:
+                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 12;
+                                break;
+                            case R:
+                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 64;
+                                break;
+                            case X:
+                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) ;
+                                break;
+                            case B:
+                            case B_EXEC:
+                                //TODO
+                        }
+                    } catch (NotFoundException nfex) {
+                        diagnostics.append(new ErrorDiagnostic( registerSubField.getLocale(),
+                                                                "Unrecognized value in register subfield"));
+                    }
+
+                    if ((aField < 0) || (aField > 017)) {
+                        diagnostics.append(new TruncationDiagnostic( registerSubField.getLocale(),
+                                                                     "Illegal value "));
+                }
+            }
+        }
+
+        //  Create the instruction word...
+        //TODO
+        System.out.println(String.format("f=%02o j=%02o a=%02o", iinfo._fField, jField, aField));//TODO temporary
+
+        return true;
     }
 
     /**
@@ -107,53 +266,23 @@ public class Assembler {
         TextField operationField = textLine.getField(1);
         TextField operandField = textLine.getField(2);
 
+        //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
         if (processMnemonic(labelField, operationField, operandField, textLine._diagnostics)) {
+            if (textLine._fields.size() > 3) {
+                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
+                                                        "Extraneous fields ignored"));
+            }
             return;
         }
 
+        //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
+        //TODO
         Dictionary d = _context._dictionary;
 
-        //  Examine field 0 which contains at most one subfield which we presume is a label.
-        String label = null;
-        int labelLevel = 0;
-        if ( (labelField != null) && (labelField.getSubfieldCount() > 0) ) {
-            TextSubfield labelSubfield = labelField.getSubfield(0);
-            label = labelSubfield.getText();
-            while ( label.endsWith("*") ) {
-                label = label.substring(0, label.length() - 1);
-                ++labelLevel;
-            }
+        //  Hmm.  Is it an expression (or a list of expressions)?
+        //TODO
 
-            if ( !Dictionary.isValidUserLabel(label) ) {
-                label = null;
-                textLine._diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
-                                                                 "Invalid label"));
-            } else {
-                if ( labelField.getSubfieldCount() > 1 ) {
-                    textLine._diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
-                                                                     "Extraneous subfields in label field"));
-                }
-
-                //  If there are no further fields, then this is a stand-alone label.
-                //  Process it as such...
-                if ( textLine._fields.size() == 1 ) {
-                    if ( d.hasValue(label) ) {
-                        textLine._diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
-                                                                             "Duplicate label"));
-                    } else {
-                        d.addValue(labelLevel, label, getCurrentLocation());
-                    }
-                }
-
-                return;
-            }
-        }
-
-        //TODO is this a mnemonic?
-
-        //  Look up the opcode in the dictionary
-
-        //TODO Is it an expression?
+        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "What the heck is this?"));
     }
 
     /**
@@ -228,7 +357,8 @@ public class Assembler {
             _diagnostics.append(line._diagnostics);
         }
 
-        //???? TODO
+        //  Resolve all references which can be resolved
+        //TODO
     }
 
     /**
@@ -247,8 +377,16 @@ public class Assembler {
         System.out.println("Dictionary");
         for (String label : _context._dictionary.getLabels()) {
             try {
-                Value value = _context._dictionary.getValue(label);
-                System.out.println(String.format("%s: %s", label, value.toString()));
+                Dictionary.ValueAndLevel val = _context._dictionary.getValueAndLevel(label);
+                StringBuilder sb = new StringBuilder();
+                sb.append(label);
+                for (int lx = 0; lx < val._level; ++lx) {
+                    sb.append("*");
+                }
+                sb.append(": ");
+                sb.append(val._value.toString());
+
+                System.out.println(sb.toString());
             } catch (NotFoundException ex) {
                 //  can't happen
             }

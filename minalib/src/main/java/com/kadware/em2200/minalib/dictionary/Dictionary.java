@@ -15,6 +15,19 @@ import java.util.Set;
  */
 public class Dictionary {
 
+    public class ValueAndLevel {
+        final public int _level;
+        final public Value _value;
+
+        public ValueAndLevel(
+            final int level,
+            final Value value
+        ) {
+            _level = level;
+            _value = value;
+        }
+    }
+
     private final Dictionary _upperLevelDictionary;
     private final Map<String, Value> _values = new HashMap<>();
 
@@ -87,6 +100,29 @@ public class Dictionary {
             throw new NotFoundException(label);
         }
         return result;
+    }
+
+    /**
+     * Retrieves a particular Value object along with its level, 0 representing the current dictionary,
+     * anything greater representing higher-level dictionaries.
+     * @param label label to be retrieved
+     * @return object if found
+     * @throws NotFoundException if the value is not found in this, or any upper-level dictionary
+     */
+    public ValueAndLevel getValueAndLevel(
+            final String label
+    ) throws NotFoundException {
+        Value v = _values.get(label.toUpperCase());
+        if (v == null) {
+            if (_upperLevelDictionary != null) {
+                ValueAndLevel upperResult = _upperLevelDictionary.getValueAndLevel( label );
+                return new ValueAndLevel(upperResult._level + 1, upperResult._value);
+            } else {
+                throw new NotFoundException( label );
+            }
+        }
+
+        return new ValueAndLevel(0, v);
     }
 
     /**
