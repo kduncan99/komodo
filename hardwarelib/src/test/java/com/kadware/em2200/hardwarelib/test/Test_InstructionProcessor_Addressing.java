@@ -41,7 +41,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPINotAssignedException {
         String[] source = {
             "START* .",
-            "          LA,U      A5,01000 . 010, 016, 0, 0, 01000",
+            "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
 //            "          PF$FJAXU  010,016,0,0,01000",//????
             "END .",
             "          HALT      0",

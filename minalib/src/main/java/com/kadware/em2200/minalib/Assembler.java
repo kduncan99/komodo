@@ -10,6 +10,8 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
+import org.omg.CosNaming.NamingContextPackage.NotFound;
+
 import java.util.Map;
 
 /**
@@ -172,12 +174,7 @@ public class Assembler {
 
         //  Deal with the operand field
         int aField = 0;
-        int xField = 0;
-        int hField = 0;
-        int iField = 0;
-        int uField = 0;
-        int bField = 0;
-        int dField = 0;
+        Value operandValue = null;
         if (operandField == null) {
             diagnostics.append(new ErrorDiagnostic( operationField.getLocale(), "Mnemonic requires an operand field"));
         } else {
@@ -186,7 +183,7 @@ public class Assembler {
             //  If the flag is clear, then the first subfield is a register specification... which can get a bit
             //  complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
             TextSubfield registerSubField = null;
-            TextSubfield addressSubField = null;
+            TextSubfield valueSubField = null;
             TextSubfield indexSubField = null;
             TextSubfield baseSubField = null;
 
@@ -197,7 +194,7 @@ public class Assembler {
                 registerSubField = operandField.getSubfield( sfx++ );
             }
             if (sfc > sfx) {
-                addressSubField = operandField.getSubfield( sfx++ );
+                valueSubField = operandField.getSubfield( sfx++ );
             }
             if (sfc > sfx) {
                 indexSubField = operandField.getSubfield( sfx++ );
@@ -212,41 +209,71 @@ public class Assembler {
             }
 
             //  Interpret the subfields
-            if (!iinfo._aFlag)
-                if (registerSubField == null) {
-                    diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
-                                                             "Missing register specification" ) );
-                } else {
-                    try {
-                        switch (iinfo._aSemantics) {
-                            case A:
-                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 12;
-                                break;
-                            case R:
-                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 64;
-                                break;
-                            case X:
-                                aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) ;
-                                break;
-                            case B:
-                            case B_EXEC:
-                                //TODO
-                        }
-                    } catch (NotFoundException nfex) {
-                        diagnostics.append(new ErrorDiagnostic( registerSubField.getLocale(),
-                                                                "Unrecognized value in register subfield"));
+            if ((registerSubField == null) || (registerSubField.getText().isEmpty())) {
+                diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
+                                                         "Missing register specification" ) );
+            } else {
+                try {
+                    switch (iinfo._aSemantics) {
+                        case A:
+                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 12;
+                            break;
+                        case R:
+                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 64;
+                            break;
+                        case X:
+                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) ;
+                            break;
+                        case B:
+                        case B_EXEC:
+                            //TODO
                     }
+                } catch (NotFoundException nfex) {
+                    diagnostics.append(new ErrorDiagnostic( registerSubField.getLocale(),
+                                                            "Unrecognized value in register subfield"));
+                }
 
-                    if ((aField < 0) || (aField > 017)) {
-                        diagnostics.append(new TruncationDiagnostic( registerSubField.getLocale(),
-                                                                     "Illegal value "));
+                if ((aField < 0) || (aField > 017)) {
+                    diagnostics.append(new TruncationDiagnostic(
+                        registerSubField.getLocale(),
+                        "Illegal value "));
                 }
             }
+
+            if ((valueSubField == null) || (valueSubField.getText().isEmpty())) {
+                diagnostics.append(new ErrorDiagnostic(operandField.getLocale(),
+                                                       "Missing operand value (U, u, or d subfield)"));
+            } else {
+                ExpressionParser p = new ExpressionParser(valueSubField.getText(), valueSubField.getLocale());
+                try {
+                    Expression e = p.parse(_context, diagnostics);
+                    Value v = e.evaluate(_context, diagnostics);
+                    if (v.getType() != ValueType.Integer) {
+                        diagnostics.append(new ValueDiagnostic(valueSubField.getLocale(),
+                                                               "Operand value is not an integer type"));
+                        operandValue = new IntegerValue.Builder().build();
+                    } else {
+                        operandValue = v;
+                    }
+                } catch (ExpressionException | NotFoundException ex) {
+                    diagnostics.append(new ErrorDiagnostic(valueSubField.getLocale(),
+                                                           "Syntax error in operand value"));
+                    operandValue = new IntegerValue.Builder().build();
+                }
+            }
+
+            //TODO x-field
+            //TODO maybe b-field
         }
 
         //  Create the instruction word...
         //TODO
-        System.out.println(String.format("f=%02o j=%02o a=%02o", iinfo._fField, jField, aField));//TODO temporary
+        System.out.println(String.format("f=%02o j=%02o a=%02o val=%s%s",
+                                         iinfo._fField,
+                                         jField,
+                                         aField,
+                                         operandValue.getFlagged() ? "*" : "",
+                                         operandValue.toString()));//TODO temporary
 
         return true;
     }

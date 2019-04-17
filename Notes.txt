@@ -1,4 +1,10 @@
-minalib - need to finish code to generate Relocatable objects
+Change integer value to 64-bit (long) - saves us a lot of trouble
+  Then fix bug in ExpressionParser line 444 where we ignore radix
+We added some code to skip whitespace after + or -, but we did it wrong.  Remove it.
+Can we forego the attached form for Values ?
+Can we have a specific $FORM type ?
+Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
+
 * Flesh out relocInfo for Value object
 ** Need Undefined Reference relocInfo
 ** Do we need more than one Reloc info for Value objects?  I think so...
