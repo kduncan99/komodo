@@ -5,13 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b880716-c31f-448c-9c99-d38ba345c67e" name="Default Changelist" comment="Interpret register subfield, labels.">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/InstructionWord.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/InstructionWord.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/OnesComplement.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/OnesComplement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -43,38 +50,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Notes.txt">
-          <provider selected="true" editor-type-id="text-editor" />
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="5" selection-start-line="5" selection-end-line="5" />
+            </state>
+          </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="448" selection-start-line="448" selection-end-line="448" />
-              <folding>
-                <element signature="e#0#21449#0" expanded="true" />
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/InstructionWord.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="304">
-              <caret line="598" column="4" lean-forward="true" selection-start-line="598" selection-start-column="4" selection-end-line="598" selection-end-column="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4140">
-              <caret line="287" selection-start-line="287" selection-end-line="287" />
+            <state relative-caret-position="633">
+              <caret line="526" lean-forward="true" selection-start-line="526" selection-end-line="526" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -83,10 +72,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/MainLevelDictionary.java">
+        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="570">
-              <caret line="43" selection-start-line="43" selection-end-line="43" />
+            <state relative-caret-position="1575">
+              <caret line="107" selection-start-line="107" selection-end-line="107" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -94,11 +83,23 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret lean-forward="true" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="382">
-              <caret line="48" selection-start-line="48" selection-end-line="48" />
+            <state relative-caret-position="372">
+              <caret line="43" column="36" lean-forward="true" selection-start-line="43" selection-start-column="36" selection-end-line="43" selection-end-column="36" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -130,9 +131,9 @@
       <find>getInstructionWord</find>
       <find>NotFound</find>
       <find>parseLabel</find>
-      <find>s</find>
       <find>Locale</find>
       <find>l;</find>
+      <find>s</find>
     </findStrings>
     <replaceStrings>
       <replace>HashSet</replace>
@@ -152,16 +153,11 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/Expression.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/OperandItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ReferenceItem.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ValueItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FormValue.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/BuiltInFunctionValue.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/NodeValue.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java" />
@@ -170,22 +166,15 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SRFunction.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/SSFunction.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/builtInFunctions/TYPEFunction.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Context.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessThanOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NegativeOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java" />
@@ -199,10 +188,22 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/MainLevelDictionary.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/InstructionWord.java" />
-        <option value="$PROJECT_DIR$/Notes.txt" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/OnesComplement.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
+        <option value="$PROJECT_DIR$/Notes.txt" />
       </list>
     </option>
   </component>
@@ -445,6 +446,17 @@
               <item name="expressions" type="462c0819:PsiDirectoryNode" />
               <item name="builtInFunctions" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+              <item name="operators" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -523,7 +535,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="Errors" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.tabs" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
@@ -557,7 +569,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_ConcatenationOperator" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_ConcatenationOperator.integer_ASCII" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="minalib" />
       <extension name="coverage">
         <pattern>
@@ -567,7 +579,24 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib.expressions.operators" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.expressions.operators.Test_ConcatenationOperator" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="METHOD_NAME" value="integer_ASCII" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Expression.parseSimpleMathWithPrecedence" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.em2200.minalib.expressions.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib.expressions" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.expressions.Test_Expression" />
+      <option name="METHOD_NAME" value="parseSimpleMathWithPrecedence" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -588,23 +617,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode_old" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="immediateUnsigned_BasicMode_old" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_TextField" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="com.kadware.em2200.minalib in minalib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="minalib" />
       <extension name="coverage">
         <pattern>
@@ -613,8 +626,7 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.minalib.Test_TextField" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="TEST_OBJECT" value="package" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -622,10 +634,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" />
+        <item itemvalue="JUnit.com.kadware.em2200.minalib in minalib" />
+        <item itemvalue="JUnit.Test_ConcatenationOperator.integer_ASCII" />
         <item itemvalue="JUnit.All in minalib" />
-        <item itemvalue="JUnit.Test_ConcatenationOperator" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode_old" />
-        <item itemvalue="JUnit.Test_TextField" />
+        <item itemvalue="JUnit.Test_Expression.parseSimpleMathWithPrecedence" />
       </list>
     </recent_temporary>
   </component>
@@ -652,7 +664,7 @@
       <workItem from="1555462413378" duration="2768000" />
       <workItem from="1555517736949" duration="12843000" />
       <workItem from="1555607541905" duration="28291000" />
-      <workItem from="1555814263513" duration="7109000" />
+      <workItem from="1555814263513" duration="10580000" />
     </task>
     <task id="LOCAL-00001" summary="Interpret register subfield, labels.">
       <created>1555456868457</created>
@@ -665,39 +677,39 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 16m 58s.xml">
+    <history-entry file="All_in_minalib - 2019.04.21 at 10h 12m 52s.xml">
+      <configuration name="All in minalib" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_Expression_parseSimpleMathWithPrecedence - 2019.04.21 at 10h 14m 13s.xml">
+      <configuration name="Test_Expression.parseSimpleMathWithPrecedence" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_Expression_parseSimpleMathWithPrecedence - 2019.04.21 at 10h 21m 52s.xml">
+      <configuration name="Test_Expression.parseSimpleMathWithPrecedence" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_Expression_parseSimpleMathWithPrecedence - 2019.04.21 at 10h 22m 16s.xml">
+      <configuration name="Test_Expression.parseSimpleMathWithPrecedence" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="All_in_minalib - 2019.04.21 at 10h 26m 38s.xml">
+      <configuration name="All in minalib" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="com_kadware_em2200_minalib_in_minalib - 2019.04.21 at 10h 29m 14s.xml">
+      <configuration name="com.kadware.em2200.minalib in minalib" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 10h 29m 57s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 18m 59s.xml">
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 10h 44m 50s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 19m 25s.xml">
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 10h 49m 56s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 19m 46s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 20m 18s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 21m 13s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.20 at 19h 22m 26s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 09h 08m 12s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 09h 11m 07s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 09h 13m 57s.xml">
+    <history-entry file="Test_InstructionProcessor_Addressing_immediateUnsigned_BasicMode - 2019.04.21 at 10h 51m 05s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.immediateUnsigned_BasicMode" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="142932000" />
+    <option name="totallyTimeSpent" value="146403000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="185" y="23" width="1728" height="1088" extended-state="0" />
@@ -772,6 +784,18 @@
           <properties />
           <option name="timeStamp" value="12" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java</url>
+          <line>80</line>
+          <properties />
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java</url>
+          <line>103</line>
+          <properties />
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
@@ -781,70 +805,12 @@
     </SUITE>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="83" selection-start-line="83" selection-end-line="83" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ValueItem.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="10" selection-start-line="10" selection-end-line="10" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FormValue.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/FlaggedOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="83">
-          <caret line="45" selection-start-line="45" selection-end-line="45" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FloatingPointValue.java">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/RelationalOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="593">
-          <caret line="96" selection-start-line="96" selection-end-line="96" />
         </state>
       </provider>
     </entry>
@@ -933,69 +899,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1080">
-          <caret line="72" selection-start-line="72" selection-end-line="72" />
-          <folding>
-            <element signature="e#0#2370#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="456">
-          <caret line="76" selection-start-line="76" selection-end-line="76" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="456">
-          <caret line="47" selection-start-line="47" selection-end-line="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="15" column="13" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#1921#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterThanOperator.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="366">
           <caret line="44" selection-start-line="44" selection-end-line="44" />
           <folding>
             <element signature="e#0#1977#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="43" column="70" selection-start-line="43" selection-start-column="70" selection-end-line="43" selection-end-column="70" />
-          <folding>
-            <element signature="e#0#1551#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="426">
-          <caret line="45" selection-start-line="45" selection-end-line="45" />
-          <folding>
-            <element signature="e#0#1984#0" expanded="true" />
-            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1010,95 +919,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="336">
-          <caret line="69" selection-start-line="54" selection-end-line="69" />
-          <folding>
-            <element signature="e#0#2379#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-            <element signature="e#385#416#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="456">
-          <caret line="74" selection-start-line="74" selection-end-line="74" />
-          <folding>
-            <element signature="e#0#2152#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="471">
-          <caret line="73" selection-start-line="73" selection-end-line="73" />
-          <folding>
-            <element signature="e#0#2146#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="441">
-          <caret line="70" column="47" selection-start-line="70" selection-start-column="47" selection-end-line="70" selection-end-column="47" />
-          <folding>
-            <element signature="e#0#2304#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="501">
-          <caret line="90" column="29" selection-start-line="90" selection-start-column="29" selection-end-line="90" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#2810#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NegativeOperator.java">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <folding>
             <element signature="e#0#2185#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="546">
-          <caret line="59" selection-start-line="59" selection-end-line="59" />
-          <folding>
-            <element signature="e#0#1892#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="56" column="67" selection-start-line="56" selection-start-column="67" selection-end-line="56" selection-end-column="67" />
-          <folding>
-            <element signature="e#0#1898#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/Operator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="110" selection-start-line="110" selection-end-line="110" />
-          <folding>
-            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1114,29 +939,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="413">
-          <caret line="69" selection-start-line="54" selection-end-line="69" />
-          <folding>
-            <element signature="e#0#2094#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-            <element signature="e#380#411#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/BuiltInFunctionItem.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="245">
           <caret line="28" selection-start-line="28" selection-end-line="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="158">
-          <caret line="106" selection-start-line="106" selection-end-line="106" />
         </state>
       </provider>
     </entry>
@@ -1151,13 +957,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="465">
           <caret line="42" selection-start-line="42" selection-end-line="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="473">
-          <caret line="77" selection-start-line="77" selection-end-line="77" />
         </state>
       </provider>
     </entry>
@@ -1198,16 +997,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="16" selection-start-line="15" selection-end-line="16" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/OnesComplement.java">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -1217,9 +1006,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Notes.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/InstructionWord.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="304">
@@ -1227,12 +1013,215 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
+    <entry file="jar://$MAVEN_REPOSITORY$/junit/junit/4.12/junit-4.12.jar!/org/junit/Assert.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="448" selection-start-line="448" selection-end-line="448" />
+        <state>
           <folding>
-            <element signature="e#0#21449#0" expanded="true" />
+            <element signature="e#0#12755#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AdditionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="67" selection-start-line="67" selection-end-line="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_Expression.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="70" column="51" selection-start-line="70" selection-start-column="51" selection-end-line="70" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/Operator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="302">
+          <caret line="91" selection-start-line="91" selection-end-line="91" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/AndOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="202">
+          <caret line="51" column="32" selection-start-line="51" selection-start-column="32" selection-end-line="51" selection-end-column="32" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionRemainderOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="58" column="48" selection-start-line="58" selection-start-column="48" selection-end-line="58" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="61" column="52" selection-start-line="61" selection-start-column="52" selection-end-line="61" selection-end-column="52" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/DivisionCoveredQuotientOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="59" column="48" selection-start-line="59" selection-start-column="48" selection-end-line="59" selection-end-column="48" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/EqualityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="494">
+          <caret line="47" selection-start-line="47" selection-end-line="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/GreaterOrEqualOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="547">
+          <caret line="55" lean-forward="true" selection-start-line="55" selection-end-line="55" />
+          <folding>
+            <element signature="e#0#1921#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/InequalityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="486">
+          <caret line="43" column="70" selection-start-line="43" selection-start-column="70" selection-end-line="43" selection-end-column="70" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/LessOrEqualOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="426">
+          <caret line="45" selection-start-line="45" selection-end-line="45" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeIdentityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-98">
+          <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/NodeNonIdentityOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="524">
+          <caret line="56" column="67" selection-start-line="56" selection-start-column="67" selection-end-line="56" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/XorOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="344">
+          <caret line="64" column="48" selection-start-line="64" selection-start-column="48" selection-end-line="64" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/SubtractionOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="43">
+          <caret line="61" selection-start-line="61" selection-end-line="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ShiftOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="70" column="47" selection-start-line="70" selection-start-column="47" selection-end-line="70" selection-end-column="47" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/RelationalOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="593">
+          <caret line="96" selection-start-line="96" selection-end-line="96" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/OrOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="62" column="48" selection-start-line="62" selection-start-column="48" selection-end-line="62" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/MultiplicationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="446">
+          <caret line="64" selection-start-line="64" selection-end-line="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/operators/Test_ConcatenationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="355">
+          <caret line="103" selection-start-line="103" selection-end-line="103" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="495">
+          <caret line="203" column="43" selection-start-line="203" selection-start-column="43" selection-end-line="203" selection-end-column="43" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/operators/ConcatenationOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="63" selection-start-line="63" selection-end-line="63" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/TextLine.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1575">
+          <caret line="107" selection-start-line="107" selection-end-line="107" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableWord36.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret lean-forward="true" />
+          <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
@@ -1240,11 +1229,28 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="382">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        <state relative-caret-position="372">
+          <caret line="43" column="36" lean-forward="true" selection-start-line="43" selection-start-column="36" selection-end-line="43" selection-end-column="36" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="633">
+          <caret line="526" lean-forward="true" selection-start-line="526" selection-end-line="526" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Notes.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" selection-start-line="5" selection-end-line="5" />
         </state>
       </provider>
     </entry>

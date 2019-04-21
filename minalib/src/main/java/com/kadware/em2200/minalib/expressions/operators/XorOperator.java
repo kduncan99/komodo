@@ -62,7 +62,7 @@ public class XorOperator extends LogicalOperator {
                 diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
             }
 
-            IntegerValue rightValue = operands[0].toIntegerValue(getLocale(), diagnostics);
+            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
             if (rightValue.getUndefinedReferences().length != 0) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }

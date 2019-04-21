@@ -8,11 +8,29 @@ import com.kadware.em2200.minalib.diagnostics.ErrorDiagnostic;
 import com.kadware.em2200.minalib.diagnostics.QuoteDiagnostic;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Represents a line of source code
  */
 class TextLine {
+
+    public static class GeneratedWord{
+        public final int _lcIndex;
+        public final int _lcOffset;
+        public final RelocatableWord36 _word;
+
+        public GeneratedWord(
+            final int lcIndex,
+            final int lcOffset,
+            final RelocatableWord36 word
+        ) {
+            _lcIndex = lcIndex;
+            _lcOffset = lcOffset;
+            _word = word;
+        }
+    }
 
     //  line number of this line of text
     final int _lineNumber;
@@ -25,6 +43,10 @@ class TextLine {
 
     //  Diagnostic objects pertaining to this line of text
     final Diagnostics _diagnostics = new Diagnostics();
+
+    //  Words generated for this line of text
+    final List<GeneratedWord> _generatedWords = new LinkedList<>();
+
 
     /**
      * Constructor
@@ -51,6 +73,20 @@ class TextLine {
             return _fields.get(index);
         }
         return null;
+    }
+
+    /**
+     * Add a reference to a word generated for this line of text
+     * @param lcIndex location counter index
+     * @param lcOffset location counter offset
+     * @param word word generated (including any relocation information)
+     */
+    void appendWord(
+        final int lcIndex,
+        final int lcOffset,
+        final RelocatableWord36 word
+    ) {
+        _generatedWords.add(new GeneratedWord(lcIndex, lcOffset, word));
     }
 
     /**

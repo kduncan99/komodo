@@ -59,10 +59,6 @@ public class SubtractionOperator extends ArithmeticOperator {
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue iopLeft = (IntegerValue)operands[0];
                 IntegerValue iopRight = (IntegerValue)operands[1];
-                if (iopLeft.getFlagged() || iopRight.getFlagged()) {
-                    diagnostics.append(new ValueDiagnostic( getLocale(), "Cannot subtract flagged values" ));
-                    throw new ExpressionException();
-                }
 
                 long intResult = iopLeft.getValue() + iopRight.getValue();
 

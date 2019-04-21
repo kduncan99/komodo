@@ -54,7 +54,7 @@ public class Assembler {
         TextField operandField = textLine.getField(2);
 
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(labelField, operationField, operandField, textLine._diagnostics)) {
+        if (processMnemonic(textLine, labelField, operationField, operandField, textLine._diagnostics)) {
             if (textLine._fields.size() > 3) {
                 _diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
                                                         "Extraneous fields ignored"));
@@ -93,6 +93,7 @@ public class Assembler {
 
     /**
      * Generates the given word into the indicated location counter pool
+     * @param textLine line of text which is driving this
      * @param form indicates the bit fields - there should be one value per bit-field
      * @param values the values to be used
      * @param lcIndex index of the location counter pool
@@ -100,6 +101,7 @@ public class Assembler {
      * @param diagnostics where we post diagnostics if necessary
      */
     private void generate(
+        final TextLine textLine,
         final Form form,
         final IntegerValue[] values,
         final int lcIndex,
@@ -140,8 +142,17 @@ public class Assembler {
             startingBit += fieldSizes[fx];
         }
 
-        //TODO
-        System.out.println(String.format("--$(%d)->%012o", lcIndex, result));
+        //TODO set up undefined references
+
+        RelocatableWord36 rw36 = new RelocatableWord36( result, null );
+        try {
+            LocationCounterPool pool = getRelocatableModule().getLocationCounterPool( lcIndex );
+            int lcOffset = pool.getNextOffset();
+            pool.appendStorage( rw36 );
+            textLine.appendWord( lcIndex, lcOffset, rw36 );
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException( "Internal Error" );
+        }
     }
 
     /**
@@ -210,6 +221,7 @@ public class Assembler {
 
     /**
      * Handles instruction mnemonic lines of code, and blank lines
+     * @param textLine where this came from
      * @param labelField represents the label field, if any
      * @param operationField represents the operation field, if any
      * @param operandField represents the operand field, if any
@@ -217,6 +229,7 @@ public class Assembler {
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
     private boolean processMnemonic(
+        final TextLine textLine,
         final TextField labelField,
         final TextField operationField,
         final TextField operandField,
@@ -421,14 +434,6 @@ public class Assembler {
         }
 
         //  Create the instruction word
-        //TODO
-        System.out.println(String.format("f=%02o j=%o a=%s val=%s x=%s b=%s",
-                                         iinfo._fField,
-                                         jField,
-                                         String.valueOf(aValue),
-                                         String.valueOf(uValue),
-                                         String.valueOf(xValue),
-                                         String.valueOf(bValue)));
         if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
             if (iinfo._jFlag || (jField < 016)) {
                 IntegerValue[] values = new IntegerValue[7];
@@ -439,7 +444,7 @@ public class Assembler {
                 values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
                 values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
                 values[6] = uValue;
-                generate(_fjaxhiuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+                generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
             } else {
                 IntegerValue[] values = new IntegerValue[5];
                 values[0] = new IntegerValue( false, iinfo._fField, null );
@@ -447,7 +452,7 @@ public class Assembler {
                 values[2] = aValue;
                 values[3] = xValue;
                 values[4] = uValue;
-                generate(_fjaxuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+                generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
             }
         } else {
             IntegerValue[] values = new IntegerValue[8];
@@ -459,7 +464,7 @@ public class Assembler {
             values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
             values[6] = bValue;
             values[7] = uValue;
-            generate(_fjaxhibdForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+            generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
         }
 
         return true;
@@ -527,8 +532,22 @@ public class Assembler {
     ) {
         for (TextLine line : _sourceCode) {
             System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
+
             for (Diagnostic d : line._diagnostics.getDiagnostics()) {
-                System.out.println(d.getMessage());
+                System.out.println( d.getMessage() );
+            }
+
+            for (TextLine.GeneratedWord gw : line._generatedWords) {
+                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, gw._word.getW());
+                if (gw._word._undefinedReferences.length == 0) {
+                    System.out.println(gwBase);
+                } else {
+                    for (int urx = 0; urx < gw._word._undefinedReferences.length; ++urx) {
+                        System.out.println(String.format("%s %s",
+                                                         urx == 0 ? gwBase : "                           ",
+                                                         gw._word._undefinedReferences[urx].toString()));
+                    }
+                }
             }
         }
 

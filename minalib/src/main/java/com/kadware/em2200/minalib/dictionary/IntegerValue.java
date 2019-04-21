@@ -201,7 +201,7 @@ public class IntegerValue extends Value {
         final CharacterMode characterMode,
         Diagnostics diagnostics
     ) {
-        if (_undefinedReferences != null) {
+        if (_undefinedReferences.length > 0) {
             diagnostics.append(new RelocationDiagnostic(locale));
         }
 

@@ -1,5 +1,9 @@
+RelocatableModule - resolve all resolvable references
+  Need to figure out how we're going to handle LC and BDI references
+
+Unit testing - convert RelocatableModule to bank info things
+
 Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
-Need Undefined References for RelocatableWord36 objects
 
 Convert IP unit tests from octal to assembler and mina them
 

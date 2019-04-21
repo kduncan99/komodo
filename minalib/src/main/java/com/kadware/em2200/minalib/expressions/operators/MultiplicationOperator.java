@@ -58,16 +58,10 @@ public class MultiplicationOperator extends ArithmeticOperator {
                 if (leftValue.getUndefinedReferences().length != 0) {
                     diagnostics.append( new RelocationDiagnostic( getLocale() ) );
                 }
-                if (leftValue.getFlagged()) {
-                    diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
-                }
 
-                IntegerValue rightValue = operands[0].toIntegerValue(getLocale(), diagnostics);
+                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
                 if (rightValue.getUndefinedReferences().length != 0) {
                     diagnostics.append( new RelocationDiagnostic( getLocale() ) );
-                }
-                if (rightValue.getFlagged()) {
-                    diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
                 }
 
                 long result = leftValue.getValue() * rightValue.getValue();
@@ -75,15 +69,7 @@ public class MultiplicationOperator extends ArithmeticOperator {
             } else {
                 //  must be floating point
                 FloatingPointValue leftValue = (FloatingPointValue)operands[0];
-                if (leftValue.getFlagged()) {
-                    diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
-                }
-
                 FloatingPointValue rightValue = (FloatingPointValue)operands[1];
-                if (rightValue.getFlagged()) {
-                    diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
-                }
-
                 double result = leftValue.getValue() * rightValue.getValue();
                 opResult = new FloatingPointValue( false, result );
             }
