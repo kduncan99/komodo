@@ -27,7 +27,7 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("14458", locale);
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -47,7 +47,7 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("'Hello'", locale);
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -67,7 +67,7 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("'Hello ':'Stupid ':'Moron'", locale);
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -82,7 +82,7 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("1+3", locale);
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -109,7 +109,7 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("$sl('Test')", locale);
 
-        Context context = new Context();
+        Context context = new Context( new SystemDictionary() );
         Diagnostics diagnostics = new Diagnostics();
         FunctionItem fi = parser.parseFunction(context, diagnostics);
         assertTrue(fi instanceof BuiltInFunctionItem);

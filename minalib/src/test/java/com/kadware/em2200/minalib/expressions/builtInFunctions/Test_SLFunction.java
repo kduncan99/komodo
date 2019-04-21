@@ -34,7 +34,7 @@ public class Test_SLFunction {
 
         BuiltInFunction bif = new SLFunction(new Locale(10, 16), expressions);
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diagnostics = new Diagnostics();
         Value result = bif.evaluate(context, diagnostics);
 

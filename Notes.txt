@@ -1,5 +1,4 @@
-RelocatableModule - resolve all resolvable references
-  Need to figure out how we're going to handle LC and BDI references
+Implement HALT instruction 077 017 017 in both modes
 
 Unit testing - convert RelocatableModule to bank info things
 

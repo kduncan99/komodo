@@ -12,6 +12,11 @@ import java.util.Set;
 
 /**
  * Represents a collection of values, tagged with a label
+ * Dictionaries are structured as such:
+ *  SystemDictionary (contains system labels which may be overwritten)
+ *  GlobalDictionary (contains labels defined by the program which are to be externalized)
+ *  MainDictionary (top level general dictionary, containing top-level non-global labels)
+ *  SubDictionary (subordinate to MainDictionary, created during proc definition, execution, etc)
  */
 public class Dictionary {
 
@@ -32,7 +37,7 @@ public class Dictionary {
     private final Map<String, Value> _values = new HashMap<>();
 
     /**
-     * Constructor for top-level dictionary
+     * Constructor for top-level (System) dictionary
      */
     public Dictionary(
     ) {
@@ -43,7 +48,7 @@ public class Dictionary {
      * Constructor for any other dictionary
      * @param upperLevelDictionary reference to higher level dictionary
      */
-    Dictionary(
+    public Dictionary(
         final Dictionary upperLevelDictionary
     ) {
         _upperLevelDictionary = upperLevelDictionary;

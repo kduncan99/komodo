@@ -25,7 +25,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -48,7 +48,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.Fieldata));
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         context._characterMode = CharacterMode.Fieldata;
         Diagnostics diags = new Diagnostics();
 
@@ -72,7 +72,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -95,7 +95,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new IntegerValue(false, 0_101_102_103_104L, null));
         valueStack.push(new IntegerValue(false, 0_105_106_107_110L, null));
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -118,7 +118,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
         valueStack.push(new FloatingPointValue(false, 1.0));
 
-        Context context = new Context();
+        Context context = new Context( new Dictionary() );
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));

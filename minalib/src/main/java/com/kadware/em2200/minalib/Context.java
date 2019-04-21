@@ -21,7 +21,8 @@ public class Context {
      * General constructor
      */
     public Context(
+        final Dictionary upperLevelDictionary
     ) {
-        _dictionary = new MainLevelDictionary(new Dictionary());
+        _dictionary = new Dictionary( upperLevelDictionary );
     }
 }

@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a main-level (i.e., level 1) dictionary.
+ * Represents a top-level dictionary which contains all the system labels
  * This is a subclass so that we can pre-load the built-ins
  */
-public class MainLevelDictionary extends Dictionary {
+public class SystemDictionary extends Dictionary {
 
     private static final Map<String, Value> _initialValues = new HashMap<>();
     static {
@@ -64,17 +64,8 @@ public class MainLevelDictionary extends Dictionary {
 
     /**
      * Constructor for top-level dictionary
-     * <p>
-     * @param globalDictionary reference to the global-level (level 0) dictionary
      */
-    public MainLevelDictionary(
-        final Dictionary globalDictionary
-    ) {
-        super(globalDictionary);
-        initialize();
-    }
-
-    private void initialize(
+    public SystemDictionary(
     ) {
         for (Map.Entry<String, Value> entry : _initialValues.entrySet()) {
             addValue(0, entry.getKey(), entry.getValue());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2 by Kurt Duncan - All Rights Reserved
  */
 package com.kadware.em2200.minalib;
 
@@ -16,8 +16,8 @@ public class Test_Assembler {
     ) {
         String[] source = {};
 
-        Assembler asm = new Assembler("Test", source);
-        asm.assemble();
+        Assembler asm = new Assembler( source );
+        asm.assemble( "Test" );
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(0, asm.getParsedCode().length);
     }
@@ -32,8 +32,8 @@ public class Test_Assembler {
             ". Blah blah blah",
         };
 
-        Assembler asm = new Assembler("Test", source);
-        asm.assemble();
+        Assembler asm = new Assembler( source );
+        asm.assemble( "Test" );
         assertTrue(asm.getDiagnostics().isEmpty());
         TextLine[] parsedCode = asm.getParsedCode();
         assertEquals(4, parsedCode.length);

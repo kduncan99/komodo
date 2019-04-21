@@ -10,10 +10,12 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Assembler for minalib
@@ -23,7 +25,7 @@ public class Assembler {
 
     //  The Context object contains things which specifically apply to a particular sub-assembly...
     //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
-    private final Context _context = new Context();
+    private Context _context;
 
     //  Aggregation of all TextLine diagnostics.
     //  This is rarely (if at all) up-to-date, until we reach the end of the assembly process.
@@ -33,12 +35,12 @@ public class Assembler {
     //  Keep track of the amount of code generated per location counter index
     private final Map<Integer, Integer> _codeCount = new HashMap<>();
 
-    //  The RelocatableModule we build up as a result of the assembly
-    private final RelocatableModule _module;
-
     //  The various TextLine object which comprise the source and assembled code...
     //  These objects are where most of the work is done throughout the assembly process
     private final TextLine[] _sourceCode;
+
+    private Dictionary _globalDictionary;
+    private SystemDictionary _systemDictionary;
 
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
@@ -61,7 +63,7 @@ public class Assembler {
      * @param textLine entity to be assembled
      */
     private void assemble(
-            final TextLine textLine
+        final TextLine textLine
     ) {
         if ( textLine._fields.size() == 0 ) {
             return;
@@ -101,23 +103,34 @@ public class Assembler {
     }
 
     /**
-     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
-     * current generation location counter (e.g., for interpreting '$' or whatever).
-     * @return IntegerValue object as described
+     * Displays the content of a particular dictionary
+     * @param name name to be displayed
+     * @param dictionary dictionary to be displayed
      */
-    private IntegerValue getCurrentLocation(
+    private static void displayDictionary(
+        final String name,
+        final Dictionary dictionary
     ) {
-        //  Find the current generation lc index.
-        //  If it doesn't exist, it will be created.
-        int lcIndex = _context._currentGenerationLCIndex;
-        if (!_codeCount.containsKey( lcIndex )) {
-            _codeCount.put( lcIndex, 0 );
-        }
+        System.out.println("Dictionary " + name);
+        for ( String label : dictionary.getLabels() ) {
+            try {
+                Dictionary.ValueAndLevel val = dictionary.getValueAndLevel( label );
+                if (val._level < 2) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("  ");
+                    sb.append(label);
+                    for ( int x = 0; x < val._level; ++x ) {
+                        sb.append("*");
+                    }
 
-        int lcOffset = _codeCount.get( lcIndex );
-        String ref = String.format( "LC$BASE_%d", lcIndex );
-        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
-        return new IntegerValue(false, lcOffset, refs);
+                    sb.append(": ");
+                    sb.append(val._value.toString());
+                    System.out.println(sb.toString());
+                }
+            } catch (NotFoundException ex) {
+                //  can't happen
+            }
+        }
     }
 
     /**
@@ -153,6 +166,69 @@ public class Assembler {
         int lcOffset = _codeCount.get( lcIndex );
         textLine.appendWord( lcIndex, lcOffset, fields );
         _codeCount.put( lcIndex, lcOffset + 1);
+    }
+
+    /**
+     * Generates the RelocatableModule based on the various internal structures we've built up
+     * @param moduleName name of the module
+     * @return RelocatableModule object
+     */
+    private RelocatableModule generateRelocatableModule(
+        final String moduleName
+    ) {
+        Map<Integer, RelocatableWord36[]> temp = new HashMap<>();
+        for (Map.Entry<Integer, Integer> entry : _codeCount.entrySet()) {
+            int lcIndex = entry.getKey();
+            int size = entry.getValue();
+            temp.put( lcIndex, new RelocatableWord36[size] );
+        }
+
+        for (TextLine line : _sourceCode) {
+            for (TextLine.GeneratedWord gw : line._generatedWords) {
+                temp.get( gw._lcIndex )[gw._lcOffset] = gw.produceRelocatableWord36( line );
+            }
+        }
+
+        Map<Integer, LocationCounterPool> pools = new HashMap<>();
+        for (Map.Entry<Integer, RelocatableWord36[]> entry : temp.entrySet()) {
+            int lcIndex = entry.getKey();
+            RelocatableWord36[] storage = entry.getValue();
+            pools.put( lcIndex, new LocationCounterPool( storage ) );
+        }
+
+        Map<String, IntegerValue> externalLabels = new TreeMap<>();
+        for ( String label : _globalDictionary.getLabels() ) {
+            try {
+                Value val = _globalDictionary.getValue( label );
+                if ( val.getType() == ValueType.Integer ) {
+                    externalLabels.put( label, (IntegerValue) val );
+                }
+            } catch (NotFoundException ex) {
+                //  can't happen
+            }
+        }
+
+        return new RelocatableModule( moduleName, pools, externalLabels );
+    }
+
+    /**
+     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
+     * current generation location counter (e.g., for interpreting '$' or whatever).
+     * @return IntegerValue object as described
+     */
+    private IntegerValue getCurrentLocation(
+    ) {
+        //  Find the current generation lc index.
+        //  If it doesn't exist, it will be created.
+        int lcIndex = _context._currentGenerationLCIndex;
+        if (!_codeCount.containsKey( lcIndex )) {
+            _codeCount.put( lcIndex, 0 );
+        }
+
+        int lcOffset = _codeCount.get( lcIndex );
+        String ref = String.format( "LC$BASE_%d", lcIndex );
+        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
+        return new IntegerValue(false, lcOffset, refs);
     }
 
     /**
@@ -525,14 +601,14 @@ public class Assembler {
 
     /**
      * Create an Assembler object and load it with text from the given array of source lines
-     * @param moduleName name of the module
      * @param source array of strings comprising the source code to be assembled
      */
     public Assembler(
-        final String moduleName,
         final String[] source
     ) {
-        _module = new RelocatableModule(moduleName);
+        _systemDictionary = new SystemDictionary();
+        _globalDictionary = new Dictionary( _systemDictionary );
+        _context = new Context( _globalDictionary );
         _sourceCode = new TextLine[source.length];
         for (int sx = 0; sx < source.length; ++sx) {
             int lineNumber = sx + 1;
@@ -543,8 +619,11 @@ public class Assembler {
     /**
      * Assemble the source code in the object.
      * We do not do things quite in the same way as MASM.
+     * @param moduleName name to be given to the module
+     * @return RelocatableModule we create if successful, else null
      */
-    public void assemble(
+    public RelocatableModule assemble(
+        final String moduleName
     ) {
         //  setup
         _context._characterMode = CharacterMode.ASCII;
@@ -556,7 +635,7 @@ public class Assembler {
             line.parseFields();
             if (line._diagnostics.hasFatal()) {
                 collectDiagnostics();
-                return;
+                return null;
             }
         }
 
@@ -565,15 +644,14 @@ public class Assembler {
             assemble(line);
             if (_diagnostics.hasFatal()) {
                 collectDiagnostics();
-                return;
+                return null;
             }
         }
 
         resolveReferences(_context._dictionary);
-
-        //TODO Generate RelocatableModule
-
+        RelocatableModule module = generateRelocatableModule( moduleName );
         collectDiagnostics();
+        return module;
     }
 
     /**
@@ -603,24 +681,7 @@ public class Assembler {
             }
         }
 
-        System.out.println();
-        System.out.println("Dictionary");
-        for (String label : _context._dictionary.getLabels()) {
-            try {
-                Dictionary.ValueAndLevel val = _context._dictionary.getValueAndLevel(label);
-                StringBuilder sb = new StringBuilder();
-                sb.append(label);
-                for (int lx = 0; lx < val._level; ++lx) {
-                    sb.append("*");
-                }
-                sb.append(": ");
-                sb.append(val._value.toString());
-
-                System.out.println(sb.toString());
-            } catch (NotFoundException ex) {
-                //  can't happen
-            }
-        }
+        displayDictionary( "Dictionary", _context._dictionary );
 
         System.out.println();
         StringBuilder sb = new StringBuilder();
@@ -649,14 +710,5 @@ public class Assembler {
     public TextLine[] getParsedCode(
     ) {
         return _sourceCode;
-    }
-
-    /**
-     * Getter
-     * @return RelocatableModule object produced as a result of the assemble() method
-     */
-    public RelocatableModule getRelocatableModule(
-    ) {
-        return _module;
     }
 }
