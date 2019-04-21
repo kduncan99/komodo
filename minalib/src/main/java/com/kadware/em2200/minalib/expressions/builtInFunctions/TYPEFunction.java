@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
@@ -17,9 +17,8 @@ public class TYPEFunction extends BuiltInFunction {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param argumentExpressions
+     * @param locale location of function ref
+     * @param argumentExpressions arguments
      */
     public TYPEFunction(
         final Locale locale,
@@ -30,8 +29,7 @@ public class TYPEFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public String getFunctionName(
@@ -41,8 +39,7 @@ public class TYPEFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMaximumArguments(
@@ -52,8 +49,7 @@ public class TYPEFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMinimumArguments(
@@ -63,12 +59,9 @@ public class TYPEFunction extends BuiltInFunction {
 
     /**
      * Evaluator
-     * <p>
      * @param context evaluation-time contextual information
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @return Value object representing the result of the evaluation
-     * <p>
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
@@ -88,9 +81,9 @@ public class TYPEFunction extends BuiltInFunction {
             case FuncName:          iType = 7; break;
             case Directive:         iType = 8; break;
             case BuiltInFunction:   iType = 9; break;
+            case Form:              iType = 10; break;  //  this one is non-standard
         }
 
-        return new IntegerValue.Builder().setValue(iType)
-                                         .build();
+        return new IntegerValue(false, iType, null);
     }
 }

@@ -15,6 +15,14 @@ import com.kadware.em2200.minalib.exceptions.ExpressionException;
  */
 public abstract class OperandItem implements ExpressionItem {
 
+    final Locale _locale;
+
+    OperandItem(
+        final Locale locale
+    ) {
+        _locale = locale;
+    }
+
     public abstract Value resolve(
         final Context context,
         Diagnostics diagnostics

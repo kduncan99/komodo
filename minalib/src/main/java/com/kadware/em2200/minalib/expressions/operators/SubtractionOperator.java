@@ -1,25 +1,27 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
 
 import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.minalib.*;
+import com.kadware.em2200.minalib.Locale;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
-import java.util.Stack;
+
+import java.util.*;
 
 /**
  * Class for subtraction operator
  */
+@SuppressWarnings("Duplicates")
 public class SubtractionOperator extends ArithmeticOperator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of operator
      */
     public SubtractionOperator(
         final Locale locale
@@ -29,8 +31,7 @@ public class SubtractionOperator extends ArithmeticOperator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public final int getPrecedence(
@@ -40,11 +41,9 @@ public class SubtractionOperator extends ArithmeticOperator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -60,65 +59,42 @@ public class SubtractionOperator extends ArithmeticOperator {
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue iopLeft = (IntegerValue)operands[0];
                 IntegerValue iopRight = (IntegerValue)operands[1];
-
-                //  check for relocatable incompatibility, and determine value (if any) for the result.
-                //  The minuend (on the left) may have reloc info.  The subtrahend (on the right) may not.
-                RelocationInfo relocInfo = iopLeft.getRelocationInfo();
-                if (iopRight.getRelocationInfo() != null) {
-                    diagnostics.append(new RelocationDiagnostic(getLocale(), "Subtrahend relocation info lost"));
+                if (iopLeft.getFlagged() || iopRight.getFlagged()) {
+                    diagnostics.append(new ValueDiagnostic( getLocale(), "Cannot subtract flagged values" ));
+                    throw new ExpressionException();
                 }
 
-                //  Determine precision results
-                Precision precision = Precision.None;
-                if ((iopLeft.getPrecision() == Precision.Double) || (iopRight.getPrecision() == Precision.Double)) {
-                    precision = Precision.Double;
-                } else if ((iopLeft.getPrecision() == Precision.Single) || (iopRight.getPrecision() == Precision.Single)) {
-                    precision = Precision.Single;
+                long intResult = iopLeft.getValue() + iopRight.getValue();
+
+                List<IntegerValue.UndefinedReference> temp = new LinkedList<>();
+                temp.addAll( Arrays.asList( iopLeft.getUndefinedReferences()));
+                for (IntegerValue.UndefinedReference ref : iopRight.getUndefinedReferences()) {
+                    temp.add(new IntegerValue.UndefinedReference( ref._reference, !ref._isNegative ));
                 }
 
-                //  do the math
-                long[] opLeft = iopLeft.getValue();
-                if (iopLeft.getSigned() == Signed.Negative) {
-                    OnesComplement.negate72(opLeft, opLeft);
+                Map<String, Integer> tallyMap = new HashMap<>();
+                for (IntegerValue.UndefinedReference ref : temp) {
+                    int refVal = ref._isNegative ? -1 : 1;
+                    if ( tallyMap.containsKey( ref._reference ) ) {
+                        refVal += tallyMap.get(ref._reference);
+                    }
+                    tallyMap.put(ref._reference, refVal);
                 }
 
-                long[] opRight = iopRight.getValue();
-                if (iopLeft.getSigned() != Signed.Negative) {
-                    OnesComplement.negate72(opRight, opRight);
+                List<IntegerValue.UndefinedReference> newRefs = new LinkedList<>();
+                for (Map.Entry<String, Integer> entry : tallyMap.entrySet()) {
+                    boolean isNeg = entry.getValue() < 0;
+                    for (int ex = 0; ex < Math.abs(entry.getValue()); ++ex) {
+                        newRefs.add(new IntegerValue.UndefinedReference(entry.getKey(), isNeg));
+                    }
                 }
 
-                OnesComplement.Add72Result ocResult = new OnesComplement.Add72Result();
-                OnesComplement.add72(opLeft, opRight, ocResult);
-
-                //  check for truncation
-                if (ocResult._overflow) {
-                    diagnostics.append(new TruncationDiagnostic(getLocale(), "Arithmetic overflow"));
-                } else if ((precision == Precision.Single) && (ocResult._sum[0] != 0)) {
-                    diagnostics.append(new TruncationDiagnostic(getLocale(), "Result larger than 36 bits"));
-                }
-
-                opResult = new IntegerValue.Builder().setValue(ocResult._sum)
-                                                     .setPrecision(precision)
-                                                     .setRelocationInfo(relocInfo)
-                                                     .build();
+                opResult = new IntegerValue(false, intResult, newRefs.toArray(new IntegerValue.UndefinedReference[0] ));
             } else {
-                //  must be floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-
-                //  Determine precision results
-                Precision precision = Precision.None;
-                if ((iopLeft.getPrecision() == Precision.Double) || (iopRight.getPrecision() == Precision.Double)) {
-                    precision = Precision.Double;
-                } else if ((iopLeft.getPrecision() == Precision.Single) || (iopRight.getPrecision() == Precision.Single)) {
-                    precision = Precision.Single;
-                }
-
-                double opLeft = iopLeft.getSigned() == Signed.Negative ? (0 - iopLeft.getValue()) : iopLeft.getValue();
-                double opRight = iopRight.getSigned() == Signed.Negative ? (0 - iopRight.getValue()) : iopRight.getValue();
-                double result = opLeft - opRight;
-                opResult = new FloatingPointValue.Builder().setValue(result)
-                                                           .build();
+                double result = iopLeft.getValue() - iopRight.getValue();
+                opResult = new FloatingPointValue(false, result);
             }
 
             valueStack.push(opResult);

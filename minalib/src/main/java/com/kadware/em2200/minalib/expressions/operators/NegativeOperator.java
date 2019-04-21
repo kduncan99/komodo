@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
@@ -17,8 +17,7 @@ public class NegativeOperator extends Operator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of operator
      */
     public NegativeOperator(
         final Locale locale
@@ -28,8 +27,7 @@ public class NegativeOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getPrecedence(
@@ -39,8 +37,7 @@ public class NegativeOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public Type getType(
@@ -50,11 +47,9 @@ public class NegativeOperator extends Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -63,22 +58,28 @@ public class NegativeOperator extends Operator {
         Stack<Value> valueStack,
         Diagnostics diagnostics
     ) throws ExpressionException {
-        try {
-            Value operand = getOperands(valueStack)[0];
-            switch(operand.getType()) {
-                case Integer:
-                case FloatingPoint:
-                case String:
-                    valueStack.push(operand.copy(Signed.Negative));
-                    break;
+        Value operand = getOperands(valueStack)[0];
+        switch(operand.getType()) {
+            case Integer:
+                IntegerValue ioperand = (IntegerValue) operand;
+                IntegerValue.UndefinedReference[] opRefs = ioperand.getUndefinedReferences();
+                IntegerValue.UndefinedReference[] negRefs = new IntegerValue.UndefinedReference[opRefs.length];
+                for (int urx = 0; urx < opRefs.length; ++urx) {
+                    negRefs[urx] = new IntegerValue.UndefinedReference( opRefs[urx]._reference, !opRefs[urx]._isNegative );
+                }
+                IntegerValue iresult = new IntegerValue( ioperand.getFlagged(), -ioperand.getValue(), negRefs );
+                valueStack.push( iresult );
+                break;
 
-                default:
-                    postValueDiagnostic(false, diagnostics);
-                    throw new ExpressionException();
-            }
-        } catch (TypeException ex) {
-            postValueDiagnostic(false, diagnostics);
-            throw new ExpressionException();
+            case FloatingPoint:
+                FloatingPointValue fpoperand = (FloatingPointValue) operand;
+                FloatingPointValue fpresult = new FloatingPointValue( fpoperand.getFlagged(), -fpoperand.getValue() );
+                valueStack.push( fpresult );
+                break;
+
+            default:
+                postValueDiagnostic(false, diagnostics);
+                throw new ExpressionException();
         }
     }
 }

@@ -54,12 +54,9 @@ public class Expression {
 
     /**
      * Evaluates the (putative) expression in the given text
-     * <p>
      * @param context under which we evaluate the given expression
      * @param diagnostics where we post any appropriate diagnostics
-     * <p>
      * @return a Value object representing the final evaluated value of the exptression
-     * <p>
      * @throws ExpressionException if the expression evaluation fails at any point
      */
     public Value evaluate(
@@ -70,19 +67,19 @@ public class Expression {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
-        for (ExpressionItem item : _items) {
+        for ( ExpressionItem item : _items ) {
             //  Take items off the item list...
             //  Operand items get resolved into values which are place on the value stack.
             //  Operator items get placed on the operator stack *after* all other operators
             //  on that stack, of equal or greater prcedence, are evaluated.
-            if (item instanceof OperandItem) {
+            if ( item instanceof OperandItem ) {
                 OperandItem opItem = (OperandItem)item;
                 Value value = opItem.resolve(context, diagnostics);
                 valueStack.push(value);
-            } else if (item instanceof OperatorItem) {
+            } else if ( item instanceof OperatorItem ) {
                 OperatorItem opItem = (OperatorItem)item;
                 Operator op = opItem.getOperator();
-                while (!operatorStack.empty() && (operatorStack.peek().getPrecedence() >= op.getPrecedence())) {
+                while ( !operatorStack.empty() && (operatorStack.peek().getPrecedence() >= op.getPrecedence()) ) {
                     Operator stackedOp = operatorStack.pop();
                     stackedOp.evaluate(_context, valueStack, diagnostics);
                 }

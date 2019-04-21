@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions;
@@ -18,7 +18,9 @@ public abstract class FunctionItem extends OperandItem {
      * constructor
      */
     public FunctionItem(
+        final Locale locale
     ) {
+        super( locale );
     }
 
     /**

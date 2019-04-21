@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -12,15 +11,15 @@ import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.Expression;
 
 /**
- * Converts the parameter to a string in the current character set
+ * Produces a substring of the argument string
  */
+@SuppressWarnings("Duplicates")
 public class SSFunction extends BuiltInFunction {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param argumentExpressions
+     * @param locale location of the function
+     * @param argumentExpressions arguments
      */
     public SSFunction(
         final Locale locale,
@@ -31,8 +30,7 @@ public class SSFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public String getFunctionName(
@@ -42,8 +40,7 @@ public class SSFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMaximumArguments(
@@ -53,8 +50,7 @@ public class SSFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMinimumArguments(
@@ -64,12 +60,9 @@ public class SSFunction extends BuiltInFunction {
 
     /**
      * Evaluator
-     * <p>
      * @param context evaluation-time contextual information
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @return Value object representing the result of the evaluation
-     * <p>
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
@@ -98,33 +91,27 @@ public class SSFunction extends BuiltInFunction {
             IntegerValue iarg1 = (IntegerValue)arguments[1];
             IntegerValue iarg2 = (arguments.length == 3) ? (IntegerValue)arguments[2] : null;
 
-            if (iarg1.getRelocationInfo() != null) {
+            if (iarg1.getUndefinedReferences().length != 0) {
                 diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
-            if ((iarg2 != null) && (iarg2.getRelocationInfo() != null)) {
+            if ((iarg2 != null) && (iarg2.getUndefinedReferences().length != 0)) {
                 diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
-            String sval = sarg.getValue();
-            long[] val1 = iarg1.getValue();
-            long[] val2 = { 0, 0 };
-            if (iarg2 != null) {
-                val2 = iarg2.getValue();
-            }
-
-            if (OnesComplement.isNegative72(val1) || OnesComplement.isZero72(val1)) {
-                diagnostics.append(new ValueDiagnostic(getLocale(), "Index argument must be >= 1"));
+            if (iarg1.getValue() < 1) {
+                diagnostics.append(new ValueDiagnostic(getLocale(), "Index argument must be > 0"));
                 throw new ExpressionException();
             }
 
-            if (OnesComplement.isNegative72(val2)) {
+            if ((iarg2 != null) && (iarg2.getValue() < 1)) {
                 diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument must be > 0"));
                 throw new ExpressionException();
             }
 
-            int ival1 = (int)val1[1];
-            int ival2 = (int)val2[1];
+            String sval = sarg.getValue();
+            int ival1 = (int)iarg1.getValue();
+            int ival2 = (iarg2 == null) ? sval.length() - ival1 : (int)iarg2.getValue();
             StringBuilder sb = new StringBuilder();
             sb.append((ival1 < sval.length()) ? sval.substring(ival1, ival2) : "");
             if (sb.length() < ival2) {
@@ -133,9 +120,7 @@ public class SSFunction extends BuiltInFunction {
                 } while (sb.length() < ival2);
             }
 
-            return new StringValue.Builder().setValue(sb.toString())
-                                            .setCharacterMode(sarg.getCharacterMode())
-                                            .build();
+            return new StringValue(false, sb.toString(), sarg.getCharacterMode());
         } catch (ExpressionException ex) {
             diagnostics.append(new ErrorDiagnostic(getLocale(), ex.getMessage()));
             throw ex;

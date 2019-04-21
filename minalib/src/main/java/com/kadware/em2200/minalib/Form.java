@@ -77,4 +77,21 @@ public class Form {
     ) {
         return _leftSlop;
     }
+
+    /**
+     * Produce human-readable version of this object
+     * @return string
+     */
+    public String toString(
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        for (int ix = 0; ix < _fieldSizes.length; ++ix) {
+            sb.append(String.format("%s%d",
+                                    ix == 0 ? "" : ",",
+                                    _fieldSizes[ix]));
+        }
+        sb.append(")");
+        return sb.toString();
+    }
 }

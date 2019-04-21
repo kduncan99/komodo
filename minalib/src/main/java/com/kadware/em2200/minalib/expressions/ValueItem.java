@@ -17,11 +17,14 @@ public class ValueItem extends OperandItem {
 
     /**
      * Constructor
+     * @param locale location of this item
      * @param value Value which we represent
      */
     public ValueItem(
+        final Locale locale,
         final Value value
     ) {
+        super(locale);
         _value = value;
     }
 

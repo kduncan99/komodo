@@ -4,13 +4,11 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.baselib.Word36;
-import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;
-import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * A Value which represents a 72-bit signed integer.
@@ -18,185 +16,96 @@ import java.math.BigInteger;
  */
 public class IntegerValue extends Value {
 
-    public static class Builder {
-        private boolean _flagged = false;
-        private Form _form = null;
-        private Precision _precision = Precision.None;
-        private Signed _signed = Signed.None;
-        private RelocationInfo _relocatableInfo = null;
-        private long[] _value = new long[2];
+    public static class UndefinedReference {
+        public final boolean _isNegative;
+        public final String _reference;
 
-        public Builder setFlagged(
-            final boolean flagged
+        public UndefinedReference(
+            final String reference,
+            final boolean isNegative
         ) {
-            _flagged = flagged;
-            return this;
+            _isNegative = isNegative;
+            _reference = reference;
         }
 
-        public Builder setForm(
-            final Form form
+        @Override
+        public boolean equals(
+            final Object obj
         ) {
-            _form = form;
-            return this;
-        }
-
-        public Builder setPrecision(
-            final Precision precision
-        ) {
-            _precision = precision;
-            return this;
-        }
-
-        public Builder setSigned(
-            final Signed signed
-        ) {
-            _signed = signed;
-            return this;
-        }
-
-        public Builder setRelocationInfo(
-            final RelocationInfo relocationInfo
-        ) {
-            _relocatableInfo = relocationInfo;
-            return this;
-        }
-
-        public Builder setValue(
-            final long value
-        ) {
-            _value[0] = (value >> 36);
-            _value[1] = value & 0_777777_777777l;
-            return this;
-        }
-
-        public Builder setValue(
-            final long[] value
-        ) {
-            assert(value.length == 2);
-            _value[0] = value[0];
-            _value[1] = value[1];
-            return this;
-        }
-
-        public IntegerValue build(
-        ) {
-            return new IntegerValue(_flagged, _signed, _precision, _form, _relocatableInfo, _value);
+            if ( obj instanceof UndefinedReference ) {
+                UndefinedReference robj = (UndefinedReference) obj;
+                return (robj._isNegative == _isNegative) && robj._reference.equals( _reference );
+            }
+            return false;
         }
     }
 
-    // [0] is MS 36-bit Word, [1] is LS 36-bit Word
-    private final long[] _value;
+    private final UndefinedReference[] _undefinedReferences;    //  will never be null, but is often empty
+    private final long _value;
 
     /**
      * constructor
-     * <p>
      * @param flagged - leading asterisk
-     * @param signed - is this signed? pos or neg?
-     * @param precision - only affects things at value generation time
-     * @param form - null if no Form is attached
-     * @param relInfo - null if no Relocation information is attached
-     * @param value - two 36-bit values making up the 72-bit value
+     * @param value - integer value
+     * @param undefinedReferences - null if no undefined references are attached
      */
-    private IntegerValue(
+    public IntegerValue(
         final boolean flagged,
-        final Signed signed,
-        final Precision precision,
-        final Form form,
-        final RelocationInfo relInfo,
-        final long[] value
+        final long value,
+        final UndefinedReference[] undefinedReferences
     ) {
-        super(flagged, signed, precision, form, relInfo);
-        _value = new long[2];
-        _value[0] = value[0];
-        _value[1] = value[1];
+        super(flagged);
+        _value = value;
+        if (undefinedReferences != null) {
+            _undefinedReferences = undefinedReferences;
+        } else {
+            _undefinedReferences = new UndefinedReference[0];
+        }
     }
 
     /**
      * Compares an object to this object
-     * <p>
-     * @param obj
-     * <p>
+     * @param obj comparison object
      * @return -1 if this object sorts before (is less than) the given object
      *         +1 if this object sorts after (is greater than) the given object,
      *          0 if both objects sort to the same position (are equal)
-     * <p>
-     * @throws RelocationException if the relocation info for this object and the comparison object are incompatible
-     * @throws TypeException if there is no reasonable way to compare the objects
+     * @throws TypeException if there is no reasonable way to compare the objects -
+     *                          note that if the flagged and relocation info attributes are not equal,
+     *                          no comparison can be done.
      */
     @Override
     public int compareTo(
         final Object obj
-    ) throws RelocationException,
-             TypeException {
+    ) throws TypeException {
         if (obj instanceof IntegerValue) {
             IntegerValue iobj = (IntegerValue)obj;
 
-            //  Account for relocation info
-            RelocationInfo riThis = getRelocationInfo();
-            RelocationInfo riThat = iobj.getRelocationInfo();
-            if ((riThis == null) && (riThat == null)) {
-                //  we're okay - null/null is compatible
-            } else if ((riThis == null) || (riThat == null) || !riThis.equals(riThat)) {
-                //  either one or the other (but not both) is null, or else they both exist, and are unequal
-                throw new RelocationException();
+            if ((iobj.getFlagged() == getFlagged())
+                && (iobj._undefinedReferences.length == 0)
+                && (_undefinedReferences.length == 0)) {
+                return Long.compare( _value, iobj._value );
             }
-
-            //  Relocation is okay - do the comparison
-            //???? WAIT - check signed, this impacts comparison
-            return OnesComplement.compare72(_value, ((IntegerValue)obj)._value);
-        } else {
-            throw new TypeException();
         }
+
+        throw new TypeException();
     }
 
     /**
      * Create a new copy of this object, with the given flagged value
-     * <p>
-     * @param newFlagged
-     * <p>
-     * @return
+     * @param newFlagged new attribute value
+     * @return new value
      */
     @Override
     public Value copy(
         final boolean newFlagged
     ) {
-        return new IntegerValue(newFlagged, getSigned(), getPrecision(), getForm(), getRelocationInfo(), _value);
-    }
-
-    /**
-     * Create a new copy of this object, with the given signed value
-     * <p>
-     * @param newSigned
-     * <p>
-     * @return
-     */
-    @Override
-    public Value copy(
-        final Signed newSigned
-    ) {
-        return new IntegerValue(getFlagged(), newSigned, getPrecision(), getForm(), getRelocationInfo(), _value);
-    }
-
-    /**
-     * Create a new copy of this object, with the given precision value
-     * <p>
-     * @param newPrecision
-     * <p>
-     * @return
-     */
-    @Override
-    public Value copy(
-        final Precision newPrecision
-    ) {
-        return new IntegerValue(getFlagged(), getSigned(), newPrecision, getForm(), getRelocationInfo(), _value);
+        return new IntegerValue(newFlagged, _value, _undefinedReferences);
     }
 
     /**
      * Check for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if comparison object is equal to this one
      */
     @Override
     public boolean equals(
@@ -207,63 +116,21 @@ public class IntegerValue extends Value {
         }
 
         IntegerValue iobj = (IntegerValue)obj;
-
-        //  Account for relocation info
-        RelocationInfo riThis = getRelocationInfo();
-        RelocationInfo riThat = iobj.getRelocationInfo();
-        if ((riThis == null) && (riThat == null)) {
-            //  we're okay - null/null is compatible
-        } else if ((riThis == null) || (riThat == null) || !riThis.equals(riThat)) {
-            //  either one or the other (but not both) is null, or else they both exist, and are unequal
+        if (iobj.getFlagged() != getFlagged()) {
             return false;
         }
 
-        //  Result depends opon signed field.  None and Positive are effectively the same thing...
-        Signed sThis = getSigned();
-        Signed sThat = iobj.getSigned();
-        if (((sThis == Signed.Negative) || (sThat == Signed.Negative)) && (sThis != sThat)) {
-            //  one  or the other is negative, but not both.  Need to do some additional work.
-            long[] negValue = new long[2];
-            OnesComplement.copy72(iobj._value, negValue);
-            return OnesComplement.isEqual72(_value, negValue);
-        } else {
-            //  Signs are effectively the same, so just do a simple comparison
-            return OnesComplement.isEqual72(_value, iobj._value);
-        }
-    }
-
-    /**
-     * Checks to see whether two words should be generated for this value.
-     * Yes if Double precision, No if Single, and Yes if None and MSWord is non-zero.
-     * <p>
-     * @return
-     */
-    public boolean generateDoublePrecision(
-    ) {
-        switch (getPrecision()) {
-            case Double:    return true;
-            case Single:    return false;
-            case None:      return _value[0] != 0;
+        //  This check isn't quite right, but it's close enough
+        if (!Arrays.equals(iobj._undefinedReferences, _undefinedReferences)) {
+            return false;
         }
 
-        throw new InternalErrorRuntimeException("bad Precision value in IntegerValue.generateDoublePrecision()");
-    }
-
-    /**
-     * Checks to see if the precision setting is valid.
-     * None and Double are always valid.  Single is valid if the upper 36 bits are zero
-     * <p>
-     * @return
-     */
-    public boolean isPrecisionValid(
-    ) {
-        return !((getPrecision() == Precision.Single) && (_value[0] != 0));
+        return _value == iobj._value;
     }
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public ValueType getType(
@@ -273,42 +140,45 @@ public class IntegerValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
-    public long[] getValue(
+    public UndefinedReference[] getUndefinedReferences(
     ) {
-        long[] result = new long[2];
-        OnesComplement.copy72(_value, result);
-        return result;
+        return _undefinedReferences;
     }
 
     /**
-     * Transform the value to an FloatingPointValue, if possible
-     * <p>
+     * Getter
+     * @return value
+     */
+    public long getValue(
+    ) {
+        return _value;
+    }
+
+    /**
+     * Transform the value to a FloatingPointValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post any necessary diagnostics
+     * @return new value
      */
     @Override
     public FloatingPointValue toFloatingPointValue(
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        //????TODO - Not sure how we're going to do this, but this *might* work
-        BigInteger bi = OnesComplement.getNative72(_value);
-        return new FloatingPointValue.Builder().setValue(bi.doubleValue())
-                                               .build();
+        if (_undefinedReferences != null) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        return new FloatingPointValue(getFlagged(), _value);
     }
 
     /**
      * Transform the value to an IntegerValue, if possible
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post any necessary diagnostics
+     * @return new value
      */
     @Override
     public IntegerValue toIntegerValue(
@@ -320,12 +190,10 @@ public class IntegerValue extends Value {
 
     /**
      * Transform the value to a StringValue, if possible
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param characterMode desired character mode
      * @param diagnostics where we post any necessary diagnostics
-     * <p>
-     * @return
+     * @return new value
      */
     @Override
     public StringValue toStringValue(
@@ -333,42 +201,23 @@ public class IntegerValue extends Value {
         final CharacterMode characterMode,
         Diagnostics diagnostics
     ) {
-        if (!isPrecisionValid()) {
-            diagnostics.append(new TruncationDiagnostic(locale, "Value larger than precision"));
-        }
-
-        if (getRelocationInfo() != null) {
+        if (_undefinedReferences != null) {
             diagnostics.append(new RelocationDiagnostic(locale));
         }
 
         String str;
         long msbits = 0_400400_400400l;
-        if (generateDoublePrecision()) {
-            if (characterMode == CharacterMode.ASCII) {
-                if (((_value[0] & msbits) != 0) || ((_value[1] & msbits) != 0)) {
-                    diagnostics.append(new TruncationDiagnostic(locale, "MSBits dropped for ASCII conversion"));
-                }
-
-                str = Word36.toASCII(_value[0]) + Word36.toASCII(_value[1]);
-            } else {
-                str = Word36.toFieldata(_value[0]) + Word36.toFieldata(_value[1]);
+        if (characterMode == CharacterMode.ASCII) {
+            if ((_value & msbits) != 0) {
+                diagnostics.append(new TruncationDiagnostic(locale, "MSBits dropped for ASCII conversion"));
             }
+
+            str = Word36.toASCII(_value);
         } else {
-            if (characterMode == CharacterMode.ASCII) {
-                if ((_value[1] & msbits) != 0) {
-                    diagnostics.append(new TruncationDiagnostic(locale, "MSBits dropped for ASCII conversion"));
-                }
-
-                str = Word36.toASCII(_value[1]);
-            } else {
-                str = Word36.toFieldata(_value[1]);
-            }
+            str = Word36.toFieldata(_value);
         }
 
-        return new StringValue.Builder().setValue(str)
-                                        .setCharacterMode(characterMode)
-                                        .setPrecision(getPrecision())
-                                        .build();
+        return new StringValue(getFlagged(), str, characterMode);
     }
 
     /**
@@ -377,22 +226,14 @@ public class IntegerValue extends Value {
      */
     @Override
     public String toString() {
-        Word36 w0 = new Word36(_value[0]);
-        Word36 w1 = new Word36(_value[1]);
-        if (getSigned() == Signed.Negative) {
-            w0.setW(Word36.logicalNot(w0.getW()));
-            w1.setW(Word36.logicalNot(w1.getW()));
-        }
-
-        String str = String.format("%s%s", Word36.toOctal(w0.getW()), Word36.toOctal(w1.getW()));
-        while (str.startsWith("0")) {
-            str = str.substring(1);
-        }
-
         StringBuilder sb = new StringBuilder();
-        sb.append("0");
-        sb.append(str);
-        super.appendAttributes(sb);
+        sb.append( String.format( "%s%012o",
+                                  getFlagged() ? "*" : "",
+                                  _value ) );
+        for ( UndefinedReference ur : _undefinedReferences ) {
+            sb.append( ur._isNegative ? "-" : "+" );
+            sb.append( ur._reference );
+        }
         return sb.toString();
     }
 }

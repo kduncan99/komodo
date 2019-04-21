@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.minalib.dictionary.*;
 
 /**

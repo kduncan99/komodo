@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
@@ -13,12 +13,12 @@ import java.util.Stack;
 /**
  * Class for logical XOR operator
  */
+@SuppressWarnings("Duplicates")
 public class XorOperator extends LogicalOperator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale  value
      */
     public XorOperator(
         final Locale locale
@@ -28,8 +28,7 @@ public class XorOperator extends LogicalOperator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getPrecedence(
@@ -56,28 +55,23 @@ public class XorOperator extends LogicalOperator {
 
         try {
             IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
-            if (leftValue.getRelocationInfo() != null) {
-                diagnostics.append(new RelocationDiagnostic(getLocale()));
+            if (leftValue.getUndefinedReferences().length != 0) {
+                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+            }
+            if (leftValue.getFlagged()) {
+                diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
             }
 
             IntegerValue rightValue = operands[0].toIntegerValue(getLocale(), diagnostics);
-            if (rightValue.getRelocationInfo() != null) {
-                diagnostics.append(new RelocationDiagnostic(getLocale()));
+            if (rightValue.getUndefinedReferences().length != 0) {
+                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+            }
+            if (rightValue.getFlagged()) {
+                diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
             }
 
-            long[] result = new long[2];
-            result[0] = leftValue.getValue()[0] ^ rightValue.getValue()[0];
-            result[1] = leftValue.getValue()[1] ^ rightValue.getValue()[1];
-
-            Signed signed = Signed.None;
-            Precision precision = resolvePrecision(leftValue, rightValue);
-            Form form = selectMatchingOrOnlyForm(leftValue, rightValue);
-
-            valueStack.push(new IntegerValue.Builder().setValue(result)
-                                                      .setSigned(signed)
-                                                      .setPrecision(precision)
-                                                      .setForm(form)
-                                                      .build());
+            long result = leftValue.getValue() ^ rightValue.getValue();
+            valueStack.push(new IntegerValue( false, result, null ) );
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

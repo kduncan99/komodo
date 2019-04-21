@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -18,8 +17,7 @@ public class ShiftOperator extends ArithmeticOperator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of operator
      */
     public ShiftOperator(
         final Locale locale
@@ -29,8 +27,7 @@ public class ShiftOperator extends ArithmeticOperator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public final int getPrecedence(
@@ -41,11 +38,9 @@ public class ShiftOperator extends ArithmeticOperator {
     /**
      * Evaluator
      * We do *NOT* flag T's on left shifts out of MSBit, contra MASM.
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -60,48 +55,20 @@ public class ShiftOperator extends ArithmeticOperator {
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
-            //  Relocation allowed only for the left-hand operand
-            RelocationInfo relocInfo = iopLeft.getRelocationInfo();
-            if (iopRight.getRelocationInfo() != null) {
-                diagnostics.append(new RelocationDiagnostic(getLocale()));
+            //  Undefined references not allowed for the right-hand operand
+            if ( iopRight.getUndefinedReferences().length != 0 ) {
+                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
 
-            //  Determine precision results
-            Precision precision = Precision.None;
-            if ((iopLeft.getPrecision() == Precision.Double) || (iopRight.getPrecision() == Precision.Double)) {
-                precision = Precision.Double;
-            } else if ((iopLeft.getPrecision() == Precision.Single) || (iopRight.getPrecision() == Precision.Single)) {
-                precision = Precision.Single;
-            }
-
-            long[] result = new long[2];
-            OnesComplement.copy72(iopLeft.getValue(), result);
-
-            long[] count = new long[2];
-            OnesComplement.copy72(iopRight.getValue(), count);
-
-            boolean leftShift = true;
-            if (OnesComplement.isNegative72(iopRight.getValue())) {
-                //  negative shift - convert to positive shift right
-                OnesComplement.negate72(count, count);
-                leftShift = false;
-            }
-
-            if ((count[0] != 0) || (count[1] >= 72)) {
-                result[0] = 0;
-                result[1] = 0;
+            long result = iopLeft.getValue();
+            long count = iopRight.getValue();
+            if (count < 0) {
+                result >>= (-count);
             } else {
-                if (leftShift) {
-                    OnesComplement.leftShiftLogical72(result, (int)count[1], result);
-                } else {
-                    OnesComplement.rightShiftLogical72(result, (int)count[1], result);
-                }
+                result <<= count;
             }
 
-            valueStack.push(new IntegerValue.Builder().setValue(result)
-                                                      .setPrecision(precision)
-                                                      .setRelocationInfo(relocInfo)
-                                                      .build());
+            valueStack.push( new IntegerValue( iopLeft.getFlagged(), result, iopLeft.getUndefinedReferences() ) );
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

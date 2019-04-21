@@ -4,36 +4,38 @@
 
 package com.kadware.em2200.minalib.expressions;
 
-import com.kadware.em2200.baselib.exceptions.NotFoundException;
-import com.kadware.em2200.minalib.Context;
-import com.kadware.em2200.minalib.diagnostics.Diagnostics;
-import com.kadware.em2200.minalib.diagnostics.UndefinedReferenceDiagnostic;
-import com.kadware.em2200.minalib.dictionary.IntegerValue;
-import com.kadware.em2200.minalib.dictionary.Value;
-import com.kadware.em2200.minalib.exceptions.ExpressionException;
+import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.em2200.minalib.*;
+import com.kadware.em2200.minalib.diagnostics.*;
+import com.kadware.em2200.minalib.dictionary.*;
+import com.kadware.em2200.minalib.exceptions.*;
 
 /**
  * Represents a dictionary reference within an expression
  */
-public abstract class ReferenceItem extends OperandItem {
+public class ReferenceItem extends OperandItem {
 
     private final String _reference;
 
     /**
      * constructor
+     * @param locale location of this entity
+     * @param reference reference for this entity
      */
     public ReferenceItem(
+        final Locale locale,
         final String reference
     ) {
+        super(locale);
         _reference = reference;
     }
 
     /**
      * Evaluates the reference based on the dictionary
-     * @param context
-     * @param diagnostics
+     * @param context context of execution
+     * @param diagnostics where we post diagnostics if necessary
      * @return true if successful, false to discontinue evaluation
-     * @throws ExpressionException
+     * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     @Override
     public Value resolve(
@@ -41,12 +43,24 @@ public abstract class ReferenceItem extends OperandItem {
         Diagnostics diagnostics
     ) throws ExpressionException {
         try {
-            return context._dictionary.getValue(_reference);
+            //  Look up the reference in the dictionary.
+            //  It must be a particular type of value, else we have an expression exception.
+            Value v = context._dictionary.getValue(_reference);
+            switch (v.getType()) {
+                case Integer:
+                case FloatingPoint:
+                case String:
+                    return v;
+
+                default:
+                    diagnostics.append( new ValueDiagnostic( _locale, "Wrong value type referenced" ));
+                    throw new ExpressionException();
+            }
         } catch ( NotFoundException ex ) {
-            //  This is an undefined reference - create an IntegerValue with a value of zero
-            //  and a reference relocation item attached thereto.
-            //  TODO fix reloc info object below
-            return new IntegerValue.Builder().setRelocationInfo(null).build();
+            //  reference not found - create an IntegerValue with a value of zero
+            //  and an attached positive UndefinedReference.
+            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference(  _reference, false ) };
+            return new IntegerValue(false, 0, refs);
         }
     }
 }

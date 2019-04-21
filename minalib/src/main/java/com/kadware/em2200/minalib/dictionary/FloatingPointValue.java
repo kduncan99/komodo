@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
-import com.kadware.em2200.baselib.Word36;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;
@@ -14,92 +13,36 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class FloatingPointValue extends Value {
 
-    public static class Builder {
-        private boolean _flagged = false;
-        private Precision _precision = Precision.None;
-        private Signed _signed = Signed.None;
-        private double _value;
-
-        public Builder setFlagged(
-            final boolean flagged
-        ) {
-            _flagged = flagged;
-            return this;
-        }
-
-        public Builder setPrecision(
-            final Precision precision
-        ) {
-            _precision = precision;
-            return this;
-        }
-
-        public Builder setSigned(
-            final Signed signed
-        ) {
-            _signed = signed;
-            return this;
-        }
-
-        public Builder setValue(
-            final double value
-        ) {
-            _value = value;
-            return this;
-        }
-
-        public FloatingPointValue build(
-        ) {
-            return new FloatingPointValue(_flagged, _signed, _precision, _value);
-        }
-    }
-
-    //???? TODO  - how do we really store these?
     private final double _value;
 
     /**
      * constructor
-     * <p>
      * @param flagged - leading asterisk
-     * @param signed - is this signed? pos or neg?
-     * @param precision - only affects things at value generation time
      * @param value - native floating point value
      */
-    private FloatingPointValue(
+    public FloatingPointValue(
         final boolean flagged,
-        final Signed signed,
-        final Precision precision,
         final double value
     ) {
-        super(flagged, signed, precision, null, null);
+        super(flagged);
         _value = value;
     }
 
     /**
      * Compares an object to this object
-     * <p>
-     * @param obj
-     * <p>
+     * @param obj comparison object
      * @return -1 if this object sorts before (is less than) the given object
      *         +1 if this object sorts after (is greater than) the given object,
      *          0 if both objects sort to the same position (are equal)
-     * <p>
      * @throws TypeException if there is no reasonable way to compare the objects
      */
     @Override
     public int compareTo(
         final Object obj
     ) throws TypeException {
-        //????TODO : Account for signed attribute
-        if (obj instanceof IntegerValue) {
+        if (obj instanceof FloatingPointValue) {
             FloatingPointValue fpObj = (FloatingPointValue)obj;
-            if (_value < fpObj._value) {
-                return -1;
-            } else if (_value > fpObj._value) {
-                return 1;
-            } else {
-                return 0;
-            }
+            return Double.compare( _value, fpObj._value );
         } else {
             throw new TypeException();
         }
@@ -116,43 +59,13 @@ public class FloatingPointValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new FloatingPointValue(newFlagged, getSigned(), getPrecision(), _value);
-    }
-
-    /**
-     * Create a new copy of this object, with the given signed value
-     * <p>
-     * @param newSigned
-     * <p>
-     * @return
-     */
-    @Override
-    public Value copy(
-        final Signed newSigned
-    ) {
-        return new FloatingPointValue(getFlagged(), newSigned, getPrecision(), _value);
-    }
-
-    /**
-     * Create a new copy of this object, with the given precision value
-     * <p>
-     * @param newPrecision
-     * <p>
-     * @return
-     */
-    @Override
-    public Value copy(
-        final Precision newPrecision
-    ) {
-        return new FloatingPointValue(getFlagged(), getSigned(), newPrecision, _value);
+        return new FloatingPointValue(newFlagged, _value);
     }
 
     /**
      * Check for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if objects are equal
      */
     @Override
     public boolean equals(
@@ -163,8 +76,7 @@ public class FloatingPointValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public ValueType getType(
@@ -174,8 +86,7 @@ public class FloatingPointValue extends Value {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public double getValue(
     ) {
@@ -214,8 +125,7 @@ public class FloatingPointValue extends Value {
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        //????TODO Fix this later
-        return new IntegerValue.Builder().build();
+        return new IntegerValue(getFlagged(), (long)_value, null);
     }
 
     /**
@@ -245,9 +155,6 @@ public class FloatingPointValue extends Value {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(_value);
-        super.appendAttributes(sb);
-        return sb.toString();
+        return String.format("%s%f", getFlagged(), _value);
     }
 }

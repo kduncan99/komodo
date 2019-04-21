@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
@@ -12,15 +12,15 @@ import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.Expression;
 
 /**
- * Converts the parameter to a string in the current character set
+ * Produces a particular number of some character in the current character set
  */
+@SuppressWarnings("Duplicates")
 public class SRFunction extends BuiltInFunction {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param argumentExpressions
+     * @param locale location of the function
+     * @param argumentExpressions arguments
      */
     public SRFunction(
         final Locale locale,
@@ -31,8 +31,7 @@ public class SRFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public String getFunctionName(
@@ -42,8 +41,7 @@ public class SRFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMaximumArguments(
@@ -53,8 +51,7 @@ public class SRFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMinimumArguments(
@@ -64,12 +61,9 @@ public class SRFunction extends BuiltInFunction {
 
     /**
      * Evaluator
-     * <p>
      * @param context evaluation-time contextual information
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @return Value object representing the result of the evaluation
-     * <p>
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
@@ -88,24 +82,22 @@ public class SRFunction extends BuiltInFunction {
             throw new ExpressionException();
         }
 
-        if (arguments[1].getRelocationInfo() != null) {
+        StringValue sarg = (StringValue)arguments[0];
+        IntegerValue iarg = (IntegerValue)arguments[1];
+        if (iarg.getUndefinedReferences().length != 0) {
             diagnostics.append(new RelocationDiagnostic(getLocale()));
         }
 
-        StringValue sarg = (StringValue)arguments[0];
-        IntegerValue iarg = (IntegerValue)arguments[1];
-        if (OnesComplement.isNegative72(iarg.getValue())) {
+        if (iarg.getValue() < 0) {
             diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
             throw new ExpressionException();
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int sx = 0; sx < (int)iarg.getValue()[1]; ++sx) {
+        for (int sx = 0; sx < iarg.getValue(); ++sx) {
             sb.append(sarg.getValue());
         }
 
-        return new StringValue.Builder().setValue(sb.toString())
-                                        .setCharacterMode(sarg.getCharacterMode())
-                                        .build();
+        return new StringValue(false, sb.toString(), sarg.getCharacterMode());
     }
 }

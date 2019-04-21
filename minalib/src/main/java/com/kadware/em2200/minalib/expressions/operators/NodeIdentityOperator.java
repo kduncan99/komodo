@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
@@ -13,12 +13,12 @@ import java.util.Stack;
 /**
  * Class for node identity operator
  */
+@SuppressWarnings("Duplicates")
 public class NodeIdentityOperator extends RelationalOperator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of operator
      */
     public NodeIdentityOperator(
         final Locale locale
@@ -28,11 +28,9 @@ public class NodeIdentityOperator extends RelationalOperator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -56,7 +54,6 @@ public class NodeIdentityOperator extends RelationalOperator {
         NodeValue leftValue = (NodeValue)operands[0];
         NodeValue rightValue = (NodeValue)operands[1];
         int result = (leftValue == rightValue) ? 1 : 0;
-        valueStack.push(new IntegerValue.Builder().setValue(result)
-                                                  .build());
+        valueStack.push( new IntegerValue( false, result, null ) );
     }
 }

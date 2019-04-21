@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
@@ -17,8 +17,7 @@ public class ConcatenationOperator extends Operator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of the operator
      */
     public ConcatenationOperator(
         final Locale locale
@@ -28,8 +27,7 @@ public class ConcatenationOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getPrecedence(
@@ -39,8 +37,7 @@ public class ConcatenationOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public Type getType(
@@ -50,11 +47,9 @@ public class ConcatenationOperator extends Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -74,10 +69,7 @@ public class ConcatenationOperator extends Operator {
                                 || (rightValue.getCharacterMode() == CharacterMode.ASCII);
             CharacterMode charMode = ascii ? CharacterMode.ASCII : CharacterMode.Fieldata;
 
-            Precision precision = resolvePrecision(leftValue, rightValue);
-            valueStack.push(new StringValue.Builder().setValue(newValue)
-                                                     .setCharacterMode(charMode)
-                                                     .build());
+            valueStack.push( new StringValue(false, newValue, charMode) );
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

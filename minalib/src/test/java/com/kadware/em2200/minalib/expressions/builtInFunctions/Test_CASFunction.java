@@ -26,8 +26,8 @@ public class Test_CASFunction {
              NotFoundException {
 
         List<ExpressionItem> items = new LinkedList<>();
-        IntegerValue iv = new IntegerValue.Builder().setValue(060061062063l).build();
-        items.add(new ValueItem(iv));
+        IntegerValue iv = new IntegerValue(false, 060061062063L, null);
+        items.add(new ValueItem(new Locale(1, 1), iv));
 
         Expression[] expressions = new Expression[1];
         expressions[0] = new Expression(items);
@@ -38,7 +38,7 @@ public class Test_CASFunction {
         Diagnostics diagnostics = new Diagnostics();
         Value result = bif.evaluate(context, diagnostics);
 
-        StringValue expected = new StringValue.Builder().setValue("0123").build();
+        StringValue expected = new StringValue(false, "0123", CharacterMode.ASCII);
         assertEquals(expected, result);
     }
 }

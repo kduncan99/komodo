@@ -114,28 +114,4 @@ public abstract class Operator {
         String str = String.format("%s is of wrong type", leftOperand ? "left-hand" : "right-hand");
         diagnostics.append(new ValueDiagnostic(_locale, str));
     }
-
-    /**
-     * Determines the proper precision for a result involving two operands
-     * <p>
-     * @param operand1
-     * @param operand2
-     * <p>
-     * @return
-     */
-    protected static Precision resolvePrecision(
-        final Value operand1,
-        final Value operand2
-    ) {
-        Precision operand1Precision = operand1.getPrecision();
-        Precision operand2Precision = operand2.getPrecision();
-
-        if ((operand1Precision == Precision.None) && (operand2Precision == Precision.None)) {
-            return Precision.None;
-        } else if ((operand1Precision == Precision.Double) || (operand2Precision == Precision.Double)) {
-            return Precision.Double;
-        } else {
-            return Precision.Single;
-        }
-    }
 }

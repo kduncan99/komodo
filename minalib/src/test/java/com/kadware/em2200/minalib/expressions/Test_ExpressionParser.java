@@ -31,15 +31,13 @@ public class Test_ExpressionParser {
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
-        long[] expected = { 0, 14458 };
-
         List<ExpressionItem> items = exp.getItems();
         assertEquals(1, items.size());
         ExpressionItem item = items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item).getValue();
         assertTrue(v instanceof IntegerValue);
-        assertArrayEquals(expected, ((IntegerValue)v).getValue());
+        assertEquals(14458l, ((IntegerValue)v).getValue());
     }
 
     @Test

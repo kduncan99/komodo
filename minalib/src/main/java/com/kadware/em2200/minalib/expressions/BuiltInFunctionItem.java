@@ -25,6 +25,7 @@ public class BuiltInFunctionItem extends FunctionItem {
     public BuiltInFunctionItem(
         final BuiltInFunction function
     ) {
+        super(null);
         _function = function;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
@@ -17,9 +17,8 @@ public class SLFunction extends BuiltInFunction {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param argumentExpressions
+     * @param locale location of this function
+     * @param argumentExpressions argument expressions
      */
     public SLFunction(
         final Locale locale,
@@ -30,8 +29,7 @@ public class SLFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public String getFunctionName(
@@ -41,8 +39,7 @@ public class SLFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMaximumArguments(
@@ -52,8 +49,7 @@ public class SLFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getMinimumArguments(
@@ -83,7 +79,6 @@ public class SLFunction extends BuiltInFunction {
         }
 
         StringValue sarg = (StringValue)arguments[0];
-        return new IntegerValue.Builder().setValue(sarg.getValue().length())
-                                         .build();
+        return new IntegerValue(false, sarg.getValue().length(), null);
     }
 }

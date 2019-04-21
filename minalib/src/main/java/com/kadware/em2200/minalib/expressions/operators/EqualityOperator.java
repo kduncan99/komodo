@@ -44,8 +44,7 @@ public class EqualityOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, diagnostics);
             int result = (operands[0].equals(operands[1])) ? 1 : 0;
-            valueStack.push(new IntegerValue.Builder().setValue(result)
-                                                      .build());
+            valueStack.push( new IntegerValue( false, result, null ) );
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

@@ -21,9 +21,9 @@ public class Test_Expression {
     public void parseSimpleValue(
     ) throws ExpressionException,
              NotFoundException {
-        Value val = new IntegerValue.Builder().setValue(42).build();
+        Value val = new IntegerValue(false, 42, null);
         List<ExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(val));
+        items.add(new ValueItem(new Locale(1, 1), val));
         Expression exp = new Expression(items);
 
         Context context = new Context();
@@ -38,14 +38,14 @@ public class Test_Expression {
     public void parseSimpleMath(
     ) throws ExpressionException,
              NotFoundException {
-        Value addend1 = new IntegerValue.Builder().setValue(42).build();
-        Value addend2 = new IntegerValue.Builder().setValue(112).build();
-        Value expected = new IntegerValue.Builder().setValue(154).build();
+        Value addend1 = new IntegerValue(false, 42, null);
+        Value addend2 = new IntegerValue(false, 112, null);
+        Value expected = new IntegerValue(false, 154, null);
 
         List<ExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(addend1));
+        items.add(new ValueItem(new Locale(1, 1), addend1));
         items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
-        items.add(new ValueItem(addend2));
+        items.add(new ValueItem(new Locale(1, 11), addend2));
         Expression exp = new Expression(items);
 
         Context context = new Context();
@@ -61,17 +61,17 @@ public class Test_Expression {
     ) throws ExpressionException,
              NotFoundException {
         //  expression is 5 + 7 * 12...  it should be evaluated at 5 + (7 * 12) == 89
-        Value term1 = new IntegerValue.Builder().setValue(5).build();
-        Value term2 = new IntegerValue.Builder().setValue(7).build();
-        Value term3 = new IntegerValue.Builder().setValue(12).build();
-        Value expected = new IntegerValue.Builder().setValue(89).build();
+        Value term1 = new IntegerValue(false, 5, null);
+        Value term2 = new IntegerValue(false, 7, null);
+        Value term3 = new IntegerValue(false, 12, null);
+        Value expected = new IntegerValue(false, 89, null);
 
         List<ExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(term1));
+        items.add(new ValueItem(new Locale(1, 1), term1));
         items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
-        items.add(new ValueItem(term2));
+        items.add(new ValueItem(new Locale(1, 30), term2));
         items.add(new OperatorItem(new MultiplicationOperator(new Locale(10, 12))));
-        items.add(new ValueItem(term3));
+        items.add(new ValueItem(new Locale(1, 50), term3));
         Expression exp = new Expression(items);
 
         Context context = new Context();

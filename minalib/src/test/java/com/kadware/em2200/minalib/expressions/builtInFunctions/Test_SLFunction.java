@@ -26,8 +26,8 @@ public class Test_SLFunction {
              NotFoundException {
 
         List<ExpressionItem> items = new LinkedList<>();
-        StringValue sv = new StringValue.Builder().setValue("Hello Stupid").build();
-        items.add(new ValueItem(sv));
+        StringValue sv = new StringValue(false, "Hello Stupid", CharacterMode.ASCII);
+        items.add(new ValueItem(new Locale( 1, 1), sv));
 
         Expression[] expressions = new Expression[1];
         expressions[0] = new Expression(items);
@@ -38,7 +38,7 @@ public class Test_SLFunction {
         Diagnostics diagnostics = new Diagnostics();
         Value result = bif.evaluate(context, diagnostics);
 
-        IntegerValue expected = new IntegerValue.Builder().setValue(12).build();
+        IntegerValue expected = new IntegerValue(false, 12, null);
         assertEquals(expected, result);
     }
 }

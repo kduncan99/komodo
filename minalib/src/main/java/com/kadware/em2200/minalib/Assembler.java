@@ -17,6 +17,7 @@ import java.util.Map;
 /**
  * Assembler for minalib
  */
+@SuppressWarnings("Duplicates")
 public class Assembler {
 
     private final Context _context = new Context();
@@ -45,11 +46,11 @@ public class Assembler {
         } catch ( ExpressionException eex ) {
             diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
                                                      "Cannot evaluate expression:" + eex.getMessage() ) );
-            return new IntegerValue.Builder().build();
+            return new IntegerValue(false, 0, null);
         } catch ( NotFoundException nfex ) {
             diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
                                                      "Expected an expression" ) );
-            return new IntegerValue.Builder().build();
+            return new IntegerValue(false, 0, null);
         }
     }
 
@@ -172,11 +173,18 @@ public class Assembler {
             }
         }
 
-        //  Deal with the operand field
-        int aField = 0;
+        //  Deal with the operand field - initialize resulting values here, as we do make every attempt to generate
+        //  a word, even in the presence of errors which might short-circuit other stuff inside the conditional
+        //  expression(s).
+        Value aValue = null;    //  register subfield
+        Value bValue = null;    //  base register subfield
+        Value uValue = null;    //  displacement/address/value subfield
+        Value xValue = null;    //  index register subfield
+
         Value operandValue = null;
         if (operandField == null) {
-            diagnostics.append(new ErrorDiagnostic( operationField.getLocale(), "Mnemonic requires an operand field"));
+            diagnostics.append(new ErrorDiagnostic( operationField.getLocale(),
+                                                    "An instruction mnemonic requires an operand field"));
         } else {
             //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
             //  a field, and there isn't one in the syntax for the operand field.
@@ -202,41 +210,37 @@ public class Assembler {
             if ((sfc > sfx) && baseSubFieldAllowed) {
                 baseSubField = operandField.getSubfield( sfx++ );
             }
-
             if (sfc > sfx) {
                 diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx ).getLocale(),
                                                          "Extreanous subfields in operand field ignored") );
             }
 
             //  Interpret the subfields
-            if ((registerSubField == null) || (registerSubField.getText().isEmpty())) {
-                diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
-                                                         "Missing register specification" ) );
+            if (iinfo._aFlag) {
+                aValue = new IntegerValue( false, iinfo._aField, null );
             } else {
-                try {
-                    switch (iinfo._aSemantics) {
-                        case A:
-                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 12;
-                            break;
-                        case R:
-                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) - 64;
-                            break;
-                        case X:
-                            aField = GeneralRegisterSet.getGRSIndex( registerSubField.getText().toUpperCase() ) ;
-                            break;
-                        case B:
-                        case B_EXEC:
-                            //TODO
+                if ( (registerSubField == null) || (registerSubField.getText().isEmpty()) ) {
+                    diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
+                                                             "Missing register specification" ) );
+                } else {
+                    try {
+                        ExpressionParser p = new ExpressionParser( registerSubField.getText(), registerSubField.getLocale() );
+                        Expression e = p.parse( _context, diagnostics );
+                        aValue = e.evaluate( _context, diagnostics );
+                        //  Reduce the value appropriately for the a-field
+                        if ( iinfo._aSemantics == InstructionWord.ASemantics.A ) {
+                            IntegerValue iv = (IntegerValue) aValue;
+                            aValue = new IntegerValue( iv.getFlagged(), iv.getValue() - 12, iv.getUndefinedReferences() );
+                        } else if ( iinfo._aSemantics == InstructionWord.ASemantics.R ) {
+                            IntegerValue iv = (IntegerValue) aValue;
+                            aValue = new IntegerValue( iv.getFlagged(), iv.getValue() - 64, iv.getUndefinedReferences() );
+                        }
+                        //TODO do we need to do anything for B16-B31?  Those registers have the same a-field values as
+                        //  B0-B15, with the i-field set, and they only apply at higher processor privileges...
+                    } catch ( ExpressionException | NotFoundException ex ) {
+                        diagnostics.append( new ErrorDiagnostic( registerSubField.getLocale(),
+                                                                 "Syntax Error:" + ex.getMessage() ) );
                     }
-                } catch (NotFoundException nfex) {
-                    diagnostics.append(new ErrorDiagnostic( registerSubField.getLocale(),
-                                                            "Unrecognized value in register subfield"));
-                }
-
-                if ((aField < 0) || (aField > 017)) {
-                    diagnostics.append(new TruncationDiagnostic(
-                        registerSubField.getLocale(),
-                        "Illegal value "));
                 }
             }
 
@@ -244,36 +248,49 @@ public class Assembler {
                 diagnostics.append(new ErrorDiagnostic(operandField.getLocale(),
                                                        "Missing operand value (U, u, or d subfield)"));
             } else {
-                ExpressionParser p = new ExpressionParser(valueSubField.getText(), valueSubField.getLocale());
                 try {
-                    Expression e = p.parse(_context, diagnostics);
-                    Value v = e.evaluate(_context, diagnostics);
-                    if (v.getType() != ValueType.Integer) {
-                        diagnostics.append(new ValueDiagnostic(valueSubField.getLocale(),
-                                                               "Operand value is not an integer type"));
-                        operandValue = new IntegerValue.Builder().build();
-                    } else {
-                        operandValue = v;
-                    }
-                } catch (ExpressionException | NotFoundException ex) {
-                    diagnostics.append(new ErrorDiagnostic(valueSubField.getLocale(),
-                                                           "Syntax error in operand value"));
-                    operandValue = new IntegerValue.Builder().build();
+                    ExpressionParser p = new ExpressionParser( valueSubField.getText(), valueSubField.getLocale() );
+                    Expression e = p.parse( _context, diagnostics );
+                    uValue = e.evaluate( _context, diagnostics );
+                } catch ( ExpressionException | NotFoundException ex ) {
+                    diagnostics.append( new ErrorDiagnostic( valueSubField.getLocale(),
+                                                             "Syntax Error:" + ex.getMessage() ) );
                 }
             }
 
-            //TODO x-field
-            //TODO maybe b-field
+            if ((indexSubField != null) && !indexSubField.getText().isEmpty()) {
+                try {
+                    ExpressionParser p = new ExpressionParser( indexSubField.getText(), indexSubField.getLocale() );
+                    Expression e = p.parse( _context, diagnostics );
+                    xValue = e.evaluate( _context, diagnostics );
+                } catch ( ExpressionException | NotFoundException ex ) {
+                    diagnostics.append( new ErrorDiagnostic( indexSubField.getLocale(),
+                                                             "Syntax Error:" + ex.getMessage() ) );
+                }
+            }
+
+            //TODO check code mode to see whether we're supposed to have a base register spec
+            if ((baseSubField != null) && !baseSubField.getText().isEmpty()) {
+                try {
+                    ExpressionParser p = new ExpressionParser( baseSubField.getText(), baseSubField.getLocale() );
+                    Expression e = p.parse( _context, diagnostics );
+                    bValue = e.evaluate( _context, diagnostics );
+                } catch ( ExpressionException | NotFoundException ex ) {
+                    diagnostics.append( new ErrorDiagnostic( baseSubField.getLocale(),
+                                                             "Syntax Error:" + ex.getMessage() ) );
+                }
+            }
         }
 
-        //  Create the instruction word...
+        //  Create the instruction word
         //TODO
-        System.out.println(String.format("f=%02o j=%02o a=%02o val=%s%s",
+        System.out.println(String.format("f=%02o j=%o a=%s val=%s x=%s b=%s",
                                          iinfo._fField,
                                          jField,
-                                         aField,
-                                         operandValue.getFlagged() ? "*" : "",
-                                         operandValue.toString()));//TODO temporary
+                                         String.valueOf(aValue),
+                                         String.valueOf(uValue),
+                                         String.valueOf(xValue),
+                                         String.valueOf(bValue)));
 
         return true;
     }
@@ -313,7 +330,7 @@ public class Assembler {
     }
 
     /**
-     * Creates an IntegerValue object with appropriate reloc info, to represent the current location of the
+     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
      * current generation location counter (e.g., for interpreting '$' or whatever).
      * @return IntegerValue object as described
      */
@@ -323,11 +340,9 @@ public class Assembler {
         //  If it doesn't exist, it will be created.
         try {
             LocationCounterPool lcPool = _module.getLocationCounterPool(_context._currentGenerationLCIndex);
-            LocationCounterRelocationInfo lcri =
-                new LocationCounterRelocationInfo(FieldDescriptor.W, _context._currentGenerationLCIndex);
-            return new IntegerValue.Builder().setValue(lcPool.getNextOffset())
-                                             .setRelocationInfo(lcri)
-                                             .build();
+            String ref = String.format("LC$BASE_%d", _context._currentGenerationLCIndex);
+            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
+            return new IntegerValue(false, lcPool.getNextOffset(), refs);
         } catch (InvalidParameterException ex) {
             throw new RuntimeException("Internal Error: Caught " + ex.getMessage());
         }

@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib.expressions;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
@@ -13,7 +12,6 @@ import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 import com.kadware.em2200.minalib.expressions.operators.*;
 import java.lang.reflect.*;
-import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -190,11 +188,11 @@ public class ExpressionParser {
             }
 
             if (allowPrefixOperator) {
-                //????
+                //TODO
             }
 
             if (allowPostfixOperator) {
-                //????
+                //TODO
             }
 
             //  we've found something we don't understand.
@@ -285,6 +283,7 @@ public class ExpressionParser {
         String name = parseLabel(diagnostics);
 
         if (!skipToken("(", true)) {
+            _index = holdIndex;
             throw new NotFoundException();
         }
 
@@ -325,7 +324,7 @@ public class ExpressionParser {
                 Class<?>[] argTypes = { Locale.class, Expression[].class };
                 Class<?> clazz = ((BuiltInFunctionValue)value).getClazz();
                 Constructor<?> ctor = clazz.getConstructor(argTypes);
-                Object[] ctorArgs = { funcLocale, argExpressions.toArray(new Expression[argExpressions.size()]) };
+                Object[] ctorArgs = { funcLocale, argExpressions.toArray(new Expression[0]) };
                 BuiltInFunction bif = (BuiltInFunction)(ctor.newInstance(ctorArgs));
                 return new BuiltInFunctionItem(bif);
             } catch (IllegalAccessException
@@ -365,7 +364,7 @@ public class ExpressionParser {
      */
     private OperatorItem parseInfixOperator(
     ) throws NotFoundException {
-        Locale locale = new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
+        Locale locale = getLocale();
 
         //  Be careful with ordering here... for example, look for '>=' before '>' so we don't get tripped up
         if (skipToken("==", true)) {
@@ -426,8 +425,9 @@ public class ExpressionParser {
             throw new NotFoundException();
         }
 
-        StringBuilder sb = new StringBuilder();
+        long value = 0;
         int radix = 10;
+        int digits = 0;
         while (!atEnd() && Character.isDigit(nextChar())) {
             char ch = getNextChar();
             if ((radix == 8) && ((ch == '8') || (ch == '9'))) {
@@ -435,34 +435,27 @@ public class ExpressionParser {
                 throw new ExpressionException();
             }
 
-            if ((ch == '0') && (sb.length() == 0)) {
+            if ((ch == '0') && (digits == 0)) {
                 radix = 8;
             }
-            sb.append(ch);
+
+            value = (value * radix) + (ch - '0');
+            ++digits;
         }
 
-        BigInteger bi = new BigInteger(sb.toString());
-        OnesComplement.OnesComplement72Result ocResult = new OnesComplement.OnesComplement72Result();
-        OnesComplement.getOnesComplement72(bi, ocResult);
-        if (ocResult._overflow) {
-            diagnostics.append(new TruncationDiagnostic(getLocale(), "Integer literal is too large"));
-        }
-
-        return new ValueItem(new IntegerValue.Builder().setValue(ocResult._result)
-                                                       .build());
+        return new ValueItem( getLocale(),
+                              new IntegerValue(false, value, null ) );
     }
 
     /**
-     * Parses a label from _index
+     * Parses a label or reference (okay, a label would be a reference) from _index
      * @param diagnostics where we post diagnostics if appropriate
      * @return the label, if found
-     * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      * @throws NotFoundException if we do not find anything which looks like a label
      */
     String parseLabel(
         Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws NotFoundException {
         //  Check first character - it must be acceptable as the first character of a label.
         if (atEnd()) {
             throw new NotFoundException();
@@ -540,19 +533,19 @@ public class ExpressionParser {
     ) throws ExpressionException,
              NotFoundException {
         try {
-            return parseLiteral(context, diagnostics);
+            return parseLiteral( context, diagnostics );
         } catch (NotFoundException ex) {
             //  keep going
         }
 
         try {
-            return parseFunction(context, diagnostics);
+            return parseFunction( context, diagnostics );
         } catch (NotFoundException ex) {
             //  keep going
         }
 
         try {
-            return parseReference();
+            return parseReference( diagnostics );
         } catch (NotFoundException ex) {
             //  keep going
         }
@@ -569,13 +562,7 @@ public class ExpressionParser {
     protected OperatorItem parsePostfixOperator(
     ) throws NotFoundException {
         Locale locale = new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
-
-        if (skipToken("S", false)) {
-            return new OperatorItem(new SinglePrecisionOperator(locale));
-        } else if (skipToken("D", false)) {
-            return new OperatorItem(new DoublePrecisionOperator(locale));
-        }
-
+        //  Currently there are no post-fix operators (we don't do precision)
         throw new NotFoundException();
     }
 
@@ -602,25 +589,24 @@ public class ExpressionParser {
 
     /**
      * Parses a reference of one type or another
+     * @param diagnostics where we post diagnostics if necessary
      * @return OperandItem representing the reference
      * @throws ExpressionException if there is some syntactic error
      * @throws NotFoundException if we don't find anything resembling a reference
      */
     protected OperandItem parseReference(
+            final Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
-        //TODO fix this
-        throw new ExpressionException();//????
+        String label = parseLabel( diagnostics );
+        return new ReferenceItem( new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index), label );
     }
 
     /**
      * Parses a string literal into an appropriate Value object
-     * <p>
-     * @param context
-     * @param diagnostics
-     * <p>
+     * @param context context
+     * @param diagnostics where we post any diagnostics
      * @return OperandItem object if we find a valid string literal.
-     * <p>
      * @throws ExpressionException if there is an error in the formatting of the string literal
      * @throws NotFoundException if we do not find a string literal at all - this may NOT be an error
      */
@@ -658,9 +644,8 @@ public class ExpressionParser {
             throw new ExpressionException();
         }
 
-        return new ValueItem(new StringValue.Builder().setValue(sb.toString())
-                                                      .setCharacterMode(context._characterMode)
-                                                      .build());
+        return new ValueItem( getLocale(),
+                              new StringValue(false, sb.toString(), context._characterMode ) );
     }
 
 
@@ -670,12 +655,9 @@ public class ExpressionParser {
 
     /**
      * Parses the given text, within the given context, into the ExpressionItem list in an Expression object
-     * <p>
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * <p>
      * @return A properly formatted Expression object which can subsequently be evaluated
-     * <p>
      * @throws ExpressionException if we run into a problem while we are working on a valid expressoin
      * @throws NotFoundException if we don't find anything that even looks like an expression
      */
@@ -688,7 +670,7 @@ public class ExpressionParser {
 
         Expression exp = parseExpression(context, diagnostics);
         if (!atEnd()) {
-            //???? post some shit
+            //TODO post some shit
             throw new ExpressionException();
         }
 

@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -18,8 +17,7 @@ public class NotOperator extends Operator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale location of operator
      */
     public NotOperator(
         final Locale locale
@@ -29,8 +27,7 @@ public class NotOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public int getPrecedence(
@@ -40,8 +37,7 @@ public class NotOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public Type getType(
@@ -51,11 +47,9 @@ public class NotOperator extends Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
@@ -64,28 +58,18 @@ public class NotOperator extends Operator {
         Stack<Value> valueStack,
         Diagnostics diagnostics
     ) throws ExpressionException {
-        try {
-            Value operand = getOperands(valueStack)[0];
-            switch(operand.getType()) {
-                case Integer:
-                case FloatingPoint:
-                case String:
-                    IntegerValue interim = operand.toIntegerValue(getLocale(), diagnostics);
-                    long newValue = OnesComplement.isZero72(interim.getValue()) ? 1 : 0;
-                    valueStack.push(new IntegerValue.Builder().setValue(newValue)
-                                                              .setSigned(interim.getSigned())
-                                                              .setPrecision(interim.getPrecision())
-                                                              .setForm(interim.getForm())
-                                                              .setRelocationInfo(interim.getRelocationInfo())
-                                                              .build());
-                    break;
-
-                default:
-                    postValueDiagnostic(false, diagnostics);
-                    throw new TypeException();
+        Value operand = getOperands(valueStack)[0];
+        if ( operand.getType() == ValueType.Integer ) {
+            IntegerValue iop = (IntegerValue) operand;
+            if (iop.getUndefinedReferences().length != 0) {
+                diagnostics.append( new ValueDiagnostic( getLocale(),
+                                                         "Not operator cannot be applied to integer with undefined references" ));
             }
-        } catch (TypeException ex) {
-            postValueDiagnostic(false, diagnostics);
+            long ioperand = iop.getValue();
+            long iresult = ioperand ^= 0_777777_777777L;
+            valueStack.push( new IntegerValue(false, iresult, null ) );
+        } else {
+            postValueDiagnostic( false, diagnostics );
             throw new ExpressionException();
         }
     }
