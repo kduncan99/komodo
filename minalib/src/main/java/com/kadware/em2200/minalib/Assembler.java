@@ -10,7 +10,6 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import java.util.Map;
 
@@ -25,9 +24,125 @@ public class Assembler {
     private final RelocatableModule _module;
     private final TextLine[] _sourceCode;
 
+    private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
+    private static final Form _fjaxhiuForm = new Form(_fjaxhiuFields);
+    private static final int[] _fjaxuFields = { 6, 4, 4, 4, 18 };
+    private static final Form _fjaxuForm = new Form(_fjaxuFields);
+    private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
+    private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
+
+    private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
+
+
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Assemble a single TextLine object into the Relocatable Module
+     * @param textLine entity to be assembled
+     */
+    private void assemble(
+            final TextLine textLine
+    ) {
+        if ( textLine._fields.size() == 0 ) {
+            return;
+        }
+
+        TextField labelField = textLine.getField(0);
+        TextField operationField = textLine.getField(1);
+        TextField operandField = textLine.getField(2);
+
+        //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
+        if (processMnemonic(labelField, operationField, operandField, textLine._diagnostics)) {
+            if (textLine._fields.size() > 3) {
+                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
+                                                        "Extraneous fields ignored"));
+            }
+            return;
+        }
+
+        //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
+        //TODO
+        Dictionary d = _context._dictionary;
+
+        //  Hmm.  Is it an expression (or a list of expressions)?
+        //TODO
+
+        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "What the heck is this?"));
+    }
+
+    /**
+     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
+     * current generation location counter (e.g., for interpreting '$' or whatever).
+     * @return IntegerValue object as described
+     */
+    private IntegerValue getCurrentLocation(
+    ) {
+        //  Find the current generation lc index.
+        //  If it doesn't exist, it will be created.
+        try {
+            LocationCounterPool lcPool = _module.getLocationCounterPool(_context._currentGenerationLCIndex);
+            String ref = String.format("LC$BASE_%d", _context._currentGenerationLCIndex);
+            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
+            return new IntegerValue(false, lcPool.getNextOffset(), refs);
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Internal Error: Caught " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Generates the given word into the indicated location counter pool
+     * @param form indicates the bit fields - there should be one value per bit-field
+     * @param values the values to be used
+     * @param lcIndex index of the location counter pool
+     * @param locale locale associated with this (line number only)
+     * @param diagnostics where we post diagnostics if necessary
+     */
+    private void generate(
+        final Form form,
+        final IntegerValue[] values,
+        final int lcIndex,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) {
+        if (values.length != form.getFieldCount()) {
+            throw new RuntimeException("Number of bit-fields in the form differ from number of values");
+        }
+
+        long result = 0;
+        int startingBit = 0;
+        int[] fieldSizes = form.getFieldSizes();
+        for (int fx = 0; fx < values.length; ++fx) {
+            //  convert value from twos- to ones-complement, check for 36-bit truncation
+            long value = values[fx].getValue();
+            OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
+            OnesComplement.getOnesComplement36( value, ocr );
+            boolean trunc = ocr._overflow;
+            long value36 = ocr._result;
+
+            long mask = (1 << fieldSizes[fx]) - 1;
+            long maskedValue = value36 & mask;
+
+            //  Check for field size truncation
+            if (value > 0) {
+                trunc = (value36 != maskedValue);
+            } else if (value < 0) {
+                trunc = ((mask | value36) != 0_777777_777777L);
+            }
+
+            if (trunc) {
+                diagnostics.append( new TruncationDiagnostic( locale, startingBit, fieldSizes[fx] ) );
+            }
+
+            result <<= fieldSizes[fx];
+            result |= maskedValue;
+            startingBit += fieldSizes[fx];
+        }
+
+        //TODO
+        System.out.println(String.format("--$(%d)->%012o", lcIndex, result));
+    }
 
     /**
      * Interprets a subfield as an expression
@@ -176,10 +291,10 @@ public class Assembler {
         //  Deal with the operand field - initialize resulting values here, as we do make every attempt to generate
         //  a word, even in the presence of errors which might short-circuit other stuff inside the conditional
         //  expression(s).
-        Value aValue = null;    //  register subfield
-        Value bValue = null;    //  base register subfield
-        Value uValue = null;    //  displacement/address/value subfield
-        Value xValue = null;    //  index register subfield
+        IntegerValue aValue = _zeroValue;   //  register value
+        IntegerValue bValue = _zeroValue;   //  base register subfield
+        IntegerValue uValue = _zeroValue;   //  displacement/address/value subfield
+        IntegerValue xValue = _zeroValue;   //  index register subfield
 
         Value operandValue = null;
         if (operandField == null) {
@@ -226,17 +341,22 @@ public class Assembler {
                     try {
                         ExpressionParser p = new ExpressionParser( registerSubField.getText(), registerSubField.getLocale() );
                         Expression e = p.parse( _context, diagnostics );
-                        aValue = e.evaluate( _context, diagnostics );
-                        //  Reduce the value appropriately for the a-field
-                        if ( iinfo._aSemantics == InstructionWord.ASemantics.A ) {
-                            IntegerValue iv = (IntegerValue) aValue;
-                            aValue = new IntegerValue( iv.getFlagged(), iv.getValue() - 12, iv.getUndefinedReferences() );
-                        } else if ( iinfo._aSemantics == InstructionWord.ASemantics.R ) {
-                            IntegerValue iv = (IntegerValue) aValue;
-                            aValue = new IntegerValue( iv.getFlagged(), iv.getValue() - 64, iv.getUndefinedReferences() );
+                        Value v = e.evaluate( _context, diagnostics );
+                        if (v.getType() != ValueType.Integer) {
+                            diagnostics.append( new ValueDiagnostic( registerSubField.getLocale(), "Wrong value type" ) );
+                        } else {
+                            aValue = (IntegerValue) v;
+                            //  Reduce the value appropriately for the a-field
+                            if ( iinfo._aSemantics == InstructionWord.ASemantics.A ) {
+                                aValue = new IntegerValue( aValue.getFlagged(),
+                                                           aValue.getValue() - 12,
+                                                           aValue.getUndefinedReferences() );
+                            } else if ( iinfo._aSemantics == InstructionWord.ASemantics.R ) {
+                                aValue = new IntegerValue( aValue.getFlagged(),
+                                                           aValue.getValue() - 64,
+                                                           aValue.getUndefinedReferences() );
+                            }
                         }
-                        //TODO do we need to do anything for B16-B31?  Those registers have the same a-field values as
-                        //  B0-B15, with the i-field set, and they only apply at higher processor privileges...
                     } catch ( ExpressionException | NotFoundException ex ) {
                         diagnostics.append( new ErrorDiagnostic( registerSubField.getLocale(),
                                                                  "Syntax Error:" + ex.getMessage() ) );
@@ -251,7 +371,12 @@ public class Assembler {
                 try {
                     ExpressionParser p = new ExpressionParser( valueSubField.getText(), valueSubField.getLocale() );
                     Expression e = p.parse( _context, diagnostics );
-                    uValue = e.evaluate( _context, diagnostics );
+                    Value v = e.evaluate( _context, diagnostics );
+                    if (v.getType() != ValueType.Integer) {
+                        diagnostics.append( new ValueDiagnostic( valueSubField.getLocale(), "Wrong value type" ) );
+                    } else {
+                        uValue = (IntegerValue) v;
+                    }
                 } catch ( ExpressionException | NotFoundException ex ) {
                     diagnostics.append( new ErrorDiagnostic( valueSubField.getLocale(),
                                                              "Syntax Error:" + ex.getMessage() ) );
@@ -262,22 +387,35 @@ public class Assembler {
                 try {
                     ExpressionParser p = new ExpressionParser( indexSubField.getText(), indexSubField.getLocale() );
                     Expression e = p.parse( _context, diagnostics );
-                    xValue = e.evaluate( _context, diagnostics );
+                    Value v = e.evaluate( _context, diagnostics );
+                    if (v.getType() != ValueType.Integer) {
+                        diagnostics.append( new ValueDiagnostic( indexSubField.getLocale(), "Wrong value type" ) );
+                    } else {
+                        xValue = (IntegerValue) v;
+                    }
                 } catch ( ExpressionException | NotFoundException ex ) {
                     diagnostics.append( new ErrorDiagnostic( indexSubField.getLocale(),
                                                              "Syntax Error:" + ex.getMessage() ) );
                 }
             }
 
-            //TODO check code mode to see whether we're supposed to have a base register spec
-            if ((baseSubField != null) && !baseSubField.getText().isEmpty()) {
-                try {
-                    ExpressionParser p = new ExpressionParser( baseSubField.getText(), baseSubField.getLocale() );
-                    Expression e = p.parse( _context, diagnostics );
-                    bValue = e.evaluate( _context, diagnostics );
-                } catch ( ExpressionException | NotFoundException ex ) {
-                    diagnostics.append( new ErrorDiagnostic( baseSubField.getLocale(),
-                                                             "Syntax Error:" + ex.getMessage() ) );
+            if (baseSubFieldAllowed) {
+                if ( (baseSubField != null) && !baseSubField.getText().isEmpty() ) {
+                    try {
+                        ExpressionParser p = new ExpressionParser( baseSubField.getText(), baseSubField.getLocale() );
+                        Expression e = p.parse( _context, diagnostics );
+                        Value v = e.evaluate( _context, diagnostics );
+                        if (v.getType() != ValueType.Integer) {
+                            diagnostics.append( new ValueDiagnostic( baseSubField.getLocale(), "Wrong value type" ) );
+                        } else {
+                            bValue = (IntegerValue) v;
+                        }
+                    } catch ( ExpressionException | NotFoundException ex ) {
+                        diagnostics.append( new ErrorDiagnostic( baseSubField.getLocale(),
+                                                                 "Syntax Error:" + ex.getMessage() ) );
+                    }
+                } else {
+                    //TODO what is the default base register?
                 }
             }
         }
@@ -291,61 +429,40 @@ public class Assembler {
                                          String.valueOf(uValue),
                                          String.valueOf(xValue),
                                          String.valueOf(bValue)));
+        if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
+            if (iinfo._jFlag || (jField < 016)) {
+                IntegerValue[] values = new IntegerValue[7];
+                values[0] = new IntegerValue( false, iinfo._fField, null );
+                values[1] = new IntegerValue( false, jField, null );
+                values[2] = aValue;
+                values[3] = xValue;
+                values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
+                values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
+                values[6] = uValue;
+                generate(_fjaxhiuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+            } else {
+                IntegerValue[] values = new IntegerValue[5];
+                values[0] = new IntegerValue( false, iinfo._fField, null );
+                values[1] = new IntegerValue( false, jField, null );
+                values[2] = aValue;
+                values[3] = xValue;
+                values[4] = uValue;
+                generate(_fjaxuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+            }
+        } else {
+            IntegerValue[] values = new IntegerValue[8];
+            values[0] = new IntegerValue( false, iinfo._fField, null );
+            values[1] = new IntegerValue( false, jField, null );
+            values[2] = aValue;
+            values[3] = xValue;
+            values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
+            values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
+            values[6] = bValue;
+            values[7] = uValue;
+            generate(_fjaxhibdForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+        }
 
         return true;
-    }
-
-    /**
-     * Assemble a single TextLine object into the Relocatable Module
-     * @param textLine entity to be assembled
-     */
-    private void assemble(
-        final TextLine textLine
-    ) {
-        if ( textLine._fields.size() == 0 ) {
-            return;
-        }
-
-        TextField labelField = textLine.getField(0);
-        TextField operationField = textLine.getField(1);
-        TextField operandField = textLine.getField(2);
-
-        //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(labelField, operationField, operandField, textLine._diagnostics)) {
-            if (textLine._fields.size() > 3) {
-                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
-                                                        "Extraneous fields ignored"));
-            }
-            return;
-        }
-
-        //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
-        //TODO
-        Dictionary d = _context._dictionary;
-
-        //  Hmm.  Is it an expression (or a list of expressions)?
-        //TODO
-
-        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "What the heck is this?"));
-    }
-
-    /**
-     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
-     * current generation location counter (e.g., for interpreting '$' or whatever).
-     * @return IntegerValue object as described
-     */
-    private IntegerValue getCurrentLocation(
-    ) {
-        //  Find the current generation lc index.
-        //  If it doesn't exist, it will be created.
-        try {
-            LocationCounterPool lcPool = _module.getLocationCounterPool(_context._currentGenerationLCIndex);
-            String ref = String.format("LC$BASE_%d", _context._currentGenerationLCIndex);
-            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
-            return new IntegerValue(false, lcPool.getNextOffset(), refs);
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Internal Error: Caught " + ex.getMessage());
-        }
     }
 
 

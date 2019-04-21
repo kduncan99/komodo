@@ -19,6 +19,7 @@ import java.util.Arrays;
  * 72-bit signed integers are stored in two-element arrays of longs, where ar[0] contains the most-significant
  * 36 bits, and ar[1] contains the least-significant 36 bits.
  */
+@SuppressWarnings("Duplicates")
 public class OnesComplement {
 
     public static class Add36Result {
@@ -49,28 +50,28 @@ public class OnesComplement {
         public boolean _overflow;
     }
 
-    public static final long BIT_MASK_12 = 0_7777l;
-    public static final long BIT_MASK_18 = 0_777777l;
-    public static final long BIT_MASK_36 = 0_777777_777777l;
-    public static final long CARRY_BIT_12 = 0_1_0000l;
-    public static final long CARRY_BIT_18 = 0_1_000000l;
-    public static final long CARRY_BIT_36 = 0_1_000000_000000l;
-    public static final long LARGEST_POSITIVE_INTEGER_36 = 0_377777_777777l;
-    public static final long NEGATIVE_BIT_36 = 0_400000_000000l;
-    public static final long NEGATIVE_ZERO_12 = 0_7777l;
-    public static final long NEGATIVE_ZERO_18 = 0_777777l;
-    public static final long NEGATIVE_ZERO_36 = 0_777777_777777l;
-    public static final long POSITIVE_ZERO_12 = 0l;
-    public static final long POSITIVE_ZERO_18 = 0l;
-    public static final long POSITIVE_ZERO_36 = 0l;
-    public static final long SMALLEST_NEGATIVE_INTEGER_36 = 0_400000_000000l;
+    public static final long BIT_MASK_12 = 0_7777L;
+    public static final long BIT_MASK_18 = 0_777777L;
+    public static final long BIT_MASK_36 = 0_777777_777777L;
+    public static final long CARRY_BIT_12 = 0_1_0000L;
+    public static final long CARRY_BIT_18 = 0_1_000000L;
+    public static final long CARRY_BIT_36 = 0_1_000000_000000L;
+    public static final long LARGEST_POSITIVE_INTEGER_36 = 0_377777_777777L;
+    public static final long NEGATIVE_BIT_36 = 0_400000_000000L;
+    public static final long NEGATIVE_ZERO_12 = 0_7777L;
+    public static final long NEGATIVE_ZERO_18 = 0_777777L;
+    public static final long NEGATIVE_ZERO_36 = 0_777777_777777L;
+    public static final long POSITIVE_ZERO_12 = 0L;
+    public static final long POSITIVE_ZERO_18 = 0L;
+    public static final long POSITIVE_ZERO_36 = 0L;
+    public static final long SMALLEST_NEGATIVE_INTEGER_36 = 0_400000_000000L;
 
     public static final long[] BIT_MASK_72 = { BIT_MASK_36, BIT_MASK_36 };
-    public static final long[] LARGEST_POSITIVE_INTEGER_72 = { 0_377777_777777l, 0_777777_777777l };
-    public static final long[] NEGATIVE_BIT_72 = { 0_400000_000000l, 0l };
+    public static final long[] LARGEST_POSITIVE_INTEGER_72 = { 0_377777_777777L, 0_777777_777777L };
+    public static final long[] NEGATIVE_BIT_72 = { 0_400000_000000L, 0L };
     public static final long[] NEGATIVE_ZERO_72 = { BIT_MASK_36, BIT_MASK_36 };
-    public static final long[] POSITIVE_ZERO_72 = { 0l, 0l };
-    public static final long[] SMALLEST_NEGATIVE_INTEGER_72 = { 0_400000_000000l, 0l };
+    public static final long[] POSITIVE_ZERO_72 = { 0L, 0L };
+    public static final long[] SMALLEST_NEGATIVE_INTEGER_72 = { 0_400000_000000L, 0L };
 
     public static final BigInteger BI_BIT_MASK_36 = BigInteger.valueOf(BIT_MASK_36);
     public static final BigInteger BI_BIT_MASK_72 = new BigInteger("0777777777777777777777777", 8);
@@ -80,9 +81,7 @@ public class OnesComplement {
 
     /**
      * Retrieves the absolute value of the 36-bit signed integer presented as the operand
-     * <p>
      * @param operand ones-complement signed integer
-     * <p>
      * @return 36-bit ones-complement integer, the absolute value of the operand parameter
      */
     public static long absoluteValue36(
@@ -93,7 +92,6 @@ public class OnesComplement {
 
     /**
      * Retrieves the absolute value of the 72-bit signed integer presented as the operand
-     * <p>
      * @param operand ones-complement signed integer
      * @param result where we store the result
      */
@@ -109,10 +107,8 @@ public class OnesComplement {
 
     /**
      * Performs ones-complement addition on two 12-bit signed integers, with no regard to carry or overflow.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
-     * <p>
      * @return result of the operation
      */
     public static long add12Simple(
@@ -134,10 +130,8 @@ public class OnesComplement {
 
     /**
      * Performs ones-complement addition on two 18-bit signed integers, with no regard to carry or overflow.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
-     * <p>
      * @return result of the operation
      */
     public static long add18Simple(
@@ -160,7 +154,6 @@ public class OnesComplement {
     /**
      * Performs ones-complement addition on two 36-bit signed integers.
      * See the hardware docs sections on general ones-complement math and the binary arithmetic instructions.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
      * @param result where we store the result of the operation along with carry and overflow flags
@@ -181,10 +174,8 @@ public class OnesComplement {
 
     /**
      * Performs ones-complement addition on two 36-bit signed integers, with no regard to carry or overflow.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
-     * <p>
      * @return result of the operation
      */
     public static long add36Simple(
@@ -207,7 +198,6 @@ public class OnesComplement {
     /**
      * Performs ones-complement addition on two 72-bit signed integers.
      * See the hardware docs sections on general ones-complement math and the binary arithmetic instructions.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
      * @param result where we store the result and the carry and overflow flags
@@ -228,7 +218,6 @@ public class OnesComplement {
 
     /**
      * Performs ones-complement addition on two 72-bit signed integers, with no regard to carry or overflow.
-     * <p>
      * @param addend1 addend
      * @param addend2 another addend
      * @param result where we store the result
@@ -265,33 +254,21 @@ public class OnesComplement {
 
     /**
      * Compares two 36-bit signed ones-complement operands
-     * <p>
-     * @param operand1
-     * @param operand2
-     * <p>
+     * @param operand1 first operand
+     * @param operand2 second operand
      * @return -1 if operand1 < operand2, 0 if operand1 == operand2, 1 if operand1 > operand2
      */
     public static int compare36(
         final long operand1,
         final long operand2
     ) {
-        long native1 = getNative36(operand1);
-        long native2 = getNative36(operand2);
-        if (native1 < native2) {
-            return -1;
-        } else if (native1 == native2) {
-            return 0;
-        } else {
-            return 1;
-        }
+        return Long.compare( getNative36( operand1 ), getNative36( operand2 ) );
     }
 
     /**
      * Compares two 72-bit signed ones-complement operands
-     * <p>
-     * @param operand1
-     * @param operand2
-     * <p>
+     * @param operand1 first operand
+     * @param operand2 second operand
      * @return -1 if operand1 < operand2, 0 if operand1 == operand2, 1 if operand1 > operand2
      */
     public static int compare72(
@@ -305,9 +282,8 @@ public class OnesComplement {
 
     /**
      * Copies the 72-bit source to the 72-bit destination
-     * <p>
-     * @param destination
-     * @param source
+     * @param destination destination
+     * @param source source
      */
     public static void copy72(
         final long[] source,
@@ -319,11 +295,9 @@ public class OnesComplement {
 
     /**
      * Divides the 72-bit dividend by the 72-bit divisor.
-     * <p>
      * @param dividend 72-bit dividend
      * @param divisor 72-bit divisor
      * @param result where we store the result and the overflow flag
-     * <p>
      * @throws DivideByZeroException if divisor is zero
      */
     public static void divide72(
@@ -354,9 +328,7 @@ public class OnesComplement {
 
     /**
      * Converts ones-complement 36-bit signed integer to native format (likely twos-complement)
-     * <p>
      * @param operand 36-bit signed integer to be converted
-     * <p>
      * @return twos-complement integer
      */
     public static long getNative36(
@@ -369,10 +341,8 @@ public class OnesComplement {
      * Converts a ones-complement number, presented as the most-significant and least-significant
      * 36-bit values wrapped in two longs, to a BigInteger containing the corresponding value.
      * It may or may not be internally represented as twos-complement, but we treat it that way.
-     * <p>
      * @param operand 72-bit ones-complement signed integer
-     * <p>
-     * @return
+     * @return BigInteger containing the 71-bit signed integer value
      */
     public static BigInteger getNative72(
         final long[] operand
@@ -390,7 +360,6 @@ public class OnesComplement {
 
     /**
      * Converts native signed integer to ones-complement 36-bit signed integer
-     * <p>
      * @param operand twos-complement (native) signed integer
      * @param result where we store the result and the overflow flag
      */
@@ -400,7 +369,7 @@ public class OnesComplement {
     ) {
         if (operand < 0) {
             result._result = (~(-operand)) & BIT_MASK_36;
-            result._overflow = operand < -(0_377777_777777l);
+            result._overflow = operand < -( 0_377777_777777L );
         } else {
             result._result = operand & BIT_MASK_36;
             result._overflow = operand > LARGEST_POSITIVE_INTEGER_36;
@@ -409,7 +378,6 @@ public class OnesComplement {
 
     /**
      * Converts native big integer to ones-coplement 72-bit signed integer
-     * <p>
      * @param operand native signed integer to be converted
      * @param result where we store the result and the overflow flag
      */
@@ -432,11 +400,9 @@ public class OnesComplement {
 
     /**
      * Indicates whether the two 72-bit operands are equal
-     * <p>
-     * @param operand1
-     * @param operand2
-     * <p>
-     * @return
+     * @param operand1 first operand
+     * @param operand2 second operand
+     * @return true if the operands are equal, else false
      */
     public static boolean isEqual72(
         final long[] operand1,
@@ -447,10 +413,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 36-bit signed ones-complement integer is negative
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is negative, else false
      */
     public static boolean isNegative36(
         final long operand
@@ -460,10 +424,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 72-bit signed ones-complement value is negative
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is negative, else false
      */
     public static boolean isNegative72(
         final long[] operand
@@ -473,10 +435,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 36-bit signed ones-complement integer is negative zero
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is negative zero, else false
      */
     public static boolean isNegativeZero36(
         final long operand
@@ -486,10 +446,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 72-bit signed ones-complement integer is negative zero
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is negative zero, else false
      */
     public static boolean isNegativeZero72(
         final long[] operand
@@ -499,10 +457,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 36-bit signed ones-complement integer is positive
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is positive, else false
      */
     public static boolean isPositive36(
         final long operand
@@ -512,10 +468,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 72-bit signed ones-complement integer is positive
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is positive, else false
      */
     public static boolean isPositive72(
         final long[] operand
@@ -525,10 +479,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 36-bit signed ones-complement integer is positive zero
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is positive zero, else false
      */
     public static boolean isPositiveZero36(
         final long operand
@@ -538,10 +490,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 72-bit signed ones-complement integer is positive zero
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is positive zero, else false
      */
     public static boolean isPositiveZero72(
         final long[] operand
@@ -551,10 +501,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 36-bit signed ones-complement integer is zero (negative or positive)
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is zero, else false
      */
     public static boolean isZero36(
         final long operand
@@ -564,10 +512,8 @@ public class OnesComplement {
 
     /**
      * Determines whether the given 72-bit signed ones-complement integer is zero (negative or positive)
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand operand to be tested
+     * @return true if the operand is zero, else false
      */
     public static boolean isZero72(
         final long[] operand
@@ -577,10 +523,8 @@ public class OnesComplement {
 
     /**
      * Shifts the operand left by {count} bits, with the msb shifting to the lsb
-     * <p>
-     * @param operand
-     * @param count
-     * <p>
+     * @param operand value to be shifted
+     * @param count shift count
      * @return result
      */
     public static long leftShiftCircular36(
@@ -601,10 +545,9 @@ public class OnesComplement {
 
     /**
      * Shifts the operand left by {count} bits, with the msb shifting to the lsb
-     * <p>
-     * @param operand
-     * @param count
-     * @param result
+     * @param operand value to be shifted
+     * @param count shift count
+     * @param result where we store the 2-word result
      */
     public static void leftShiftCircular72(
         final long[] operand,
@@ -631,11 +574,9 @@ public class OnesComplement {
 
     /**
      * Shifts the operand left by {count} bits, and returns the result
-     * <p>
-     * @param operand
+     * @param operand value to be shifted
      * @param count if less than zero, we default to zero
-     * <p>
-     * @return
+     * @return resulting value
      */
     public static long leftShiftLogical36(
         final long operand,
@@ -646,10 +587,9 @@ public class OnesComplement {
 
     /**
      * Shifts the operand left by {count} bits, and returns the result
-     * <p>
-     * @param operand
+     * @param operand value to be shifted
      * @param count if less than zero, we default to zero
-     * @param result
+     * @param result where we store the 2-word result
      */
     public static void leftShiftLogical72(
         final long[] operand,
@@ -667,10 +607,9 @@ public class OnesComplement {
 
     /**
      * Multiplies two 36-bit ones-complement numbers, producing a 72-bit ones-complement result.
-     * <p>
-     * @param factor1
-     * @param factor2
-     * @param product
+     * @param factor1 operand
+     * @param factor2 operand
+     * @param product where we store the 2-word result
      */
     public static void multiply36(
         final long factor1,
@@ -705,10 +644,8 @@ public class OnesComplement {
 
     /**
      * Returns the arithmetic inverse (the negative) of the given 12-bit signed integer.
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand value to be inverted
+     * @return result
      */
     public static long negate12(
         final long operand
@@ -718,10 +655,8 @@ public class OnesComplement {
 
     /**
      * Returns the arithmetic inverse (the negative) of the given 18-bit signed integer.
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand value to be inverted
+     * @return result
      */
     public static long negate18(
         final long operand
@@ -731,10 +666,8 @@ public class OnesComplement {
 
     /**
      * Returns the arithmetic inverse (the negative) of the given 36-bit signed integer.
-     * <p>
-     * @param operand
-     * <p>
-     * @return
+     * @param operand value to be inverted
+     * @return result
      */
     public static long negate36(
         final long operand
@@ -744,9 +677,8 @@ public class OnesComplement {
 
     /**
      * Returns the arithmetic inverse (the negative) of the given 72-bit signed integer.
-     * <p>
-     * @param operand
-     * @param result
+     * @param operand value to be inverted
+     * @param result 2-word result
      */
     public static void negate72(
         final long[] operand,
@@ -758,10 +690,8 @@ public class OnesComplement {
 
     /**
      * Performs a right-shift algebraic on the 36-bit operand
-     * <p>
      * @param operand value to be shifted
      * @param count number of bits to shift - if less than zero, we default to zero
-     * <p>
      * @return result of the shift
      */
     public static long rightShiftAlgebraic36(
@@ -776,7 +706,7 @@ public class OnesComplement {
             long result = operand >> count;
             if (isNegative36(operand)) {
                 //  create a mask right-aligned, with {count} bits set, then left-align it within 36 bits.
-                long mask = 1l << count;
+                long mask = 1L << count;
                 mask -= 1;
                 mask <<= (36 - count);
                 result |= mask;
@@ -787,10 +717,9 @@ public class OnesComplement {
 
     /**
      * Performs a right-shift algebraic on the 72-bit operand
-     * <p>
      * @param operand value to be shifted
      * @param count number of bits to shift
-     * @param result
+     * @param result where we store the 2-word result
      */
     public static void rightShiftAlgebraic72(
         final long[] operand,
@@ -823,10 +752,8 @@ public class OnesComplement {
 
     /**
      * Shifts the operand right by {count} bits, with the lsb shifting to the msb
-     * <p>
-     * @param operand
-     * @param count
-     * <p>
+     * @param operand value to be shifted
+     * @param count shift count
      * @return result
      */
     public static long rightShiftCircular36(
@@ -839,7 +766,7 @@ public class OnesComplement {
             boolean carry = (result & 01) != 0;
             result >>= 1;
             if (carry) {
-                result |= 0_400000_000000l;
+                result |= 0_400000_000000L;
             }
         }
         return result;
@@ -847,10 +774,9 @@ public class OnesComplement {
 
     /**
      * Shifts the operand right by {count} bits, with the lsb shifting to the msb
-     * <p>
-     * @param operand
-     * @param count
-     * @param result
+     * @param operand value to be shifted
+     * @param count shift count
+     * @param result where we store the 2-word result
      */
     public static void rightShiftCircular72(
         final long[] operand,
@@ -866,22 +792,20 @@ public class OnesComplement {
             result[1] >>= 1;
 
             if (carryMid) {
-                result[1] |= 0_400000_000000l;
+                result[1] |= 0_400000_000000L;
             }
 
             if (carryMsb) {
-                result[0] |= 0_400000_000000l;
+                result[0] |= 0_400000_000000L;
             }
         }
     }
 
     /**
      * Shifts the operand left by {count} bits, and returns the result
-     * <p>
-     * @param operand
+     * @param operand value to be shifted
      * @param count if less than zero, we default to zero
-     * <p>
-     * @return
+     * @return result
      */
     public static long rightShiftLogical36(
         final long operand,
@@ -892,10 +816,9 @@ public class OnesComplement {
 
     /**
      * Shifts the operand left by {count} bits, and returns the result
-     * <p>
-     * @param operand
+     * @param operand value to be shifted
      * @param count if less than zero, we default to zero
-     * @param result
+     * @param result where we store the 2-word result
      */
     public static void rightShiftLogical72(
         final long[] operand,

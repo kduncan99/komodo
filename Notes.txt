@@ -1,6 +1,5 @@
-Use pure evaluation for register fields (be sure to account for flagged values)
 Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
-Need Undefined Reference RelocationInfo
+Need Undefined References for RelocatableWord36 objects
 
 Convert IP unit tests from octal to assembler and mina them
 

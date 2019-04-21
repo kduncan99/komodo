@@ -364,6 +364,7 @@ public class InstructionWord extends Word36 {
     /**
      * Mnemonics of the various Executive Requests, indexed by the ER number
      */
+    //TODO These don't really belong here...
     private static final Map<Integer, String> ER_NAMES = new HashMap<>();
     static {
         ER_NAMES.put(01,    "IO$");

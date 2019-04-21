@@ -40,12 +40,8 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "START* .",
             "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
-//            "          PF$FJAXU  010,016,0,0,01000",//????
-            "END .",
             "          HALT      0",
-//            "          PF$FJAXU 077,017,017,0,0",//????
         };
 
         Assembler asm = new Assembler("Test", source);
