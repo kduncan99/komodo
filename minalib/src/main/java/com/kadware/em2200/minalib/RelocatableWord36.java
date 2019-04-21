@@ -43,6 +43,16 @@ public class RelocatableWord36 extends Word36 {
             }
             return false;
         }
+
+        @Override
+        public String toString(
+        ) {
+            return String.format("[%d.%d]%s%s",
+                                 _fieldDescriptor._startingBit,
+                                 _fieldDescriptor._fieldSize,
+                                 _isNegative ? "-" : "+",
+                                 _reference);
+        }
     }
 
     public final UndefinedReference[] _undefinedReferences;

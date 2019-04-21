@@ -5,12 +5,14 @@
 package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.baselib.*;
-import com.kadware.em2200.baselib.exceptions.NotFoundException;
+import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
-
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,11 +21,26 @@ import java.util.Map;
 @SuppressWarnings("Duplicates")
 public class Assembler {
 
+    //  The Context object contains things which specifically apply to a particular sub-assembly...
+    //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
     private final Context _context = new Context();
-    private final Diagnostics _diagnostics = new Diagnostics();     //  cumulative of all textLine diagnostics
+
+    //  Aggregation of all TextLine diagnostics.
+    //  This is rarely (if at all) up-to-date, until we reach the end of the assembly process.
+    //  Diagnostics, when generated, should be appended to the TextLine objects' _diagnostic members.
+    private final Diagnostics _diagnostics = new Diagnostics();
+
+    //  Keep track of the amount of code generated per location counter index
+    private final Map<Integer, Integer> _codeCount = new HashMap<>();
+
+    //  The RelocatableModule we build up as a result of the assembly
     private final RelocatableModule _module;
+
+    //  The various TextLine object which comprise the source and assembled code...
+    //  These objects are where most of the work is done throughout the assembly process
     private final TextLine[] _sourceCode;
 
+    //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
     private static final Form _fjaxhiuForm = new Form(_fjaxhiuFields);
     private static final int[] _fjaxuFields = { 6, 4, 4, 4, 18 };
@@ -31,6 +48,7 @@ public class Assembler {
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
 
+    //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
 
 
@@ -56,20 +74,30 @@ public class Assembler {
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
         if (processMnemonic(textLine, labelField, operationField, operandField, textLine._diagnostics)) {
             if (textLine._fields.size() > 3) {
-                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
-                                                        "Extraneous fields ignored"));
+                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
+                                                                 "Extraneous fields ignored"));
             }
             return;
         }
 
         //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
         //TODO
-        Dictionary d = _context._dictionary;
 
         //  Hmm.  Is it an expression (or a list of expressions)?
         //TODO
 
-        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "What the heck is this?"));
+        textLine._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+                                                         "What the heck is this?"));//????
+    }
+
+    /**
+     * Aggregates the diagnostics from the individual lines of text into the master _diagnostics container
+     */
+    private void collectDiagnostics(
+    ) {
+        for (TextLine line : _sourceCode) {
+            _diagnostics.append(line._diagnostics);
+        }
     }
 
     /**
@@ -81,78 +109,50 @@ public class Assembler {
     ) {
         //  Find the current generation lc index.
         //  If it doesn't exist, it will be created.
-        try {
-            LocationCounterPool lcPool = _module.getLocationCounterPool(_context._currentGenerationLCIndex);
-            String ref = String.format("LC$BASE_%d", _context._currentGenerationLCIndex);
-            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
-            return new IntegerValue(false, lcPool.getNextOffset(), refs);
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Internal Error: Caught " + ex.getMessage());
+        int lcIndex = _context._currentGenerationLCIndex;
+        if (!_codeCount.containsKey( lcIndex )) {
+            _codeCount.put( lcIndex, 0 );
         }
+
+        int lcOffset = _codeCount.get( lcIndex );
+        String ref = String.format( "LC$BASE_%d", lcIndex );
+        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
+        return new IntegerValue(false, lcOffset, refs);
     }
 
     /**
-     * Generates the given word into the indicated location counter pool
+     * Generates the given word as a set of subfields for a given location counter index and offset,
+     * and places it into the given TextLine objects's set of generated words.
      * @param textLine line of text which is driving this
      * @param form indicates the bit fields - there should be one value per bit-field
      * @param values the values to be used
      * @param lcIndex index of the location counter pool
-     * @param locale locale associated with this (line number only)
-     * @param diagnostics where we post diagnostics if necessary
      */
     private void generate(
         final TextLine textLine,
         final Form form,
         final IntegerValue[] values,
-        final int lcIndex,
-        final Locale locale,
-        final Diagnostics diagnostics
+        final int lcIndex
     ) {
         if (values.length != form.getFieldCount()) {
             throw new RuntimeException("Number of bit-fields in the form differ from number of values");
         }
 
-        long result = 0;
         int startingBit = 0;
         int[] fieldSizes = form.getFieldSizes();
+        Map<FieldDescriptor, IntegerValue> fields = new HashMap<>();
         for (int fx = 0; fx < values.length; ++fx) {
-            //  convert value from twos- to ones-complement, check for 36-bit truncation
-            long value = values[fx].getValue();
-            OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
-            OnesComplement.getOnesComplement36( value, ocr );
-            boolean trunc = ocr._overflow;
-            long value36 = ocr._result;
-
-            long mask = (1 << fieldSizes[fx]) - 1;
-            long maskedValue = value36 & mask;
-
-            //  Check for field size truncation
-            if (value > 0) {
-                trunc = (value36 != maskedValue);
-            } else if (value < 0) {
-                trunc = ((mask | value36) != 0_777777_777777L);
-            }
-
-            if (trunc) {
-                diagnostics.append( new TruncationDiagnostic( locale, startingBit, fieldSizes[fx] ) );
-            }
-
-            result <<= fieldSizes[fx];
-            result |= maskedValue;
+            FieldDescriptor fd = new FieldDescriptor( startingBit, fieldSizes[fx] );
+            fields.put(fd, values[fx]);
             startingBit += fieldSizes[fx];
         }
 
-        //TODO set up undefined references
-
-        RelocatableWord36 rw36 = new RelocatableWord36( result, null );
-        try {
-            LocationCounterPool pool = getRelocatableModule().getLocationCounterPool( lcIndex );
-            int lcOffset = pool.getNextOffset();
-            pool.appendStorage( rw36 );
-            textLine.appendWord( lcIndex, lcOffset, rw36 );
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException( "Internal Error" );
+        if (!_codeCount.containsKey( lcIndex )) {
+            _codeCount.put( lcIndex, 0 );
         }
+        int lcOffset = _codeCount.get( lcIndex );
+        textLine.appendWord( lcIndex, lcOffset, fields );
+        _codeCount.put( lcIndex, lcOffset + 1);
     }
 
     /**
@@ -181,7 +181,7 @@ public class Assembler {
     }
 
     /**
-     * For textlines which contain a label intended to actually *be* a label - that is, to represent the current
+     * For TextLine objecs which contain a label intended to actually *be* a label - that is, to represent the current
      * address in the current generation location counter...
      * @param labelField label field
      * @param diagnostics where we post any appropriate diagnostics
@@ -200,7 +200,6 @@ public class Assembler {
             }
 
             if ( !Dictionary.isValidUserLabel(label) ) {
-                label = null;
                 diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
                                                        "Invalid label"));
             } else {
@@ -259,7 +258,7 @@ public class Assembler {
             try {
                 InstructionWord.Mode imode =
                     _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
-                iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+                InstructionWord.getInstructionInfo(mnemonic, imode);
                 diagnostics.append(new ErrorDiagnostic(mnemonicSubfield.getLocale(),
                                                        "Opcode not valid for the current code mode"));
                 return true;
@@ -444,7 +443,7 @@ public class Assembler {
                 values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
                 values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
                 values[6] = uValue;
-                generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+                generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex);
             } else {
                 IntegerValue[] values = new IntegerValue[5];
                 values[0] = new IntegerValue( false, iinfo._fField, null );
@@ -452,7 +451,7 @@ public class Assembler {
                 values[2] = aValue;
                 values[3] = xValue;
                 values[4] = uValue;
-                generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+                generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex);
             }
         } else {
             IntegerValue[] values = new IntegerValue[8];
@@ -464,10 +463,59 @@ public class Assembler {
             values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
             values[6] = bValue;
             values[7] = uValue;
-            generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex, operandField.getLocale(), diagnostics);
+            generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex);
         }
 
         return true;
+    }
+
+    /**
+     * Resolves any lingering undefined references once initial assembly is complete...
+     * These will be the forward-references we picked up along the way.
+     * @param dictionary our source for looking up the references
+     */
+    private void resolveReferences(
+        final Dictionary dictionary
+    ) {
+        for (TextLine line : _sourceCode) {
+            for (int wx = 0; wx < line._generatedWords.size(); ++wx) {
+                TextLine.GeneratedWord gw = line._generatedWords.get(wx);
+                for ( Map.Entry<FieldDescriptor, IntegerValue> entry : gw._fields.entrySet() ) {
+                    FieldDescriptor fd = entry.getKey();
+                    IntegerValue originalIV = entry.getValue();
+                    if (originalIV.getUndefinedReferences().length > 0) {
+                        long newDiscreteValue = originalIV.getValue();
+                        List<IntegerValue.UndefinedReference> newURefs = new LinkedList<>();
+                        for (IntegerValue.UndefinedReference intURef : originalIV.getUndefinedReferences()) {
+                            try {
+                                Value lookupValue = dictionary.getValue(intURef._reference);
+                                if ( lookupValue.getType() != ValueType.Integer ) {
+                                    Locale loc = new Locale(line._lineNumber, 0);
+                                    line._diagnostics.append(
+                                        new ValueDiagnostic(
+                                            loc,
+                                            "Forward reference does not resolve to an integer"));
+                                } else {
+                                    IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
+                                    newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue.getValue();
+                                    for (IntegerValue.UndefinedReference urLookup : lookupIntegerValue.getUndefinedReferences()) {
+                                        newURefs.add( urLookup );
+                                    }
+                                }
+                            } catch ( NotFoundException ex ) {
+                                //  reference is still not found - propagate it
+                                newURefs.add(intURef);
+                            }
+                        }
+
+                        IntegerValue newIV = new IntegerValue( originalIV.getFlagged(),
+                                                               newDiscreteValue,
+                                                               newURefs.toArray(new IntegerValue.UndefinedReference[0]) );
+                        gw._fields.put( fd, newIV );
+                    }
+                }
+            }
+        }
     }
 
 
@@ -507,22 +555,25 @@ public class Assembler {
         for (TextLine line : _sourceCode) {
             line.parseFields();
             if (line._diagnostics.hasFatal()) {
+                collectDiagnostics();
                 return;
             }
-            _diagnostics.append(line._diagnostics);
         }
 
         //  Next step - assemble all the things
         for (TextLine line : _sourceCode) {
             assemble(line);
             if (_diagnostics.hasFatal()) {
+                collectDiagnostics();
                 return;
             }
-            _diagnostics.append(line._diagnostics);
         }
 
-        //  Resolve all references which can be resolved
-        //TODO
+        resolveReferences(_context._dictionary);
+
+        //TODO Generate RelocatableModule
+
+        collectDiagnostics();
     }
 
     /**
@@ -538,14 +589,15 @@ public class Assembler {
             }
 
             for (TextLine.GeneratedWord gw : line._generatedWords) {
-                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, gw._word.getW());
-                if (gw._word._undefinedReferences.length == 0) {
+                RelocatableWord36 rw36 = gw.produceRelocatableWord36( line );
+                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, rw36.getW());
+                if (rw36._undefinedReferences.length == 0) {
                     System.out.println(gwBase);
                 } else {
-                    for (int urx = 0; urx < gw._word._undefinedReferences.length; ++urx) {
+                    for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
                         System.out.println(String.format("%s %s",
                                                          urx == 0 ? gwBase : "                           ",
-                                                         gw._word._undefinedReferences[urx].toString()));
+                                                         rw36._undefinedReferences[urx].toString()));
                     }
                 }
             }

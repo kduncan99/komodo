@@ -4,31 +4,91 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.diagnostics.ErrorDiagnostic;
-import com.kadware.em2200.minalib.diagnostics.QuoteDiagnostic;
-import com.kadware.em2200.minalib.diagnostics.Diagnostics;
+import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.minalib.diagnostics.*;
+import com.kadware.em2200.minalib.dictionary.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a line of source code
  */
 class TextLine {
 
-    public static class GeneratedWord{
-        public final int _lcIndex;
-        public final int _lcOffset;
-        public final RelocatableWord36 _word;
+    //  These exist only within the TextLine objects, and contain the bitfield which comprise
+    //  each generated word, along with the values and any undefined references which apply thereto.
+    //  They are tagged with the location counter index and offset where they are to be placed.
+    static class GeneratedWord{
+        final int _lcIndex;
+        final int _lcOffset;
+        final Map<FieldDescriptor, IntegerValue> _fields = new HashMap<>();
 
-        public GeneratedWord(
+        /**
+         * constructor
+         * @param lcIndex location counter index
+         * @param lcOffset offset from start of location counter pool
+         * @param fields field definitions
+         */
+        GeneratedWord(
             final int lcIndex,
             final int lcOffset,
-            final RelocatableWord36 word
+            final Map<FieldDescriptor, IntegerValue> fields
         ) {
             _lcIndex = lcIndex;
             _lcOffset = lcOffset;
-            _word = word;
+            _fields.putAll( fields );
+        }
+
+        /**
+         * Constructs a composite RelocatableWord36 object based upon the various component field definitions.
+         * Should be called after we've resolved all references local to the containing module.
+         * @return composite word
+         */
+        RelocatableWord36 produceRelocatableWord36(
+            final TextLine textLine
+        ) {
+            long discreteValue = 0;
+            List<RelocatableWord36.UndefinedReference> relRefs = new LinkedList<>();
+            for ( Map.Entry<FieldDescriptor, IntegerValue> entry : _fields.entrySet() ) {
+                //  convert value from twos- to ones-complement, check for 36-bit truncation
+                long fieldValue = entry.getValue().getValue();
+                OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
+                OnesComplement.getOnesComplement36( fieldValue, ocr );
+                boolean trunc = ocr._overflow;
+                long value36 = ocr._result;
+
+                FieldDescriptor fd = entry.getKey();
+                long mask = (1 << fd._fieldSize) - 1;
+                long maskedValue = value36 & mask;
+
+                //  Check for field size truncation
+                if (fieldValue > 0) {
+                    trunc = (value36 != maskedValue);
+                } else if (fieldValue < 0) {
+                    trunc = ((mask | value36) != 0_777777_777777L);
+                }
+
+                if (trunc) {
+                    Locale loc = new Locale( textLine._lineNumber, 0 );
+                    textLine._diagnostics.append( new TruncationDiagnostic( loc, fd._startingBit, fd._fieldSize ) );
+                }
+
+                int bitMask = (1 << fd._fieldSize) - 1;
+                int shiftCount = 36 - fd._startingBit - fd._fieldSize;
+                discreteValue |= (maskedValue << shiftCount);
+
+                //  Propagate any remaining external references
+                for (IntegerValue.UndefinedReference intURef : entry.getValue().getUndefinedReferences()) {
+                    RelocatableWord36.UndefinedReference relURef =
+                        new RelocatableWord36.UndefinedReference( intURef._reference, fd, intURef._isNegative );
+                    relRefs.add( relURef );
+                }
+            }
+
+            return new RelocatableWord36( discreteValue, relRefs.toArray(new RelocatableWord36.UndefinedReference[0]) );
         }
     }
 
@@ -79,14 +139,13 @@ class TextLine {
      * Add a reference to a word generated for this line of text
      * @param lcIndex location counter index
      * @param lcOffset location counter offset
-     * @param word word generated (including any relocation information)
      */
     void appendWord(
         final int lcIndex,
         final int lcOffset,
-        final RelocatableWord36 word
+        final Map<FieldDescriptor, IntegerValue> fields
     ) {
-        _generatedWords.add(new GeneratedWord(lcIndex, lcOffset, word));
+        _generatedWords.add( new GeneratedWord( lcIndex, lcOffset, fields ) );
     }
 
     /**
@@ -198,7 +257,7 @@ class TextLine {
 
         String fieldText = sb.toString();
         fieldText = fieldText.trim();
-        if (fieldText.length() > 0) {
+        if (!fieldText.isEmpty()) {
             TextField field = new TextField(locale, fieldText);
             _fields.add(field);
             Diagnostics parseDiags = field.parseSubfields();

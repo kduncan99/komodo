@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
 
+import com.kadware.em2200.minalib.exceptions.*;
 import java.util.HashMap;
 import java.util.Map;
-import com.kadware.em2200.minalib.exceptions.*;
 
 /**
  * Represents the assembly of a particular set of lines of source code,
@@ -19,7 +19,6 @@ class RelocatableModule {
 
     /**
      * Constructor
-     * <p>
      * @param name name of the module
      */
     RelocatableModule(
@@ -31,11 +30,8 @@ class RelocatableModule {
     /**
      * Retrieves the LocationCounterPool associated with the given index.
      * If one does not exist, it is created and returned.
-     * <p>
-     * @param index
-     * <p>
-     * @return
-     * <p>
+     * @param index lc index
+     * @return reference to LocationCounterPool
      * @throws InvalidParameterException if the index is out of range
      */
     LocationCounterPool getLocationCounterPool(
