@@ -40,6 +40,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
+            "START*",
             "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
             "          HALT      0",
         };

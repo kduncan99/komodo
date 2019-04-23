@@ -39,6 +39,9 @@ public class Assembler {
     //  These objects are where most of the work is done throughout the assembly process
     private final TextLine[] _sourceCode;
 
+    //  Name of the module to be created
+    private String _moduleName;
+
     private Dictionary _globalDictionary;
     private SystemDictionary _systemDictionary;
 
@@ -226,7 +229,7 @@ public class Assembler {
         }
 
         int lcOffset = _codeCount.get( lcIndex );
-        String ref = String.format( "LC$BASE_%d", lcIndex );
+        String ref = String.format( "%s_LC$BASE_%d", _moduleName, lcIndex );
         IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
         return new IntegerValue(false, lcOffset, refs);
     }
@@ -626,6 +629,7 @@ public class Assembler {
         final String moduleName
     ) {
         //  setup
+        _moduleName = moduleName;
         _context._characterMode = CharacterMode.ASCII;
         _context._codeMode = CodeMode.Basic;
         _diagnostics.clear();

@@ -8,7 +8,7 @@ package com.kadware.em2200.minalib;
  */
 public class LocationCounterPool {
 
-    private final RelocatableWord36[] _storage;
+    public final RelocatableWord36[] _storage;
 
     public LocationCounterPool(
         final RelocatableWord36[] storage
