@@ -4,17 +4,13 @@
 
 package com.kadware.em2200.hardwarelib.test;
 
-import com.kadware.em2200.baselib.IndexRegister;
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.Word36ArraySlice;
+import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.hardwarelib.misc.AbsoluteAddress;
-import com.kadware.em2200.hardwarelib.misc.AccessInfo;
-import com.kadware.em2200.hardwarelib.misc.AccessPermissions;
-import com.kadware.em2200.hardwarelib.misc.BankDescriptor;
-import com.kadware.em2200.hardwarelib.misc.BaseRegister;
-import com.kadware.em2200.hardwarelib.misc.VirtualAddress;
+import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.em2200.minalib.*;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Base class for all Test_InstructionProcessor_* classes
@@ -39,6 +35,82 @@ class Test_InstructionProcessor {
     private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
 
     /**
+     * Assembles sets of code into multiple relocatable modules, then links them.
+     * @param code array of arrays of text - each outer array is a separate assembly.
+     *             odd location counter pools go into the first (instruction) bank,
+     *             even location counter pools into a second (data) bank.
+     * @param display true to display assembler/linker output
+     * @return linked absolute module
+     */
+    protected static AbsoluteModule buildCodeBasic(
+            final String[][] code,
+            final boolean display
+    ) {
+        List<RelocatableModule> relocatableModules = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+
+        for (String[] codeSet : code) {
+            Assembler a = new Assembler(codeSet);
+            String moduleName = String.format("TEST%d", relocatableModules.size() + 1);
+            RelocatableModule relModule = a.assemble(moduleName, display);
+            relocatableModules.add(relModule);
+
+            for (Integer lcIndex : relModule._storage.keySet()) {
+                if ((lcIndex & 01) == 01) {
+                    Linker.LCPoolSpecification oddPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+                    poolSpecsOdd.add(oddPoolSpec);
+                } else {
+                    Linker.LCPoolSpecification evenPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+                    poolSpecsEven.add(evenPoolSpec);
+                }
+            }
+        }
+
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("I1")
+                                     .setBankDescriptorIndex(000004)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(022000)
+                                     .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(12)
+                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                     .build());
+
+        if (!poolSpecsEven.isEmpty()) {
+            bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                         .setBankName("D1")
+                                         .setBankDescriptorIndex(000005)
+                                         .setBankLevel(0)
+                                         .setStartingAddress(040000)
+                                         .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
+                                         .setInitialBaseRegister(13)
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .build());
+        }
+
+        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
+        return linker.link("TEST", display);
+    }
+
+    /**
+     * Wrapper around the above, for a single set of code
+     * @param codeSet code to be assembled and linked
+     * @param display true to display assembler/linker output
+     * @return linked absolute module
+     */
+    protected static AbsoluteModule buildCodeBasic(
+            final String[] codeSet,
+            final boolean display
+    ) {
+        String[][] code = { codeSet };
+        return buildCodeBasic(code, display);
+    }
+
+    /**
      * Retrieves the contents of a bank represented by a base register
      * @param ip reference to IP containing the desired BR
      * @param baseRegisterIndex index of the desired BR
@@ -57,6 +129,55 @@ class Test_InstructionProcessor {
     }
 
     /**
+     * Loads the various banks from the given absolute element, into the given MSP
+     * and applies initial base registers for the given IP as appropriate.
+     * @param ip instruction processor of interest
+     * @param msp main storage processor of interest
+     * @param module absolute module to be loaded
+     */
+    protected static void loadBanks(
+            final InstructionProcessor ip,
+            final MainStorageProcessor msp,
+            final AbsoluteModule module
+    ) {
+        Word36Array storage = msp.getStorage();
+        short mspUpi = msp.getUPI();
+
+        int mspOffset = 0;
+        for (LoadableBank loadableBank : module._loadableBanks.values()) {
+            storage.load(mspOffset, loadableBank._content);
+            AbsoluteAddress absoluteAddress = new AbsoluteAddress(mspUpi, mspOffset);
+            System.out.println(String.format("Loaded Bank %s BDI=%06o Starting Address=%06o at Absolute Address=%012o",
+                                             loadableBank._bankName,
+                                             loadableBank._bankDescriptorIndex,
+                                             loadableBank._startingAddress,
+                                             absoluteAddress._offset));
+
+            if (loadableBank._initialBaseRegister != null) {
+                Word36ArraySlice storageSubset = new Word36ArraySlice(storage, mspOffset, loadableBank._content.getArraySize());
+                int bankLower = loadableBank._startingAddress;
+                int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
+                BaseRegister bReg = new BaseRegister(absoluteAddress,
+                                                     false,
+                                                     bankLower,
+                                                     bankUpper,
+                                                     loadableBank._accessInfo,
+                                                     loadableBank._generalPermissions,
+                                                     loadableBank._specialPermissions,
+                                                     storageSubset);
+                ip.setBaseRegister(loadableBank._initialBaseRegister, bReg);
+
+                System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
+                                                 loadableBank._initialBaseRegister,
+                                                 bReg.getLowerLimitNormalized(),
+                                                 bReg.getUpperLimitNormalized()));
+            }
+
+            mspOffset += loadableBank._content.getArraySize();
+        }
+    }
+
+    /**
      * Given an array of LoadBankInfo objects, we load the described data as individual banks, into consecutive locations
      * into the given MainStorageProcessor.  For each bank, we create a BankRegister and establish that bank register
      * of the given InstructionProcessor as B0, B1, ...
@@ -65,7 +186,7 @@ class Test_InstructionProcessor {
      * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
      * @param bankInfos contains the various banks to be loaded
      */
-    public static void loadBanks(
+    protected static void loadBanks(
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int brIndex,

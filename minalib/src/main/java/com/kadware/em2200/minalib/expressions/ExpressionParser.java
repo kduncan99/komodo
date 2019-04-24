@@ -188,11 +188,21 @@ public class ExpressionParser {
             }
 
             if (allowPrefixOperator) {
-                //TODO
+                try {
+                    expItems.add(parsePrefixOperator());
+                    continue;
+                } catch (NotFoundException ex) {
+                    //  skip
+                }
             }
 
             if (allowPostfixOperator) {
-                //TODO
+                try {
+                    expItems.add(parsePostfixOperator());
+                    continue;
+                } catch (NotFoundException ex) {
+                    //  skip
+                }
             }
 
             //  we've found something we don't understand.

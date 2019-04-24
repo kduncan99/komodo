@@ -7,13 +7,6 @@ package com.kadware.em2200.hardwarelib;
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.functions.*;
-import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
-import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
-import com.kadware.em2200.hardwarelib.functions.generalStore.*;
-import com.kadware.em2200.hardwarelib.functions.jump.*;
-import com.kadware.em2200.hardwarelib.functions.logical.*;
-import com.kadware.em2200.hardwarelib.functions.shift.*;
-import com.kadware.em2200.hardwarelib.functions.systemControl.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 
@@ -630,7 +623,7 @@ public class InstructionProcessor extends Processor implements Worker {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
         }
 
-        //  Make sure we have exeucte permission here.
+        //  Make sure we have execute permission here.
         if (!isExecuteAllowed(bReg)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
         }

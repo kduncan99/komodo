@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions;
@@ -30,7 +30,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 005, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION005_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION005_HANDLERS = {
         new SZFunctionHandler(),    //  000
         new SNZFunctionHandler(),   //  001
         new SP1FunctionHandler(),   //  002
@@ -52,7 +52,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 007, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION007_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION007_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -74,7 +74,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 071, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION071_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION071_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -96,7 +96,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 072, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION072_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION072_HANDLERS = {
         null,           //  000
         new SLJFunctionHandler(),   //  001
         new JPSFunctionHandler(),   //  002
@@ -118,7 +118,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 073, j-field 015, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION073_015_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION073_015_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -140,7 +140,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 073, j-field 017, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION073_017_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION073_017_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -162,7 +162,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 073, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION073_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION073_HANDLERS = {
         new SSCFunctionHandler(),   //  000
         new DSCFunctionHandler(),   //  001
         new SSLFunctionHandler(),   //  002
@@ -184,7 +184,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 074 j-field 004, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION074_004_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION074_004_HANDLERS = {
         new JFunctionHandler(),     //  000
         new JKFunctionHandler(),    //  001
         new JKFunctionHandler(),    //  002
@@ -206,7 +206,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 074 j-field 014, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION074_014_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION074_014_HANDLERS = {
         new JOFunctionHandler(),    //  000
         null,           //  001
         null,           //  002
@@ -228,7 +228,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 074 j-field 004, indexed by a-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION074_015_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION074_015_HANDLERS = {
         new JNOFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
@@ -250,7 +250,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 074, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION074_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION074_HANDLERS = {
         new JZFunctionHandler(),    //  000
         new JNZFunctionHandler(),   //  001
         new JPFunctionHandler(),    //  002
@@ -272,7 +272,7 @@ public abstract class FunctionTable {
     /**
      * Basic Mode function handlers for f-field 075, indexed by j-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTION075_HANDLERS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION075_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -292,9 +292,53 @@ public abstract class FunctionTable {
     };
 
     /**
+     * Basic Mode function handlers for f-field 077 j-field 017, indexed by a-field
+     */
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION077_017_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        new HALTFunctionHandler(),
+    };
+
+    /**
+     * Basic Mode function handlers for f-field 077, indexed by j-field
+     */
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION077_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        new SubSubFunctionHandler(BASIC_MODE_FUNCTION077_017_HANDLERS),
+    };
+
+    /**
      * Basic mode function handler vector indexed by the instruction f-field
      */
-    private static final FunctionHandler BASIC_MODE_FUNCTIONS[] = {
+    private static final FunctionHandler[] BASIC_MODE_FUNCTIONS = {
         null,           //  000
         new SAFunctionHandler(),    //  001
         new SNAFunctionHandler(),   //  002
@@ -358,13 +402,13 @@ public abstract class FunctionTable {
         new SubFunctionHandler(BASIC_MODE_FUNCTION074_HANDLERS),    //  074
         new SubFunctionHandler(BASIC_MODE_FUNCTION075_HANDLERS),    //  075
         null,           //  076
-        null,           //  077
+        new SubFunctionHandler(BASIC_MODE_FUNCTION077_HANDLERS),    //  077
     };
 
     /**
      * Extended Mode function handlers for f-field 005, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION005_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION005_HANDLERS = {
         new SZFunctionHandler(),    //  000
         new SNZFunctionHandler(),   //  001
         new SP1FunctionHandler(),   //  002
@@ -386,7 +430,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 007, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION007_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION007_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -408,7 +452,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 033, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION033_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION033_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -430,7 +474,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 050, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION050_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION050_HANDLERS = {
         new TNOPFunctionHandler(),  //  000
         new TGZFunctionHandler(),   //  001
         new TPZFunctionHandler(),   //  002
@@ -452,7 +496,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 071, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION071_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION071_HANDLERS = {
         new MTEFunctionHandler(),   //  000
         new MTNEFunctionHandler(),  //  001
         new MTLEFunctionHandler(),  //  002
@@ -474,7 +518,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 072, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION072_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION072_HANDLERS = {
         null,           //  000
         null,           //  001
         new JPSFunctionHandler(),   //  002
@@ -496,7 +540,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 073, j-field 014, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION073_014_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_014_HANDLERS = {
         new NOPFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
@@ -518,7 +562,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 073, j-field 015, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION073_015_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_015_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -540,7 +584,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 073, j-field 017, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION073_017_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_017_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -562,7 +606,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 073, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION073_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_HANDLERS = {
         new SSCFunctionHandler(),   //  000
         new DSCFunctionHandler(),   //  001
         new SSLFunctionHandler(),   //  002
@@ -584,7 +628,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 074 j-field 014, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION074_014_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION074_014_HANDLERS = {
         new JOFunctionHandler(),    //  000
         null,           //  001
         null,           //  002
@@ -606,7 +650,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 074 j-field 015, indexed by a-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION074_015_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION074_015_HANDLERS = {
         new JNOFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
@@ -628,7 +672,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 074, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION074_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION074_HANDLERS = {
         new JZFunctionHandler(),    //  000
         new JNZFunctionHandler(),   //  001
         new JPFunctionHandler(),    //  002
@@ -650,7 +694,7 @@ public abstract class FunctionTable {
     /**
      * Extended Mode function handlers for f-field 075, indexed by j-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTION075_HANDLERS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION075_HANDLERS = {
         null,           //  000
         null,           //  001
         null,           //  002
@@ -670,9 +714,53 @@ public abstract class FunctionTable {
     };
 
     /**
+     * Extended Mode function handlers for f-field 077 j-field 017, indexed by a-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION077_017_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        new HALTFunctionHandler(),
+    };
+
+    /**
+     * Extended Mode function handlers for f-field 077, indexed by j-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION077_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION077_017_HANDLERS),  //  017
+    };
+
+    /**
      * Extended mode function handler vector indexed by the instruction f-field
      */
-    private static final FunctionHandler EXTENDED_MODE_FUNCTIONS[] = {
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTIONS = {
         null,           //  000
         new SAFunctionHandler(),    //  001
         new SNAFunctionHandler(),   //  002
@@ -736,16 +824,14 @@ public abstract class FunctionTable {
         new SubFunctionHandler(EXTENDED_MODE_FUNCTION074_HANDLERS), //  074
         new SubFunctionHandler(EXTENDED_MODE_FUNCTION075_HANDLERS), //  075
         null,           //  076
-        null,           //  077
+        new SubFunctionHandler(EXTENDED_MODE_FUNCTION077_HANDLERS), //  077
     };
 
     /**
      * Retrieves the proper instruction/function handler given the instruction word
-     * <p>
      * @param iw instruction word of interest
      * @param basicMode true if we are in basic mode, false if extended mode
-     * <p>
-     * @return
+     * @return FunctionHandler if found, else null
      */
     public static FunctionHandler lookup(
         final InstructionWord iw,

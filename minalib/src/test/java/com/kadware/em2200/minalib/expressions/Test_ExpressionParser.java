@@ -10,14 +10,10 @@ import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
-import java.util.List;
+import com.kadware.em2200.minalib.expressions.operators.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- *
- * @author kduncan
- */
 public class Test_ExpressionParser {
 
     @Test
@@ -31,13 +27,36 @@ public class Test_ExpressionParser {
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
-        List<ExpressionItem> items = exp.getItems();
-        assertEquals(1, items.size());
-        ExpressionItem item = items.get(0);
+        assertEquals(1, exp._items.size());
+        ExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item).getValue();
         assertTrue(v instanceof IntegerValue);
-        assertEquals(14458l, ((IntegerValue)v).getValue());
+        assertEquals(14458L, ((IntegerValue)v).getValue());
+    }
+
+    @Test
+    public void parseNegativeIntegerLiteral(
+    ) throws ExpressionException,
+             NotFoundException {
+        Locale locale = new Locale(10, 10);
+        ExpressionParser parser = new ExpressionParser("-14458", locale);
+
+        Context context = new Context( new Dictionary() );
+        Diagnostics diagnostics = new Diagnostics();
+        Expression exp = parser.parse(context, diagnostics);
+
+        assertEquals(2, exp._items.size());
+
+        ExpressionItem item0 = exp._items.get(0);
+        assertTrue(item0 instanceof OperatorItem);
+        Operator op = ((OperatorItem) item0)._operator;
+
+        ExpressionItem item1 = exp._items.get(1);
+        assertTrue(item1 instanceof ValueItem);
+        Value v1 = ((ValueItem)item1).getValue();
+        assertTrue(v1 instanceof IntegerValue);
+        assertEquals(14458L, ((IntegerValue)v1).getValue());
     }
 
     @Test
@@ -51,9 +70,8 @@ public class Test_ExpressionParser {
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
-        List<ExpressionItem> items = exp.getItems();
-        assertEquals(1, items.size());
-        ExpressionItem item = items.get(0);
+        assertEquals(1, exp._items.size());
+        ExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item).getValue();
         assertTrue(v instanceof StringValue);
@@ -71,8 +89,7 @@ public class Test_ExpressionParser {
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
-        List<ExpressionItem> items = exp.getItems();
-        assertEquals(5, items.size());
+        assertEquals(5, exp._items.size());
     }
 
     @Test
@@ -86,14 +103,12 @@ public class Test_ExpressionParser {
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
-        List<ExpressionItem> items = exp.getItems();
-        assertEquals(3, items.size());
+        assertEquals(3, exp._items.size());
     }
 
     @Test
     public void parseLabel(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws NotFoundException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("$Label", locale);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test;
@@ -10,7 +10,6 @@ import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -40,65 +39,24 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "START*",
-            "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
-            "          J         START . ",
+            "          LA,U      A0,01000",
             "          HALT      0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule relocatableModule = asm.assemble("TEST");
-        assert(relocatableModule != null);
-
-        Linker.LCPoolSpecification[] poolSpecifications = {
-                new Linker.LCPoolSpecification(relocatableModule, 1)
-        };
-        Linker.BankDeclaration[] bankDeclarations = {
-                new Linker.BankDeclaration("I1",
-                                           000004,
-                                           0,
-                                           022000,
-                                           false,
-                                           poolSpecifications,
-                                           12),
-        };
-        Linker linker = new Linker(bankDeclarations);
-        AbsoluteModule absoluteModule = linker.link("TEST");
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
-        absoluteModule.display();//????
-
-        //TODO
-    }
-
-    @Test
-    public void immediateUnsigned_BasicMode_old(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 01000)).getW(),        //  LA,U    A0,01000
-            //???? IAR is not valid for Basic Mode - do something different here, and everywhere we do IAR/BasicMode
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        LoadBankInfo infos[] = { codeInfo };
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
@@ -115,27 +73,25 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 01000)).getW(),        //  LA,XU   A0,01000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          LA,XU     A0,01000",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        LoadBankInfo infos[] = { codeInfo };
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
@@ -153,27 +109,25 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         //  Negative zero is converted to positive zero before sign-extension, per hardware docs
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 0777777)).getW(),      //  LA,XU   A0,0777777
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          LA,XU     A0,0777777",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        LoadBankInfo infos[] = { codeInfo };
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
@@ -190,28 +144,25 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  Negative zero is converted to positive zero before sign-extension, per hardware docs
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 0777776)).getW(),      //  LA,XU   A0,-1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          LA,XU     A0,-1",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        LoadBankInfo infos[] = { codeInfo };
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 

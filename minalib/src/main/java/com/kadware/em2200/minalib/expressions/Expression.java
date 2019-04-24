@@ -19,38 +19,19 @@ import java.util.Stack;
  */
 public class Expression {
 
-    private Context _context;
-    private final List<ExpressionItem> _items = new LinkedList<>();
+    public Context _context;
+    public final List<ExpressionItem> _items = new LinkedList<>();
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructor
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
+    /**
+     * constructor
+     * @param items list of ExpressionItems which comprise this expression
+     */
     public Expression(
         final List<ExpressionItem> items
     ) {
         _items.addAll(items);
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public List<ExpressionItem> getItems(
-    ) {
-        return _items;
-    }
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Evaluates the (putative) expression in the given text
@@ -78,7 +59,7 @@ public class Expression {
                 valueStack.push(value);
             } else if ( item instanceof OperatorItem ) {
                 OperatorItem opItem = (OperatorItem)item;
-                Operator op = opItem.getOperator();
+                Operator op = opItem._operator;
                 while ( !operatorStack.empty() && (operatorStack.peek().getPrecedence() >= op.getPrecedence()) ) {
                     Operator stackedOp = operatorStack.pop();
                     stackedOp.evaluate(_context, valueStack, diagnostics);

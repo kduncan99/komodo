@@ -4,21 +4,18 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
-import com.kadware.em2200.baselib.OnesComplement;
-import com.kadware.em2200.baselib.Word36Array;
+import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * Links one or more RelocatableModule objects into an AbsoluteModule object
  */
+@SuppressWarnings("Duplicates")
 public class Linker {
 
     /**
@@ -53,47 +50,76 @@ public class Linker {
      * Class provided by clients for declaring how banks are to be created
      */
     public static class BankDeclaration {
-        final int _bankDescriptorIndex;
-        final int _bankLevel;
-        final String _bankName;
-        final Integer _initialBaseRegister;
-        final boolean _isExtended;
-        final LCPoolSpecification[] _poolSpecifications;
-        final int _startingAddress;
+        private final AccessInfo _accessInfo;
+        private final int _bankDescriptorIndex;
+        private final int _bankLevel;
+        private final String _bankName;
+        private final AccessPermissions _generalAccessPermissions;
+        private final Integer _initialBaseRegister;
+        private final boolean _isExtended;
+        private final LCPoolSpecification[] _poolSpecifications;
+        private final AccessPermissions _specialAccessPermissions;
+        private final int _startingAddress;
 
-        public BankDeclaration(
+        private BankDeclaration(
             final String bankName,
             final int bankDescriptorIndex,
             final int bankLevel,
+            final AccessInfo accessInfo,
+            final AccessPermissions generalAccessPermissions,
+            final AccessPermissions specialAccessPermissions,
             final int startingAddress,
             final boolean isExtended,
+            final Integer initialBaseRegister,
             final LCPoolSpecification[] poolSpecifications
         ) {
+            _accessInfo = accessInfo;
             _bankDescriptorIndex = bankDescriptorIndex;
             _bankLevel = bankLevel;
             _bankName = bankName;
-            _initialBaseRegister = null;
-            _isExtended = isExtended;
-            _poolSpecifications = poolSpecifications;
-            _startingAddress = startingAddress;
-        }
-
-        public BankDeclaration(
-            final String bankName,
-            final int bankDescriptorIndex,
-            final int bankLevel,
-            final int startingAddress,
-            final boolean isExtended,
-            final LCPoolSpecification[] poolSpecifications,
-            final int initialBaseRegister
-        ) {
-            _bankDescriptorIndex = bankDescriptorIndex;
-            _bankLevel = bankLevel;
-            _bankName = bankName;
+            _generalAccessPermissions = generalAccessPermissions;
             _initialBaseRegister = initialBaseRegister;
             _isExtended = isExtended;
             _poolSpecifications = poolSpecifications;
+            _specialAccessPermissions = specialAccessPermissions;
             _startingAddress = startingAddress;
+        }
+
+        public static class Builder{
+            private AccessInfo _accessInfo = new AccessInfo((byte) 0,(short) 0);
+            private int _bankDescriptorIndex;
+            private int _bankLevel;
+            private String _bankName = null;
+            private AccessPermissions _generalAccessPermissions = new AccessPermissions();
+            private Integer _initialBaseRegister = null;
+            private boolean _isExtended = false;
+            private LCPoolSpecification[] _poolSpecifications = null;
+            private AccessPermissions _specialAccessPermissions = new AccessPermissions();
+            private int _startingAddress;
+
+            public Builder setAccessInfo(final AccessInfo value) { _accessInfo = value; return this; }
+            public Builder setBankDescriptorIndex(final int value) { _bankDescriptorIndex = value; return this; }
+            public Builder setBankLevel(final int value) { _bankLevel = value; return this; }
+            public Builder setBankName(final String value) { _bankName = value; return this; }
+            public Builder setGeneralAccessPermissions(final AccessPermissions value) { _generalAccessPermissions = value; return this; }
+            public Builder setInitialBaseRegister(final Integer value) { _initialBaseRegister = value; return this; }
+            public Builder setIsExtended(final boolean value) { _isExtended = value; return this; }
+            public Builder setPoolSpecifications(final LCPoolSpecification[] values) { _poolSpecifications = values; return this; }
+            public Builder setSpecialAccessPermissions(final AccessPermissions value) { _specialAccessPermissions = value; return this; }
+            public Builder setStartingAddress(final int value) { _startingAddress = value; return this; }
+
+            public BankDeclaration build() {
+                return new BankDeclaration(_bankName,
+                                           _bankDescriptorIndex,
+                                           _bankLevel,
+                                           _accessInfo,
+                                           _generalAccessPermissions,
+                                           _specialAccessPermissions,
+                                           _startingAddress,
+                                           _isExtended,
+                                           _initialBaseRegister,
+                                           _poolSpecifications);
+            }
         }
     }
 
@@ -200,14 +226,28 @@ public class Linker {
                 }
             }
 
-            return new LoadableBank(bankDeclaration._bankDescriptorIndex,
-                                    bankDeclaration._bankName,
-                                    bankDeclaration._startingAddress,
-                                    wArray);
+            return new LoadableBank.Builder().setBankDescriptorIndex(bankDeclaration._bankDescriptorIndex)
+                                             .setBankName(bankDeclaration._bankName)
+                                             .setContent(wArray)
+                                             .setIsExtendedMode(bankDeclaration._isExtended)
+                                             .setStartingAddress(bankDeclaration._startingAddress)
+                                             .setInitialBaseRegister(bankDeclaration._initialBaseRegister)
+                                             .setAccessInfo(bankDeclaration._accessInfo)
+                                             .setGeneralPermissions(bankDeclaration._generalAccessPermissions)
+                                             .setSpecialPermissions(bankDeclaration._specialAccessPermissions)
+                                             .build();
         } catch (InvalidParameterException ex) {
             //  can't happen
             return null;
         }
+    }
+
+    /**
+     * Displays summary information
+     */
+    private void display(
+    ) {
+        //TODO
     }
 
     /**
@@ -289,8 +329,15 @@ public class Linker {
         _bankDeclarations = bankDeclarations;
     }
 
+    /**
+     * Performs the linkage
+     * @param moduleName name of the absolute module to be created
+     * @param display true to display linkage detailed output
+     * @return newly created AbsoluteModule
+     */
     public AbsoluteModule link(
-        final String moduleName
+        final String moduleName,
+        final boolean display
     ) {
         System.out.println(String.format("Linking module %s -----------------------------------", moduleName));
         mapLCPools();
@@ -303,7 +350,8 @@ public class Linker {
 
         try {
             if (_errors == 0) {
-                System.out.println("Linking Ends -------------------------------------------------------");
+                System.out.println(String.format("Linking Ends Errors=%d -------------------------------------------------------",
+                                                 _errors));
                 return new AbsoluteModule(moduleName, loadableBanks);
             }
         } catch (InvalidParameterException ex) {

@@ -17,7 +17,7 @@ public class Test_Assembler {
         String[] source = {};
 
         Assembler asm = new Assembler( source );
-        asm.assemble( "Test" );
+        asm.assemble( "Test", true );
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(0, asm.getParsedCode().length);
     }
@@ -33,7 +33,7 @@ public class Test_Assembler {
         };
 
         Assembler asm = new Assembler( source );
-        asm.assemble( "Test" );
+        asm.assemble( "Test", true );
         assertTrue(asm.getDiagnostics().isEmpty());
         TextLine[] parsedCode = asm.getParsedCode();
         assertEquals(4, parsedCode.length);

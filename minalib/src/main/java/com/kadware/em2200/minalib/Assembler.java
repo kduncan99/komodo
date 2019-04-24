@@ -135,6 +135,36 @@ public class Assembler {
     }
 
     /**
+     * Displays output upon the console
+     */
+    private void displayResults(
+    ) {
+        for (TextLine line : _sourceCode) {
+            System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
+
+            for (Diagnostic d : line._diagnostics.getDiagnostics()) {
+                System.out.println( d.getMessage() );
+            }
+
+            for (TextLine.GeneratedWord gw : line._generatedWords) {
+                RelocatableWord36 rw36 = gw.produceRelocatableWord36( line );
+                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, rw36.getW());
+                if (rw36._undefinedReferences.length == 0) {
+                    System.out.println(gwBase);
+                } else {
+                    for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+                        System.out.println(String.format("%s %s",
+                                                         urx == 0 ? gwBase : "                           ",
+                                                         rw36._undefinedReferences[urx].toString()));
+                    }
+                }
+            }
+        }
+
+        displayDictionary(_context._dictionary);
+    }
+
+    /**
      * Generates the given word as a set of subfields for a given location counter index and offset,
      * and places it into the given TextLine objects's set of generated words.
      * @param textLine line of text which is driving this
@@ -621,10 +651,12 @@ public class Assembler {
      * Assemble the source code in the object.
      * We do not do things quite in the same way as MASM.
      * @param moduleName name to be given to the module
+     * @param display true to display source, code generation, etc on console
      * @return RelocatableModule we create if successful, else null
      */
     public RelocatableModule assemble(
-        final String moduleName
+        final String moduleName,
+        final boolean display
     ) {
         System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
 
@@ -655,39 +687,10 @@ public class Assembler {
         resolveReferences(_context._dictionary);
         RelocatableModule module = generateRelocatableModule( moduleName );
         collectDiagnostics();
-        displayResults();
-        System.out.println("Assembly Ends -------------------------------------------------------");
-        return module;
-    }
 
-    /**
-     * Displays output upon the console
-     */
-    public void displayResults(
-    ) {
-        for (TextLine line : _sourceCode) {
-            System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
-
-            for (Diagnostic d : line._diagnostics.getDiagnostics()) {
-                System.out.println( d.getMessage() );
-            }
-
-            for (TextLine.GeneratedWord gw : line._generatedWords) {
-                RelocatableWord36 rw36 = gw.produceRelocatableWord36( line );
-                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, rw36.getW());
-                if (rw36._undefinedReferences.length == 0) {
-                    System.out.println(gwBase);
-                } else {
-                    for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
-                        System.out.println(String.format("%s %s",
-                                                         urx == 0 ? gwBase : "                           ",
-                                                         rw36._undefinedReferences[urx].toString()));
-                    }
-                }
-            }
+        if (display) {
+            displayResults();
         }
-
-        displayDictionary(_context._dictionary);
 
         System.out.println();
         StringBuilder sb = new StringBuilder();
@@ -698,6 +701,9 @@ public class Assembler {
             }
         }
         System.out.println(sb.toString());
+        System.out.println("Assembly Ends -------------------------------------------------------");
+
+        return module;
     }
 
     /**

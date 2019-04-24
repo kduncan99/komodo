@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.misc;
+package com.kadware.em2200.baselib;
 
 /**
  * Describes a ring/domain combination
