@@ -9,51 +9,20 @@ package com.kadware.em2200.minalib;
  */
 class TextSubfield {
 
-    private final boolean _flagged;     //  true if the subfield is prefixed with an asterisk
-    private final Locale _locale;       //  linenumber/column of this subfield within the source code set
-    private final String _text;         //  text of the field, not including the prefixing asterisk (if it exists)
+    final Locale _locale;           //  linenumber/column of this subfield within the source code set
+    final String _text;             //  text of the field, not including the prefixing asterisk (if it exists)
 
     /**
      * Constructor
      * @param locale location of this subfield of text within the source code set
-     * @param flagged true if this subfield is prefixed with an asterisk, else false
      * @param text text of this subfield, not including the prefix asterisk (if it exists)
      */
     TextSubfield(
         final Locale locale,
-        final boolean flagged,
         final String text
     ) {
-        _flagged = flagged;
         _locale = locale;
         _text = text;
-    }
-
-    /**
-     * Getter
-     * @return locale of this subfield
-     */
-    public Locale getLocale(
-    ) {
-        return _locale;
-    }
-
-    /**
-     * Getter
-     * @return raw text for this subfield
-     */
-    public String getText(
-    ) {
-        return _text;
-    }
-
-    /**
-     * Getter
-     * @return true if this subfield is flagged, else false
-     */
-    boolean isFlagged(
-    ) {
-        return _flagged;
     }
 
     /**

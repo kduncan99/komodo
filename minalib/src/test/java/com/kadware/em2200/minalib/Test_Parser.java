@@ -4,9 +4,6 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.TextParser;
-import com.kadware.em2200.minalib.TextLine;
-import com.kadware.em2200.minalib.Locale;
 import java.util.ArrayList;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -30,9 +27,9 @@ public class Test_Parser {
         };
         TextParser parser = new TextParser(source);
         parser.parse();
-        assertTrue(parser.getDiagnostics().isEmpty());
+        assertTrue(parser._diagnostics.isEmpty());
 
-        ArrayList<TextLine> scset = parser.getSourceCodeSet();
+        ArrayList<TextLine> scset = parser._sourceCodeSet;
         assertEquals(7, scset.size());
         assertEquals(2, scset.get(0)._fields.size());
         assertEquals(2, scset.get(1)._fields.size());
@@ -44,13 +41,13 @@ public class Test_Parser {
 
         assertNull(scset.get(0).getField(0));
 
-        assertEquals(new Locale(3, 1), scset.get(2).getField(0).getLocale());
-        assertEquals("$(0)", scset.get(2).getField(0).getText());
+        assertEquals(new Locale(3, 1), scset.get(2).getField(0)._locale);
+        assertEquals("$(0)", scset.get(2).getField(0)._text);
 
-        assertEquals(new Locale(5, 11), scset.get(4).getField(1).getLocale());
-        assertEquals("LA", scset.get(4).getField(1).getText());
+        assertEquals(new Locale(5, 11), scset.get(4).getField(1)._locale);
+        assertEquals("LA", scset.get(4).getField(1)._text);
 
-        assertEquals(new Locale(7, 21), scset.get(6).getField(2).getLocale());
-        assertEquals("EXIT$", scset.get(6).getField(2).getText());
+        assertEquals(new Locale(7, 21), scset.get(6).getField(2)._locale);
+        assertEquals("EXIT$", scset.get(6).getField(2)._text);
     }
 }

@@ -25,7 +25,7 @@ public class Assembler {
 
     //  The Context object contains things which specifically apply to a particular sub-assembly...
     //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
-    private Context _context;
+    private final Context _context;
 
     //  Aggregation of all TextLine diagnostics.
     //  This is rarely (if at all) up-to-date, until we reach the end of the assembly process.
@@ -42,8 +42,8 @@ public class Assembler {
     //  Name of the module to be created
     private String _moduleName;
 
-    private Dictionary _globalDictionary;
-    private SystemDictionary _systemDictionary;
+    private final Dictionary _globalDictionary;
+    private final SystemDictionary _systemDictionary;
 
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
@@ -68,7 +68,7 @@ public class Assembler {
     private void assemble(
         final TextLine textLine
     ) {
-        if ( textLine._fields.size() == 0 ) {
+        if (textLine._fields.isEmpty()) {
             return;
         }
 
@@ -79,7 +79,7 @@ public class Assembler {
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
         if (processMnemonic(textLine, labelField, operationField, operandField, textLine._diagnostics)) {
             if (textLine._fields.size() > 3) {
-                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3).getLocale(),
+                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
                                                                  "Extraneous fields ignored"));
             }
             return;
@@ -273,15 +273,15 @@ public class Assembler {
         final Diagnostics diagnostics
     ) {
         try {
-            ExpressionParser p = new ExpressionParser( subfield.getText(), subfield.getLocale() );
+            ExpressionParser p = new ExpressionParser( subfield._text, subfield._locale );
             Expression e = p.parse( _context, diagnostics );
             return e.evaluate( _context, diagnostics );
         } catch ( ExpressionException eex ) {
-            diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
+            diagnostics.append( new ErrorDiagnostic( subfield._locale,
                                                      "Cannot evaluate expression:" + eex.getMessage() ) );
             return new IntegerValue(false, 0, null);
         } catch ( NotFoundException nfex ) {
-            diagnostics.append( new ErrorDiagnostic( subfield.getLocale(),
+            diagnostics.append( new ErrorDiagnostic( subfield._locale,
                                                      "Expected an expression" ) );
             return new IntegerValue(false, 0, null);
         }
@@ -297,9 +297,9 @@ public class Assembler {
         final TextField labelField,
         final Diagnostics diagnostics
     ) {
-        if ( (labelField != null) && (labelField.getSubfieldCount() > 0) ) {
+        if ( (labelField != null) && (labelField._subfields.size() > 0) ) {
             TextSubfield labelSubfield = labelField.getSubfield(0);
-            String label = labelSubfield.getText();
+            String label = labelSubfield._text;
             int labelLevel = 0;
             while ( label.endsWith("*") ) {
                 label = label.substring(0, label.length() - 1);
@@ -307,16 +307,16 @@ public class Assembler {
             }
 
             if ( !Dictionary.isValidUserLabel(label) ) {
-                diagnostics.append(new ErrorDiagnostic(labelSubfield.getLocale(),
+                diagnostics.append(new ErrorDiagnostic(labelSubfield._locale,
                                                        "Invalid label"));
             } else {
-                if ( labelField.getSubfieldCount() > 1 ) {
-                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1).getLocale(),
+                if ( labelField._subfields.size() > 1 ) {
+                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1)._locale,
                                                            "Extraneous subfields in label field"));
                 }
 
                 if ( _context._dictionary.hasValue(label) ) {
-                    diagnostics.append(new DuplicateDiagnostic(labelSubfield.getLocale(),
+                    diagnostics.append(new DuplicateDiagnostic(labelSubfield._locale,
                                                                "Duplicate label"));
                 } else {
                     _context._dictionary.addValue(labelLevel, label, getCurrentLocation());
@@ -350,7 +350,7 @@ public class Assembler {
 
         //  Deal with the operation field
         TextSubfield mnemonicSubfield = operationField.getSubfield(0);
-        String mnemonic = mnemonicSubfield.getText();
+        String mnemonic = mnemonicSubfield._text;
         InstructionWord.InstructionInfo iinfo;
         try {
             InstructionWord.Mode imode =
@@ -366,7 +366,7 @@ public class Assembler {
                 InstructionWord.Mode imode =
                     _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
                 InstructionWord.getInstructionInfo(mnemonic, imode);
-                diagnostics.append(new ErrorDiagnostic(mnemonicSubfield.getLocale(),
+                diagnostics.append(new ErrorDiagnostic(mnemonicSubfield._locale,
                                                        "Opcode not valid for the current code mode"));
                 return true;
             } catch (NotFoundException ex2) {
@@ -387,22 +387,22 @@ public class Assembler {
         int jField = 0;
         if (iinfo._jFlag) {
             jField = iinfo._jField;
-            if (operationField.getSubfieldCount() > 1) {
-                diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1).getLocale(),
+            if (operationField._subfields.size() > 1) {
+                diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1)._locale,
                                                       "Extraneous subfields in operation field"));
             }
-        } else if (operationField.getSubfieldCount() > 1) {
+        } else if (operationField._subfields.size() > 1) {
             TextSubfield jSubField = operationField.getSubfield(1);
             try {
-                jField = InstructionWord.getJFieldValue(jSubField.getText());
+                jField = InstructionWord.getJFieldValue(jSubField._text);
             } catch ( NotFoundException e ) {
-                diagnostics.append(new ErrorDiagnostic(jSubField.getLocale(),
+                diagnostics.append(new ErrorDiagnostic(jSubField._locale,
                                                        "Invalid text for j-field of instruction"));
             }
 
-            if ( operationField.getSubfieldCount() > 2 ) {
+            if ( operationField._subfields.size() > 2 ) {
                 diagnostics.append(new ErrorDiagnostic(
-                    operationField.getSubfield(1).getLocale(),
+                    operationField.getSubfield(1)._locale,
                     "Extraneous subfields in operation field"));
             }
         }
@@ -417,7 +417,7 @@ public class Assembler {
 
         Value operandValue = null;
         if (operandField == null) {
-            diagnostics.append(new ErrorDiagnostic( operationField.getLocale(),
+            diagnostics.append(new ErrorDiagnostic( operationField._locale,
                                                     "An instruction mnemonic requires an operand field"));
         } else {
             //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
@@ -431,7 +431,7 @@ public class Assembler {
 
             boolean baseSubFieldAllowed = (_context._codeMode == CodeMode.Extended) && !iinfo._useBMSemantics;
             int sfx = 0;
-            int sfc = operandField.getSubfieldCount();
+            int sfc = operandField._subfields.size();
             if (!iinfo._aFlag && (sfc > sfx)) {
                 registerSubField = operandField.getSubfield( sfx++ );
             }
@@ -445,7 +445,7 @@ public class Assembler {
                 baseSubField = operandField.getSubfield( sfx++ );
             }
             if (sfc > sfx) {
-                diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx ).getLocale(),
+                diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
                                                          "Extreanous subfields in operand field ignored") );
             }
 
@@ -453,16 +453,16 @@ public class Assembler {
             if (iinfo._aFlag) {
                 aValue = new IntegerValue( false, iinfo._aField, null );
             } else {
-                if ( (registerSubField == null) || (registerSubField.getText().isEmpty()) ) {
-                    diagnostics.append( new ErrorDiagnostic( operandField.getLocale(),
+                if ( (registerSubField == null) || (registerSubField._text.isEmpty()) ) {
+                    diagnostics.append( new ErrorDiagnostic( operandField._locale,
                                                              "Missing register specification" ) );
                 } else {
                     try {
-                        ExpressionParser p = new ExpressionParser( registerSubField.getText(), registerSubField.getLocale() );
+                        ExpressionParser p = new ExpressionParser( registerSubField._text, registerSubField._locale );
                         Expression e = p.parse( _context, diagnostics );
                         Value v = e.evaluate( _context, diagnostics );
                         if (v.getType() != ValueType.Integer) {
-                            diagnostics.append( new ValueDiagnostic( registerSubField.getLocale(), "Wrong value type" ) );
+                            diagnostics.append( new ValueDiagnostic( registerSubField._locale, "Wrong value type" ) );
                         } else {
                             aValue = (IntegerValue) v;
                             //  Reduce the value appropriately for the a-field
@@ -477,60 +477,60 @@ public class Assembler {
                             }
                         }
                     } catch ( ExpressionException | NotFoundException ex ) {
-                        diagnostics.append( new ErrorDiagnostic( registerSubField.getLocale(),
+                        diagnostics.append( new ErrorDiagnostic( registerSubField._locale,
                                                                  "Syntax Error:" + ex.getMessage() ) );
                     }
                 }
             }
 
-            if ((valueSubField == null) || (valueSubField.getText().isEmpty())) {
-                diagnostics.append(new ErrorDiagnostic(operandField.getLocale(),
+            if ((valueSubField == null) || (valueSubField._text.isEmpty())) {
+                diagnostics.append(new ErrorDiagnostic(operandField._locale,
                                                        "Missing operand value (U, u, or d subfield)"));
             } else {
                 try {
-                    ExpressionParser p = new ExpressionParser( valueSubField.getText(), valueSubField.getLocale() );
+                    ExpressionParser p = new ExpressionParser( valueSubField._text, valueSubField._locale );
                     Expression e = p.parse( _context, diagnostics );
                     Value v = e.evaluate( _context, diagnostics );
                     if (v.getType() != ValueType.Integer) {
-                        diagnostics.append( new ValueDiagnostic( valueSubField.getLocale(), "Wrong value type" ) );
+                        diagnostics.append( new ValueDiagnostic( valueSubField._locale, "Wrong value type" ) );
                     } else {
                         uValue = (IntegerValue) v;
                     }
                 } catch ( ExpressionException | NotFoundException ex ) {
-                    diagnostics.append( new ErrorDiagnostic( valueSubField.getLocale(),
+                    diagnostics.append( new ErrorDiagnostic( valueSubField._locale,
                                                              "Syntax Error:" + ex.getMessage() ) );
                 }
             }
 
-            if ((indexSubField != null) && !indexSubField.getText().isEmpty()) {
+            if ((indexSubField != null) && !indexSubField._text.isEmpty()) {
                 try {
-                    ExpressionParser p = new ExpressionParser( indexSubField.getText(), indexSubField.getLocale() );
+                    ExpressionParser p = new ExpressionParser( indexSubField._text, indexSubField._locale );
                     Expression e = p.parse( _context, diagnostics );
                     Value v = e.evaluate( _context, diagnostics );
                     if (v.getType() != ValueType.Integer) {
-                        diagnostics.append( new ValueDiagnostic( indexSubField.getLocale(), "Wrong value type" ) );
+                        diagnostics.append( new ValueDiagnostic( indexSubField._locale, "Wrong value type" ) );
                     } else {
                         xValue = (IntegerValue) v;
                     }
                 } catch ( ExpressionException | NotFoundException ex ) {
-                    diagnostics.append( new ErrorDiagnostic( indexSubField.getLocale(),
+                    diagnostics.append( new ErrorDiagnostic( indexSubField._locale,
                                                              "Syntax Error:" + ex.getMessage() ) );
                 }
             }
 
             if (baseSubFieldAllowed) {
-                if ( (baseSubField != null) && !baseSubField.getText().isEmpty() ) {
+                if ( (baseSubField != null) && !baseSubField._text.isEmpty() ) {
                     try {
-                        ExpressionParser p = new ExpressionParser( baseSubField.getText(), baseSubField.getLocale() );
+                        ExpressionParser p = new ExpressionParser( baseSubField._text, baseSubField._locale );
                         Expression e = p.parse( _context, diagnostics );
                         Value v = e.evaluate( _context, diagnostics );
                         if (v.getType() != ValueType.Integer) {
-                            diagnostics.append( new ValueDiagnostic( baseSubField.getLocale(), "Wrong value type" ) );
+                            diagnostics.append( new ValueDiagnostic( baseSubField._locale, "Wrong value type" ) );
                         } else {
                             bValue = (IntegerValue) v;
                         }
                     } catch ( ExpressionException | NotFoundException ex ) {
-                        diagnostics.append( new ErrorDiagnostic( baseSubField.getLocale(),
+                        diagnostics.append( new ErrorDiagnostic( baseSubField._locale,
                                                                  "Syntax Error:" + ex.getMessage() ) );
                     }
                 } else {

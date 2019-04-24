@@ -27,19 +27,19 @@ public class Test_TextLine {
         assertEquals(3, tline._fields.size());
 
         TextField tf0 = tline.getField(0);
-        Locale loc0 = tf0.getLocale();
+        Locale loc0 = tf0._locale;
         assertEquals(new Locale(10, 1), loc0);
-        assertEquals("LABEL", tf0.getText());
+        assertEquals("LABEL", tf0._text);
 
         TextField tf1 = tline.getField(1);
-        Locale loc1 = tf1.getLocale();
+        Locale loc1 = tf1._locale;
         assertEquals(new Locale(10, 11), loc1);
-        assertEquals("LA,U", tf1.getText());
+        assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
-        Locale loc2 = tf2.getLocale();
+        Locale loc2 = tf2._locale;
         assertEquals(new Locale(10, 21), loc2);
-        assertEquals("A0,015", tf2.getText());
+        assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
     }
@@ -54,19 +54,19 @@ public class Test_TextLine {
         assertEquals(3, tline._fields.size());
 
         TextField tf0 = tline.getField(0);
-        Locale loc0 = tf0.getLocale();
+        Locale loc0 = tf0._locale;
         assertEquals(new Locale(10, 1), loc0);
-        assertEquals("LABEL", tf0.getText());
+        assertEquals("LABEL", tf0._text);
 
         TextField tf1 = tline.getField(1);
-        Locale loc1 = tf1.getLocale();
+        Locale loc1 = tf1._locale;
         assertEquals(new Locale(10, 11), loc1);
-        assertEquals("LA,U", tf1.getText());
+        assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
-        Locale loc2 = tf2.getLocale();
+        Locale loc2 = tf2._locale;
         assertEquals(new Locale(10, 21), loc2);
-        assertEquals("A0,015", tf2.getText());
+        assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
     }
@@ -82,14 +82,14 @@ public class Test_TextLine {
         assertNull(tline.getField(0));
 
         TextField tf1 = tline.getField(1);
-        Locale loc1 = tf1.getLocale();
+        Locale loc1 = tf1._locale;
         assertEquals(new Locale(10, 11), loc1);
-        assertEquals("LA,U", tf1.getText());
+        assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
-        Locale loc2 = tf2.getLocale();
+        Locale loc2 = tf2._locale;
         assertEquals(new Locale(10, 21), loc2);
-        assertEquals("A0,015", tf2.getText());
+        assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
     }
@@ -137,9 +137,9 @@ public class Test_TextLine {
         assertNull(tf0);
 
         TextField tf1 = tline.getField(1);
-        Locale loc1 = tf1.getLocale();
+        Locale loc1 = tf1._locale;
         assertEquals(new Locale(10, 11), loc1);
-        assertEquals("+ (100, 100)", tf1.getText());
+        assertEquals("+ (100, 100)", tf1._text);
     }
 
     @Test

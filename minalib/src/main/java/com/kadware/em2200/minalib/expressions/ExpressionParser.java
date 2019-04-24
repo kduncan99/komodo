@@ -153,8 +153,6 @@ public class ExpressionParser {
         boolean allowPostfixOperator = false;
         boolean allowPrefixOperator = true;
         boolean allowOperand = true;
-        int prefixOperatorPrecedence = 0;       //  allow anything
-        int postfixOperatorPrecedence = 99;     //  allow nothing
 
         while (!atEnd()) {
             if (allowInfixOperator) {
@@ -163,9 +161,7 @@ public class ExpressionParser {
                     allowInfixOperator = false;
                     allowOperand = true;
                     allowPostfixOperator = false;
-                    postfixOperatorPrecedence = 99;
                     allowPrefixOperator = true;
-                    prefixOperatorPrecedence = 0;
                     continue;
                 } catch (NotFoundException ex) {
                     //  skip
@@ -177,9 +173,7 @@ public class ExpressionParser {
                     expItems.add(parseOperand(context, diagnostics));
                     allowInfixOperator = true;
                     allowPostfixOperator = true;
-                    postfixOperatorPrecedence = 0;
                     allowPrefixOperator = false;
-                    prefixOperatorPrecedence = 99;
                     allowOperand = false;
                     continue;
                 } catch (NotFoundException ex) {
@@ -579,7 +573,7 @@ public class ExpressionParser {
     /**
      * If _index points to a prefix operator, we construct an Operator object and return it.
      * @return Operator object
-     * @throws NotFoundException if no post-fix operator was discovered
+     * @throws NotFoundException if no prefix operator was discovered
      */
     protected OperatorItem parsePrefixOperator(
     ) throws NotFoundException {

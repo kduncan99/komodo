@@ -17,7 +17,7 @@ public class Test_TextSubfield {
 
     @Test
     public void getLocaleLimit() {
-        TextSubfield sf = new TextSubfield(new Locale(10, 20), false, "ABCDE");
+        TextSubfield sf = new TextSubfield(new Locale(10, 20), "ABCDE");
         Locale expected = new Locale(10, 25);
         assertEquals(expected, sf.getLocaleLimit());
     }

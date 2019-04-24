@@ -1,10 +1,8 @@
-Implement HALT instruction 077 017 017 in both modes
-
-Unit testing - convert RelocatableModule to bank info things
-
-Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
-
 Convert IP unit tests from octal to assembler and mina them
+
+minalib $BASIC and $EXTENDED
+minalib data generation
+minalib Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
 
 All Device objects: add Builder class, make constructors private
 
@@ -12,7 +10,7 @@ Device.IoInfo objects: add Builder class, make constructors private
 
 Finish adding instructions to IP
 
-Recode disk (and maybe tape devices) using async IO
+Recode disk (and maybe tape) devices using async IO
 
 Figure out how to do channel programs - more specifically, do we need a cleaner IO path?
 
@@ -21,3 +19,4 @@ minalib - finish up various functions and directives
 Mina - wrapper around minalib
 
 Exec - using Mina
+

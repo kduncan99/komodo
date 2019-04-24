@@ -11,16 +11,16 @@ import java.util.ArrayList;
 /**
  * Represents a (possibly empty) field of text, parsed from a line of assembly code.
  */
-public class TextField {
+class TextField {
 
     //  linenumber and column of this field
-    private final Locale _locale;
+    final Locale _locale;
 
     //  text of this field, with leading/trailing blanks removed
-    private final String _text;
+    final String _text;
 
     //  Subfield objects which comprise this field
-    private final ArrayList<TextSubfield> _subfields = new ArrayList<>();
+    final ArrayList<TextSubfield> _subfields = new ArrayList<>();
 
     /**
      * Constructor
@@ -45,19 +45,8 @@ public class TextField {
         final String text,
         final int column
     ) {
-        boolean flagged = text.startsWith("*");
         Locale loc = new Locale(_locale.getLineNumber(), column);
-        TextSubfield subfield = new TextSubfield(loc, flagged, text.substring(flagged ? 1 : 0));
-        _subfields.add(subfield);
-    }
-
-    /**
-     * Getter
-     * @return locale for this field
-     */
-    public Locale getLocale(
-    ) {
-        return _locale;
+        _subfields.add(new TextSubfield(loc, text));
     }
 
     /**
@@ -82,25 +71,6 @@ public class TextField {
             return _subfields.get(index);
         }
         return null;
-    }
-
-    /**
-     * Retrieves the number of TextSubfield object that exist, plus any void spaces within the array.
-     * That is, if subfields exist at indices 0, 1, and 3, we return 4.
-     * @return number of subfields in this field
-     */
-    int getSubfieldCount(
-    ) {
-        return _subfields.size();
-    }
-
-    /**
-     * Getter
-     * @return raw text for this field
-     */
-    public String getText(
-    ) {
-        return _text;
     }
 
     /**
