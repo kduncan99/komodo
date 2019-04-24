@@ -42,14 +42,32 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         String[] source = {
             "START*",
             "          LA,U      A0,01000 . 010, 016, 0, 0, 01000",
+            "          J         START . ",
             "          HALT      0",
         };
 
-        Assembler asm = new Assembler( source );
-        asm.assemble( "Test" );
-        asm.displayResults();
+        Assembler asm = new Assembler(source);
+        RelocatableModule relocatableModule = asm.assemble("TEST");
+        assert(relocatableModule != null);
 
-        //????
+        Linker.LCPoolSpecification[] poolSpecifications = {
+                new Linker.LCPoolSpecification(relocatableModule, 1)
+        };
+        Linker.BankDeclaration[] bankDeclarations = {
+                new Linker.BankDeclaration("I1",
+                                           000004,
+                                           0,
+                                           022000,
+                                           false,
+                                           poolSpecifications,
+                                           12),
+        };
+        Linker linker = new Linker(bankDeclarations);
+        AbsoluteModule absoluteModule = linker.link("TEST");
+        assert(absoluteModule != null);
+        absoluteModule.display();//????
+
+        //TODO
     }
 
     @Test

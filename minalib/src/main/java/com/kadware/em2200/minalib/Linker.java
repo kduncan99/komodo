@@ -4,6 +4,8 @@
 
 package com.kadware.em2200.minalib;
 
+import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.baselib.Word36Array;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
@@ -123,12 +125,83 @@ public class Linker {
             Word36Array wArray = new Word36Array(bankSize);
 
             for (LCPoolSpecification lcps : bankDeclaration._poolSpecifications) {
-                for (RelocatableWord36 rw36 : lcps._module.getLocationCounterPool(lcps._lcIndex)._storage) {
-                    //TODO
+                //  For each source word in the relocatable element's location counter pool,
+                //  get the discrete integer value, update it if appropriate, and move it
+                //  to the Word36Array which eventually becomes the storage for the bank.
+                LocationCounterPool lcp = lcps._module.getLocationCounterPool(lcps._lcIndex);
+                for (int rwx = 0, wax = _lcPoolMap.get(lcps) - bankDeclaration._startingAddress;
+                     rwx < lcp._storage.length;
+                     ++rwx, ++wax) {
+                    RelocatableWord36 rw36 = lcp._storage[rwx];
+                    long discreteValue = rw36.getW();
+
+                    //  If there are any undefined references in the source word from the relocatable module,
+                    //  iterate over them.  For each undefined reference, lookup the value for the reference,
+                    //  slice out the particular field of the discrete value, add the reference value thereto,
+                    //  check for truncation, and splice the resulting value back into the discrete value.
+                    if (rw36._undefinedReferences.length > 0) {
+                        for (RelocatableWord36.UndefinedReference ur : rw36._undefinedReferences) {
+                            FieldDescriptor fd = ur._fieldDescriptor;
+                            if (_dictionary.containsKey(ur._reference)) {
+                                long mask = (1 << fd._fieldSize) - 1;
+                                long msbMask = 1 << (fd._fieldSize - 1);
+                                long notMask = mask ^ 0_777777_777777L;
+                                int shift = 36 - (fd._fieldSize + fd._startingBit);
+
+                                //  A special note - we recognize that the source word is in ones-complement.
+                                //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
+                                //  as we don't know whether the field we slice out is signed or unsigned.
+                                //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
+                                //  negative, convert to twos-complement, add or subtract the reference, then convert it
+                                //  back to ones-complement.  This works regardless, via magic.
+                                long tempValue = (discreteValue & mask) >> shift;
+                                if ((tempValue & msbMask) != 0) {
+                                    //  original field value is negative...  sign-extend it.
+                                    tempValue |= notMask;
+                                }
+
+                                OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
+                                OnesComplement.getOnesComplement36(tempValue, ocr);
+                                ocr._result += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
+                                tempValue = OnesComplement.getNative36(ocr._result);
+
+                                //  Check for field overflow...
+                                boolean trunc = false;
+                                if (OnesComplement.isPositive36(tempValue)) {
+                                    trunc = (tempValue & notMask) != 0;
+                                } else {
+                                    trunc = (tempValue | mask) != 0_777777_777777L;
+                                }
+                                if (trunc) {
+                                    raise(String.format("Truncation resolving %s LC(%d) offset %d reference %s, field %s",
+                                                        lcps._module,
+                                                        lcps._lcIndex,
+                                                        rwx,
+                                                        ur._reference,
+                                                        fd.toString()));
+                                }
+
+                                //  splice it back into the discrete value
+                                tempValue = tempValue & mask;
+                                long shiftedNotMask = (mask << shift) ^ 0_777777_777777L;
+                                discreteValue = (discreteValue & shiftedNotMask) | (tempValue << shift);
+                            } else {
+                                raise(String.format("Value in %s LC(%d) offset %d - undefined reference %s in field %s",
+                                                    lcps._module,
+                                                    lcps._lcIndex,
+                                                    rwx,
+                                                    ur._reference,
+                                                    fd.toString()));
+                            }
+                        }
+                    }
+
+                    wArray.setValue(wax, discreteValue);
                 }
             }
 
             return new LoadableBank(bankDeclaration._bankDescriptorIndex,
+                                    bankDeclaration._bankName,
                                     bankDeclaration._startingAddress,
                                     wArray);
         } catch (InvalidParameterException ex) {
@@ -219,22 +292,24 @@ public class Linker {
     public AbsoluteModule link(
         final String moduleName
     ) {
+        System.out.println(String.format("Linking module %s -----------------------------------", moduleName));
         mapLCPools();
         extractLabels();
 
         LoadableBank[] loadableBanks = new LoadableBank[_bankDeclarations.length];
         for (int bx = 0; bx < _bankDeclarations.length; ++bx) {
-            loadableBanks[bx = createLoadableBank(bd);
+            loadableBanks[bx] = createLoadableBank(_bankDeclarations[bx]);
         }
 
         try {
             if (_errors == 0) {
+                System.out.println("Linking Ends -------------------------------------------------------");
                 return new AbsoluteModule(moduleName, loadableBanks);
             }
         } catch (InvalidParameterException ex) {
             raise(ex.getMessage());
-        } finally {
-            return null;
         }
+
+        return null;
     }
 }

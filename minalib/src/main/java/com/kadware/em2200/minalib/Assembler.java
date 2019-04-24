@@ -107,14 +107,12 @@ public class Assembler {
 
     /**
      * Displays the content of a particular dictionary
-     * @param name name to be displayed
      * @param dictionary dictionary to be displayed
      */
     private static void displayDictionary(
-        final String name,
         final Dictionary dictionary
     ) {
-        System.out.println("Dictionary " + name);
+        System.out.println("Dictionary:");
         for ( String label : dictionary.getLabels() ) {
             try {
                 Dictionary.ValueAndLevel val = dictionary.getValueAndLevel( label );
@@ -628,6 +626,8 @@ public class Assembler {
     public RelocatableModule assemble(
         final String moduleName
     ) {
+        System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
+
         //  setup
         _moduleName = moduleName;
         _context._characterMode = CharacterMode.ASCII;
@@ -655,6 +655,8 @@ public class Assembler {
         resolveReferences(_context._dictionary);
         RelocatableModule module = generateRelocatableModule( moduleName );
         collectDiagnostics();
+        displayResults();
+        System.out.println("Assembly Ends -------------------------------------------------------");
         return module;
     }
 
@@ -685,7 +687,7 @@ public class Assembler {
             }
         }
 
-        displayDictionary( "Dictionary", _context._dictionary );
+        displayDictionary(_context._dictionary);
 
         System.out.println();
         StringBuilder sb = new StringBuilder();

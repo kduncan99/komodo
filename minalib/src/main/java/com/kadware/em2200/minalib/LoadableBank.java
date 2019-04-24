@@ -12,7 +12,8 @@ import com.kadware.em2200.baselib.Word36Array;
 public class LoadableBank {
 
     public final int _bankDescriptorIndex;
-    public final long _startingAddress;
+    public final String _bankName;
+    public final int _startingAddress;
     public final Word36Array _content;
 
     /**
@@ -21,10 +22,12 @@ public class LoadableBank {
      */
     public LoadableBank(
         final int bdi,
-        final long startingAddress,
+        final String name,
+        final int startingAddress,
         final Word36Array content
     ) {
         _bankDescriptorIndex = bdi;
+        _bankName = name;
         _startingAddress = startingAddress;
         _content = content;
     }

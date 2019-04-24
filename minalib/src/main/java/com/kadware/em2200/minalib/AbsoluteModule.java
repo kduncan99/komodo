@@ -32,4 +32,29 @@ public class AbsoluteModule {
             _loadableBanks.put(lb._bankDescriptorIndex, lb);
         }
     }
+
+    /**
+     * Mainly for development and debugging
+     */
+    public void display(
+    ) {
+        System.out.println("Absolute Module name=" + _name);
+        for (LoadableBank bank : _loadableBanks.values()) {
+            System.out.println(String.format("  Bank=%s BDI=%06o", bank._bankName, bank._bankDescriptorIndex));
+            int address = bank._startingAddress;
+            int arraySize = bank._content.getArraySize();
+            for (int ax = 0; ax < arraySize; ax += 8) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("    %06o:", address));
+                for (int bx = 0; bx < 8; ++bx) {
+                    sb.append(String.format("%012o ", bank._content.getValue(ax + bx)));
+                    if (ax + bx + 1 == arraySize) {
+                        break;
+                    }
+                }
+
+                System.out.println(sb.toString());
+            }
+        }
+    }
 }
