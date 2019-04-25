@@ -5,10 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b880716-c31f-448c-9c99-d38ba345c67e" name="Default Changelist" comment="Interpret register subfield, labels.">
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/BASICDirective.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/EXTENDDirective.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -52,8 +55,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3870">
-              <caret line="266" selection-start-line="266" selection-end-line="266" />
+            <state relative-caret-position="218">
+              <caret line="325" column="75" selection-start-line="325" selection-start-column="75" selection-end-line="325" selection-end-column="75" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -62,13 +65,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
+        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="452">
-              <caret line="480" lean-forward="true" selection-start-line="480" selection-end-line="480" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state relative-caret-position="135">
+              <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
             </state>
           </provider>
         </entry>
@@ -85,7 +85,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
+            <state relative-caret-position="3240">
               <caret line="224" selection-start-line="224" selection-end-line="224" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -97,10 +97,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6840">
-              <caret line="470" column="99" selection-start-line="470" selection-start-column="99" selection-end-line="470" selection-end-column="99" />
+            <state relative-caret-position="375">
+              <caret line="722" column="31" lean-forward="true" selection-start-line="722" selection-start-column="31" selection-end-line="722" selection-end-column="31" />
               <folding>
                 <element signature="imports" expanded="true" />
+                <element signature="e#621#652#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -193,9 +194,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/systemControl/HALTFunctionHandler.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/functions/FunctionTable.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/LoadableBank.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InstructionProcessor.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/OperatorItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/Expression.java" />
@@ -234,15 +232,18 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ReferenceItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ValueItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/expressions/Test_ExpressionParser.java" />
-        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/Word36ArraySlice.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/MainStorageProcessor.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InventoryManager.java" />
-        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/Word36Array.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java" />
         <option value="$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/BASICDirective.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/EXTENDDirective.java" />
+        <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
+        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
       </list>
     </option>
@@ -277,41 +278,6 @@
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
               <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="baselib" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
               <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -319,30 +285,6 @@
               <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
               <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
-              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
@@ -411,7 +353,7 @@
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="minalib" type="462c0819:PsiDirectoryNode" />
-              <item name="dictionary" type="462c0819:PsiDirectoryNode" />
+              <item name="directives" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
@@ -567,11 +509,11 @@
       <recent name="com.kadware.em2200.minalib" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.kadware.em2200.minalib.directives" />
       <recent name="com.kadware.em2200.hardwarelib.functions.systemControl" />
       <recent name="com.kadware.em2200.minalib" />
       <recent name="com.kadware.em2200.minalib.dictionary" />
       <recent name="com.kadware.em2200.minalib.expressions.operators" />
-      <recent name="com.kadware.em2200.minalib.diagnostics" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -586,8 +528,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Addressing.storage_BasicMode">
-    <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Addressing">
+    <configuration name="Test_InstructionProcessor_Addressing" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
         <pattern>
@@ -597,13 +539,12 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="execRegisterSelection_BasicMode" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.storage_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
         <pattern>
@@ -613,13 +554,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="storage_BasicMode" />
+      <option name="METHOD_NAME" value="execRegisterSelection_ExtendedMode" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
         <pattern>
@@ -629,13 +570,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="storage_indexed_BasicMode" />
+      <option name="METHOD_NAME" value="grs_indexed_ExtendedMode" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.storage_indirect_BasicMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
         <pattern>
@@ -645,33 +586,35 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="storage_indirect_BasicMode" />
+      <option name="METHOD_NAME" value="storage_indexed_18BitModifier_ExtendedMode" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="com.kadware.em2200.minalib in minalib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="minalib" />
+    <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.minalib.*" />
+          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.minalib" />
-      <option name="TEST_OBJECT" value="package" />
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
+      <option name="METHOD_NAME" value="storage_indexed_24BitModifier_ExtendedMode" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_BasicMode" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indirect_BasicMode" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indexed_BasicMode" />
-        <item itemvalue="JUnit.com.kadware.em2200.minalib in minalib" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" />
       </list>
     </recent_temporary>
   </component>
@@ -710,6 +653,7 @@
       <workItem from="1556161055279" duration="5477000" />
       <workItem from="1556203304576" duration="9211000" />
       <workItem from="1556224470769" duration="2073000" />
+      <workItem from="1556230922346" duration="5018000" />
     </task>
     <task id="LOCAL-00001" summary="Interpret register subfield, labels.">
       <created>1555456868457</created>
@@ -722,44 +666,44 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_BasicMode - 2019.04.25 at 11h 49m 08s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_grs_indexed_ExtendedMode - 2019.04.25 at 17h 16m 18s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indirect_BasicMode - 2019.04.25 at 16h 02m 36s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indirect_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 20m 54s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indirect_BasicMode - 2019.04.25 at 16h 06m 25s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indirect_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 40m 48s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_BasicMode - 2019.04.25 at 16h 10m 20s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 41m 26s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_BasicMode - 2019.04.25 at 16h 12m 00s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 43m 33s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_BasicMode - 2019.04.25 at 16h 13m 13s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 46m 26s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_BasicMode - 2019.04.25 at 16h 13m 59s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_24BitModifier_ExtendedMode - 2019.04.25 at 17h 49m 02s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_BasicMode - 2019.04.25 at 16h 16m 13s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_ExtendedMode - 2019.04.25 at 17h 51m 02s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_BasicMode - 2019.04.25 at 16h 16m 42s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_ExtendedMode - 2019.04.25 at 17h 51m 30s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_BasicMode - 2019.04.25 at 16h 17m 26s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_BasicMode" configurationId="JUnit" />
+    <history-entry file="Test_InstructionProcessor_Addressing - 2019.04.25 at 17h 52m 25s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="221814000" />
+    <option name="totallyTimeSpent" value="226832000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="38" y="-1055" width="1740" height="1047" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.22909304" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23144877" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -855,33 +799,6 @@
     </SUITE>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_Parser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/test/java/com/kadware/em2200/minalib/Test_TextLine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="143" lean-forward="true" selection-start-line="143" selection-end-line="143" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="8520">
@@ -944,17 +861,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
           <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
-          <folding>
-            <element signature="e#0#173#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1207,6 +1113,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="656">
+          <caret line="59" selection-start-line="59" selection-end-line="59" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Notes.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="45">
@@ -1214,20 +1127,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3870">
-          <caret line="266" selection-start-line="266" selection-end-line="266" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="450">
+          <caret line="35" selection-start-line="35" selection-end-line="35" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6840">
-          <caret line="470" column="99" selection-start-line="470" selection-start-column="99" selection-end-line="470" selection-end-column="99" />
+        <state relative-caret-position="3240">
+          <caret line="224" selection-start-line="224" selection-end-line="224" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -1241,37 +1151,70 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="224" selection-start-line="224" selection-end-line="224" />
+        <state relative-caret-position="180">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
           <folding>
             <element signature="imports" expanded="true" />
+            <element signature="e#395#426#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/baselib/src/main/java/com/kadware/em2200/baselib/FieldDescriptor.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/EXTENDDirective.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="656">
-          <caret line="59" selection-start-line="59" selection-end-line="59" />
+        <state relative-caret-position="375">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java">
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/BASICDirective.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        <state relative-caret-position="90">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#701#732#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="722" column="31" lean-forward="true" selection-start-line="722" selection-start-column="31" selection-end-line="722" selection-end-column="31" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#621#652#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="452">
-          <caret line="480" lean-forward="true" selection-start-line="480" selection-end-line="480" />
+        <state relative-caret-position="209">
+          <caret line="826" lean-forward="true" selection-start-line="826" selection-end-line="826" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="325" column="75" selection-start-line="325" selection-start-column="75" selection-end-line="325" selection-end-column="75" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
         </state>
       </provider>
     </entry>

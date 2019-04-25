@@ -11,6 +11,7 @@ import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
 
+@SuppressWarnings("Duplicates")
 public class RESDirective implements IDirective {
 
     @Override

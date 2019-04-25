@@ -57,6 +57,8 @@ public class Assembler {
     //  Directives
     private static final Map<String, IDirective> _directives = new HashMap<>();
     static {
+        _directives.put("$BASIC", new BASICDirective());
+        _directives.put("$EXTEND", new EXTENDDirective());
         _directives.put("$RES", new RESDirective());
     }
 
@@ -705,34 +707,32 @@ public class Assembler {
         }
 
         //  Create the instruction word
-        if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
-            if (iinfo._jFlag || (jField < 016)) {
-                IntegerValue[] values = new IntegerValue[7];
-                values[0] = new IntegerValue( false, iinfo._fField, null );
-                values[1] = new IntegerValue( false, jField, null );
-                values[2] = aValue;
-                values[3] = xValue;
-                values[4] = new IntegerValue( false, (xValue._flagged ? 1 : 0), null );
-                values[5] = new IntegerValue( false, (uValue._flagged ? 1 : 0), null );
-                values[6] = uValue;
-                generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex);
-            } else {
-                IntegerValue[] values = new IntegerValue[5];
-                values[0] = new IntegerValue( false, iinfo._fField, null );
-                values[1] = new IntegerValue( false, jField, null );
-                values[2] = aValue;
-                values[3] = xValue;
-                values[4] = uValue;
-                generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex);
-            }
-        } else {
-            IntegerValue[] values = new IntegerValue[8];
+        if (!iinfo._jFlag && (jField >= 016)) {
+            IntegerValue[] values = new IntegerValue[5];
             values[0] = new IntegerValue( false, iinfo._fField, null );
             values[1] = new IntegerValue( false, jField, null );
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue( false, (xValue._flagged ? 1 : 0), null );
-            values[5] = new IntegerValue( false, (uValue._flagged ? 1 : 0), null );
+            values[4] = uValue;
+            generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex);
+        } else if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
+            IntegerValue[] values = new IntegerValue[7];
+            values[0] = new IntegerValue(false, iinfo._fField, null);
+            values[1] = new IntegerValue(false, jField, null);
+            values[2] = aValue;
+            values[3] = xValue;
+            values[4] = new IntegerValue(false, (xValue._flagged ? 1 : 0), null);
+            values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
+            values[6] = uValue;
+            generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex);
+        } else {
+            IntegerValue[] values = new IntegerValue[8];
+            values[0] = new IntegerValue(false, iinfo._fField, null);
+            values[1] = new IntegerValue(false, jField, null);
+            values[2] = aValue;
+            values[3] = xValue;
+            values[4] = new IntegerValue(false, (xValue._flagged ? 1 : 0), null);
+            values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
             values[6] = bValue;
             values[7] = uValue;
             generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex);

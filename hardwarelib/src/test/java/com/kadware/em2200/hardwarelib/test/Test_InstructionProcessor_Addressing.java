@@ -489,18 +489,20 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 01000)).getW(),        //  LA,U    A0,01000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LA,U      A0,01000",
+                "          HALT      0",
         };
 
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -524,18 +526,20 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 01000)).getW(),        //  LA,XU   A0,01000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LA,XU     A0,01000",
+                "          HALT      0",
         };
 
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -560,18 +564,20 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         //  Negative zero is converted to positive zero before sign-extension, per hardware docs
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 0777777)).getW(),      //  LA,XU   A0,0777777
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LA,XU     A0,0777777",
+                "          HALT      0",
         };
 
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -596,18 +602,20 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         //  Negative zero is converted to positive zero before sign-extension, per hardware docs
-        long[] code = {
-            (new InstructionWord(010, 017, 0, 0, 0777776)).getW(),      //  LA,XU   A0,-1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LA,XU     A0,-1",
+                "          HALT      0",
         };
 
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -621,7 +629,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_777777_777776l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
@@ -631,35 +639,29 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_112233_445566l,
-        };
-        LoadBankInfo dataInfo = new LoadBankInfo(data);
-        dataInfo._lowerLimit = 022000;
-
-        long[] code = {
-            (new InstructionWord(023, 016, 5, 0, 01234)).getW(),                        //  LR,U    R5,01234
-            (new InstructionWord(010, 0, 0, 0, 0, 0, GeneralRegisterSet.R5)).getW(),    //  LA      A0,R5
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),                  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "",
+                "$(1),START",
+                "          LR,U      R5,01234",
+                "          LA        A0,R5",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo, dataInfo };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(0);
 
         startAndWait(ip);
 
@@ -676,22 +678,23 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_112233_445566l,
+        String[] source = {
+                "          $EXTEND",
+                "$(2),DATA",
+                "          01122,03344,05566",
+                "",
+                "$(1),START",
+                "          LA        A0,0,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,0,,B1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -705,7 +708,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_112233_445566l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
@@ -715,31 +718,30 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(023, 016, 5, 0, 01234)).getW(),                        //  LR,U    R5,01234
-            (new InstructionWord(026, 016, 1, 0, 04)).getW(),                           //  LXM,U   X1,4
-            (new InstructionWord(046, 016, 1, 0, 02)).getW(),                           //  LXI,U   X1,2
-            (new InstructionWord(010, 0, 0, 1, 1, 0, GeneralRegisterSet.R1)).getW(),    //  LA      A0,R1,*X1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),                  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LR,U      R5,01234",
+                "          LXM,U     X1,4",
+                "          LXI,U     X1,2",
+                "          LA        A0,R1,*X1",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(0);
 
         startAndWait(ip);
 
@@ -747,50 +749,61 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
         assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000002_000006l, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(0_000002_000006L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
     }
 
     @Test
     public void storage_indexed_18BitModifier_ExtendedMode(
-    ) throws MachineInterrupt,
-             MaxNodesException,
+    ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data1 = { 01, 0, 0, 02, 0, 0, 03, 0, 0, 05, 0, 0, 010 };
-        LoadBankInfo data1Info = new LoadBankInfo(data1);
-        data1Info._lowerLimit = 02000;
-
-        long[] data2 = { 0, 0, 0, 0, 0, 0, 0, 0, };
-        LoadBankInfo data2Info = new LoadBankInfo(data2);
-        data2Info._lowerLimit = 02000;
-
-        long[] code = {
-            (new InstructionWord(026, 016, 5, 0, 01)).getW(),           //  LXM,U   X5,1
-            (new InstructionWord(046, 016, 5, 0, 03)).getW(),           //  LXI,U   X5,3
-            (new InstructionWord(026, 016, 7, 0, 00)).getW(),           //  LXM,U   X7,0
-            (new InstructionWord(046, 016, 7, 0, 01)).getW(),           //  LXI,U   X7,1
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(0)",
+                "DATA1     0",
+                "          01",
+                "          0",
+                "          0",
+                "          02",
+                "          0",
+                "          0",
+                "          03",
+                "          0",
+                "          0",
+                "          05",
+                "          0",
+                "          0",
+                "          010",
+                "",
+                "$(2),DATA2",
+                "          $RES 8",
+                "",
+                "$(1),START",
+                "          LXM,U     X5,1",
+                "          LXI,U     X5,3",
+                "          LXM,U     X7,0",
+                "          LXI,U     X7,1",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          HALT      0",
         };
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
 
-        LoadBankInfo infos[] = { codeInfo, data1Info, data2Info };
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -814,45 +827,56 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
 
     @Test
     public void storage_indexed_24BitModifier_ExtendedMode(
-    ) throws MachineInterrupt,
-             MaxNodesException,
+    ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data1 = { 01, 0, 0, 02, 0, 0, 03, 0, 0, 05, 0, 0, 010 };
-        LoadBankInfo data1Info = new LoadBankInfo(data1);
-        data1Info._lowerLimit = 02000;
-
-        long[] data2 = { 0, 0, 0, 0, 0, 0, 0, 0, };
-        LoadBankInfo data2Info = new LoadBankInfo(data2);
-        data2Info._lowerLimit = 02000;
-
-        long[] code = {
-            (new InstructionWord(026, 016, 5, 0, 01)).getW(),           //  LXM,U   X5,1
-            (new InstructionWord(046, 016, 5, 0, 0300)).getW(),         //  LXI,U   X5,0300
-            (new InstructionWord(026, 016, 7, 0, 00)).getW(),           //  LXM,U   X7,0
-            (new InstructionWord(046, 016, 7, 0, 0100)).getW(),         //  LXI,U   X7,0100
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 1, 01777)).getW(), //  LA      A3,01777,*X5,B1
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 2, 02000)).getW(), //  SA      A3,02000,*X7,B2
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(0)",
+                "DATA1     0",
+                "          01",
+                "          0",
+                "          0",
+                "          02",
+                "          0",
+                "          0",
+                "          03",
+                "          0",
+                "          0",
+                "          05",
+                "          0",
+                "          0",
+                "          010",
+                "",
+                "$(2),DATA2",
+                "          $RES 8",
+                "",
+                "$(1),START",
+                "          LXM,U     X5,1",
+                "          LXI,U     X5,0300",
+                "          LXM,U     X7,0",
+                "          LXI,U     X7,0100",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          LA        A3,DATA1,*X5,B1",
+                "          SA        A3,DATA2,*X7,B2",
+                "          HALT      0",
         };
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
 
-        LoadBankInfo infos[] = { codeInfo, data1Info, data2Info };
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -882,23 +906,21 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 05, 0, 01)).getW(),          //  LA,U    EA5,01
-            (new InstructionWord(027, 016, 05, 0, 05)).getW(),          //  LX,U    EX5,05
-            (new InstructionWord(023, 016, 05, 0, 077)).getW(),         //  LR,U    ER5,077
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "          $EXTEND",
+                "$(1),START",
+                "          LA,U      EA5,01",
+                "          LX,U      EX5,05",
+                "          LR,U      ER5,077",
+                "          HALT      0",
         };
-
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo };
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -906,7 +928,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setExecRegisterSetSelected(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(0);
 
         startAndWait(ip);
 
