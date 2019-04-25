@@ -23,6 +23,34 @@ import java.util.TreeMap;
 @SuppressWarnings("Duplicates")
 public class Assembler {
 
+    /**
+     * Represents the components of a label field.
+     * If either _lcIndex or _label is null, the corresponding component was not specified.
+     * If _label is not null, _labelLevel will indicate the number of external signifiers (asterisks)
+     * which follow the label.
+     */
+    private static class LabelFieldComponents {
+        public final String _label;
+        public final Integer _labelLevel;
+        public final Locale _labelLocale;
+        public final Integer _lcIndex;
+        public final Locale _lcIndexLocale;
+
+        public LabelFieldComponents(
+            final Integer lcIndex,
+            final Locale lcIndexLocale,
+            final String label,
+            final Integer labelLevel,
+            final Locale labelLocale
+        ) {
+            _label = label;
+            _labelLevel = labelLevel;
+            _labelLocale = labelLocale;
+            _lcIndex = lcIndex;
+            _lcIndexLocale = lcIndexLocale;
+        }
+    }
+
     //  The Context object contains things which specifically apply to a particular sub-assembly...
     //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
     private final Context _context;
@@ -65,7 +93,7 @@ public class Assembler {
      * Assemble a single TextLine object into the Relocatable Module
      * @param textLine entity to be assembled
      */
-    private void assemble(
+    private void assembleTextLine(
         final TextLine textLine
     ) {
         if (textLine._fields.isEmpty()) {
@@ -76,8 +104,14 @@ public class Assembler {
         TextField operationField = textLine.getField(1);
         TextField operandField = textLine.getField(2);
 
+        //  Interpret label field and update current location counter index if appropriate
+        LabelFieldComponents lfc = interpretLabelField(labelField, textLine._diagnostics);
+        if (lfc._lcIndex != null) {
+            _context._currentGenerationLCIndex = lfc._lcIndex;
+        }
+
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(textLine, labelField, operationField, operandField, textLine._diagnostics)) {
+        if (processMnemonic(textLine, lfc, operationField, operandField, textLine._diagnostics)) {
             if (textLine._fields.size() > 3) {
                 textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
                                                                  "Extraneous fields ignored"));
@@ -162,6 +196,30 @@ public class Assembler {
         }
 
         displayDictionary(_context._dictionary);
+    }
+
+    /**
+     * Establishes a label value in the current (or a super-ordinate) dictionary
+     * @param locale locale of label (for posting diagnostics)
+     * @param dictionary dictionary in which the label is to be created (the base, if level is > 0)
+     * @param label label
+     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
+     * @param value value to be associated with the level
+     * @param diagnostics where we post diagnostics
+     */
+    private void establishLabel(
+            final Locale locale,
+            final Dictionary dictionary,
+            final String label,
+            final int labelLevel,
+            final Value value,
+            final Diagnostics diagnostics
+    ) {
+        if (dictionary.hasValue(label)) {
+            diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
+        } else {
+            dictionary.addValue(labelLevel, label, value);
+        }
     }
 
     /**
@@ -263,6 +321,71 @@ public class Assembler {
     }
 
     /**
+     * Interprets the label field to the extend possible when the purpose of the label is not known.
+     * Calling code will do different things depending upon how the label (if any) is to be established.
+     * @param labelField TextField containing the label field (might be null or empty)
+     * @param diagnostics where we post any appropriate diagnostics
+     * @return an appropriately populated LabelFieldComponents object
+     */
+    private LabelFieldComponents interpretLabelField(
+            final TextField labelField,
+            final Diagnostics diagnostics
+    ) {
+        Integer lcIndex = null;
+        Locale lcLocale = null;
+        String label = null;
+        Integer labelLevel = null;
+        Locale labelLocale = null;
+
+        if (labelField != null) {
+            //  Look for a location counter specification.  If one is given, it will be the first subfield
+            int sfx = 0;
+            if (labelField._subfields.size() > sfx) {
+                TextSubfield lcSubField = labelField._subfields.get(sfx);
+                Locale sfLocale = lcSubField._locale;
+                String sfText = lcSubField._text;
+                if (sfText.matches("\\$\\(\\d{1,3}\\)")) {
+                    lcIndex = Integer.parseInt(sfText.substring(2, sfText.length() - 1));
+                    lcLocale = sfLocale;
+                    ++sfx;
+                } else if (sfText.startsWith("$(")) {
+                    diagnostics.append(new ErrorDiagnostic(sfLocale, "Illegal location counter specification"));
+                }
+            }
+
+            //  Look for a label specification.  If one is given, it will follow any lc specification
+            if (labelField._subfields.size() > sfx) {
+                TextSubfield lcSubField = labelField._subfields.get(sfx);
+                Locale sfLocale = lcSubField._locale;
+                String sfText = lcSubField._text;
+
+                int levelers = 0;
+                while (sfText.endsWith("*")) {
+                    ++levelers;
+                    sfText = sfText.substring(0, sfText.length() - 1);
+                }
+                if (Dictionary.isValidLabel(sfText)) {
+                    label = sfText;
+                    labelLevel = levelers;
+                    labelLocale = sfLocale;
+                    ++sfx;
+                } else {
+                    diagnostics.append(new ErrorDiagnostic(sfLocale, "Invalid label specified"));
+                }
+            }
+
+            //  Warn on anything extra
+            if (sfx < labelField._subfields.size()) {
+                TextSubfield lcSubField = labelField._subfields.get(sfx);
+                Locale sfLocale = lcSubField._locale;
+                diagnostics.append(new ErrorDiagnostic(sfLocale, "Extraneous label subfields ignored"));
+            }
+        }
+
+        return new LabelFieldComponents(lcIndex, lcLocale, label, labelLevel, labelLocale);
+    }
+
+    /**
      * Interprets a subfield as an expression
      * @param subfield subfield to be interpreted
      * @param diagnostics where we post any appropriate diagnostics
@@ -287,48 +410,48 @@ public class Assembler {
         }
     }
 
-    /**
-     * For TextLine objecs which contain a label intended to actually *be* a label - that is, to represent the current
-     * address in the current generation location counter...
-     * @param labelField label field
-     * @param diagnostics where we post any appropriate diagnostics
-     */
-    private void processLabel(
-        final TextField labelField,
-        final Diagnostics diagnostics
-    ) {
-        if ( (labelField != null) && (labelField._subfields.size() > 0) ) {
-            TextSubfield labelSubfield = labelField.getSubfield(0);
-            String label = labelSubfield._text;
-            int labelLevel = 0;
-            while ( label.endsWith("*") ) {
-                label = label.substring(0, label.length() - 1);
-                ++labelLevel;
-            }
-
-            if ( !Dictionary.isValidUserLabel(label) ) {
-                diagnostics.append(new ErrorDiagnostic(labelSubfield._locale,
-                                                       "Invalid label"));
-            } else {
-                if ( labelField._subfields.size() > 1 ) {
-                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1)._locale,
-                                                           "Extraneous subfields in label field"));
-                }
-
-                if ( _context._dictionary.hasValue(label) ) {
-                    diagnostics.append(new DuplicateDiagnostic(labelSubfield._locale,
-                                                               "Duplicate label"));
-                } else {
-                    _context._dictionary.addValue(labelLevel, label, getCurrentLocation());
-                }
-            }
-        }
-    }
+//    /**
+//     * For TextLine objecs which contain a label intended to actually *be* a label - that is, to represent the current
+//     * address in the current generation location counter...
+//     * @param labelField label field
+//     * @param diagnostics where we post any appropriate diagnostics
+//     */
+//    private void processLabel(
+//        final TextField labelField,
+//        final Diagnostics diagnostics
+//    ) {
+//        if ( (labelField != null) && (labelField._subfields.size() > 0) ) {
+//            TextSubfield labelSubfield = labelField.getSubfield(0);
+//            String label = labelSubfield._text;
+//            int labelLevel = 0;
+//            while ( label.endsWith("*") ) {
+//                label = label.substring(0, label.length() - 1);
+//                ++labelLevel;
+//            }
+//
+//            if ( !Dictionary.isValidUserLabel(label) ) {
+//                diagnostics.append(new ErrorDiagnostic(labelSubfield._locale,
+//                                                       "Invalid label"));
+//            } else {
+//                if ( labelField._subfields.size() > 1 ) {
+//                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1)._locale,
+//                                                           "Extraneous subfields in label field"));
+//                }
+//
+//                if ( _context._dictionary.hasValue(label) ) {
+//                    diagnostics.append(new DuplicateDiagnostic(labelSubfield._locale,
+//                                                               "Duplicate label"));
+//                } else {
+//                    _context._dictionary.addValue(labelLevel, label, getCurrentLocation());
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Handles instruction mnemonic lines of code, and blank lines
      * @param textLine where this came from
-     * @param labelField represents the label field, if any
+     * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      * @param operandField represents the operand field, if any
      * @param diagnostics where we post diagnostics if needed
@@ -336,7 +459,7 @@ public class Assembler {
      */
     private boolean processMnemonic(
         final TextLine textLine,
-        final TextField labelField,
+        final LabelFieldComponents labelFieldComponents,
         final TextField operationField,
         final TextField operandField,
         final Diagnostics diagnostics
@@ -344,7 +467,14 @@ public class Assembler {
         if ( operationField == null ) {
             //  This is a no-op line - but it might have a label.
             //  Do label stuff, then return true indicating that the line has been processed.
-            processLabel(labelField, diagnostics);
+            if (labelFieldComponents._label != null) {
+                establishLabel(labelFieldComponents._labelLocale,
+                               _context._dictionary,
+                               labelFieldComponents._label,
+                               labelFieldComponents._labelLevel,
+                               getCurrentLocation(),
+                               diagnostics);
+            }
             return true;
         }
 
@@ -375,10 +505,16 @@ public class Assembler {
             }
         }
 
-        //  We've found an iinfo - from here on, we are sure this is a mnemonic text line.
-        //  It might have all kinds of errors in it (or not), but it's a mnemonic line.
-        //  So, a) the label field is to be processed as such, and b) we return true from here onward.
-        processLabel(labelField, diagnostics);
+        //  Establish the label to refer to the current lc pool's current offset (if there is a label).
+        //  Use the label level to establish which dictionary level it should be placed in.
+        if (labelFieldComponents._label != null) {
+            establishLabel(labelFieldComponents._labelLocale,
+                           _context._dictionary,
+                           labelFieldComponents._label,
+                           labelFieldComponents._labelLevel,
+                           getCurrentLocation(),
+                           diagnostics);
+        }
 
         //  Is this a special instruction? (such as JGD, BT, etc)
         //TODO
@@ -677,7 +813,7 @@ public class Assembler {
 
         //  Next step - assemble all the things
         for (TextLine line : _sourceCode) {
-            assemble(line);
+            assembleTextLine(line);
             if (_diagnostics.hasFatal()) {
                 collectDiagnostics();
                 return null;

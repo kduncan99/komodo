@@ -6,7 +6,7 @@ package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Map;
 
 /**
@@ -16,8 +16,8 @@ import java.util.Map;
 public class RelocatableModule {
 
     public final String _name;
-    public final Map<Integer, LocationCounterPool> _storage = new HashMap<>();
-    public final Map<String, IntegerValue> _externalLabels = new HashMap<>();
+    public final Map<Integer, LocationCounterPool> _storage = new TreeMap<>();
+    public final Map<String, IntegerValue> _externalLabels = new TreeMap<>();
 
     /**
      * Constructor

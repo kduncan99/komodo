@@ -210,7 +210,6 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-
                 "          LR,U      R5,01234    . Put the test value in R5",
                 "          LXM,U     X1,4        . Set X modifier to 4 and increment to 2",
                 "          LXI,U     X1,2",
@@ -249,36 +248,30 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            (new InstructionWord(0, 0, 0, 0, 0, 0, GeneralRegisterSet.R5)).getW(),      //  Reference to GRS
+        String[] source = {
+                "$(2)",
+                "INDIRECT* LA        A0,R5         . Only using the x,h,i, and u fields",
+                "",
+                "$(1)",
+                "          LR,U      R5,01234      . Put the test value in R5",
+                "          LA        A0,*INDIRECT  . Indirection through INDIRECT",
+                "                                  .   will transfer content from R5 to A0"
         };
 
-        LoadBankInfo dataInfo = new LoadBankInfo(data);
-        dataInfo._lowerLimit = 022000;
-
-        long[] code = {
-            (new InstructionWord(023, 016, 5, 0, 01234)).getW(),            //  LR,U    R5,01234
-            (new InstructionWord(010, 0, 0, 0, 0, 1, 022000)).getW(),       //  LA      A0,*022000 . indirect through 022000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),      //  IAR     d,x,b
-        };
-
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo, dataInfo };
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
