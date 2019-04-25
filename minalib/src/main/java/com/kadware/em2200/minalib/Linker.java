@@ -216,7 +216,7 @@ public class Linker {
                                     discreteValue = (discreteValue & shiftedNotMask) | (tempValue << shift);
                                 } else {
                                     raise(String.format("Value in %s LC(%d) offset %d - undefined reference %s in field %s",
-                                                        lcps._module,
+                                                        lcps._module._name,
                                                         lcps._lcIndex,
                                                         rwx,
                                                         ur._reference,

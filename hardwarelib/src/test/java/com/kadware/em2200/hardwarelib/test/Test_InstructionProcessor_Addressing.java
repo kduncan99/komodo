@@ -361,39 +361,33 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data1 = {
-            (new InstructionWord(0, 0, 0, 0, 0, 1, 050000)).getW(),     //  indirect to 050000 in databank2
-            (new InstructionWord(0, 0, 0, 0, 0, 1, 022002)).getW(),     //  indirect to 022002
-            (new InstructionWord(0, 0, 0, 0, 0, 1, 022003)).getW(),     //  indirect to 022003
-            (new InstructionWord(0, 0, 0, 0, 0, 1, 022004)).getW(),     //  indirect to 022004
-            (new InstructionWord(0, 0, 0, 0, 0, 0, 050001)).getW(),     //  indirect to 050001 in databank2
+        String[] source = {
+                "$(0)",
+                "DATA1",
+                "          NOP       0,*DATA2",
+                "          NOP       0,*DATA1+2",
+                "          NOP       0,*DATA1+3",
+                "          NOP       0,*DATA1+4",
+                "          NOP       0,DATA2+1",
+                "",
+                "$(2)",
+                "DATA2",
+                "          NOP       0,*DATA1+1",
+                "          011,022,033,044,055,066",
+                "",
+                "$(1)",
+                "START*",
+                "          LA        A0,*DATA1",
+                "          HALT      0"
         };
 
-        LoadBankInfo data1Info = new LoadBankInfo(data1);
-        data1Info._lowerLimit = 022000;
-        long[] data2 = {
-            (new InstructionWord(0, 0, 0, 0, 0, 1, 022001)).getW(),     //  indirect to 022001 in databank1
-            0112233_445566l,                                            //  the actual data
-        };
-
-        LoadBankInfo data2Info = new LoadBankInfo(data2);
-        data2Info._lowerLimit = 050000;
-
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 1, 022000)).getW(),       //  LA      A0,*022000 . indirect through 022000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),      //  IAR     d,x,b
-        };
-
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo, data1Info, data2Info };
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -407,7 +401,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_112233_445566l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
@@ -417,23 +411,21 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 05, 0, 01)).getW(),          //  LA,U    EA5,01
-            (new InstructionWord(027, 016, 05, 0, 05)).getW(),          //  LX,U    EX5,05
-            (new InstructionWord(023, 016, 05, 0, 077)).getW(),         //  LR,U    ER5,077
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "$(1) .",
+                "          LA,U      EA5,01              . ",
+                "          LX,U      EX5,05              . ",
+                "          LR,U      ER5,077             . ",
+                "          HALT      0                   . "
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo };
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -441,7 +433,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setExecRegisterSetSelected(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
@@ -460,41 +452,34 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_112233_445566l,
-        };
-        LoadBankInfo dataInfo = new LoadBankInfo(data);
-        dataInfo._lowerLimit = 022000;
-
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 022000)).getW(),   //  LA      A0,022000
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "$(0),DATA +0112233,0445566",
+                "$(1),START",
+                "          LA        A0,DATA",
+                "          HALT      0",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
-
-        LoadBankInfo infos[] = { codeInfo, dataInfo };
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(022000);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_112233_445566l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test

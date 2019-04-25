@@ -50,4 +50,10 @@ public class FieldDescriptor {
 
         return false;
     }
+
+    @Override
+    public String toString(
+    ) {
+        return String.format("[%d:%d]", _startingBit, _startingBit + _fieldSize - 1);
+    }
 }
