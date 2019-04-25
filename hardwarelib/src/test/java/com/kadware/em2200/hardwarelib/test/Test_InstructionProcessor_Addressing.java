@@ -250,12 +250,13 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
              UPINotAssignedException {
         String[] source = {
                 "$(2)",
-                "INDIRECT* LA        A0,R5         . Only using the x,h,i, and u fields",
+                "INDIRECT* +R5                    . Only using the x,h,i, and u fields",
                 "",
                 "$(1)",
                 "          LR,U      R5,01234      . Put the test value in R5",
                 "          LA        A0,*INDIRECT  . Indirection through INDIRECT",
-                "                                  .   will transfer content from R5 to A0"
+                "                                  .   will transfer content from R5 to A0",
+                "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, true);

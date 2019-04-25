@@ -61,7 +61,7 @@ class TextLine {
                 long value36 = ocr._result;
 
                 FieldDescriptor fd = entry.getKey();
-                long mask = (1 << fd._fieldSize) - 1;
+                long mask = (1L << fd._fieldSize) - 1;
                 long maskedValue = value36 & mask;
 
                 //  Check for field size truncation
@@ -73,10 +73,12 @@ class TextLine {
 
                 if (trunc) {
                     Locale loc = new Locale( textLine._lineNumber, 0 );
-                    textLine._diagnostics.append( new TruncationDiagnostic( loc, fd._startingBit, fd._fieldSize ) );
+                    textLine._diagnostics.append( new TruncationDiagnostic( loc,
+                                                                            fd._startingBit,
+                                                                            fd._startingBit + fd._fieldSize - 1) );
                 }
 
-                int bitMask = (1 << fd._fieldSize) - 1;
+                long bitMask = (1L << fd._fieldSize) - 1;
                 int shiftCount = 36 - fd._startingBit - fd._fieldSize;
                 discreteValue |= (maskedValue << shiftCount);
 

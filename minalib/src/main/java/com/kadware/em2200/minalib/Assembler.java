@@ -10,7 +10,7 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
-
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,13 +30,13 @@ public class Assembler {
      * which follow the label.
      */
     private static class LabelFieldComponents {
-        public final String _label;
-        public final Integer _labelLevel;
-        public final Locale _labelLocale;
-        public final Integer _lcIndex;
-        public final Locale _lcIndexLocale;
+        final String _label;
+        final Integer _labelLevel;
+        final Locale _labelLocale;
+        final Integer _lcIndex;
+        final Locale _lcIndexLocale;
 
-        public LabelFieldComponents(
+        LabelFieldComponents(
             final Integer lcIndex,
             final Locale lcIndexLocale,
             final String label,
@@ -123,10 +123,17 @@ public class Assembler {
         //TODO
 
         //  Hmm.  Is it an expression (or a list of expressions)?
-        //TODO
+        //  In this case, the operation field actually contains the operand, while the operand field should be empty.
+        if (processDataGeneration(textLine, lfc, operationField, textLine._diagnostics)) {
+            if (textLine._fields.size() > 2) {
+                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
+                                                                 "Extraneous fields ignored"));
+            }
+            return;
+        }
 
         textLine._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
-                                                         "What the heck is this?"));//????
+                                                         "Unrecognizable source code"));
     }
 
     /**
@@ -386,67 +393,110 @@ public class Assembler {
     }
 
     /**
-     * Interprets a subfield as an expression
-     * @param subfield subfield to be interpreted
-     * @param diagnostics where we post any appropriate diagnostics
-     * @return interpreted value (may be zero with no other information)
+     * Handles source lines which generate data implicitly by virtue of specifying an expression list
+     * with no operation field (the operand field takes the place of the operation field).
+     * We can generate ASCII or FIELDATA text, or we can generate a single word of data made up of one or more
+     * bit fields (defined by dividing 36 bits by the number of expressions in the list).
+     * The way this works, is we evaluate the expression in the first subfield.
+     * If it is a string, then we allow no other subfields, and we generate as many words as necessary.
+     * If it is a float, we generate one word, and allow no other subfields //TODO
+     * If it is an integer, we then expect any other subfields to also evaluate to integers, and proceed accordingly.
+     * @param textLine where this came from
+     * @param labelFieldComponents represents the label field components, if any were specified
+     * @param operandField represents the operand field, if any
+     * @param diagnostics where we post diagnostics if needed
+     * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private Value interpretSubfield(
-        final TextSubfield subfield,
+    private boolean processDataGeneration(
+        final TextLine textLine,
+        final LabelFieldComponents labelFieldComponents,
+        final TextField operandField,
         final Diagnostics diagnostics
     ) {
-        try {
-            ExpressionParser p = new ExpressionParser( subfield._text, subfield._locale );
-            Expression e = p.parse( _context, diagnostics );
-            return e.evaluate( _context, diagnostics );
-        } catch ( ExpressionException eex ) {
-            diagnostics.append( new ErrorDiagnostic( subfield._locale,
-                                                     "Cannot evaluate expression:" + eex.getMessage() ) );
-            return new IntegerValue(false, 0, null);
-        } catch ( NotFoundException nfex ) {
-            diagnostics.append( new ErrorDiagnostic( subfield._locale,
-                                                     "Expected an expression" ) );
-            return new IntegerValue(false, 0, null);
+        if (operandField._subfields.isEmpty()) {
+            return false;
         }
-    }
 
-//    /**
-//     * For TextLine objecs which contain a label intended to actually *be* a label - that is, to represent the current
-//     * address in the current generation location counter...
-//     * @param labelField label field
-//     * @param diagnostics where we post any appropriate diagnostics
-//     */
-//    private void processLabel(
-//        final TextField labelField,
-//        final Diagnostics diagnostics
-//    ) {
-//        if ( (labelField != null) && (labelField._subfields.size() > 0) ) {
-//            TextSubfield labelSubfield = labelField.getSubfield(0);
-//            String label = labelSubfield._text;
-//            int labelLevel = 0;
-//            while ( label.endsWith("*") ) {
-//                label = label.substring(0, label.length() - 1);
-//                ++labelLevel;
-//            }
-//
-//            if ( !Dictionary.isValidUserLabel(label) ) {
-//                diagnostics.append(new ErrorDiagnostic(labelSubfield._locale,
-//                                                       "Invalid label"));
-//            } else {
-//                if ( labelField._subfields.size() > 1 ) {
-//                    diagnostics.append(new ErrorDiagnostic(labelField.getSubfield(1)._locale,
-//                                                           "Extraneous subfields in label field"));
-//                }
-//
-//                if ( _context._dictionary.hasValue(label) ) {
-//                    diagnostics.append(new DuplicateDiagnostic(labelSubfield._locale,
-//                                                               "Duplicate label"));
-//                } else {
-//                    _context._dictionary.addValue(labelLevel, label, getCurrentLocation());
-//                }
-//            }
-//        }
-//    }
+        TextSubfield sf0 = operandField._subfields.get(0);
+        String sf0Text = sf0._text;
+        Locale sf0Locale = sf0._locale;
+        Value firstValue = null;
+        try {
+            ExpressionParser p1 = new ExpressionParser(sf0Text, sf0Locale);
+            Expression e1 = p1.parse(_context, diagnostics);
+            firstValue = e1.evaluate(_context, diagnostics);
+        } catch (ExpressionException eex) {
+            diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+        } catch (NotFoundException nfex) {
+            return false;
+        }
+
+        if (labelFieldComponents._label != null) {
+            establishLabel(labelFieldComponents._labelLocale,
+                           _context._dictionary,
+                           labelFieldComponents._label,
+                           labelFieldComponents._labelLevel,
+                           getCurrentLocation(),
+                           diagnostics);
+        }
+
+        if (firstValue instanceof FloatingPointValue) {
+            FloatingPointValue fpValue = (FloatingPointValue) firstValue;
+            //TODO
+
+            if (operandField._subfields.size() > 1) {
+                Locale loc = operandField._subfields.get(1)._locale;
+                diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
+            }
+        } else if (firstValue instanceof StringValue) {
+            StringValue sValue = (StringValue) firstValue;
+            //TODO
+
+            if (operandField._subfields.size() > 1) {
+                Locale loc = operandField._subfields.get(1)._locale;
+                diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
+            }
+        } else if (firstValue instanceof IntegerValue) {
+            //  Ensure the number of values divides evenly.
+            int valueCount = (operandField._subfields.size());
+            if ((36 % valueCount) != 0) {
+                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
+            } else {
+                IntegerValue[] values = new IntegerValue[valueCount];
+                values[0] = (IntegerValue) firstValue;
+                for (int vx = 1; vx < valueCount; ++vx) {
+                    TextSubfield sfNext = operandField._subfields.get(vx);
+                    String sfNextText = sfNext._text;
+                    Locale sfNextLocale = sfNext._locale;
+                    try {
+                        ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
+                        Expression eNext = pNext.parse(_context, diagnostics);
+                        Value vNext = eNext.evaluate(_context, diagnostics);
+                        if (vNext instanceof IntegerValue) {
+                            values[vx] = (IntegerValue) vNext;
+                        } else {
+                            diagnostics.append(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
+                            values[vx] = _zeroValue;
+                        }
+                    } catch (ExpressionException | NotFoundException ex) {
+                        diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+                    }
+                }
+
+                int[] fieldSizes = new int[valueCount];
+                int fieldSize = 36 / valueCount;
+                for (int fx = 0; fx < values.length; ++fx) {
+                    fieldSizes[fx] = fieldSize;
+                }
+
+                generate(textLine, new Form(fieldSizes), values, _context._currentGenerationLCIndex);
+            }
+        } else {
+            diagnostics.append(new ErrorDiagnostic(sf0Locale, "Wrong value type for data generation"));
+        }
+
+        return true;
+    }
 
     /**
      * Handles instruction mnemonic lines of code, and blank lines
@@ -741,9 +791,7 @@ public class Assembler {
                                 } else {
                                     IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
                                     newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue.getValue();
-                                    for (IntegerValue.UndefinedReference urLookup : lookupIntegerValue.getUndefinedReferences()) {
-                                        newURefs.add( urLookup );
-                                    }
+                                    newURefs.addAll(Arrays.asList(lookupIntegerValue.getUndefinedReferences()));
                                 }
                             } catch ( NotFoundException ex ) {
                                 //  reference is still not found - propagate it
