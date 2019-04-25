@@ -91,27 +91,27 @@ public class SSFunction extends BuiltInFunction {
             IntegerValue iarg1 = (IntegerValue)arguments[1];
             IntegerValue iarg2 = (arguments.length == 3) ? (IntegerValue)arguments[2] : null;
 
-            if (iarg1.getUndefinedReferences().length != 0) {
+            if (iarg1._undefinedReferences.length != 0) {
                 diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
-            if ((iarg2 != null) && (iarg2.getUndefinedReferences().length != 0)) {
+            if ((iarg2 != null) && (iarg2._undefinedReferences.length != 0)) {
                 diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
-            if (iarg1.getValue() < 1) {
+            if (iarg1._value < 1) {
                 diagnostics.append(new ValueDiagnostic(getLocale(), "Index argument must be > 0"));
                 throw new ExpressionException();
             }
 
-            if ((iarg2 != null) && (iarg2.getValue() < 1)) {
+            if ((iarg2 != null) && (iarg2._value < 1)) {
                 diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument must be > 0"));
                 throw new ExpressionException();
             }
 
-            String sval = sarg.getValue();
-            int ival1 = (int)iarg1.getValue();
-            int ival2 = (iarg2 == null) ? sval.length() - ival1 : (int)iarg2.getValue();
+            String sval = sarg._value;
+            int ival1 = (int)iarg1._value;
+            int ival2 = (iarg2 == null) ? sval.length() - ival1 : (int)iarg2._value;
             StringBuilder sb = new StringBuilder();
             sb.append((ival1 < sval.length()) ? sval.substring(ival1, ival2) : "");
             if (sb.length() < ival2) {
@@ -120,7 +120,7 @@ public class SSFunction extends BuiltInFunction {
                 } while (sb.length() < ival2);
             }
 
-            return new StringValue(false, sb.toString(), sarg.getCharacterMode());
+            return new StringValue(false, sb.toString(), sarg._characterMode);
         } catch (ExpressionException ex) {
             diagnostics.append(new ErrorDiagnostic(getLocale(), ex.getMessage()));
             throw ex;

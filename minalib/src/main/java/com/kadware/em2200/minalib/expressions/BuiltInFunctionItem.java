@@ -15,7 +15,7 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class BuiltInFunctionItem extends FunctionItem {
 
-    private final BuiltInFunction _function;
+    public final BuiltInFunction _function;
 
     /**
      * constructor
@@ -27,16 +27,6 @@ public class BuiltInFunctionItem extends FunctionItem {
     ) {
         super(null);
         _function = function;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return encapsulated BuiltInFunction object
-     */
-    protected BuiltInFunction getBuiltInFunction(
-    ) {
-        return _function;
     }
 
     /**

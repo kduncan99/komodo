@@ -28,11 +28,11 @@ public class Test_ExpressionParser {
         Expression exp = parser.parse(context, diagnostics);
 
         assertEquals(1, exp._items.size());
-        ExpressionItem item = exp._items.get(0);
+        IExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
-        Value v = ((ValueItem)item).getValue();
+        Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof IntegerValue);
-        assertEquals(14458L, ((IntegerValue)v).getValue());
+        assertEquals(14458L, ((IntegerValue)v)._value);
     }
 
     @Test
@@ -48,15 +48,15 @@ public class Test_ExpressionParser {
 
         assertEquals(2, exp._items.size());
 
-        ExpressionItem item0 = exp._items.get(0);
+        IExpressionItem item0 = exp._items.get(0);
         assertTrue(item0 instanceof OperatorItem);
         Operator op = ((OperatorItem) item0)._operator;
 
-        ExpressionItem item1 = exp._items.get(1);
+        IExpressionItem item1 = exp._items.get(1);
         assertTrue(item1 instanceof ValueItem);
-        Value v1 = ((ValueItem)item1).getValue();
+        Value v1 = ((ValueItem)item1)._value;
         assertTrue(v1 instanceof IntegerValue);
-        assertEquals(14458L, ((IntegerValue)v1).getValue());
+        assertEquals(14458L, ((IntegerValue)v1)._value);
     }
 
     @Test
@@ -71,11 +71,11 @@ public class Test_ExpressionParser {
         Expression exp = parser.parse(context, diagnostics);
 
         assertEquals(1, exp._items.size());
-        ExpressionItem item = exp._items.get(0);
+        IExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
-        Value v = ((ValueItem)item).getValue();
+        Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof StringValue);
-        assertEquals("Hello", ((StringValue)v).getValue());
+        assertEquals("Hello", ((StringValue)v)._value);
     }
 
     @Test
@@ -129,7 +129,7 @@ public class Test_ExpressionParser {
         FunctionItem fi = parser.parseFunction(context, diagnostics);
         assertTrue(fi instanceof BuiltInFunctionItem);
         BuiltInFunctionItem bifItem = (BuiltInFunctionItem)fi;
-        BuiltInFunction bif = bifItem.getBuiltInFunction();
+        BuiltInFunction bif = bifItem._function;
         assertTrue(bif instanceof SLFunction);
     }
 }

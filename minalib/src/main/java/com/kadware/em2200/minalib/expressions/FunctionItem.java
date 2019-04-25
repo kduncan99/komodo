@@ -20,7 +20,7 @@ public abstract class FunctionItem extends OperandItem {
     public FunctionItem(
         final Locale locale
     ) {
-        super( locale );
+        super(locale);
     }
 
     /**

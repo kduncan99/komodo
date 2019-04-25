@@ -1,5 +1,7 @@
 Convert IP unit tests from octal to assembler and mina them
 
+Lose unnecessary accessors
+
 minalib $BASIC and $EXTENDED
 minalib data generation
 minalib Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain

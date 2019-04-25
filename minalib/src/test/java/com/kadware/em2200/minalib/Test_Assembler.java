@@ -65,7 +65,7 @@ public class Test_Assembler {
         RelocatableModule module = asm.assemble("Test", true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START").getUndefinedReferences().length);
+        assertEquals(1, module._externalLabels.get("START")._undefinedReferences.length);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class Test_Assembler {
         assertEquals(1, module._storage.size());
         assertTrue(module._storage.containsKey(3));
         assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START").getUndefinedReferences().length);
+        assertEquals(1, module._externalLabels.get("START")._undefinedReferences.length);
     }
 
     @Test

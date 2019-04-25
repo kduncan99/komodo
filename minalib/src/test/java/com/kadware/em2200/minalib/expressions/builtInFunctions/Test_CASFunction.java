@@ -25,7 +25,7 @@ public class Test_CASFunction {
     ) throws ExpressionException,
              NotFoundException {
 
-        List<ExpressionItem> items = new LinkedList<>();
+        List<IExpressionItem> items = new LinkedList<>();
         IntegerValue iv = new IntegerValue(false, 060061062063L, null);
         items.add(new ValueItem(new Locale(1, 1), iv));
 

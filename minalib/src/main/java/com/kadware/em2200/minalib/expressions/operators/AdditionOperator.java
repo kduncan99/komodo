@@ -62,11 +62,11 @@ public class AdditionOperator extends ArithmeticOperator {
                 IntegerValue iopLeft = (IntegerValue)operands[0];
                 IntegerValue iopRight = (IntegerValue)operands[1];
 
-                long intResult = iopLeft.getValue() + iopRight.getValue();
+                long intResult = iopLeft._value + iopRight._value;
 
                 List<IntegerValue.UndefinedReference> temp = new LinkedList<>();
-                temp.addAll(Arrays.asList(iopLeft.getUndefinedReferences()));
-                temp.addAll(Arrays.asList(iopRight.getUndefinedReferences()));
+                temp.addAll(Arrays.asList(iopLeft._undefinedReferences));
+                temp.addAll(Arrays.asList(iopRight._undefinedReferences));
                 Map<String, Integer> tallyMap = new HashMap<>();
                 for (IntegerValue.UndefinedReference ref : temp) {
                     int refVal = ref._isNegative ? -1 : 1;
@@ -88,7 +88,7 @@ public class AdditionOperator extends ArithmeticOperator {
             } else {
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                double result = iopLeft.getValue() + iopRight.getValue();
+                double result = iopLeft._value + iopRight._value;
                 opResult = new FloatingPointValue(false, result);
             }
 

@@ -35,16 +35,149 @@ class Test_InstructionProcessor {
     private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
 
     /**
-     * Assembles sets of code into multiple relocatable modules, then links them.
-     * @param code array of arrays of text - each outer array is a separate assembly.
-     *             odd location counter pools go into the first (instruction) bank,
-     *             even location counter pools into a second (data) bank.
+     * Assembles sets of code into a relocatable module, then links it such that the odd-numbered lc pools
+     * are placed in an IBANK with BDI 04 and the even-number pools in a DBANK with BDI 05.
+     * @param code arrays of text comprising the source code we assemble
      * @param display true to display assembler/linker output
      * @return linked absolute module
      */
     protected static AbsoluteModule buildCodeBasic(
-            final String[][] code,
+        final String[] code,
+        final boolean display
+    ) {
+        Assembler asm = new Assembler(code);
+        RelocatableModule relModule = asm.assemble("TEST", display);
+        List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
+        for (Integer lcIndex : relModule._storage.keySet()) {
+            if ((lcIndex & 01) == 01) {
+                Linker.LCPoolSpecification oddPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+                poolSpecsOdd.add(oddPoolSpec);
+            } else {
+                Linker.LCPoolSpecification evenPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+                poolSpecsEven.add(evenPoolSpec);
+            }
+        }
+
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("I1")
+                                     .setBankDescriptorIndex(000004)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(022000)
+                                     .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(12)
+                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                     .build());
+
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("D1")
+                                     .setBankDescriptorIndex(000005)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(040000)
+                                     .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(13)
+                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                     .build());
+
+        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
+        return linker.link("TEST", display);
+    }
+
+    /**
+     * Assembles source code into a relocatable module, then links it, producing four banks containing:
+     *  BDI 04 IBANK:   LC pool 1
+     *  BDI 05 DBANK:   LC pool 0
+     *  BDI 06 IBANK:   All other odd location counter pools
+     *  BDI 07 DBANK:   All other even location counter pools
+     * @param code arrays of text comprising the source code we assemble
+     * @param display true to display assembler/linker output
+     * @return linked absolute module
+     */
+    protected static AbsoluteModule buildCodeBasicMultibank(
+            final String[] code,
             final boolean display
+    ) {
+        Assembler asm = new Assembler(code);
+        RelocatableModule relModule = asm.assemble("TEST", display);
+        List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecs05 = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecs06 = new LinkedList<>();
+        List<Linker.LCPoolSpecification> poolSpecs07 = new LinkedList<>();
+        for (Integer lcIndex : relModule._storage.keySet()) {
+            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+            if (lcIndex == 0) {
+                poolSpecs05.add(poolSpec);
+            } else if (lcIndex == 1) {
+                poolSpecs04.add(poolSpec);
+            } else if ((lcIndex & 01) == 01) {
+                poolSpecs06.add(poolSpec);
+            } else {
+                poolSpecs07.add(poolSpec);
+            }
+        }
+
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("I1")
+                                     .setBankDescriptorIndex(000004)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(01000)
+                                     .setPoolSpecifications(poolSpecs04.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(12)
+                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                     .build());
+
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("D1")
+                                     .setBankDescriptorIndex(000005)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(040000)
+                                     .setPoolSpecifications(poolSpecs05.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(13)
+                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                     .build());
+
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("I2")
+                                     .setBankDescriptorIndex(000006)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(020000)
+                                     .setPoolSpecifications(poolSpecs06.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(14)
+                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                     .build());
+
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("D2")
+                                     .setBankDescriptorIndex(000007)
+                                     .setBankLevel(0)
+                                     .setStartingAddress(060000)
+                                     .setPoolSpecifications(poolSpecs07.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setInitialBaseRegister(15)
+                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                     .build());
+
+        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
+        return linker.link("TEST", display);
+    }
+
+    /**
+     * Assembles multiple codesets into as a sequence of relocatable modules.
+     *
+     * @param code
+     * @param display
+     * @return
+     */
+    protected static AbsoluteModule buildCodeBasic(
+        final String[][] code,
+        final boolean display
     ) {
         List<RelocatableModule> relocatableModules = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
@@ -97,20 +230,6 @@ class Test_InstructionProcessor {
     }
 
     /**
-     * Wrapper around the above, for a single set of code
-     * @param codeSet code to be assembled and linked
-     * @param display true to display assembler/linker output
-     * @return linked absolute module
-     */
-    protected static AbsoluteModule buildCodeBasic(
-            final String[] codeSet,
-            final boolean display
-    ) {
-        String[][] code = { codeSet };
-        return buildCodeBasic(code, display);
-    }
-
-    /**
      * Retrieves the contents of a bank represented by a base register
      * @param ip reference to IP containing the desired BR
      * @param baseRegisterIndex index of the desired BR
@@ -147,10 +266,11 @@ class Test_InstructionProcessor {
         for (LoadableBank loadableBank : module._loadableBanks.values()) {
             storage.load(mspOffset, loadableBank._content);
             AbsoluteAddress absoluteAddress = new AbsoluteAddress(mspUpi, mspOffset);
-            System.out.println(String.format("Loaded Bank %s BDI=%06o Starting Address=%06o at Absolute Address=%012o",
+            System.out.println(String.format("Loaded Bank %s BDI=%06o Starting Address=%06o Length=%06o at Absolute Address=%012o",
                                              loadableBank._bankName,
                                              loadableBank._bankDescriptorIndex,
                                              loadableBank._startingAddress,
+                                             loadableBank._content.getArraySize(),
                                              absoluteAddress._offset));
 
             if (loadableBank._initialBaseRegister != null) {

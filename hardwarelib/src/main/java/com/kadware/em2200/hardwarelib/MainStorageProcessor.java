@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
 
+import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.em2200.baselib.Word36Array;
 import java.io.BufferedWriter;
 import java.io.IOException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.kadware.em2200.baselib.exceptions.*;
-import com.kadware.em2200.baselib.Word36Array;
 
 /**
  * Class which models a Main Storage Processor.
@@ -19,36 +18,22 @@ import com.kadware.em2200.baselib.Word36Array;
  * There must be at least one and there may be more depending upon the size of the host's memory and the number of other
  * Processors in the configuration (there must be at least one IP and one IOP as well).
  * Max size for any single MSP is 2GB, although smaller sizes should work fine.
- * <p>
+ *
  * The rest of the processing complex deals with various types of addresses down to absolute addresses.
  * Such absolute addresses are formatted as 36-bit words, with the top 4 bits containing the UPI of a particular MSP
  * and the bottom 32 bits containing the signed offset from the start of that MSP's memory.
  */
 public class MainStorageProcessor extends Processor {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private static final Logger LOGGER = LogManager.getLogger(MainStorageProcessor.class);
+    private final Word36Array _storage; //  keep this private so we can control what goes into it
 
-    private final Word36Array _storage;
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
+    /**
+     * constructor
+     * @param name node name of the MSP
+     * @param upi UPI for the MSP
+     * @param sizeInWords size of the MSP in words
+     */
     public MainStorageProcessor(
         final String name,
         final short upi,
@@ -56,43 +41,26 @@ public class MainStorageProcessor extends Processor {
     ) {
         super(Processor.ProcessorType.MainStorageProcessor, name, upi);
 
-        if ((sizeInWords <= 0) || (sizeInWords > 0x7fffffff)) {
+        if (sizeInWords <= 0) {
             throw new InvalidArgumentRuntimeException(String.format("Bad size for MSP:%d words", sizeInWords));
         }
 
         _storage = new Word36Array(sizeInWords);
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public Word36Array getStorage(
     ) {
         return _storage;
     }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * MSPs have no ancestors
-     * <p>
-     * @param ancestor
-     * <p>
-     * @return
+     * @param ancestor candidate ancestor
+     * @return always false
      */
     @Override
     public boolean canConnect(
@@ -103,8 +71,7 @@ public class MainStorageProcessor extends Processor {
 
     /**
      * For debugging
-     * <p>
-     * @param writer
+     * @param writer destination for output
      */
     @Override
     public void dump(
@@ -119,14 +86,13 @@ public class MainStorageProcessor extends Processor {
     }
 
     /**
-     * Invoked when configuration is presented
+     * Invoked when configuration is presented - does nothing
      */
     @Override
     public void initialize() {}
 
     /**
      * Invoked when this object is the source of an IO which has been cancelled or completed
-     * <p>
      * @param source the Node which is signalling us
      */
     @Override
@@ -137,13 +103,8 @@ public class MainStorageProcessor extends Processor {
     }
 
     /**
-     * Invoked just before tearing down the configuration.
+     * Invoked just before tearing down the configuration - does nothing
      */
     @Override
     public void terminate() {}
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

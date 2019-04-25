@@ -159,70 +159,74 @@ public class Linker {
                      rwx < lcp._storage.length;
                      ++rwx, ++wax) {
                     RelocatableWord36 rw36 = lcp._storage[rwx];
-                    long discreteValue = rw36.getW();
 
-                    //  If there are any undefined references in the source word from the relocatable module,
-                    //  iterate over them.  For each undefined reference, lookup the value for the reference,
-                    //  slice out the particular field of the discrete value, add the reference value thereto,
-                    //  check for truncation, and splice the resulting value back into the discrete value.
-                    if (rw36._undefinedReferences.length > 0) {
-                        for (RelocatableWord36.UndefinedReference ur : rw36._undefinedReferences) {
-                            FieldDescriptor fd = ur._fieldDescriptor;
-                            if (_dictionary.containsKey(ur._reference)) {
-                                long mask = (1 << fd._fieldSize) - 1;
-                                long msbMask = 1 << (fd._fieldSize - 1);
-                                long notMask = mask ^ 0_777777_777777L;
-                                int shift = 36 - (fd._fieldSize + fd._startingBit);
+                    //  Check for null - this happens due to $RES in the assembler
+                    if (rw36 != null) {
+                        long discreteValue = rw36.getW();
 
-                                //  A special note - we recognize that the source word is in ones-complement.
-                                //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
-                                //  as we don't know whether the field we slice out is signed or unsigned.
-                                //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
-                                //  negative, convert to twos-complement, add or subtract the reference, then convert it
-                                //  back to ones-complement.  This works regardless, via magic.
-                                long tempValue = (discreteValue & mask) >> shift;
-                                if ((tempValue & msbMask) != 0) {
-                                    //  original field value is negative...  sign-extend it.
-                                    tempValue |= notMask;
-                                }
+                        //  If there are any undefined references in the source word from the relocatable module,
+                        //  iterate over them.  For each undefined reference, lookup the value for the reference,
+                        //  slice out the particular field of the discrete value, add the reference value thereto,
+                        //  check for truncation, and splice the resulting value back into the discrete value.
+                        if (rw36._undefinedReferences.length > 0) {
+                            for (RelocatableWord36.UndefinedReference ur : rw36._undefinedReferences) {
+                                FieldDescriptor fd = ur._fieldDescriptor;
+                                if (_dictionary.containsKey(ur._reference)) {
+                                    long mask = (1 << fd._fieldSize) - 1;
+                                    long msbMask = 1 << (fd._fieldSize - 1);
+                                    long notMask = mask ^ 0_777777_777777L;
+                                    int shift = 36 - (fd._fieldSize + fd._startingBit);
 
-                                OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
-                                OnesComplement.getOnesComplement36(tempValue, ocr);
-                                ocr._result += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
-                                tempValue = OnesComplement.getNative36(ocr._result);
+                                    //  A special note - we recognize that the source word is in ones-complement.
+                                    //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
+                                    //  as we don't know whether the field we slice out is signed or unsigned.
+                                    //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
+                                    //  negative, convert to twos-complement, add or subtract the reference, then convert it
+                                    //  back to ones-complement.  This works regardless, via magic.
+                                    long tempValue = (discreteValue & mask) >> shift;
+                                    if ((tempValue & msbMask) != 0) {
+                                        //  original field value is negative...  sign-extend it.
+                                        tempValue |= notMask;
+                                    }
 
-                                //  Check for field overflow...
-                                boolean trunc = false;
-                                if (OnesComplement.isPositive36(tempValue)) {
-                                    trunc = (tempValue & notMask) != 0;
+                                    OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
+                                    OnesComplement.getOnesComplement36(tempValue, ocr);
+                                    ocr._result += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
+                                    tempValue = OnesComplement.getNative36(ocr._result);
+
+                                    //  Check for field overflow...
+                                    boolean trunc = false;
+                                    if (OnesComplement.isPositive36(tempValue)) {
+                                        trunc = (tempValue & notMask) != 0;
+                                    } else {
+                                        trunc = (tempValue | mask) != 0_777777_777777L;
+                                    }
+                                    if (trunc) {
+                                        raise(String.format("Truncation resolving %s LC(%d) offset %d reference %s, field %s",
+                                                            lcps._module,
+                                                            lcps._lcIndex,
+                                                            rwx,
+                                                            ur._reference,
+                                                            fd.toString()));
+                                    }
+
+                                    //  splice it back into the discrete value
+                                    tempValue = tempValue & mask;
+                                    long shiftedNotMask = (mask << shift) ^ 0_777777_777777L;
+                                    discreteValue = (discreteValue & shiftedNotMask) | (tempValue << shift);
                                 } else {
-                                    trunc = (tempValue | mask) != 0_777777_777777L;
-                                }
-                                if (trunc) {
-                                    raise(String.format("Truncation resolving %s LC(%d) offset %d reference %s, field %s",
+                                    raise(String.format("Value in %s LC(%d) offset %d - undefined reference %s in field %s",
                                                         lcps._module,
                                                         lcps._lcIndex,
                                                         rwx,
                                                         ur._reference,
                                                         fd.toString()));
                                 }
-
-                                //  splice it back into the discrete value
-                                tempValue = tempValue & mask;
-                                long shiftedNotMask = (mask << shift) ^ 0_777777_777777L;
-                                discreteValue = (discreteValue & shiftedNotMask) | (tempValue << shift);
-                            } else {
-                                raise(String.format("Value in %s LC(%d) offset %d - undefined reference %s in field %s",
-                                                    lcps._module,
-                                                    lcps._lcIndex,
-                                                    rwx,
-                                                    ur._reference,
-                                                    fd.toString()));
                             }
                         }
-                    }
 
-                    wArray.setValue(wax, discreteValue);
+                        wArray.setValue(wax, discreteValue);
+                    }
                 }
             }
 
@@ -261,8 +265,8 @@ public class Linker {
                 if (_dictionary.containsKey(label)) {
                     raise("Duplicate label:" + label);
                 } else {
-                    long value = entry.getValue().getValue();
-                    for (IntegerValue.UndefinedReference ur : entry.getValue().getUndefinedReferences()) {
+                    long value = entry.getValue()._value;
+                    for (IntegerValue.UndefinedReference ur : entry.getValue()._undefinedReferences) {
                         if (_dictionary.containsKey(ur._reference)) {
                             value += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
                         } else {

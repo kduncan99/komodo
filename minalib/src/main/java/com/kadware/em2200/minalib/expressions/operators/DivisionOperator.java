@@ -55,27 +55,27 @@ public class DivisionOperator extends ArithmeticOperator {
 
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
-                if (leftValue.getUndefinedReferences().length != 0) {
+                if (leftValue._undefinedReferences.length != 0) {
                     diagnostics.append( new RelocationDiagnostic( getLocale() ) );
                 }
 
                 IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
-                if (rightValue.getUndefinedReferences().length != 0) {
+                if (rightValue._undefinedReferences.length != 0) {
                     diagnostics.append( new RelocationDiagnostic( getLocale() ) );
                 }
 
-                if (rightValue.getValue() == 0) {
+                if (rightValue._value == 0) {
                     diagnostics.append(new TruncationDiagnostic(getLocale(), "Division by zero"));
                     throw new ExpressionException();
                 }
 
-                long result = leftValue.getValue() / rightValue.getValue();
+                long result = leftValue._value / rightValue._value;
                 opResult = new IntegerValue( false, result, null );
             } else {
                 //  must be floating point
                 FloatingPointValue leftValue = (FloatingPointValue)operands[0];
                 FloatingPointValue rightValue = (FloatingPointValue)operands[1];
-                double result = leftValue.getValue() / rightValue.getValue();
+                double result = leftValue._value / rightValue._value;
                 opResult = new FloatingPointValue( false, result );
             }
 

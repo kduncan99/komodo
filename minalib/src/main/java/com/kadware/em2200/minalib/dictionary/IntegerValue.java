@@ -40,8 +40,8 @@ public class IntegerValue extends Value {
         }
     }
 
-    private final UndefinedReference[] _undefinedReferences;    //  will never be null, but is often empty
-    private final long _value;
+    public final UndefinedReference[] _undefinedReferences;     //  will never be null, but is often empty
+    public final long _value;
 
     /**
      * constructor
@@ -80,7 +80,7 @@ public class IntegerValue extends Value {
         if (obj instanceof IntegerValue) {
             IntegerValue iobj = (IntegerValue)obj;
 
-            if ((iobj.getFlagged() == getFlagged())
+            if ((iobj._flagged == _flagged)
                 && (iobj._undefinedReferences.length == 0)
                 && (_undefinedReferences.length == 0)) {
                 return Long.compare( _value, iobj._value );
@@ -116,7 +116,7 @@ public class IntegerValue extends Value {
         }
 
         IntegerValue iobj = (IntegerValue)obj;
-        if (iobj.getFlagged() != getFlagged()) {
+        if (iobj._flagged != _flagged) {
             return false;
         }
 
@@ -139,24 +139,6 @@ public class IntegerValue extends Value {
     }
 
     /**
-     * Getter
-     * @return value
-     */
-    public UndefinedReference[] getUndefinedReferences(
-    ) {
-        return _undefinedReferences;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public long getValue(
-    ) {
-        return _value;
-    }
-
-    /**
      * Transform the value to a FloatingPointValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param diagnostics where we post any necessary diagnostics
@@ -171,7 +153,7 @@ public class IntegerValue extends Value {
             diagnostics.append(new RelocationDiagnostic(locale));
         }
 
-        return new FloatingPointValue(getFlagged(), _value);
+        return new FloatingPointValue(_flagged, _value);
     }
 
     /**
@@ -217,7 +199,7 @@ public class IntegerValue extends Value {
             str = Word36.toFieldata(_value);
         }
 
-        return new StringValue(getFlagged(), str, characterMode);
+        return new StringValue(_flagged, str, characterMode);
     }
 
     /**
@@ -228,7 +210,7 @@ public class IntegerValue extends Value {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append( String.format( "%s%012o",
-                                  getFlagged() ? "*" : "",
+                                  _flagged ? "*" : "",
                                   _value ) );
         for ( UndefinedReference ur : _undefinedReferences ) {
             sb.append( ur._isNegative ? "-" : "+" );

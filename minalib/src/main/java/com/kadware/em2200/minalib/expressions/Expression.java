@@ -20,14 +20,14 @@ import java.util.Stack;
 public class Expression {
 
     public Context _context;
-    public final List<ExpressionItem> _items = new LinkedList<>();
+    public final List<IExpressionItem> _items = new LinkedList<>();
 
     /**
      * constructor
      * @param items list of ExpressionItems which comprise this expression
      */
     public Expression(
-        final List<ExpressionItem> items
+        final List<IExpressionItem> items
     ) {
         _items.addAll(items);
     }
@@ -48,7 +48,7 @@ public class Expression {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
-        for ( ExpressionItem item : _items ) {
+        for ( IExpressionItem item : _items ) {
             //  Take items off the item list...
             //  Operand items get resolved into values which are place on the value stack.
             //  Operator items get placed on the operator stack *after* all other operators

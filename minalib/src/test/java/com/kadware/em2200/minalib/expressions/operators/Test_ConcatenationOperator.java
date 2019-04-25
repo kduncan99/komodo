@@ -36,9 +36,9 @@ public class Test_ConcatenationOperator {
         assertEquals(ValueType.String, valueStack.peek().getType());
 
         StringValue vResult = (StringValue)valueStack.pop();
-        assertFalse(vResult.getFlagged());
-        assertEquals("ABCDEF", vResult.getValue());
-        assertEquals(CharacterMode.ASCII, vResult.getCharacterMode());
+        assertFalse(vResult._flagged);
+        assertEquals("ABCDEF", vResult._value);
+        assertEquals(CharacterMode.ASCII, vResult._characterMode);
     }
 
     @Test
@@ -60,9 +60,9 @@ public class Test_ConcatenationOperator {
         assertEquals(ValueType.String, valueStack.peek().getType());
 
         StringValue vResult = (StringValue)valueStack.pop();
-        assertFalse(vResult.getFlagged());
-        assertEquals("ABCDEF", vResult.getValue());
-        assertEquals(CharacterMode.Fieldata, vResult.getCharacterMode());
+        assertFalse(vResult._flagged);
+        assertEquals("ABCDEF", vResult._value);
+        assertEquals(CharacterMode.Fieldata, vResult._characterMode);
     }
 
     @Test
@@ -83,9 +83,9 @@ public class Test_ConcatenationOperator {
         assertEquals(ValueType.String, valueStack.peek().getType());
 
         StringValue vResult = (StringValue)valueStack.pop();
-        assertFalse(vResult.getFlagged());
-        assertEquals("ABCDEF", vResult.getValue());
-        assertEquals(CharacterMode.ASCII, vResult.getCharacterMode());
+        assertFalse(vResult._flagged);
+        assertEquals("ABCDEF", vResult._value);
+        assertEquals(CharacterMode.ASCII, vResult._characterMode);
     }
 
     @Test
@@ -106,9 +106,9 @@ public class Test_ConcatenationOperator {
         assertEquals(ValueType.String, valueStack.peek().getType());
 
         StringValue vResult = (StringValue)valueStack.pop();
-        assertFalse(vResult.getFlagged());
-        assertEquals("ABCDEFGH", vResult.getValue());
-        assertEquals(CharacterMode.ASCII, vResult.getCharacterMode());
+        assertFalse(vResult._flagged);
+        assertEquals("ABCDEFGH", vResult._value);
+        assertEquals(CharacterMode.ASCII, vResult._characterMode);
     }
 
     @Test

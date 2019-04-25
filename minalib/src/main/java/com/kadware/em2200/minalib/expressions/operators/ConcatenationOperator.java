@@ -63,10 +63,10 @@ public class ConcatenationOperator extends Operator {
         try {
             StringValue leftValue = operands[0].toStringValue(getLocale(), context._characterMode, diagnostics);
             StringValue rightValue = operands[1].toStringValue(getLocale(), context._characterMode, diagnostics);
-            String newValue = leftValue.getValue() + rightValue.getValue();
+            String newValue = leftValue._value + rightValue._value;
 
-            boolean ascii = (leftValue.getCharacterMode() == CharacterMode.ASCII)
-                                || (rightValue.getCharacterMode() == CharacterMode.ASCII);
+            boolean ascii = (leftValue._characterMode == CharacterMode.ASCII)
+                                || (rightValue._characterMode == CharacterMode.ASCII);
             CharacterMode charMode = ascii ? CharacterMode.ASCII : CharacterMode.Fieldata;
 
             valueStack.push( new StringValue(false, newValue, charMode) );

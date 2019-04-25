@@ -25,7 +25,7 @@ public class Test_SLFunction {
     ) throws ExpressionException,
              NotFoundException {
 
-        List<ExpressionItem> items = new LinkedList<>();
+        List<IExpressionItem> items = new LinkedList<>();
         StringValue sv = new StringValue(false, "Hello Stupid", CharacterMode.ASCII);
         items.add(new ValueItem(new Locale( 1, 1), sv));
 

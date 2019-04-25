@@ -13,7 +13,7 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public abstract class Value {
 
-    private final boolean _flagged;
+    public final boolean _flagged;
 
     /**
      * Normal constructor
@@ -59,15 +59,6 @@ public abstract class Value {
     public abstract boolean equals(
         final Object obj
     );
-
-    /**
-     * Getter
-     * @return value of Flagged attribute
-     */
-    public boolean getFlagged(
-    ) {
-        return _flagged;
-    }
 
     /**
      * Getter

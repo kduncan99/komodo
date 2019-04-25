@@ -194,6 +194,6 @@ public class NodeValue extends Value {
     @Override
     public String toString(
     ) {
-        return String.format("%s<node>", getFlagged() ? "*" : "");
+        return String.format("%s<node>", _flagged ? "*" : "");
     }
 }

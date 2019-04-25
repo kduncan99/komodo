@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
 
 import com.kadware.em2200.baselib.exceptions.*;
+import org.apache.logging.log4j.*;
 
 /**
  * Manages a semi-opaque array of 36=bit values.
@@ -15,11 +16,10 @@ import com.kadware.em2200.baselib.exceptions.*;
  */
 public class Word36Array {
 
-    protected final long[] _array;
+    final long[] _array;
 
     /**
      * Standard constructor
-     * <p>
      * @param size requesed size of the array
      */
     public Word36Array(
@@ -30,7 +30,6 @@ public class Word36Array {
 
     /**
      * Constructor which uses a pre-existing array of long's
-     * <p>
      * @param array reference to base array
      */
     public Word36Array(
@@ -44,16 +43,14 @@ public class Word36Array {
 
     /**
      * tests for equality of content
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return value
      */
     @Override
     public boolean equals(
         final Object obj
     ) {
-        if ((obj != null) && (obj instanceof Word36Array)) {
+        if (obj instanceof Word36Array) {
             Word36Array comp = (Word36Array)obj;
             if (getArraySize() == comp.getArraySize()) {
                 for (int ax = 0; ax < getArraySize(); ++ax) {
@@ -74,7 +71,9 @@ public class Word36Array {
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
      * <p>
-     * @return
+     *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
+     * </p>
+     * @return value
      */
     public int getArraySize(
     ) {
@@ -86,9 +85,10 @@ public class Word36Array {
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
      * <p>
-     * @param index
-     * <p>
-     * @return
+     *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
+     * </p>
+     * @param index index of interest
+     * @return value
      */
     public long getValue(
         final int index
@@ -101,9 +101,10 @@ public class Word36Array {
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
      * <p>
-     * @param index
-     * <p>
-     * @return
+     *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
+     * </p>
+     * @param index index of interest
+     * @return value
      */
     public Word36 getWord36(
         final int index
@@ -120,8 +121,10 @@ public class Word36Array {
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
      * <p>
-     * @param index
-     * @param value
+     *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
+     * </p>
+     * @param index index of interest
+     * @param value value
      */
     public void setValue(
         final int index,
@@ -135,8 +138,10 @@ public class Word36Array {
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
      * <p>
-     * @param index
-     * @param value
+     *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
+     * </p>
+     * @param index index of interest
+     * @param value value
      */
     public void setWord36(
         final int index,
@@ -147,7 +152,6 @@ public class Word36Array {
 
     /**
      * Loads values from a subset of a given source Word35Array into some portion of this array
-     * <p>
      * @param destinationOffset where we start populating this object's array
      * @param source source array
      */
@@ -162,15 +166,13 @@ public class Word36Array {
                                                              getArraySize()));
         }
 
-        int dx = destinationOffset;
         for (int sx = 0; sx < source.getArraySize(); ++sx) {
-            _array[dx + sx] = source.getValue(sx);
+            _array[destinationOffset + sx] = source.getValue(sx);
         }
     }
 
     /**
      * Loads values from a subset of a given source array into some portion of this array
-     * <p>
      * @param destinationOffset where we start populating this object's array
      * @param source source array
      * @param sourceOffset offset into the source array from which we start taking values
@@ -178,7 +180,7 @@ public class Word36Array {
      */
     public void load(
         final int destinationOffset,
-        final long source[],
+        final long[] source,
         final int sourceOffset,
         final int sourceLength
     ) {
@@ -189,22 +191,19 @@ public class Word36Array {
                                                              getArraySize()));
         }
 
-        int sx = sourceOffset;
-        int dx = destinationOffset;
         for (int x = 0; x < sourceLength; ++x) {
-            _array[dx + x] = source[sx + x];
+            _array[destinationOffset + x] = source[sourceOffset + x];
         }
     }
 
     /**
      * Loads values from the given source array into some portion of this array
-     * <p>
      * @param destinationOffset where we start populating this object's array
      * @param source source array
      */
     public void load(
         final int destinationOffset,
-        final long source[]
+        final long[] source
     ) {
         load(destinationOffset, source, 0, source.length);
     }
@@ -212,14 +211,13 @@ public class Word36Array {
     /**
      * Logs the contents of a particular buffer of 36-bit values in multi-format mode...
      * That is, four words per line in octal, then fieldata, then ASCII, with offset indicators on the left.
-     * <p>
      * @param logger destination for the output
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      */
     public void logBufferMultiFormat(
-        final org.apache.logging.log4j.Logger logger,
-        final org.apache.logging.log4j.Level logLevel,
+        final Logger logger,
+        final Level logLevel,
         final String caption
     ) {
         if (!caption.isEmpty()) {
@@ -268,14 +266,13 @@ public class Word36Array {
 
     /**
      * Logs the contents of a particular buffer of 36-bit values in octal, seven words per line.
-     * <p>
      * @param logger destination for the output
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      */
     public void logBufferOctal(
-        final org.apache.logging.log4j.Logger logger,
-        final org.apache.logging.log4j.Level logLevel,
+        final Logger logger,
+        final Level logLevel,
         final String caption
     ) {
         if (!caption.isEmpty()) {
@@ -289,11 +286,10 @@ public class Word36Array {
             Word36ArraySlice subset = new Word36ArraySlice(this, bufferIndex, 7);
 
             //  Build octal string
-            StringBuilder octalBuilder = new StringBuilder();
-            octalBuilder.append(subset.toOctal(true));
+            String octalString = subset.toOctal(true);
 
             //  Log the output
-            logger.printf(logLevel, String.format("%06o:%s", rowIndex, octalBuilder.toString()));
+            logger.printf(logLevel, String.format("%06o:%s", rowIndex, octalString));
         }
     }
 
@@ -303,10 +299,8 @@ public class Word36Array {
     /**
      * Creates a string containing the representation of this buffer in consecutive 4-character strings,
      * possibly delimited by spaces.
-     * <p>
      * @param delimitFlag true to delimit between words with a blank character
-     * <p>
-     * @return
+     * @return display string
      */
     public String toASCII(
         final boolean delimitFlag
@@ -326,10 +320,8 @@ public class Word36Array {
     /**
      * Creates a string containing the representation of this buffer in consecutive 6-character strings,
      * possibly delimited by spaces.
-     * <p>
      * @param delimitFlag true to delimit between words with a blank character
-     * <p>
-     * @return
+     * @return display string
      */
     public String toFieldata(
         final boolean delimitFlag
@@ -349,10 +341,8 @@ public class Word36Array {
     /**
      * Creates a string containing the representation of this buffer in consecutive 12-digit octal strings,
      * possibly delimited by spaces.
-     * <p>
      * @param delimitFlag true to delimit between words with a blank character
-     * <p>
-     * @return
+     * @return display string
      */
     public String toOctal(
         final boolean delimitFlag
@@ -375,10 +365,8 @@ public class Word36Array {
     /**
      * Packs this entire array as pairs of 36-bit words into groups of 9 bytes.
      * We highly suggest that this array contains an even number of words, for calling this method.
-     * <p>
      * @param destination array where we place byte output
      * @param destinationOffset index of byte within the destination, where we begin placing packed output
-     * <p>
      * @return number of COMPLETE words packed - will be less than getArraySize() if we hit the end of the destination buffer
      */
     public int pack(
@@ -467,9 +455,7 @@ public class Word36Array {
      * Packs this entire array as pairs of 36-bit words into groups of 9 bytes.
      * We highly suggest that this array contains an even number of words, for calling this method.
      * Convenience wrapper for the above method.
-     * <p>
      * @param destination array where we place byte output
-     * <p>
      * @return number of COMPLETE words packed - will be less than getArraySize() if we hit the end of the destination buffer
      */
     public int pack(
@@ -480,11 +466,9 @@ public class Word36Array {
 
     /**
      * unpacks groups of 9-bytes of data into 36-bit word pairs into this array.
-     * <p>
      * @param source array containing byte input
      * @param sourceOffset index of first byte to be converted
      * @param sourceCount number of bytes to be converted (should be divisible by 9)
-     * <p>
      * @return number of bytes unpacked - will be less than sourceCount if we run out of space in this object
      */
     public int unpack(
@@ -510,35 +494,35 @@ public class Word36Array {
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
             switch (partial) {
                 case 0:
-                    setValue(dx, (getValue(dx) & 0_001777_777777l) | ((long)source[sx++] << 28));
+                    setValue(dx, (getValue(dx) & 0_001777_777777L) | ((long)source[sx++] << 28));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 1:
-                    setValue(dx, (getValue(dx) & 0_776003_777777l) | ((long)source[sx++] << 20));
+                    setValue(dx, (getValue(dx) & 0_776003_777777L) | ((long)source[sx++] << 20));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 2:
-                    setValue(dx, (getValue(dx) & 0_777774_007777l) | ((long)source[sx++] << 12));
+                    setValue(dx, (getValue(dx) & 0_777774_007777L) | ((long)source[sx++] << 12));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 3:
-                    setValue(dx, (getValue(dx) & 0_777777_770017l) | ((long)source[sx++] << 4));
+                    setValue(dx, (getValue(dx) & 0_777777_770017L) | ((long)source[sx++] << 4));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 4:
-                    setValue(dx, (getValue(dx) & 0_777777_777760l) | ((long)source[sx] >> 4));
+                    setValue(dx, (getValue(dx) & 0_777777_777760L) | ((long)source[sx] >> 4));
                     ++dx;
                     --wordsLeft;
                     if (wordsLeft > 0) {
-                        setValue(dx, (getValue(dx) & 0_037777_777777l) | (((long)source[sx] & 017) << 32));
+                        setValue(dx, (getValue(dx) & 0_037777_777777L) | (((long)source[sx] & 017) << 32));
                         ++count;
                     }
                     ++sx;
@@ -546,25 +530,25 @@ public class Word36Array {
                     break;
 
                 case 5:
-                    setValue(dx, (getValue(dx) & 0_740077_777777l) | ((long)source[sx++] << 24));
+                    setValue(dx, (getValue(dx) & 0_740077_777777L) | ((long)source[sx++] << 24));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 6:
-                    setValue(dx, (getValue(dx) & 0_777700_177777l) | ((long)source[sx++] << 16));
+                    setValue(dx, (getValue(dx) & 0_777700_177777L) | ((long)source[sx++] << 16));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 7:
-                    setValue(dx, (getValue(dx) & 0_777777_600377l) | ((long)source[sx++] << 8));
+                    setValue(dx, (getValue(dx) & 0_777777_600377L) | ((long)source[sx++] << 8));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 8:
-                    setValue(dx, (getValue(dx) & 0_777777_777400l) | (long)source[sx++]);
+                    setValue(dx, (getValue(dx) & 0_777777_777400L) | (long)source[sx++]);
                     ++count;
                     --bytesLeft;
                     ++dx;
@@ -584,9 +568,7 @@ public class Word36Array {
     /**
      * unpacks groups of 9-bytes of data into 36-bit word pairs into this array.
      * Convenience wrapper for the method above.
-     * <p>
      * @param source array containing byte input
-     * <p>
      * @return number of bytes unpacked - will be less than sourceCount if we run out of space in this object
      */
     public int unpack(

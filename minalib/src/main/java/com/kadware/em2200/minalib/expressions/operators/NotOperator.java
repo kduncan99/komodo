@@ -61,11 +61,11 @@ public class NotOperator extends Operator {
         Value operand = getOperands(valueStack)[0];
         if ( operand.getType() == ValueType.Integer ) {
             IntegerValue iop = (IntegerValue) operand;
-            if (iop.getUndefinedReferences().length != 0) {
+            if (iop._undefinedReferences.length != 0) {
                 diagnostics.append( new ValueDiagnostic( getLocale(),
                                                          "Not operator cannot be applied to integer with undefined references" ));
             }
-            long ioperand = iop.getValue();
+            long ioperand = iop._value;
             long iresult = ioperand ^= 0_777777_777777L;
             valueStack.push( new IntegerValue(false, iresult, null ) );
         } else {

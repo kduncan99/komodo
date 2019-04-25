@@ -163,7 +163,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_777777_777776l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
@@ -238,7 +238,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
         assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000002_000006l, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(0_000002_000006L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
     }
 
     @Test
@@ -259,7 +259,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
                 "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -284,46 +284,55 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
 
     @Test
     public void storage_indexed_BasicMode(
-    ) throws MachineInterrupt,
-             MaxNodesException,
+    ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data1 = { 01, 0, 0, 02, 0, 0, 03, 0, 0, 05, 0, 0, 010 };
-        LoadBankInfo data1Info = new LoadBankInfo(data1);
-        data1Info._lowerLimit = 022000;
-
-        long[] data2 = { 0, 0, 0, 0, 0, 0, 0, 0, };
-        LoadBankInfo data2Info = new LoadBankInfo(data2);
-        data2Info._lowerLimit = 050000;
-
-        long[] code = {
-            (new InstructionWord(026, 016, 5, 0, 01)).getW(),           //  LXM,U   X5,1
-            (new InstructionWord(046, 016, 5, 0, 03)).getW(),           //  LXI,U   X5,3
-            (new InstructionWord(026, 016, 7, 0, 00)).getW(),           //  LXM,U   X7,0
-            (new InstructionWord(046, 016, 7, 0, 01)).getW(),           //  LXI,U   X7,1
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 021777)).getW(),   //  LA      A3,021777,*X5
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 050000)).getW(),   //  SA      A3,050000,*X7
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 021777)).getW(),   //  LA      A3,021777,*X5
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 050000)).getW(),   //  SA      A3,050000,*X7
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 021777)).getW(),   //  LA      A3,021777,*X5
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 050000)).getW(),   //  SA      A3,050000,*X7
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 021777)).getW(),   //  LA      A3,021777,*X5
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 050000)).getW(),   //  SA      A3,050000,*X7
-            (new InstructionWord(010, 0, 3, 5, 1, 0, 021777)).getW(),   //  LA      A3,021777,*X5
-            (new InstructionWord(001, 0, 3, 7, 1, 0, 050000)).getW(),   //  SA      A3,050000,*X7
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+        String[] source = {
+                "$(0)",
+                "DATA1     +0",
+                "          +01",
+                "          +0",
+                "          +0",
+                "          +02",
+                "          +0",
+                "          +0",
+                "          +03",
+                "          +0",
+                "          +0",
+                "          +05",
+                "          +0",
+                "          +0",
+                "          +010",
+                "",
+                "$(2)",
+                "DATA2     $res      8",
+                "",
+                "$(1)",
+                "          LXM,U     X5,1",
+                "          LXI,U     X5,3",
+                "          LXM,U     X7,0",
+                "          LXI,U     X7,1",
+                "          LA      A3,DATA1,*X5",
+                "          SA      A3,DATA2,*X7",
+                "          LA      A3,DATA1,*X5",
+                "          SA      A3,DATA2,*X7",
+                "          LA      A3,DATA1,*X5",
+                "          SA      A3,DATA2,*X7",
+                "          LA      A3,DATA1,*X5",
+                "          SA      A3,DATA2,*X7",
+                "          LA      A3,DATA1,*X5",
+                "          SA      A3,DATA2,*X7",
+                "          HALT      0",
         };
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
 
-        LoadBankInfo infos[] = { codeInfo, data1Info, data2Info };
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 12, infos);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -337,7 +346,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        long[] bankData = getBank(ip, 14);
+        long[] bankData = getBank(ip, 15);
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
         assertEquals(03, bankData[2]);

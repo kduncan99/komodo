@@ -22,7 +22,7 @@ public class Test_Expression {
     ) throws ExpressionException,
              NotFoundException {
         Value val = new IntegerValue(false, 42, null);
-        List<ExpressionItem> items = new LinkedList<>();
+        List<IExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(new Locale(1, 1), val));
         Expression exp = new Expression(items);
 
@@ -42,7 +42,7 @@ public class Test_Expression {
         Value addend2 = new IntegerValue(false, 112, null);
         Value expected = new IntegerValue(false, 154, null);
 
-        List<ExpressionItem> items = new LinkedList<>();
+        List<IExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(new Locale(1, 1), addend1));
         items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
         items.add(new ValueItem(new Locale(1, 11), addend2));
@@ -66,7 +66,7 @@ public class Test_Expression {
         Value term3 = new IntegerValue(false, 12, null);
         Value expected = new IntegerValue(false, 89, null);
 
-        List<ExpressionItem> items = new LinkedList<>();
+        List<IExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(new Locale(1, 1), term1));
         items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
         items.add(new ValueItem(new Locale(1, 30), term2));

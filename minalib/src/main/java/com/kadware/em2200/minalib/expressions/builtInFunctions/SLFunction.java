@@ -79,6 +79,6 @@ public class SLFunction extends BuiltInFunction {
         }
 
         StringValue sarg = (StringValue)arguments[0];
-        return new IntegerValue(false, sarg.getValue().length(), null);
+        return new IntegerValue(false, sarg._value.length(), null);
     }
 }

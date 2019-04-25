@@ -54,7 +54,7 @@ class TextLine {
             List<RelocatableWord36.UndefinedReference> relRefs = new LinkedList<>();
             for ( Map.Entry<FieldDescriptor, IntegerValue> entry : _fields.entrySet() ) {
                 //  convert value from twos- to ones-complement, check for 36-bit truncation
-                long fieldValue = entry.getValue().getValue();
+                long fieldValue = entry.getValue()._value;
                 OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
                 OnesComplement.getOnesComplement36( fieldValue, ocr );
                 boolean trunc = ocr._overflow;
@@ -83,7 +83,7 @@ class TextLine {
                 discreteValue |= (maskedValue << shiftCount);
 
                 //  Propagate any remaining external references
-                for (IntegerValue.UndefinedReference intURef : entry.getValue().getUndefinedReferences()) {
+                for (IntegerValue.UndefinedReference intURef : entry.getValue()._undefinedReferences) {
                     RelocatableWord36.UndefinedReference relURef =
                         new RelocatableWord36.UndefinedReference( intURef._reference, fd, intURef._isNegative );
                     relRefs.add( relURef );

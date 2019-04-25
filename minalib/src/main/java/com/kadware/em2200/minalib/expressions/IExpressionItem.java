@@ -7,5 +7,5 @@ package com.kadware.em2200.minalib.expressions;
 /**
  * Base class for an expression item - basically, a component of which expressions are comprised
  */
-public interface ExpressionItem {
+public interface IExpressionItem {
 }

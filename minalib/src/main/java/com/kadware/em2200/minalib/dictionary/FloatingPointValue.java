@@ -13,7 +13,7 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class FloatingPointValue extends Value {
 
-    private final double _value;
+    public final double _value;
 
     /**
      * constructor
@@ -85,15 +85,6 @@ public class FloatingPointValue extends Value {
     }
 
     /**
-     * Getter
-     * @return value
-     */
-    public double getValue(
-    ) {
-        return _value;
-    }
-
-    /**
      * Simply return this object
      * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
@@ -125,7 +116,7 @@ public class FloatingPointValue extends Value {
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        return new IntegerValue(getFlagged(), (long)_value, null);
+        return new IntegerValue(_flagged, (long)_value, null);
     }
 
     /**
@@ -155,6 +146,6 @@ public class FloatingPointValue extends Value {
      */
     @Override
     public String toString() {
-        return String.format("%s%f", getFlagged(), _value);
+        return String.format("%s%f", _flagged, _value);
     }
 }

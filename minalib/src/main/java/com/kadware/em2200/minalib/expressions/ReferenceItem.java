@@ -15,7 +15,7 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class ReferenceItem extends OperandItem {
 
-    private final String _reference;
+    public final String _reference;
 
     /**
      * constructor

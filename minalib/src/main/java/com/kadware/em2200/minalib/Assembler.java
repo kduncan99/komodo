@@ -6,6 +6,7 @@ package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.em2200.minalib.directives.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
@@ -22,34 +23,6 @@ import java.util.TreeMap;
  */
 @SuppressWarnings("Duplicates")
 public class Assembler {
-
-    /**
-     * Represents the components of a label field.
-     * If either _lcIndex or _label is null, the corresponding component was not specified.
-     * If _label is not null, _labelLevel will indicate the number of external signifiers (asterisks)
-     * which follow the label.
-     */
-    private static class LabelFieldComponents {
-        final String _label;
-        final Integer _labelLevel;
-        final Locale _labelLocale;
-        final Integer _lcIndex;
-        final Locale _lcIndexLocale;
-
-        LabelFieldComponents(
-            final Integer lcIndex,
-            final Locale lcIndexLocale,
-            final String label,
-            final Integer labelLevel,
-            final Locale labelLocale
-        ) {
-            _label = label;
-            _labelLevel = labelLevel;
-            _labelLocale = labelLocale;
-            _lcIndex = lcIndex;
-            _lcIndexLocale = lcIndexLocale;
-        }
-    }
 
     //  The Context object contains things which specifically apply to a particular sub-assembly...
     //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
@@ -80,6 +53,12 @@ public class Assembler {
     private static final Form _fjaxuForm = new Form(_fjaxuFields);
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
+
+    //  Directives
+    private static final Map<String, IDirective> _directives = new HashMap<>();
+    static {
+        _directives.put("$RES", new RESDirective());
+    }
 
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
@@ -120,13 +99,15 @@ public class Assembler {
         }
 
         //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
-        //TODO
+        if (processDirective(textLine, lfc, operationField, operandField, textLine._diagnostics)) {
+            return;
+        }
 
         //  Hmm.  Is it an expression (or a list of expressions)?
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
         if (processDataGeneration(textLine, lfc, operationField, textLine._diagnostics)) {
             if (textLine._fields.size() > 2) {
-                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
+                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale,
                                                                  "Extraneous fields ignored"));
             }
             return;
@@ -176,6 +157,20 @@ public class Assembler {
     }
 
     /**
+     * Summary of module
+     * @param module module
+     */
+    private void displayModuleSummary(
+        final RelocatableModule module
+    ) {
+        for (Map.Entry<Integer, LocationCounterPool> entry : module._storage.entrySet()) {
+            System.out.println(String.format("LCPool %d: %d word(s) generated",
+                                             entry.getKey(),
+                                             entry.getValue()._storage.length));
+        }
+    }
+
+    /**
      * Displays output upon the console
      */
     private void displayResults(
@@ -203,30 +198,6 @@ public class Assembler {
         }
 
         displayDictionary(_context._dictionary);
-    }
-
-    /**
-     * Establishes a label value in the current (or a super-ordinate) dictionary
-     * @param locale locale of label (for posting diagnostics)
-     * @param dictionary dictionary in which the label is to be created (the base, if level is > 0)
-     * @param label label
-     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
-     * @param value value to be associated with the level
-     * @param diagnostics where we post diagnostics
-     */
-    private void establishLabel(
-            final Locale locale,
-            final Dictionary dictionary,
-            final String label,
-            final int labelLevel,
-            final Value value,
-            final Diagnostics diagnostics
-    ) {
-        if (dictionary.hasValue(label)) {
-            diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
-        } else {
-            dictionary.addValue(labelLevel, label, value);
-        }
     }
 
     /**
@@ -308,26 +279,6 @@ public class Assembler {
     }
 
     /**
-     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
-     * current generation location counter (e.g., for interpreting '$' or whatever).
-     * @return IntegerValue object as described
-     */
-    private IntegerValue getCurrentLocation(
-    ) {
-        //  Find the current generation lc index.
-        //  If it doesn't exist, it will be created.
-        int lcIndex = _context._currentGenerationLCIndex;
-        if (!_codeCount.containsKey( lcIndex )) {
-            _codeCount.put( lcIndex, 0 );
-        }
-
-        int lcOffset = _codeCount.get( lcIndex );
-        String ref = String.format( "%s_LC$BASE_%d", _moduleName, lcIndex );
-        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
-        return new IntegerValue(false, lcOffset, refs);
-    }
-
-    /**
      * Interprets the label field to the extend possible when the purpose of the label is not known.
      * Calling code will do different things depending upon how the label (if any) is to be established.
      * @param labelField TextField containing the label field (might be null or empty)
@@ -399,7 +350,7 @@ public class Assembler {
      * bit fields (defined by dividing 36 bits by the number of expressions in the list).
      * The way this works, is we evaluate the expression in the first subfield.
      * If it is a string, then we allow no other subfields, and we generate as many words as necessary.
-     * If it is a float, we generate one word, and allow no other subfields //TODO
+     * If it is a float, we generate one word, and allow no other subfields
      * If it is an integer, we then expect any other subfields to also evaluate to integers, and proceed accordingly.
      * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
@@ -413,7 +364,7 @@ public class Assembler {
         final TextField operandField,
         final Diagnostics diagnostics
     ) {
-        if (operandField._subfields.isEmpty()) {
+        if ((operandField == null) || (operandField._subfields.isEmpty())) {
             return false;
         }
 
@@ -440,9 +391,9 @@ public class Assembler {
                            diagnostics);
         }
 
+        //TODO implement fp and string value handling
         if (firstValue instanceof FloatingPointValue) {
             FloatingPointValue fpValue = (FloatingPointValue) firstValue;
-            //TODO
 
             if (operandField._subfields.size() > 1) {
                 Locale loc = operandField._subfields.get(1)._locale;
@@ -450,7 +401,6 @@ public class Assembler {
             }
         } else if (firstValue instanceof StringValue) {
             StringValue sValue = (StringValue) firstValue;
-            //TODO
 
             if (operandField._subfields.size() > 1) {
                 Locale loc = operandField._subfields.get(1)._locale;
@@ -499,6 +449,35 @@ public class Assembler {
     }
 
     /**
+     * Handles directives
+     * @param textLine where this came from
+     * @param labelFieldComponents represents the label field components, if any were specified
+     * @param operationField represents the operation field, if any
+     * @param operandField represents the operand field, if any
+     * @param diagnostics where we post diagnostics if needed
+     * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
+     */
+    private boolean processDirective(
+            final TextLine textLine,
+            final LabelFieldComponents labelFieldComponents,
+            final TextField operationField,
+            final TextField operandField,
+            final Diagnostics diagnostics
+    ) {
+        if ((operationField == null) || (operationField._subfields.isEmpty())) {
+            return false;
+        }
+
+        IDirective directive = _directives.get(operationField._subfields.get(0)._text.toUpperCase());
+        if (directive != null) {
+            directive.process(this, _context, labelFieldComponents, operationField, operandField, diagnostics);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Handles instruction mnemonic lines of code, and blank lines
      * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
@@ -514,7 +493,7 @@ public class Assembler {
         final TextField operandField,
         final Diagnostics diagnostics
     ) {
-        if ( operationField == null ) {
+        if ((operationField == null) || (operationField._subfields.isEmpty())) {
             //  This is a no-op line - but it might have a label.
             //  Do label stuff, then return true indicating that the line has been processed.
             if (labelFieldComponents._label != null) {
@@ -653,13 +632,13 @@ public class Assembler {
                             aValue = (IntegerValue) v;
                             //  Reduce the value appropriately for the a-field
                             if ( iinfo._aSemantics == InstructionWord.ASemantics.A ) {
-                                aValue = new IntegerValue( aValue.getFlagged(),
-                                                           aValue.getValue() - 12,
-                                                           aValue.getUndefinedReferences() );
+                                aValue = new IntegerValue( aValue._flagged,
+                                                           aValue._value - 12,
+                                                           aValue._undefinedReferences );
                             } else if ( iinfo._aSemantics == InstructionWord.ASemantics.R ) {
-                                aValue = new IntegerValue( aValue.getFlagged(),
-                                                           aValue.getValue() - 64,
-                                                           aValue.getUndefinedReferences() );
+                                aValue = new IntegerValue( aValue._flagged,
+                                                           aValue._value - 64,
+                                                           aValue._undefinedReferences );
                             }
                         }
                     } catch ( ExpressionException | NotFoundException ex ) {
@@ -733,8 +712,8 @@ public class Assembler {
                 values[1] = new IntegerValue( false, jField, null );
                 values[2] = aValue;
                 values[3] = xValue;
-                values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
-                values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
+                values[4] = new IntegerValue( false, (xValue._flagged ? 1 : 0), null );
+                values[5] = new IntegerValue( false, (uValue._flagged ? 1 : 0), null );
                 values[6] = uValue;
                 generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex);
             } else {
@@ -752,8 +731,8 @@ public class Assembler {
             values[1] = new IntegerValue( false, jField, null );
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue( false, (xValue.getFlagged() ? 1 : 0), null );
-            values[5] = new IntegerValue( false, (uValue.getFlagged() ? 1 : 0), null );
+            values[4] = new IntegerValue( false, (xValue._flagged ? 1 : 0), null );
+            values[5] = new IntegerValue( false, (uValue._flagged ? 1 : 0), null );
             values[6] = bValue;
             values[7] = uValue;
             generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex);
@@ -776,10 +755,10 @@ public class Assembler {
                 for ( Map.Entry<FieldDescriptor, IntegerValue> entry : gw._fields.entrySet() ) {
                     FieldDescriptor fd = entry.getKey();
                     IntegerValue originalIV = entry.getValue();
-                    if (originalIV.getUndefinedReferences().length > 0) {
-                        long newDiscreteValue = originalIV.getValue();
+                    if (originalIV._undefinedReferences.length > 0) {
+                        long newDiscreteValue = originalIV._value;
                         List<IntegerValue.UndefinedReference> newURefs = new LinkedList<>();
-                        for (IntegerValue.UndefinedReference intURef : originalIV.getUndefinedReferences()) {
+                        for (IntegerValue.UndefinedReference intURef : originalIV._undefinedReferences) {
                             try {
                                 Value lookupValue = dictionary.getValue(intURef._reference);
                                 if ( lookupValue.getType() != ValueType.Integer ) {
@@ -790,8 +769,8 @@ public class Assembler {
                                             "Forward reference does not resolve to an integer"));
                                 } else {
                                     IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                                    newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue.getValue();
-                                    newURefs.addAll(Arrays.asList(lookupIntegerValue.getUndefinedReferences()));
+                                    newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue._value;
+                                    newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
                                 }
                             } catch ( NotFoundException ex ) {
                                 //  reference is still not found - propagate it
@@ -799,7 +778,7 @@ public class Assembler {
                             }
                         }
 
-                        IntegerValue newIV = new IntegerValue( originalIV.getFlagged(),
+                        IntegerValue newIV = new IntegerValue( originalIV._flagged,
                                                                newDiscreteValue,
                                                                newURefs.toArray(new IntegerValue.UndefinedReference[0]) );
                         gw._fields.put( fd, newIV );
@@ -828,6 +807,22 @@ public class Assembler {
         for (int sx = 0; sx < source.length; ++sx) {
             int lineNumber = sx + 1;
             _sourceCode[sx] = new TextLine(lineNumber, source[sx]);
+        }
+    }
+
+    /**
+     * Advances the offset of a particular location counter
+     * @param lcIndex index of the location counter
+     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
+     */
+    public void advanceLocation(
+        final int lcIndex,
+        final int count
+    ) {
+        if (!_codeCount.containsKey(lcIndex)) {
+            _codeCount.put(lcIndex, count);
+        } else {
+            _codeCount.put(lcIndex, _codeCount.get(lcIndex) + count);
         }
     }
 
@@ -874,6 +869,7 @@ public class Assembler {
 
         if (display) {
             displayResults();
+            displayModuleSummary(module);
         }
 
         System.out.println();
@@ -888,6 +884,48 @@ public class Assembler {
         System.out.println("Assembly Ends -------------------------------------------------------");
 
         return module;
+    }
+
+    /**
+     * Establishes a label value in the current (or a super-ordinate) dictionary
+     * @param locale locale of label (for posting diagnostics)
+     * @param dictionary dictionary in which the label is to be created (the base, if level is > 0)
+     * @param label label
+     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
+     * @param value value to be associated with the level
+     * @param diagnostics where we post diagnostics
+     */
+    public static void establishLabel(
+            final Locale locale,
+            final Dictionary dictionary,
+            final String label,
+            final int labelLevel,
+            final Value value,
+            final Diagnostics diagnostics
+    ) {
+        if (dictionary.hasValue(label)) {
+            diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
+        } else {
+            dictionary.addValue(labelLevel, label, value);
+        }
+    }
+
+    /**
+     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
+     * current generation location counter (e.g., for interpreting '$' or whatever).
+     * @return IntegerValue object as described
+     */
+    public IntegerValue getCurrentLocation(
+    ) {
+        int lcIndex = _context._currentGenerationLCIndex;
+        if (!_codeCount.containsKey( lcIndex )) {
+            _codeCount.put( lcIndex, 0 );
+        }
+
+        int lcOffset = _codeCount.get( lcIndex );
+        String ref = String.format( "%s_LC$BASE_%d", _moduleName, lcIndex );
+        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
+        return new IntegerValue(false, lcOffset, refs);
     }
 
     /**

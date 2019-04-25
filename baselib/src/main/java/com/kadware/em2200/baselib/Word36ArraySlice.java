@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
@@ -46,8 +46,7 @@ public class Word36ArraySlice extends Word36Array {
      * In this case, this subset has a view of the entire underlying array.
      * This is for BankDescriptor, which may be constructed with a specific size as a standalone array,
      * or may be constructed as a subset of a larger storage structure.
-     * <p>
-     * @param size
+     * @param size size to be created
      */
     public Word36ArraySlice(
         final int size
@@ -60,7 +59,9 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Retrieves the size of the view of the aray
      * <p>
-     * @return
+     *     DO NOT REMOVE - IT IS AN OVERRIDE
+     * </p>
+     * @return value
      */
     @Override
     public int getArraySize(
@@ -71,9 +72,10 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Retrieves the 36-bit value indicated by the index from this view of the base Array.
      * <p>
-     * @param index
-     * <p>
-     * @return
+     *     DO NOT REMOVE - IT IS AN OVERRIDE
+     * </p>
+     * @param index index of interest
+     * @return value
      */
     @Override
     public long getValue(
@@ -88,9 +90,10 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Retrieves a Word36 object representing a particular value within this view of the base Array
      * <p>
-     * @param index
-     * <p>
-     * @return
+     *     DO NOT REMOVE - IT IS AN OVERRIDE
+     * </p>
+     * @param index index of interest
+     * @return value
      */
     @Override
     public Word36 getWord36(
@@ -105,8 +108,10 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Sets the value of a particular item in this view of the base array
      * <p>
-     * @param index
-     * @param value
+     *     DO NOT REMOVE - IT IS AN OVERRIDE
+     * </p>
+     * @param index index of interest
+     * @param value value
      */
     @Override
     public void setValue(
@@ -122,8 +127,10 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Sets the value of a particular item in this view of the base array
      * <p>
-     * @param index
-     * @param value
+     *     DO NOT REMOVE - IT IS AN OVERRIDE
+     * </p>
+     * @param index index of interest
+     * @param value value
      */
     @Override
     public void setWord36(

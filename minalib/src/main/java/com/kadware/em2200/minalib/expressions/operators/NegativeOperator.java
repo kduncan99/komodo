@@ -62,18 +62,18 @@ public class NegativeOperator extends Operator {
         switch(operand.getType()) {
             case Integer:
                 IntegerValue ioperand = (IntegerValue) operand;
-                IntegerValue.UndefinedReference[] opRefs = ioperand.getUndefinedReferences();
+                IntegerValue.UndefinedReference[] opRefs = ioperand._undefinedReferences;
                 IntegerValue.UndefinedReference[] negRefs = new IntegerValue.UndefinedReference[opRefs.length];
                 for (int urx = 0; urx < opRefs.length; ++urx) {
                     negRefs[urx] = new IntegerValue.UndefinedReference( opRefs[urx]._reference, !opRefs[urx]._isNegative );
                 }
-                IntegerValue iresult = new IntegerValue( ioperand.getFlagged(), -ioperand.getValue(), negRefs );
+                IntegerValue iresult = new IntegerValue( ioperand._flagged, -ioperand._value, negRefs );
                 valueStack.push( iresult );
                 break;
 
             case FloatingPoint:
                 FloatingPointValue fpoperand = (FloatingPointValue) operand;
-                FloatingPointValue fpresult = new FloatingPointValue( fpoperand.getFlagged(), -fpoperand.getValue() );
+                FloatingPointValue fpresult = new FloatingPointValue( fpoperand._flagged, -fpoperand._value );
                 valueStack.push( fpresult );
                 break;
 

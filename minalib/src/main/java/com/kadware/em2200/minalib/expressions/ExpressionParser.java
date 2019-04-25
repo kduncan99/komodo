@@ -147,7 +147,7 @@ public class ExpressionParser {
         Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
-        List<ExpressionItem> expItems = new LinkedList<>();
+        List<IExpressionItem> expItems = new LinkedList<>();
 
         boolean allowInfixOperator = false;
         boolean allowPostfixOperator = false;
@@ -658,7 +658,7 @@ public class ExpressionParser {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Parses the given text, within the given context, into the ExpressionItem list in an Expression object
+     * Parses the given text, within the given context, into the IExpressionItem list in an Expression object
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
      * @return A properly formatted Expression object which can subsequently be evaluated

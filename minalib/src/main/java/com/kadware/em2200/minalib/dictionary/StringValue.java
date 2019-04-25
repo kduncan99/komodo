@@ -15,8 +15,8 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class StringValue extends Value {
 
-    private final CharacterMode _characterMode;
-    private final String _value;
+    public final CharacterMode _characterMode;
+    public final String _value;
 
     /**
      * constructor
@@ -48,7 +48,7 @@ public class StringValue extends Value {
     ) throws TypeException {
         if (obj instanceof StringValue) {
             StringValue sobj = (StringValue) obj;
-            if ( sobj.getFlagged() == getFlagged() ) {
+            if ( sobj._flagged == _flagged ) {
                 return _value.compareTo( ((StringValue) obj)._value );
             }
         }
@@ -75,7 +75,7 @@ public class StringValue extends Value {
     public Value copy(
         final CharacterMode newMode
     ) {
-        return new StringValue(getFlagged(), _value, newMode);
+        return new StringValue(_flagged, _value, newMode);
     }
 
     /**
@@ -89,19 +89,10 @@ public class StringValue extends Value {
     ) {
         if (obj instanceof StringValue) {
             StringValue sobj = (StringValue) obj;
-            return ( sobj.getFlagged() == getFlagged() ) && sobj._value.equals(_value);
+            return ( sobj._flagged == _flagged ) && sobj._value.equals(_value);
         } else {
             return false;
         }
-    }
-
-    /**
-     * Getter
-     * @return character mode attribute
-     */
-    public CharacterMode getCharacterMode(
-    ) {
-        return _characterMode;
     }
 
     /**
@@ -112,15 +103,6 @@ public class StringValue extends Value {
     public ValueType getType(
     ) {
         return ValueType.String;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public String getValue(
-    ) {
-        return _value;
     }
 
     /**
@@ -142,7 +124,7 @@ public class StringValue extends Value {
             result = Word36.stringToWord36Fieldata(_value).getW();
         }
 
-        return new FloatingPointValue( getFlagged(), result );
+        return new FloatingPointValue( _flagged, result );
     }
 
     /**
@@ -164,7 +146,7 @@ public class StringValue extends Value {
             result = Word36.stringToWord36Fieldata(_value).getW();
         }
 
-        return new IntegerValue( getFlagged(), result, null );
+        return new IntegerValue( _flagged, result, null );
     }
 
     /**
@@ -190,7 +172,7 @@ public class StringValue extends Value {
     @Override
     public String toString() {
         return String.format("%s%s",
-                             getFlagged() ? "*" : "",
+                             _flagged ? "*" : "",
                              _value);
     }
 }

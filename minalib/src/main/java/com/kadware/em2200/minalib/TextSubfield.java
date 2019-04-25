@@ -7,10 +7,10 @@ package com.kadware.em2200.minalib;
 /**
  * Represents a (possibly empty) subfield of text, parsed from a line of assembly code.
  */
-class TextSubfield {
+public class TextSubfield {
 
-    final Locale _locale;           //  linenumber/column of this subfield within the source code set
-    final String _text;             //  text of the field, not including the prefixing asterisk (if it exists)
+    public final Locale _locale;        //  linenumber/column of this subfield within the source code set
+    public final String _text;          //  text of the field, not including the prefixing asterisk (if it exists)
 
     /**
      * Constructor

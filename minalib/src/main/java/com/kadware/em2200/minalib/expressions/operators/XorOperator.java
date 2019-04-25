@@ -55,22 +55,22 @@ public class XorOperator extends LogicalOperator {
 
         try {
             IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
-            if (leftValue.getUndefinedReferences().length != 0) {
+            if (leftValue._undefinedReferences.length != 0) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
-            if (leftValue.getFlagged()) {
+            if (leftValue._flagged) {
                 diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
             }
 
             IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
-            if (rightValue.getUndefinedReferences().length != 0) {
+            if (rightValue._undefinedReferences.length != 0) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
-            if (rightValue.getFlagged()) {
+            if (rightValue._flagged) {
                 diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
             }
 
-            long result = leftValue.getValue() ^ rightValue.getValue();
+            long result = leftValue._value ^ rightValue._value;
             valueStack.push(new IntegerValue( false, result, null ) );
         } catch (TypeException ex) {
             throw new ExpressionException();

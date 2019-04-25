@@ -84,20 +84,20 @@ public class SRFunction extends BuiltInFunction {
 
         StringValue sarg = (StringValue)arguments[0];
         IntegerValue iarg = (IntegerValue)arguments[1];
-        if (iarg.getUndefinedReferences().length != 0) {
+        if (iarg._undefinedReferences.length != 0) {
             diagnostics.append(new RelocationDiagnostic(getLocale()));
         }
 
-        if (iarg.getValue() < 0) {
+        if (iarg._value < 0) {
             diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
             throw new ExpressionException();
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int sx = 0; sx < iarg.getValue(); ++sx) {
-            sb.append(sarg.getValue());
+        for (int sx = 0; sx < iarg._value; ++sx) {
+            sb.append(sarg._value);
         }
 
-        return new StringValue(false, sb.toString(), sarg.getCharacterMode());
+        return new StringValue(false, sb.toString(), sarg._characterMode);
     }
 }

@@ -13,7 +13,7 @@ import com.kadware.em2200.minalib.dictionary.Value;
  */
 public class ValueItem extends OperandItem {
 
-    private final Value _value;
+    public final Value _value;
 
     /**
      * Constructor
@@ -26,15 +26,6 @@ public class ValueItem extends OperandItem {
     ) {
         super(locale);
         _value = value;
-    }
-
-    /**
-     * Getter
-     * @return ValueItem object associated with this item
-     */
-    public Value getValue(
-    ) {
-        return _value;
     }
 
     /**

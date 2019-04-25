@@ -141,8 +141,6 @@ public class FormValue extends Value {
      */
     @Override
     public String toString() {
-        return String.format("%s%s",
-                             getFlagged() ? "*" : "",
-                             _form.toString());
+        return String.format("%s%s", _flagged ? "*" : "", _form.toString());
     }
 }

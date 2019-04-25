@@ -56,19 +56,19 @@ public class ShiftOperator extends ArithmeticOperator {
             IntegerValue iopRight = (IntegerValue)operands[1];
 
             //  Undefined references not allowed for the right-hand operand
-            if ( iopRight.getUndefinedReferences().length != 0 ) {
+            if ( iopRight._undefinedReferences.length != 0 ) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
 
-            long result = iopLeft.getValue();
-            long count = iopRight.getValue();
+            long result = iopLeft._value;
+            long count = iopRight._value;
             if (count < 0) {
                 result >>= (-count);
             } else {
                 result <<= count;
             }
 
-            valueStack.push( new IntegerValue( iopLeft.getFlagged(), result, iopLeft.getUndefinedReferences() ) );
+            valueStack.push( new IntegerValue( iopLeft._flagged, result, iopLeft._undefinedReferences ) );
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

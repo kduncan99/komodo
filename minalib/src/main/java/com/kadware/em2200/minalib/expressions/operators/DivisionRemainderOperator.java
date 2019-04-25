@@ -52,22 +52,22 @@ public class DivisionRemainderOperator extends ArithmeticOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, false, diagnostics);
             IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
-            if (leftValue.getUndefinedReferences().length != 0) {
+            if (leftValue._undefinedReferences.length != 0) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
 
             IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
-            if (rightValue.getUndefinedReferences().length != 0) {
+            if (rightValue._undefinedReferences.length != 0) {
                 diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
 
-            if (rightValue.getValue() == 0) {
+            if (rightValue._value == 0) {
                 diagnostics.append(new TruncationDiagnostic(getLocale(), "Division by zero"));
                 throw new ExpressionException();
             }
 
             //  do the math
-            long result = leftValue.getValue() / rightValue.getValue();
+            long result = leftValue._value / rightValue._value;
             valueStack.push( new IntegerValue( false, result, null ) );
         } catch (TypeException ex) {
             throw new ExpressionException();

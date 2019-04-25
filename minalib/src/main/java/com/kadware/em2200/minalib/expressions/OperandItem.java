@@ -13,7 +13,7 @@ import com.kadware.em2200.minalib.exceptions.ExpressionException;
  * Base class for an expression item which represents an operand.
  * This could be a value, a built-in function reference, etc.
  */
-public abstract class OperandItem implements ExpressionItem {
+public abstract class OperandItem implements IExpressionItem {
 
     final Locale _locale;
 

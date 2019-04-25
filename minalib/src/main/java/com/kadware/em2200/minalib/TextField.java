@@ -11,16 +11,16 @@ import java.util.ArrayList;
 /**
  * Represents a (possibly empty) field of text, parsed from a line of assembly code.
  */
-class TextField {
+public class TextField {
 
     //  linenumber and column of this field
-    final Locale _locale;
+    public final Locale _locale;
 
     //  text of this field, with leading/trailing blanks removed
-    final String _text;
+    public final String _text;
 
     //  Subfield objects which comprise this field
-    final ArrayList<TextSubfield> _subfields = new ArrayList<>();
+    public final ArrayList<TextSubfield> _subfields = new ArrayList<>();
 
     /**
      * Constructor

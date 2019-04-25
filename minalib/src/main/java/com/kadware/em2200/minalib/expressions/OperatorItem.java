@@ -9,7 +9,7 @@ import com.kadware.em2200.minalib.expressions.operators.Operator;
 /**
  * Allows us to stack an operator on the expression item stack
  */
-public class OperatorItem implements ExpressionItem {
+public class OperatorItem implements IExpressionItem {
 
     public final Operator _operator;
 
