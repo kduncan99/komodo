@@ -313,16 +313,16 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
                 "          LXI,U     X5,3",
                 "          LXM,U     X7,0",
                 "          LXI,U     X7,1",
-                "          LA      A3,DATA1,*X5",
-                "          SA      A3,DATA2,*X7",
-                "          LA      A3,DATA1,*X5",
-                "          SA      A3,DATA2,*X7",
-                "          LA      A3,DATA1,*X5",
-                "          SA      A3,DATA2,*X7",
-                "          LA      A3,DATA1,*X5",
-                "          SA      A3,DATA2,*X7",
-                "          LA      A3,DATA1,*X5",
-                "          SA      A3,DATA2,*X7",
+                "          LA        A3,DATA1,*X5",
+                "          SA        A3,DATA2,*X7",
+                "          LA        A3,DATA1,*X5",
+                "          SA        A3,DATA2,*X7",
+                "          LA        A3,DATA1,*X5",
+                "          SA        A3,DATA2,*X7",
+                "          LA        A3,DATA1,*X5",
+                "          SA        A3,DATA2,*X7",
+                "          LA        A3,DATA1,*X5",
+                "          SA        A3,DATA2,*X7",
                 "          HALT      0",
         };
 
@@ -914,6 +914,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
                 "          LR,U      ER5,077",
                 "          HALT      0",
         };
+
         AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
 

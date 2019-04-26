@@ -8,8 +8,10 @@
       <change afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/BASICDirective.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/EXTENDDirective.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/directives/RESDirective.java" afterDir="false" />
     </list>
@@ -43,53 +45,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Notes.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" selection-start-line="3" selection-end-line="3" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="218">
-              <caret line="325" column="75" selection-start-line="325" selection-start-column="75" selection-end-line="325" selection-end-column="75" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/SystemDictionary.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="35" selection-start-line="35" selection-end-line="35" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Linker.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3240">
-              <caret line="224" selection-start-line="224" selection-end-line="224" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state relative-caret-position="48">
+              <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
             </state>
           </provider>
         </entry>
@@ -97,21 +57,45 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="722" column="31" lean-forward="true" selection-start-line="722" selection-start-column="31" selection-end-line="722" selection-end-column="31" />
+            <state relative-caret-position="4256">
+              <caret line="279" selection-start-line="279" selection-end-line="279" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#621#652#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/MachineInterrupt.java">
+        <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/RelocatableModule.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="870">
-              <caret line="60" selection-start-line="60" selection-end-line="60" />
+            <state relative-caret-position="320">
+              <caret line="25" selection-start-line="25" selection-end-line="25" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="410">
+              <caret line="934" selection-start-line="917" selection-end-line="934" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="32">
+              <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+              <folding>
+                <element signature="e#0#8898#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -194,7 +178,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/InstructionProcessor.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/OperatorItem.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/Expression.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/expressions/ExpressionParser.java" />
@@ -212,7 +195,6 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/Value.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/StringValue.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/IntegerValue.java" />
-        <option value="$PROJECT_DIR$/Notes.txt" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/com/kadware/em2200/minalib/directives/RESDirective.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/com/kadware/em2200/minalib/directives/IDirective.java" />
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/dictionary/FormValue.java" />
@@ -245,6 +227,8 @@
         <option value="$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor.java" />
         <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java" />
+        <option value="$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java" />
+        <option value="$PROJECT_DIR$/Notes.txt" />
       </list>
     </option>
   </component>
@@ -267,7 +251,63 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
+      <pane id="PackagesPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="baselib" type="616d4139:PackageViewModuleNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="baselib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.baselib" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+              <item name="diagnostics" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+              <item name="dictionary" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+              <item name="expressions" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+              <item name="expressions" type="1f31426a:PackageElementNode" />
+              <item name="builtInFunctions" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
+              <item name="minalib" type="616d4139:PackageViewModuleNode" />
+              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
+              <item name="expressions" type="1f31426a:PackageElementNode" />
+              <item name="operators" type="1f31426a:PackageElementNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -278,6 +318,41 @@
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
               <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="baselib" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
               <item name="hardwarelib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -353,7 +428,27 @@
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="minalib" type="462c0819:PsiDirectoryNode" />
-              <item name="directives" type="462c0819:PsiDirectoryNode" />
+              <item name="diagnostics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="dictionary" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="exceptions" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
@@ -364,6 +459,28 @@
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="minalib" type="462c0819:PsiDirectoryNode" />
               <item name="expressions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+              <item name="builtInFunctions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
+              <item name="em2200-java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="minalib" type="462c0819:PsiDirectoryNode" />
+              <item name="expressions" type="462c0819:PsiDirectoryNode" />
+              <item name="operators" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="em2200-java" type="b2602c69:ProjectViewProjectNode" />
@@ -425,63 +542,7 @@
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="baselib" type="616d4139:PackageViewModuleNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="baselib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.baselib" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-              <item name="diagnostics" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-              <item name="dictionary" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-              <item name="expressions" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-              <item name="expressions" type="1f31426a:PackageElementNode" />
-              <item name="builtInFunctions" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="em2200-java" type="58d84e3e:PackageViewProjectNode" />
-              <item name="minalib" type="616d4139:PackageViewModuleNode" />
-              <item name="com.kadware.em2200.minalib" type="1f31426a:PackageElementNode" />
-              <item name="expressions" type="1f31426a:PackageElementNode" />
-              <item name="operators" type="1f31426a:PackageElementNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -528,7 +589,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Addressing">
+  <component name="RunManager" selected="JUnit.Test_InstructionProcessor_Algorithms">
     <configuration name="Test_InstructionProcessor_Addressing" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
@@ -560,38 +621,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="grs_indexed_ExtendedMode" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Addressing" />
-      <option name="METHOD_NAME" value="storage_indexed_18BitModifier_ExtendedMode" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
@@ -608,13 +637,44 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test_InstructionProcessor_Algorithms" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Algorithms" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_InstructionProcessor_Algorithms.sieve" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.em2200.hardwarelib.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.em2200.hardwarelib.test" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.em2200.hardwarelib.test.Test_InstructionProcessor_Algorithms" />
+      <option name="METHOD_NAME" value="sieve" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.Test_InstructionProcessor_Algorithms" />
+        <item itemvalue="JUnit.Test_InstructionProcessor_Algorithms.sieve" />
         <item itemvalue="JUnit.Test_InstructionProcessor_Addressing" />
         <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" />
         <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" />
-        <item itemvalue="JUnit.Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" />
       </list>
     </recent_temporary>
   </component>
@@ -666,44 +726,44 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test_InstructionProcessor_Addressing_grs_indexed_ExtendedMode - 2019.04.25 at 17h 16m 18s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.grs_indexed_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 20m 54s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 40m 48s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 41m 26s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 43m 33s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_18BitModifier_ExtendedMode - 2019.04.25 at 17h 46m 26s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_18BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_storage_indexed_24BitModifier_ExtendedMode - 2019.04.25 at 17h 49m 02s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.storage_indexed_24BitModifier_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_ExtendedMode - 2019.04.25 at 17h 51m 02s.xml">
-      <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" configurationId="JUnit" />
-    </history-entry>
     <history-entry file="Test_InstructionProcessor_Addressing_execRegisterSelection_ExtendedMode - 2019.04.25 at 17h 51m 30s.xml">
       <configuration name="Test_InstructionProcessor_Addressing.execRegisterSelection_ExtendedMode" configurationId="JUnit" />
     </history-entry>
     <history-entry file="Test_InstructionProcessor_Addressing - 2019.04.25 at 17h 52m 25s.xml">
       <configuration name="Test_InstructionProcessor_Addressing" configurationId="JUnit" />
     </history-entry>
+    <history-entry file="Test_InstructionProcessor_Addressing - 2019.04.25 at 19h 10m 19s.xml">
+      <configuration name="Test_InstructionProcessor_Addressing" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 36m 58s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 39m 56s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 42m 39s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 43m 16s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 44m 28s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms_sieve - 2019.04.25 at 19h 47m 12s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms.sieve" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="Test_InstructionProcessor_Algorithms - 2019.04.25 at 19h 48m 57s.xml">
+      <configuration name="Test_InstructionProcessor_Algorithms" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="226832000" />
+    <option name="totallyTimeSpent" value="229555000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="38" y="-1055" width="1740" height="1047" extended-state="0" />
+    <frame x="88" y="8" width="1728" height="1020" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23144877" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25119904" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -712,15 +772,15 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.1895288" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.23246074" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.28795812" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3018018" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.2725225" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Messages" order="10" weight="0.32460734" />
+      <window_info anchor="bottom" id="Messages" order="10" weight="0.3243243" />
       <window_info anchor="bottom" id="Database Changes" order="11" />
       <window_info anchor="bottom" id="Version Control" order="12" />
       <window_info anchor="bottom" id="Inspection Results" order="13" weight="0.32931727" />
@@ -1057,13 +1117,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/src.zip!/java/lang/Thread.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="300" column="30" selection-start-line="300" selection-start-column="30" selection-end-line="300" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/src.zip!/java/lang/Thread.java" />
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/main/java/com/kadware/em2200/hardwarelib/interrupts/InvalidInstructionInterrupt.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="203">
@@ -1117,13 +1171,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="656">
           <caret line="59" selection-start-line="59" selection-end-line="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Notes.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" selection-start-line="3" selection-end-line="3" />
         </state>
       </provider>
     </entry>
@@ -1182,19 +1229,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/minalib/src/main/java/com/kadware/em2200/minalib/Assembler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="722" column="31" lean-forward="true" selection-start-line="722" selection-start-column="31" selection-end-line="722" selection-end-column="31" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#621#652#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="826" lean-forward="true" selection-start-line="826" selection-end-line="826" />
+        <state relative-caret-position="4256">
+          <caret line="279" selection-start-line="279" selection-end-line="279" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -1211,10 +1247,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Addressing.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="410">
+          <caret line="934" selection-start-line="917" selection-end-line="934" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/hardwarelib/src/test/java/com/kadware/em2200/hardwarelib/test/Test_InstructionProcessor_Algorithms.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
+        <state relative-caret-position="32">
+          <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+          <folding>
+            <element signature="e#0#8898#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Notes.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
         </state>
       </provider>
     </entry>

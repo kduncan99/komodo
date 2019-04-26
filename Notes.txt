@@ -1,18 +1,42 @@
-Convert IP unit tests from octal to assembler and mina them
+Convert IP unit tests from octal to assembler and mina them (in progress)
 
-Lose unnecessary accessors
+Lose unnecessary accessors (in progress)
 
-minalib $BASIC and $EXTENDED
-minalib data generation
-minalib Think about how we do $LIT in expressions - using extraneous grouping symbols is a pain
-
-All Device objects: add Builder class, make constructors private
-
-Device.IoInfo objects: add Builder class, make constructors private
+minalib special mnemonics need attention (JGD, BT, etc)
+minalib data generation - strings and floats
+minalib float values - firm this up
+minalib Think about how we do $LIT / expressions - using extraneous grouping symbols is a pain
+minalib procs and functions
+minalib functions
+  $ILCN
+  $L0
+  $L1
+  $LCB
+  $LCFV
+  $LCN
+  $SSS
+  $LCV
+  $(n)
+minalib directives
+  $BASE
+  $IF / $ELSE / $ELSF / $ENDF
+  $DO / $ENDD
+  $REPEAT / $ENDR
+  $END
+  $FORM
+  $GEN
+  $GFORM
+  $INCLUDE
+  $INFO (?)
+  $LIT
 
 Finish adding instructions to IP
 
 Recode disk (and maybe tape) devices using async IO
+
+All Device objects: add Builder class, make constructors private
+
+Device.IoInfo objects: add Builder class, make constructors private
 
 Figure out how to do channel programs - more specifically, do we need a cleaner IO path?
 
@@ -21,4 +45,3 @@ minalib - finish up various functions and directives
 Mina - wrapper around minalib
 
 Exec - using Mina
-
