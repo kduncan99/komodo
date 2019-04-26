@@ -15,6 +15,7 @@ public class Context {
     public CodeMode _codeMode = CodeMode.Extended;
     public int _currentGenerationLCIndex = 1;
     public int _currentLitLCIndex = 0;
+    public Integer _defaultBaseRegister = null;
     public final Dictionary _dictionary;
 
     /**

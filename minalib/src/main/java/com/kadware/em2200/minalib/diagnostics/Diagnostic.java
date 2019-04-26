@@ -23,14 +23,13 @@ public abstract class Diagnostic {
         Value,
     }
 
-    private final Locale _locale;
-    private final String _message;
+    public final Locale _locale;
+    public final String _message;
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param message
+     * @param locale locale associated with this diagnostic
+     * @param message message associated with this diagnostic
      */
     public Diagnostic(
         final Locale locale,
@@ -42,31 +41,19 @@ public abstract class Diagnostic {
 
     /**
      * Get the level associated with this instance
-     * <p>
-     * @return
+     * @return value
      */
     public abstract Level getLevel(
     );
 
     /**
      * Private getter, retrieve severity level as a displayable character
-     * <p>
-     * @return
+     * @return value
      */
     public final char getLevelIndicator(
     ) {
         return getLevelIndicator(getLevel());
     };
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public final Locale getLocale(
-    ) {
-        return _locale;
-    }
 
     /**
      * Construct and return a message to be displayed, describing this diagnostic

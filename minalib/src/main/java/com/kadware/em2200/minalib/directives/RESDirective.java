@@ -46,27 +46,35 @@ public class RESDirective implements IDirective {
         if ((operandField == null) || (operandField._subfields.isEmpty())) {
             Locale loc = operatorField._locale;
             diagnostics.append(new ErrorDiagnostic(loc, "No word count specified for $RES directive"));
-        } else {
-            TextSubfield expSubField = operandField._subfields.get(0);
-            String expText = expSubField._text;
-            Locale expLocale = expSubField._locale;
-            try {
-                ExpressionParser p = new ExpressionParser(expText, expLocale);
-                Expression e = p.parse(context, diagnostics);
-                Value v = e.evaluate(context, diagnostics);
-                if ((v instanceof IntegerValue) && (((IntegerValue) v)._undefinedReferences.length == 0)) {
-                    assembler.advanceLocation(context._currentGenerationLCIndex, (int)((IntegerValue) v)._value);
-                } else {
-                    diagnostics.append(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
-                }
-            } catch (ExpressionException | NotFoundException ex) {
+            return;
+        }
+
+        TextSubfield expSubField = operandField._subfields.get(0);
+        String expText = expSubField._text;
+        Locale expLocale = expSubField._locale;
+        try {
+            ExpressionParser p = new ExpressionParser(expText, expLocale);
+            Expression e = p.parse(context, diagnostics);
+            if (e == null) {
                 diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+                return;
             }
 
-            if (operandField._subfields.size() > 1) {
-                Locale loc = operandField._subfields.get(1)._locale;
-                diagnostics.append(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
+            Value v = e.evaluate(context, diagnostics);
+            if (!(v instanceof IntegerValue) || (((IntegerValue) v)._undefinedReferences.length != 0)) {
+                diagnostics.append(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
+                return;
             }
+
+            assembler.advanceLocation(context._currentGenerationLCIndex, (int)((IntegerValue) v)._value);
+        } catch (ExpressionException ex) {
+            diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+            return;
+        }
+
+        if (operandField._subfields.size() > 1) {
+            Locale loc = operandField._subfields.get(1)._locale;
+            diagnostics.append(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
         }
     }
 }

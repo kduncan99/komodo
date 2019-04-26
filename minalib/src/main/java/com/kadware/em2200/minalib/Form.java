@@ -11,13 +11,8 @@ import java.util.Arrays;
  */
 public class Form {
 
-    private final int[] _fieldSizes;
-    private final int _leftSlop;
-    private static final int[] _emptyFormInts = { 0 };
-    private static final int[] _fullFormInts = { 72 };
-
-    public static final Form EMPTY_FORM = new Form(_emptyFormInts);
-    public static final Form FULL_FORM = new Form(_fullFormInts);
+    public final int[] _fieldSizes;
+    public final int _leftSlop;
 
     /**
      * Constructor
@@ -31,7 +26,12 @@ public class Form {
         for (int fs : fieldSizes) {
             total += fs;
         }
-        _leftSlop = 72 - total;
+
+        if (total > 36) {
+            throw new RuntimeException("Bad form instantiation - too many bits");
+        }
+
+        _leftSlop = 36 - total;
     }
 
     /**
@@ -49,33 +49,6 @@ public class Form {
         }
 
         return false;
-    }
-
-    /**
-     * Getter
-     * @return number of field definitions
-     */
-    public int getFieldCount(
-    ) {
-        return _fieldSizes.length;
-    }
-
-    /**
-     * Getter
-     * @return array of bit field sizes
-     */
-    public int[] getFieldSizes(
-    ) {
-        return _fieldSizes;
-    }
-
-    /**
-     * Getter
-     * @return slop - i.e., bits not accounted for
-     */
-    public int getLeftSlop(
-    ) {
-        return _leftSlop;
     }
 
     /**

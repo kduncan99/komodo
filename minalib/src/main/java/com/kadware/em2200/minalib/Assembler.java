@@ -216,12 +216,12 @@ public class Assembler {
         final IntegerValue[] values,
         final int lcIndex
     ) {
-        if (values.length != form.getFieldCount()) {
+        if (values.length != form._fieldSizes.length) {
             throw new RuntimeException("Number of bit-fields in the form differ from number of values");
         }
 
-        int startingBit = 0;
-        int[] fieldSizes = form.getFieldSizes();
+        int startingBit = form._leftSlop;
+        int[] fieldSizes = form._fieldSizes;
         Map<FieldDescriptor, IntegerValue> fields = new HashMap<>();
         for (int fx = 0; fx < values.length; ++fx) {
             FieldDescriptor fd = new FieldDescriptor( startingBit, fieldSizes[fx] );
@@ -278,6 +278,15 @@ public class Assembler {
         }
 
         return new RelocatableModule( moduleName, pools, externalLabels );
+    }
+
+    /**
+     * Getter for unit tests
+     * @return array of TextLine objects comprising the source code
+     */
+    TextLine[] getParsedCode(
+    ) {
+        return _sourceCode;
     }
 
     /**
@@ -377,11 +386,12 @@ public class Assembler {
         try {
             ExpressionParser p1 = new ExpressionParser(sf0Text, sf0Locale);
             Expression e1 = p1.parse(_context, diagnostics);
+            if (e1 == null) {
+                return false;
+            }
             firstValue = e1.evaluate(_context, diagnostics);
         } catch (ExpressionException eex) {
             diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
-        } catch (NotFoundException nfex) {
-            return false;
         }
 
         if (labelFieldComponents._label != null) {
@@ -394,59 +404,73 @@ public class Assembler {
         }
 
         //TODO implement fp and string value handling
+
         if (firstValue instanceof FloatingPointValue) {
             FloatingPointValue fpValue = (FloatingPointValue) firstValue;
-
+            //TODO here
             if (operandField._subfields.size() > 1) {
                 Locale loc = operandField._subfields.get(1)._locale;
                 diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
             }
-        } else if (firstValue instanceof StringValue) {
-            StringValue sValue = (StringValue) firstValue;
 
-            if (operandField._subfields.size() > 1) {
-                Locale loc = operandField._subfields.get(1)._locale;
-                diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
-            }
-        } else if (firstValue instanceof IntegerValue) {
-            //  Ensure the number of values divides evenly.
-            int valueCount = (operandField._subfields.size());
-            if ((36 % valueCount) != 0) {
-                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
-            } else {
-                IntegerValue[] values = new IntegerValue[valueCount];
-                values[0] = (IntegerValue) firstValue;
-                for (int vx = 1; vx < valueCount; ++vx) {
-                    TextSubfield sfNext = operandField._subfields.get(vx);
-                    String sfNextText = sfNext._text;
-                    Locale sfNextLocale = sfNext._locale;
-                    try {
-                        ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
-                        Expression eNext = pNext.parse(_context, diagnostics);
-                        Value vNext = eNext.evaluate(_context, diagnostics);
-                        if (vNext instanceof IntegerValue) {
-                            values[vx] = (IntegerValue) vNext;
-                        } else {
-                            diagnostics.append(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
-                            values[vx] = _zeroValue;
-                        }
-                    } catch (ExpressionException | NotFoundException ex) {
-                        diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
-                    }
-                }
-
-                int[] fieldSizes = new int[valueCount];
-                int fieldSize = 36 / valueCount;
-                for (int fx = 0; fx < values.length; ++fx) {
-                    fieldSizes[fx] = fieldSize;
-                }
-
-                generate(textLine, new Form(fieldSizes), values, _context._currentGenerationLCIndex);
-            }
-        } else {
-            diagnostics.append(new ErrorDiagnostic(sf0Locale, "Wrong value type for data generation"));
+            return true;
         }
 
+        if (firstValue instanceof StringValue) {
+            StringValue sValue = (StringValue) firstValue;
+            //TODO and here
+            if (operandField._subfields.size() > 1) {
+                Locale loc = operandField._subfields.get(1)._locale;
+                diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
+            }
+            
+            return true;
+        }
+        
+        if (firstValue instanceof IntegerValue) {
+            //  Ensure the number of values divides evenly.
+            int valueCount = (operandField._subfields.size());
+            if (valueCount > 36) {
+                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
+                return true;
+            }
+
+            IntegerValue[] values = new IntegerValue[valueCount];
+            values[0] = (IntegerValue) firstValue;
+            for (int vx = 1; vx < valueCount; ++vx) {
+                values[vx] = _zeroValue;
+                TextSubfield sfNext = operandField._subfields.get(vx);
+                String sfNextText = sfNext._text;
+                Locale sfNextLocale = sfNext._locale;
+                try {
+                    ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
+                    Expression eNext = pNext.parse(_context, diagnostics);
+                    if (eNext == null) {
+                        diagnostics.append(new ErrorDiagnostic(sf0Locale, "Expression expected"));
+                        continue;
+                    }
+
+                    Value vNext = eNext.evaluate(_context, diagnostics);
+                    if (vNext instanceof IntegerValue) {
+                        values[vx] = (IntegerValue) vNext;
+                    } else {
+                        diagnostics.append(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
+                    }
+                } catch (ExpressionException ex) {
+                    diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+                }
+            }
+
+            int[] fieldSizes = new int[valueCount];
+            int fieldSize = 36 / valueCount;
+            for (int fx = 0; fx < values.length; ++fx) {
+                fieldSizes[fx] = fieldSize;
+            }
+
+            generate(textLine, new Form(fieldSizes), values, _context._currentGenerationLCIndex);
+        }
+
+        diagnostics.append(new ErrorDiagnostic(sf0Locale, "Wrong value type for data generation"));
         return true;
     }
 
@@ -584,124 +608,160 @@ public class Assembler {
 
         Value operandValue = null;
         if (operandField == null) {
-            diagnostics.append(new ErrorDiagnostic( operationField._locale,
-                                                    "An instruction mnemonic requires an operand field"));
+            diagnostics.append(new ErrorDiagnostic(operationField._locale,
+                                                    "Instruction mnemonic requires an operand field"));
+            return true;
+        }
+
+        //  We have to be in extended mode, *not* using basic mode semantics, and
+        //  either the j-field is part of the instruction, or else it is no U or XU...
+        //  If that is the case, then we allow (maybe even require) a base register specification.
+        boolean sfBaseAllowed =
+                (_context._codeMode == CodeMode.Extended)
+                && !iinfo._useBMSemantics
+                && (iinfo._jFlag || (jField < 016));
+
+        //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
+        //  a field, and there isn't one in the syntax for the operand field.
+        //  If the flag is clear, then the first subfield is a register specification... which can get a bit
+        //  complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
+        TextSubfield sfRegister = null;
+        TextSubfield sfValue = null;
+        TextSubfield sfIndex = null;
+        TextSubfield sfBase = null;
+
+        int sfx = 0;
+        int sfc = operandField._subfields.size();
+        if (!iinfo._aFlag && (sfc > sfx)) {
+            sfRegister = operandField.getSubfield( sfx++ );
+        }
+        if (sfc > sfx) {
+            sfValue = operandField.getSubfield( sfx++ );
+        }
+        if (sfc > sfx) {
+            sfIndex = operandField.getSubfield( sfx++ );
+        }
+        if ((sfc > sfx) && sfBaseAllowed) {
+            sfBase = operandField.getSubfield( sfx++ );
+        }
+        if (sfc > sfx) {
+            diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
+                                                     "Extreanous subfields in operand field ignored") );
+        }
+
+        //  Interpret the subfields
+        if (iinfo._aFlag) {
+            aValue = new IntegerValue( false, iinfo._aField, null );
         } else {
-            //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
-            //  a field, and there isn't one in the syntax for the operand field.
-            //  If the flag is clear, then the first subfield is a register specification... which can get a bit
-            //  complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
-            TextSubfield registerSubField = null;
-            TextSubfield valueSubField = null;
-            TextSubfield indexSubField = null;
-            TextSubfield baseSubField = null;
-
-            boolean baseSubFieldAllowed = (_context._codeMode == CodeMode.Extended) && !iinfo._useBMSemantics;
-            int sfx = 0;
-            int sfc = operandField._subfields.size();
-            if (!iinfo._aFlag && (sfc > sfx)) {
-                registerSubField = operandField.getSubfield( sfx++ );
-            }
-            if (sfc > sfx) {
-                valueSubField = operandField.getSubfield( sfx++ );
-            }
-            if (sfc > sfx) {
-                indexSubField = operandField.getSubfield( sfx++ );
-            }
-            if ((sfc > sfx) && baseSubFieldAllowed) {
-                baseSubField = operandField.getSubfield( sfx++ );
-            }
-            if (sfc > sfx) {
-                diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
-                                                         "Extreanous subfields in operand field ignored") );
+            if ((sfRegister == null) || (sfRegister._text.isEmpty())) {
+                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Missing register specification"));
+                return true;
             }
 
-            //  Interpret the subfields
-            if (iinfo._aFlag) {
-                aValue = new IntegerValue( false, iinfo._aField, null );
-            } else {
-                if ( (registerSubField == null) || (registerSubField._text.isEmpty()) ) {
-                    diagnostics.append( new ErrorDiagnostic( operandField._locale,
-                                                             "Missing register specification" ) );
-                } else {
-                    try {
-                        ExpressionParser p = new ExpressionParser( registerSubField._text, registerSubField._locale );
-                        Expression e = p.parse( _context, diagnostics );
-                        Value v = e.evaluate( _context, diagnostics );
-                        if (v.getType() != ValueType.Integer) {
-                            diagnostics.append( new ValueDiagnostic( registerSubField._locale, "Wrong value type" ) );
-                        } else {
-                            aValue = (IntegerValue) v;
-                            //  Reduce the value appropriately for the a-field
-                            if ( iinfo._aSemantics == InstructionWord.ASemantics.A ) {
-                                aValue = new IntegerValue( aValue._flagged,
-                                                           aValue._value - 12,
-                                                           aValue._undefinedReferences );
-                            } else if ( iinfo._aSemantics == InstructionWord.ASemantics.R ) {
-                                aValue = new IntegerValue( aValue._flagged,
-                                                           aValue._value - 64,
-                                                           aValue._undefinedReferences );
-                            }
-                        }
-                    } catch ( ExpressionException | NotFoundException ex ) {
-                        diagnostics.append( new ErrorDiagnostic( registerSubField._locale,
-                                                                 "Syntax Error:" + ex.getMessage() ) );
-                    }
+            try {
+                ExpressionParser p = new ExpressionParser(sfRegister._text, sfRegister._locale);
+                Expression e = p.parse(_context, diagnostics);
+                if (e == null) {
+                    diagnostics.append(new ErrorDiagnostic(sfRegister._locale, "Syntax Error"));
+                    return true;
                 }
+
+                Value v = e.evaluate(_context, diagnostics);
+                if (!(v instanceof IntegerValue)) {
+                    diagnostics.append(new ValueDiagnostic(sfRegister._locale, "Wrong value type"));
+                    return true;
+                }
+
+                //  Reduce the value appropriately for the a-field
+                aValue = (IntegerValue) v;
+                switch (iinfo._aSemantics) {
+                    case A:
+                        aValue = new IntegerValue(aValue._flagged, aValue._value - 12, aValue._undefinedReferences);
+                        break;
+
+                    case R:
+                        aValue = new IntegerValue(aValue._flagged, aValue._value - 64, aValue._undefinedReferences);
+                        break;
+                }
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(sfRegister._locale, "Syntax Error"));
+                return true;
+            }
+        }
+
+        if ((sfValue == null) || (sfValue._text.isEmpty())) {
+            diagnostics.append(new ErrorDiagnostic(operationField._locale,
+                                                   "Missing operand value (U, u, or d subfield)"));
+            return true;
+        }
+
+        try {
+            ExpressionParser p = new ExpressionParser( sfValue._text, sfValue._locale );
+            Expression e = p.parse(_context, diagnostics);
+            if (e == null) {
+                diagnostics.append(new ErrorDiagnostic(sfValue._locale, "Syntax Error"));
+                return true;
             }
 
-            if ((valueSubField == null) || (valueSubField._text.isEmpty())) {
-                diagnostics.append(new ErrorDiagnostic(operandField._locale,
-                                                       "Missing operand value (U, u, or d subfield)"));
-            } else {
+            Value v = e.evaluate(_context, diagnostics);
+            if (!(v instanceof IntegerValue)) {
+                diagnostics.append(new ValueDiagnostic(sfValue._locale, "Wrong value type"));
+                return true;
+            }
+
+            uValue = (IntegerValue) v;
+        } catch ( ExpressionException ex ) {
+            diagnostics.append(new ErrorDiagnostic(sfValue._locale, "Syntax Error"));
+            return true;
+        }
+
+        if ((sfIndex != null) && !sfIndex._text.isEmpty()) {
+            try {
+                ExpressionParser p = new ExpressionParser( sfIndex._text, sfIndex._locale );
+                Expression e = p.parse(_context, diagnostics);
+                if (e == null) {
+                    diagnostics.append(new ErrorDiagnostic(sfIndex._locale, "Syntax Error"));
+                    return true;
+                }
+
+                Value v = e.evaluate(_context, diagnostics);
+                if (!(v instanceof IntegerValue)) {
+                    diagnostics.append(new ValueDiagnostic(sfIndex._locale, "Wrong value type"));
+                    return true;
+                }
+
+                xValue = (IntegerValue) v;
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(sfIndex._locale, "Syntax Error"));
+                return true;
+            }
+        }
+
+        if (sfBaseAllowed) {
+            if ((sfBase != null) && !sfBase._text.isEmpty()) {
                 try {
-                    ExpressionParser p = new ExpressionParser( valueSubField._text, valueSubField._locale );
+                    ExpressionParser p = new ExpressionParser( sfBase._text, sfBase._locale );
                     Expression e = p.parse( _context, diagnostics );
-                    Value v = e.evaluate( _context, diagnostics );
-                    if (v.getType() != ValueType.Integer) {
-                        diagnostics.append( new ValueDiagnostic( valueSubField._locale, "Wrong value type" ) );
-                    } else {
-                        uValue = (IntegerValue) v;
+                    if (e == null) {
+                        diagnostics.append(new ErrorDiagnostic(sfBase._locale, "Syntax Error"));
+                        return true;
                     }
-                } catch ( ExpressionException | NotFoundException ex ) {
-                    diagnostics.append( new ErrorDiagnostic( valueSubField._locale,
-                                                             "Syntax Error:" + ex.getMessage() ) );
-                }
-            }
 
-            if ((indexSubField != null) && !indexSubField._text.isEmpty()) {
-                try {
-                    ExpressionParser p = new ExpressionParser( indexSubField._text, indexSubField._locale );
-                    Expression e = p.parse( _context, diagnostics );
                     Value v = e.evaluate( _context, diagnostics );
-                    if (v.getType() != ValueType.Integer) {
-                        diagnostics.append( new ValueDiagnostic( indexSubField._locale, "Wrong value type" ) );
-                    } else {
-                        xValue = (IntegerValue) v;
+                    if (!(v instanceof IntegerValue)) {
+                        diagnostics.append(new ValueDiagnostic(sfBase._locale, "Wrong value type"));
+                        return true;
                     }
-                } catch ( ExpressionException | NotFoundException ex ) {
-                    diagnostics.append( new ErrorDiagnostic( indexSubField._locale,
-                                                             "Syntax Error:" + ex.getMessage() ) );
-                }
-            }
 
-            if (baseSubFieldAllowed) {
-                if ( (baseSubField != null) && !baseSubField._text.isEmpty() ) {
-                    try {
-                        ExpressionParser p = new ExpressionParser( baseSubField._text, baseSubField._locale );
-                        Expression e = p.parse( _context, diagnostics );
-                        Value v = e.evaluate( _context, diagnostics );
-                        if (v.getType() != ValueType.Integer) {
-                            diagnostics.append( new ValueDiagnostic( baseSubField._locale, "Wrong value type" ) );
-                        } else {
-                            bValue = (IntegerValue) v;
-                        }
-                    } catch ( ExpressionException | NotFoundException ex ) {
-                        diagnostics.append( new ErrorDiagnostic( baseSubField._locale,
-                                                                 "Syntax Error:" + ex.getMessage() ) );
-                    }
-                } else {
-                    //TODO what is the default base register?
+                    bValue = (IntegerValue) v;
+                } catch (ExpressionException ex) {
+                    diagnostics.append( new ErrorDiagnostic( sfBase._locale,
+                                                             "Syntax Error:" + ex.getMessage() ) );
+                    return true;
+                }
+            } else {
+                if (_context._defaultBaseRegister != null) {
+                    bValue = new IntegerValue(false, _context._defaultBaseRegister, null);
                 }
             }
         }
@@ -837,7 +897,9 @@ public class Assembler {
         final String moduleName,
         final boolean display
     ) {
-        System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
+        if (display) {
+            System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
+        }
 
         //  setup
         _moduleName = moduleName;
@@ -872,16 +934,17 @@ public class Assembler {
             displayModuleSummary(module);
         }
 
-        System.out.println();
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Summary: Lines=%d", _sourceCode.length));
-        for (Map.Entry<Diagnostic.Level, Integer> entry : _diagnostics.getCounters().entrySet()) {
-            if (entry.getValue() > 0) {
-                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+        if (display) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Summary: Lines=%d", _sourceCode.length));
+            for (Map.Entry<Diagnostic.Level, Integer> entry : _diagnostics.getCounters().entrySet()) {
+                if (entry.getValue() > 0) {
+                    sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+                }
             }
+            System.out.println(sb.toString());
+            System.out.println("Assembly Ends -------------------------------------------------------");
         }
-        System.out.println(sb.toString());
-        System.out.println("Assembly Ends -------------------------------------------------------");
 
         return module;
     }
@@ -935,14 +998,5 @@ public class Assembler {
     public Diagnostics getDiagnostics(
     ) {
         return _diagnostics;
-    }
-
-    /**
-     * Getter
-     * @return array of TextLine objects comprising the source code
-     */
-    public TextLine[] getParsedCode(
-    ) {
-        return _sourceCode;
     }
 }

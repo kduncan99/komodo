@@ -2,6 +2,7 @@ Convert IP unit tests from octal to assembler and mina them (in progress)
 
 Lose unnecessary accessors (in progress)
 
+minalib make sure we don't propagate flagged attribute in any of the operators
 minalib literal generation
 minalib special mnemonics need attention (JGD, BT, etc)
 minalib data generation - strings and floats
@@ -21,6 +22,7 @@ minalib directives
   $EQU
   $EQUF
   $USE (implicit base register)
+  $INSERT
   $BASE (maybe)
   $IF / $ELSE / $ELSF / $ENDF
   $DO / $ENDD

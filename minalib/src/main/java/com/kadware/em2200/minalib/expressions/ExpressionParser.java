@@ -73,26 +73,20 @@ public class ExpressionParser {
 
     /**
      * Retrieves the next character and advances the index
-     * @return the character in text, indexed by _index
+     * @return the character in text, indexed by _index, else 0
      */
     private char getNextChar(
-    ) throws NotFoundException {
-        if (atEnd()) {
-            throw new NotFoundException("End of text");
-        }
-        return _text.charAt(_index++);
+    ) {
+        return atEnd() ? 0 : _text.charAt(_index++);
     }
 
     /**
      * Peek at the next character
-     * @return the character in text, indexed by _index
+     * @return the character in text, indexed by _index unless we're at the end, then 0.
      */
     private char nextChar(
-    ) throws NotFoundException {
-        if (atEnd()) {
-            throw new NotFoundException("End of text");
-        }
-        return _text.charAt(_index);
+    ) {
+        return atEnd() ? 0 : _text.charAt(_index);
     }
 
     /**
@@ -110,22 +104,16 @@ public class ExpressionParser {
     /**
      * Skips a fixed token if it exists in the source code at _index
      * @param token token to be parsed
-     * @param caseSensitive true if we are sensitive to case, else false
      * @return true if token was found and skipped, else false
      */
     private boolean skipToken(
-        final String token,
-        final boolean caseSensitive
+        final String token
     ) {
         int remain = _text.length() - _index;
         if (remain >= token.length()) {
             for (int tx = 0; tx < token.length(); ++tx) {
-                char ch1 = token.charAt(tx);
-                char ch2 = _text.charAt(_index + tx);
-                if (caseSensitive) {
-                    ch1 = Character.toUpperCase(ch1);
-                    ch2 = Character.toUpperCase(ch2);
-                }
+                char ch1 = Character.toUpperCase(token.charAt(tx));
+                char ch2 = Character.toUpperCase(_text.charAt(_index + tx));
                 if (ch1 != ch2) {
                     return false;
                 }
@@ -152,6 +140,7 @@ public class ExpressionParser {
         return count;
     }
 
+
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods (possibly protected for unit test purposes)
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -161,15 +150,13 @@ public class ExpressionParser {
      * belong in the expression.
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * @return a parsed Expression object
+     * @return a parsed Expression object if we found one, else null
      * @throws ExpressionException if we detect an obvious error
-     * @throws NotFoundException if we do not find such a structure
      */
     private Expression parseExpression(
         final Context context,
         Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         List<IExpressionItem> expItems = new LinkedList<>();
 
         boolean allowInfixOperator = false;
@@ -179,46 +166,42 @@ public class ExpressionParser {
 
         while (!atEnd()) {
             if (allowInfixOperator) {
-                try {
-                    expItems.add(parseInfixOperator());
+                IExpressionItem item = parseInfixOperator();
+                if (item != null) {
+                    expItems.add(item);
                     allowInfixOperator = false;
                     allowOperand = true;
                     allowPostfixOperator = false;
                     allowPrefixOperator = true;
                     continue;
-                } catch (NotFoundException ex) {
-                    //  skip
                 }
             }
 
             if (allowOperand) {
-                try {
-                    expItems.add(parseOperand(context, diagnostics));
+                IExpressionItem item = parseOperand(context, diagnostics);
+                if (item != null) {
+                    expItems.add(item);
                     allowInfixOperator = true;
                     allowPostfixOperator = true;
                     allowPrefixOperator = false;
                     allowOperand = false;
                     continue;
-                } catch (NotFoundException ex) {
-                    //  skip
                 }
             }
 
             if (allowPrefixOperator) {
-                try {
-                    expItems.add(parsePrefixOperator());
+                IExpressionItem item = parsePrefixOperator();
+                if (item != null) {
+                    expItems.add(item);
                     continue;
-                } catch (NotFoundException ex) {
-                    //  skip
                 }
             }
 
             if (allowPostfixOperator) {
-                try {
-                    expItems.add(parsePostfixOperator());
+                IExpressionItem item = parsePostfixOperator();
+                if (item != null) {
+                    expItems.add(item);
                     continue;
-                } catch (NotFoundException ex) {
-                    //  skip
                 }
             }
 
@@ -226,7 +209,7 @@ public class ExpressionParser {
             //  If we haven't found anything yet, then we don't have an expression.
             //  If we *have* found something, this is the end of the expression.
             if (expItems.isEmpty()) {
-                throw new NotFoundException();
+                return null;
             } else {
                 //  end of expression is not allowed if we are expecting an operand
                 if (allowOperand) {
@@ -240,53 +223,46 @@ public class ExpressionParser {
         return new Expression(expItems);
     }
 
-    //TODO do we still need this?
-//    /**
-//     * Parses an expression group.
-//     * Such a structure is formatted as:
-//     *      '(' [ expression [ ',' expression ]* ')'
-//     * These entities are used for function argument lists and possibly for other purposes.
-//     * <p>
-//     * @param context Current assembler context
-//     * @param diagnostics Where we post any necessary diagnostics
-//     * <p>
-//     * @return an array of parsed Expression objects
-//     * <p>
-//     * @throws ExpressionException if we detect an obvious error
-//     * @throws NotFoundException if we do not find such a structure
-//     */
-//    protected Expression[] parseExpressionGroup(
-//        final Context context,
-//        Diagnostics diagnostics
-//    ) throws ExpressionException,
-//             NotFoundException {
-//        if (!skipToken("(", true)) {
-//            throw new NotFoundException();
-//        }
-//
-//        List<Expression> expressions = new LinkedList<>();
-//        while (!skipToken(")", true)) {
-//            try {
-//                expressions.add(parseExpression(context, diagnostics));
-//            } catch (NotFoundException ex) {
-//                //  didn't find an expression, and we didn't find a closing paren either... something is wrong
-//                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
-//                throw new ExpressionException();
-//            }
-//
-//            if (skipToken(",", true)) {
-//                continue;
-//            }
-//
-//            if (nextChar() != ')') {
-//                //  next char isn't a comma, nor a closing paren - again, something is wrong
-//                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
-//                throw new ExpressionException();
-//            }
-//        }
-//
-//        return expressions.toArray(new Expression[expressions.size()]);
-//    }
+    /**
+     * Parses an expression group.
+     * Such a structure is formatted as:
+     *      '(' [ expression [ ',' expression ]* ')'
+     * @param context Current assembler context
+     * @param diagnostics Where we post any necessary diagnostics
+     * @return an array of parsed Expression objects if we found a group, else null
+     * @throws ExpressionException if we detect an obvious error
+     */
+    protected Expression[] parseExpressionGroup(
+        final Context context,
+        Diagnostics diagnostics
+    ) throws ExpressionException {
+        if (!skipToken("(")) {
+            return null;
+        }
+
+        List<Expression> expressions = new LinkedList<>();
+        while (!skipToken(")")) {
+            Expression exp = parseExpression(context, diagnostics);
+            if (exp == null) {
+                //  didn't find an expression, and we didn't find a closing paren either... something is wrong
+                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                throw new ExpressionException();
+            }
+
+            expressions.add(exp);
+            if (skipToken(",")) {
+                continue;
+            }
+
+            if (nextChar() != ')') {
+                //  next char isn't a comma, nor a closing paren - again, something is wrong
+                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                throw new ExpressionException();
+            }
+        }
+
+        return expressions.toArray(new Expression[0]);
+    }
 
     /**
      * Parses a function specification from _index
@@ -294,13 +270,11 @@ public class ExpressionParser {
      * @param diagnostics Where we post any necessary diagnostics
      * @return newly created FunctionItem object
      * @throws ExpressionException if something is syntactically wrong
-     * @throws NotFoundException if we didn't find anything resembling a function reference
      */
     FunctionItem parseFunction(
         final Context context,
         Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         //  We're looking for {label} '(' {expr}* ')'
         //  If we don't find the above combination, we bail with NotFoundException
         //  Otherwise, we begin parsing the putative and possibly empty parameter list.
@@ -309,23 +283,26 @@ public class ExpressionParser {
         Locale funcLocale = getLocale();
         int holdIndex = _index;
         String name = parseLabel(diagnostics);
+        if (name == null) {
+            return null;
+        }
 
-        if (!skipToken("(", true)) {
+        if (!skipToken("(")) {
             _index = holdIndex;
-            throw new NotFoundException();
+            return null;
         }
 
         List<Expression> argExpressions = new LinkedList<>();
-        while (!skipToken(")", true)) {
-            try {
-                argExpressions.add(parseExpression(context, diagnostics));
-            } catch (NotFoundException ex) {
+        while (!skipToken(")")) {
+            Expression exp = parseExpression(context, diagnostics);
+            if (exp == null) {
                 //  didn't find an expression, and we didn't find a closing paren either... something is wrong
                 diagnostics.append(new ErrorDiagnostic(funcLocale, "Syntax error"));
                 throw new ExpressionException();
             }
 
-            if (skipToken(",", true)) {
+            argExpressions.add(exp);
+            if (skipToken(",")) {
                 continue;
             }
 
@@ -374,83 +351,82 @@ public class ExpressionParser {
 
     /**
      * Parses a floating point literal value
+     * @param context Current assembler context
+     * @param diagnostics Where we post any necessary diagnostics
      * @return floating point value OperandItem
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
-     * @throws NotFoundException if we do not find anything which looks like an integer literal
      */
     private OperandItem parseFloatingPointLiteral(
-    ) throws ExpressionException,
-             NotFoundException {
+        final Context context,
+        Diagnostics diagnostics
+    ) {
         //TODO parse the flpt thing
-        throw new NotFoundException();
+        return null;
     }
 
     /**
      * If _index points to an infix operator, we construct an Operator object and return it.
-     * @return Operator object
-     * @throws NotFoundException if no post-fix operator was discovered
+     * @return Operator object if found, else null
      */
     private OperatorItem parseInfixOperator(
-    ) throws NotFoundException {
+    ) {
         Locale locale = getLocale();
 
         //  Be careful with ordering here... for example, look for '>=' before '>' so we don't get tripped up
-        if (skipToken("==", true)) {
+        if (skipToken("==")) {
             return new OperatorItem(new NodeIdentityOperator(locale));
-        } else if (skipToken("=/=", true)) {
+        } else if (skipToken("=/=")) {
             return new OperatorItem(new NodeNonIdentityOperator(locale));
-        } else if (skipToken("<=", true)) {
+        } else if (skipToken("<=")) {
             return new OperatorItem(new LessOrEqualOperator(locale));
-        } else if (skipToken(">=", true)) {
+        } else if (skipToken(">=")) {
             return new OperatorItem(new GreaterOrEqualOperator(locale));
-        } else if (skipToken("<>", true)) {
+        } else if (skipToken("<>")) {
             return new OperatorItem(new InequalityOperator(locale));
-        } else if (skipToken("=", true)) {
+        } else if (skipToken("=")) {
             return new OperatorItem(new EqualityOperator(locale));
-        } else if (skipToken("<", true)) {
+        } else if (skipToken("<")) {
             return new OperatorItem(new LessThanOperator(locale));
-        } else if (skipToken(">", true)) {
+        } else if (skipToken(">")) {
             return new OperatorItem(new GreaterThanOperator(locale));
-        } else if (skipToken("++", true)) {
+        } else if (skipToken("++")) {
             return new OperatorItem(new OrOperator(locale));
-        } else if (skipToken("--", true)) {
+        } else if (skipToken("--")) {
             return new OperatorItem(new XorOperator(locale));
-        } else if (skipToken("**", true)) {
+        } else if (skipToken("**")) {
             return new OperatorItem(new AndOperator(locale));
-        } else if (skipToken("*/", true)) {
+        } else if (skipToken("*/")) {
             return new OperatorItem(new ShiftOperator(locale));
-        } else if (skipToken("+", true)) {
+        } else if (skipToken("+")) {
             return new OperatorItem(new AdditionOperator(locale));
-        } else if (skipToken("-", true)) {
+        } else if (skipToken("-")) {
             return new OperatorItem(new SubtractionOperator(locale));
-        } else if (skipToken("*", true)) {
+        } else if (skipToken("*")) {
             return new OperatorItem(new MultiplicationOperator(locale));
-        } else if (skipToken("///", true)) {
+        } else if (skipToken("///")) {
             return new OperatorItem(new DivisionRemainderOperator(locale));
-        } else if (skipToken("//", true)) {
+        } else if (skipToken("//")) {
             return new OperatorItem(new DivisionCoveredQuotientOperator(locale));
-        } else if (skipToken("/", true)) {
+        } else if (skipToken("/")) {
             return new OperatorItem(new DivisionOperator(locale));
-        } else if (skipToken(":", true)) {
+        } else if (skipToken(":")) {
             return new OperatorItem(new ConcatenationOperator(locale));
         }
 
-        throw new NotFoundException();
+        return null;
     }
 
     /**
      * Parses an integer literal value
      * @param diagnostics where we post diagnostics if appropriate
-     * @return integer literal OperandItem
+     * @return integer literal OperandItem if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
-     * @throws NotFoundException if we do not find anything which looks like an integer literal
      */
     private OperandItem parseIntegerLiteral(
         Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         if (atEnd() || !Character.isDigit(nextChar())) {
-            throw new NotFoundException();
+            return null;
         }
 
         long value = 0;
@@ -471,27 +447,26 @@ public class ExpressionParser {
             ++digits;
         }
 
-        return new ValueItem( getLocale(),
-                              new IntegerValue(false, value, null ) );
+        return new ValueItem(getLocale(),
+                             new IntegerValue(false, value, null));
     }
 
     /**
      * Parses a label or reference (okay, a label would be a reference) from _index
      * @param diagnostics where we post diagnostics if appropriate
-     * @return the label, if found
-     * @throws NotFoundException if we do not find anything which looks like a label
+     * @return the label if found, else null
      */
     String parseLabel(
         Diagnostics diagnostics
-    ) throws NotFoundException {
+    ) {
         //  Check first character - it must be acceptable as the first character of a label.
         if (atEnd()) {
-            throw new NotFoundException();
+            return null;
         }
 
         char ch = nextChar();
         if (!Character.isAlphabetic(ch) && (ch != '$') && (ch != '_')) {
-            throw new NotFoundException();
+            return null;
         }
 
         //  So, we *might* have a label - parse through until we get to the end of the label.
@@ -521,136 +496,110 @@ public class ExpressionParser {
      * Parses a literal
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * @return OperandItem representing the integer literal
+     * @return OperandItem representing the literal if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
-     * @throws NotFoundException if we do not find anything which looks like a string literal
      */
     private OperandItem parseLiteral(
         final Context context,
-        Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
-        try {
-            return parseStringLiteral(context, diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
+        final Diagnostics diagnostics
+    ) throws ExpressionException {
+        OperandItem opItem = parseStringLiteral(context, diagnostics);
+        if (opItem == null) {
+            opItem = parseFloatingPointLiteral(context, diagnostics);
+        }
+        if (opItem == null) {
+            opItem = parseIntegerLiteral(diagnostics);
         }
 
-        //TODO parse float literal here
-
-        try {
-            return parseIntegerLiteral(diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
-        }
-
-        throw new NotFoundException();
+        return opItem;
     }
 
     /**
      * Parses anything which could be an operand
      * @param context Current assembler context
      * @param diagnostics Where we post any necessary diagnostics
-     * @return parsed OperandItem
+     * @return parsed OperandItem if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
-     * @throws NotFoundException if we do not find anything which looks like an operand
      */
     private OperandItem parseOperand(
         final Context context,
-        Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
-        try {
-            return parseSubExpression(context, diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
+        final Diagnostics diagnostics
+    ) throws ExpressionException {
+        //  TODO literal generation or arithmetic group...
+
+        OperandItem opItem = parseLiteral(context, diagnostics);
+        if (opItem == null) {
+            opItem = parseFunction(context, diagnostics);
         }
 
-        try {
-            return parseLiteral(context, diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
+        if (opItem == null) {
+            opItem = parseReference(diagnostics);
         }
 
-        try {
-            return parseFunction(context, diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
-        }
-
-        try {
-            return parseReference(diagnostics);
-        } catch (NotFoundException ex) {
-            //  keep going
-        }
-
-        throw new NotFoundException();
+        return opItem;
     }
 
     /**
      * If _index points to a postfix operator, we construct an Operator object and return it.
      * Since StringValue doesn't like justification, we do not support L and R post-fix operators.
-     * @return Operator object
-     * @throws NotFoundException if no post-fix operator was discovered
+     * @return Operator object if found, else null
      */
     private OperatorItem parsePostfixOperator(
-    ) throws NotFoundException {
-        Locale locale = new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
+    ) {
         //  Currently there are no post-fix operators (we don't do precision)
-        throw new NotFoundException();
+        return null;
     }
 
     /**
      * If _index points to a prefix operator, we construct an Operator object and return it.
-     * @return Operator object
-     * @throws NotFoundException if no prefix operator was discovered
+     * @return Operator object if found, else null
      */
     private OperatorItem parsePrefixOperator(
-    ) throws NotFoundException {
+    ) {
         Locale locale = getLocale();
 
-        if (skipToken("*", true)) {
+        if (skipToken("*")) {
             return new OperatorItem(new FlaggedOperator(locale));
-        } else if (skipToken("+", true)) {
+        } else if (skipToken("+")) {
             return new OperatorItem(new PositiveOperator(locale));
-        } else if (skipToken("-", true)) {
+        } else if (skipToken("-")) {
             return new OperatorItem(new NegativeOperator(locale));
-        } else if (skipToken("\\", true)) {
+        } else if (skipToken("\\")) {
             return new OperatorItem(new NotOperator(locale));
         }
-        throw new NotFoundException();
+
+        return null;
     }
 
     /**
      * Parses a reference of one type or another
      * @param diagnostics where we post diagnostics if necessary
-     * @return OperandItem representing the reference
-     * @throws ExpressionException if there is some syntactic error
-     * @throws NotFoundException if we don't find anything resembling a reference
+     * @return OperandItem representing the reference if one was found, else null
      */
     private OperandItem parseReference(
-            final Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
-        String label = parseLabel( diagnostics );
-        return new ReferenceItem( new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index), label );
+        final Diagnostics diagnostics
+    ) {
+        String label = parseLabel(diagnostics);
+        if (label != null) {
+            return new ReferenceItem(new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index), label);
+        }
+
+        return null;
     }
 
     /**
      * Parses a string literal into an appropriate Value object
      * @param context context
      * @param diagnostics where we post any diagnostics
-     * @return OperandItem object if we find a valid string literal.
+     * @return OperandItem object if we find a valid string literal, null if we don't find any string literal
      * @throws ExpressionException if there is an error in the formatting of the string literal
-     * @throws NotFoundException if we do not find a string literal at all - this may NOT be an error
      */
     private OperandItem parseStringLiteral(
         final Context context,
-        Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+        final Diagnostics diagnostics
+    ) throws ExpressionException {
         if (atEnd() || (nextChar() != '\'')) {
-            throw new NotFoundException("");
+            return null;
         }
 
         skipNextChar();
@@ -678,29 +627,8 @@ public class ExpressionParser {
             throw new ExpressionException();
         }
 
-        return new ValueItem( getLocale(),
-                              new StringValue(false, sb.toString(), context._characterMode ) );
-    }
-
-    /**
-     * Attempts to parse the next bit of text as a (sub) expression
-     * @param context
-     * @param diagnostics
-     * @return
-     * @throws ExpressionException
-     * @throws NotFoundException
-     */
-    private SubExpressionItem parseSubExpression(
-        final Context context,
-        Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
-        if (atEnd() || (nextChar() != '(')) {
-            throw new NotFoundException("");
-        }
-
-        //TODO go back over everything and skip whitespace - there could be any amount of it inside grouping symbols
-        //TODO inside grouping symbols, we might have more than one expression (we won't have zero of them, though)
+        return new ValueItem(getLocale(),
+                             new StringValue(false, sb.toString(), context._characterMode));
     }
 
 
@@ -718,15 +646,13 @@ public class ExpressionParser {
      */
     public Expression parse(
         final Context context,
-        Diagnostics diagnostics
-    ) throws ExpressionException,
-             NotFoundException {
+        final Diagnostics diagnostics
+    ) throws ExpressionException {
         _index = 0;
 
         Expression exp = parseExpression(context, diagnostics);
-        if (!atEnd()) {
-            //TODO post some shit
-            throw new ExpressionException();
+        if (exp == null) {
+            return null;
         }
 
         return exp;
