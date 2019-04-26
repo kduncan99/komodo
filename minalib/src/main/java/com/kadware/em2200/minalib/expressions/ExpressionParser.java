@@ -38,6 +38,16 @@ public class ExpressionParser {
         _index = 0;
     }
 
+    public ExpressionParser(
+        final String text,
+        final int offset,
+        final Locale textLocale
+    ) {
+        _text = text;
+        _index = offset;
+        _textLocale = textLocale;
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private basic-functionality methods
@@ -128,6 +138,19 @@ public class ExpressionParser {
         return false;
     }
 
+    /**
+     * Skips past whitespace - not usually a thing, except inside grouping symbols
+     * @return number of whitespaces we skipped, if any
+     */
+    private int skipWhitespace(
+    ) {
+        int count = 0;
+        while (!atEnd() && (_text.charAt(_index) == ' ')) {
+            ++_index;
+            ++count;
+        }
+        return count;
+    }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods (possibly protected for unit test purposes)
@@ -217,6 +240,7 @@ public class ExpressionParser {
         return new Expression(expItems);
     }
 
+    //TODO do we still need this?
 //    /**
 //     * Parses an expression group.
 //     * Such a structure is formatted as:
@@ -531,25 +555,31 @@ public class ExpressionParser {
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      * @throws NotFoundException if we do not find anything which looks like an operand
      */
-    protected OperandItem parseOperand(
+    private OperandItem parseOperand(
         final Context context,
         Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
         try {
-            return parseLiteral( context, diagnostics );
+            return parseSubExpression(context, diagnostics);
         } catch (NotFoundException ex) {
             //  keep going
         }
 
         try {
-            return parseFunction( context, diagnostics );
+            return parseLiteral(context, diagnostics);
         } catch (NotFoundException ex) {
             //  keep going
         }
 
         try {
-            return parseReference( diagnostics );
+            return parseFunction(context, diagnostics);
+        } catch (NotFoundException ex) {
+            //  keep going
+        }
+
+        try {
+            return parseReference(diagnostics);
         } catch (NotFoundException ex) {
             //  keep going
         }
@@ -563,7 +593,7 @@ public class ExpressionParser {
      * @return Operator object
      * @throws NotFoundException if no post-fix operator was discovered
      */
-    protected OperatorItem parsePostfixOperator(
+    private OperatorItem parsePostfixOperator(
     ) throws NotFoundException {
         Locale locale = new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
         //  Currently there are no post-fix operators (we don't do precision)
@@ -575,7 +605,7 @@ public class ExpressionParser {
      * @return Operator object
      * @throws NotFoundException if no prefix operator was discovered
      */
-    protected OperatorItem parsePrefixOperator(
+    private OperatorItem parsePrefixOperator(
     ) throws NotFoundException {
         Locale locale = getLocale();
 
@@ -598,7 +628,7 @@ public class ExpressionParser {
      * @throws ExpressionException if there is some syntactic error
      * @throws NotFoundException if we don't find anything resembling a reference
      */
-    protected OperandItem parseReference(
+    private OperandItem parseReference(
             final Diagnostics diagnostics
     ) throws ExpressionException,
              NotFoundException {
@@ -614,7 +644,7 @@ public class ExpressionParser {
      * @throws ExpressionException if there is an error in the formatting of the string literal
      * @throws NotFoundException if we do not find a string literal at all - this may NOT be an error
      */
-    protected OperandItem parseStringLiteral(
+    private OperandItem parseStringLiteral(
         final Context context,
         Diagnostics diagnostics
     ) throws ExpressionException,
@@ -650,6 +680,27 @@ public class ExpressionParser {
 
         return new ValueItem( getLocale(),
                               new StringValue(false, sb.toString(), context._characterMode ) );
+    }
+
+    /**
+     * Attempts to parse the next bit of text as a (sub) expression
+     * @param context
+     * @param diagnostics
+     * @return
+     * @throws ExpressionException
+     * @throws NotFoundException
+     */
+    private SubExpressionItem parseSubExpression(
+        final Context context,
+        Diagnostics diagnostics
+    ) throws ExpressionException,
+             NotFoundException {
+        if (atEnd() || (nextChar() != '(')) {
+            throw new NotFoundException("");
+        }
+
+        //TODO go back over everything and skip whitespace - there could be any amount of it inside grouping symbols
+        //TODO inside grouping symbols, we might have more than one expression (we won't have zero of them, though)
     }
 
 

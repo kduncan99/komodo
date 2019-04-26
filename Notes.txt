@@ -2,10 +2,10 @@ Convert IP unit tests from octal to assembler and mina them (in progress)
 
 Lose unnecessary accessors (in progress)
 
+minalib literal generation
 minalib special mnemonics need attention (JGD, BT, etc)
 minalib data generation - strings and floats
 minalib float values - firm this up
-minalib Think about how we do $LIT / expressions - using extraneous grouping symbols is a pain
 minalib procs and functions
 minalib functions
   $ILCN
@@ -18,7 +18,10 @@ minalib functions
   $LCV
   $(n)
 minalib directives
-  $BASE
+  $EQU
+  $EQUF
+  $USE (implicit base register)
+  $BASE (maybe)
   $IF / $ELSE / $ELSF / $ENDF
   $DO / $ENDD
   $REPEAT / $ENDR
@@ -28,7 +31,7 @@ minalib directives
   $GFORM
   $INCLUDE
   $INFO (?)
-  $LIT
+  $LIT (see special usage with base registers)
 
 Finish adding instructions to IP
 
