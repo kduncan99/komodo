@@ -598,37 +598,41 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_000123_555123l,
-            0_000001_223000l,
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 000123555123",
+                "DATA2     + 000001223000",
+                "",
+                "$(1),START*",
+                "          LA        A5,DATA1,,B1",
+                "          AT        A5,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010,  0, 05, 0, 0, 0, 1, 0)).getW(),   //  LA      A5,0,,B1
-            (new InstructionWord(072, 06, 05, 0, 0, 0, 1, 1)).getW(),   //  AT      A5,1,,B1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(false);
+        dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_000124_770124l, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_000124_770124L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
         assertFalse(ip.getDesignatorRegister().getCarry());
         assertFalse(ip.getDesignatorRegister().getOverflow());
     }
@@ -640,37 +644,41 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_0001_0122_5123l,
-            0_0000_2355_3000l,
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 00001,00122,05123",
+                "DATA2     + 00000,02355,03000",
+                "",
+                "$(1),START*",
+                "          LA        A3,DATA1,,B1",
+                "          ANT       A3,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010,  0, 03, 0, 0, 0, 1, 0)).getW(),   //  LA      A3,0,,B1
-            (new InstructionWord(072, 07, 03, 0, 0, 0, 1, 1)).getW(),   //  ANT     A3,1,,B1
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(false);
+        dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_0001_5544_2123l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_0001_5544_2123L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
         assertFalse(ip.getDesignatorRegister().getCarry());
         assertFalse(ip.getDesignatorRegister().getOverflow());
     }
@@ -683,53 +691,54 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
              // Example from the hardware guide
-        long[] data = {
-            0_000000_011416l,
-            0_110621_672145l,
-            0_000001_635035l
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 011416",
+                "          + 0110621,0672145",
+                "DATA2     + 01,0635035",
+                "$(1),START*",
+                "          DL        A2,DATA1,,B1",
+                "          DI        A2,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 2, 0, 0, 0, 1, 0)).getW(),     //  LA      A2,data[0]
-            (new InstructionWord(010, 0, 3, 0, 0, 0, 1, 1)).getW(),     //  LA      A3,data[1]
-            (new InstructionWord(034, 0, 2, 0, 0, 0, 1, 2)).getW(),     //  DI      A2,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
-        dReg.setArithmeticExceptionEnabled(true);
+        dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_005213_747442l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_000000_244613l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_005213_747442L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_000000_244613L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
-    @Test
-    public void divideInteger_byZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideInteger_byZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void divideInteger_byZero_noInterrupt(
@@ -738,27 +747,26 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-             // disable arithmetic exception interrupt, and look for zeros in the resulting registers
-        long[] data = {
-            0_111111_222222l,
-            0_333333_444444l,
-            0l
+        // disable arithmetic exception interrupt, and look for zeros in the resulting registers
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 0111111,0222222",
+                "          + 0333333,0444444",
+                "$(1),START*",
+                "          DL        A0,DATA1,,B1",
+                "          DI,U      A0,0",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,data[0]
-            (new InstructionWord(010, 0, 1, 0, 0, 0, 1, 1)).getW(),     //  LA      A1,data[1]
-            (new InstructionWord(034, 0, 0, 0, 0, 0, 1, 2)).getW(),     //  DI      A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -767,27 +775,28 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertTrue(dReg.getDivideCheck());
     }
 
-    @Test
-    public void divideInteger_byNegativeZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideInteger_byNegativeZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void divideSingleFractional(
@@ -796,27 +805,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-             // Example from the hardware guide
-        long[] data = {
-            0_000000_007236l,
-            0_743464_241454l,
-            0_000001_711467l
+        // Example from the hardware guide
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 07236",
+                "          + 0743464241454",
+                "DATA2     + 01711467",
+                "$(1),START*",
+                "          DL        A3,DATA1,,B1",
+                "          DSF       A3,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 3, 0, 0, 0, 1, 0)).getW(),     //  LA      A3,data[0]
-            (new InstructionWord(010, 0, 4, 0, 0, 0, 1, 1)).getW(),     //  LA      A4,data[1]
-            (new InstructionWord(035, 0, 3, 0, 0, 0, 1, 2)).getW(),     //  DSF     A3,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -824,25 +833,26 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_001733_765274l, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_001733_765274L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
     }
 
-    @Test
-    public void divideSingleFractional_byZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideSingleFractional_byZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void divideSingleFractional_byZero_noInterrupt(
@@ -851,27 +861,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-             // disable arithmetic exception interrupt, and look for zeros in the resulting registers
-        long[] data = {
-            0_111111_222222l,
-            0_333333_444444l,
-            0l
+        // disable arithmetic exception interrupt, and look for zeros in the resulting registers
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 0111111222222",
+                "          + 0333333444444",
+                "DATA2     + 0",
+                "$(1),START*",
+                "          DL        A0,DATA1,,B1",
+                "          DSF       A0,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,data[0]
-            (new InstructionWord(010, 0, 1, 0, 0, 0, 1, 1)).getW(),     //  LA      A1,data[1]
-            (new InstructionWord(035, 0, 0, 0, 0, 0, 1, 2)).getW(),     //  DSF     A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -880,26 +890,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertTrue(dReg.getDivideCheck());
     }
 
-    @Test
-    public void divideSingleFractional_byNegativeZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideSingleFractional_byNegativeZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void divideFractional(
@@ -908,27 +919,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-             // Example from the hardware guide
-        long[] data = {
-            0,
-            0_000061_026335l,
-            0_000000_001300l
+        // Example from the hardware guide
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 0",
+                "          + 061026335",
+                "DATA2     + 01300",
+                "$(1),START*",
+                "          DL        A4,DATA1,,B1",
+                "          DF        A4,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 4, 0, 0, 0, 1, 0)).getW(),     //  LA      A4,data[0]
-            (new InstructionWord(010, 0, 5, 0, 0, 0, 1, 1)).getW(),     //  LA      A5,data[1]
-            (new InstructionWord(036, 0, 4, 0, 0, 0, 1, 2)).getW(),     //  DF      A4,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -936,26 +947,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_000000_021653l, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_000000_000056l, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_000000_021653L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_000000_000056L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
-    @Test
-    public void divideFractional_byZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideFractional_byZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void divideFractional_byZero_noInterrupt(
@@ -964,27 +976,27 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-             // disable arithmetic exception interrupt, and look for zeros in the resulting registers
-        long[] data = {
-            0_111111_222222l,
-            0_333333_444444l,
-            0l
+        // disable arithmetic exception interrupt, and look for zeros in the resulting registers
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(0)",
+                "DATA1     + 0111111222222",
+                "          + 0333333444444",
+                "DATA2     + 0",
+                "$(1),START*",
+                "          DL        A0,DATA1,,B1",
+                "          DF        A0,DATA2,,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,data[0]
-            (new InstructionWord(010, 0, 1, 0, 0, 0, 1, 1)).getW(),     //  LA      A1,data[1]
-            (new InstructionWord(036, 0, 0, 0, 0, 0, 1, 2)).getW(),     //  DF      A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -993,27 +1005,28 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertTrue(dReg.getDivideCheck());
     }
 
-    @Test
-    public void divideFractional_byNegativeZero(
-    ) throws MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-             //???? implement when we can catch arithmetic exception interrupt
-    }
+    //TODO
+//    @Test
+//    public void divideFractional_byNegativeZero(
+//    ) throws MachineInterrupt,
+//             MaxNodesException,
+//             NodeNameConflictException,
+//             UPIConflictException,
+//             UPINotAssignedException {
+//             //???? implement when we can catch arithmetic exception interrupt
+//    }
 
     @Test
     public void doubleAdd(
@@ -1022,40 +1035,42 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_111111_222222l,
-            0_333333_444444l,
-            0_222222_333333l,
-            0_000000_111111l,
+        String[] source = {
+                "          $BASIC",
+                "          $LIT 0",
+                "$(0)",
+                "ADDEND1   + 0111111222222",
+                "          + 0333333444444",
+                "ADDEND2   + 0222222333333",
+                "          + 0000000111111",
+                "$(1),START*",
+                "          DL        A0,ADDEND1",
+                "          DA        A0,ADDEND2",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(071, 013, 0, 0, 0, 0, 1, 0)).getW(),   //  DL      A0,data[0]
-            (new InstructionWord(071, 010, 0, 0, 0, 0, 1, 2)).getW(),   //  DA      A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_333333_555555l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_333333_555555l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_333333_555555L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_555555L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertFalse(ip.getDesignatorRegister().getCarry());
         assertFalse(ip.getDesignatorRegister().getOverflow());
     }
@@ -1067,40 +1082,42 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_333333_222222l,
-            0_777777_666666l,
-            0_111111_222222l,
-            0_444444_333333l,
+        String[] source = {
+                "          $BASIC",
+                "          $LIT 0",
+                "$(0)",
+                "ADDEND1   + 0333333222222",
+                "          + 0777777666666",
+                "ADDEND2   + 0111111222222",
+                "          + 0444444333333",
+                "$(1),START*",
+                "          DL        A0,ADDEND1",
+                "          DAN       A0,ADDEND2",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(071, 013, 0, 0, 0, 0, 1, 0)).getW(),   //  DL      A0,data[0]
-            (new InstructionWord(071, 011, 0, 0, 0, 0, 1, 2)).getW(),   //  DAN     A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_222222_000000l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_333333_333333l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_222222_000000L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_333333L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertTrue(ip.getDesignatorRegister().getCarry());
         assertFalse(ip.getDesignatorRegister().getOverflow());
     }
@@ -1112,44 +1129,41 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_377777_777777l,   //  data
-            0_777777_777776l,
-            0_002244_113355l,
+        String[] source = {
+                "          $EXTEND",
+                "          $LIT 0",
+                "$(1),START*",
+                "          LA        A0,(0377777777777),,B1",
+                "          MI        A0,(0377777777777),,B1",
+                "          LA        A2,(0777777777776),,B1",
+                "          MI        A2,(0002244113355),,B1",
+                "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,data[0]
-            (new InstructionWord(030, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  MI      A0,data[0]
-            (new InstructionWord(010, 0, 2, 0, 0, 0, 1, 1)).getW(),     //  LA      A0,data[1]
-            (new InstructionWord(030, 0, 2, 0, 0, 0, 1, 2)).getW(),     //  MI      A0,data[2]
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_177777_777777l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000000_000001l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0_777777_777777l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_775533_664422l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_177777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_000000_000001L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_775533_664422L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
@@ -1161,9 +1175,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         String[] source = {
                 "          $EXTEND",
-                "",
                 "          $LIT 0",
-                "",
                 "$(1),START*",
                 "          LA,U      A0,200",
                 "          MSI       A0,(520),,B1",
@@ -1205,7 +1217,6 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         //  This test is per the hardware instruction guide
         String[] source = {
                 "          $EXTEND",
-                "",
                 "          $LIT 0",
                 "$(0)",
                 "FACTOR1   0200000000002",
@@ -1254,9 +1265,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         //  This test is per the hardware instruction guide
         String[] source = {
                 "          $EXTEND",
-                "",
                 "          $LIT 0",
-                "",
                 "$(1),START*",
                 "          ADD1,H1   (0777776,0111111),,B1",
                 "          ADD1,T2   (0,07777,0),,B1",
@@ -1305,9 +1314,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         //  This test is per the hardware instruction guide
         String[] source = {
                 "          $EXTEND",
-                "",
                 "          $LIT 0",
-                "",
                 "$(1),START*",
                 "          SUB1,T2   (05555,0001,05555),,B1",
                 "          SUB1,H1   (0),,B1",
@@ -1355,9 +1362,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         //  This test is per the hardware instruction guide
         String[] source = {
                 "          $EXTEND",
-                "",
                 "          $LIT 0",
-                "",
                 "$(1),START*",
                 "          LA,U      A0,0",
                 "          LA,U      A1,0",
