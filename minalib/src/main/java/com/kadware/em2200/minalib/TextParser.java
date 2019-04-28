@@ -16,9 +16,6 @@ class TextParser {
     //  Source code, as lines of text in order of processing
     final ArrayList<TextLine> _sourceCodeSet = new ArrayList<>();
 
-    //  Diagnostics, in order of generation (not necessarily in lineNumber/column order)
-    final Diagnostics _diagnostics = new Diagnostics();
-
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  constructor
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -39,13 +36,15 @@ class TextParser {
     /**
      * Invokes the parse function, which parses the entire source code set into a collection of TextField objects.
      * The results of this process can be obtained via getDiagnostics() and getSourceFields().
+     * @param diagnostics where any diagnostics are posted
      */
     void parse(
+        final Diagnostics diagnostics
     ) {
         int lineNumber = 1;
         for (TextLine textLine : _sourceCodeSet) {
-            textLine.parseFields();
-            if (textLine._diagnostics.hasFatal()) {
+            textLine.parseFields(diagnostics);
+            if (diagnostics.hasFatal()) {
                 break;
             }
         }

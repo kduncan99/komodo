@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib.expressions;
 
-import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -19,14 +18,13 @@ public class Test_Expression {
 
     @Test
     public void parseSimpleValue(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Value val = new IntegerValue(false, 42, null);
         List<IExpressionItem> items = new LinkedList<>();
         items.add(new ValueItem(new Locale(1, 1), val));
         Expression exp = new Expression(items);
 
-        Context context = new Context( new Dictionary() );
+        Context context = new Context(new Dictionary(), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context, diagnostics);
 
@@ -36,8 +34,7 @@ public class Test_Expression {
 
     @Test
     public void parseSimpleMath(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Value addend1 = new IntegerValue(false, 42, null);
         Value addend2 = new IntegerValue(false, 112, null);
         Value expected = new IntegerValue(false, 154, null);
@@ -48,7 +45,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(1, 11), addend2));
         Expression exp = new Expression(items);
 
-        Context context = new Context( new Dictionary() );
+        Context context = new Context(new Dictionary(), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context, diagnostics);
 
@@ -58,8 +55,7 @@ public class Test_Expression {
 
     @Test
     public void parseSimpleMathWithPrecedence(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         //  expression is 5 + 7 * 12...  it should be evaluated at 5 + (7 * 12) == 89
         Value term1 = new IntegerValue(false, 5, null);
         Value term2 = new IntegerValue(false, 7, null);
@@ -74,7 +70,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(1, 50), term3));
         Expression exp = new Expression(items);
 
-        Context context = new Context( new Dictionary() );
+        Context context = new Context(new Dictionary(), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context, diagnostics);
 

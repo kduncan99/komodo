@@ -17,7 +17,7 @@ public class SystemDictionary extends Dictionary {
 
     private static final Map<String, Value> _initialValues = new HashMap<>();
     static {
-        //  registers TODO move these to AXR$
+        //  registers TODO move these to AXR$... maybe
         for (int rx = 0; rx < 15; ++rx) {
             _initialValues.put(String.format("X%d", rx), new IntegerValue(false, rx, null));
             _initialValues.put(String.format("EX%d", rx), new IntegerValue(false, rx, null));
@@ -37,8 +37,7 @@ public class SystemDictionary extends Dictionary {
             _initialValues.put(String.format("B%d", rx), new IntegerValue(false, rx, null));
         }
 
-        //  directives
-        //TODO
+        //TODO should be put directives in here?
 
         //  built-in function names
         _initialValues.put("$CAS", new BuiltInFunctionValue(CASFunction.class));

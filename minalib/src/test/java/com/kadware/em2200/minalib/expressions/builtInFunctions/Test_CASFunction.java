@@ -34,7 +34,7 @@ public class Test_CASFunction {
 
         BuiltInFunction bif = new CASFunction(new Locale(10, 16), expressions);
 
-        Context context = new Context( new Dictionary() );
+        Context context = new Context(new Dictionary(), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Value result = bif.evaluate(context, diagnostics);
 

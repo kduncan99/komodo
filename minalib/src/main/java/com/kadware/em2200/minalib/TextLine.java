@@ -4,95 +4,13 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
-import com.kadware.em2200.minalib.dictionary.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a line of source code
  */
 class TextLine {
-
-    //  These exist only within the TextLine objects, and contain the bitfield which comprise
-    //  each generated word, along with the values and any undefined references which apply thereto.
-    //  They are tagged with the location counter index and offset where they are to be placed.
-    static class GeneratedWord{
-        final int _lcIndex;
-        final int _lcOffset;
-        final Map<FieldDescriptor, IntegerValue> _fields = new HashMap<>();
-
-        /**
-         * constructor
-         * @param lcIndex location counter index
-         * @param lcOffset offset from start of location counter pool
-         * @param fields field definitions
-         */
-        GeneratedWord(
-            final int lcIndex,
-            final int lcOffset,
-            final Map<FieldDescriptor, IntegerValue> fields
-        ) {
-            _lcIndex = lcIndex;
-            _lcOffset = lcOffset;
-            _fields.putAll( fields );
-        }
-
-        /**
-         * Constructs a composite RelocatableWord36 object based upon the various component field definitions.
-         * Should be called after we've resolved all references local to the containing module.
-         * @return composite word
-         */
-        RelocatableWord36 produceRelocatableWord36(
-            final TextLine textLine
-        ) {
-            long discreteValue = 0;
-            List<RelocatableWord36.UndefinedReference> relRefs = new LinkedList<>();
-            for ( Map.Entry<FieldDescriptor, IntegerValue> entry : _fields.entrySet() ) {
-                //  convert value from twos- to ones-complement, check for 36-bit truncation
-                long fieldValue = entry.getValue()._value;
-                OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
-                OnesComplement.getOnesComplement36( fieldValue, ocr );
-                boolean trunc = ocr._overflow;
-                long value36 = ocr._result;
-
-                FieldDescriptor fd = entry.getKey();
-                long mask = (1L << fd._fieldSize) - 1;
-                long maskedValue = value36 & mask;
-
-                //  Check for field size truncation
-                if (fieldValue > 0) {
-                    trunc = (value36 != maskedValue);
-                } else if (fieldValue < 0) {
-                    trunc = ((mask | value36) != 0_777777_777777L);
-                }
-
-                if (trunc) {
-                    Locale loc = new Locale( textLine._lineNumber, 0 );
-                    textLine._diagnostics.append( new TruncationDiagnostic( loc,
-                                                                            fd._startingBit,
-                                                                            fd._startingBit + fd._fieldSize - 1) );
-                }
-
-                long bitMask = (1L << fd._fieldSize) - 1;
-                int shiftCount = 36 - fd._startingBit - fd._fieldSize;
-                discreteValue |= (maskedValue << shiftCount);
-
-                //  Propagate any remaining external references
-                for (IntegerValue.UndefinedReference intURef : entry.getValue()._undefinedReferences) {
-                    RelocatableWord36.UndefinedReference relURef =
-                        new RelocatableWord36.UndefinedReference( intURef._reference, fd, intURef._isNegative );
-                    relRefs.add( relURef );
-                }
-            }
-
-            return new RelocatableWord36( discreteValue, relRefs.toArray(new RelocatableWord36.UndefinedReference[0]) );
-        }
-    }
 
     //  line number of this line of text
     final int _lineNumber;
@@ -102,13 +20,6 @@ class TextLine {
 
     //  parsed TextField objects parsed from the line of text - may be empty
     final ArrayList<TextField> _fields = new ArrayList<>();
-
-    //  Diagnostic objects pertaining to this line of text
-    final Diagnostics _diagnostics = new Diagnostics();
-
-    //  Words generated for this line of text
-    final List<GeneratedWord> _generatedWords = new LinkedList<>();
-
 
     /**
      * Constructor
@@ -138,25 +49,12 @@ class TextLine {
     }
 
     /**
-     * Add a reference to a word generated for this line of text
-     * @param lcIndex location counter index
-     * @param lcOffset location counter offset
-     */
-    void appendWord(
-        final int lcIndex,
-        final int lcOffset,
-        final Map<FieldDescriptor, IntegerValue> fields
-    ) {
-        _generatedWords.add( new GeneratedWord( lcIndex, lcOffset, fields ) );
-    }
-
-    /**
      * Parses the text into TextField objects
      */
     void parseFields(
+        final Diagnostics diagnostics
     ) {
         //  We should only ever be called once, but just in case...
-        _diagnostics.clear();
         _fields.clear();
 
         //  Create clean text string by removing all commentary and trailing whitespace.
@@ -215,7 +113,7 @@ class TextLine {
                         TextField field = new TextField(locale, fieldText);
                         _fields.add(field);
                         Diagnostics parseDiags = field.parseSubfields();
-                        _diagnostics.append(parseDiags);
+                        diagnostics.append(parseDiags);
 
                         //  Skip field-delimiting whitespace
                         while ((tx < cleanText.length()) && (cleanText.charAt(tx) == ' ')) {
@@ -241,7 +139,7 @@ class TextLine {
                     } else if (ch == ')') {
                         if (parenLevel == 0) {
                             Locale diagLoc = new Locale(_lineNumber, tx);
-                            _diagnostics.append(new ErrorDiagnostic(diagLoc, "Too many closing parentheses"));
+                            diagnostics.append(new ErrorDiagnostic(diagLoc, "Too many closing parentheses"));
                             return;
                         }
                         --parenLevel;
@@ -263,16 +161,16 @@ class TextLine {
             TextField field = new TextField(locale, fieldText);
             _fields.add(field);
             Diagnostics parseDiags = field.parseSubfields();
-            _diagnostics.append(parseDiags);
+            diagnostics.append(parseDiags);
         }
 
         Locale endloc = new Locale(_lineNumber, tx - 1);
         if (quoted) {
-            _diagnostics.append(new QuoteDiagnostic(endloc, "Unterminated string"));
+            diagnostics.append(new QuoteDiagnostic(endloc, "Unterminated string"));
         }
 
         if (parenLevel > 0) {
-            _diagnostics.append(new ErrorDiagnostic(endloc, "Unterminated parenthesized expression"));
+            diagnostics.append(new ErrorDiagnostic(endloc, "Unterminated parenthesized expression"));
         }
     }
 

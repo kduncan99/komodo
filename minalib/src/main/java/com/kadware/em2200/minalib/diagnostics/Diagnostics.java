@@ -72,9 +72,26 @@ public class Diagnostics {
      * Getter
      * @return array of all diagnostics
      */
-    public Diagnostic[] getDiagnostics(
+    public List<Diagnostic> getDiagnostics(
     ) {
-        return _diagnostics.toArray(new Diagnostic[0]);
+        return _diagnostics;
+    }
+
+    /**
+     * Getter
+     * @param lineNumber indicates we only want those related to a particular line number
+     * @return array of diagnostics for the line number
+     */
+    public List<Diagnostic> getDiagnostics(
+        final int lineNumber
+    ) {
+        List<Diagnostic> result = new LinkedList<>();
+        for (Diagnostic d : _diagnostics) {
+            if (d._locale.getLineNumber() == lineNumber) {
+                result.add(d);
+            }
+        }
+        return result;
     }
 
     /**

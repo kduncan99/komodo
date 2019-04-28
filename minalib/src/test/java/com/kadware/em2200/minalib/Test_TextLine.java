@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
@@ -8,6 +8,7 @@ import com.kadware.em2200.minalib.Locale;
 import com.kadware.em2200.minalib.TextField;
 import com.kadware.em2200.minalib.TextLine;
 import com.kadware.em2200.minalib.diagnostics.*;
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -20,9 +21,10 @@ public class Test_TextLine {
     @Test
     public void parseFields_normal(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015  . This is a comment.");
-        tline.parseFields();
-        assertTrue(tline._diagnostics.isEmpty());
+        tline.parseFields(d);
+        assertTrue(d.isEmpty());
 
         assertEquals(3, tline._fields.size());
 
@@ -47,9 +49,10 @@ public class Test_TextLine {
     @Test
     public void parseFields_noComment(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015");
-        tline.parseFields();
-        assertTrue(tline._diagnostics.isEmpty());
+        tline.parseFields(d);
+        assertTrue(d.isEmpty());
 
         assertEquals(3, tline._fields.size());
 
@@ -74,9 +77,10 @@ public class Test_TextLine {
     @Test
     public void parseFields_noLabel(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "          LA,U      A0,015  . This is a comment.");
-        tline.parseFields();
-        assertTrue(tline._diagnostics.isEmpty());
+        tline.parseFields(d);
+        assertTrue(d.isEmpty());
 
         assertEquals(3, tline._fields.size());
         assertNull(tline.getField(0));
@@ -97,39 +101,43 @@ public class Test_TextLine {
     @Test
     public void parseFields_parenLevel1(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "          LA,U      A0,('@ASG  '");
-        tline.parseFields();
-        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
-        assertEquals(1, diags.length);
-        assertEquals(Diagnostic.Level.Error, diags[0].getLevel());
+        tline.parseFields(d);
+        List<Diagnostic> diags = d.getDiagnostics();
+        assertEquals(1, diags.size());
+        assertEquals(Diagnostic.Level.Error, diags.get(0).getLevel());
     }
 
     @Test
     public void parseFields_parenLevel2(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "          LA,U      A0,'@ASG  ')");
-        tline.parseFields();
-        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
-        assertEquals(1, diags.length);
-        assertEquals(Diagnostic.Level.Error, diags[0].getLevel());
+        tline.parseFields(d);
+        List<Diagnostic> diags = d.getDiagnostics();
+        assertEquals(1, diags.size());
+        assertEquals(Diagnostic.Level.Error, diags.get(0).getLevel());
     }
 
     @Test
     public void parseFields_unterminatedQuote(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "TAG       $EQU      '@ASG  .");
-        tline.parseFields();
-        Diagnostic[] diags = tline._diagnostics.getDiagnostics();
-        assertEquals(1, diags.length);
-        assertEquals(Diagnostic.Level.Quote, diags[0].getLevel());
+        tline.parseFields(d);
+        List<Diagnostic> diags = d.getDiagnostics();
+        assertEquals(1, diags.size());
+        assertEquals(Diagnostic.Level.Quote, diags.get(0).getLevel());
     }
 
     @Test
     public void parseFields_splitSign(
     ) {
+        Diagnostics d = new Diagnostics();
         TextLine tline = new TextLine(10, "          + (100, 100)  . This should be ONE field");
-        tline.parseFields();
-        assertTrue(tline._diagnostics.isEmpty());
+        tline.parseFields(d);
+        assertTrue(d.isEmpty());
 
         assertEquals(2, tline._fields.size());
 

@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
 
+import com.kadware.em2200.minalib.diagnostics.*;
 import java.util.ArrayList;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -25,9 +26,11 @@ public class Test_Parser {
             "          ER        APRINT$",
             "          ER        EXIT$"
         };
+
+        Diagnostics d = new Diagnostics();
         TextParser parser = new TextParser(source);
-        parser.parse();
-        assertTrue(parser._diagnostics.isEmpty());
+        parser.parse(d);
+        assertTrue(d.isEmpty());
 
         ArrayList<TextLine> scset = parser._sourceCodeSet;
         assertEquals(7, scset.size());

@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib.expressions;
 
-import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -18,12 +17,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void parseIntegerLiteral(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("14458", locale);
 
-        Context context = new Context( new Dictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -37,12 +36,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void parseNegativeIntegerLiteral(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("-14458", locale);
 
-        Context context = new Context( new Dictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -61,12 +60,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void parseStringLiteral(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("'Hello'", locale);
 
-        Context context = new Context( new Dictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -80,12 +79,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void simpleConcatenation(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("'Hello ':'Stupid ':'Moron'", locale);
 
-        Context context = new Context( new Dictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -94,12 +93,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void simpleMath(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("1+3", locale);
 
-        Context context = new Context( new Dictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         Expression exp = parser.parse(context, diagnostics);
 
@@ -108,7 +107,7 @@ public class Test_ExpressionParser {
 
     @Test
     public void parseLabel(
-    ) throws NotFoundException {
+    ) {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("$Label", locale);
 
@@ -119,12 +118,12 @@ public class Test_ExpressionParser {
 
     @Test
     public void parseBuiltInFunction(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("$sl('Test')", locale);
 
-        Context context = new Context( new SystemDictionary() );
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), "TEST");
         Diagnostics diagnostics = new Diagnostics();
         FunctionItem fi = parser.parseFunction(context, diagnostics);
         assertTrue(fi instanceof BuiltInFunctionItem);

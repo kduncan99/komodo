@@ -11,6 +11,8 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
+import sun.nio.cs.ext.EUC_CN;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,15 +35,12 @@ public class Assembler {
     //  Diagnostics, when generated, should be appended to the TextLine objects' _diagnostic members.
     private final Diagnostics _diagnostics = new Diagnostics();
 
-    //  Keep track of the amount of code generated per location counter index
-    private final Map<Integer, Integer> _codeCount = new HashMap<>();
-
     //  The various TextLine object which comprise the source and assembled code...
     //  These objects are where most of the work is done throughout the assembly process
     private final TextLine[] _sourceCode;
 
     //  Name of the module to be created
-    private String _moduleName;
+    private final String _moduleName;
 
     private final Dictionary _globalDictionary;
     private final SystemDictionary _systemDictionary;
@@ -86,47 +85,34 @@ public class Assembler {
         TextField operandField = textLine.getField(2);
 
         //  Interpret label field and update current location counter index if appropriate
-        LabelFieldComponents lfc = interpretLabelField(labelField, textLine._diagnostics);
+        LabelFieldComponents lfc = interpretLabelField(labelField, _diagnostics);
         if (lfc._lcIndex != null) {
             _context._currentGenerationLCIndex = lfc._lcIndex;
         }
 
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(textLine, lfc, operationField, operandField, textLine._diagnostics)) {
+        if (processMnemonic(textLine, lfc, operationField, operandField, _diagnostics)) {
             if (textLine._fields.size() > 3) {
-                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
-                                                                 "Extraneous fields ignored"));
+                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale, "Extraneous fields ignored"));
             }
             return;
         }
 
         //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
-        if (processDirective(textLine, lfc, operationField, operandField, textLine._diagnostics)) {
+        if (processDirective(textLine, lfc, operationField, operandField, _diagnostics)) {
             return;
         }
 
         //  Hmm.  Is it an expression (or a list of expressions)?
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
-        if (processDataGeneration(textLine, lfc, operationField, textLine._diagnostics)) {
+        if (processDataGeneration(textLine, lfc, operationField, _diagnostics)) {
             if (textLine._fields.size() > 2) {
-                textLine._diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale,
-                                                                 "Extraneous fields ignored"));
+                _diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale, "Extraneous fields ignored"));
             }
             return;
         }
 
-        textLine._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
-                                                         "Unrecognizable source code"));
-    }
-
-    /**
-     * Aggregates the diagnostics from the individual lines of text into the master _diagnostics container
-     */
-    private void collectDiagnostics(
-    ) {
-        for (TextLine line : _sourceCode) {
-            _diagnostics.append(line._diagnostics);
-        }
+        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "Unrecognizable source code"));
     }
 
     /**
@@ -177,64 +163,38 @@ public class Assembler {
      */
     private void displayResults(
     ) {
+        //  This is inefficient, but it only applies when the caller wants to display source output.
         for (TextLine line : _sourceCode) {
             System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
 
-            for (Diagnostic d : line._diagnostics.getDiagnostics()) {
+            for (Diagnostic d : _diagnostics.getDiagnostics(line._lineNumber)) {
                 System.out.println( d.getMessage() );
             }
 
-            for (TextLine.GeneratedWord gw : line._generatedWords) {
-                RelocatableWord36 rw36 = gw.produceRelocatableWord36( line );
-                String gwBase = String.format("  $(%2d) %06o:  %012o", gw._lcIndex, gw._lcOffset, rw36.getW());
-                if (rw36._undefinedReferences.length == 0) {
-                    System.out.println(gwBase);
-                } else {
-                    for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
-                        System.out.println(String.format("%s %s",
-                                                         urx == 0 ? gwBase : "                           ",
-                                                         rw36._undefinedReferences[urx].toString()));
+            for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : _context._generatedPools.entrySet()) {
+                int lcIndex = poolEntry.getKey();
+                Context.GeneratedPool gPool = poolEntry.getValue();
+                for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : gPool.entrySet()) {
+                    int lcOffset = wordEntry.getKey();
+                    Context.GeneratedWord gWord = wordEntry.getValue();
+                    if (gWord._locale.getLineNumber() == line._lineNumber) {
+                        RelocatableWord36 rw36 = gWord.produceRelocatableWord36(_diagnostics);
+                        String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
+                        if (rw36._undefinedReferences.length == 0) {
+                            System.out.println(gwBase);
+                        } else {
+                            for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+                                System.out.println(String.format("%s %s",
+                                                                 urx == 0 ? gwBase : "                           ",
+                                                                 rw36._undefinedReferences[urx].toString()));
+                            }
+                        }
                     }
                 }
             }
         }
 
         displayDictionary(_context._dictionary);
-    }
-
-    /**
-     * Generates the given word as a set of subfields for a given location counter index and offset,
-     * and places it into the given TextLine objects's set of generated words.
-     * @param textLine line of text which is driving this
-     * @param form indicates the bit fields - there should be one value per bit-field
-     * @param values the values to be used
-     * @param lcIndex index of the location counter pool
-     */
-    private void generate(
-        final TextLine textLine,
-        final Form form,
-        final IntegerValue[] values,
-        final int lcIndex
-    ) {
-        if (values.length != form._fieldSizes.length) {
-            throw new RuntimeException("Number of bit-fields in the form differ from number of values");
-        }
-
-        int startingBit = form._leftSlop;
-        int[] fieldSizes = form._fieldSizes;
-        Map<FieldDescriptor, IntegerValue> fields = new HashMap<>();
-        for (int fx = 0; fx < values.length; ++fx) {
-            FieldDescriptor fd = new FieldDescriptor( startingBit, fieldSizes[fx] );
-            fields.put(fd, values[fx]);
-            startingBit += fieldSizes[fx];
-        }
-
-        if (!_codeCount.containsKey( lcIndex )) {
-            _codeCount.put( lcIndex, 0 );
-        }
-        int lcOffset = _codeCount.get( lcIndex );
-        textLine.appendWord( lcIndex, lcOffset, fields );
-        _codeCount.put( lcIndex, lcOffset + 1);
     }
 
     /**
@@ -245,26 +205,6 @@ public class Assembler {
     private RelocatableModule generateRelocatableModule(
         final String moduleName
     ) {
-        Map<Integer, RelocatableWord36[]> temp = new HashMap<>();
-        for (Map.Entry<Integer, Integer> entry : _codeCount.entrySet()) {
-            int lcIndex = entry.getKey();
-            int size = entry.getValue();
-            temp.put( lcIndex, new RelocatableWord36[size] );
-        }
-
-        for (TextLine line : _sourceCode) {
-            for (TextLine.GeneratedWord gw : line._generatedWords) {
-                temp.get( gw._lcIndex )[gw._lcOffset] = gw.produceRelocatableWord36( line );
-            }
-        }
-
-        Map<Integer, LocationCounterPool> pools = new HashMap<>();
-        for (Map.Entry<Integer, RelocatableWord36[]> entry : temp.entrySet()) {
-            int lcIndex = entry.getKey();
-            RelocatableWord36[] storage = entry.getValue();
-            pools.put( lcIndex, new LocationCounterPool( storage ) );
-        }
-
         Map<String, IntegerValue> externalLabels = new TreeMap<>();
         for ( String label : _globalDictionary.getLabels() ) {
             try {
@@ -277,7 +217,7 @@ public class Assembler {
             }
         }
 
-        return new RelocatableModule( moduleName, pools, externalLabels );
+        return new RelocatableModule(moduleName, _context.produceLocationCounterPools(_diagnostics), externalLabels);
     }
 
     /**
@@ -399,7 +339,7 @@ public class Assembler {
                            _context._dictionary,
                            labelFieldComponents._label,
                            labelFieldComponents._labelLevel,
-                           getCurrentLocation(),
+                           _context.getCurrentLocation(),
                            diagnostics);
         }
 
@@ -467,7 +407,11 @@ public class Assembler {
                 fieldSizes[fx] = fieldSize;
             }
 
-            generate(textLine, new Form(fieldSizes), values, _context._currentGenerationLCIndex);
+            _context.generate(operandField._locale,
+                              _context._currentGenerationLCIndex,
+                              new Form(fieldSizes),
+                              values);
+            return true;
         }
 
         diagnostics.append(new ErrorDiagnostic(sf0Locale, "Wrong value type for data generation"));
@@ -527,7 +471,7 @@ public class Assembler {
                                _context._dictionary,
                                labelFieldComponents._label,
                                labelFieldComponents._labelLevel,
-                               getCurrentLocation(),
+                               _context.getCurrentLocation(),
                                diagnostics);
             }
             return true;
@@ -567,7 +511,7 @@ public class Assembler {
                            _context._dictionary,
                            labelFieldComponents._label,
                            labelFieldComponents._labelLevel,
-                           getCurrentLocation(),
+                           _context.getCurrentLocation(),
                            diagnostics);
         }
 
@@ -601,9 +545,9 @@ public class Assembler {
         //  Deal with the operand field - initialize resulting values here, as we do make every attempt to generate
         //  a word, even in the presence of errors which might short-circuit other stuff inside the conditional
         //  expression(s).
-        IntegerValue aValue = _zeroValue;   //  register value
+        IntegerValue aValue;                //  register value
         IntegerValue bValue = _zeroValue;   //  base register subfield
-        IntegerValue uValue = _zeroValue;   //  displacement/address/value subfield
+        IntegerValue uValue;                //  displacement/address/value subfield
         IntegerValue xValue = _zeroValue;   //  index register subfield
 
         Value operandValue = null;
@@ -759,24 +703,23 @@ public class Assembler {
                                                              "Syntax Error:" + ex.getMessage() ) );
                     return true;
                 }
-            } else {
-                if (_context._defaultBaseRegister != null) {
-                    bValue = new IntegerValue(false, _context._defaultBaseRegister, null);
-                }
             }
         }
 
         //  Create the instruction word
+        Form form;
+        IntegerValue[] values;
         if (!iinfo._jFlag && (jField >= 016)) {
-            IntegerValue[] values = new IntegerValue[5];
+            form = _fjaxuForm;
+            values = new IntegerValue[5];
             values[0] = new IntegerValue( false, iinfo._fField, null );
             values[1] = new IntegerValue( false, jField, null );
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
-            generate(textLine, _fjaxuForm, values, _context._currentGenerationLCIndex);
         } else if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
-            IntegerValue[] values = new IntegerValue[7];
+            form = _fjaxhiuForm;
+            values = new IntegerValue[7];
             values[0] = new IntegerValue(false, iinfo._fField, null);
             values[1] = new IntegerValue(false, jField, null);
             values[2] = aValue;
@@ -784,9 +727,9 @@ public class Assembler {
             values[4] = new IntegerValue(false, (xValue._flagged ? 1 : 0), null);
             values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
             values[6] = uValue;
-            generate(textLine, _fjaxhiuForm, values, _context._currentGenerationLCIndex);
         } else {
-            IntegerValue[] values = new IntegerValue[8];
+            form = _fjaxhibdForm;
+            values = new IntegerValue[8];
             values[0] = new IntegerValue(false, iinfo._fField, null);
             values[1] = new IntegerValue(false, jField, null);
             values[2] = aValue;
@@ -795,24 +738,26 @@ public class Assembler {
             values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
             values[6] = bValue;
             values[7] = uValue;
-            generate(textLine, _fjaxhibdForm, values, _context._currentGenerationLCIndex);
         }
 
+        _context.generate(operationField._locale, _context._currentGenerationLCIndex, form, values);
         return true;
     }
 
     /**
      * Resolves any lingering undefined references once initial assembly is complete...
      * These will be the forward-references we picked up along the way.
-     * @param dictionary our source for looking up the references
      */
     private void resolveReferences(
-        final Dictionary dictionary
     ) {
-        for (TextLine line : _sourceCode) {
-            for (int wx = 0; wx < line._generatedWords.size(); ++wx) {
-                TextLine.GeneratedWord gw = line._generatedWords.get(wx);
-                for ( Map.Entry<FieldDescriptor, IntegerValue> entry : gw._fields.entrySet() ) {
+        for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : _context._generatedPools.entrySet()) {
+            int lcIndex = poolEntry.getKey();
+            Context.GeneratedPool pool = poolEntry.getValue();
+            for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : pool.entrySet()) {
+                int lcOffset = wordEntry.getKey();
+                Context.GeneratedWord gWord = wordEntry.getValue();
+
+                for ( Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet() ) {
                     FieldDescriptor fd = entry.getKey();
                     IntegerValue originalIV = entry.getValue();
                     if (originalIV._undefinedReferences.length > 0) {
@@ -820,28 +765,27 @@ public class Assembler {
                         List<IntegerValue.UndefinedReference> newURefs = new LinkedList<>();
                         for (IntegerValue.UndefinedReference intURef : originalIV._undefinedReferences) {
                             try {
-                                Value lookupValue = dictionary.getValue(intURef._reference);
-                                if ( lookupValue.getType() != ValueType.Integer ) {
-                                    Locale loc = new Locale(line._lineNumber, 0);
-                                    line._diagnostics.append(
-                                        new ValueDiagnostic(
-                                            loc,
-                                            "Forward reference does not resolve to an integer"));
+                                Value lookupValue = _context._dictionary.getValue(intURef._reference);
+                                if (lookupValue.getType() != ValueType.Integer) {
+                                    _diagnostics.append(
+                                            new ValueDiagnostic(
+                                                    gWord._locale,
+                                                    "Forward reference does not resolve to an integer"));
                                 } else {
                                     IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
                                     newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue._value;
                                     newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
                                 }
-                            } catch ( NotFoundException ex ) {
+                            } catch (NotFoundException ex) {
                                 //  reference is still not found - propagate it
                                 newURefs.add(intURef);
                             }
                         }
 
-                        IntegerValue newIV = new IntegerValue( originalIV._flagged,
-                                                               newDiscreteValue,
-                                                               newURefs.toArray(new IntegerValue.UndefinedReference[0]) );
-                        gw._fields.put( fd, newIV );
+                        IntegerValue newIV = new IntegerValue(originalIV._flagged,
+                                                              newDiscreteValue,
+                                                              newURefs.toArray(new IntegerValue.UndefinedReference[0]));
+                        gWord.put(fd, newIV);
                     }
                 }
             }
@@ -856,62 +800,45 @@ public class Assembler {
     /**
      * Create an Assembler object and load it with text from the given array of source lines
      * @param source array of strings comprising the source code to be assembled
+     * @param moduleName name to be given to the relocatable module
      */
     public Assembler(
-        final String[] source
+        final String[] source,
+        final String moduleName
     ) {
         _systemDictionary = new SystemDictionary();
-        _globalDictionary = new Dictionary( _systemDictionary );
-        _context = new Context( _globalDictionary );
+        _globalDictionary = new Dictionary(_systemDictionary);
+        _context = new Context(_globalDictionary, moduleName);
         _sourceCode = new TextLine[source.length];
         for (int sx = 0; sx < source.length; ++sx) {
             int lineNumber = sx + 1;
             _sourceCode[sx] = new TextLine(lineNumber, source[sx]);
         }
-    }
-
-    /**
-     * Advances the offset of a particular location counter
-     * @param lcIndex index of the location counter
-     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
-     */
-    public void advanceLocation(
-        final int lcIndex,
-        final int count
-    ) {
-        if (!_codeCount.containsKey(lcIndex)) {
-            _codeCount.put(lcIndex, count);
-        } else {
-            _codeCount.put(lcIndex, _codeCount.get(lcIndex) + count);
-        }
+        _moduleName = moduleName;
     }
 
     /**
      * Assemble the source code in the object.
      * We do not do things quite in the same way as MASM.
-     * @param moduleName name to be given to the module
      * @param display true to display source, code generation, etc on console
      * @return RelocatableModule we create if successful, else null
      */
     public RelocatableModule assemble(
-        final String moduleName,
         final boolean display
     ) {
         if (display) {
-            System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
+            System.out.println(String.format("Assembling module %s -----------------------------------", _moduleName));
         }
 
         //  setup
-        _moduleName = moduleName;
         _context._characterMode = CharacterMode.ASCII;
         _context._codeMode = CodeMode.Basic;
         _diagnostics.clear();
 
         //  First step - parse all the source code into fields/subfields.
         for (TextLine line : _sourceCode) {
-            line.parseFields();
-            if (line._diagnostics.hasFatal()) {
-                collectDiagnostics();
+            line.parseFields(_diagnostics);
+            if (_diagnostics.hasFatal()) {
                 return null;
             }
         }
@@ -920,14 +847,12 @@ public class Assembler {
         for (TextLine line : _sourceCode) {
             assembleTextLine(line);
             if (_diagnostics.hasFatal()) {
-                collectDiagnostics();
                 return null;
             }
         }
 
-        resolveReferences(_context._dictionary);
-        RelocatableModule module = generateRelocatableModule( moduleName );
-        collectDiagnostics();
+        resolveReferences();
+        RelocatableModule module = generateRelocatableModule(_moduleName);
 
         if (display) {
             displayResults();
@@ -971,24 +896,6 @@ public class Assembler {
         } else {
             dictionary.addValue(labelLevel, label, value);
         }
-    }
-
-    /**
-     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
-     * current generation location counter (e.g., for interpreting '$' or whatever).
-     * @return IntegerValue object as described
-     */
-    public IntegerValue getCurrentLocation(
-    ) {
-        int lcIndex = _context._currentGenerationLCIndex;
-        if (!_codeCount.containsKey( lcIndex )) {
-            _codeCount.put( lcIndex, 0 );
-        }
-
-        int lcOffset = _codeCount.get( lcIndex );
-        String ref = String.format( "%s_LC$BASE_%d", _moduleName, lcIndex );
-        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference( ref, false ) };
-        return new IntegerValue(false, lcOffset, refs);
     }
 
     /**

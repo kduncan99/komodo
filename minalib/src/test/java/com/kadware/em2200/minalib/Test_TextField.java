@@ -1,13 +1,10 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.TextField;
-import com.kadware.em2200.minalib.TextSubfield;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
-import com.kadware.em2200.minalib.Locale;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,7 +28,7 @@ public class Test_TextField {
         Locale loc = new Locale(1, 1);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
-        assertEquals(0, diag.getDiagnostics().length);
+        assertTrue(diag.getDiagnostics().isEmpty());
 
         int sfCount = fld._subfields.size();
         assertEquals(1, sfCount);
@@ -48,7 +45,7 @@ public class Test_TextField {
         Locale loc = new Locale(1, 8);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
-        assertEquals(0, diag.getDiagnostics().length);
+        assertTrue(diag.getDiagnostics().isEmpty());
 
         int sfCount = fld._subfields.size();
         assertEquals(2, sfCount);
@@ -70,7 +67,7 @@ public class Test_TextField {
         Locale loc = new Locale(10, 21);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
-        assertEquals(0, diag.getDiagnostics().length);
+        assertTrue(diag.getDiagnostics().isEmpty());
 
         int sfCount = fld._subfields.size();
         assertEquals(4, sfCount);

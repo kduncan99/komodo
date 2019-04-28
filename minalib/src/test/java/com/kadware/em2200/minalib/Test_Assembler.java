@@ -16,8 +16,8 @@ public class Test_Assembler {
     ) {
         String[] source = {};
 
-        Assembler asm = new Assembler(source);
-        asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(0, asm.getParsedCode().length);
     }
@@ -32,8 +32,8 @@ public class Test_Assembler {
             ". Blah blah blah",
         };
 
-        Assembler asm = new Assembler(source);
-        asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         TextLine[] parsedCode = asm.getParsedCode();
         assertEquals(4, parsedCode.length);
@@ -49,8 +49,8 @@ public class Test_Assembler {
             "  LA,U A0,0"
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
     }
 
@@ -61,8 +61,8 @@ public class Test_Assembler {
                 "START*  LA,U A0,0"
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertTrue(module._externalLabels.containsKey("START"));
         assertEquals(1, module._externalLabels.get("START")._undefinedReferences.length);
@@ -76,8 +76,8 @@ public class Test_Assembler {
                 "$(5)  LA,U      A0,1",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(2, module._storage.size());
         assertTrue(module._storage.containsKey(3));
@@ -91,8 +91,8 @@ public class Test_Assembler {
                 "$(3),START*  LA,U      A0,0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(1, module._storage.size());
         assertTrue(module._storage.containsKey(3));
@@ -107,8 +107,8 @@ public class Test_Assembler {
                 "$%$%$ LA  A5,0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertFalse(asm.getDiagnostics().isEmpty());
     }
 
@@ -119,8 +119,8 @@ public class Test_Assembler {
                 "$(25),%%% LA  A5,0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertFalse(asm.getDiagnostics().isEmpty());
     }
 
@@ -131,8 +131,8 @@ public class Test_Assembler {
                 "LABEL,EXTRA LA  A5,0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertFalse(asm.getDiagnostics().isEmpty());
     }
 
@@ -143,8 +143,22 @@ public class Test_Assembler {
                 "$(25),LABEL,EXTRA LA  A5,0",
         };
 
-        Assembler asm = new Assembler(source);
-        RelocatableModule module = asm.assemble("Test", true);
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
         assertFalse(asm.getDiagnostics().isEmpty());
+    }
+
+    @Test
+    public void lit(
+    ) {
+        String[] source = {
+                "$(1)  + 15",
+                "      + (077, 0777)"
+        };
+
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
+        assertTrue(asm.getDiagnostics().isEmpty());
+        assertEquals(2, module._storage.size());
     }
 }

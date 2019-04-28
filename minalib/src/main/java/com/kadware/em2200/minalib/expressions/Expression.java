@@ -13,6 +13,7 @@ import com.kadware.em2200.minalib.expressions.operators.Operator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.BinaryOperator;
 
 /**
  * Expression evaluator
@@ -48,16 +49,35 @@ public class Expression {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
-        for ( IExpressionItem item : _items ) {
+        //  Special case - if there is an ExpressionGroupItem here and it has no binary operator siblings,
+        //  then it needs to become a case-2 e-g-item.
+        ExpressionGroupItem egItem = null;
+        boolean hasBinary = false;
+        for (IExpressionItem item : _items) {
+            if (item instanceof OperatorItem) {
+                OperatorItem opItem = (OperatorItem) item;
+                if (opItem._operator instanceof BinaryOperator) {
+                    hasBinary = true;
+                }
+            } else if (item instanceof ExpressionGroupItem) {
+                egItem = (ExpressionGroupItem) item;
+            }
+        }
+
+        if (!hasBinary && (egItem != null)) {
+            egItem._isSubExpression = false;
+        }
+
+        for (IExpressionItem item : _items) {
             //  Take items off the item list...
             //  Operand items get resolved into values which are place on the value stack.
             //  Operator items get placed on the operator stack *after* all other operators
             //  on that stack, of equal or greater prcedence, are evaluated.
-            if ( item instanceof OperandItem ) {
+            if (item instanceof OperandItem) {
                 OperandItem opItem = (OperandItem)item;
                 Value value = opItem.resolve(context, diagnostics);
                 valueStack.push(value);
-            } else if ( item instanceof OperatorItem ) {
+            } else if (item instanceof OperatorItem) {
                 OperatorItem opItem = (OperatorItem)item;
                 Operator op = opItem._operator;
                 while ( !operatorStack.empty() && (operatorStack.peek().getPrecedence() >= op.getPrecedence()) ) {

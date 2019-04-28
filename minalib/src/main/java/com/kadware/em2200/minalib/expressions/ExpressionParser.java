@@ -12,6 +12,7 @@ import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 import com.kadware.em2200.minalib.expressions.operators.*;
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -164,6 +165,7 @@ public class ExpressionParser {
         boolean allowPrefixOperator = true;
         boolean allowOperand = true;
 
+        skipWhitespace();
         while (!atEnd()) {
             if (allowInfixOperator) {
                 IExpressionItem item = parseInfixOperator();
@@ -173,6 +175,7 @@ public class ExpressionParser {
                     allowOperand = true;
                     allowPostfixOperator = false;
                     allowPrefixOperator = true;
+                    skipWhitespace();
                     continue;
                 }
             }
@@ -185,6 +188,7 @@ public class ExpressionParser {
                     allowPostfixOperator = true;
                     allowPrefixOperator = false;
                     allowOperand = false;
+                    skipWhitespace();
                     continue;
                 }
             }
@@ -193,6 +197,7 @@ public class ExpressionParser {
                 IExpressionItem item = parsePrefixOperator();
                 if (item != null) {
                     expItems.add(item);
+                    skipWhitespace();
                     continue;
                 }
             }
@@ -201,6 +206,7 @@ public class ExpressionParser {
                 IExpressionItem item = parsePostfixOperator();
                 if (item != null) {
                     expItems.add(item);
+                    skipWhitespace();
                     continue;
                 }
             }
@@ -250,10 +256,12 @@ public class ExpressionParser {
             }
 
             expressions.add(exp);
+            skipWhitespace();
             if (skipToken(",")) {
                 continue;
             }
 
+            skipWhitespace();
             if (nextChar() != ')') {
                 //  next char isn't a comma, nor a closing paren - again, something is wrong
                 diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
@@ -275,11 +283,6 @@ public class ExpressionParser {
         final Context context,
         Diagnostics diagnostics
     ) throws ExpressionException {
-        //  We're looking for {label} '(' {expr}* ')'
-        //  If we don't find the above combination, we bail with NotFoundException
-        //  Otherwise, we begin parsing the putative and possibly empty parameter list.
-        //  Each parameter is a sub-expression which... gets handled appropriately.
-
         Locale funcLocale = getLocale();
         int holdIndex = _index;
         String name = parseLabel(diagnostics);
@@ -287,66 +290,37 @@ public class ExpressionParser {
             return null;
         }
 
-        if (!skipToken("(")) {
-            _index = holdIndex;
-            return null;
-        }
-
-        List<Expression> argExpressions = new LinkedList<>();
-        while (!skipToken(")")) {
-            Expression exp = parseExpression(context, diagnostics);
-            if (exp == null) {
-                //  didn't find an expression, and we didn't find a closing paren either... something is wrong
-                diagnostics.append(new ErrorDiagnostic(funcLocale, "Syntax error"));
-                throw new ExpressionException();
-            }
-
-            argExpressions.add(exp);
-            if (skipToken(",")) {
-                continue;
-            }
-
-            if (nextChar() != ')') {
-                //  next char isn't a comma, nor a closing paren - again, something is wrong
-                diagnostics.append(new ErrorDiagnostic(funcLocale, "Syntax error"));
-                throw new ExpressionException();
-            }
-        }
-
-        //  Is the label found in the dictionary?
-        //  Function refs cannot be forward-referenced...
+        //  Is the label found in the dictionary as a function definition?
         Value value;
         try {
             value = context._dictionary.getValue(name);
-        } catch (NotFoundException ex) {
-            diagnostics.append(new ErrorDiagnostic(funcLocale, String.format("Function %s not defined", name)));
-            throw new ExpressionException();
-        }
+            //TODO handle user functions as well
+            if (value.getType() == ValueType.BuiltInFunction) {
+                Expression[] argExpressions = parseExpressionGroup(context, diagnostics);
+                if (argExpressions == null) {
+                    argExpressions = new Expression[0];
+                }
 
-        //  Is it a built-in function?
-        if (value.getType() == ValueType.BuiltInFunction) {
-            try {
-                Class<?>[] argTypes = { Locale.class, Expression[].class };
-                Class<?> clazz = ((BuiltInFunctionValue)value).getClazz();
-                Constructor<?> ctor = clazz.getConstructor(argTypes);
-                Object[] ctorArgs = { funcLocale, argExpressions.toArray(new Expression[0]) };
-                BuiltInFunction bif = (BuiltInFunction)(ctor.newInstance(ctorArgs));
-                return new BuiltInFunctionItem(bif);
-            } catch (IllegalAccessException
-                     | InstantiationException
-                     | InvocationTargetException
-                     | NoSuchMethodException ex) {
-                throw new InternalErrorRuntimeException(String.format("Caught:%s in ExpressonParser.parseFunction()", ex));
+                try {
+                    Class<?>[] argTypes = { Locale.class, Expression[].class };
+                    Class<?> clazz = ((BuiltInFunctionValue)value).getClazz();
+                    Constructor<?> ctor = clazz.getConstructor(argTypes);
+                    Object[] ctorArgs = { funcLocale, argExpressions };
+                    BuiltInFunction bif = (BuiltInFunction)(ctor.newInstance(ctorArgs));
+                    return new BuiltInFunctionItem(bif);
+                } catch (IllegalAccessException
+                        | InstantiationException
+                        | InvocationTargetException
+                        | NoSuchMethodException ex) {
+                    throw new InternalErrorRuntimeException(String.format("Caught:%s in ExpressonParser.parseFunction()", ex));
+                }
             }
+        } catch (NotFoundException ex) {
+            //  fall through
         }
 
-        //  Is it a user function reference?
-        if (value.getType() == ValueType.FuncName) {
-            //TODO user function lookup
-        }
-
-        diagnostics.append(new ErrorDiagnostic(getLocale(), String.format("%s is not defined as a function", name)));
-        throw new ExpressionException();
+        _index = holdIndex;
+        return null;
     }
 
     /**
@@ -525,7 +499,10 @@ public class ExpressionParser {
         final Context context,
         final Diagnostics diagnostics
     ) throws ExpressionException {
-        //  TODO literal generation or arithmetic group...
+        Expression[] expGroup = parseExpressionGroup(context, diagnostics);
+        if (expGroup != null) {
+            return new ExpressionGroupItem(_textLocale, expGroup);
+        }
 
         OperandItem opItem = parseLiteral(context, diagnostics);
         if (opItem == null) {

@@ -47,8 +47,8 @@ class Test_InstructionProcessor {
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code);
-        RelocatableModule relModule = asm.assemble("TEST", display);
+        Assembler asm = new Assembler(code, "TEST");
+        RelocatableModule relModule = asm.assemble(display);
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         for (Integer lcIndex : relModule._storage.keySet()) {
@@ -106,9 +106,9 @@ class Test_InstructionProcessor {
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
 
         for (String[] codeSet : code) {
-            Assembler a = new Assembler(codeSet);
             String moduleName = String.format("TEST%d", relocatableModules.size() + 1);
-            RelocatableModule relModule = a.assemble(moduleName, display);
+            Assembler a = new Assembler(codeSet, moduleName);
+            RelocatableModule relModule = a.assemble(display);
             relocatableModules.add(relModule);
 
             for (Integer lcIndex : relModule._storage.keySet()) {
@@ -164,8 +164,8 @@ class Test_InstructionProcessor {
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code);
-        RelocatableModule relModule = asm.assemble("TEST", display);
+        Assembler asm = new Assembler(code, "TEST");
+        RelocatableModule relModule = asm.assemble(display);
         List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs05 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs06 = new LinkedList<>();
@@ -244,8 +244,8 @@ class Test_InstructionProcessor {
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code);
-        RelocatableModule relModule = asm.assemble("TEST", display);
+        Assembler asm = new Assembler(code, "TEST");
+        RelocatableModule relModule = asm.assemble(display);
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         for (Integer lcIndex : relModule._storage.keySet()) {
@@ -299,8 +299,8 @@ class Test_InstructionProcessor {
             final String[] code,
             final boolean display
     ) {
-        Assembler asm = new Assembler(code);
-        RelocatableModule relModule = asm.assemble("TEST", display);
+        Assembler asm = new Assembler(code, "TEST");
+        RelocatableModule relModule = asm.assemble(display);
         Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
         int nextDBankBDI = 05;
         for (Integer lcIndex : relModule._storage.keySet()) {
