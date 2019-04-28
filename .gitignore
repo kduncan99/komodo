@@ -1,12 +1,5 @@
 /baselib/target
 /minalib/target
-/basewarelib/target
-
-/baselib/target
-/minalib/target
 /hardwarelib/target
 
-/baselib/target
-/minalib/target
-/minalib/target
-
+.idea/workspace.xml
