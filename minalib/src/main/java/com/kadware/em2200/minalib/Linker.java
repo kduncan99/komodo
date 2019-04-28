@@ -356,7 +356,7 @@ public class Linker {
             if (_errors == 0) {
                 System.out.println(String.format("Linking Ends Errors=%d -------------------------------------------------------",
                                                  _errors));
-                return new AbsoluteModule(moduleName, loadableBanks);
+                return new AbsoluteModule(moduleName, loadableBanks, loadableBanks[0]._startingAddress);
             }
         } catch (InvalidParameterException ex) {
             raise(ex.getMessage());

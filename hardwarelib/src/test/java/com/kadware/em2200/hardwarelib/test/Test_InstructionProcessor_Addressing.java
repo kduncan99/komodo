@@ -50,7 +50,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -85,7 +85,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -121,7 +121,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -156,7 +156,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -192,7 +192,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -230,7 +230,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -272,7 +272,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -339,7 +339,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -394,7 +394,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -433,7 +433,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setExecRegisterSetSelected(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -472,7 +472,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(022000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -509,7 +509,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -546,7 +546,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -584,7 +584,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -622,7 +622,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -661,7 +661,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -684,7 +684,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
                 "          01122,03344,05566",
                 "",
                 "$(1),START",
-                "          LA        A0,0,,B1",
+                "          LA        A0,DATA,,B1",
                 "          HALT      0",
         };
 
@@ -701,7 +701,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -741,7 +741,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -810,7 +810,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -884,7 +884,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setExecutive24BitIndexingEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
@@ -929,7 +929,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         dReg.setExecRegisterSetSelected(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 

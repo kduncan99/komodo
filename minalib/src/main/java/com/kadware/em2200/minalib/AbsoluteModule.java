@@ -15,6 +15,7 @@ public class AbsoluteModule {
 
     public final String _name;
     public final Map<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
+    public final int _startingAddress;
 
     /**
      * Constructor
@@ -22,7 +23,8 @@ public class AbsoluteModule {
      */
     public AbsoluteModule(
         final String name,
-        final LoadableBank[] loadableBanks
+        final LoadableBank[] loadableBanks,
+        final int startingAddress
     ) throws InvalidParameterException {
         _name = name;
         for (LoadableBank lb : loadableBanks) {
@@ -31,6 +33,7 @@ public class AbsoluteModule {
             }
             _loadableBanks.put(lb._bankDescriptorIndex, lb);
         }
+        _startingAddress = startingAddress;
     }
 
     /**
@@ -56,5 +59,6 @@ public class AbsoluteModule {
                 System.out.println(sb.toString());
             }
         }
+        System.out.println(String.format("  Starting Address:%06o", _startingAddress));
     }
 }

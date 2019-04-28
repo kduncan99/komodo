@@ -2,6 +2,7 @@ Convert IP unit tests from octal to assembler and mina them (in progress)
 
 Lose unnecessary accessors (in progress)
 
+minalib - set up interrupt handlers for all tests - needs to be testable so we can assert on interrupt taken
 minalib put directives into the system dictionary
 minalib can we do implicit base register (and do it right)?
 minalib make sure we don't propagate flagged attribute in any of the operators

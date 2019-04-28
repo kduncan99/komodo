@@ -58,6 +58,7 @@ public class Assembler {
     static {
         _directives.put("$BASIC", new BASICDirective());
         _directives.put("$EXTEND", new EXTENDDirective());
+        _directives.put("$LIT", new LITDirective());
         _directives.put("$RES", new RESDirective());
     }
 
@@ -155,6 +156,17 @@ public class Assembler {
             System.out.println(String.format("LCPool %d: %d word(s) generated",
                                              entry.getKey(),
                                              entry.getValue()._storage.length));
+        }
+
+        System.out.println("Undefined Refereces:");
+        for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
+            int lcIndex = poolEntry.getKey();
+            LocationCounterPool lcPool = poolEntry.getValue();
+            for (RelocatableWord36 word36 : lcPool._storage) {
+                for (RelocatableWord36.UndefinedReference ur : word36._undefinedReferences) {
+                    System.out.println("  " + ur._reference);
+                }
+            }
         }
     }
 
@@ -757,7 +769,7 @@ public class Assembler {
                 int lcOffset = wordEntry.getKey();
                 Context.GeneratedWord gWord = wordEntry.getValue();
 
-                for ( Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet() ) {
+                for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
                     FieldDescriptor fd = entry.getKey();
                     IntegerValue originalIV = entry.getValue();
                     if (originalIV._undefinedReferences.length > 0) {
