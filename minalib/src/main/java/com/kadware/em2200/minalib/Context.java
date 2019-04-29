@@ -169,7 +169,7 @@ public class Context {
     public final Dictionary _dictionary;
 
     //  name of the relocatable module
-    private final String _moduleName;
+    public final String _moduleName;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

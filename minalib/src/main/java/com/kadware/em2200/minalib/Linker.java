@@ -248,10 +248,33 @@ public class Linker {
 
     /**
      * Displays summary information
+     * @param module AbsoluteModule to be displayed
      */
     private void display(
+        final AbsoluteModule module
     ) {
-        //TODO
+        //TODO code
+
+        System.out.println("Labels:");
+        for (Map.Entry<String, Long> entry : _dictionary.entrySet()) {
+            System.out.println(String.format("  %s  %012o", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    /**
+     * Establishes a label while checking for duplicates
+     * @param label label
+     * @param value value
+     */
+    private void establishLabel(
+        final String label,
+        final long value
+    ) {
+        if (_dictionary.containsKey(label)) {
+            raise("Duplicate label:" + label);
+        } else {
+            _dictionary.put(label, (long) value);
+        }
     }
 
     /**
@@ -262,21 +285,17 @@ public class Linker {
         for (RelocatableModule module : _modules) {
             for (Map.Entry<String, IntegerValue> entry : module._externalLabels.entrySet()) {
                 String label = entry.getKey();
-                if (_dictionary.containsKey(label)) {
-                    raise("Duplicate label:" + label);
-                } else {
-                    long value = entry.getValue()._value;
-                    for (IntegerValue.UndefinedReference ur : entry.getValue()._undefinedReferences) {
-                        if (_dictionary.containsKey(ur._reference)) {
-                            value += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
-                        } else {
-                            raise(String.format("Module %s contains an external label with an undefined reference:%s",
-                                                module._name,
-                                                ur._reference));
-                        }
+                long value = entry.getValue()._value;
+                for (IntegerValue.UndefinedReference ur : entry.getValue()._undefinedReferences) {
+                    if (_dictionary.containsKey(ur._reference)) {
+                        value += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
+                    } else {
+                        raise(String.format("Module %s contains an external label with an undefined reference:%s",
+                                            module._name,
+                                            ur._reference));
                     }
-                    _dictionary.put(label, value);
                 }
+                establishLabel(label, value);
             }
         }
     }
@@ -294,12 +313,10 @@ public class Linker {
                 _modules.add(lcps._module);
                 try {
                     _lcPoolMap.put( lcps, address );
-                    String label = String.format("%s_LC$BASE_%d", lcps._module._name, lcps._lcIndex);
-                    if (_dictionary.containsKey(label)) {
-                        raise("Duplicate label:" + label);
-                    } else {
-                        _dictionary.put(label, (long) address);
-                    }
+                    establishLabel(String.format("%s_LC$BASE_%d", lcps._module._name, lcps._lcIndex),
+                                   (long) address);
+                    establishLabel(String.format("%s_LC$BDI_%d", lcps._module._name, lcps._lcIndex),
+                                   bd._bankDescriptorIndex);
                     address += lcps._module.getLocationCounterPool(lcps._lcIndex)._storage.length;
                 } catch ( InvalidParameterException ex ) {
                     //  I don't think this can happen...
@@ -354,9 +371,13 @@ public class Linker {
 
         try {
             if (_errors == 0) {
+                AbsoluteModule module = new AbsoluteModule(moduleName, loadableBanks, loadableBanks[0]._startingAddress);
+                if (display) {
+                    display(module);
+                }
                 System.out.println(String.format("Linking Ends Errors=%d -------------------------------------------------------",
                                                  _errors));
-                return new AbsoluteModule(moduleName, loadableBanks, loadableBanks[0]._startingAddress);
+                return module;
             }
         } catch (InvalidParameterException ex) {
             raise(ex.getMessage());

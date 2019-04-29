@@ -34,10 +34,12 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
              UPINotAssignedException {
 
         String[] source = {
-                "          $EXTEND",
-                "$(1),START*",
-                "          +0 . illegal operation",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(1),START*",
+            "          LA,U      A5,1",
+            "          +0 . illegal operation",
+            "          LA,U      A5,2",
+            "          HALT      07777",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -58,6 +60,7 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         startAndWait(ip);
 
+        showDebugInfo(ip, msp);
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 

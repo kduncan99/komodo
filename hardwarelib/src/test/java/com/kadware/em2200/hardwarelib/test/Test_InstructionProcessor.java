@@ -9,6 +9,8 @@ import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
+import org.apache.logging.log4j.core.tools.Generate;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +67,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("I1")
                                      .setBankDescriptorIndex(000004)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(022000)
                                      .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(12)
@@ -76,7 +78,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("D1")
                                      .setBankDescriptorIndex(000005)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(040000)
                                      .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(13)
@@ -125,7 +127,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("I1")
                                      .setBankDescriptorIndex(000004)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(022000)
                                      .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(12)
@@ -137,7 +139,7 @@ class Test_InstructionProcessor {
             bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                          .setBankName("D1")
                                          .setBankDescriptorIndex(000005)
-                                         .setBankLevel(0)
+                                         .setBankLevel(06)
                                          .setStartingAddress(040000)
                                          .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
                                          .setInitialBaseRegister(13)
@@ -187,7 +189,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("I1")
                                      .setBankDescriptorIndex(000004)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(01000)
                                      .setPoolSpecifications(poolSpecs04.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(12)
@@ -198,7 +200,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("D1")
                                      .setBankDescriptorIndex(000005)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(040000)
                                      .setPoolSpecifications(poolSpecs05.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(13)
@@ -209,7 +211,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("I2")
                                      .setBankDescriptorIndex(000006)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(020000)
                                      .setPoolSpecifications(poolSpecs06.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(14)
@@ -220,7 +222,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("D2")
                                      .setBankDescriptorIndex(000007)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setStartingAddress(060000)
                                      .setPoolSpecifications(poolSpecs07.toArray(new Linker.LCPoolSpecification[0]))
                                      .setInitialBaseRegister(15)
@@ -262,7 +264,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("I1")
                                      .setBankDescriptorIndex(000004)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setIsExtended(true)
                                      .setStartingAddress(01000)
                                      .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
@@ -274,7 +276,7 @@ class Test_InstructionProcessor {
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
                                      .setBankName("D1")
                                      .setBankDescriptorIndex(000005)
-                                     .setBankLevel(0)
+                                     .setBankLevel(06)
                                      .setIsExtended(true)
                                      .setStartingAddress(01000)
                                      .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
@@ -351,99 +353,157 @@ class Test_InstructionProcessor {
             final int mspOffset
     ) throws MachineInterrupt {
         String[] code = {
-                "          $EXTEND",
-                "$(0)      . Interrupt handler - Reserved, Hardware Default",
-                "          HALT      0",
-                "",
-                "$(1)      . Interrupt handler - Hardware Check",
-                "          HALT      0",
-                "",
-                "$(2)      . Interrupt handler - Diagnostic",
-                "          HALT      0",
-                "",
-                "$(8)      . Interrupt handler - Reference Violation",
-                "          HALT      0",
-                "",
-                "$(9)      . Interrupt handler - Addressing Exception",
-                "          HALT      0",
-                "",
-                "$(10)     . Interrupt handler - Terminal Addressing Exception",
-                "          HALT      0",
-                "",
-                "$(11)     . Interrupt handler - RCS Generic Stack Under/Over Flow",
-                "          HALT      0",
-                "",
-                "$(12)     . Interrupt handler - Signal",
-                "          HALT      0",
-                "",
-                "$(13)     . Interrupt handler - Test And Set",
-                "          HALT      0",
-                "",
-                "$(14)     . Interrupt handler - Invalid Instruction",
-                "          HALT      01000+14",
-                "",
-                "$(15)     . Interrupt handler - Page Exception",
-                "          HALT      0",
-                "",
-                "$(16)     . Interrupt handler - Arithmetic Exception",
-                "          HALT      0",
-                "",
-                "$(17)     . Interrupt handler - Data Exception",
-                "          HALT      0",
-                "",
-                "$(18)     . Interrupt handler - Operation Trap",
-                "          HALT      0",
-                "",
-                "$(19)     . Interrupt handler - Breakpoint",
-                "          HALT      0",
-                "",
-                "$(20)     . Interrupt handler - Quantum Timer",
-                "          HALT      0",
-                "",
-                "$(23)     . Interrupt handler - Page(s) Zeroed",
-                "          HALT      0",
-                "",
-                "$(24)     . Interrupt handler - Software Break",
-                "          HALT      0",
-                "",
-                "$(25)     . Interrupt handler - Jump History Full",
-                "          HALT      0",
-                "",
-                "$(27)     . Interrupt handler - Dayclock",
-                "          HALT      0",
-                "",
-                "$(28)     . Interrupt handler - Performance Monitoring",
-                "          HALT      0",
-                "",
-                "$(29)     . Interrupt handler - IPL",
-                "          HALT      0",
-                "",
-                "$(30)     . Interrupt handler - UPI Initial",
-                "          HALT      0",
-                "",
-                "$(31)     . Interrupt handler - UPI Normal",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(1)",
+            "IH00      . Interrupt handler - Reserved, Hardware Default",
+            "          HALT      01000+0",
+            "",
+            "IH01      . Interrupt handler - Hardware Check",
+            "          HALT      01000+1",
+            "",
+            "IH02      . Interrupt handler - Diagnostic",
+            "          HALT      01000+2",
+            "",
+            "IH08      . Interrupt handler - Reference Violation",
+            "          HALT      01000+8",
+            "",
+            "IH09      . Interrupt handler - Addressing Exception",
+            "          HALT      01000+9",
+            "",
+            "IH10      . Interrupt handler - Terminal Addressing Exception",
+            "          HALT      01000+10",
+            "",
+            "IH11      . Interrupt handler - RCS Generic Stack Under/Over Flow",
+            "          HALT      01000+11",
+            "",
+            "IH12      . Interrupt handler - Signal",
+            "          HALT      01000+12",
+            "",
+            "IH13      . Interrupt handler - Test And Set",
+            "          HALT      01000+13",
+            "",
+            "IH14      . Interrupt handler - Invalid Instruction",
+            "          HALT      01000+14",
+            "",
+            "IH15      . Interrupt handler - Page Exception",
+            "          HALT      01000+15",
+            "",
+            "IH16      . Interrupt handler - Arithmetic Exception",
+            "          HALT      01000+16",
+            "",
+            "IH17      . Interrupt handler - Data Exception",
+            "          HALT      01000+17",
+            "",
+            "IH18      . Interrupt handler - Operation Trap",
+            "          HALT      01000+18",
+            "",
+            "IH19      . Interrupt handler - Breakpoint",
+            "          HALT      01000+19",
+            "",
+            "IH20      . Interrupt handler - Quantum Timer",
+            "          HALT      01000+20",
+            "",
+            "IH23      . Interrupt handler - Page(s) Zeroed",
+            "          HALT      01000+23",
+            "",
+            "IH24      . Interrupt handler - Software Break",
+            "          HALT      01000+24",
+            "",
+            "IH25      . Interrupt handler - Jump History Full",
+            "          HALT      01000+25",
+            "",
+            "IH27      . Interrupt handler - Dayclock",
+            "          HALT      01000+27",
+            "",
+            "IH28      . Interrupt handler - Performance Monitoring",
+            "          HALT      01000+28",
+            "",
+            "IH29      . Interrupt handler - IPL",
+            "          HALT      01000+29",
+            "",
+            "IH30      . Interrupt handler - UPI Initial",
+            "          HALT      01000+30",
+            "",
+            "IH31      . Interrupt handler - UPI Normal",
+            "          HALT      01000+31",
+            "",
+            "$(0) . Vectors",
+            "          . Table of PAR vectors in L,BDI,PC format",
+            "          . Presumes all interrupt handlers are in bank with BDI of 020 and level 0",
+            "          + $BDI(1),IH00",
+            "          + $BDI(1),IH01",
+            "          + $BDI(1),IH02",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "          + $BDI(1),IH08",
+            "          + $BDI(1),IH09",
+            "          + $BDI(1),IH10",
+            "          + $BDI(1),IH11",
+            "          + $BDI(1),IH12",
+            "          + $BDI(1),IH13",
+            "          + $BDI(1),IH14",
+            "          + $BDI(1),IH15",
+            "          + $BDI(1),IH16",
+            "          + $BDI(1),IH17",
+            "          + $BDI(1),IH18",
+            "          + $BDI(1),IH19",
+            "          + $BDI(1),IH20",
+            "          + 0",
+            "          + 0",
+            "          + $BDI(1),IH23",
+            "          + $BDI(1),IH24",
+            "          + $BDI(1),IH25",
+            "          + 0",
+            "          + $BDI(1),IH27",
+            "          + $BDI(1),IH28",
+            "          + $BDI(1),IH29",
+            "          + $BDI(1),IH30",
+            "          + $BDI(1),IH31",
+            "          $RES 32"
         };
 
         Assembler asm = new Assembler(code, "IH");
         RelocatableModule relModule = asm.assemble(true);
-        List<Linker.LCPoolSpecification> poolSpecs = new LinkedList<>();
-        for (Integer lcIndex : relModule._storage.keySet()) {
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+        for (Map.Entry<Integer, LocationCounterPool> poolEntry : relModule._storage.entrySet()) {
+            int lcIndex = poolEntry.getKey();
+            LocationCounterPool pool = poolEntry.getValue();
             Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-            poolSpecs.add(poolSpec);
+            Linker.LCPoolSpecification[] poolSpecs = { poolSpec };
+
+            Linker.BankDeclaration bDecl =
+                new Linker.BankDeclaration.Builder().setBankName(String.format("INTHNDLR%03o", lcIndex))
+                                                    .setBankDescriptorIndex(lcIndex)
+                                                    .setBankLevel(0)
+                                                    .setIsExtended(true)
+                                                    .setStartingAddress(01000)
+                                                    .setPoolSpecifications(poolSpecs)
+                                                    .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                    .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                    .build();
+            bankDeclarations.add(bDecl);
         }
 
-        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                 .setBankName("IH")
-                                 .setBankDescriptorIndex(000004)
-                                 .setBankLevel(0)
-                                 .setIsExtended(true)
-                                 .setStartingAddress(01000)
-                                 .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                 .build());
+//        List<Linker.LCPoolSpecification> poolSpecs = new LinkedList<>();
+//        for (Integer lcIndex : relModule._storage.keySet()) {
+//            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+//            poolSpecs.add(poolSpec);
+//        }
+//
+//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+//        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+//                                 .setBankName("IH")
+//                                 .setBankDescriptorIndex(000004)
+//                                 .setBankLevel(0)
+//                                 .setIsExtended(true)
+//                                 .setStartingAddress(01000)
+//                                 .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
+//                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+//                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+//                                 .build());
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
         AbsoluteModule module = linker.link("IH", true);
@@ -637,10 +697,11 @@ class Test_InstructionProcessor {
                 //  Set the interrupt vector for this code, starting immediately following the previous handler
                 //  (i.e., at bank offset ihCodeSize).
                 VirtualAddress vector = new VirtualAddress((byte)0, (short)0, ihCodeSize);
+                System.out.println(String.format("========== Vector for index %d: %012o", ihx, vector.getW()));//????
                 interruptVector.setValue(ihx, vector.getW());
 
                 //  Copy the code to the MSP
-                msp.getStorage().load(ihCodeSize, lb._content);
+                msp.getStorage().load(ihCodeMSPOffset + ihCodeSize, lb._content);
                 ihCodeSize += lb._content.getArraySize();
             }
         }
@@ -706,6 +767,67 @@ class Test_InstructionProcessor {
         ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, icsIndexRegister.getW());
 
         return bdtSize + ihCodeSize + icsStackSize;
+    }
+
+    public static void showDebugInfo(
+        final InstructionProcessor ip,
+        final MainStorageProcessor msp
+    ) {
+        try {
+            System.out.println("Debug Info:");
+            System.out.println("  Processor Registers:");
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.X0 + x);
+                System.out.println(String.format("    X%d %012o", x, gr.getW()));
+            }
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.A0 + x);
+                System.out.println(String.format("    A%d %012o", x, gr.getW()));
+            }
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.R0 + x);
+                System.out.println(String.format("    R%d %012o", x, gr.getW()));
+            }
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.EX0 + x);
+                System.out.println(String.format("    EX%d %012o", x, gr.getW()));
+            }
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.EA0 + x);
+                System.out.println(String.format("    EA%d %012o", x, gr.getW()));
+            }
+            for (int x = 0; x < 16; ++x) {
+                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.ER0 + x);
+                System.out.println(String.format("    ER%d %012o", x, gr.getW()));
+            }
+
+            System.out.println("  Base Registers:");
+            for (int bx = 0; bx < 32; ++bx) {
+                BaseRegister br = ip.getBaseRegister(bx);
+                System.out.println(String.format("    BR%d base:(UPI:%d Offset:%08o) lower:%d upper:%d",
+                                                 bx,
+                                                 br.getBaseAddress()._upi,
+                                                 br.getBaseAddress()._offset,
+                                                 br.getLowerLimitNormalized(),
+                                                 br.getUpperLimitNormalized()));
+                System.out.println("    Content:");
+                Word36Array storage = br.getStorage();
+                if (storage != null) {
+                    for ( int sx = 0; sx < storage.getArraySize(); sx += 8 ) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(String.format("      %08o:", sx));
+                        for ( int sy = 0; sy < 8; ++sy ) {
+                            if ( sx + sy < storage.getArraySize() ) {
+                                sb.append(String.format(" %012o", storage.getValue(sx + sy)));
+                            }
+                        }
+                        System.out.println(sb.toString());
+                    }
+                }
+            }
+        } catch (MachineInterrupt ex) {
+            System.out.println("Caught:" + ex.getMessage());
+        }
     }
 
     /**

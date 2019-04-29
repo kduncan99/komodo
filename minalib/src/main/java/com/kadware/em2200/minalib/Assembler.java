@@ -158,6 +158,7 @@ public class Assembler {
                                              entry.getValue()._storage.length));
         }
 
+        //TODO Set<> these before displaying to reduce noise pollution
         System.out.println("Undefined References:");
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
             int lcIndex = poolEntry.getKey();
@@ -220,11 +221,13 @@ public class Assembler {
         final String moduleName
     ) {
         Map<String, IntegerValue> externalLabels = new TreeMap<>();
-        for ( String label : _globalDictionary.getLabels() ) {
+        for (String label : _globalDictionary.getLabels()) {
             try {
-                Value val = _globalDictionary.getValue( label );
-                if ( val.getType() == ValueType.Integer ) {
-                    externalLabels.put( label, (IntegerValue) val );
+                Dictionary.ValueAndLevel val = _globalDictionary.getValueAndLevel(label);
+                if (val._level == 0) {
+                    if ( val._value.getType() == ValueType.Integer ) {
+                        externalLabels.put(label, (IntegerValue) val._value);
+                    }
                 }
             } catch (NotFoundException ex) {
                 //  can't happen

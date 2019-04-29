@@ -78,7 +78,6 @@ public class LoadableBank {
         public Builder setContent(final Word36Array value) { _content = value; return this; }
 
         public LoadableBank build() {
-            assert(_bankDescriptorIndex != 0);
             assert(_bankName != null);
             return new LoadableBank(_bankDescriptorIndex,
                                     _bankName,
