@@ -506,7 +506,7 @@ public class InstructionProcessor extends Processor implements Worker {
         // Are there any pending conditions which need to be turned into interrupts?
         if (_indicatorKeyRegister.getBreakpointRegisterMatchCondition() && !_midInstructionInterruptPoint) {
             if (_breakpointRegister.getHaltFlag()) {
-                stop(StopReason.Breakpoint);
+                stop(StopReason.Breakpoint, 0);
                 return true;
             } else {
                 throw new BreakpointInterrupt();
@@ -960,7 +960,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         // Make sure the interrupt control stack base register is valid
         if (_baseRegisters[ICS_BASE_REGISTER].getVoidFlag()) {
-            stop(StopReason.ICSBaseRegisterInvalid);
+            stop(StopReason.ICSBaseRegisterInvalid, 0);
             return;
         }
 
@@ -972,14 +972,14 @@ public class InstructionProcessor extends Processor implements Worker {
         long stackFrameLimit = stackOffset + stackFrameSize;
         if ((stackFrameLimit - 1 > _baseRegisters[ICS_BASE_REGISTER].getUpperLimitNormalized())
             || (stackOffset < _baseRegisters[ICS_BASE_REGISTER].getLowerLimitNormalized())) {
-            stop(StopReason.ICSOverflow);
+            stop(StopReason.ICSOverflow, 0);
             return;
         }
 
         // Populate the stack frame in storage.
         Word36Array icsStorage = _baseRegisters[ICS_BASE_REGISTER].getStorage();
         if (stackFrameLimit > icsStorage.getArraySize()) {
-            stop(StopReason.ICSBaseRegisterInvalid);
+            stop(StopReason.ICSBaseRegisterInvalid, 0);
             return;
         }
 
@@ -1005,14 +1005,14 @@ public class InstructionProcessor extends Processor implements Worker {
         // for the associated interrupt class.  Load the PAR appropriately.
         // Make sure B16 is valid before dereferencing through it.
         if (_baseRegisters[L0_BDT_BASE_REGISTER].getVoidFlag()) {
-            stop(StopReason.L0BaseRegisterInvalid);
+            stop(StopReason.L0BaseRegisterInvalid, 0);
             return;
         }
 
         Word36Array intStorage = _baseRegisters[ICS_BASE_REGISTER].getStorage();
         int intOffset = interrupt.getInterruptClass().getCode();
         if (intOffset >= icsStorage.getArraySize()) {
-            stop(StopReason.InterruptHandlerOffsetOutOfRange);
+            stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);
             return;
         }
 
@@ -1029,7 +1029,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck) {
             if (fhip) {
-                stop(StopReason.InterruptHandlerHardwareFailure);
+                stop(StopReason.InterruptHandlerHardwareFailure, 0);
                 return;
             }
             _designatorRegister.setFaultHandlingInProgress(true);
@@ -1044,7 +1044,7 @@ public class InstructionProcessor extends Processor implements Worker {
         byte bankLevel = (byte)_programAddressRegister.getLevel();
         short bankDescriptorIndex = (short)_programAddressRegister.getBankDescriptorIndex();
         if ((bankLevel == 0) && (bankDescriptorIndex < 64)) {
-            stop(StopReason.InterruptHandlerInvalidLevelBDI);
+            stop(StopReason.InterruptHandlerInvalidLevelBDI, 0);
             return;
         }
 
@@ -1069,7 +1069,7 @@ public class InstructionProcessor extends Processor implements Worker {
         BankDescriptor bankDescriptor = new BankDescriptor(bdStorage, bankDescriptorTableOffset);
         long bankType = bankDescriptor.getWord36(0).getS2() & 017;
         if (bankType != 0) {
-            stop(StopReason.InterruptHandlerInvalidBankType);
+            stop(StopReason.InterruptHandlerInvalidBankType, 0);
             return;
         }
 
@@ -1327,7 +1327,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                             // Should we stop, given that we've completed an instruction?
                             if (_currentRunMode == RunMode.SingleInstruction) {
-                                stop(StopReason.Debug);
+                                stop(StopReason.Debug, 0);
                             }
                         }
 
@@ -1339,7 +1339,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 // End of the cycle - should we stop?
                 if (_currentRunMode == RunMode.SingleCycle) {
-                    stop(StopReason.Debug);
+                    stop(StopReason.Debug, 0);
                 }
 
                 if (!somethingDone) {
@@ -2235,30 +2235,6 @@ public class InstructionProcessor extends Processor implements Worker {
      * More accurately, it puts the worker thread into not-running state, such that it no longer processes instructions.
      * Rather, it will simply sleep until such time as it is placed back into running state.
      * <p>
-     * This version is for stops with no additional detail
-     * <p>
-     * @param stopReason
-     */
-    public void stop(
-        final StopReason stopReason
-    ) {
-        synchronized(this) {
-            if (_runningFlag) {
-                _latestStopReason = stopReason;
-                _latestStopDetail.setW(0);
-                _runningFlag = false;
-                System.out.println(String.format("%s Stopping:%s", getName(), stopReason.toString()));//????
-                LOGGER.error(String.format("%s Stopping:%s", getName(), stopReason.toString()));
-                this.notify();
-            }
-        }
-    }
-
-    /**
-     * Stops the processor.
-     * More accurately, it puts the worker thread into not-running state, such that it no longer processes instructions.
-     * Rather, it will simply sleep until such time as it is placed back into running state.
-     * <p>
      * This version is for stops with additional detail
      * <p>
      * @param stopReason
@@ -2271,10 +2247,16 @@ public class InstructionProcessor extends Processor implements Worker {
         synchronized(this) {
             if (_runningFlag) {
                 _latestStopReason = stopReason;
-                _latestStopDetail.setW(detail);
+                _latestStopDetail.setW(0);
                 _runningFlag = false;
-                System.out.println(String.format("%s Stopping:%s", getName(), stopReason.toString()));//????
-                LOGGER.error(String.format("%s Stopping:%s", getName(), stopReason.toString()));
+                System.out.println(String.format("%s Stopping:%s Detail:%o",
+                                                 getName(),
+                                                 stopReason.toString(),
+                                                 _latestStopDetail.getW()));//????
+                LOGGER.error(String.format("%s Stopping:%s Detail:%o",
+                                           getName(),
+                                           stopReason.toString(),
+                                           _latestStopDetail.getW()));
                 this.notify();
             }
         }

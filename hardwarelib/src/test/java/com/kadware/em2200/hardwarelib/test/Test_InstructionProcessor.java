@@ -339,6 +339,117 @@ class Test_InstructionProcessor {
     }
 
     /**
+     * Sets up the interrupt handling environment
+     * @param ip the IP which will have its various registers set appropriately to account for the created environment
+     * @param msp the MSP in which we'll create the environment
+     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
+     */
+    void establishInterruptEnvironment(
+            final InstructionProcessor ip,
+            final MainStorageProcessor msp,
+            final int mspOffset
+    ) throws MachineInterrupt {
+        String[] code = {
+                "          $EXTEND",
+                "$(0)      . Interrupt handler - Reserved, Hardware Default",
+                "          HALT      0",
+                "",
+                "$(1)      . Interrupt handler - Hardware Check",
+                "          HALT      0",
+                "",
+                "$(2)      . Interrupt handler - Diagnostic",
+                "          HALT      0",
+                "",
+                "$(8)      . Interrupt handler - Reference Violation",
+                "          HALT      0",
+                "",
+                "$(9)      . Interrupt handler - Addressing Exception",
+                "          HALT      0",
+                "",
+                "$(10)     . Interrupt handler - Terminal Addressing Exception",
+                "          HALT      0",
+                "",
+                "$(11)     . Interrupt handler - RCS Generic Stack Under/Over Flow",
+                "          HALT      0",
+                "",
+                "$(12)     . Interrupt handler - Signal",
+                "          HALT      0",
+                "",
+                "$(13)     . Interrupt handler - Test And Set",
+                "          HALT      0",
+                "",
+                "$(14)     . Interrupt handler - Invalid Instruction",
+                "          HALT      01000+14",
+                "",
+                "$(15)     . Interrupt handler - Page Exception",
+                "          HALT      0",
+                "",
+                "$(16)     . Interrupt handler - Arithmetic Exception",
+                "          HALT      0",
+                "",
+                "$(17)     . Interrupt handler - Data Exception",
+                "          HALT      0",
+                "",
+                "$(18)     . Interrupt handler - Operation Trap",
+                "          HALT      0",
+                "",
+                "$(19)     . Interrupt handler - Breakpoint",
+                "          HALT      0",
+                "",
+                "$(20)     . Interrupt handler - Quantum Timer",
+                "          HALT      0",
+                "",
+                "$(23)     . Interrupt handler - Page(s) Zeroed",
+                "          HALT      0",
+                "",
+                "$(24)     . Interrupt handler - Software Break",
+                "          HALT      0",
+                "",
+                "$(25)     . Interrupt handler - Jump History Full",
+                "          HALT      0",
+                "",
+                "$(27)     . Interrupt handler - Dayclock",
+                "          HALT      0",
+                "",
+                "$(28)     . Interrupt handler - Performance Monitoring",
+                "          HALT      0",
+                "",
+                "$(29)     . Interrupt handler - IPL",
+                "          HALT      0",
+                "",
+                "$(30)     . Interrupt handler - UPI Initial",
+                "          HALT      0",
+                "",
+                "$(31)     . Interrupt handler - UPI Normal",
+                "          HALT      0",
+        };
+
+        Assembler asm = new Assembler(code, "IH");
+        RelocatableModule relModule = asm.assemble(true);
+        List<Linker.LCPoolSpecification> poolSpecs = new LinkedList<>();
+        for (Integer lcIndex : relModule._storage.keySet()) {
+            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+            poolSpecs.add(poolSpec);
+        }
+
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+        bankDeclarations.add(new Linker.BankDeclaration.Builder()
+                                     .setBankName("IH")
+                                     .setBankDescriptorIndex(000004)
+                                     .setBankLevel(0)
+                                     .setIsExtended(true)
+                                     .setStartingAddress(01000)
+                                     .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
+                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                     .build());
+
+        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
+        AbsoluteModule module = linker.link("IH", true);
+        setupInterrupts(ip, msp, mspOffset, module);
+    }
+
+    /**
      * Retrieves the contents of a bank represented by a base register
      * @param ip reference to IP containing the desired BR
      * @param baseRegisterIndex index of the desired BR
@@ -484,7 +595,7 @@ class Test_InstructionProcessor {
      *              which handles the particular interrupt.
      *              L,BDI of 0,0 through 0,31 do not refer to actual banks (for architectural reasons or something),
      *              so these first 64 words do not conflict with any BD's.
-     *              Since we are building all of this up from scratch, we'll go ahead an assign L,BDI of 0,32 to be
+     *              Since we are building all of this up from scratch, we'll go ahead and assign L,BDI of 0,32 to be
      *              the bank which contains all the interrupt handling code, so this entire table will be 33 * 8 words
      *              in length.  We'll also assign L,BDI of 0,33 to be the bank which contains the interrupt control stack.
      *  +n      Interrupt handling code bank - size is determined by the content of the arrays in interruptCode.
@@ -494,11 +605,7 @@ class Test_InstructionProcessor {
      * @param ip the IP which will have its various registers set appropriately to account for the created environment
      * @param msp the MSP in which we'll create the environment
      * @param mspOffset the offset from the beginning of MSP storage where we create the environment
-     * @param interruptCode an array of 64 pointers to code arrays - each code array contains the instructions necessary for
-     *                      handling a particular interrupt.  Each code array is indexed (by the major index) by the class
-     *                      of the interrupt which the code handles.  If any major reference is null, it is assumed that the
-     *                      caller has no preference for handling the particular interrupt, and we will set the interrupt vectort
-     *                      to point to a generic interrupt handler that we will create here.
+     * @param module AbsoluteModule containing the interrupt code.  Code for interrupt 0 is in LC 0, for 1 in LC 1, etc
      * @return size of allocated memory in the MSP, starting at mspOffset
      * @throws MachineInterrupt if the IP throws one
      */
@@ -506,7 +613,7 @@ class Test_InstructionProcessor {
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int mspOffset,
-        final long[][] interruptCode
+        final AbsoluteModule module
     ) throws MachineInterrupt {
         //  Stake out slices of the level 0 bank descriptor table
         Word36ArraySlice interruptVector = new Word36ArraySlice(msp.getStorage(), mspOffset, 64);
@@ -520,11 +627,9 @@ class Test_InstructionProcessor {
 
         //  Iterate over the provided interrupt code arrays
         for (int ihx = 0; ihx < 63; ++ihx) {
-            //  If the given code sequence is a null reference, or if we've run over the end of the array,
-            //  set the corresponding interrupt vector L,BDI,Offset to all zero.  Eventually, we want to handle this
-            //  by pointing the corrdsponding vector to some fixed default interrupt handling code which stores something
-            //  and then returns.  However, we don't yet have mechanisms to allow this, so for now...  //????
-            if ((ihx >= interruptCode.length) || (interruptCode[ihx] == null)) {
+            //  If there is no code for the given interrupt, set the corresponding interrupt vector L,BDI,Offset to all zero.
+            LoadableBank lb = module._loadableBanks.get(ihx);
+            if (lb == null) {
                 interruptVector.setValue(ihx, 0);
             } else {
                 //  The caller actually gave us a code sequence for this interrupt.
@@ -534,10 +639,8 @@ class Test_InstructionProcessor {
                 interruptVector.setValue(ihx, vector.getW());
 
                 //  Copy the code to the MSP
-                for (int cx = 0; cx < interruptCode[ihx].length; ++cx) {
-                    msp.getStorage().setValue(ihCodeMSPOffset + ihCodeSize, interruptCode[ihx][cx]);
-                    ++ihCodeSize;
-                }
+                msp.getStorage().load(ihCodeSize, lb._content);
+                ihCodeSize += lb._content.getArraySize();
             }
         }
 

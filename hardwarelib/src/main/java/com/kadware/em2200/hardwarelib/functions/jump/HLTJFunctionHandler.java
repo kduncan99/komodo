@@ -24,6 +24,6 @@ public class HLTJFunctionHandler extends FunctionHandler {
         //  Always jump, but halt thereafter
         int counter = (int)ip.getJumpOperand();
         ip.setProgramCounter(counter, true);
-        ip.stop(InstructionProcessor.StopReason.HaltJumpExecuted);
+        ip.stop(InstructionProcessor.StopReason.HaltJumpExecuted, 0);
     }
 }

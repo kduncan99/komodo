@@ -493,8 +493,8 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
         dReg.setOperationTrapEnabled(true);
 
-        long[][] interruptCode = new long[64][];
-        setupInterrupts(ip, msp, 02000, interruptCode);
+//        long[][] interruptCode = new long[64][];
+//        setupInterrupts(ip, msp, 02000, interruptCode);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         par.setProgramCounter(0);
@@ -760,7 +760,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
                 "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -819,7 +819,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
                 "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);

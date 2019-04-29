@@ -72,7 +72,7 @@ public class LoadableBank {
         public Builder setSpecialPermissions(final AccessPermissions value) { _specialPermissions = value; return this; }
         public Builder setBankDescriptorIndex(final int value) { _bankDescriptorIndex = value; return this; }
         public Builder setBankName(final String value) { _bankName = value; return this; }
-        public Builder setInitialBaseRegister(final int value) { _initialBaseRegister = value; return this; }
+        public Builder setInitialBaseRegister(final Integer value) { _initialBaseRegister = value; return this; }
         public Builder setIsExtendedMode(final boolean value) { _isExtendedMode = value; return this; }
         public Builder setStartingAddress(final int value) { _startingAddress = value; return this; }
         public Builder setContent(final Word36Array value) { _content = value; return this; }

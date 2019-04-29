@@ -158,7 +158,7 @@ public class Assembler {
                                              entry.getValue()._storage.length));
         }
 
-        System.out.println("Undefined Refereces:");
+        System.out.println("Undefined References:");
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
             int lcIndex = poolEntry.getKey();
             LocationCounterPool lcPool = poolEntry.getValue();
