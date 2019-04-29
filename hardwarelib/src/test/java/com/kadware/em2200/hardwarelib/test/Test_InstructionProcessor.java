@@ -322,16 +322,17 @@ class Test_InstructionProcessor {
         for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
             int bdi = entry.getKey();
             List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
-            bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                         .setBankName(String.format("BANK%06o", bdi))
-                                         .setBankDescriptorIndex(bdi)
-                                         .setBankLevel(0)
-                                         .setStartingAddress(01000)
-                                         .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-                                         .setInitialBaseRegister(bReg++)
-                                         .setGeneralAccessPermissions(new AccessPermissions(bdi == 04, true, true))
-                                         .setSpecialAccessPermissions(new AccessPermissions(bdi == 04, true, true))
-                                         .build());
+            bankDeclarations.add(
+                new Linker.BankDeclaration.Builder()
+                    .setBankName(String.format("BANK%06o", bdi))
+                    .setBankDescriptorIndex(bdi)
+                    .setBankLevel(0)
+                    .setStartingAddress(01000)
+                    .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
+                    .setInitialBaseRegister(bReg++)
+                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04, true, true))
+                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04, true, true))
+                    .build());
         }
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
@@ -434,15 +435,15 @@ class Test_InstructionProcessor {
 
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
         bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("IH")
-                                     .setBankDescriptorIndex(000004)
-                                     .setBankLevel(0)
-                                     .setIsExtended(true)
-                                     .setStartingAddress(01000)
-                                     .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+                                 .setBankName("IH")
+                                 .setBankDescriptorIndex(000004)
+                                 .setBankLevel(0)
+                                 .setIsExtended(true)
+                                 .setStartingAddress(01000)
+                                 .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
+                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                 .build());
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
         AbsoluteModule module = linker.link("IH", true);

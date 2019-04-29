@@ -36,12 +36,11 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         String[] source = {
                 "          $EXTEND",
                 "$(1),START*",
-                "          LA,U      A0,5",//testing
                 "          +0 . illegal operation",
                 "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -55,7 +54,7 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 

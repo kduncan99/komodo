@@ -50,8 +50,9 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "INITLOOP  SP1       flags,*X2,B1",
             "          JGD       A2,initloop",
             "",
-            "          . Initialize primes table - X4 is iterator to the table",
-            "          SZ        primes+0,,B2",
+            "          . Initialize primes table...",
+            "          . X4 indexes the next free entry in the table",
+            "          SZ        primes,,B2",
             "          LXI,U     X4,1",
             "          LXM,U     X4,1",
             "",
@@ -89,7 +90,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "          LXI,U     X12,0",
             "          TG        A0,A5               . is A5 > A0?",
             "          J         outeriter           . No, iterate",
-            "          SZ        0,*X3,B1            . Set a multiple as non-prime",
+            "          SZ        primes,*X3,B1       . Set a multiple as non-prime",
             "          J         innerloop           . Iterate",
             "",
             "OUTERITER .",
@@ -117,7 +118,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 

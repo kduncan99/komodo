@@ -163,8 +163,10 @@ public class Assembler {
             int lcIndex = poolEntry.getKey();
             LocationCounterPool lcPool = poolEntry.getValue();
             for (RelocatableWord36 word36 : lcPool._storage) {
-                for (RelocatableWord36.UndefinedReference ur : word36._undefinedReferences) {
-                    System.out.println("  " + ur._reference);
+                if (word36 != null) {
+                    for ( RelocatableWord36.UndefinedReference ur : word36._undefinedReferences ) {
+                        System.out.println("  " + ur._reference);
+                    }
                 }
             }
         }
@@ -375,10 +377,10 @@ public class Assembler {
                 Locale loc = operandField._subfields.get(1)._locale;
                 diagnostics.append(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
             }
-            
+
             return true;
         }
-        
+
         if (firstValue instanceof IntegerValue) {
             //  Ensure the number of values divides evenly.
             int valueCount = (operandField._subfields.size());
