@@ -11,14 +11,14 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
-import sun.nio.cs.ext.EUC_CN;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Assembler for minalib
@@ -158,7 +158,7 @@ public class Assembler {
                                              entry.getValue()._storage.length));
         }
 
-        //TODO Set<> these before displaying to reduce noise pollution
+        Set<String> references = new TreeSet<>();
         System.out.println("Undefined References:");
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
             int lcIndex = poolEntry.getKey();
@@ -166,10 +166,13 @@ public class Assembler {
             for (RelocatableWord36 word36 : lcPool._storage) {
                 if (word36 != null) {
                     for ( RelocatableWord36.UndefinedReference ur : word36._undefinedReferences ) {
-                        System.out.println("  " + ur._reference);
+                        references.add(ur._reference);
                     }
                 }
             }
+        }
+        for (String ref : references) {
+            System.out.println("  " + ref);
         }
     }
 

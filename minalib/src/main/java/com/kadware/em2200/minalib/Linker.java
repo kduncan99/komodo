@@ -255,7 +255,7 @@ public class Linker {
     ) {
         //TODO code
 
-        System.out.println("Labels:");
+        System.out.println("Dictionary:");
         for (Map.Entry<String, Long> entry : _dictionary.entrySet()) {
             System.out.println(String.format("  %s  %012o", entry.getKey(), entry.getValue()));
         }

@@ -9,7 +9,6 @@ import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
-import org.apache.logging.log4j.core.tools.Generate;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,6 +20,153 @@ import java.util.Map;
  */
 class Test_InstructionProcessor {
 
+    /*
+
+2.1.2 Base_Register Conventions
+The following table lists the architecturally defined conventions for Base_Register usage.
+Base_Register Usage
+0 Current Extended_Mode Code Bank, if any
+1 Reserved for activity-local storage stack
+2–15 Unassigned User, available in Extended_Mode
+12–15 Unassigned User, available in Basic_Mode
+16 L0 BDT Pointer and Interrupt_Vector_Area Pointer (see 3.1.1 and 3.6)
+17 L1 BDT Pointer (see 3.1.1)
+18 L2 BDT Pointer (see 3.1.1)
+19 L3 BDT Pointer (see 3.1.1)
+20 L4 BDT Pointer (see 3.1.1)
+21 L5 BDT Pointer (see 3.1.1)
+22 L6 BDT Pointer (see 3.1.1)
+23 L7 BDT Pointer (see 3.1.1)
+24 ASA Pointer (see 3.5)
+25 Return_Control_Stack (see 3.3.1)
+26 Interrupt_Control_Stack (see 3.3.2)
+27–31 Unassigned Exec
+
+The Bank_Descriptor_Table (BDT) is a series of 8-word Bank_Descriptors (BD). Up to eight such
+tables may be active at any one time, and each of the eight BDT Pointer Base_Registers, B16–B23,
+points to one of these. These eight parts of the address space are called level (L) 0–7, respectively.
+BDTs are referenced by the L-field (bits 0–2) of a Virtual_Address as described in 4.2.2.
+The L1–L7 BDTs may contain up to 32,768 BDs each. Because B16 is also used as the
+Interrupt_Vector_Area pointer (see 3.6), the L0 BDT may contain up to 32,736 BDs. Section 8
+contains the special addressing rules for BDTs.
+
+Version 3H models, hardware requires that B16 addresses 0120-0137 be available (that at least the
+limits support this address) for hardware read and write. Sometimes hardware needs to read and
+write a place in memory to control internal operations.
+
+Software Note: It is intended that L indicate scope, with L0 most global and L7 most local. No other
+architectural definition of L is made.
+
+The Interrupt_Vector_Area is an array of 64 contiguous words (entries), starting at word 0 of the
+Bank described by B16, which are in the format of the Program_Address_Register (PAR; see 2.2.1).
+The Interrupt_Vector_Area entries provide a unique software entry point for each class of interrupt.
+The Interrupt_Vector_Area entries are ordered by interrupt class number, as shown in Table 5–1. As
+part of the interrupt sequence (see 5.1.5), the appropriate entry is fetched from the
+Interrupt_Vector_Area (using the interrupt class as an offset) and loaded into the hard-held PAR.
+There is no conflict between the Interrupt_Vector_Area and the Level 0 Bank_Descriptors because
+L,BDI 0,0 through 0,31 do not reference the BDT.
+ */
+
+    //  Assembler source for the interrupt handlers
+    static private final String[] IH_CODE = {
+        "          $EXTEND",
+        "          $LIT(0)",
+        "",
+        "$(1)      . Interrupt handlers",
+        "IH_00*    HALT 01000",
+        "IH_01*    HALT 01001",
+        "IH_02*    HALT 01002",
+        "IH_03*    HALT 01003",
+        "IH_04*    HALT 01004",
+        "IH_05*    HALT 01005",
+        "IH_06*    HALT 01006",
+        "IH_07*    HALT 01007",
+        "IH_10*    HALT 01010",
+        "IH_11*    HALT 01011",
+        "IH_12*    HALT 01012",
+        "IH_13*    HALT 01013",
+        "IH_14*    HALT 01014",
+        "IH_15*    HALT 01015",
+        "IH_16*    HALT 01016",
+        "IH_17*    HALT 01017",
+        "IH_20*    HALT 01020",
+        "IH_21*    HALT 01021",
+        "IH_22*    HALT 01022",
+        "IH_23*    HALT 01023",
+        "IH_24*    HALT 01024",
+        "IH_25*    HALT 01025",
+        "IH_26*    HALT 01026",
+        "IH_27*    HALT 01027",
+        "IH_30*    HALT 01030",
+        "IH_31*    HALT 01031",
+        "IH_32*    HALT 01032",
+        "IH_33*    HALT 01033",
+        "IH_34*    HALT 01034",
+        "IH_35*    HALT 01035",
+        "IH_36*    HALT 01036",
+        "IH_37*    HALT 01037",
+    };
+
+    static private final String[] BDT_CODE = {
+        "          $EXTEND",
+        "$(0)",
+        "",
+        "BANKS_PER_LEVEL* $EQU 64",
+        "BANK_TABLE_SIZE* $EQU 8*BANKS_PER_LEVEL . 8 words per BD",
+        "",
+        "BDT_LEVEL0* . Interrupt handler vectors (total of 64 vectors)",
+        "            . L,BDI is 000000+33, assuming the IH code is in bank 33",
+        "          + 33,IH_00",
+        "          + 33,IH_01",
+        "          + 33,IH_02",
+        "          + 33,IH_03",
+        "          + 33,IH_04",
+        "          + 33,IH_05",
+        "          + 33,IH_06",
+        "          + 33,IH_07",
+        "          + 33,IH_10",
+        "          + 33,IH_11",
+        "          + 33,IH_12",
+        "          + 33,IH_13",
+        "          + 33,IH_14",
+        "          + 33,IH_15",
+        "          + 33,IH_16",
+        "          + 33,IH_17",
+        "          + 33,IH_20",
+        "          + 33,IH_21",
+        "          + 33,IH_22",
+        "          + 33,IH_23",
+        "          + 33,IH_24",
+        "          + 33,IH_25",
+        "          + 33,IH_26",
+        "          + 33,IH_27",
+        "          + 33,IH_30",
+        "          + 33,IH_31",
+        "          + 33,IH_32",
+        "          + 33,IH_33",
+        "          + 33,IH_34",
+        "          + 33,IH_35",
+        "          + 33,IH_36",
+        "          + 33,IH_37",
+        "          $RES      32                  . Interrupts 32-63 are not defined",
+        "          $RES      (8*32)-64           . Unused",
+        "          $RES      8*32                . Space for 32 exec banks, BDI 32 to 41",
+        "",
+        "BDT_LEVEL1* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL2* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL3* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL4* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL5* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL6* $RES BANK_TABLE_SIZE",
+        "BDT_LEVEL7* $RES BANK_TABLE_SIZE",
+    };
+
+    //  Absolute module for the above code...
+    //  The BDT will be in bank 31 (it gets special loading consideration, and is never referenced in the BDT)
+    //  IH code will be in bank 33 (2nd BD in level 0 BDT) (our convention, it'll work)
+    static private AbsoluteModule _bankModule = null;
+
+    //  Class which describes a bank to be loaded into the existing BDT environment
     static class LoadBankInfo {
 
         long[] _source;
@@ -342,173 +488,188 @@ class Test_InstructionProcessor {
     }
 
     /**
-     * Sets up the interrupt handling environment
+     * Establishes the banking environment
      * @param ip the IP which will have its various registers set appropriately to account for the created environment
      * @param msp the MSP in which we'll create the environment
-     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
      */
-    void establishInterruptEnvironment(
+    static void establishBankingEnvironment(
             final InstructionProcessor ip,
-            final MainStorageProcessor msp,
-            final int mspOffset
-    ) throws MachineInterrupt {
-        String[] code = {
-            "          $EXTEND",
-            "$(1)",
-            "IH00      . Interrupt handler - Reserved, Hardware Default",
-            "          HALT      01000+0",
-            "",
-            "IH01      . Interrupt handler - Hardware Check",
-            "          HALT      01000+1",
-            "",
-            "IH02      . Interrupt handler - Diagnostic",
-            "          HALT      01000+2",
-            "",
-            "IH08      . Interrupt handler - Reference Violation",
-            "          HALT      01000+8",
-            "",
-            "IH09      . Interrupt handler - Addressing Exception",
-            "          HALT      01000+9",
-            "",
-            "IH10      . Interrupt handler - Terminal Addressing Exception",
-            "          HALT      01000+10",
-            "",
-            "IH11      . Interrupt handler - RCS Generic Stack Under/Over Flow",
-            "          HALT      01000+11",
-            "",
-            "IH12      . Interrupt handler - Signal",
-            "          HALT      01000+12",
-            "",
-            "IH13      . Interrupt handler - Test And Set",
-            "          HALT      01000+13",
-            "",
-            "IH14      . Interrupt handler - Invalid Instruction",
-            "          HALT      01000+14",
-            "",
-            "IH15      . Interrupt handler - Page Exception",
-            "          HALT      01000+15",
-            "",
-            "IH16      . Interrupt handler - Arithmetic Exception",
-            "          HALT      01000+16",
-            "",
-            "IH17      . Interrupt handler - Data Exception",
-            "          HALT      01000+17",
-            "",
-            "IH18      . Interrupt handler - Operation Trap",
-            "          HALT      01000+18",
-            "",
-            "IH19      . Interrupt handler - Breakpoint",
-            "          HALT      01000+19",
-            "",
-            "IH20      . Interrupt handler - Quantum Timer",
-            "          HALT      01000+20",
-            "",
-            "IH23      . Interrupt handler - Page(s) Zeroed",
-            "          HALT      01000+23",
-            "",
-            "IH24      . Interrupt handler - Software Break",
-            "          HALT      01000+24",
-            "",
-            "IH25      . Interrupt handler - Jump History Full",
-            "          HALT      01000+25",
-            "",
-            "IH27      . Interrupt handler - Dayclock",
-            "          HALT      01000+27",
-            "",
-            "IH28      . Interrupt handler - Performance Monitoring",
-            "          HALT      01000+28",
-            "",
-            "IH29      . Interrupt handler - IPL",
-            "          HALT      01000+29",
-            "",
-            "IH30      . Interrupt handler - UPI Initial",
-            "          HALT      01000+30",
-            "",
-            "IH31      . Interrupt handler - UPI Normal",
-            "          HALT      01000+31",
-            "",
-            "$(0) . Vectors",
-            "          . Table of PAR vectors in L,BDI,PC format",
-            "          . Presumes all interrupt handlers are in bank with BDI of 020 and level 0",
-            "          + $BDI(1),IH00",
-            "          + $BDI(1),IH01",
-            "          + $BDI(1),IH02",
-            "          + 0",
-            "          + 0",
-            "          + 0",
-            "          + 0",
-            "          + 0",
-            "          + $BDI(1),IH08",
-            "          + $BDI(1),IH09",
-            "          + $BDI(1),IH10",
-            "          + $BDI(1),IH11",
-            "          + $BDI(1),IH12",
-            "          + $BDI(1),IH13",
-            "          + $BDI(1),IH14",
-            "          + $BDI(1),IH15",
-            "          + $BDI(1),IH16",
-            "          + $BDI(1),IH17",
-            "          + $BDI(1),IH18",
-            "          + $BDI(1),IH19",
-            "          + $BDI(1),IH20",
-            "          + 0",
-            "          + 0",
-            "          + $BDI(1),IH23",
-            "          + $BDI(1),IH24",
-            "          + $BDI(1),IH25",
-            "          + 0",
-            "          + $BDI(1),IH27",
-            "          + $BDI(1),IH28",
-            "          + $BDI(1),IH29",
-            "          + $BDI(1),IH30",
-            "          + $BDI(1),IH31",
-            "          $RES 32"
-        };
-
-        Assembler asm = new Assembler(code, "IH");
-        RelocatableModule relModule = asm.assemble(true);
-        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-        for (Map.Entry<Integer, LocationCounterPool> poolEntry : relModule._storage.entrySet()) {
-            int lcIndex = poolEntry.getKey();
-            LocationCounterPool pool = poolEntry.getValue();
-            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-            Linker.LCPoolSpecification[] poolSpecs = { poolSpec };
-
-            Linker.BankDeclaration bDecl =
-                new Linker.BankDeclaration.Builder().setBankName(String.format("INTHNDLR%03o", lcIndex))
-                                                    .setBankDescriptorIndex(lcIndex)
-                                                    .setBankLevel(0)
-                                                    .setIsExtended(true)
-                                                    .setStartingAddress(01000)
-                                                    .setPoolSpecifications(poolSpecs)
-                                                    .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                                    .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                    .build();
-            bankDeclarations.add(bDecl);
+            final MainStorageProcessor msp
+    ) {
+        //  Does the bank control absolute module already exist?  If not, create it
+        if (_bankModule == null) {
+            //TODO
         }
 
-//        List<Linker.LCPoolSpecification> poolSpecs = new LinkedList<>();
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//            poolSpecs.add(poolSpec);
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-//                                 .setBankName("IH")
-//                                 .setBankDescriptorIndex(000004)
-//                                 .setBankLevel(0)
-//                                 .setIsExtended(true)
-//                                 .setStartingAddress(01000)
-//                                 .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-//                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-//                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                 .build());
+        //TODO load the bank control module into the given MSP and set the IP registers accordingly
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        AbsoluteModule module = linker.link("IH", true);
-        setupInterrupts(ip, msp, mspOffset, module);
+        //TODO establish an interrupt control stack
+
+        //TODO note the next available absolute memory location for future bank loading
     }
+
+//    /**
+//     * Sets up the interrupt handling environment
+//     * @param ip the IP which will have its various registers set appropriately to account for the created environment
+//     * @param msp the MSP in which we'll create the environment
+//     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
+//     */
+//    void establishInterruptEnvironment(
+//            final InstructionProcessor ip,
+//            final MainStorageProcessor msp,
+//            final int mspOffset
+//    ) throws MachineInterrupt {
+//        String[] code = {
+//            "          $EXTEND",
+//            "$(1)",
+//            "IH00      . Interrupt handler - Reserved, Hardware Default",
+//            "          HALT      01000+0",
+//            "",
+//            "IH01      . Interrupt handler - Hardware Check",
+//            "          HALT      01000+1",
+//            "",
+//            "IH02      . Interrupt handler - Diagnostic",
+//            "          HALT      01000+2",
+//            "",
+//            "IH08      . Interrupt handler - Reference Violation",
+//            "          HALT      01000+8",
+//            "",
+//            "IH09      . Interrupt handler - Addressing Exception",
+//            "          HALT      01000+9",
+//            "",
+//            "IH10      . Interrupt handler - Terminal Addressing Exception",
+//            "          HALT      01000+10",
+//            "",
+//            "IH11      . Interrupt handler - RCS Generic Stack Under/Over Flow",
+//            "          HALT      01000+11",
+//            "",
+//            "IH12      . Interrupt handler - Signal",
+//            "          HALT      01000+12",
+//            "",
+//            "IH13      . Interrupt handler - Test And Set",
+//            "          HALT      01000+13",
+//            "",
+//            "IH14      . Interrupt handler - Invalid Instruction",
+//            "          HALT      01000+14",
+//            "",
+//            "IH15      . Interrupt handler - Page Exception",
+//            "          HALT      01000+15",
+//            "",
+//            "IH16      . Interrupt handler - Arithmetic Exception",
+//            "          HALT      01000+16",
+//            "",
+//            "IH17      . Interrupt handler - Data Exception",
+//            "          HALT      01000+17",
+//            "",
+//            "IH18      . Interrupt handler - Operation Trap",
+//            "          HALT      01000+18",
+//            "",
+//            "IH19      . Interrupt handler - Breakpoint",
+//            "          HALT      01000+19",
+//            "",
+//            "IH20      . Interrupt handler - Quantum Timer",
+//            "          HALT      01000+20",
+//            "",
+//            "IH23      . Interrupt handler - Page(s) Zeroed",
+//            "          HALT      01000+23",
+//            "",
+//            "IH24      . Interrupt handler - Software Break",
+//            "          HALT      01000+24",
+//            "",
+//            "IH25      . Interrupt handler - Jump History Full",
+//            "          HALT      01000+25",
+//            "",
+//            "IH27      . Interrupt handler - Dayclock",
+//            "          HALT      01000+27",
+//            "",
+//            "IH28      . Interrupt handler - Performance Monitoring",
+//            "          HALT      01000+28",
+//            "",
+//            "IH29      . Interrupt handler - IPL",
+//            "          HALT      01000+29",
+//            "",
+//            "IH30      . Interrupt handler - UPI Initial",
+//            "          HALT      01000+30",
+//            "",
+//            "IH31      . Interrupt handler - UPI Normal",
+//            "          HALT      01000+31",
+//            "",
+//            "$(0) . Vectors",
+//            "          . Table of PAR vectors in L,BDI,PC format",
+//            "          . Presumes all interrupt handlers are in bank with BDI of 020 and level 0",
+//            "          + $BDI(1),IH00",
+//            "          + $BDI(1),IH01",
+//            "          + $BDI(1),IH02",
+//            "          + 0",
+//            "          + 0",
+//            "          + 0",
+//            "          + 0",
+//            "          + 0",
+//            "          + $BDI(1),IH08",
+//            "          + $BDI(1),IH09",
+//            "          + $BDI(1),IH10",
+//            "          + $BDI(1),IH11",
+//            "          + $BDI(1),IH12",
+//            "          + $BDI(1),IH13",
+//            "          + $BDI(1),IH14",
+//            "          + $BDI(1),IH15",
+//            "          + $BDI(1),IH16",
+//            "          + $BDI(1),IH17",
+//            "          + $BDI(1),IH18",
+//            "          + $BDI(1),IH19",
+//            "          + $BDI(1),IH20",
+//            "          + 0",
+//            "          + 0",
+//            "          + $BDI(1),IH23",
+//            "          + $BDI(1),IH24",
+//            "          + $BDI(1),IH25",
+//            "          + 0",
+//            "          + $BDI(1),IH27",
+//            "          + $BDI(1),IH28",
+//            "          + $BDI(1),IH29",
+//            "          + $BDI(1),IH30",
+//            "          + $BDI(1),IH31",
+//            "          $RES 32"
+//        };
+//
+//        Assembler asm = new Assembler(code, "IH");
+//        RelocatableModule relModule = asm.assemble(true);
+//
+//        Linker.LCPoolSpecification codePoolSpec = new Linker.LCPoolSpecification(relModule, 1);
+//        Linker.LCPoolSpecification vectorPoolSpec = new Linker.LCPoolSpecification(relModule, 0);
+//        Linker.LCPoolSpecification[] codePoolSpecs = { codePoolSpec };
+//        Linker.LCPoolSpecification[] vectorPoolSpecs = { vectorPoolSpec };
+//
+//        Linker.BankDeclaration codeBankDecl =
+//            new Linker.BankDeclaration.Builder().setBankName("IHCODE")
+//                                                .setBankDescriptorIndex(0)
+//                                                .setBankLevel(0)
+//                                                .setIsExtended(true)
+//                                                .setStartingAddress(01000)
+//                                                .setPoolSpecifications(codePoolSpecs)
+//                                                .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+//                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+//                                                .build();
+//
+//        Linker.BankDeclaration vectorBankDecl =
+//            new Linker.BankDeclaration.Builder().setBankName("IHVECTORS")
+//                                                .setBankDescriptorIndex(1)
+//                                                .setBankLevel(0)
+//                                                .setIsExtended(true)
+//                                                .setStartingAddress(0)
+//                                                .setPoolSpecifications(vectorPoolSpecs)
+//                                                .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+//                                                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+//                                                .build();
+//
+//        Linker.BankDeclaration[] bankDeclarations = {
+//            codeBankDecl,
+//            vectorBankDecl
+//        };
+//        Linker linker = new Linker(bankDeclarations);
+//        AbsoluteModule module = linker.link("IH", true);
+//        setupInterrupts(ip, msp, mspOffset, module);
+//    }
 
     /**
      * Retrieves the contents of a bank represented by a base register
@@ -645,129 +806,40 @@ class Test_InstructionProcessor {
         loadBanks(ip, msp, brIndex, bankInfos);
     }
 
-    /**
-     * Sets up the interrupt environment at the given offset in the given MSP, and adjusts the given IP's registers
-     * accordingly.  A number of structures are created in contiguous memory beginning at mspOffset, as such:
-     *  +0      Level 0 Bank Descriptor Table (which we create)
-     *              This table is indexed by BDI for virtual addresses which have an L-value of zero.
-     *              Each entry is an 8-word bank descriptor (see hardware manual)
-     *              However, the first 64 words of this table comprise the interrupt vector table, consisting of
-     *              64 contiguous words indexed by interrupt class.  Each word is the L,BDI,Offset of the code
-     *              which handles the particular interrupt.
-     *              L,BDI of 0,0 through 0,31 do not refer to actual banks (for architectural reasons or something),
-     *              so these first 64 words do not conflict with any BD's.
-     *              Since we are building all of this up from scratch, we'll go ahead and assign L,BDI of 0,32 to be
-     *              the bank which contains all the interrupt handling code, so this entire table will be 33 * 8 words
-     *              in length.  We'll also assign L,BDI of 0,33 to be the bank which contains the interrupt control stack.
-     *  +n      Interrupt handling code bank - size is determined by the content of the arrays in interruptCode.
-     *  +n+m    Interrupt Control Stack - we'll set this up with a particular stack frame size, with a total maximum size
-     *              which will allow for some few nested interrupts.
-     *
-     * @param ip the IP which will have its various registers set appropriately to account for the created environment
-     * @param msp the MSP in which we'll create the environment
-     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
-     * @param module AbsoluteModule containing the interrupt code.  Code for interrupt 0 is in LC 0, for 1 in LC 1, etc
-     * @return size of allocated memory in the MSP, starting at mspOffset
-     * @throws MachineInterrupt if the IP throws one
-     */
-    int setupInterrupts(
-        final InstructionProcessor ip,
-        final MainStorageProcessor msp,
-        final int mspOffset,
-        final AbsoluteModule module
-    ) throws MachineInterrupt {
-        //  Stake out slices of the level 0 bank descriptor table
-        Word36ArraySlice interruptVector = new Word36ArraySlice(msp.getStorage(), mspOffset, 64);
-        BankDescriptor ihBankDescriptor = new BankDescriptor(msp.getStorage(), 8 * mspOffset);
-        BankDescriptor icsBankDescriptor = new BankDescriptor(msp.getStorage(), 8 * (mspOffset + 1));
-        int bdtSize = interruptVector.getArraySize() + ihBankDescriptor.getArraySize() + icsBankDescriptor.getArraySize();
-
-        int ihCodeMSPOffset = mspOffset + bdtSize;  //  This is where the interrupt handler code bank is found,
-                                                    //      relative to the start of MSP storage
-        int ihCodeSize = 0;                         //  This is the size of the interrupt handler code bank (so far)
-
-        //  Iterate over the provided interrupt code arrays
-        for (int ihx = 0; ihx < 63; ++ihx) {
-            //  If there is no code for the given interrupt, set the corresponding interrupt vector L,BDI,Offset to all zero.
-            LoadableBank lb = module._loadableBanks.get(ihx);
-            if (lb == null) {
-                interruptVector.setValue(ihx, 0);
-            } else {
-                //  The caller actually gave us a code sequence for this interrupt.
-                //  Set the interrupt vector for this code, starting immediately following the previous handler
-                //  (i.e., at bank offset ihCodeSize).
-                VirtualAddress vector = new VirtualAddress((byte)0, (short)0, ihCodeSize);
-                System.out.println(String.format("========== Vector for index %d: %012o", ihx, vector.getW()));//????
-                interruptVector.setValue(ihx, vector.getW());
-
-                //  Copy the code to the MSP
-                msp.getStorage().load(ihCodeMSPOffset + ihCodeSize, lb._content);
-                ihCodeSize += lb._content.getArraySize();
-            }
-        }
-
-        //  Create a slice for the interrupt handler code bank in storage
-        Word36ArraySlice ihSlice = new Word36ArraySlice(msp.getStorage(), ihCodeMSPOffset, ihCodeSize);
-
-        //  Set up the interrupt handler code bank descriptor
-        ihBankDescriptor.setBankType(BankDescriptor.BankType.ExtendedMode);
-        ihBankDescriptor.setBaseAddress(new AbsoluteAddress(msp.getUPI(), ihCodeMSPOffset));
-        ihBankDescriptor.setGeneralAccessPermissions(ALL_ACCESS);
-        ihBankDescriptor.setGeneralFault(false);
-        ihBankDescriptor.setLargeBank(false);
-        ihBankDescriptor.setLowerLimit(0);
-        ihBankDescriptor.setSpecialAccessPermissions(ALL_ACCESS);
-        ihBankDescriptor.setUpperLimit(ihCodeSize - 1);
-        ihBankDescriptor.setUpperLimitSuppressionControl(false);
-
-        //  Set up the base register for the level 0 BDT
-        BaseRegister ihBaseRegister = new BaseRegister(ihBankDescriptor.getBaseAddress(),
-                                                       false,
-                                                       ihBankDescriptor.getLowerLimitNormalized(),
-                                                       ihBankDescriptor.getUpperLimitNormalized(),
-                                                       ihBankDescriptor.getAccessLock(),
-                                                       ihBankDescriptor.getGeneraAccessPermissions(),
-                                                       ihBankDescriptor.getSpecialAccessPermissions(),
-                                                       ihSlice);
-        ip.setBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER, ihBaseRegister);
-
-        //  Set up the interrupt control stack bank descriptor
-        int icsMSPOffset = ihCodeMSPOffset + ihCodeSize;
-        int icsFrameSize = 16;
-        int icsEntries = 8;
-        int icsStackSize = icsEntries * icsFrameSize;
-        icsBankDescriptor.setBankType(BankDescriptor.BankType.ExtendedMode);
-        icsBankDescriptor.setBaseAddress(new AbsoluteAddress(msp.getUPI(), icsMSPOffset));
-        icsBankDescriptor.setGeneralAccessPermissions(ALL_ACCESS);
-        icsBankDescriptor.setGeneralFault(false);
-        icsBankDescriptor.setLargeBank(false);
-        icsBankDescriptor.setLowerLimit(0);
-        icsBankDescriptor.setSpecialAccessPermissions(ALL_ACCESS);
-        //???? check the setUpperLimit() ... I think it might be wonky
-        icsBankDescriptor.setUpperLimit(icsStackSize - 1);
-        icsBankDescriptor.setUpperLimitSuppressionControl(false);
-
-        //  Need a slice object for the ICS
-        Word36ArraySlice icsSlice = new Word36ArraySlice(msp.getStorage(), icsMSPOffset, icsStackSize);
-
-        //  Set up the Interrupt Control Stack registers on the IP
-        BaseRegister icsBaseRegister = new BaseRegister(icsBankDescriptor.getBaseAddress(),
-                                                        false,
-                                                        icsBankDescriptor.getLowerLimitNormalized(),
-                                                        icsBankDescriptor.getUpperLimitNormalized(),
-                                                        icsBankDescriptor.getAccessLock(),
-                                                        icsBankDescriptor.getGeneraAccessPermissions(),
-                                                        icsBankDescriptor.getSpecialAccessPermissions(),
-                                                        icsSlice);
-        ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, icsBaseRegister);
-
-        IndexRegister icsIndexRegister = new IndexRegister();
-        icsIndexRegister.setXI(icsFrameSize);
-        icsIndexRegister.setXM(icsStackSize);
-        ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, icsIndexRegister.getW());
-
-        return bdtSize + ihCodeSize + icsStackSize;
-    }
+//    /**
+//     * Sets up the interrupt environment at the given offset in the given MSP, and adjusts the given IP's registers
+//     * accordingly.  A number of structures are created in contiguous memory beginning at mspOffset, as such:
+//     *  +0      Level 0 Bank Descriptor Table (which we create)
+//     *              This table is indexed by BDI for virtual addresses which have an L-value of zero.
+//     *              Each entry is an 8-word bank descriptor (see hardware manual)
+//     *              However, the first 64 words of this table comprise the interrupt vector table, consisting of
+//     *              64 contiguous words indexed by interrupt class.  Each word is the L,BDI,Offset of the code
+//     *              which handles the particular interrupt.
+//     *              L,BDI of 0,0 through 0,31 do not refer to actual banks (for architectural reasons or something),
+//     *              so these first 64 words do not conflict with any BD's.
+//     *              Since we are building all of this up from scratch, we'll go ahead and assign L,BDI of 0,32 to be
+//     *              the bank which contains all the interrupt handling code, so this entire table will be 33 * 8 words
+//     *              in length.  We'll also assign L,BDI of 0,33 to be the bank which contains the interrupt control stack.
+//     *  +n      Interrupt handling code bank - size is determined by the content of the arrays in interruptCode.
+//     *  +n+m    Interrupt Control Stack - we'll set this up with a particular stack frame size, with a total maximum size
+//     *              which will allow for some few nested interrupts.
+//     *
+//     * @param ip the IP which will have its various registers set appropriately to account for the created environment
+//     * @param msp the MSP in which we'll create the environment
+//     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
+//     * @param module AbsoluteModule containing the interrupt code.  Code for interrupt 0 is in LC 0, for 1 in LC 1, etc
+//     * @return size of allocated memory in the MSP, starting at mspOffset
+//     * @throws MachineInterrupt if the IP throws one
+//     */
+//    int setupInterrupts(
+//        final InstructionProcessor ip,
+//        final MainStorageProcessor msp,
+//        final int mspOffset,
+//        final AbsoluteModule module
+//    ) throws MachineInterrupt {
+//        //TODO
+//        return 0;
+//    }
 
     public static void showDebugInfo(
         final InstructionProcessor ip,

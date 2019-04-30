@@ -1,16 +1,28 @@
+InProgress
+Need to completely re-imagine banking in hardware lib tests...
+  We need to establish the bank descriptor tables for all levels
+  Establish interrupt handler code as a bank in level 0
+  Set up the testing code we get in an AbsoluteModule from the various test cases in
+    user-level or exec-level banks (chosen at load time) which are to be added to the
+    bank descriptor tables
+  Can we do this once for all test case executions?
+    Partly - set up a static member for the absolute module containing the bank descriptor tables and
+    ih code, and we only have to assemble and link it once.
+    We *do* have to load each time, because we get a new MSP each time.
+minalib set up interrupt handlers for all tests - needs to be testable so we can assert on interrupt taken
 Convert IP unit tests from octal to assembler and mina them (in progress)
-
 Lose unnecessary accessors (in progress)
 
-minalib - set up interrupt handlers for all tests - needs to be testable so we can assert on interrupt taken
-minalib - add test cases for interrupts (many of them already TODO)
-minalib put directives into the system dictionary
-minalib can we do implicit base register (and do it right)?
-minalib make sure we don't propagate flagged attribute in any of the operators
+TODO
 minalib special mnemonics need attention (JGD, BT, etc)
-minalib data generation - strings and floats
+minalib data generation - strings
 minalib float values - firm this up
-minalib procs and functions
+minalib data generation - floats
+minalib add test cases for interrupts (many of them already marked TODO)
+minalib put directives into the system dictionary
+minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
+minalib make sure we don't propagate flagged attribute in any of the operators
+minalib support procs and (maybe) functions
 minalib functions
   $ILCN
   $L0
@@ -36,20 +48,17 @@ minalib directives
   $GFORM
   $INCLUDE
   $INFO (?)
-  $LIT (see special usage with base registers)
 
 Finish adding instructions to IP
 
-Recode disk (and maybe tape) devices using async IO
+Figure out how to do channel programs
+  do we need a cleaner IO path?
+  we'd still like word and byte operations... don't we?
 
+Rewrite disk (and maybe tape) devices using async IO
 All Device objects: add Builder class, make constructors private
-
 Device.IoInfo objects: add Builder class, make constructors private
-
-Figure out how to do channel programs - more specifically, do we need a cleaner IO path?
-
-minalib - finish up various functions and directives
 
 Mina - wrapper around minalib
 
-Exec - using Mina
+Exec - using Mina (or minalib, but hopefully mina)
