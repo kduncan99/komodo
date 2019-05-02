@@ -91,7 +91,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     //  Assembler source for the interrupt handlers
     static private final String[] IH_CODE = {
         "          $EXTEND",
-        "          $LIT(0)",
+        "$(0)",
+        "          $LIT",
         "",
         "$(1)      . Interrupt handlers",
         "IH_00*    . Interrupt 0:Reserved - Hardware Default",

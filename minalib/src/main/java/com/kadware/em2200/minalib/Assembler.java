@@ -86,7 +86,10 @@ public class Assembler {
         TextField operationField = textLine.getField(1);
         TextField operandField = textLine.getField(2);
 
-        //  Interpret label field and update current location counter index if appropriate
+        //  Interpret label field and update current location counter index if appropriate.
+        //  We can't do anything with the label at this point (what we do depends on the operator field),
+        //  but if there is a location counter spec, it will always set the current generation lc index.
+        //  So do that part of it here.
         LabelFieldComponents lfc = interpretLabelField(labelField, _diagnostics);
         if (lfc._lcIndex != null) {
             _context._currentGenerationLCIndex = lfc._lcIndex;

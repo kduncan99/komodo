@@ -586,7 +586,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_000124_223000l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_000124_223000L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
         assertFalse(ip.getDesignatorRegister().getCarry());
         assertFalse(ip.getDesignatorRegister().getOverflow());
     }
@@ -599,16 +599,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 000123555123",
-                "DATA2     + 000001223000",
-                "",
-                "$(1),START*",
-                "          LA        A5,DATA1,,B1",
-                "          AT        A5,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 000123555123",
+            "DATA2     + 000001223000",
+            "",
+            "$(1),START*",
+            "          LA        A5,DATA1,,B1",
+            "          AT        A5,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -645,16 +645,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 00001,00122,05123",
-                "DATA2     + 00000,02355,03000",
-                "",
-                "$(1),START*",
-                "          LA        A3,DATA1,,B1",
-                "          ANT       A3,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 00001,00122,05123",
+            "DATA2     + 00000,02355,03000",
+            "",
+            "$(1),START*",
+            "          LA        A3,DATA1,,B1",
+            "          ANT       A3,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -692,16 +692,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
              // Example from the hardware guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 011416",
-                "          + 0110621,0672145",
-                "DATA2     + 01,0635035",
-                "$(1),START*",
-                "          DL        A2,DATA1,,B1",
-                "          DI        A2,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 011416",
+            "          + 0110621,0672145",
+            "DATA2     + 01,0635035",
+            "$(1),START*",
+            "          DL        A2,DATA1,,B1",
+            "          DI        A2,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -749,15 +749,15 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 0111111,0222222",
-                "          + 0333333,0444444",
-                "$(1),START*",
-                "          DL        A0,DATA1,,B1",
-                "          DI,U      A0,0",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 0111111,0222222",
+            "          + 0333333,0444444",
+            "$(1),START*",
+            "          DL        A0,DATA1,,B1",
+            "          DI,U      A0,0",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -807,16 +807,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         // Example from the hardware guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 07236",
-                "          + 0743464241454",
-                "DATA2     + 01711467",
-                "$(1),START*",
-                "          DL        A3,DATA1,,B1",
-                "          DSF       A3,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 07236",
+            "          + 0743464241454",
+            "DATA2     + 01711467",
+            "$(1),START*",
+            "          DL        A3,DATA1,,B1",
+            "          DSF       A3,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -863,16 +863,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 0111111222222",
-                "          + 0333333444444",
-                "DATA2     + 0",
-                "$(1),START*",
-                "          DL        A0,DATA1,,B1",
-                "          DSF       A0,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 0111111222222",
+            "          + 0333333444444",
+            "DATA2     + 0",
+            "$(1),START*",
+            "          DL        A0,DATA1,,B1",
+            "          DSF       A0,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -921,16 +921,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         // Example from the hardware guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 0",
-                "          + 061026335",
-                "DATA2     + 01300",
-                "$(1),START*",
-                "          DL        A4,DATA1,,B1",
-                "          DF        A4,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 0",
+            "          + 061026335",
+            "DATA2     + 01300",
+            "$(1),START*",
+            "          DL        A4,DATA1,,B1",
+            "          DF        A4,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -978,16 +978,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "DATA1     + 0111111222222",
-                "          + 0333333444444",
-                "DATA2     + 0",
-                "$(1),START*",
-                "          DL        A0,DATA1,,B1",
-                "          DF        A0,DATA2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "DATA1     + 0111111222222",
+            "          + 0333333444444",
+            "DATA2     + 0",
+            "$(1),START*",
+            "          DL        A0,DATA1,,B1",
+            "          DF        A0,DATA2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
@@ -1036,17 +1036,17 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $BASIC",
-                "          $LIT 0",
-                "$(0)",
-                "ADDEND1   + 0111111222222",
-                "          + 0333333444444",
-                "ADDEND2   + 0222222333333",
-                "          + 0000000111111",
-                "$(1),START*",
-                "          DL        A0,ADDEND1",
-                "          DA        A0,ADDEND2",
-                "          HALT      0",
+            "          $BASIC",
+            "$(0)",
+            "          $LIT",
+            "ADDEND1   + 0111111222222",
+            "          + 0333333444444",
+            "ADDEND2   + 0222222333333",
+            "          + 0000000111111",
+            "$(1),START*",
+            "          DL        A0,ADDEND1",
+            "          DA        A0,ADDEND2",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, true);
@@ -1083,17 +1083,17 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $BASIC",
-                "          $LIT 0",
-                "$(0)",
-                "ADDEND1   + 0333333222222",
-                "          + 0777777666666",
-                "ADDEND2   + 0111111222222",
-                "          + 0444444333333",
-                "$(1),START*",
-                "          DL        A0,ADDEND1",
-                "          DAN       A0,ADDEND2",
-                "          HALT      0",
+            "          $BASIC",
+            "$(0)",
+            "          $LIT",
+            "ADDEND1   + 0333333222222",
+            "          + 0777777666666",
+            "ADDEND2   + 0111111222222",
+            "          + 0444444333333",
+            "$(1),START*",
+            "          DL        A0,ADDEND1",
+            "          DAN       A0,ADDEND2",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, true);
@@ -1130,14 +1130,15 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(1),START*",
-                "          LA        A0,(0377777777777),,B1",
-                "          MI        A0,(0377777777777),,B1",
-                "          LA        A2,(0777777777776),,B1",
-                "          MI        A2,(0002244113355),,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "$(1),START*",
+            "          LA        A0,(0377777777777),,B1",
+            "          MI        A0,(0377777777777),,B1",
+            "          LA        A2,(0777777777776),,B1",
+            "          MI        A2,(0002244113355),,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1174,12 +1175,12 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(1),START*",
-                "          LA,U      A0,200",
-                "          MSI       A0,(520),,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)      $LIT",
+            "$(1)      .",
+            "          LA,U      A0,200",
+            "          MSI       A0,(520),,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1216,18 +1217,18 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(0)",
-                "FACTOR1   0200000000002",
-                "          0777777777777",
-                "FACTOR2   0111111111111",
-                "",
-                "$(1),START*",
-                "          LA        A3,FACTOR1,,B1",
-                "          LA        A4,FACTOR1+1,,B1",
-                "          MF        A3,FACTOR2,,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "FACTOR1   0200000000002",
+            "          0777777777777",
+            "FACTOR2   0111111111111",
+            "",
+            "$(1),START*",
+            "          LA        A3,FACTOR1,,B1",
+            "          LA        A4,FACTOR1+1,,B1",
+            "          MF        A3,FACTOR2,,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1264,13 +1265,14 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(1),START*",
-                "          ADD1,H1   (0777776,0111111),,B1",
-                "          ADD1,T2   (0,07777,0),,B1",
-                "          ADD1      (0777777777776),,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "$(1),START*",
+            "          ADD1,H1   (0777776,0111111),,B1",
+            "          ADD1,T2   (0,07777,0),,B1",
+            "          ADD1      (0777777777776),,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1313,13 +1315,14 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(1),START*",
-                "          SUB1,T2   (05555,0001,05555),,B1",
-                "          SUB1,H1   (0),,B1",
-                "          SUB1      (0),,B1",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "$(1),START*",
+            "          SUB1,T2   (05555,0001,05555),,B1",
+            "          SUB1,H1   (0),,B1",
+            "          SUB1      (0),,B1",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1361,19 +1364,20 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "          $LIT 0",
-                "$(1),START*",
-                "          LA,U      A0,0",
-                "          LA,U      A1,0",
-                "          LA,U      A2,0",
-                "          INC       (0),,B1",
-                "          LA,U      A0,1                . should be skipped",
-                "          INC       (0777777777776),,B1",
-                "          LA,U      A1,1                . should be skipped",
-                "          INC,H1    (010111111),,B1",
-                "          LA,U      A2,1                . should be executed",
-                "          HALT      0",
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          LA,U      A1,0",
+            "          LA,U      A2,0",
+            "          INC       (0),,B1",
+            "          LA,U      A0,1                . should be skipped",
+            "          INC       (0777777777776),,B1",
+            "          LA,U      A1,1                . should be skipped",
+            "          INC,H1    (010111111),,B1",
+            "          LA,U      A2,1                . should be executed",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1414,21 +1418,22 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "",
-                "          $LIT 0",
-                "",
-                "$(1),START*",
-                "          LA,U      A0,0",
-                "          LA,U      A1,0",
-                "          LA,U      A2,0",
-                "          DEC       (01),,B1",
-                "          LA,U      A0,1                . should be skipped",
-                "          DEC       (0777777777777),,B1",
-                "          LA,U      A1,1                . should be skipped",
-                "          DEC,H1    (010111111),,B1",
-                "          LA,U      A2,1                . should be executed",
-                "          HALT      0",
+            "          $EXTEND",
+            "",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          LA,U      A1,0",
+            "          LA,U      A2,0",
+            "          DEC       (01),,B1",
+            "          LA,U      A0,1                . should be skipped",
+            "          DEC       (0777777777777),,B1",
+            "          LA,U      A1,1                . should be skipped",
+            "          DEC,H1    (010111111),,B1",
+            "          LA,U      A2,1                . should be executed",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1469,21 +1474,20 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "",
-                "          $LIT 0",
-                "",
-                "$(1),START*",
-                "          LA,U      A0,0",
-                "          LA,U      A1,0",
-                "          LA,U      A2,0",
-                "          INC2      (0),,B1",
-                "          LA,U      A0,1                . should be skipped",
-                "          INC2      (0777777777775),,B1",
-                "          LA,U      A1,1                . should be skipped",
-                "          INC2,H1   (010111111),,B1",
-                "          LA,U      A2,1                . should be executed",
-                "          HALT      0",
+            "          $EXTEND",
+            "",
+            "$(0)      $LIT",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          LA,U      A1,0",
+            "          LA,U      A2,0",
+            "          INC2      (0),,B1",
+            "          LA,U      A0,1                . should be skipped",
+            "          INC2      (0777777777775),,B1",
+            "          LA,U      A1,1                . should be skipped",
+            "          INC2,H1   (010111111),,B1",
+            "          LA,U      A2,1                . should be executed",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1524,21 +1528,20 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "",
-                "          $LIT 0",
-                "",
-                "$(1),START*",
-                "          LA,U      A0,0",
-                "          LA,U      A1,0",
-                "          LA,U      A2,0",
-                "          DEC2      (02),,B1",
-                "          LA,U      A0,1                . should be skipped",
-                "          DEC2      (0),,B1",
-                "          LA,U      A1,1                . should be skipped",
-                "          DEC2,H1   (010,0111111),,B1",
-                "          LA,U      A2,1                . should be executed",
-                "          HALT      0",
+            "          $EXTEND",
+            "",
+            "$(0)      $LIT",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          LA,U      A1,0",
+            "          LA,U      A2,0",
+            "          DEC2      (02),,B1",
+            "          LA,U      A0,1                . should be skipped",
+            "          DEC2      (0),,B1",
+            "          LA,U      A1,1                . should be skipped",
+            "          DEC2,H1   (010,0111111),,B1",
+            "          LA,U      A2,1                . should be executed",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -1579,21 +1582,20 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  This test is per the hardware instruction guide
         String[] source = {
-                "          $EXTEND",
-                "",
-                "          $LIT 0",
-                "",
-                "$(1),START*",
-                "          LA,U      A0,0",
-                "          LA,U      A1,0",
-                "          LA,U      A2,0",
-                "          ENZ       (0),,B1",
-                "          LA,U      A0,1                . should be skipped",
-                "          ENZ       (0777777,0777777),,B1",
-                "          LA,U      A1,1                . should be skipped",
-                "          ENZ,H1    (010,0111111),,B1",
-                "          LA,U      A2,1                . should be executed",
-                "          HALT      0",
+            "          $EXTEND",
+            "",
+            "$(0)      $LIT",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          LA,U      A1,0",
+            "          LA,U      A2,0",
+            "          ENZ       (0),,B1",
+            "          LA,U      A0,1                . should be skipped",
+            "          ENZ       (0777777,0777777),,B1",
+            "          LA,U      A1,1                . should be skipped",
+            "          ENZ,H1    (010,0111111),,B1",
+            "          LA,U      A2,1                . should be executed",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
