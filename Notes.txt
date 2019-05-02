@@ -23,6 +23,9 @@ minalib put directives into the system dictionary
 minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
 minalib make sure we don't propagate flagged attribute in any of the operators
 minalib support procs and (maybe) functions
+minalib allow expression list inside literal which is part of expression
+  e.g., ((005, 007) + 12)
+
 minalib functions
   $ILCN
   $L0
@@ -49,16 +52,16 @@ minalib directives
   $INCLUDE
   $INFO (?)
 
-Finish adding instructions to IP
-
-Figure out how to do channel programs
+hardwarelib Finish adding instructions to IP
+hardwarelib UPI send/ack mechanism
+hardwarelib Figure out how to do channel programs
   do we need a cleaner IO path?
   we'd still like word and byte operations... don't we?
-
-Rewrite disk (and maybe tape) devices using async IO
-All Device objects: add Builder class, make constructors private
-Device.IoInfo objects: add Builder class, make constructors private
+hardwarelib Rewrite disk (and maybe tape) devices using async IO
+hardwarelib All Device objects: add Builder class, make constructors private
+hardwarelib Device.IoInfo objects: add Builder class, make constructors private
 
 Mina - wrapper around minalib
 
 Exec - using Mina (or minalib, but hopefully mina)
+

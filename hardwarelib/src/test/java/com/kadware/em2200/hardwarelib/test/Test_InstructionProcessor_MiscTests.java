@@ -16,8 +16,6 @@ import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -45,21 +43,23 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-        loadBanks(ip, msp, absoluteModule);
-        establishInterruptEnvironment(ip, msp, 0100000);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 0, 8 * 1024 * 1024);
+//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
-
-        startAndWait(ip);
-
+//        loadBanks(ip, msp, absoluteModule);
+        establishBankingEnvironment(ip, msp);
+//
+//        DesignatorRegister dReg = ip.getDesignatorRegister();
+//        dReg.setQuarterWordModeEnabled(true);
+//        dReg.setBasicModeEnabled(false);
+//
+//        ProgramAddressRegister par = ip.getProgramAddressRegister();
+//        par.setProgramCounter(absoluteModule._startingAddress);
+//
+//        startAndWait(ip);
+//
         showDebugInfo(ip, msp);
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());

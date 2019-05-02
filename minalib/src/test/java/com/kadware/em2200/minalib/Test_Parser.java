@@ -24,7 +24,9 @@ public class Test_Parser {
             "START*    .",
             "          LA        A0,(0104, 'HELLO, WORLD!')",
             "          ER        APRINT$",
-            "          ER        EXIT$"
+            "          ER        EXIT$",
+            "          + (25)",
+            "          + (3+4)*5",
         };
 
         Diagnostics d = new Diagnostics();
@@ -33,7 +35,7 @@ public class Test_Parser {
         assertTrue(d.isEmpty());
 
         ArrayList<TextLine> scset = parser._sourceCodeSet;
-        assertEquals(7, scset.size());
+        assertEquals(9, scset.size());
         assertEquals(2, scset.get(0)._fields.size());
         assertEquals(2, scset.get(1)._fields.size());
         assertEquals(2, scset.get(2)._fields.size());
@@ -41,6 +43,8 @@ public class Test_Parser {
         assertEquals(3, scset.get(4)._fields.size());
         assertEquals(3, scset.get(5)._fields.size());
         assertEquals(3, scset.get(6)._fields.size());
+        assertEquals(2, scset.get(7)._fields.size());
+        assertEquals(2, scset.get(8)._fields.size());
 
         assertNull(scset.get(0).getField(0));
 
@@ -52,5 +56,9 @@ public class Test_Parser {
 
         assertEquals(new Locale(7, 21), scset.get(6).getField(2)._locale);
         assertEquals("EXIT$", scset.get(6).getField(2)._text);
+
+        assertEquals("+ (25)", scset.get(7).getField(1)._text);
+
+        assertEquals("+ (3+4)*5", scset.get(8).getField(1)._text);
     }
 }

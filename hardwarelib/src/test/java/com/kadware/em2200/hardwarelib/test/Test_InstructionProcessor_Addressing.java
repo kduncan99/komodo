@@ -40,7 +40,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -75,7 +75,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -111,7 +111,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -146,7 +146,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -182,7 +182,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -220,7 +220,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -262,7 +262,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -329,7 +329,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -384,7 +384,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -422,7 +422,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -462,7 +462,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -499,7 +499,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -536,7 +536,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -574,7 +574,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -612,7 +612,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -651,7 +651,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -691,7 +691,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -731,7 +731,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -800,7 +800,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -873,7 +873,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);
@@ -918,7 +918,7 @@ public class Test_InstructionProcessor_Addressing extends Test_InstructionProces
         AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
         loadBanks(ip, msp, absoluteModule);

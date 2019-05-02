@@ -3,6 +3,7 @@
  */
 package com.kadware.em2200.minalib;
 
+import com.kadware.em2200.minalib.exceptions.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -149,11 +150,40 @@ public class Test_Assembler {
     }
 
     @Test
-    public void lit(
+    public void group(
+    ) throws InvalidParameterException {
+        String[] source = {
+            "$(1)  + (5 + 3)*2"
+        };
+
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
+        assertTrue(asm.getDiagnostics().isEmpty());
+        assertEquals(1, module._storage.size());
+        assertEquals(1, module.getLocationCounterPool(1)._storage.length);
+        assertEquals(16, module.getLocationCounterPool(1)._storage[0].getW());
+    }
+
+    @Test
+    public void lit1(
     ) {
         String[] source = {
                 "$(1)  + 15",
                 "      + (077, 0777)"
+        };
+
+        Assembler asm = new Assembler(source, "TEST");
+        RelocatableModule module = asm.assemble(true);
+        assertTrue(asm.getDiagnostics().isEmpty());
+        assertEquals(2, module._storage.size());
+    }
+
+    @Test
+    public void lit2(
+    ) {
+        String[] source = {
+            "$(1)  + 15",
+            "      + ((077000777) + 5)"
         };
 
         Assembler asm = new Assembler(source, "TEST");

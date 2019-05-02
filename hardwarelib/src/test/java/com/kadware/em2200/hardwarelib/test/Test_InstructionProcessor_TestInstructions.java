@@ -45,7 +45,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         long[][] sourceData = { code, data };
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 
@@ -119,7 +119,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         long[][] sourceData = { code, data };
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 
@@ -172,7 +172,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         long[][] sourceData = { code, data };
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 
@@ -223,7 +223,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         long[][] sourceData = { code, data };
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 
@@ -287,7 +287,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         long[][] sourceData = { code, data };
 
-        TestProcessor ip = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
 

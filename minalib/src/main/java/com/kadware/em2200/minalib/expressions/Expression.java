@@ -49,22 +49,19 @@ public class Expression {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
-        //  Special case - if there is an ExpressionGroupItem here and it has no binary operator siblings,
+        //  Special case - if there is an ExpressionGroupItem here and it has no other operand siblings,
         //  then it needs to become a case-2 e-g-item.
         ExpressionGroupItem egItem = null;
-        boolean hasBinary = false;
+        IExpressionItem nonEgItem = null;
         for (IExpressionItem item : _items) {
-            if (item instanceof OperatorItem) {
-                OperatorItem opItem = (OperatorItem) item;
-                if (opItem._operator instanceof BinaryOperator) {
-                    hasBinary = true;
-                }
-            } else if (item instanceof ExpressionGroupItem) {
+            if (item instanceof ExpressionGroupItem) {
                 egItem = (ExpressionGroupItem) item;
+            } else if (item instanceof OperandItem) {
+                nonEgItem = item;
             }
         }
 
-        if (!hasBinary && (egItem != null)) {
+        if ((egItem != null) && (nonEgItem == null)) {
             egItem._isSubExpression = false;
         }
 

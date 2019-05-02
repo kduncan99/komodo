@@ -77,5 +77,4 @@ public class Test_Expression {
         assertTrue(diagnostics.isEmpty());
         assertEquals(expected, result);
     }
-
 }

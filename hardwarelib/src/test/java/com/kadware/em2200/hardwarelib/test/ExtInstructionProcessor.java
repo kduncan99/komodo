@@ -9,11 +9,11 @@ import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 
 /**
- * subclass of Processor, suitable instrumented for special testing
+ * Extended subclass of InstructionProcessor class, suitably instrumented for special testing
  */
-public class TestProcessor extends InstructionProcessor {
+public class ExtInstructionProcessor extends InstructionProcessor {
 
-    public TestProcessor (
+    public ExtInstructionProcessor(
         final String name,
         final short upi
     ) {
