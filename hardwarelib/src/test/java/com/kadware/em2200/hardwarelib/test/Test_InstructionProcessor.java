@@ -233,8 +233,11 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         "          + 33,IH_36",
         "          + 33,IH_37",
         "          $RES      32                  . Interrupts 32-63 are not defined",
-        "          $RES      (8*32)-64           . Unused",
+        "          + 077 . testing",
+        "          $RES      (8*32)-64           . Unused remainder of 32 BDs not valid",
+        "          + 077 . testing",
         "          $RES      8*32                . Space for 32 exec banks, BDI 32 to 41",
+        "          + 077 . testing",
         "",
         "$(1),BDT_LEVEL1* $RES BANKTABLESZ",
         "$(2),BDT_LEVEL2* $RES BANKTABLESZ",
@@ -746,7 +749,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final int bankLevel,
         final int bankDescriptorIndex
     ) {
-        assert(bankLevel > 0) && (bankLevel < 8);
+        assert(bankLevel >= 0) && (bankLevel < 8);
 
         //  Load the bank into memory
         try {

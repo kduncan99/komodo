@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.misc.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Creation and discardation of hardware things (i.e., anything extending Node) must occur via this manager.
  * This is a singleton.
  */
+@SuppressWarnings("Duplicates")
 public class InventoryManager {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ public class InventoryManager {
 
     public final static int MAIN_STORAGE_PROCESSOR_SIZE = 4 * 1024 * 1024;  //  4 MWords
 
-    final Map<Short, Processor> _processors = new HashMap<>();
+    private final Map<Short, Processor> _processors = new HashMap<>();
 
     private static InventoryManager _instance = null;
 
@@ -49,16 +49,8 @@ public class InventoryManager {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Constructor
-     */
-    public InventoryManager(
-    ) {
-    }
-
-    /**
      * Instance getter
-     * <p>
-     * @return
+     * @return singleton instance getter
      */
     public static InventoryManager getInstance(
     ) {
@@ -73,17 +65,16 @@ public class InventoryManager {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Private methods
+    //  Public methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Adds an existing InstructionProcessor to our inventory.
      * The existing IP should not yet have been initialized.
-     * <p>
-     * @param ip
-     * <p>
-     * @throws NodeNameConflictException
-     * @throws UPIConflictException
+     * Only for unit tests.
+     * @param ip object to be added
+     * @throws NodeNameConflictException if there is a conflict in node names
+     * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addInstructionProcessor(
         final InstructionProcessor ip
@@ -103,17 +94,36 @@ public class InventoryManager {
         ip.initialize();
     }
 
+    /**
+     * Adds an existing MainStorageProcessor to our inventory.
+     * The existing MSP should not yet have been initialized.
+     * Only for unit tests.
+     * @param msp object to be added
+     * @throws NodeNameConflictException if there is a conflict in node names
+     * @throws UPIConflictException if there is a conflict in UPI
+     */
+    public void addMainStorageProcessor(
+        final MainStorageProcessor msp
+    ) throws NodeNameConflictException,
+             UPIConflictException {
+        if (_processors.get(msp.getUPI()) != null) {
+            throw new UPIConflictException(msp.getUPI());
+        }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+        for (Processor processor : _processors.values()) {
+            if (msp.getName().equalsIgnoreCase(processor.getName())) {
+                throw new NodeNameConflictException(msp.getName());
+            }
+        }
+
+        _processors.put(msp.getUPI(), msp);
+        msp.initialize();
+    }
 
     /**
      * Creates a new MainStorageProcessor with a unique name and UPI.
-     * <p>
-     * @return
-     * <p>
-     * @throws MaxNodesException
+     * @return new processor object
+     * @throws MaxNodesException if too many processors of this type have been created
      */
     public MainStorageProcessor createMainStorageProcessor(
     ) throws MaxNodesException {
@@ -133,10 +143,8 @@ public class InventoryManager {
 
     /**
      * Creates a new InputOutputProcessor with a unique name and UPI.
-     * <p>
-     * @return
-     * <p>
-     * @throws MaxNodesException
+     * @return new processor object
+     * @throws MaxNodesException if too many processors of this type have been created
      */
     public InputOutputProcessor createInputOutputProcessor(
     ) throws MaxNodesException {
@@ -156,10 +164,8 @@ public class InventoryManager {
 
     /**
      * Creates a new InstructionProcessor with a unique name and UPI.
-     * <p>
-     * @return
-     * <p>
-     * @throws MaxNodesException
+     * @return new processor object
+     * @throws MaxNodesException if too many processors of this type have been created
      */
     public InstructionProcessor createInstructionProcessor(
     ) throws MaxNodesException {
@@ -179,10 +185,8 @@ public class InventoryManager {
 
     /**
      * Deletes a particular processor from our inventory
-     * <p>
      * @param upi UPI of the processor to be deleted
-     * <p>
-     * @throws UPINotAssignedException
+     * @throws UPINotAssignedException if no processor can be found
      */
     //???? Need to change this to deleteNode, or something
     public void deleteProcessor(
@@ -199,12 +203,9 @@ public class InventoryManager {
 
     /**
      * Retrieves a particular processor given its UPI
-     * <p>
-     * @param upi
-     * <p>
-     * @return
-     * <p>
-     * @throws UPINotAssignedException
+     * @param upi UPI of processor of interest
+     * @return processor of interest
+     * @throws UPINotAssignedException if no processor can be found
      */
     public Processor getProcessor(
         final short upi
@@ -218,13 +219,10 @@ public class InventoryManager {
 
     /**
      * Retrieves a specific MainStorageProcessor
-     * <p>
-     * @param upi
-     * <p>
-     * @return
-     * <p>
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param upi UPI of processor of interest
+     * @return processor of interest
+     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
+     * @throws UPINotAssignedException if no processor can be found
      */
     public MainStorageProcessor getMainStorageProcessor(
         final short upi
@@ -240,13 +238,10 @@ public class InventoryManager {
 
     /**
      * Retrieves a specific InputOutputProcessor
-     * <p>
-     * @param upi
-     * <p>
-     * @return
-     * <p>
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param upi UPI of processor of interest
+     * @return processor of interest
+     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
+     * @throws UPINotAssignedException if no processor can be found
      */
     public InputOutputProcessor getInputOutputProcessor(
         final short upi
@@ -262,13 +257,10 @@ public class InventoryManager {
 
     /**
      * Retrieves a specific InstructionProcessor
-     * <p>
-     * @param upi
-     * <p>
-     * @return
-     * <p>
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param upi UPI of processor of interest
+     * @return processor of interest
+     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
+     * @throws UPINotAssignedException if no processor can be found
      */
     public InstructionProcessor getInstructionProcessor(
         final short upi
@@ -284,14 +276,11 @@ public class InventoryManager {
 
     /**
      * Retrieves the value of a particular word of storage for a given MSP, as described by an AbsoluteAddress object
-     * <p>
-     * @param absoluteAddress
-     * <p>
-     * @return
-     * <p>
-     * @throws AddressLimitsException
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param absoluteAddress MSP UPI and address of the word within the MSP
+     * @return long integer value of the word retrieved
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
      */
     public long getStorageValue(
         final AbsoluteAddress absoluteAddress
@@ -309,14 +298,11 @@ public class InventoryManager {
     /**
      * Retrieves a particular word of storage for a given MSP, as described by an AbsoluteAddress object.
      * Since storage is kept as values and not objects, we have to create an object here.
-     * <p>
-     * @param absoluteAddress
-     * <p>
-     * @return
-     * <p>
-     * @throws AddressLimitsException
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param absoluteAddress MSP UPI and address of the word within the MSP
+     * @return Word36 object containing the value of the word retrieved
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
      */
     public Word36 getStorageWord(
         final AbsoluteAddress absoluteAddress
@@ -333,13 +319,11 @@ public class InventoryManager {
 
     /**
      * Sets a value in main storage
-     * <p>
-     * @param absoluteAddress
-     * @param value
-     * <p>
-     * @throws AddressLimitsException
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param absoluteAddress MSP UPI and address of the word within the MSP
+     * @param value value to be stored
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
      */
     public void setStorageValue(
         final AbsoluteAddress absoluteAddress,
@@ -357,13 +341,11 @@ public class InventoryManager {
 
     /**
      * Sets a value in main storage
-     * <p>
-     * @param absoluteAddress
-     * @param value
-     * <p>
-     * @throws AddressLimitsException
-     * @throws UPIProcessorTypeException
-     * @throws UPINotAssignedException
+     * @param absoluteAddress MSP UPI and address of the word within the MSP
+     * @param value value to be stored
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
      */
     public void setStorageValue(
         final AbsoluteAddress absoluteAddress,

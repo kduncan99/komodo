@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Base class which models a Procesor node
  */
+@SuppressWarnings("Duplicates")
 public abstract class Processor extends Node {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -34,8 +35,7 @@ public abstract class Processor extends Node {
 
         /**
          * Constructor
-         * <p>
-         * @param code
+         * @param code code associated with the type
          */
         ProcessorType(
             final int code
@@ -45,8 +45,7 @@ public abstract class Processor extends Node {
 
         /**
          * Retrieves the unique code assigned to this ProcessorType
-         * <p>
-         * @return
+         * @return value
          */
         public int getCode(
         ) {
@@ -55,10 +54,8 @@ public abstract class Processor extends Node {
 
         /**
          * Converts a code to a ProcessorType
-         * <p>
-         * @param code
-         * <p>
-         * @return
+         * @param code code of interest
+         * @return the value
          */
         public static ProcessorType getValue(
             final int code
@@ -115,8 +112,7 @@ public abstract class Processor extends Node {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public ProcessorType getProcessorType(
     ) {
@@ -125,8 +121,7 @@ public abstract class Processor extends Node {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public short getUPI(
     ) {
@@ -146,7 +141,6 @@ public abstract class Processor extends Node {
 
     /**
      * Invoked when this object is the source of an IO which has been cancelled or completed
-     * <p>
      * @param source the Node which is signalling us
      */
     @Override
@@ -167,8 +161,7 @@ public abstract class Processor extends Node {
 
     /**
      * For debugging purposes
-     * <p>
-     * @param writer
+     * @param writer where we write
      */
     @Override
     public void dump(

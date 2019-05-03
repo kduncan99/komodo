@@ -5,7 +5,6 @@
 package com.kadware.em2200.hardwarelib.test;
 
 import com.kadware.em2200.hardwarelib.InventoryManager;
-import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIConflictException;
@@ -45,8 +44,8 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 0, 8 * 1024 * 1024);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
 //        loadBanks(ip, msp, absoluteModule);
         establishBankingEnvironment(ip, msp);
