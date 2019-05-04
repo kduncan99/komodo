@@ -808,7 +808,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             BankDescriptor bd = loadBank(ip, msp, loadableBank, bdtLevel, loadableBank._bankDescriptorIndex);
 
             if (loadableBank._initialBaseRegister != null) {
-                System.out.println(String.format("%o:%o", bd.getBaseAddress()._upi, bd.getBaseAddress()._offset));//????
                 Word36ArraySlice storageSubset =
                     new Word36ArraySlice(msp.getStorage(),
                                          bd.getBaseAddress()._offset,
@@ -996,13 +995,14 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
                 BaseRegister br = ip.getBaseRegister(bx);
-                System.out.println(String.format("    BR%d base:(UPI:%d Offset:%08o) lower:%d upper:%d",
+                System.out.println(String.format("    BR%d base:%s(UPI:%d Offset:%08o) lower:%d upper:%d",
                                                  bx,
+                                                 br._voidFlag ? "(VOID)" : "",
                                                  br._baseAddress._upi,
                                                  br._baseAddress._offset,
                                                  br._lowerLimitNormalized,
                                                  br._upperLimitNormalized));
-                if (bx >= 16 && bx <= 24) {
+                if (bx >= 16 && bx < 24) {
                     System.out.println(String.format("    Base register refers to BDT level %d; BDT Content follows:",
                                                      bx - 16));
                     if (br._storage != null) {

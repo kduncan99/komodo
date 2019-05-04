@@ -348,9 +348,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setLowerLimit(
         final int value
     ) {
-        long result = getValue(2) & 0_000777_777777L;
+        long result = getValue(1) & 0_000777_777777L;
         result |= (long)(value & 0777) << 27;
-        setValue(2, result);
+        setValue(1, result);
     }
 
     /**
@@ -372,9 +372,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setUpperLimit(
         final int value
     ) {
-        long result = getValue(2) & 0_777000_000000L;
+        long result = getValue(1) & 0_777000_000000L;
         result |= value & 0777_777777L;
-        setValue(2, result);
+        setValue(1, result);
     }
 
     /**
