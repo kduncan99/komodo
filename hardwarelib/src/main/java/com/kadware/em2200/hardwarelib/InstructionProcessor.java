@@ -619,7 +619,7 @@ public class InstructionProcessor extends Processor implements Worker {
         BaseRegister bReg = _baseRegisters[baseRegisterIndex];
 
         //  Make sure it is not a large size bank.
-        if (bReg.getLargeSizeFlag()) {
+        if (bReg._largeSizeFlag) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
         }
 
@@ -638,9 +638,9 @@ public class InstructionProcessor extends Processor implements Worker {
         //  due to the operation of findBasicModeBank() above.
 
         //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
-        _fetchInstructionAbsoluteAddress.set(bReg.getBaseAddress()._upi,
-                                             bReg.getBaseAddress()._offset);
-        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - bReg.getLowerLimitNormalized());
+        _fetchInstructionAbsoluteAddress.set(bReg._baseAddress._upi,
+                                             bReg._baseAddress._offset);
+        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - bReg._lowerLimitNormalized);
         checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
 
         try {
@@ -664,7 +664,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private void fetchInstructionExtendedMode(
     ) throws MachineInterrupt {
         //  Is the bank based on BR0 void, or a large bank?
-        if (_baseRegisters[0].getVoidFlag() || _baseRegisters[0].getLargeSizeFlag()) {
+        if (_baseRegisters[0]._voidFlag || _baseRegisters[0]._largeSizeFlag) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
         }
 
@@ -677,9 +677,10 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
         //  Set the word (which is an instruction) in _currentInstruction, clear MidInstIntPt, and set IKR.INF.
-        _fetchInstructionAbsoluteAddress.set(_baseRegisters[0].getBaseAddress()._upi,
-                                             _baseRegisters[0].getBaseAddress()._offset);
-        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - _baseRegisters[0].getLowerLimitNormalized());
+        _fetchInstructionAbsoluteAddress.set(_baseRegisters[0]._baseAddress._upi,
+                                             _baseRegisters[0]._baseAddress._offset);
+        int offset = _programAddressRegister.getProgramCounter() - _baseRegisters[0]._lowerLimitNormalized;
+        _fetchInstructionAbsoluteAddress.addOffset(offset);
         checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
 
         try {
@@ -761,7 +762,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * Private fixed AbsoluteAddress object for findBaseRegister* methods.
      * Likely, we'll only use it during BasicMode indirect address resolution.
      */
-    private AbsoluteAddress _fbrAbsoluteAddress = new AbsoluteAddress();
+    private final AbsoluteAddress _fbrAbsoluteAddress = new AbsoluteAddress();
 
     /**
      * Locates the index of the base register which represents the bank which contains the given relative address.
@@ -805,8 +806,8 @@ public class InstructionProcessor extends Processor implements Worker {
             //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
             //  then throw UnresolvedAddressException so the caller knows we're not done here.
             try {
-                _fbrAbsoluteAddress.set(bReg.getBaseAddress()._upi, bReg.getBaseAddress()._offset);
-                _fbrAbsoluteAddress.addOffset(relativeAddress - bReg.getLowerLimitNormalized());
+                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._offset);
+                _fbrAbsoluteAddress.addOffset(relativeAddress - bReg._lowerLimitNormalized);
                 long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
                 _currentInstruction.setXHIU(replacementValue);
             } catch (AddressLimitsException
@@ -852,7 +853,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt {
         int brIndex = getEffectiveBaseRegisterIndex();
         BaseRegister bReg = _baseRegisters[brIndex];
-        if (bReg.getVoidFlag()) {
+        if (bReg._voidFlag) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
@@ -896,21 +897,20 @@ public class InstructionProcessor extends Processor implements Worker {
     private AccessPermissions getEffectivePermissions(
         final BaseRegister baseRegister
     ) {
-        AccessInfo tempInfo = new AccessInfo();
-        tempInfo.set(_indicatorKeyRegister.getAccessKey());
+        AccessInfo tempInfo = new AccessInfo(_indicatorKeyRegister.getAccessKey());
 
         // If we are at a more-privileged ring than the base register's ring, use the base register's special access permissions.
-        if (tempInfo.getRing() < baseRegister.getAccessLock().getRing()) {
-            return baseRegister.getSpecialAccessPermissions();
+        if (tempInfo._ring < baseRegister._accessLock._ring) {
+            return baseRegister._specialAccessPermissions;
         }
 
         // If we are in the same domain as the base register, again, use the special access permissions.
-        if (tempInfo.getDomain() == baseRegister.getAccessLock().getDomain()) {
-            return baseRegister.getSpecialAccessPermissions();
+        if (tempInfo._domain == baseRegister._accessLock._domain) {
+            return baseRegister._specialAccessPermissions;
         }
 
         // Otherwise, use the general access permissions.
-        return baseRegister.getGeneralAccessPermissions();
+        return baseRegister._generalAccessPermissions;
     }
 
     /**
@@ -959,7 +959,7 @@ public class InstructionProcessor extends Processor implements Worker {
         _indicatorKeyRegister.setInterruptClassField(interrupt.getInterruptClass().getCode());
 
         // Make sure the interrupt control stack base register is valid
-        if (_baseRegisters[ICS_BASE_REGISTER].getVoidFlag()) {
+        if (_baseRegisters[ICS_BASE_REGISTER]._voidFlag) {
             stop(StopReason.ICSBaseRegisterInvalid, 0);
             return;
         }
@@ -970,14 +970,14 @@ public class InstructionProcessor extends Processor implements Worker {
         long stackOffset = icsXReg.getH2();
         long stackFrameSize = icsXReg.getXI();
         long stackFrameLimit = stackOffset + stackFrameSize;
-        if ((stackFrameLimit - 1 > _baseRegisters[ICS_BASE_REGISTER].getUpperLimitNormalized())
-            || (stackOffset < _baseRegisters[ICS_BASE_REGISTER].getLowerLimitNormalized())) {
+        if ((stackFrameLimit - 1 > _baseRegisters[ICS_BASE_REGISTER]._upperLimitNormalized)
+            || (stackOffset < _baseRegisters[ICS_BASE_REGISTER]._lowerLimitNormalized)) {
             stop(StopReason.ICSOverflow, 0);
             return;
         }
 
         // Populate the stack frame in storage.
-        Word36Array icsStorage = _baseRegisters[ICS_BASE_REGISTER].getStorage();
+        Word36Array icsStorage = _baseRegisters[ICS_BASE_REGISTER]._storage;
         if (stackFrameLimit > icsStorage.getArraySize()) {
             stop(StopReason.ICSBaseRegisterInvalid, 0);
             return;
@@ -1004,12 +1004,12 @@ public class InstructionProcessor extends Processor implements Worker {
         // Each word is a Program Address Register word, containg the L,BDI,Offset of the interrupt handling routine
         // for the associated interrupt class.  Load the PAR appropriately.
         // Make sure B16 is valid before dereferencing through it.
-        if (_baseRegisters[L0_BDT_BASE_REGISTER].getVoidFlag()) {
+        if (_baseRegisters[L0_BDT_BASE_REGISTER]._voidFlag) {
             stop(StopReason.L0BaseRegisterInvalid, 0);
             return;
         }
 
-        Word36Array intStorage = _baseRegisters[ICS_BASE_REGISTER].getStorage();
+        Word36Array intStorage = _baseRegisters[ICS_BASE_REGISTER]._storage;
         int intOffset = interrupt.getInterruptClass().getCode();
         if (intOffset >= icsStorage.getArraySize()) {
             stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);
@@ -1052,13 +1052,13 @@ public class InstructionProcessor extends Processor implements Worker {
         // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
         // where {n} is the bank descriptor index.  Read the bank descriptor into B0.
         int bankDescriptorBaseRegisterIndex = bankLevel + 16;
-        if (_baseRegisters[bankDescriptorBaseRegisterIndex].getVoidFlag()) {
+        if (_baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
                                                    bankLevel,
                                                    bankDescriptorIndex);
         }
 
-        Word36Array bdStorage = _baseRegisters[bankDescriptorBaseRegisterIndex].getStorage();
+        Word36Array bdStorage = _baseRegisters[bankDescriptorBaseRegisterIndex]._storage;
         int bankDescriptorTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
         if (bankDescriptorTableOffset + 8 >= bdStorage.getArraySize()) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
@@ -1122,9 +1122,9 @@ public class InstructionProcessor extends Processor implements Worker {
         final BaseRegister baseRegister,
         final int offset
     ) {
-        return !baseRegister.getVoidFlag()
-               && (offset >= baseRegister.getLowerLimitNormalized())
-               && (offset <= baseRegister.getUpperLimitNormalized());
+        return !baseRegister._voidFlag
+               && (offset >= baseRegister._lowerLimitNormalized)
+               && (offset <= baseRegister._upperLimitNormalized);
     }
 
     /**
@@ -2353,9 +2353,9 @@ public class InstructionProcessor extends Processor implements Worker {
         final BaseRegister baseRegister,
         final int relativeAddress
     ) throws MachineInterrupt {
-        short upi = baseRegister.getBaseAddress()._upi;
-        int actualOffset = relativeAddress - baseRegister.getLowerLimitNormalized();
-        int offset = baseRegister.getBaseAddress()._offset + actualOffset;
+        short upi = baseRegister._baseAddress._upi;
+        int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
+        int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, offset);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.misc;
@@ -57,16 +57,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -81,9 +71,8 @@ public class BankDescriptor extends Word36ArraySlice {
     /**
      * Constructor for a BankDescriptor which is located in a larger structure.
      * We do not alter the underlying array, in case it already contains a valid structure.
-     * <p>
-     * @param base
-     * @param offset
+     * @param base base array
+     * @param offset offset within the base array where the bank descriptor source code exists
      */
     public BankDescriptor(
         final Word36Array base,
@@ -99,7 +88,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Access lock for this bank
      *          BD.Access_Lock:Word 0:H2
      */
@@ -112,7 +100,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Type of bank (has some impact on the validity/meaning of other fields
      *          BD.TYPE:Word 0 Bits 8-11
      */
@@ -124,7 +111,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Base Address - i.e., describes the logical physical address (if that makes sense) corresponding to the
      *          first word of this bank in memory.  The actual meaning of this depends upon the hardware architecture.
      *          For us, the UPI portion is held in H2 of Word 2, while the offset is held in Word 3.
@@ -146,7 +132,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return position of this bank relative to the first bank describing a large or very large bank
      *          BD.DISP:Word 2 Bits 3-17
      */
@@ -157,7 +142,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Execute, Read, and Write permissions for ring/domain at a lower level
      *          BD.GAP:Word 0 Bits 0-2
      */
@@ -168,31 +152,28 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return G-flag
      *          Addressing_Exception interrupt results if this BD is accessed by normal bank-manipulation handling
      *          BD.G:Word 0 Bit 13
      */
     public boolean getGeneralFault(
     ) {
-        return (getValue(0) & 020_000000l) != 0;
+        return (getValue(0) & 020_000000L) != 0;
     }
 
     /**
      * Special Getter
-     * <p>
      * @return Inactive-flag
      *          Has meaning only for Queue banks (see docs)
      *          BD.INA:Word 2 Bit 0
      */
     public boolean getInactive(
     ) {
-        return (getValue(2) & 0_400000_000000l) != 0;
+        return (getValue(2) & 0_400000_000000L) != 0;
     }
 
     /**
      * Special Getter
-     * <p>
      * @return Inactive Queue BD List Next Pointer
      *          For Inactive Queue Bank Descriptors, this is the address of the next entry in the
      *          inactive queue BD list - for the last entry this will be zero.
@@ -204,7 +185,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return large bank flag:
      *          If false, this is a single bank no greater than 0_777777.
      *              BD.Lower_Limit has 512-word granularity and BD.Upper_Limit has 1-word granularity.
@@ -216,12 +196,11 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public boolean getLargeBank(
     ) {
-        return (getValue(0) & 04_000000l) != 0;
+        return (getValue(0) & 04_000000L) != 0;
     }
 
     /**
      * Special Getter
-     * <p>
      * @return lower limit, subject to granularity specified in the large-bank field - for non-indirect banks
      *          Word 1 Bits 0-8
      */
@@ -232,7 +211,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return lower limit with granularity normalized out (making this 1-word granularity)
      */
     public int getLowerLimitNormalized(
@@ -242,7 +220,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Execute, Read, and Write permissions for ring/domain at a lower level
      *          BD.SAP:Word 0 Bits 3-5
      */
@@ -253,7 +230,6 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return Target bank L,BDI (only for indirect banks)
      *          L (level) is the top 3 bits in a the wrapped 18-bit field
      *          BDI is the remaining (bottom) 15 bits
@@ -265,18 +241,16 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return upper limit, subject to granularity specified in the large-bank field - for non-indirect banks
      *          Word 1 Bits 9-35 (bottom 3 quarter words)
      */
     public int getUpperLimit(
     ) {
-        return (int)(getValue(2) & 0777_777777);
+        return (int)(getValue(2) & 0777_777777L);
     }
 
     /**
      * Special Getter
-     * <p>
      * @return upper limit with granularity normalized out (making this 1-word granularity)
      */
     public int getUpperLimitNormalized(
@@ -286,9 +260,8 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special Getter
-     * <p>
      * @return U flag (upper limit suppression control)
-     * //???? re-word the following
+     * //TODO re-word the following
      *          The purpose of U is to permit the BDs not within the last 16,777,216 words of a Very_Large_Bank
      *          to have a maximum Upper_Limit for full 24-bit indexing. For BD.U := 1, the logical upper limit of the
      *          Very_Large_Bank is more than the BD can describe were the BD subset to the last word. See 11.2,
@@ -302,56 +275,52 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public boolean getUpperLimitSuppressionControl(
     ) {
-        return (getValue(0) & 02_000000l) != 0;
+        return (getValue(0) & 02_000000L) != 0;
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new bank type value
      */
     public void setBankType(
         final BankType value
     ) {
-        long result = getValue(0) & 0_776000_000000l;
+        long result = getValue(0) & 0_776000_000000L;
         result |= (long)(value._code) << 24;
         setValue(0, result);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param baseAddress
+     * @param baseAddress new base address value
      */
     public void setBaseAddress(
         final AbsoluteAddress baseAddress
     ) {
-        setValue(2, (getValue(2) & 0_777777_000000l) | (baseAddress._upi & 0777777));
+        setValue(2, (getValue(2) & 0_777777_000000L) | (baseAddress._upi & 0777777L));
         setValue(3, baseAddress._offset);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new GAP
      */
     public void setGeneralAccessPermissions(
         final AccessPermissions value
     ) {
-        long result = getValue(0) & 0_077777_777777l;
+        long result = getValue(0) & 0_077777_777777L;
         result |= ((long)value.get() << 33);
         setValue(0, result);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setGeneralFault(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777757_777777l;
+        long result = getValue(0) & 0_777757_777777L;
         if (value) {
             result |= 020_000000;
         }
@@ -360,13 +329,12 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setLargeBank(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777773_777777l;
+        long result = getValue(0) & 0_777773_777777L;
         if (value) {
             result |= 04_000000;
         }
@@ -375,52 +343,48 @@ public class BankDescriptor extends Word36ArraySlice {
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setLowerLimit(
         final int value
     ) {
-        long result = getValue(2) & 0_000777_777777l;
+        long result = getValue(2) & 0_000777_777777L;
         result |= (long)(value & 0777) << 27;
         setValue(2, result);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new SAP
      */
     public void setSpecialAccessPermissions(
         final AccessPermissions value
     ) {
-        long result = getValue(0) & 0_707777_777777l;
+        long result = getValue(0) & 0_707777_777777L;
         result |= ((long)value.get() << 30);
         setValue(0, result);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setUpperLimit(
         final int value
     ) {
-        long result = getValue(2) & 0_777000_000000l;
-        result |= value & 0777_777777;
+        long result = getValue(2) & 0_777000_000000L;
+        result |= value & 0777_777777L;
         setValue(2, result);
     }
 
     /**
      * Special setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setUpperLimitSuppressionControl(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777775_777777l;
+        long result = getValue(0) & 0_777775_777777L;
         if (value) {
             result |= 02_000000;
         }

@@ -47,8 +47,8 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-//        loadBanks(ip, msp, absoluteModule);
         establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 //
 //        DesignatorRegister dReg = ip.getDesignatorRegister();
 //        dReg.setQuarterWordModeEnabled(true);
@@ -62,7 +62,5 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         showDebugInfo(ip, msp);
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        //TODO how to check?
     }
 }

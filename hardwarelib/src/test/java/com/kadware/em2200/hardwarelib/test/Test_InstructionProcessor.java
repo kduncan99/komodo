@@ -725,7 +725,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final InstructionProcessor ip,
         final int baseRegisterIndex
     ) {
-        Word36Array array = ip.getBaseRegister(baseRegisterIndex).getStorage();
+        Word36Array array = ip.getBaseRegister(baseRegisterIndex)._storage;
         long[] result = new long[array.getArraySize()];
         for (int ax = 0; ax < array.getArraySize(); ++ax) {
             result[ax] = array.getValue(ax);
@@ -741,9 +741,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param bank bank to be loaded
      * @param bankLevel BDT level where the bank is to be loaded
      * @param bankDescriptorIndex BDI of the bank within the BDT
+     * @return the bank descriptor describing the bank we just loaded
      */
-    static void loadBank(
-        final ExtInstructionProcessor ip,
+    static BankDescriptor loadBank(
+        final InstructionProcessor ip,
         final ExtMainStorageProcessor msp,
         final LoadableBank bank,
         final int bankLevel,
@@ -763,7 +764,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), (int) subRegion._position);
 
             //  Create a bank descriptor for it in the appropriate bdt
-            Word36Array bankDescriptorTable = ip.getBaseRegister(16 + bankLevel).getStorage();
+            Word36Array bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
             BankDescriptor bd = new BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
             bd.setBankType(bank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode);
             bd.setBaseAddress(absAddr);
@@ -774,8 +775,61 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             bd.setSpecialAccessPermissions(bank._specialPermissions);
             bd.setUpperLimit(bankUpper);
             bd.setUpperLimitSuppressionControl(false);
+
+            System.out.println(String.format("Loaded bank %s level %d BDI %06o MSP offset:%d length:%d",
+                                             bank._bankName,
+                                             bankLevel,
+                                             bankDescriptorIndex,
+                                             subRegion._position,
+                                             subRegion._extent));
+
+            return bd;
         } catch (RegionTracker.OutOfSpaceException ex) {
             throw new RuntimeException("Cannot find space in MSP for bank to be loaded");
+        }
+    }
+
+    /**
+     * Loads the various banks from the given absolute module into the given MSP
+     * and applies initial base registers for the given IP as directed by that module.
+     * @param ip instruction processor of interest
+     * @param msp main storage processor of interest
+     * @param module absolute module to be loaded
+     * @param bdtLevel indicates which bdt the bank should be loaded into (0 to 7)
+     */
+    static void loadBanks(
+        final InstructionProcessor ip,
+        final ExtMainStorageProcessor msp,
+        final AbsoluteModule module,
+        final int bdtLevel
+    ) {
+        assert((bdtLevel >= 0) && (bdtLevel < 8));
+        for (LoadableBank loadableBank : module._loadableBanks.values()) {
+            BankDescriptor bd = loadBank(ip, msp, loadableBank, bdtLevel, loadableBank._bankDescriptorIndex);
+
+            if (loadableBank._initialBaseRegister != null) {
+                System.out.println(String.format("%o:%o", bd.getBaseAddress()._upi, bd.getBaseAddress()._offset));//????
+                Word36ArraySlice storageSubset =
+                    new Word36ArraySlice(msp.getStorage(),
+                                         bd.getBaseAddress()._offset,
+                                         bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
+                int bankLower = loadableBank._startingAddress;
+                int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
+                BaseRegister bReg = new BaseRegister(bd.getBaseAddress(),
+                                                     false,
+                                                     bankLower,
+                                                     bankUpper,
+                                                     loadableBank._accessInfo,
+                                                     loadableBank._generalPermissions,
+                                                     loadableBank._specialPermissions,
+                                                     storageSubset);
+                ip.setBaseRegister(loadableBank._initialBaseRegister, bReg);
+
+                System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
+                                                 loadableBank._initialBaseRegister,
+                                                 bReg._lowerLimitNormalized,
+                                                 bReg._upperLimitNormalized));
+            }
         }
     }
 
@@ -791,6 +845,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             final MainStorageProcessor msp,
             final AbsoluteModule module
     ) {
+        //TODO obsolete
         Word36Array storage = msp.getStorage();
         short mspUpi = msp.getUPI();
 
@@ -821,8 +876,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
 
                 System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
                                                  loadableBank._initialBaseRegister,
-                                                 bReg.getLowerLimitNormalized(),
-                                                 bReg.getUpperLimitNormalized()));
+                                                 bReg._lowerLimitNormalized,
+                                                 bReg._upperLimitNormalized));
             }
 
             mspOffset += loadableBank._content.getArraySize();
@@ -844,6 +899,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final int brIndex,
         final LoadBankInfo[] bankInfos
     ) {
+        //TODO obsolete
         Word36Array storage = msp.getStorage();
         short mspUpi = msp.getUPI();
 
@@ -866,8 +922,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             System.out.println(String.format("Loaded Bank B%d Abs=%s llNorm=0%o ulNorm=0%o",
                                              brIndex + sx,
                                              absoluteAddress,
-                                             bReg.getLowerLimitNormalized(),
-                                             bReg.getUpperLimitNormalized()));
+                                             bReg._lowerLimitNormalized,
+                                             bReg._upperLimitNormalized));
         }
     }
 
@@ -888,6 +944,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final int brIndex,
         final long[][] sourceData
     ) {
+        //TODO obsolete
         LoadBankInfo[] bankInfos = new LoadBankInfo[sourceData.length];
         for (int sx = 0; sx < sourceData.length; ++sx) {
             bankInfos[sx] = new LoadBankInfo(sourceData[sx]);
@@ -896,42 +953,13 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         loadBanks(ip, msp, brIndex, bankInfos);
     }
 
-//    /**
-//     * Sets up the interrupt environment at the given offset in the given MSP, and adjusts the given IP's registers
-//     * accordingly.  A number of structures are created in contiguous memory beginning at mspOffset, as such:
-//     *  +0      Level 0 Bank Descriptor Table (which we create)
-//     *              This table is indexed by BDI for virtual addresses which have an L-value of zero.
-//     *              Each entry is an 8-word bank descriptor (see hardware manual)
-//     *              However, the first 64 words of this table comprise the interrupt vector table, consisting of
-//     *              64 contiguous words indexed by interrupt class.  Each word is the L,BDI,Offset of the code
-//     *              which handles the particular interrupt.
-//     *              L,BDI of 0,0 through 0,31 do not refer to actual banks (for architectural reasons or something),
-//     *              so these first 64 words do not conflict with any BD's.
-//     *              Since we are building all of this up from scratch, we'll go ahead and assign L,BDI of 0,32 to be
-//     *              the bank which contains all the interrupt handling code, so this entire table will be 33 * 8 words
-//     *              in length.  We'll also assign L,BDI of 0,33 to be the bank which contains the interrupt control stack.
-//     *  +n      Interrupt handling code bank - size is determined by the content of the arrays in interruptCode.
-//     *  +n+m    Interrupt Control Stack - we'll set this up with a particular stack frame size, with a total maximum size
-//     *              which will allow for some few nested interrupts.
-//     *
-//     * @param ip the IP which will have its various registers set appropriately to account for the created environment
-//     * @param msp the MSP in which we'll create the environment
-//     * @param mspOffset the offset from the beginning of MSP storage where we create the environment
-//     * @param module AbsoluteModule containing the interrupt code.  Code for interrupt 0 is in LC 0, for 1 in LC 1, etc
-//     * @return size of allocated memory in the MSP, starting at mspOffset
-//     * @throws MachineInterrupt if the IP throws one
-//     */
-//    int setupInterrupts(
-//        final InstructionProcessor ip,
-//        final MainStorageProcessor msp,
-//        final int mspOffset,
-//        final AbsoluteModule module
-//    ) throws MachineInterrupt {
-//        //TODO
-//        return 0;
-//    }
-
-    public static void showDebugInfo(
+    /**
+     * Brute-force dump of almost everything we might want to know.
+     * Includes elements of IP state, as well as the content of all loaded banks in the MSP
+     * @param ip of interest
+     * @param msp of interest
+     */
+    static void showDebugInfo(
         final InstructionProcessor ip,
         final MainStorageProcessor msp
     ) {
@@ -963,27 +991,31 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                 System.out.println(String.format("    ER%d %012o", x, gr.getW()));
             }
 
+            //TODO don't dump banks here, only indicate level and BDI
+            //      instead, dump banks from the registers which point to the bdt's
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
                 BaseRegister br = ip.getBaseRegister(bx);
                 System.out.println(String.format("    BR%d base:(UPI:%d Offset:%08o) lower:%d upper:%d",
                                                  bx,
-                                                 br.getBaseAddress()._upi,
-                                                 br.getBaseAddress()._offset,
-                                                 br.getLowerLimitNormalized(),
-                                                 br.getUpperLimitNormalized()));
-                System.out.println("    Content:");
-                Word36Array storage = br.getStorage();
-                if (storage != null) {
-                    for ( int sx = 0; sx < storage.getArraySize(); sx += 8 ) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(String.format("      %08o:", sx));
-                        for ( int sy = 0; sy < 8; ++sy ) {
-                            if ( sx + sy < storage.getArraySize() ) {
-                                sb.append(String.format(" %012o", storage.getValue(sx + sy)));
+                                                 br._baseAddress._upi,
+                                                 br._baseAddress._offset,
+                                                 br._lowerLimitNormalized,
+                                                 br._upperLimitNormalized));
+                if (bx >= 16 && bx <= 24) {
+                    System.out.println(String.format("    Base register refers to BDT level %d; BDT Content follows:",
+                                                     bx - 16));
+                    if (br._storage != null) {
+                        for (int sx = 0; sx < br._storage.getArraySize(); sx += 8) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("      %08o:", sx));
+                            for (int sy = 0; sy < 8; ++sy) {
+                                if ( sx + sy < br._storage.getArraySize() ) {
+                                    sb.append(String.format(" %012o", br._storage.getValue(sx + sy)));
+                                }
                             }
+                            System.out.println(sb.toString());
                         }
-                        System.out.println(sb.toString());
                     }
                 }
             }
