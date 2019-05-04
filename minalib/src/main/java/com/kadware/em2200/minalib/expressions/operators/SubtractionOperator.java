@@ -60,7 +60,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                 IntegerValue iopLeft = (IntegerValue)operands[0];
                 IntegerValue iopRight = (IntegerValue)operands[1];
 
-                long intResult = iopLeft._value + iopRight._value;
+                long intResult = iopLeft._value - iopRight._value;
 
                 List<IntegerValue.UndefinedReference> temp = new LinkedList<>();
                 temp.addAll( Arrays.asList( iopLeft._undefinedReferences));

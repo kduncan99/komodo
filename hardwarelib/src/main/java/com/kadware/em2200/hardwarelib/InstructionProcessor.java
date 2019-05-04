@@ -1009,7 +1009,7 @@ public class InstructionProcessor extends Processor implements Worker {
             return;
         }
 
-        Word36Array intStorage = _baseRegisters[ICS_BASE_REGISTER]._storage;
+        Word36Array intStorage = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
         int intOffset = interrupt.getInterruptClass().getCode();
         if (intOffset >= icsStorage.getArraySize()) {
             stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);

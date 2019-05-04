@@ -49,17 +49,17 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         establishBankingEnvironment(ip, msp);
         loadBanks(ip, msp, absoluteModule, 7);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//        dReg.setBasicModeEnabled(false);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(absoluteModule._startingAddress);
-//
-//        startAndWait(ip);
-//
-        showDebugInfo(ip, msp);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(false);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+//        showDebugInfo(ip, msp);
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
     }

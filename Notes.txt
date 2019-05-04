@@ -1,14 +1,4 @@
 InProgress
-Need to completely re-imagine banking in hardware lib tests...
-  We need to establish the bank descriptor tables for all levels
-  Establish interrupt handler code as a bank in level 0
-  Set up the testing code we get in an AbsoluteModule from the various test cases in
-    user-level or exec-level banks (chosen at load time) which are to be added to the
-    bank descriptor tables
-  Can we do this once for all test case executions?
-    Partly - set up a static member for the absolute module containing the bank descriptor tables and
-    ih code, and we only have to assemble and link it once.
-    We *do* have to load each time, because we get a new MSP each time.
 minalib set up interrupt handlers for all tests - needs to be testable so we can assert on interrupt taken
 Convert IP unit tests from octal to assembler and mina them (in progress)
 Lose unnecessary accessors (in progress)
