@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.test;
 
+import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
@@ -14,8 +15,7 @@ import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -59,8 +59,12 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         startAndWait(ip);
 
-//        showDebugInfo(ip, msp);
+        InstructionProcessor.StopReason reason = ip.getLatestStopReason();
+        long detail = ip.getLatestStopDetail();
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, reason);
+        assertEquals(01016, detail);
     }
 }

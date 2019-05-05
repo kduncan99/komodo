@@ -128,7 +128,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private int                             _jumpHistoryTableNext = 0;
     private boolean                         _jumpHistoryThresholdReached = false;
     private MachineInterrupt                _lastInterrupt = null;    //  must always be != _pendingInterrupt
-    private final Word36                    _latestStopDetail = new Word36();
+    private long                            _latestStopDetail = 0;
     private StopReason                      _latestStopReason = StopReason.Initial;
     private boolean                         _midInstructionInterruptPoint = false;
     private MachineInterrupt                _pendingInterrupt = null;
@@ -260,8 +260,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return reason for the latest stop
      */
     public StopReason getLatestStopReason(
     ) {
@@ -270,8 +269,16 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return detail for the latest stop
+     */
+    public long getLatestStopDetail(
+    ) {
+        return _latestStopDetail;
+    }
+
+    /**
+     * Getter
+     * @return value
      */
     public ProgramAddressRegister getProgramAddressRegister(
     ) {
@@ -280,8 +287,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getRunningFlag(
     ) {
@@ -2248,16 +2254,16 @@ public class InstructionProcessor extends Processor implements Worker {
         synchronized(this) {
             if (_runningFlag) {
                 _latestStopReason = stopReason;
-                _latestStopDetail.setW(0);
+                _latestStopDetail = detail;
                 _runningFlag = false;
                 System.out.println(String.format("%s Stopping:%s Detail:%o",
                                                  getName(),
                                                  stopReason.toString(),
-                                                 _latestStopDetail.getW()));//TODO remove later
+                                                 _latestStopDetail));//TODO remove later
                 LOGGER.error(String.format("%s Stopping:%s Detail:%o",
                                            getName(),
                                            stopReason.toString(),
-                                           _latestStopDetail.getW()));
+                                           _latestStopDetail));
                 this.notify();
             }
         }
