@@ -18,526 +18,589 @@ import org.junit.*;
  */
 public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test_InstructionProcessor {
 
-//    @Test
-//    public void addAccumulator(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(010, 016, 0, 0, 007)).getW(),          //  LA,U    A0,007
-//            (new InstructionWord(014, 016, 0, 0, 014)).getW(),          //  AA.U    A0,014
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+    @Test
+    public void addAccumulator(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,7",
+            "          AA,U      A0,014",
+            "          HALT      0",
+            };
 
-//    @Test
-//    public void addAccumulator_posZeros(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-//            (new InstructionWord(014, 016, 0, 0, 0)).getW(),            //  AA.U    A0,0
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
-//    @Test
-//    public void addAccumulator_negZeros(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(005, 0, 01, 0, 0, 0, GeneralRegisterSet.A5)).getW(),   //  SNZ     A5
-//            (new InstructionWord(010, 0, 00, 0, 0, 0, GeneralRegisterSet.A5)).getW(),   //  LA      A0,A5
-//            (new InstructionWord(014, 0, 00, 0, 0, 0, GeneralRegisterSet.A5)).getW(),   //  AA      A0,A5
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),                  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0_777777_777777l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertTrue(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-//    @Test
-//    public void addNegativeAccumulator(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0234,
-//            0236
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,0,,B1
-//            (new InstructionWord(015, 0, 0, 0, 0, 0, 1, 1)).getW(),     //  ANA     A0,1,,B1
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0_777777_777775l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
-//    @Test
-//    public void addMagnitudeAccumulator_positive(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0234,
-//            0236
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,0,,B1
-//            (new InstructionWord(016, 0, 0, 0, 0, 0, 1, 1)).getW(),     //  AMA     A0,1,,B1
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0472, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
 
-//    @Test
-//    public void addMagnitudeAccumulator_negative(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0234,
-//            0777777_777775l
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,0,,B1
-//            (new InstructionWord(016, 0, 0, 0, 0, 0, 1, 1)).getW(),     //  AMA     A0,1,,B1
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0236, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
 
-//    @Test
-//    public void addNegativeMagnitudeAccumulator(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0234,
-//            0236
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,0,,B1
-//            (new InstructionWord(017, 0, 0, 0, 0, 0, 1, 1)).getW(),     //  ANMA    A0,1,,B1
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0777777_777775l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        startAndWait(ip);
 
-//    @Test
-//    public void addAccumulatorUpper(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(010, 016, 0, 0, 007)).getW(),          //  LA,U    A0,007
-//            (new InstructionWord(020, 016, 0, 0, 014)).getW(),          //  AU.U    A0,014
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-//    @Test
-//    public void addNegativeAccumulatorUpper(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(010, 016, 0, 0, 007)).getW(),          //  LA,U    A0,007
-//            (new InstructionWord(021, 016, 0, 0, 014)).getW(),          //  ANU.U   A0,014
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(0_777777_777772l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
 
-//    @Test
-//    public void addIndexRegister(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(027, 016, 0, 0, 007)).getW(),          //  LX,U    X0,007
-//            (new InstructionWord(024, 016, 0, 0, 014)).getW(),          //  AX.U    X0,014
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+    @Test
+    public void addAccumulator_posZeros(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          AA,U      A0,0",
+            "          HALT      0",
+            };
 
-//    @Test
-//    public void addNegativeIndexRegister(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0234,
-//            0236
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(027, 016, 0, 0, 007)).getW(),          //  LX,U    X0,007
-//            (new InstructionWord(025, 016, 0, 0, 014)).getW(),          //  ANX.U   X0,014
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0_777777_777772l, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
 
-//    @Test
-//    public void addAccumulator_Overflow(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            OnesComplement.LARGEST_POSITIVE_INTEGER_36,
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  LA      A0,data
-//            (new InstructionWord(014, 0, 0, 0, 0, 0, 1, 0)).getW(),     //  AA      A0,data
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//        dReg.setBasicModeEnabled(false);
-//        dReg.setOperationTrapEnabled(true);
-//
-////        long[][] interruptCode = new long[64][];
-////        setupInterrupts(ip, msp, 02000, interruptCode);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        //???? look for evidence of operation trap interrupt
-//    }
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-//    @Test
-//    public void addHalves(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        long[] data = {
-//            0_000123_555123l,
-//            0_000001_223000l,
-//        };
-//
-//        long[] code = {
-//            (new InstructionWord(010,  0, 05, 0, 0, 0, 1, 0)).getW(),   //  LA      A5,0,,B1
-//            (new InstructionWord(072, 04, 05, 0, 0, 0, 1, 1)).getW(),   //  AH      A5,1,,B1
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-//        };
-//
-//        long[][] sourceData = { code, data };
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-//
-//        loadBanks(ip, msp, 0, sourceData);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(0);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-//
-//        assertEquals(0_000124_000124l, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
-//        assertFalse(ip.getDesignatorRegister().getCarry());
-//        assertFalse(ip.getDesignatorRegister().getOverflow());
-//    }
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addAccumulator_negZeros(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          SNZ       A5",
+            "          LA        A0,A5",
+            "          AA        A0,A5",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addNegativeAccumulator(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA1     + 0234",
+            "DATA2     + 0236",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A0,DATA1,,B2",
+            "          ANA       A0,DATA2,,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0_777777_777775L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addMagnitudeAccumulator_positive(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA1     + 0234",
+            "DATA2     + 0236",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A0,DATA1,,B2",
+            "          AMA       A0,DATA2,,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0472, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addMagnitudeAccumulator_negative(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA1     + 0234",
+            "DATA2     + 0777777,0777775",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A0,DATA1,,B2",
+            "          AMA       A0,DATA2,,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0236, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addNegativeMagnitudeAccumulator(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA1     + 0234",
+            "DATA2     + 0236",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A0,DATA1,,B2",
+            "          ANMA      A0,DATA2,,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0777777_777775L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addAccumulatorUpper(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,007",
+            "          AU,U      A0,014",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addNegativeAccumulatorUpper(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,007",
+            "          ANU,U     A0,014",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addIndexRegister(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LX,U      X0,007",
+            "          AX,U      X0,014",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addNegativeIndexRegister(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LX,U      X0,007",
+            "          ANX,U     X0,014",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
+
+    @Test
+    public void addAccumulator_Overflow(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA      + 0377777777777",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A0,DATA,,B2",
+            "          AA        A0,DATA,,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+        dReg.setBasicModeEnabled(false);
+        dReg.setOperationTrapEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01022, ip.getLatestStopDetail());
+    }
+
+    @Test
+    public void addHalves(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "          $LIT",
+            "",
+            "$(1),START*",
+            "          LA        A5,(000123,0555123),,B2",
+            "          AH        A5,(01,0223000),,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(true);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(0_000124_000124l, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
+    }
 
     @Test
     public void addNegativeHalves(
@@ -558,7 +621,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
             };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -604,7 +667,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -652,7 +715,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -701,7 +764,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -878,7 +941,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -938,7 +1001,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -997,7 +1060,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -1058,7 +1121,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -1107,7 +1170,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -1275,8 +1338,6 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         assertEquals(0_044444_444444L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
     }
 
-    //TODO need add1 test for basic mode pp>0 (throws machine interrupt)
-
     @Test
     public void add1(
     ) throws MachineInterrupt,
@@ -1326,6 +1387,51 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         //  check overflow and carry from the last instruction
         assertTrue(dReg.getCarry());
         assertFalse(dReg.getOverflow());
+    }
+
+    @Test
+    public void add1_badPrivilege(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        //  In basic mode, PP of zero is required
+        String[] source = {
+            "          $BASIC",
+            "$(0)",
+            "          $LIT",
+            "$(1),START*",
+            "          ADD1      (0)",
+            "          HALT      0 . should not get here.  if we do,",
+            "                      . it's an invalid instruction (because PP>0)",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        dReg.setQuarterWordModeEnabled(false);
+        dReg.setBasicModeEnabled(true);
+        dReg.setProcessorPrivilege(1);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        startAndWait(ip);
+
+        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     @Test
@@ -1396,7 +1502,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
             "                      . it's an invalid instruction (because PP>0)",
             };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -1416,7 +1522,6 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
-        showDebugInfo(ip, msp);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
