@@ -58,6 +58,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -97,6 +99,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -137,6 +141,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -177,6 +183,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -218,6 +226,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -260,6 +270,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
@@ -302,6 +314,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
         assertEquals(0_000002_000006L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
     }
@@ -395,6 +409,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         long[] bank3Data = getBank(ip, 3);
         assertEquals(01, bank3Data[0]);
         assertEquals(02, bank3Data[1]);
@@ -484,6 +500,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         long[] bankData = getBank(ip, 3);
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
@@ -531,6 +549,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
         assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.EA5).getW());
         assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.EX5).getW());
         assertEquals(077, ip.getGeneralRegister(GeneralRegisterSet.ER5).getW());

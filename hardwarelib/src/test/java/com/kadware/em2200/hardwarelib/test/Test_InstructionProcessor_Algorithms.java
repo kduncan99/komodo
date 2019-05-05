@@ -6,6 +6,7 @@ package com.kadware.em2200.hardwarelib.test;
 
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
+import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
 import java.util.Arrays;
@@ -17,12 +18,14 @@ import org.junit.*;
  */
 public class Test_InstructionProcessor_Algorithms extends Test_InstructionProcessor {
 
+    //TODO a recursive factorial, test with succeeding inputs from 0 to ... maybe 20
+
     /**
      * Sieve of Eratosthenes - Primes from 2 to 1000
      */
     @Test
     public void sieve(
-    ) throws MaxNodesException,
+    ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -110,8 +113,11 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-        loadBanks(ip, msp, absoluteModule);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -124,6 +130,9 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
 
         long[] expected = {
             168,    //  number of prime values following
