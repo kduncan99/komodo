@@ -246,7 +246,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public int getUpperLimit(
     ) {
-        return (int)(getValue(2) & 0777_777777L);
+        return (int)(getValue(1) & 0777_777777L);
     }
 
     /**

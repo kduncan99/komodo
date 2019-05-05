@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -40,7 +40,7 @@ public class InvalidInstructionInterrupt extends MachineInterrupt {
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private final Reason _reason;
+    public final Reason _reason;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -49,13 +49,16 @@ public class InvalidInstructionInterrupt extends MachineInterrupt {
 
     /**
      * Constructor
-     * <p>
-     * @param reason
+     * @param reason reason code
      */
     public InvalidInstructionInterrupt(
         final Reason reason
     ) {
-        super(InterruptClass.InvalidInstruction, ConditionCategory.Fault, Synchrony.Synchronous, Deferrability.Exigent, InterruptPoint.IndirectExecute);
+        super(InterruptClass.InvalidInstruction,
+              ConditionCategory.Fault,
+              Synchrony.Synchronous,
+              Deferrability.Exigent,
+              InterruptPoint.IndirectExecute);
         _reason = reason;
     }
 
@@ -66,32 +69,11 @@ public class InvalidInstructionInterrupt extends MachineInterrupt {
 
     /**
      * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
-        return _reason;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
+     * @return ssf value
      */
     @Override
     public byte getShortStatusField(
     ) {
         return (byte)_reason.getCode();
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

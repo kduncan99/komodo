@@ -108,7 +108,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * ActiveBaseTable entries - B1 is index 0, B15 is index 14.  There is no entry for B0.
      */
-    //????private ActiveBaseTableEntry _activeBaseTableEntries[] = new ActiveBaseTableEntry[15];
+    //TODO private ActiveBaseTableEntry _activeBaseTableEntries[] = new ActiveBaseTableEntry[15];
 
     private static final Map<InstructionProcessor, HashSet<AbsoluteAddress>> _storageLocks = new HashMap<>();
 
@@ -364,7 +364,7 @@ public class InstructionProcessor extends Processor implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * //????TODO:Move this comment somewhere more appropriate
+     * //TODO:Move this comment somewhere more appropriate
      * When an interrupt is raised and the IP recognizes such, it saves interrupt information and other machine state
      * information on the ICS (Interrupt Control Stack) and the Jump History table.  The Program Address Register is
      * updated from the vector for the particular interrupt, and a new hard-held ASP (Activity State Packet) is built.
@@ -480,7 +480,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 && (((comparison == BreakpointComparison.Fetch) && _breakpointRegister.getFetchFlag())
                     || ((comparison == BreakpointComparison.Read) && _breakpointRegister.getReadFlag())
                     || ((comparison == BreakpointComparison.Write) && _breakpointRegister.getWriteFlag()))) {
-            //???? Per doc, 2.4.1.2 Breakpoint_Register - we need to halt if Halt Enable is set
+            //TODO Per doc, 2.4.1.2 Breakpoint_Register - we need to halt if Halt Enable is set
             //      which means Stop Right Now... how do we do that for all callers of this code?
             _indicatorKeyRegister.setBreakpointRegisterMatchCondition(true);
         }
@@ -496,8 +496,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private boolean checkPendingInterrupts(
     ) throws MachineInterrupt {
-        // Is there an interrupt pending?  If so, handle it (but wait - is DB13 == 0?  Is the pending interrupt deferrable????
-        //      also, do we need to enqueue interrupts in case multiple interrupts occur?  I think maybe so...????
+        //TODO
+        // Is there an interrupt pending?  If so, handle it (but wait - is DB13 == 0?  Is the pending interrupt deferrable?
+        //      also, do we need to enqueue interrupts in case multiple interrupts occur?  I think maybe so...?
         if (_pendingInterrupt != null) {
             handleInterrupt();
             return true;
@@ -949,7 +950,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private void handleInterrupt(
     ) throws MachineInterrupt {
         // Get pending interrupt, save it to lastInterrupt, and clear pending.
-        //???? are interrupts prevented?  If so, do not handle a deferable interrupt
+        //TODO are interrupts prevented?  If so, do not handle a deferable interrupt
         MachineInterrupt interrupt = _pendingInterrupt;
         _pendingInterrupt = null;
         _lastInterrupt = interrupt;
@@ -991,7 +992,7 @@ public class InstructionProcessor extends Processor implements Worker {
         icsStorage.setWord36(sx + 4, interrupt.getInterruptStatusWord0());
         icsStorage.setWord36(sx + 5, interrupt.getInterruptStatusWord1());
 
-        //???? other stuff which needs to be preserved - IP PRM 5.1.3
+        //TODO other stuff which needs to be preserved - IP PRM 5.1.3
         //      e.g., results of stuff that we figure out prior to generating U in Basic Mode maybe?
         //      or does it hurt anything to just regenerate that?  We /would/ need the following two lines...
         //pStack[6].setS1( m_PreservedProgramAddressRegisterValid ? 1 : 0 );
@@ -1040,10 +1041,10 @@ public class InstructionProcessor extends Processor implements Worker {
         _currentInstruction.clear();
 
         // Base the PAR-indicated interrupt handler bank on B0
-        //???? WE should use standard bank-manipulation algorithm here - see hardware manual 4.6.4
+        //TODO WE should use standard bank-manipulation algorithm here - see hardware manual 4.6.4
         byte bankLevel = (byte)_programAddressRegister.getLevel();
         short bankDescriptorIndex = (short)_programAddressRegister.getBankDescriptorIndex();
-        if ((bankLevel == 0) && (bankDescriptorIndex < 64)) {
+        if ((bankLevel == 0) && (bankDescriptorIndex < 32)) {
             stop(StopReason.InterruptHandlerInvalidLevelBDI, 0);
             return;
         }
@@ -1052,7 +1053,7 @@ public class InstructionProcessor extends Processor implements Worker {
         // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
         // where {n} is the bank descriptor index.  Read the bank descriptor into B0.
         int bankDescriptorBaseRegisterIndex = bankLevel + 16;
-        if (_baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
+        if ((bankLevel < 0) || (bankLevel > 7) || _baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
                                                    bankLevel,
                                                    bankDescriptorIndex);
@@ -1060,7 +1061,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         Word36Array bdStorage = _baseRegisters[bankDescriptorBaseRegisterIndex]._storage;
         int bankDescriptorTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bankDescriptorTableOffset + 8 >= bdStorage.getArraySize()) {
+        if (bankDescriptorTableOffset + 8 > bdStorage.getArraySize()) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
                                                    bankLevel,
                                                    bankDescriptorIndex);
@@ -2166,7 +2167,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format(""));//???? actually, a whole lot to do here
+            writer.write(String.format(""));//TODO actually, a whole lot to do here
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
@@ -2252,7 +2253,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 System.out.println(String.format("%s Stopping:%s Detail:%o",
                                                  getName(),
                                                  stopReason.toString(),
-                                                 _latestStopDetail.getW()));//????
+                                                 _latestStopDetail.getW()));//TODO remove later
                 LOGGER.error(String.format("%s Stopping:%s Detail:%o",
                                            getName(),
                                            stopReason.toString(),

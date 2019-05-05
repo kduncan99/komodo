@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -38,14 +38,14 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private final ErrorType _errorType;
+    public final ErrorType _errorType;
 
     /**
      * Indicates that this interrupt was raised when using the program address register to fetch an instruction.
      * Does not include indirect addressing references, nor references to the target of an EX or EXR instruction.
      * _errorType will not be GRSViolation nor WriteAccessViolation if this is set.
      */
-    private final boolean _fetchFlag;
+    public final boolean _fetchFlag;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -54,15 +54,18 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
 
     /**
      * Constructor
-     * <p>
-     * @param errorType
-     * @param fetchFlag
+     * @param errorType ErrorType value
+     * @param fetchFlag fetch flag value
      */
     public ReferenceViolationInterrupt(
         final ErrorType errorType,
         final boolean fetchFlag
     ) {
-        super(InterruptClass.ReferenceViolation, ConditionCategory.Fault, Synchrony.Synchronous, Deferrability.Exigent, InterruptPoint.MidExecution);
+        super(InterruptClass.ReferenceViolation,
+              ConditionCategory.Fault,
+              Synchrony.Synchronous,
+              Deferrability.Exigent,
+              InterruptPoint.MidExecution);
         _errorType = errorType;
         _fetchFlag = fetchFlag;
     }
@@ -72,39 +75,9 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public ErrorType getErrorType(
-    ) {
-        return _errorType;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getFetchFlag(
-    ) {
-        return _fetchFlag;
-    }
-
     @Override
     public byte getShortStatusField(
     ) {
         return (byte)((_errorType.getCode() << 4) | (_fetchFlag ? 1 : 0));
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

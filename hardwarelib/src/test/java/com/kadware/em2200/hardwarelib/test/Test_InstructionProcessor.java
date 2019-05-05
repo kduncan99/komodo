@@ -579,14 +579,14 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         //  Assemble banking source - there will be 8 location counter pools 0 through 7
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
         Assembler asm = new Assembler(BDT_CODE, "BDT");
-        RelocatableModule bdtModule = asm.assemble(true);
+        RelocatableModule bdtModule = asm.assemble(false);
         assert(asm.getDiagnostics().isEmpty());
 
         //  Assemble interrupt handler code into a separate relocatable module...
         //  we have no particular expectations with respect to location counters;
         //  For simplicity, we put all of this code into one IH bank - again, see linking step.
         asm = new Assembler(IH_CODE, "IH");
-        RelocatableModule ihModule = asm.assemble(true);
+        RelocatableModule ihModule = asm.assemble(false);
         assert(asm.getDiagnostics().isEmpty());
 
         //  Now we link - we need to create a separate bank for each of the Bank Descriptor Tables
@@ -759,6 +759,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                 msp._regions.assign(bank._content.getArraySize(),
                                     new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
             AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), (int) subRegion._position);
+            msp.getStorage().load(absAddr._offset, bank._content);
 
             //  Create a bank descriptor for it in the appropriate bdt
             Word36Array bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
@@ -768,7 +769,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             bd.setGeneralAccessPermissions(bank._generalPermissions);
             bd.setGeneralFault(false);
             bd.setLargeBank(false);
-            bd.setLowerLimit(bankLower);
+            bd.setLowerLimit(bankLower >> 9);
             bd.setSpecialAccessPermissions(bank._specialPermissions);
             bd.setUpperLimit(bankUpper);
             bd.setUpperLimitSuppressionControl(false);
@@ -1009,6 +1010,35 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                             for (int sy = 0; sy < 8; ++sy) {
                                 if ( sx + sy < br._storage.getArraySize() ) {
                                     sb.append(String.format(" %012o", br._storage.getValue(sx + sy)));
+                                }
+                            }
+                            System.out.println(sb.toString());
+                        }
+                    }
+                }
+            }
+
+            for (int level = 0; level < 8; ++level) {
+                System.out.println(String.format("  Level %d Banks:", level));
+                BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
+                int firstBDI = (level == 0) ? 32 : 0;
+                for (int bdi = firstBDI; bdi < br._storage.getArraySize() >> 3; ++bdi) {
+                    BankDescriptor bd = new BankDescriptor(br._storage, 8 * bdi);
+                    if (bd.getBaseAddress()._upi > 0) {
+                        System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o",
+                                                         bdi,
+                                                         bd.getBaseAddress()._upi,
+                                                         bd.getBaseAddress()._offset,
+                                                         bd.getLowerLimitNormalized(),
+                                                         bd.getUpperLimitNormalized()));
+                        int len = bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1;
+                        for (int ix = 0; ix < len; ix += 8) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("      %08o:%08o  ", ix + bd.getLowerLimitNormalized(), ix));
+                            for (int iy = 0; iy < 8; ++iy) {
+                                if (ix + iy < len) {
+                                    sb.append(String.format(" %012o",
+                                                            msp.getStorage().getValue(ix + iy + bd.getBaseAddress()._offset)));
                                 }
                             }
                             System.out.println(sb.toString());
