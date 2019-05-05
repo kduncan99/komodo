@@ -1,10 +1,13 @@
 InProgress
 Convert IP unit tests from octal to assembler and minalib them (in progress)
-minalib add test cases for interrupts (many of them already marked TODO)
 Lose unnecessary accessors (in progress)
 
 TODO
+minalib add test cases for interrupts (many of them already marked TODO)
 unit tests - all tests expected to run to completion should ensure they actually did
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
 minalib special mnemonics need attention (JGD, BT, etc)
 minalib data generation - strings
 minalib float values - firm this up

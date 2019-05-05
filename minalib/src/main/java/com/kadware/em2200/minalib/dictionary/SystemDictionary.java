@@ -23,17 +23,17 @@ public class SystemDictionary extends Dictionary {
             _initialValues.put(String.format("EX%d", rx), new IntegerValue(false, rx, null));
         }
 
-        for (int rx = 0; rx < 15; ++rx) {
+        for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("A%d", rx), new IntegerValue(false, rx + 12, null));
             _initialValues.put(String.format("EA%d", rx), new IntegerValue(false, rx + 12, null));
         }
 
-        for (int rx = 0; rx < 15; ++rx) {
+        for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("R%d", rx), new IntegerValue(false, rx + 64, null));
             _initialValues.put(String.format("ER%d", rx), new IntegerValue(false, rx + 64, null));
         }
 
-        for (int rx = 0; rx < 31; ++rx) {
+        for (int rx = 0; rx < 32; ++rx) {
             _initialValues.put(String.format("B%d", rx), new IntegerValue(false, rx, null));
         }
 
