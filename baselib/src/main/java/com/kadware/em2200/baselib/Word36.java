@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
@@ -8,7 +8,6 @@ import com.kadware.em2200.baselib.exceptions.*;
 
 /**
  * Library for doing architecturally-correct 36-bit operations on integers
- * <p>
  * Note that we have designed this to provide static operations against long values, which are presumed to contain
  * ones-complement 36-bit values with the high-order 28 bits set to zero.  This is purposeful, as most of the emulated
  * main storage consists of slices of arrays of long integers, *not* Word36 objects (because the latter would take a
@@ -40,47 +39,47 @@ public class Word36 {
     //  Constants
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public static final Word36 NEGATIVE_ONE = new Word36(0_777777_777776l);
-    public static final Word36 NEGATIVE_ZERO = new Word36(0_777777_777777l);
+    public static final Word36 NEGATIVE_ONE = new Word36(0_777777_777776L);
+    public static final Word36 NEGATIVE_ZERO = new Word36(0_777777_777777L);
     public static final Word36 POSITIVE_ONE = new Word36(1);
     public static final Word36 POSITIVE_ZERO = new Word36(0);
 
-    public static final long MASK_B0         = 1l << 35;
-    public static final long MASK_B1         = 1l << 34;
-    public static final long MASK_B2         = 1l << 33;
-    public static final long MASK_B3         = 1l << 32;
-    public static final long MASK_B4         = 1l << 31;
-    public static final long MASK_B5         = 1l << 30;
-    public static final long MASK_B6         = 1l << 29;
-    public static final long MASK_B7         = 1l << 28;
-    public static final long MASK_B8         = 1l << 27;
-    public static final long MASK_B9         = 1l << 26;
-    public static final long MASK_B10        = 1l << 25;
-    public static final long MASK_B11        = 1l << 24;
-    public static final long MASK_B12        = 1l << 23;
-    public static final long MASK_B13        = 1l << 22;
-    public static final long MASK_B14        = 1l << 21;
-    public static final long MASK_B15        = 1l << 20;
-    public static final long MASK_B16        = 1l << 19;
-    public static final long MASK_B17        = 1l << 18;
-    public static final long MASK_B18        = 1l << 17;
-    public static final long MASK_B19        = 1l << 16;
-    public static final long MASK_B20        = 1l << 15;
-    public static final long MASK_B21        = 1l << 14;
-    public static final long MASK_B22        = 1l << 13;
-    public static final long MASK_B23        = 1l << 12;
-    public static final long MASK_B24        = 1l << 11;
-    public static final long MASK_B25        = 1l << 10;
-    public static final long MASK_B26        = 1l << 9;
-    public static final long MASK_B27        = 1l << 8;
-    public static final long MASK_B28        = 1l << 7;
-    public static final long MASK_B29        = 1l << 6;
-    public static final long MASK_B30        = 1l << 5;
-    public static final long MASK_B31        = 1l << 4;
-    public static final long MASK_B32        = 1l << 3;
-    public static final long MASK_B33        = 1l << 2;
-    public static final long MASK_B34        = 1l << 1;
-    public static final long MASK_B35        = 1l;
+    public static final long MASK_B0         = 1L << 35;
+    public static final long MASK_B1         = 1L << 34;
+    public static final long MASK_B2         = 1L << 33;
+    public static final long MASK_B3         = 1L << 32;
+    public static final long MASK_B4         = 1L << 31;
+    public static final long MASK_B5         = 1L << 30;
+    public static final long MASK_B6         = 1L << 29;
+    public static final long MASK_B7         = 1L << 28;
+    public static final long MASK_B8         = 1L << 27;
+    public static final long MASK_B9         = 1L << 26;
+    public static final long MASK_B10        = 1L << 25;
+    public static final long MASK_B11        = 1L << 24;
+    public static final long MASK_B12        = 1L << 23;
+    public static final long MASK_B13        = 1L << 22;
+    public static final long MASK_B14        = 1L << 21;
+    public static final long MASK_B15        = 1L << 20;
+    public static final long MASK_B16        = 1L << 19;
+    public static final long MASK_B17        = 1L << 18;
+    public static final long MASK_B18        = 1L << 17;
+    public static final long MASK_B19        = 1L << 16;
+    public static final long MASK_B20        = 1L << 15;
+    public static final long MASK_B21        = 1L << 14;
+    public static final long MASK_B22        = 1L << 13;
+    public static final long MASK_B23        = 1L << 12;
+    public static final long MASK_B24        = 1L << 11;
+    public static final long MASK_B25        = 1L << 10;
+    public static final long MASK_B26        = 1L << 9;
+    public static final long MASK_B27        = 1L << 8;
+    public static final long MASK_B28        = 1L << 7;
+    public static final long MASK_B29        = 1L << 6;
+    public static final long MASK_B30        = 1L << 5;
+    public static final long MASK_B31        = 1L << 4;
+    public static final long MASK_B32        = 1L << 3;
+    public static final long MASK_B33        = 1L << 2;
+    public static final long MASK_B34        = 1L << 1;
+    public static final long MASK_B35        = 1L;
 
     private static final long MASK = OnesComplement.BIT_MASK_36;
     public static final long MASK_NOT_B0     = MASK ^ MASK_B0;
@@ -121,37 +120,37 @@ public class Word36 {
     public static final long MASK_NOT_B35    = MASK ^ MASK_B35;
 
     // general partial-word masks
-    public static final long MASK_H1         = 0_777777_000000l;
-    public static final long MASK_H2         = 0_000000_777777l;
-    public static final long MASK_Q1         = 0_777_000_000_000l;
-    public static final long MASK_Q2         = 0_000_777_000_000l;
-    public static final long MASK_Q3         = 0_000_000_777_000l;
-    public static final long MASK_Q4         = 0_000_000_000_777l;
-    public static final long MASK_S1         = 0_77_00_00_00_00_00l;
-    public static final long MASK_S2         = 0_00_77_00_00_00_00l;
-    public static final long MASK_S3         = 0_00_00_77_00_00_00l;
-    public static final long MASK_S4         = 0_00_00_00_77_00_00l;
-    public static final long MASK_S5         = 0_00_00_00_00_77_00l;
-    public static final long MASK_S6         = 0_00_00_00_00_00_77l;
-    public static final long MASK_T1         = 0_7777_0000_0000l;
-    public static final long MASK_T2         = 0_0000_7777_0000l;
-    public static final long MASK_T3         = 0_0000_0000_7777l;
+    public static final long MASK_H1         = 0_777777_000000L;
+    public static final long MASK_H2         = 0_000000_777777L;
+    public static final long MASK_Q1         = 0_777_000_000_000L;
+    public static final long MASK_Q2         = 0_000_777_000_000L;
+    public static final long MASK_Q3         = 0_000_000_777_000L;
+    public static final long MASK_Q4         = 0_000_000_000_777L;
+    public static final long MASK_S1         = 0_77_00_00_00_00_00L;
+    public static final long MASK_S2         = 0_00_77_00_00_00_00L;
+    public static final long MASK_S3         = 0_00_00_77_00_00_00L;
+    public static final long MASK_S4         = 0_00_00_00_77_00_00L;
+    public static final long MASK_S5         = 0_00_00_00_00_77_00L;
+    public static final long MASK_S6         = 0_00_00_00_00_00_77L;
+    public static final long MASK_T1         = 0_7777_0000_0000L;
+    public static final long MASK_T2         = 0_0000_7777_0000L;
+    public static final long MASK_T3         = 0_0000_0000_7777L;
 
-    public static final long MASK_NOT_H1     = 0_000000_777777l;
-    public static final long MASK_NOT_H2     = 0_777777_000000l;
-    public static final long MASK_NOT_Q1     = 0_000_777_777_777l;
-    public static final long MASK_NOT_Q2     = 0_777_000_777_777l;
-    public static final long MASK_NOT_Q3     = 0_777_777_000_777l;
-    public static final long MASK_NOT_Q4     = 0_777_777_777_000l;
-    public static final long MASK_NOT_S1     = 0_00_77_77_77_77_77l;
-    public static final long MASK_NOT_S2     = 0_77_00_77_77_77_77l;
-    public static final long MASK_NOT_S3     = 0_77_77_00_77_77_77l;
-    public static final long MASK_NOT_S4     = 0_77_77_77_00_77_77l;
-    public static final long MASK_NOT_S5     = 0_77_77_77_77_00_77l;
-    public static final long MASK_NOT_S6     = 0_77_77_77_77_77_00l;
-    public static final long MASK_NOT_T1     = 0_0000_7777_7777l;
-    public static final long MASK_NOT_T2     = 0_7777_0000_7777l;
-    public static final long MASK_NOT_T3     = 0_7777_7777_0000l;
+    public static final long MASK_NOT_H1     = 0_000000_777777L;
+    public static final long MASK_NOT_H2     = 0_777777_000000L;
+    public static final long MASK_NOT_Q1     = 0_000_777_777_777L;
+    public static final long MASK_NOT_Q2     = 0_777_000_777_777L;
+    public static final long MASK_NOT_Q3     = 0_777_777_000_777L;
+    public static final long MASK_NOT_Q4     = 0_777_777_777_000L;
+    public static final long MASK_NOT_S1     = 0_00_77_77_77_77_77L;
+    public static final long MASK_NOT_S2     = 0_77_00_77_77_77_77L;
+    public static final long MASK_NOT_S3     = 0_77_77_00_77_77_77L;
+    public static final long MASK_NOT_S4     = 0_77_77_77_00_77_77L;
+    public static final long MASK_NOT_S5     = 0_77_77_77_77_00_77L;
+    public static final long MASK_NOT_S6     = 0_77_77_77_77_77_00L;
+    public static final long MASK_NOT_T1     = 0_0000_7777_7777L;
+    public static final long MASK_NOT_T2     = 0_7777_0000_7777L;
+    public static final long MASK_NOT_T3     = 0_7777_7777_0000L;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

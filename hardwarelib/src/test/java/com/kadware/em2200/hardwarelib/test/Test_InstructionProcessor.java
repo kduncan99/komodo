@@ -1027,12 +1027,13 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                 for (int bdi = firstBDI; bdi < br._storage.getArraySize() >> 3; ++bdi) {
                     BankDescriptor bd = new BankDescriptor(br._storage, 8 * bdi);
                     if (bd.getBaseAddress()._upi > 0) {
-                        System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o",
+                        System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o Type:%s",
                                                          bdi,
                                                          bd.getBaseAddress()._upi,
                                                          bd.getBaseAddress()._offset,
                                                          bd.getLowerLimitNormalized(),
-                                                         bd.getUpperLimitNormalized()));
+                                                         bd.getUpperLimitNormalized(),
+                                                         bd.getBankType().name()));
                         int len = bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1;
                         for (int ix = 0; ix < len; ix += 8) {
                             StringBuilder sb = new StringBuilder();

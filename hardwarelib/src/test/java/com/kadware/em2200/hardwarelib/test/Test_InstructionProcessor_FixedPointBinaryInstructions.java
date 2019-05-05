@@ -542,7 +542,6 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
     @Test
     public void addNegativeHalves(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1388,15 +1387,16 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
              UPINotAssignedException {
         //  In basic mode, PP of zero is required
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC",
             "$(0)",
             "          $LIT",
             "$(1),START*",
-            "          SUB1      (0),,B2",
-            "          HALT      0",
+            "          SUB1      (0)",
+            "          HALT      0 . should not get here.  if we do,",
+            "                      . it's an invalid instruction (because PP>0)",
             };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -1409,18 +1409,18 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(false);
-        dReg.setBasicModeEnabled(false);
+        dReg.setBasicModeEnabled(true);
         dReg.setProcessorPrivilege(1);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
+        showDebugInfo(ip, msp);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        //TODO needs work here
         assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
         assertEquals(01016, ip.getLatestStopDetail());
     }

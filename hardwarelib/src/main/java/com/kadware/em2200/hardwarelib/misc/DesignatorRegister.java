@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.misc;
@@ -37,9 +37,8 @@ public class DesignatorRegister extends Word36 {
     }
 
     /**
-     * Initial value register
-     * <p>
-     * @param value
+     * Initial value constructor
+     * @param value source value
      */
     public DesignatorRegister(
         final long value
@@ -57,8 +56,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getActivityLevelQueueMonitorEnabled(
     ) {
@@ -67,8 +65,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getFaultHandlingInProgress(
     ) {
@@ -77,8 +74,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getExecutive24BitIndexingEnabled(
     ) {
@@ -87,8 +83,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getQuantumTimerEnabled(
     ) {
@@ -97,8 +92,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getDeferrableInterruptEnabled(
     ) {
@@ -107,8 +101,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public int getProcessorPrivilege(
     ) {
@@ -117,8 +110,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getBasicModeEnabled(
     ) {
@@ -127,8 +119,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getExecRegisterSetSelected(
     ) {
@@ -137,8 +128,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getCarry(
     ) {
@@ -147,8 +137,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getOverflow(
     ) {
@@ -157,8 +146,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getCharacteristicUnderflow(
     ) {
@@ -167,8 +155,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getCharacteristicOverflow(
     ) {
@@ -177,8 +164,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getDivideCheck(
     ) {
@@ -187,8 +173,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getOperationTrapEnabled(
     ) {
@@ -197,8 +182,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getArithmeticExceptionEnabled(
     ) {
@@ -207,8 +191,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getBasicModeBaseRegisterSelection(
     ) {
@@ -217,8 +200,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     public boolean getQuarterWordModeEnabled(
     ) {
@@ -227,8 +209,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setActivityLevelQueueMonitorEnabled(
         final boolean flag
@@ -241,8 +222,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setFaultHandlingInProgress(
         final boolean flag
@@ -255,8 +235,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setExecutive24BitIndexingEnabled(
         final boolean flag
@@ -269,8 +248,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setQuantumTimerEnabled(
         final boolean flag
@@ -283,8 +261,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setDeferrableInterruptEnabled(
         final boolean flag
@@ -297,19 +274,17 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param value
+     * @param value new value
      */
     public void setProcessorPrivilege(
         final int value
     ) {
-        _value = (value & ~MASK_ProcessorPrivilege) | ((value & 03) << 20);
+        _value = (_value & ~MASK_ProcessorPrivilege) | ((value & 03L) << 20);
     }
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setBasicModeEnabled(
         final boolean flag
@@ -322,8 +297,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setExecRegisterSetSelected(
         final boolean flag
@@ -336,8 +310,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setCarry(
         final boolean flag
@@ -350,8 +323,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setOverflow(
         final boolean flag
@@ -364,8 +336,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setCharacteristicUnderflow(
         final boolean flag
@@ -378,8 +349,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setCharacteristicOverflow(
         final boolean flag
@@ -392,8 +362,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setDivideCheck(
         final boolean flag
@@ -406,8 +375,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setOperationTrapEnabled(
         final boolean flag
@@ -420,8 +388,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setArithmeticExceptionEnabled(
         final boolean flag
@@ -434,8 +401,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setBasicModeBaseRegisterSelection(
         final boolean flag
@@ -448,8 +414,7 @@ public class DesignatorRegister extends Word36 {
 
     /**
      * Setter
-     * <p>
-     * @param flag
+     * @param flag new value
      */
     public void setQuarterWordModeEnabled(
         final boolean flag
