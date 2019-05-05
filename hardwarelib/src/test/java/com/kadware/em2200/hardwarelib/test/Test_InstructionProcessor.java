@@ -467,7 +467,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     /**
      * Assembles sets of code into a relocatable module, then links it such that the odd-numbered lc pools
      * are placed in an IBANK with BDI 04 and the even-number pools in a DBANK with BDI 05.
-     * Initial base registers will be 0 for instructions and 1 for data.
+     * Initial base registers will be 0 for instructions and 2 for data.
      * @param code arrays of text comprising the source code we assemble
      * @param display true to display assembler/linker output
      * @return linked absolute module
@@ -510,7 +510,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                      .setIsExtended(true)
                                      .setStartingAddress(01000)
                                      .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(1)
+                                     .setInitialBaseRegister(2)
                                      .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
                                      .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
                                      .build());
@@ -522,7 +522,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     /**
      * Assembles source code into a relocatable module, then links it, producing multiple banks where:
      *  BDI 000004 contains all odd-numbered lc pools, based on B0
-     *  Each unique even-numbered lc pool generates a unique bank BDI >= 5, based on B1 and up
+     *  Each unique even-numbered lc pool generates a unique bank BDI >= 5, based on B2 and up
      * @param code arrays of text comprising the source code we assemble
      * @param display true to display assembler/linker output
      * @return linked absolute module
@@ -552,6 +552,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
         int bReg = 0;
         for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
+            if (bReg == 1) {
+                ++bReg;
+            }
+
             int bdi = entry.getKey();
             List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
             bankDeclarations.add(
@@ -837,12 +841,12 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param msp main storage processor of interest
      * @param module absolute module to be loaded
      */
+    //TODO obsolete
     static void loadBanks(
             final InstructionProcessor ip,
             final MainStorageProcessor msp,
             final AbsoluteModule module
     ) {
-        //TODO obsolete
         Word36Array storage = msp.getStorage();
         short mspUpi = msp.getUPI();
 
@@ -890,13 +894,13 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
      * @param bankInfos contains the various banks to be loaded
      */
+    //TODO obsolete
     protected static void loadBanks(
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int brIndex,
         final LoadBankInfo[] bankInfos
     ) {
-        //TODO obsolete
         Word36Array storage = msp.getStorage();
         short mspUpi = msp.getUPI();
 
@@ -935,13 +939,13 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
      * @param sourceData array of source data arrays to be loaded
      */
+    //TODO obsolete
     public static void loadBanks(
         final InstructionProcessor ip,
         final MainStorageProcessor msp,
         final int brIndex,
         final long[][] sourceData
     ) {
-        //TODO obsolete
         LoadBankInfo[] bankInfos = new LoadBankInfo[sourceData.length];
         for (int sx = 0; sx < sourceData.length; ++sx) {
             bankInfos[sx] = new LoadBankInfo(sourceData[sx]);
@@ -988,8 +992,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                 System.out.println(String.format("    ER%d %012o", x, gr.getW()));
             }
 
-            //TODO don't dump banks here, only indicate level and BDI
-            //      instead, dump banks from the registers which point to the bdt's
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
                 BaseRegister br = ip.getBaseRegister(bx);

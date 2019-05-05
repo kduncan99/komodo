@@ -40,19 +40,19 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "",
             "$(1),START*",
             "          . Mark zero and one as non-prime (zero).",
-            "          SZ        flags,,B1",
-            "          SZ        flags+1,,B1",
+            "          SZ        flags,,B2",
+            "          SZ        flags+1,,B2",
             "",
             "          . Mark numbers from two as prime (one).",
             "          LA,U      A2,998",
             "          LXI,U     X2,1",
             "          LXM,U     X2,2",
-            "INITLOOP  SP1       flags,*X2,B1",
+            "INITLOOP  SP1       flags,*X2,B2",
             "          JGD       A2,initloop",
             "",
             "          . Initialize primes table...",
             "          . X4 indexes the next free entry in the table",
-            "          SZ        primes,,B2",
+            "          SZ        primes,,B3",
             "          LXI,U     X4,1",
             "          LXM,U     X4,1",
             "",
@@ -70,13 +70,13 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "          . is the number in *X2.mod a prime?  If not, skip innerloop",
             "          . remember: X2.mod is the candidate number,",
             "          . *X2 is prime / not prime,",
-            "          TNZ       flags,X2,B1         . is X2.mod prime?",
+            "          TNZ       flags,X2,B2         . is X2.mod prime?",
             "          J         outeriter           . No - skip inner loop",
             "",
             "          . X2.mod is prime - append it to the primes table",
-            "          SX,H2     X2,primes,X4,B2",
-            "          SZ,H1     primes,*X4,B2",
-            "          ADD1      primes,,B2",
+            "          SX,H2     X2,primes,X4,B3",
+            "          SZ,H1     primes,*X4,B3",
+            "          ADD1      primes,,B3",
             "",
             "          . Mark all multiples of this prime as non-prime",
             "          . (careful not to mark the prime itself as non-prime)",
@@ -90,7 +90,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "          LXI,U     X12,0",
             "          TG        A0,A5               . is A5 > A0?",
             "          J         outeriter           . No, iterate",
-            "          SZ        primes,*X3,B1       . Set a multiple as non-prime",
+            "          SZ        primes,*X3,B2       . Set a multiple as non-prime",
             "          J         innerloop           . Iterate",
             "",
             "OUTERITER .",
@@ -146,7 +146,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             947, 953, 967, 971, 977, 983, 991, 997
         };
 
-        long[] result = getBank(ip, 2);
+        long[] result = getBank(ip, 3);
         assertArrayEquals(Arrays.copyOf(expected, result.length), result);
     }
 }
