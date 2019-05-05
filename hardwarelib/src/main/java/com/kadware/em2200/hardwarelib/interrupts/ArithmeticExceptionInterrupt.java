@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -32,63 +32,30 @@ public class ArithmeticExceptionInterrupt extends MachineInterrupt {
         }
     };
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    private final Reason _reason;
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public final Reason _reason;
 
     /**
      * Constructor
-     * <p>
-     * @param reason
+     * @param reason Reason value
      */
     public ArithmeticExceptionInterrupt(
         final Reason reason
     ) {
-        super(InterruptClass.Diagnostic, ConditionCategory.Fault, Synchrony.Synchronous, Deferrability.Exigent, InterruptPoint.IndirectExecute);
+        super(InterruptClass.ArithmeticException,
+              ConditionCategory.Fault,
+              Synchrony.Synchronous,
+              Deferrability.Exigent,
+              InterruptPoint.IndirectExecute);
         _reason = reason;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
-        return _reason;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public byte getShortStatusField(
     ) {
         return (byte)_reason.getCode();
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

@@ -1,6 +1,6 @@
 InProgress
-minalib set up interrupt handlers for all tests - needs to be testable so we can assert on interrupt taken
 Convert IP unit tests from octal to assembler and mina them (in progress)
+minalib add test cases for interrupts (many of them already marked TODO)
 Lose unnecessary accessors (in progress)
 
 TODO
@@ -8,7 +8,6 @@ minalib special mnemonics need attention (JGD, BT, etc)
 minalib data generation - strings
 minalib float values - firm this up
 minalib data generation - floats
-minalib add test cases for interrupts (many of them already marked TODO)
 minalib put directives into the system dictionary
 minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
 minalib make sure we don't propagate flagged attribute in any of the operators
