@@ -822,7 +822,7 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   074, 002, 000, true,  false, false, false, ASemantics.A,     "JP",    true),
         new InstructionInfo(Mode.EITHER,   074, 003, 000, true,  false, false, false, ASemantics.A,     "JN",    true),
         new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  true,  false, false, ASemantics.NONE,  "J",	     true),	// a-field == 0
-        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false, false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  true,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  true,  false, false, ASemantics.NONE,  "HJ",    true),	// a-field == 0
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  false, false, false, ASemantics.NONE,  "HKJ",   true),	// a-field > 0
         new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  false, true,  false, ASemantics.A,     "NOP",   false),

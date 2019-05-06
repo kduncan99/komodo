@@ -1,4 +1,5 @@
 InProgress
+minalib $GFORM directive
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
 unit tests - all tests expected to run to completion should ensure they actually did
@@ -6,6 +7,8 @@ unit tests - all tests expected to run to completion should ensure they actually
         assertEquals(0, ip.getLatestStopDetail());
 
 TODO
+minalib support procs
+minalib system JK proc to do the  "right thing" for the JK instruction (requires hard-fixing an A register)
 minalib add test cases for interrupts (many of them already marked TODO)
 minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
 minalib special mnemonics need attention (JGD, BT, etc)
@@ -15,7 +18,7 @@ minalib data generation - floats
 minalib put directives into the system dictionary
 minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
 minalib make sure we don't propagate flagged attribute in any of the operators
-minalib support procs and (maybe) functions
+minalib support user-defined functions
 minalib allow expression list inside literal which is part of expression
   e.g., ((005, 007) + 12)
 
@@ -41,7 +44,6 @@ minalib directives
   $END
   $FORM
   $GEN
-  $GFORM
   $INCLUDE
   $INFO (?)
 
