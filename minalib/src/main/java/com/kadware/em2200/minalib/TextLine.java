@@ -10,16 +10,16 @@ import java.util.ArrayList;
 /**
  * Represents a line of source code
  */
-class TextLine {
+public class TextLine {
 
     //  line number of this line of text
-    final int _lineNumber;
+    public final int _lineNumber;
 
     //  source code for this line of text
-    final String _text;
+    public final String _text;
 
     //  parsed TextField objects parsed from the line of text - may be empty
-    final ArrayList<TextField> _fields = new ArrayList<>();
+    public final ArrayList<TextField> _fields = new ArrayList<>();
 
     /**
      * Constructor

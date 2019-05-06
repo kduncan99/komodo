@@ -5,10 +5,10 @@
 package com.kadware.em2200.minalib.directives;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
+import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 
 @SuppressWarnings("Duplicates")
-public class BASICDirective extends Directive {
+public class INFODirective extends Directive {
 
     @Override
     public void process(
@@ -18,8 +18,8 @@ public class BASICDirective extends Directive {
             final LabelFieldComponents labelFieldComponents,
             final Diagnostics diagnostics
     ) {
-        if (extractFields(textLine, false, 2, diagnostics)) {
-            context._codeMode = CodeMode.Basic;
+        if (extractFields(textLine, true, 4, diagnostics)) {
+            //TODO
         }
     }
 }

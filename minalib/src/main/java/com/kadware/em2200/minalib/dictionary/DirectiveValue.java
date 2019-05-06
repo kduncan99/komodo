@@ -79,7 +79,7 @@ public class DirectiveValue extends Value {
     @Override
     public ValueType getType(
     ) {
-        return ValueType.BuiltInFunction;
+        return ValueType.Directive;
     }
 
     /**

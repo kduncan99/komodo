@@ -43,6 +43,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
         _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
+        _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
         _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
         _initialValues.put("$RES", new DirectiveValue(RESDirective.class));
 

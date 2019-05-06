@@ -5,26 +5,21 @@
 package com.kadware.em2200.minalib.directives;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.Diagnostics;
+import com.kadware.em2200.minalib.diagnostics.*;
 
 @SuppressWarnings("Duplicates")
-public class EXTENDDirective implements IDirective {
-
-    @Override
-    public String getToken(
-    ) {
-        return "$EXTEND";
-    }
+public class EXTENDDirective extends Directive {
 
     @Override
     public void process(
             final Assembler assembler,
             final Context context,
+            final TextLine textLine,
             final LabelFieldComponents labelFieldComponents,
-            final TextField operatorField,
-            final TextField operandField,
             final Diagnostics diagnostics
     ) {
-        context._codeMode = CodeMode.Extended;
+        if (extractFields(textLine, false, 2, diagnostics)) {
+            context._codeMode = CodeMode.Extended;
+        }
     }
 }

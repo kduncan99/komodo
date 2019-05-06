@@ -95,7 +95,7 @@ public class Assembler {
         }
 
         //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
-        if (processDirective(textLine, lfc, operationField, operandField, _diagnostics)) {
+        if (processDirective(textLine, lfc, operationField, _diagnostics)) {
             return;
         }
 
@@ -438,7 +438,6 @@ public class Assembler {
      * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
-     * @param operandField represents the operand field, if any
      * @param diagnostics where we post diagnostics if needed
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
@@ -446,7 +445,6 @@ public class Assembler {
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents,
             final TextField operationField,
-            final TextField operandField,
             final Diagnostics diagnostics
     ) {
         if ((operationField == null) || (operationField._subfields.isEmpty())) {
@@ -463,8 +461,8 @@ public class Assembler {
 
                 Class<?> clazz = ((DirectiveValue) v)._clazz;
                 Constructor<?> ctor = clazz.getConstructor();
-                IDirective directive = (IDirective) (ctor.newInstance());
-                directive.process(this, _context, labelFieldComponents, operationField, operandField, diagnostics);
+                Directive directive = (Directive) (ctor.newInstance());
+                directive.process(this, _context, textLine, labelFieldComponents, diagnostics);
             } catch (NotFoundException ex) {
                 diagnostics.append(new ErrorDiagnostic(operationField._locale, "Unrecognized directive"));
             } catch (IllegalAccessException
