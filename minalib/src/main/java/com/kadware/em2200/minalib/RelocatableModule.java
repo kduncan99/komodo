@@ -18,19 +18,35 @@ public class RelocatableModule {
     public final String _name;
     public final Map<Integer, LocationCounterPool> _storage = new TreeMap<>();
     public final Map<String, IntegerValue> _externalLabels = new TreeMap<>();
+    public final boolean _requiresQuarterWordMode;
+    public final boolean _requiresThirdWordMode;
+    public final boolean _requiresArithmeticFaultCompatibilityMode;
+    public final boolean _requiresArithmeticFaultNonInterruptMode;
 
     /**
      * Constructor
      * @param name name of the module
      */
-    public RelocatableModule(
+    private RelocatableModule(
         final String name,
         final Map<Integer, LocationCounterPool> storage,
-        final Map<String, IntegerValue> externalLabels
+        final Map<String, IntegerValue> externalLabels,
+        final boolean quarterWord,
+        final boolean thirdWord,
+        final boolean arithmeticCompatibility,
+        final boolean arithmeticNonInterrupt
     ) {
         _name = name;
-        _storage.putAll( storage );
-        _externalLabels.putAll( externalLabels );
+        if (storage != null) {
+            _storage.putAll(storage);
+        }
+        if (externalLabels != null) {
+            _externalLabels.putAll(externalLabels);
+        }
+        _requiresQuarterWordMode = quarterWord;
+        _requiresThirdWordMode = thirdWord;
+        _requiresArithmeticFaultCompatibilityMode = arithmeticCompatibility;
+        _requiresArithmeticFaultNonInterruptMode = arithmeticNonInterrupt;
     }
 
     /**
@@ -54,5 +70,82 @@ public class RelocatableModule {
         }
 
         return lcp;
+    }
+
+    public static class Builder {
+        private String _name = null;
+        private Map<Integer, LocationCounterPool> _storage = null;
+        private Map<String, IntegerValue> _externalLabels = null;
+        private boolean _requiresQuarterWordMode = false;
+        private boolean _requiresThirdWordMode = false;
+        private boolean _requiresArithmeticFaultCompatibilityMode = false;
+        private boolean _requiresArithmeticFaultNonInterruptMode = false;
+
+        public Builder setExternalLabels(
+            final Map<String, IntegerValue> externalLabelse
+        ) {
+            _externalLabels = externalLabelse;
+            return this;
+        }
+
+        public Builder setName(
+            final String name
+        ) {
+            _name = name;
+            return this;
+        }
+
+        public Builder setArithmeticFaultCompatibilityMode(
+            final boolean flag
+        ) {
+            _requiresArithmeticFaultCompatibilityMode = flag;
+            return this;
+        }
+
+        public Builder setArithmeticFaultNonInterruptMode(
+            final boolean flag
+        ) {
+            _requiresArithmeticFaultNonInterruptMode = flag;
+            return this;
+        }
+
+        public Builder setRequiresQuarterWordMode(
+            final boolean flag
+        ) {
+            _requiresQuarterWordMode = flag;
+            return this;
+        }
+
+        public Builder setRequiresThirdWordMode(
+            final boolean flag
+        ) {
+            _requiresThirdWordMode = flag;
+            return this;
+        }
+
+        public Builder setStorage(
+            final Map<Integer, LocationCounterPool> storage
+        ) {
+            _storage = storage;
+            return this;
+        }
+
+        public RelocatableModule build() {
+            if (_name == null) {
+                throw new RuntimeException("No name specified for relocatable module");
+            }
+            if ((_requiresQuarterWordMode && _requiresThirdWordMode)
+                || (_requiresArithmeticFaultCompatibilityMode && _requiresArithmeticFaultNonInterruptMode)) {
+                throw new RuntimeException("Incompatible mode configuration for relocatable module");
+            }
+
+            return new RelocatableModule(_name,
+                                         _storage,
+                                         _externalLabels,
+                                         _requiresQuarterWordMode,
+                                         _requiresThirdWordMode,
+                                         _requiresArithmeticFaultCompatibilityMode,
+                                         _requiresArithmeticFaultCompatibilityMode);
+        }
     }
 }

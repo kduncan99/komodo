@@ -143,6 +143,11 @@ public class Linker {
         final BankDeclaration bankDeclaration
     ) {
         try {
+            boolean qword = false;
+            boolean tword = false;
+            boolean acompat = false;
+            boolean anonint = false;
+
             int bankSize = 0;
             for (LCPoolSpecification lcps : bankDeclaration._poolSpecifications) {
                 bankSize += lcps._module.getLocationCounterPool(lcps._lcIndex)._storage.length;
@@ -228,6 +233,38 @@ public class Linker {
                         wArray.setValue(wax, discreteValue);
                     }
                 }
+
+                if (lcps._module._requiresQuarterWordMode) {
+                    if (tword) {
+                        raise("QWord/TWord incompatibility - using TWord");
+                    } else {
+                        qword = true;
+                    }
+                }
+
+                if (lcps._module._requiresThirdWordMode) {
+                    if (qword) {
+                        raise("QWord/TWord incompatibility - using QWord");
+                    } else {
+                        tword = true;
+                    }
+                }
+
+                if (lcps._module._requiresArithmeticFaultCompatibilityMode) {
+                    if (anonint) {
+                        raise("Arithmetic Fault incompatibility - using NonInterrupt");
+                    } else {
+                        acompat = true;
+                    }
+                }
+
+                if (lcps._module._requiresArithmeticFaultNonInterruptMode) {
+                    if (acompat) {
+                        raise("Arithmetic Fault incompatibility - using Compatible mode");
+                    } else {
+                        anonint = true;
+                    }
+                }
             }
 
             return new LoadableBank.Builder().setBankDescriptorIndex(bankDeclaration._bankDescriptorIndex)
@@ -239,6 +276,10 @@ public class Linker {
                                              .setAccessInfo(bankDeclaration._accessInfo)
                                              .setGeneralPermissions(bankDeclaration._generalAccessPermissions)
                                              .setSpecialPermissions(bankDeclaration._specialAccessPermissions)
+                                             .setRequireQuarterWordMode(qword)
+                                             .setRequireThirdWordMode(tword)
+                                             .setRequireArithmeticFaultCompatibility(acompat)
+                                             .setRequireArithmeticNonInterrupt(anonint)
                                              .build();
         } catch (InvalidParameterException ex) {
             //  can't happen

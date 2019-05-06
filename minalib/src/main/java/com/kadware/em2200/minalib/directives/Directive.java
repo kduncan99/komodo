@@ -11,7 +11,7 @@ public abstract class Directive {
 
     protected TextField _operationField;
     protected TextField _operandField;
-    protected TextField _additionalOperandField;    //  primarly for $INFO
+    protected TextField _additionalOperandField;    //  primarily for $INFO
 
     /**
      * Extracts the fields from the TextLine object, and checks for extranous fields

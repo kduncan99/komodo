@@ -1,13 +1,10 @@
 InProgress
-minalib $GFORM directive
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
-unit tests - all tests expected to run to completion should ensure they actually did
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
 
 TODO
 minalib support procs
+minalib $USE (A.2.8) specifies base register to use if none given
 minalib system JK proc to do the  "right thing" for the JK instruction (requires hard-fixing an A register)
 minalib add test cases for interrupts (many of them already marked TODO)
 minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
@@ -45,8 +42,9 @@ minalib directives
   $FORM
   $GEN
   $INCLUDE
-  $INFO (?)
+  $INFO finish the various groups we're going to implement
 
+hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
 hardwarelib Finish adding instructions to IP
 hardwarelib UPI send/ack mechanism
 hardwarelib Figure out how to do channel programs

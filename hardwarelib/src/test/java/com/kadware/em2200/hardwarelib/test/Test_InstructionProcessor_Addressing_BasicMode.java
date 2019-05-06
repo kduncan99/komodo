@@ -31,37 +31,28 @@ public class Test_InstructionProcessor_Addressing_BasicMode extends Test_Instruc
              UPINotAssignedException {
         String[] source = {
             "          $BASIC .",
+            "          $INFO 1 3",
             "$(1) .",
             "          LA,U      A0,01000 .",
             "          HALT      0 .",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
-
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
+        Processors processors = loadModule(absoluteModule, 7);
+        DesignatorRegister dReg = processors._instructionProcessor.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        startAndWait(processors._instructionProcessor);
 
-        startAndWait(ip);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test

@@ -6,6 +6,8 @@ package com.kadware.em2200.hardwarelib.test;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
+import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
+import com.kadware.em2200.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
@@ -19,6 +21,22 @@ import java.util.Map;
  * Base class for all Test_InstructionProcessor_* classes
  */
 class Test_InstructionProcessor {
+
+    /**
+     * Produced as a result of loadModule()
+     */
+    public static class Processors {
+        final ExtInstructionProcessor _instructionProcessor;
+        final ExtMainStorageProcessor _mainStorageProcessor;
+
+        public Processors(
+            final ExtInstructionProcessor ip,
+            final ExtMainStorageProcessor msp
+        ) {
+            _instructionProcessor = ip;
+            _mainStorageProcessor = msp;
+        }
+    }
 
     private static class MSPRegionAttributes implements RegionTracker.IAttributes {
         public final String _bankName;
@@ -587,7 +605,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
         Assembler asm = new Assembler(BDT_CODE, "BDT");
         RelocatableModule bdtModule = asm.assemble(false);
-        assert(asm.getDiagnostics().isEmpty());
+        assert(asm.getDiagnostics().getDiagnostics().isEmpty());
 
         //  Assemble interrupt handler code into a separate relocatable module...
         //  we have no particular expectations with respect to location counters;
@@ -955,6 +973,36 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         loadBanks(ip, msp, brIndex, bankInfos);
+    }
+
+    /**
+     * Instantiates IP and MSP, loads a module, and sets up the processor state as needed
+     * @param absoluteModule module to be loaded
+     * @param bankLevel bank level for the banks in the module
+     * @return Processors object so that calling code has access to the created IP and MSP
+     */
+    public static Processors loadModule(
+        final AbsoluteModule absoluteModule,
+        final int bankLevel
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException {
+        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InventoryManager.getInstance().addInstructionProcessor(ip);
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
+
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
+
+        //  TODO update desreg based on module requirements
+        DesignatorRegister dReg = ip.getDesignatorRegister();
+        //  so far, these modes are set in LoadableBank...  should they instead be in AbsoluteModule?
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        par.setProgramCounter(absoluteModule._startingAddress);
+
+        return new Processors(ip, msp);
     }
 
     /**

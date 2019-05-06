@@ -47,6 +47,12 @@ public class Assembler {
     private final Dictionary _globalDictionary;
     private final SystemDictionary _systemDictionary;
 
+    //  Things relating to the relocatable module as a whole
+    public boolean _setArithFaultCompatibility = false;
+    public boolean _setArithFaultNonInterrupt = false;
+    public boolean _setQuarterWordMode = false;
+    public boolean _setThirdWordMode = false;
+
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
     private static final Form _fjaxhiuForm = new Form(_fjaxhiuFields);
@@ -147,6 +153,13 @@ public class Assembler {
     private void displayModuleSummary(
         final RelocatableModule module
     ) {
+        System.out.println("Rel Module Settings:");
+        System.out.println(String.format("  Modes:%s%s%s%s",
+                                         _setQuarterWordMode ? "QWORD " : "",
+                                         _setThirdWordMode ? "TWORD " : "",
+                                         _setArithFaultCompatibility ? "ACOMP " : "",
+                                         _setArithFaultNonInterrupt ? "ANON " : ""));
+
         for (Map.Entry<Integer, LocationCounterPool> entry : module._storage.entrySet()) {
             System.out.println(String.format("LCPool %d: %d word(s) generated",
                                              entry.getKey(),
@@ -232,7 +245,10 @@ public class Assembler {
             }
         }
 
-        return new RelocatableModule(moduleName, _context.produceLocationCounterPools(_diagnostics), externalLabels);
+        return new RelocatableModule.Builder().setName(moduleName)
+                                              .setStorage(_context.produceLocationCounterPools(_diagnostics))
+                                              .setExternalLabels(externalLabels)
+                                              .build();
     }
 
     /**
