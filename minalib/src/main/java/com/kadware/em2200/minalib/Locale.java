@@ -72,6 +72,6 @@ public class Locale {
     @Override
     public String toString(
     ) {
-        return String.format("[%d.%d]", _lineNumber, _column);
+        return String.format("[L%d.C%d]", _lineNumber, _column);
     }
 }

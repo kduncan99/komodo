@@ -203,7 +203,7 @@ public class Linker {
                                     }
                                     if (trunc) {
                                         raise(String.format("Truncation resolving %s LC(%d) offset %d reference %s, field %s",
-                                                            lcps._module,
+                                                            lcps._module._name,
                                                             lcps._lcIndex,
                                                             rwx,
                                                             ur._reference,

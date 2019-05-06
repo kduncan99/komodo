@@ -47,9 +47,9 @@ public class RelocatableWord36 extends Word36 {
         @Override
         public String toString(
         ) {
-            return String.format("[%d.%d]%s%s",
+            return String.format("[%d:%d]%s%s",
                                  _fieldDescriptor._startingBit,
-                                 _fieldDescriptor._fieldSize,
+                                 _fieldDescriptor._startingBit + _fieldDescriptor._fieldSize - 1,
                                  _isNegative ? "-" : "+",
                                  _reference);
         }

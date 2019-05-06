@@ -59,6 +59,7 @@ public class Assembler {
         _directives.put("$BASIC", new BASICDirective());
         _directives.put("$EQU", new EQUDirective());
         _directives.put("$EXTEND", new EXTENDDirective());
+        _directives.put("$GFORM", new GFormDirective());
         _directives.put("$LIT", new LITDirective());
         _directives.put("$RES", new RESDirective());
     }
