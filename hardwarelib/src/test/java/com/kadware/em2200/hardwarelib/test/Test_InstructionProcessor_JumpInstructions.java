@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test;
@@ -1063,189 +1063,203 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
     @Test
     public void jumpCarry(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0l)).getW(),           //  000 LA,U    A0,0
-            (new InstructionWord(014, 017, 0, 0, 01l)).getW(),          //  001 AA,XU   A0,1        . Does not generate carry
-            (new InstructionWord(074, 014, 04, 0, 0, 0, 04)).getW(),    //  002 JC      04          . Should not jump
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A0,0777     . Should happen
-
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 02)).getW(),     //  004 LA,U    A1,2
-            (new InstructionWord(014, 017, 1, 0, 0777776)).getW(),      //  005 AA,XU   A1,0777776  . Does generate carry
-            (new InstructionWord(074, 014, 04, 0, 0, 0, 010)).getW(),   //  006 JC      010         . Should jump
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A1,0777     . Should not happen
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  004 IAR     d,x,b
+        String[] source = {
+            "          $EXTEND",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          AA,XU     A0,1                . Does not generate carry",
+            "          JC        BAD                 . Should not jump",
+            "          LA,U      A1,2",
+            "          AA,XU     A1,0777776          . This generates a carry",
+            "          JC        DONE                . Should jump",
+            "          HALT      077",
+            "",
+            "BAD       HALT      076",
+            "",
+            "DONE      HALT      0",
         };
 
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        loadBanks(ip, msp, 0, sourceData);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
+        par.setProgramCounter(absoluteModule._startingAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0777l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(01l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jumpNoCarry(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0l)).getW(),           //  000 LA,U    A0,0
-            (new InstructionWord(014, 017, 0, 0, 01l)).getW(),          //  001 AA,XU   A0,1        . Does not generate carry
-            (new InstructionWord(074, 014, 05, 0, 0, 0, 04)).getW(),    //  002 JNC     04          . Should jump
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A0,0777     . Should not happen
+        String[] source = {
+            "          $EXTEND",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          AA,XU     A0,1                . Does not generate carry",
+            "          JNC       TARGET              . Should jump",
+            "          HALT      077",
+            "",
+            "TARGET",
+            "          LA,U      A1,2",
+            "          AA,XU     A1,0777776          . This generates a carry",
+            "          JNC       BAD                 . Should not jump",
+            "DONE      HALT      0",
+            "",
+            "BAD       HALT      076",
+            };
 
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 02)).getW(),     //  004 LA,U    A1,2
-            (new InstructionWord(014, 017, 1, 0, 0777776)).getW(),      //  005 AA,XU   A1,0777776  . Does generate carry
-            (new InstructionWord(074, 014, 05, 0, 0, 0, 010)).getW(),   //  006 JNC     010         . Should not jump
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A1,0777     . Should happen
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  004 IAR     d,x,b
-        };
-
-        long[][] sourceData = { code };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        loadBanks(ip, msp, 0, sourceData);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
+        par.setProgramCounter(absoluteModule._startingAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(01l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0777l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jumpOverflow(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_377777_777777l,
-        };
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA      + 0377777777777",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          AA,XU     A0,1                . Does not generate overflow",
+            "          JO        BAD                 . Should not jump",
+            "          LA        A1,DATA,,B2",
+            "          AA        A1,DATA,,B2         . This generates overflow",
+            "          JO        DONE                . Should jump",
+            "          HALT      077",
+            "",
+            "BAD       HALT      076",
+            "",
+            "DONE      HALT      0",
+            };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0l)).getW(),           //  000 LA,U    A0,0
-            (new InstructionWord(014, 017, 0, 0, 01l)).getW(),          //  001 AA,XU   A0,1        . Does not generate overflow
-            (new InstructionWord(074, 014, 00, 0, 0, 0, 04)).getW(),    //  002 JO      04          . Should not jump
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A0,0777     . Should happen
-
-            (new InstructionWord(010, 0, 1, 0, 0, 0, 1, 0)).getW(),     //  004 LA      A1,0,,B1
-            (new InstructionWord(014, 0, 1, 0, 0, 0, 1, 0)).getW(),     //  005 AA      A1,0,,B1    . Does generate overflow
-            (new InstructionWord(074, 014, 00, 0, 0, 0, 010)).getW(),   //  006 JO      010         . Should jump
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A1,0777     . Should not happen
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  004 IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        loadBanks(ip, msp, 0, sourceData);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
+        par.setProgramCounter(absoluteModule._startingAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0777l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertNotEquals(01l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jumpNoOverflow(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_377777_777777l,
-        };
+        String[] source = {
+            "          $EXTEND",
+            "$(0)",
+            "DATA      + 0377777777777",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,0",
+            "          AA,XU     A0,1                . Does not generate overflow",
+            "          JNO       TARGET              . Should jump",
+            "          HALT      077",
+            "",
+            "TARGET",
+            "          LA        A1,DATA,,B2",
+            "          AA        A1,DATA,,B2         . This generates overflow",
+            "          JNO       BAD                 . Should not jump",
+            "DONE      HALT      0",
+            "",
+            "BAD       HALT      076",
+            };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0l)).getW(),           //  000 LA,U    A0,0
-            (new InstructionWord(014, 017, 0, 0, 01l)).getW(),          //  001 AA,XU   A0,1        . Does not generate overflow
-            (new InstructionWord(074, 015, 00, 0, 0, 0, 04)).getW(),    //  002 JNO     04          . Should jump
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A0,0777     . Should not happen
-
-            (new InstructionWord(010, 0, 1, 0, 0, 0, 1, 0)).getW(),     //  004 LA      A1,0,,B1
-            (new InstructionWord(014, 0, 1, 0, 0, 0, 1, 0)).getW(),     //  005 AA      A1,0,,B1    . Does generate overflow
-            (new InstructionWord(074, 015, 00, 0, 0, 0, 010)).getW(),   //  006 JNO     010         . Should not jump
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 0777)).getW(),   //  003 LA,U    A1,0777     . Should happen
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  004 IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        loadBanks(ip, msp, 0, sourceData);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
+        par.setProgramCounter(absoluteModule._startingAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(01l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0777l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //TODO Need unit tests for JDF, JNDF, JFO, JNFO, JFU, JNFU
