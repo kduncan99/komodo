@@ -11,8 +11,10 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,20 +55,8 @@ public class Assembler {
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
 
-    //  Directives
-    private static final Map<String, IDirective> _directives = new HashMap<>();
-    static {
-        _directives.put("$BASIC", new BASICDirective());
-        _directives.put("$EQU", new EQUDirective());
-        _directives.put("$EXTEND", new EXTENDDirective());
-        _directives.put("$GFORM", new GFormDirective());
-        _directives.put("$LIT", new LITDirective());
-        _directives.put("$RES", new RESDirective());
-    }
-
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
-
 
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Private methods
@@ -463,9 +453,29 @@ public class Assembler {
             return false;
         }
 
-        IDirective directive = _directives.get(operationField._subfields.get(0)._text.toUpperCase());
-        if (directive != null) {
-            directive.process(this, _context, labelFieldComponents, operationField, operandField, diagnostics);
+        String text = operationField._subfields.get(0)._text;
+        if (text.startsWith("$")) {
+            try {
+                Value v = _context._dictionary.getValue(text.toUpperCase());
+                if (!(v instanceof DirectiveValue)) {
+                    return false;
+                }
+
+                Class<?> clazz = ((DirectiveValue) v)._clazz;
+                Constructor<?> ctor = clazz.getConstructor();
+                IDirective directive = (IDirective) (ctor.newInstance());
+                directive.process(this, _context, labelFieldComponents, operationField, operandField, diagnostics);
+            } catch (NotFoundException ex) {
+                diagnostics.append(new ErrorDiagnostic(operationField._locale, "Unrecognized directive"));
+            } catch (IllegalAccessException
+                     | InstantiationException
+                     | NoSuchMethodException
+                     | InvocationTargetException ex) {
+                System.out.println("Caught:%s" + ex.toString() + ":" + ex.getMessage());
+                diagnostics.append(new FatalDiagnostic(operationField._locale,
+                                                       "Internal Error in Assembler.processDirective()"));
+            }
+
             return true;
         }
 
@@ -864,6 +874,7 @@ public class Assembler {
         for (TextLine line : _sourceCode) {
             line.parseFields(_diagnostics);
             if (_diagnostics.hasFatal()) {
+                displayResults();
                 return null;
             }
         }
@@ -872,6 +883,7 @@ public class Assembler {
         for (TextLine line : _sourceCode) {
             assembleTextLine(line);
             if (_diagnostics.hasFatal()) {
+                displayResults();
                 return null;
             }
         }

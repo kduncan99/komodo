@@ -341,6 +341,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             String moduleName = String.format("TEST%d", relocatableModules.size() + 1);
             Assembler a = new Assembler(codeSet, moduleName);
             RelocatableModule relModule = a.assemble(display);
+            assert(relModule != null);
             relocatableModules.add(relModule);
 
             for (Integer lcIndex : relModule._storage.keySet()) {
@@ -398,6 +399,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     ) {
         Assembler asm = new Assembler(code, "TEST");
         RelocatableModule relModule = asm.assemble(display);
+        assert(relModule != null);
         List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs05 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs06 = new LinkedList<>();
@@ -478,6 +480,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     ) {
         Assembler asm = new Assembler(code, "TEST");
         RelocatableModule relModule = asm.assemble(display);
+        assert(relModule != null);
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         for (Integer lcIndex : relModule._storage.keySet()) {

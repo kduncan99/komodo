@@ -15,7 +15,7 @@ import com.kadware.em2200.minalib.expressions.Expression;
 import com.kadware.em2200.minalib.expressions.ExpressionParser;
 
 @SuppressWarnings("Duplicates")
-public class GFormDirective implements IDirective {
+public class GFORMDirective implements IDirective {
 
     @Override
     public String getToken(

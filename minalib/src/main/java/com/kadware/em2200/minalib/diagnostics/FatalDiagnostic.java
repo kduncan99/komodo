@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.diagnostics;
@@ -9,7 +9,7 @@ import com.kadware.em2200.minalib.Locale;
 /**
  * Class for fatal diagnostic messages (situations which kill the assembler - if any)
  */
-public abstract class FatalDiagnostic extends Diagnostic {
+public class FatalDiagnostic extends Diagnostic {
 
     public FatalDiagnostic(
         final Locale locale,
@@ -20,8 +20,7 @@ public abstract class FatalDiagnostic extends Diagnostic {
 
     /**
      * Get the level associated with this instance
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public Level getLevel(

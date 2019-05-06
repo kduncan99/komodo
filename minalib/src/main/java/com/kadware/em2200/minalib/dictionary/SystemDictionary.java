@@ -5,6 +5,7 @@
 package com.kadware.em2200.minalib.dictionary;
 
 import com.kadware.em2200.minalib.*;
+import com.kadware.em2200.minalib.directives.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,13 @@ public class SystemDictionary extends Dictionary {
             _initialValues.put(String.format("B%d", rx), new IntegerValue(false, rx, null));
         }
 
-        //TODO should be put directives in here?
+        //  directives
+        _initialValues.put("$BASIC", new DirectiveValue(BASICDirective.class));
+        _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
+        _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));
+        _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
+        _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
+        _initialValues.put("$RES", new DirectiveValue(RESDirective.class));
 
         //  built-in function names
         _initialValues.put("$BDI", new BuiltInFunctionValue(BDIFunction.class));
