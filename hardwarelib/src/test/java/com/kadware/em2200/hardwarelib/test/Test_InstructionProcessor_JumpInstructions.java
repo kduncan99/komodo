@@ -927,122 +927,137 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
     @Test
     public void jumpGreaterAndDecrement(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 010)).getW(),    //  000 L,U     A0,010
-            (new InstructionWord(010, 017, 1, 0, 0777776)).getW(),      //  001 L,XU    A1,0777776
-            (new InstructionWord(010, 016, 2, 0, 0, 0, 0)).getW(),      //  002 L,U     A2,0
-            (new InstructionWord(070, 0, 015, 0, 0, 0, 007)).getW(),    //  003 JGD     A1,007 . should not happen (A1 is 015)
-            (new InstructionWord(070, 0, 016, 0, 0, 0, 007)).getW(),    //  004 JGD     A2,007 . should not happen (A2 is 016)
-            (new InstructionWord(014, 016, 2, 0, 0, 0, 02)).getW(),     //  005 A,U     A2,2   . should happen 9 times
-            (new InstructionWord(070, 0, 014, 0, 0, 0, 005)).getW(),    //  006 JGD     A0,005 . should happen 8 times (A0 is 014)
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  007 IAR     d,x,b
-        };
+//        long[] code = {
+//            (new InstructionWord(010, 016, 0, 0, 0, 0, 010)).getW(),    //  000 L,U     A0,010
+//            (new InstructionWord(010, 017, 1, 0, 0777776)).getW(),      //  001 L,XU    A1,0777776
+//            (new InstructionWord(010, 016, 2, 0, 0, 0, 0)).getW(),      //  002 L,U     A2,0
+//            (new InstructionWord(070, 0, 015, 0, 0, 0, 007)).getW(),    //  003 JGD     A1,007 . should not happen (A1 is 015)
+//            (new InstructionWord(070, 0, 016, 0, 0, 0, 007)).getW(),    //  004 JGD     A2,007 . should not happen (A2 is 016)
+//            (new InstructionWord(014, 016, 2, 0, 0, 0, 02)).getW(),     //  005 A,U     A2,2   . should happen 9 times
+//            (new InstructionWord(070, 0, 014, 0, 0, 0, 005)).getW(),    //  006 JGD     A0,005 . should happen 8 times (A0 is 014)
+//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  007 IAR     d,x,b
+//        };
 
-        long[][] sourceData = { code };
+        String[] source = {
+            "          $EXTEND",
+            "",
+            "$(1),START*",
+            "          LA,U      A0,010",
+            "          LA,XU     A1,0777776",
+            "          LA,U      A2,0",
+            "          JGD       A1,BAD1       . should not happen (a1 is 015)",
+            "          JGD       A2,BAD2       . also should not happen",
+            "",
+            "LOOP",
+            "          AA,U      A2,2          . should happen 9 times",
+            "          JGD       A0,LOOP       . should happen 8 times",
+            "          HALT      0             . should finish here",
+            "",
+            "BAD1      HALT      077",
+            "BAD2      HALT      076",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        loadBanks(ip, msp, 0, sourceData);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0_777777_777776l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_777777_777775l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777775L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
         assertEquals(021, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 
     @Test
     public void jumpModifierGreaterAndIncrement_basic(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] code = {
-            //  test positive case (jump taken)
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 0)).getW(),      //  01000   L,U     A0,0        . initial value
-            (new InstructionWord(046, 016, 0, 0, 0, 0, 2)).getW(),      //  01001   LXI,U   X0,02       . set up X0 so we take a jump
-            (new InstructionWord(026, 016, 0, 0, 0, 0, 02)).getW(),     //  01002   LXM,U   X0,02       .
-            (new InstructionWord(074, 012, 0, 0, 0, 0, 01005)).getW(),  //  01003   JMGI    X0,01005    . should take this
-            (new InstructionWord(010, 016, 0, 0, 0, 0, 1)).getW(),      //  01004   L,U     A0,1        . should not happen
-
-            //  test negative case (no jump taken)
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 0)).getW(),      //  01005   L,U     A1,0        . initial value
-            (new InstructionWord(046, 016, 1, 0, 0, 0, 2)).getW(),      //  01006   LXI,U   X1,02       . set up X1 so we do not take a jump
-            (new InstructionWord(026, 016, 1, 0, 0, 0, 0)).getW(),      //  01007   LXM,U   X1,0        .
-            (new InstructionWord(074, 012, 1, 0, 0, 0, 01012)).getW(),  //  01010   JMGI    X1,01012    . should not take this
-            (new InstructionWord(010, 016, 1, 0, 0, 0, 1)).getW(),      //  01011   L,U     A1,1        . should happen
-
-            //  test positive case (jump taken to indexed destination, X(a) == X(x)
-            (new InstructionWord(010, 016, 2, 0, 0, 0, 0)).getW(),      //  01012   L,U     A2,0        . initial value
-            (new InstructionWord(046, 016, 2, 0, 0, 0, 1)).getW(),      //  01013   LXI,U   X2,01       . set up X2 so we take a jump
-            (new InstructionWord(026, 016, 2, 0, 0, 0, 01017)).getW(),  //  01014   LXM,U   X2,01017    .   to zero, indexed by X2
-            (new InstructionWord(074, 012, 2, 2, 1, 0, 0)).getW(),      //  01015   JMGI    X2,0,*X2    . should take this
-            (new InstructionWord(010, 016, 2, 0, 0, 0, 1)).getW(),      //  01016   L,U     A2,1        . should not happen
-
-            //  test positive case (jump taken to indexed destination, X(a) != X(x)
-            (new InstructionWord(010, 016, 3, 0, 0, 0, 0)).getW(),      //  01017   L,U     A3,0        . initial value
-            (new InstructionWord(046, 017, 3, 0, 0777776l)).getW(),     //  01020   LXI,XU  X3,0777776  . set up X3 so we take a jump
-            (new InstructionWord(026, 016, 3, 0, 0, 0, 010)).getW(),    //  01021   LXM,U   X3,010      .
-            (new InstructionWord(046, 016, 4, 0, 0, 0, 1)).getW(),      //  01022   LXI,U   X4,01       . set up X4 so we take a jump
-            (new InstructionWord(026, 016, 4, 0, 0, 0, 01026)).getW(),  //  01023   LXM,U   X4,01026    .    to zero, indexed by X4
-            (new InstructionWord(074, 012, 3, 4, 1, 0, 0)).getW(),      //  01024   JMGI    X3,0,*X4    . should take this
-            (new InstructionWord(010, 016, 3, 0, 0, 0, 1)).getW(),      //  01025   L,U     A3,1        . should not happen
-
-            //  this is a bad way to stop - find a better way for basic mode
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  01026 IAR       d,x,b
+        String[] source = {
+            "          $BASIC",
+            "$(1),START*         .",
+            "          LXI,U     X0,02           . set up X0 so we take a jump",
+            "          LXM,U     X0,02           .",
+            "          JMGI      X0,TARGET1      . we should take this jump",
+            "          HALT      077             . should not happen",
+            "",
+            "TARGET1             .",
+            "          LXI,U     X1,02           . set up X1 so we do not take a jump",
+            "          LXM,U     X1,0            .",
+            "          JMGI      X1,BAD1         . should not happen",
+            "",
+            "          LXI,U     X2,01           . set up X2 so we take a jump to zero,",
+            "          LXM,U     X2,TARGET2      .   but indexed by the address in X2",
+            "          JMGI      X2,0,*X2        . should take this",
+            "          HALT      075             . should not happen",
+            "",
+            "TARGET2             .",
+            "          LXI,XU    X3,0777776      . set up X3 so we take a jump",
+            "          LXM,U     X3,010          .",
+            "          LXI,U     X4,02           . set up X4 so we take a jump to zero,",
+            "          LXM,U     X4,TARGET3      .    indexed by X4",
+            "          JMGI      X3,0,*X4        . should take this",
+            "          HALT      074             . should not happen",
+            "",
+            "TARGET3             .",
+            "          HALT      0               . should finish here.",
+            "",
+            "BAD1      HALT      076             . should not get here",
         };
 
-        LoadBankInfo codeInfo = new LoadBankInfo(code);
-        codeInfo._lowerLimit = 01000;
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
+        assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InventoryManager.getInstance().addMainStorageProcessor(msp);
 
-        LoadBankInfo infos[] = { codeInfo };
-        loadBanks(ip, msp, 12, infos);
+        establishBankingEnvironment(ip, msp);
+        loadBanks(ip, msp, absoluteModule, 7);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(01000);
+        par.setProgramCounter(absoluteModule._startingAddress);
 
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000002_000004l, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-
-        assertEquals(01l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0_000002_000002l, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
-
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_000001_001020l, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
-
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0_777776_000007l, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        assertEquals(0_000001_001027l, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000002_000004L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(0_000002_000002L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(0_000001_022014L, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        assertEquals(0_777776_000007L, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        assertEquals(0_000002_022023L, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
     }
 
     @Test
