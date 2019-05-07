@@ -68,7 +68,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -127,7 +127,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -201,7 +201,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -269,7 +269,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -338,7 +338,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         long count1 = 4;
         long area1 = GeneralRegisterSet.R0;
@@ -410,7 +410,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         long count1 = 0;
         long area1 = GeneralRegisterSet.R0;
@@ -478,7 +478,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         long count1 = 0;
         long area1 = GeneralRegisterSet.R0;
@@ -588,7 +588,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 

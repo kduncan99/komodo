@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.expressions;
 
+import com.kadware.em2200.baselib.FieldDescriptor;
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
@@ -15,14 +16,14 @@ import com.kadware.em2200.minalib.exceptions.*;
  */
 public class ReferenceItem extends OperandItem {
 
-    public final String _reference;
+    private final String _reference;
 
     /**
      * constructor
      * @param locale location of this entity
      * @param reference reference for this entity
      */
-    public ReferenceItem(
+    ReferenceItem(
         final Locale locale,
         final String reference
     ) {
@@ -59,7 +60,9 @@ public class ReferenceItem extends OperandItem {
         } catch ( NotFoundException ex ) {
             //  reference not found - create an IntegerValue with a value of zero
             //  and an attached positive UndefinedReference.
-            IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference(  _reference, false ) };
+            UndefinedReference[] refs = { new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                                        false,
+                                                                        _reference) };
             return new IntegerValue(false, 0, refs);
         }
     }

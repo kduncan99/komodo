@@ -25,7 +25,6 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
     @Test
     public void illegalOperation(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -55,7 +54,7 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
         showDebugInfo(ip, msp);

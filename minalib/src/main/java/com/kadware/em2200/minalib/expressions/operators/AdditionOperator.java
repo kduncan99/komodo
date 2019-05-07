@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.expressions.operators;
 
+import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -64,27 +65,54 @@ public class AdditionOperator extends ArithmeticOperator {
 
                 long intResult = iopLeft._value + iopRight._value;
 
-                List<IntegerValue.UndefinedReference> temp = new LinkedList<>();
+                //  Coalesce like-references, remove inverses, etc
+                List<UndefinedReference> temp = new LinkedList<>();
                 temp.addAll(Arrays.asList(iopLeft._undefinedReferences));
                 temp.addAll(Arrays.asList(iopRight._undefinedReferences));
-                Map<String, Integer> tallyMap = new HashMap<>();
-                for (IntegerValue.UndefinedReference ref : temp) {
+
+                Map<String, Integer> tallyLabels = new HashMap<>();
+                Map<Integer, Integer> tallyLCIndices = new HashMap<>();
+
+                for (UndefinedReference ref : temp) {
                     int refVal = ref._isNegative ? -1 : 1;
-                    if ( tallyMap.containsKey( ref._reference ) ) {
-                        refVal += tallyMap.get(ref._reference);
+                    if (ref instanceof UndefinedReferenceToLabel) {
+                        UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) ref;
+                        if (tallyLabels.containsKey(lRef._label)) {
+                            refVal += tallyLabels.get(lRef._label);
+                        }
+                        tallyLabels.put(lRef._label, refVal);
+                    } else if (ref instanceof UndefinedReferenceToLocationCounter) {
+                        UndefinedReferenceToLocationCounter lRef = (UndefinedReferenceToLocationCounter) ref;
+                        if (tallyLCIndices.containsKey(lRef._locationCounterIndex)) {
+                            refVal += tallyLCIndices.get(lRef._locationCounterIndex);
+                        }
+                        tallyLCIndices.put(lRef._locationCounterIndex, refVal);
                     }
-                    tallyMap.put(ref._reference, refVal);
                 }
 
-                List<IntegerValue.UndefinedReference> newRefs = new LinkedList<>();
-                for (Map.Entry<String, Integer> entry : tallyMap.entrySet()) {
-                    boolean isNeg = entry.getValue() < 0;
-                    for (int ex = 0; ex < Math.abs(entry.getValue()); ++ex) {
-                        newRefs.add(new IntegerValue.UndefinedReference(entry.getKey(), isNeg));
+                List<UndefinedReference> newRefs = new LinkedList<>();
+                for (Map.Entry<String, Integer> entry : tallyLabels.entrySet()) {
+                    if (entry.getValue() != 0) {
+                        boolean isNeg = entry.getValue() < 0;
+                        for (int ex = 0; ex < Math.abs(entry.getValue()); ++ex) {
+                            newRefs.add(new UndefinedReferenceToLabel(new FieldDescriptor(0, 0),
+                                                                      isNeg,
+                                                                      entry.getKey()));
+                        }
+                    }
+                }
+                for (Map.Entry<Integer, Integer> entry : tallyLCIndices.entrySet()) {
+                    if (entry.getValue() != 0) {
+                        boolean isNeg = entry.getValue() < 0;
+                        for (int ex = 0; ex < Math.abs(entry.getValue()); ++ex) {
+                            newRefs.add(new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 0),
+                                                                                isNeg,
+                                                                                entry.getKey()));
+                        }
                     }
                 }
 
-                opResult = new IntegerValue(false, intResult, newRefs.toArray(new IntegerValue.UndefinedReference[0] ));
+                opResult = new IntegerValue(false, intResult, newRefs.toArray(new UndefinedReference[0] ));
             } else {
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];

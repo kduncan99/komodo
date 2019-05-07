@@ -6,21 +6,20 @@ package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.baselib.exceptions.*;
-import com.kadware.em2200.minalib.directives.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
+import com.kadware.em2200.minalib.directives.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * Assembler for minalib
@@ -45,7 +44,6 @@ public class Assembler {
     private final String _moduleName;
 
     private final Dictionary _globalDictionary;
-    private final SystemDictionary _systemDictionary;
 
     //  Things relating to the relocatable module as a whole
     public boolean _setArithFaultCompatibility = false;
@@ -93,7 +91,7 @@ public class Assembler {
         }
 
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(textLine, lfc, operationField, operandField, _diagnostics)) {
+        if (processMnemonic(lfc, operationField, operandField, _diagnostics)) {
             if (textLine._fields.size() > 3) {
                 _diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale, "Extraneous fields ignored"));
             }
@@ -107,7 +105,7 @@ public class Assembler {
 
         //  Hmm.  Is it an expression (or a list of expressions)?
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
-        if (processDataGeneration(textLine, lfc, operationField, _diagnostics)) {
+        if (processDataGeneration(lfc, operationField, _diagnostics)) {
             if (textLine._fields.size() > 2) {
                 _diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale, "Extraneous fields ignored"));
             }
@@ -166,21 +164,19 @@ public class Assembler {
                                              entry.getValue()._storage.length));
         }
 
-        Set<String> references = new TreeSet<>();
+        Set<UndefinedReference> references = new HashSet<>();
         System.out.println("Undefined References:");
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
-            int lcIndex = poolEntry.getKey();
             LocationCounterPool lcPool = poolEntry.getValue();
             for (RelocatableWord36 word36 : lcPool._storage) {
                 if (word36 != null) {
-                    for ( RelocatableWord36.UndefinedReference ur : word36._undefinedReferences ) {
-                        references.add(ur._reference);
-                    }
+                    references.addAll(Arrays.asList(word36._undefinedReferences));
                 }
             }
         }
-        for (String ref : references) {
-            System.out.println("  " + ref);
+
+        for (UndefinedReference ref : references) {
+            System.out.println("  " + ref.toString());
         }
     }
 
@@ -226,7 +222,7 @@ public class Assembler {
     /**
      * Generates the RelocatableModule based on the various internal structures we've built up
      * @param moduleName name of the module
-     * @return RelocatableModule object
+     * @return RelocatableModule object unless there's a fatal error (then we return null)
      */
     private RelocatableModule generateRelocatableModule(
         final String moduleName
@@ -245,10 +241,20 @@ public class Assembler {
             }
         }
 
-        return new RelocatableModule.Builder().setName(moduleName)
-                                              .setStorage(_context.produceLocationCounterPools(_diagnostics))
-                                              .setExternalLabels(externalLabels)
-                                              .build();
+        try {
+            return new RelocatableModule.Builder().setName(moduleName)
+                                                  .setStorage(_context.produceLocationCounterPools(_diagnostics))
+                                                  .setExternalLabels(externalLabels)
+                                                  .setRequiresQuarterWordMode(_setQuarterWordMode)
+                                                  .setRequiresThirdWordMode(_setThirdWordMode)
+                                                  .setArithmeticFaultCompatibilityMode(_setArithFaultCompatibility)
+                                                  .setArithmeticFaultNonInterruptMode(_setArithFaultNonInterrupt)
+                                                  .build();
+        } catch (InvalidParameterException ex) {
+            _diagnostics.append(new FatalDiagnostic(new Locale(1, 1),
+                                                    "Could not generate relocatable module:" + ex.getMessage()));
+            return null;
+        }
     }
 
     /**
@@ -334,14 +340,12 @@ public class Assembler {
      * If it is a string, then we allow no other subfields, and we generate as many words as necessary.
      * If it is a float, we generate one word, and allow no other subfields
      * If it is an integer, we then expect any other subfields to also evaluate to integers, and proceed accordingly.
-     * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operandField represents the operand field, if any
      * @param diagnostics where we post diagnostics if needed
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
     private boolean processDataGeneration(
-        final TextLine textLine,
         final LabelFieldComponents labelFieldComponents,
         final TextField operandField,
         final Diagnostics diagnostics
@@ -498,7 +502,6 @@ public class Assembler {
 
     /**
      * Handles instruction mnemonic lines of code, and blank lines
-     * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      * @param operandField represents the operand field, if any
@@ -506,7 +509,6 @@ public class Assembler {
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
     private boolean processMnemonic(
-        final TextLine textLine,
         final LabelFieldComponents labelFieldComponents,
         final TextField operationField,
         final TextField operandField,
@@ -599,7 +601,6 @@ public class Assembler {
         IntegerValue uValue;                //  displacement/address/value subfield
         IntegerValue xValue = _zeroValue;   //  index register subfield
 
-        Value operandValue = null;
         if (operandField == null) {
             diagnostics.append(new ErrorDiagnostic(operationField._locale,
                                                     "Instruction mnemonic requires an operand field"));
@@ -796,44 +797,44 @@ public class Assembler {
     /**
      * Resolves any lingering undefined references once initial assembly is complete...
      * These will be the forward-references we picked up along the way.
+     * No point checking for loc ctr refs, those aren't resolved until link time.
      */
     private void resolveReferences(
     ) {
         for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : _context._generatedPools.entrySet()) {
-            int lcIndex = poolEntry.getKey();
             Context.GeneratedPool pool = poolEntry.getValue();
             for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : pool.entrySet()) {
-                int lcOffset = wordEntry.getKey();
                 Context.GeneratedWord gWord = wordEntry.getValue();
-
                 for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
                     FieldDescriptor fd = entry.getKey();
                     IntegerValue originalIV = entry.getValue();
                     if (originalIV._undefinedReferences.length > 0) {
                         long newDiscreteValue = originalIV._value;
-                        List<IntegerValue.UndefinedReference> newURefs = new LinkedList<>();
-                        for (IntegerValue.UndefinedReference intURef : originalIV._undefinedReferences) {
-                            try {
-                                Value lookupValue = _context._dictionary.getValue(intURef._reference);
-                                if (lookupValue.getType() != ValueType.Integer) {
-                                    _diagnostics.append(
-                                            new ValueDiagnostic(
-                                                    gWord._locale,
-                                                    "Forward reference does not resolve to an integer"));
-                                } else {
-                                    IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                                    newDiscreteValue += (intURef._isNegative ? -1 : 1) * lookupIntegerValue._value;
-                                    newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
+                        List<UndefinedReference> newURefs = new LinkedList<>();
+                        for (UndefinedReference uRef : originalIV._undefinedReferences) {
+                            if (uRef instanceof UndefinedReferenceToLabel) {
+                                UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
+                                try {
+                                    Value lookupValue = _context._dictionary.getValue(lRef._label);
+                                    if (lookupValue.getType() != ValueType.Integer) {
+                                        _diagnostics.append(
+                                            new ValueDiagnostic(gWord._locale,
+                                                                "Forward reference does not resolve to an integer"));
+                                    } else {
+                                        IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
+                                        newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
+                                        newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
+                                    }
+                                } catch (NotFoundException ex) {
+                                    //  reference is still not found - propagate it
+                                    newURefs.add(uRef);
                                 }
-                            } catch (NotFoundException ex) {
-                                //  reference is still not found - propagate it
-                                newURefs.add(intURef);
                             }
                         }
 
                         IntegerValue newIV = new IntegerValue(originalIV._flagged,
                                                               newDiscreteValue,
-                                                              newURefs.toArray(new IntegerValue.UndefinedReference[0]));
+                                                              newURefs.toArray(new UndefinedReference[0]));
                         gWord.put(fd, newIV);
                     }
                 }
@@ -855,8 +856,7 @@ public class Assembler {
         final String[] source,
         final String moduleName
     ) {
-        _systemDictionary = new SystemDictionary();
-        _globalDictionary = new Dictionary(_systemDictionary);
+        _globalDictionary = new Dictionary(new SystemDictionary());
         _context = new Context(_globalDictionary, moduleName);
         _sourceCode = new TextLine[source.length];
         for (int sx = 0; sx < source.length; ++sx) {

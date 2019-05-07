@@ -1,14 +1,17 @@
 InProgress
+minalib support specification of starting address START$
+  assembler->linker->unit tester
+minalib $INFO group 1 from assembler through linker to unit tester
+minalib $INFO group 10 ditto
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
 
 TODO
 minalib support procs
+minalib generate system procs for special instructions such as JGD, BT, JK, SLJ
 minalib $USE (A.2.8) specifies base register to use if none given
-minalib system JK proc to do the  "right thing" for the JK instruction (requires hard-fixing an A register)
 minalib add test cases for interrupts (many of them already marked TODO)
 minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
-minalib special mnemonics need attention (JGD, BT, etc)
 minalib data generation - strings
 minalib float values - firm this up
 minalib data generation - floats

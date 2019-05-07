@@ -151,7 +151,7 @@ public class Test_Assembler {
 
     @Test
     public void group(
-    ) throws InvalidParameterException {
+    ) {
         String[] source = {
             "$(1)  + (5 + 3)*2"
         };
@@ -160,8 +160,8 @@ public class Test_Assembler {
         RelocatableModule module = asm.assemble(true);
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(1, module._storage.size());
-        assertEquals(1, module.getLocationCounterPool(1)._storage.length);
-        assertEquals(16, module.getLocationCounterPool(1)._storage[0].getW());
+        assertEquals(1, module._storage.get(1)._storage.length);
+        assertEquals(16, module._storage.get(1)._storage[0].getW());
     }
 
     @Test

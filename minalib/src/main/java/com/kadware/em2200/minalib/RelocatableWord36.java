@@ -4,8 +4,7 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
-import com.kadware.em2200.baselib.Word36;
+import com.kadware.em2200.baselib.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,52 +14,12 @@ import java.util.List;
  */
 public class RelocatableWord36 extends Word36 {
 
-    public static class UndefinedReference {
-
-        public final FieldDescriptor _fieldDescriptor;
-        public final boolean _isNegative;
-        public final String _reference;
-
-        public UndefinedReference(
-                final String reference,
-                final FieldDescriptor fieldDescriptor,
-                final boolean isNegative
-        ) {
-            _fieldDescriptor = fieldDescriptor;
-            _isNegative = isNegative;
-            _reference = reference;
-        }
-
-        @Override
-        public boolean equals(
-            final Object obj
-        ) {
-            if (obj instanceof UndefinedReference) {
-                UndefinedReference refObj = (UndefinedReference) obj;
-                return (_fieldDescriptor.equals( refObj._fieldDescriptor ))
-                        && (_isNegative == refObj._isNegative)
-                        && (_reference.equals( refObj._reference ));
-            }
-            return false;
-        }
-
-        @Override
-        public String toString(
-        ) {
-            return String.format("[%d:%d]%s%s",
-                                 _fieldDescriptor._startingBit,
-                                 _fieldDescriptor._startingBit + _fieldDescriptor._fieldSize - 1,
-                                 _isNegative ? "-" : "+",
-                                 _reference);
-        }
-    }
-
     public final UndefinedReference[] _undefinedReferences;
 
     /**
      * Constructor
      */
-    public RelocatableWord36(
+    RelocatableWord36(
         final long value,
         final UndefinedReference[] undefinedReferences
     ) {
@@ -71,7 +30,7 @@ public class RelocatableWord36 extends Word36 {
     /**
      * Constructor
      */
-    public RelocatableWord36(
+    RelocatableWord36(
         final Word36 value,
         final UndefinedReference[] undefinedReferences
     ) {

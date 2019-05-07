@@ -12,24 +12,61 @@ import com.kadware.em2200.baselib.*;
 @SuppressWarnings("Duplicates")
 public class LoadableBank {
 
+    /**
+     * Ring and domain for the bank
+     */
     public final AccessInfo _accessInfo;
+
+    /**
+     * RWX privileges for less-privileged client
+     */
     public final AccessPermissions _generalPermissions;
+
+    /**
+     * RWX privileges for equal ore more-privileged client
+     */
     public final AccessPermissions _specialPermissions;
+
+    /**
+     * BDI for this bank
+     */
     public final int _bankDescriptorIndex;
+
+    /**
+     * Bank level for this bank
+     */
+    public final int _bankLevel;
+
+    /**
+     * Bank name for the bank
+     */
     public final String _bankName;
+
+    /**
+     * BR upon which the bank should be based at load time
+     */
     public final Integer _initialBaseRegister;
+
+    /**
+     * true if this bank requires extended mode
+     */
     public final boolean _isExtendedMode;
-    public final int _startingAddress;
+
+    /**
+     * wth is this?
+     */
+    public final Integer _startingAddress;  //  null if none specified
+
+    /**
+     * content of this bank
+     */
     public final Word36Array _content;
-    public final boolean _requireQuarterWordMode;
-    public final boolean _requireThirdWordMode;
-    public final boolean _requireArithmeticFaultCompatibility;
-    public final boolean _requireArithmeticFaultNonInterrupt;
 
     /**
      * Constructor
-     * @param bdi bank descriptor index
-     * @param name bank name
+     * @param bankDescriptorIndex bank descriptor index
+     * @param bankLevel bank level for loader (might be ignored)
+     * @param bankName bank name
      * @param startingAddress starting address for the bank
      * @param content content of the bank
      * @param initialBaseRegister initial base register for the bank, null if not to be initially based
@@ -37,28 +74,22 @@ public class LoadableBank {
      * @param accessInfo access info - domain and ring values for the bank
      * @param generalPermissions GAP permissions
      * @param specialPermissions GAP permissions
-     * @param requireQuarterWordMode mode setting
-     * @param requireThirdWordMode mode setting
-     * @param requireArithmeticFaultCompatibility mode setting
-     * @param requireArithmeticFaultNonInterrupt mode setting
      */
-    public LoadableBank(
-        final int bdi,
-        final String name,
+    private LoadableBank(
+        final int bankDescriptorIndex,
+        final int bankLevel,
+        final String bankName,
         final int startingAddress,
         final Word36Array content,
         final Integer initialBaseRegister,
         final boolean isExtendedMode,
         final AccessInfo accessInfo,
         final AccessPermissions generalPermissions,
-        final AccessPermissions specialPermissions,
-        final boolean requireQuarterWordMode,
-        final boolean requireThirdWordMode,
-        final boolean requireArithmeticFaultCompatibility,
-        final boolean requireArithmeticFaultNonInterrupt
+        final AccessPermissions specialPermissions
     ) {
-        _bankDescriptorIndex = bdi;
-        _bankName = name;
+        _bankDescriptorIndex = bankDescriptorIndex;
+        _bankLevel = bankLevel;
+        _bankName = bankName;
         _startingAddress = startingAddress;
         _content = content;
         _initialBaseRegister = initialBaseRegister;
@@ -66,44 +97,35 @@ public class LoadableBank {
         _accessInfo = accessInfo;
         _generalPermissions = generalPermissions;
         _specialPermissions = specialPermissions;
-        _requireQuarterWordMode = requireQuarterWordMode;
-        _requireThirdWordMode = requireThirdWordMode;
-        _requireArithmeticFaultCompatibility = requireArithmeticFaultCompatibility;
-        _requireArithmeticFaultNonInterrupt = requireArithmeticFaultNonInterrupt;
     }
 
-    public static class Builder{
+    static class Builder{
         private AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
         private AccessPermissions _generalPermissions = new AccessPermissions();
         private AccessPermissions _specialPermissions = new AccessPermissions();
         private int _bankDescriptorIndex;
+        private int _bankLevel;
         private String _bankName = null;
         private Integer _initialBaseRegister = null;
         private boolean _isExtendedMode = false;
         private int _startingAddress;
         private Word36Array _content = null;
-        private boolean _requireQuarterWordMode;
-        private boolean _requireThirdWordMode;
-        private boolean _requireArithmeticFaultCompatibility;
-        private boolean _requireArithmeticFaultNonInterrupt;
 
-        public Builder setAccessInfo(final AccessInfo value) { _accessInfo = value; return this; }
-        public Builder setGeneralPermissions(final AccessPermissions value) { _generalPermissions = value; return this; }
-        public Builder setSpecialPermissions(final AccessPermissions value) { _specialPermissions = value; return this; }
-        public Builder setBankDescriptorIndex(final int value) { _bankDescriptorIndex = value; return this; }
-        public Builder setBankName(final String value) { _bankName = value; return this; }
-        public Builder setInitialBaseRegister(final Integer value) { _initialBaseRegister = value; return this; }
-        public Builder setIsExtendedMode(final boolean value) { _isExtendedMode = value; return this; }
-        public Builder setStartingAddress(final int value) { _startingAddress = value; return this; }
-        public Builder setContent(final Word36Array value) { _content = value; return this; }
-        public Builder setRequireQuarterWordMode(final boolean value) { _requireQuarterWordMode = value; return this; }
-        public Builder setRequireThirdWordMode(final boolean value) { _requireThirdWordMode = value; return this; }
-        public Builder setRequireArithmeticFaultCompatibility(final boolean value) { _requireArithmeticFaultCompatibility = value; return this; }
-        public Builder setRequireArithmeticNonInterrupt(final boolean value) { _requireArithmeticFaultNonInterrupt = value; return this; }
+        Builder setAccessInfo(final AccessInfo value) { _accessInfo = value; return this; }
+        Builder setGeneralPermissions(final AccessPermissions value) { _generalPermissions = value; return this; }
+        Builder setSpecialPermissions(final AccessPermissions value) { _specialPermissions = value; return this; }
+        Builder setBankDescriptorIndex(final int value) { _bankDescriptorIndex = value; return this; }
+        Builder setBankLevel(final int value) { _bankLevel = value; return this; }
+        Builder setBankName(final String value) { _bankName = value; return this; }
+        Builder setInitialBaseRegister(final Integer value) { _initialBaseRegister = value; return this; }
+        Builder setIsExtendedMode(final boolean value) { _isExtendedMode = value; return this; }
+        Builder setStartingAddress(final Integer value) { _startingAddress = value; return this; }
+        Builder setContent(final Word36Array value) { _content = value; return this; }
 
-        public LoadableBank build() {
+        LoadableBank build() {
             assert(_bankName != null);
             return new LoadableBank(_bankDescriptorIndex,
+                                    _bankLevel,
                                     _bankName,
                                     _startingAddress,
                                     _content,
@@ -111,11 +133,7 @@ public class LoadableBank {
                                     _isExtendedMode,
                                     _accessInfo,
                                     _generalPermissions,
-                                    _specialPermissions,
-                                    _requireQuarterWordMode,
-                                    _requireThirdWordMode,
-                                    _requireArithmeticFaultCompatibility,
-                                    _requireArithmeticFaultNonInterrupt);
+                                    _specialPermissions);
         }
     }
 }

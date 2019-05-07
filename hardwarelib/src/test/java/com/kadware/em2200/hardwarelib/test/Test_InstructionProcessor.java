@@ -25,11 +25,11 @@ class Test_InstructionProcessor {
     /**
      * Produced as a result of loadModule()
      */
-    public static class Processors {
+    static class Processors {
         final ExtInstructionProcessor _instructionProcessor;
         final ExtMainStorageProcessor _mainStorageProcessor;
 
-        public Processors(
+        Processors(
             final ExtInstructionProcessor ip,
             final ExtMainStorageProcessor msp
         ) {
@@ -39,11 +39,11 @@ class Test_InstructionProcessor {
     }
 
     private static class MSPRegionAttributes implements RegionTracker.IAttributes {
-        public final String _bankName;
-        public final int _bankLevel;
-        public final int _bankDescriptorIndex;
+        final String _bankName;
+        final int _bankLevel;
+        final int _bankDescriptorIndex;
 
-        public MSPRegionAttributes(
+        MSPRegionAttributes(
             final String bankName,
             final int bankLevel,
             final int bankDescriptorIndex
@@ -54,6 +54,7 @@ class Test_InstructionProcessor {
         }
     }
 
+    //TODO remove the following
     /*
 
 2.1.2 Base_Register Conventions
@@ -312,30 +313,30 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("I1")
-                                     .setBankDescriptorIndex(000004)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(022000)
-                                     .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(12)
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("I1")
+                                                                 .setBankDescriptorIndex(000004)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(022000)
+                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(12)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .build());
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("D1")
-                                     .setBankDescriptorIndex(000005)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(040000)
-                                     .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(13)
-                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("D1")
+                                                                 .setBankDescriptorIndex(000005)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(040000)
+                                                                 .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(13)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .build());
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", display);
+        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
     }
 
     /**
@@ -373,32 +374,32 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             }
         }
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("I1")
-                                     .setBankDescriptorIndex(000004)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(022000)
-                                     .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(12)
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("I1")
+                                                                 .setBankDescriptorIndex(000004)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(022000)
+                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(12)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .build());
 
         if (!poolSpecsEven.isEmpty()) {
-            bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                         .setBankName("D1")
-                                         .setBankDescriptorIndex(000005)
-                                         .setBankLevel(06)
-                                         .setStartingAddress(040000)
-                                         .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-                                         .setInitialBaseRegister(13)
-                                         .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                         .build());
+            bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                     .setBankName("D1")
+                                                                     .setBankDescriptorIndex(000005)
+                                                                     .setBankLevel(06)
+                                                                     .setStartingAddress(040000)
+                                                                     .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
+                                                                     .setInitialBaseRegister(13)
+                                                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                                                     .build());
         }
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", display);
+        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
     }
 
     /**
@@ -436,52 +437,52 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("I1")
-                                     .setBankDescriptorIndex(000004)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(01000)
-                                     .setPoolSpecifications(poolSpecs04.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(12)
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("I1")
+                                                                 .setBankDescriptorIndex(000004)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(01000)
+                                                                 .setPoolSpecifications(poolSpecs04.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(12)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .build());
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("D1")
-                                     .setBankDescriptorIndex(000005)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(040000)
-                                     .setPoolSpecifications(poolSpecs05.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(13)
-                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("D1")
+                                                                 .setBankDescriptorIndex(000005)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(040000)
+                                                                 .setPoolSpecifications(poolSpecs05.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(13)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .build());
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("I2")
-                                     .setBankDescriptorIndex(000006)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(020000)
-                                     .setPoolSpecifications(poolSpecs06.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(14)
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("I2")
+                                                                 .setBankDescriptorIndex(000006)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(020000)
+                                                                 .setPoolSpecifications(poolSpecs06.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(14)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .build());
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("D2")
-                                     .setBankDescriptorIndex(000007)
-                                     .setBankLevel(06)
-                                     .setStartingAddress(060000)
-                                     .setPoolSpecifications(poolSpecs07.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(15)
-                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("D2")
+                                                                 .setBankDescriptorIndex(000007)
+                                                                 .setBankLevel(06)
+                                                                 .setStartingAddress(060000)
+                                                                 .setPoolSpecifications(poolSpecs07.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(15)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .build());
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", display);
+        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
     }
 
     /**
@@ -512,32 +513,32 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("I1")
-                                     .setBankDescriptorIndex(000004)
-                                     .setBankLevel(06)
-                                     .setIsExtended(true)
-                                     .setStartingAddress(01000)
-                                     .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(0)
-                                     .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("I1")
+                                                                 .setBankDescriptorIndex(000004)
+                                                                 .setBankLevel(06)
+                                                                 .setNeedsExtendedMode(true)
+                                                                 .setStartingAddress(01000)
+                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(0)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .build());
 
-        bankDeclarations.add(new Linker.BankDeclaration.Builder()
-                                     .setBankName("D1")
-                                     .setBankDescriptorIndex(000005)
-                                     .setBankLevel(06)
-                                     .setIsExtended(true)
-                                     .setStartingAddress(01000)
-                                     .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-                                     .setInitialBaseRegister(2)
-                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                     .build());
+        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                                 .setBankName("D1")
+                                                                 .setBankDescriptorIndex(000005)
+                                                                 .setBankLevel(06)
+                                                                 .setNeedsExtendedMode(false)
+                                                                 .setStartingAddress(01000)
+                                                                 .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
+                                                                 .setInitialBaseRegister(2)
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                                                 .build());
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", display);
+        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
     }
 
     /**
@@ -580,26 +581,27 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             int bdi = entry.getKey();
             List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
             bankDeclarations.add(
-                new Linker.BankDeclaration.Builder()
-                    .setBankName(String.format("BANK%06o", bdi))
-                    .setBankDescriptorIndex(bdi)
-                    .setBankLevel(0)
-                    .setStartingAddress(01000)
-                    .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-                    .setInitialBaseRegister(bReg++)
-                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04, true, true))
-                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04, true, true))
-                    .build());
+                new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
+                                                    .setBankName(String.format("BANK%06o", bdi))
+                                                    .setBankDescriptorIndex(bdi)
+                                                    .setBankLevel(0)
+                                                    .setNeedsExtendedMode(bReg == 0)
+                                                    .setStartingAddress(01000)
+                                                    .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
+                                                    .setInitialBaseRegister(bReg++)
+                                                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04, true, true))
+                                                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04, true, true))
+                                                    .build());
         }
 
         Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", display);
+        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
     }
 
     /**
      * Creates the banking environment absolute module
      */
-    static void createBankingModule(
+    static private void createBankingModule(
     ) {
         //  Assemble banking source - there will be 8 location counter pools 0 through 7
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
@@ -625,10 +627,11 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             };
 
             bankDeclarations[lcIndex] =
-                new Linker.BankDeclaration.Builder().setBankName(String.format("BDTLEVEL%d", lcIndex))
+                new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 0))
+                                                    .setBankName(String.format("BDTLEVEL%d", lcIndex))
                                                     .setBankDescriptorIndex(lcIndex)
                                                     .setBankLevel(0)
-                                                    .setIsExtended(true)
+                                                    .setNeedsExtendedMode(false)
                                                     .setStartingAddress(0)
                                                     .setPoolSpecifications(bdtPoolSpecs)
                                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
@@ -642,18 +645,20 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         bankDeclarations[8] =
-            new Linker.BankDeclaration.Builder().setBankName("IHBANK")
+            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 0))
+                                                .setBankName("IHBANK")
                                                 .setBankDescriptorIndex(010)
                                                 .setBankLevel(0)
-                                                .setIsExtended(true)
+                                                .setNeedsExtendedMode(true)
                                                 .setStartingAddress(01000)
                                                 .setPoolSpecifications(ihPoolSpecList.toArray(new Linker.LCPoolSpecification[0]))
                                                 .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
                                                 .build();
 
+
         Linker linker = new Linker(bankDeclarations);
-        _bankModule = linker.link("BDT-IH", true);
+        _bankModule = linker.link("BDT-IH", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, true);
         assert(_bankModule != null);
     }
 
@@ -978,12 +983,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     /**
      * Instantiates IP and MSP, loads a module, and sets up the processor state as needed
      * @param absoluteModule module to be loaded
-     * @param bankLevel bank level for the banks in the module
      * @return Processors object so that calling code has access to the created IP and MSP
      */
     public static Processors loadModule(
-        final AbsoluteModule absoluteModule,
-        final int bankLevel
+        final AbsoluteModule absoluteModule
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException {
@@ -993,15 +996,78 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
+        //TODO let loadBanks() use the bank level in the LoadableBank object after we remove obsolete methods
         loadBanks(ip, msp, absoluteModule, 7);
 
-        //  TODO update desreg based on module requirements
+        //  Update designator register if directed by the absolute module
         DesignatorRegister dReg = ip.getDesignatorRegister();
-        //  so far, these modes are set in LoadableBank...  should they instead be in AbsoluteModule?
 
+        if (absoluteModule._setQuarter) {
+            dReg.setQuarterWordModeEnabled(true);
+        } else if (absoluteModule._setThird) {
+            dReg.setQuarterWordModeEnabled(false);
+        }
+
+        if (absoluteModule._afcmSet) {
+            dReg.setArithmeticExceptionEnabled(true);
+        } else if (absoluteModule._afcmClear) {
+            dReg.setArithmeticExceptionEnabled(false);
+        }
+
+        //  Set processor address
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
+        //TODO remove the following
+/*
+5.2. Absolute Element Arithmetic Fault Mode Determination
+The Collector marks the arithmetic fault mode of an absolute element or relocatable
+element produced by the Collector in the following order of precedence:
+1. If explicit sensitivity is given on the TYPE directive, the output element is marked
+accordingly, regardless of the sensitivities of the input relocatable elements.
+2. If all input relocatable elements have the same sensitivity, the output element is
+marked with the sensitivity.
+3. If both SETAFCM and CLRAFCM relocatable elements are present, the presence or
+absence of INSAFCM for relocatable elements where the sensitivity is not specified
+is irrelevant. In this case (both the SETAFCM and CLRAFCM relocatable elements
+are present), the output element is marked with the sensitivity of the relocatable
+element containing the program start address; if that element is marked INSAFCM
+or if no starting address exists, the output element is marked UNKNOWN.
+4. If SETAFCM relocatable elements are present in addition to INSAFCM and for
+relocatable elements where the sensitivity is not specified, the output element is
+marked SETAFCM.
+5. If CLRAFCM relocatable elements are present in addition to INSAFCM and for
+relocatable elements where the sensitivity is not specified, the output element is
+marked CLRAFCM.
+6. If INSAFCM and for conditions where sensitivity is not specified on relocatable
+elements existing by themselves, the output element is marked UNKNOWN.
+For more information on arithmetic fault compatibility mode, see the processor and
+storage reference manual for your Series 1100 and 2200 systems.
+
+5.3. Exec Action Produced by Absolute Element
+The arithmetic fault mode sensitivity of the absolute element is used by the Executive in
+determining the initial setting of PSR bit D20 on 1100/60, 1100/70, and 1100/80 systems
+or bit DB29 on the extended mode architecture systems. For more information about
+these bit settings, see the systems processor and storage reference manual for the OS
+1100 system in use at your site. The following actions are taken by the Executive:
+1. If the absolute element’s sensitivity is UNKNOWN, the system standard value set at
+system generation is used.
+2. If the absolute element’s sensitivity is SETAFCM, D20 (DB29) is initially set.
+3. If the absolute element’s sensitivity is CLRAFCM, D20 (DB29) is initially cleared.
+4. If the absolute element’s sensitivity is INSAFCM, D20 (DB29) is initially cleared.
+
+5.4. Third- and Quarter-Word Sensitivity
+If sensitivity is not specified by option or TYPE directive, program sensitivity is
+determined as follows:
+1. If only third-word sensitive elements and elements with neither T nor F sensitivity
+are present, T is used.
+2. If only quarter-word sensitive elements and elements with neither T nor F sensitivity
+are present, F is used.
+3. If both third-word and quarter-word sensitive elements are present, the sensitivity of
+the element containing the program starting address as specified by the ENT
+directive is used. If the ENT directive is not used, the absolute element is marked as
+being not sensitive.
+*/
         return new Processors(ip, msp);
     }
 

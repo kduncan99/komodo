@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
+import com.kadware.em2200.baselib.FieldDescriptor;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -83,8 +84,8 @@ public class BDIFunction extends BuiltInFunction {
         }
 
         String ref = String.format("%s_LC$BDI_%d", context._moduleName, lcIndex);
-        IntegerValue.UndefinedReference[] refs = {
-            new IntegerValue.UndefinedReference(ref, false)
+        UndefinedReference[] refs = {
+            new UndefinedReferenceToLabel(new FieldDescriptor(0, 26), false, ref),
         };
 
         return new IntegerValue(false, 0, refs);

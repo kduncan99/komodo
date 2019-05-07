@@ -13,13 +13,70 @@ import com.kadware.em2200.minalib.expressions.*;
 @SuppressWarnings("Duplicates")
 public class INFODirective extends Directive {
 
+    /**
+     * Group 10 handler
+     * @param context reference to the context in which this directive is to execute
+     * @param diagnostics where diagnostics should be posted if necessary
+     */
+    private void handleExtendedModeLCs(
+        final Context context,
+        final Diagnostics diagnostics
+    ) {
+        if ((_additionalOperandField == null) || (_additionalOperandField._subfields.isEmpty())) {
+            diagnostics.append(new ErrorDiagnostic(_operandField._locale,
+                                                   "No LCs specified for $INFO group 10"));
+            return;
+        }
+
+        for (TextSubfield sf : _additionalOperandField._subfields) {
+            try {
+                ExpressionParser p = new ExpressionParser(sf._text, sf._locale);
+                Expression e = p.parse(context, diagnostics);
+
+                Value v = e.evaluate(context, diagnostics);
+                if (!(v instanceof IntegerValue)) {
+                    diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
+                                                           "Invalid value type"));
+                    return;
+                }
+
+                int lcIndex = (int) ((IntegerValue) v)._value;
+                if ((lcIndex < 0) || (lcIndex > 063)) {
+                    diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
+                                                           "Illegal location counter index value"));
+                    return;
+                }
+
+                Context.GeneratedPool gp = context._generatedPools.get(lcIndex);
+                if (gp == null) {
+                    gp = new Context.GeneratedPool();
+                    context._generatedPools.put(lcIndex, gp);
+                }
+                gp._extendedModeFlag = true;
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(sf._locale, "Syntax error"));
+            }
+        }
+
+        if (_additionalOperandField._subfields.size() > 1) {
+            diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
+                                                   "Ignoring extraneous subfields"));
+        }
+    }
+
+    /**
+     * Group 1 handler
+     * @param assembler reference to the assembler
+     * @param context reference to the context in which this directive is to execute
+     * @param diagnostics where diagnostics should be posted if necessary
+     */
     private void handleProcessorModeSettings(
         final Assembler assembler,
         final Context context,
         final Diagnostics diagnostics
     ) {
-        if ((_additionalOperandField == null) || (_additionalOperandField._subfields.size() == 0)) {
-            diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
+        if ((_additionalOperandField == null) || (_additionalOperandField._subfields.isEmpty())) {
+            diagnostics.append(new ErrorDiagnostic(_operandField._locale,
                                                    "No value specified for $INFO group 1"));
             return;
         }
@@ -57,6 +114,15 @@ public class INFODirective extends Directive {
         }
     }
 
+    /**
+     * Main routine
+     * @param assembler reference to the assembler
+     * @param context reference to the context in which this directive is to execute
+     * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
+     *                 make different usages of the fields - and $INFO even uses an extra field
+     * @param labelFieldComponents LabelFieldComponents describing the label field on the line containing this directive
+     * @param diagnostics where diagnostics should be posted if necessary
+     */
     @Override
     public void process(
             final Assembler assembler,
@@ -80,6 +146,10 @@ public class INFODirective extends Directive {
                             handleProcessorModeSettings(assembler, context, diagnostics);
                             break;
 
+                        case 10:    //  Extended Mode Location Counter
+                            handleExtendedModeLCs(context, diagnostics);
+                            break;
+
                         case 2:     //  Common Block
                         case 3:     //  Minimum D-Bank Specification
                         case 4:     //  Blank Common Block
@@ -88,7 +158,6 @@ public class INFODirective extends Directive {
                         case 7:     //  Even Starting Address
                         case 8:     //  Static Diagnostic Information
                         case 9:     //  Read-Only Location Counters
-                        case 10:    //  Extended Mode Location Counter
                         case 11:    //  Void Bank
                         case 12:    //  Library Search File
                         default:

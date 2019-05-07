@@ -16,30 +16,6 @@ import java.util.Arrays;
  */
 public class IntegerValue extends Value {
 
-    public static class UndefinedReference {
-        public final boolean _isNegative;
-        public final String _reference;
-
-        public UndefinedReference(
-            final String reference,
-            final boolean isNegative
-        ) {
-            _isNegative = isNegative;
-            _reference = reference;
-        }
-
-        @Override
-        public boolean equals(
-            final Object obj
-        ) {
-            if ( obj instanceof UndefinedReference ) {
-                UndefinedReference robj = (UndefinedReference) obj;
-                return (robj._isNegative == _isNegative) && robj._reference.equals( _reference );
-            }
-            return false;
-        }
-    }
-
     public final UndefinedReference[] _undefinedReferences;     //  will never be null, but is often empty
     public final long _value;
 
@@ -188,7 +164,7 @@ public class IntegerValue extends Value {
         }
 
         String str;
-        long msbits = 0_400400_400400l;
+        long msbits = 0_400400_400400L;
         if (characterMode == CharacterMode.ASCII) {
             if ((_value & msbits) != 0) {
                 diagnostics.append(new TruncationDiagnostic(locale, "MSBits dropped for ASCII conversion"));
@@ -209,12 +185,11 @@ public class IntegerValue extends Value {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append( String.format( "%s%012o",
-                                  _flagged ? "*" : "",
-                                  _value ) );
-        for ( UndefinedReference ur : _undefinedReferences ) {
-            sb.append( ur._isNegative ? "-" : "+" );
-            sb.append( ur._reference );
+        sb.append(String.format("%s%012o",
+                                _flagged ? "*" : "",
+                                _value));
+        for (UndefinedReference ur : _undefinedReferences) {
+            sb.append(ur.toString());
         }
         return sb.toString();
     }

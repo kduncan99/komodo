@@ -49,29 +49,6 @@ public class RelocatableModule {
         _requiresArithmeticFaultNonInterruptMode = arithmeticNonInterrupt;
     }
 
-    /**
-     * Retrieves the LocationCounterPool associated with the given index.
-     * If one does not exist, it is created and returned.
-     * @param index lc index
-     * @return reference to LocationCounterPool
-     * @throws InvalidParameterException if the index is out of range
-     */
-    public LocationCounterPool getLocationCounterPool(
-        final int index
-    ) throws InvalidParameterException {
-        if ( (index < 0) || (index > 63) ) {
-            throw new InvalidParameterException(String.format("Location Counter Index %d is out of range", index));
-        }
-
-        LocationCounterPool lcp = _storage.get(index);
-        if (lcp == null) {
-            lcp = new LocationCounterPool( new RelocatableWord36[0] );
-            _storage.put( index, lcp );
-        }
-
-        return lcp;
-    }
-
     public static class Builder {
         private String _name = null;
         private Map<Integer, LocationCounterPool> _storage = null;
@@ -81,62 +58,27 @@ public class RelocatableModule {
         private boolean _requiresArithmeticFaultCompatibilityMode = false;
         private boolean _requiresArithmeticFaultNonInterruptMode = false;
 
-        public Builder setExternalLabels(
-            final Map<String, IntegerValue> externalLabelse
-        ) {
-            _externalLabels = externalLabelse;
-            return this;
-        }
+        public Builder setExternalLabels(final Map<String, IntegerValue> value) { _externalLabels = value; return this; }
+        public Builder setName(final String value) { _name = value; return this; }
+        public Builder setArithmeticFaultCompatibilityMode(final boolean value) { _requiresArithmeticFaultCompatibilityMode = value; return this; }
+        public Builder setArithmeticFaultNonInterruptMode(final boolean value) { _requiresArithmeticFaultNonInterruptMode = value; return this; }
+        Builder setRequiresQuarterWordMode(final boolean value) { _requiresQuarterWordMode = value; return this; }
+        Builder setRequiresThirdWordMode(final boolean value) { _requiresThirdWordMode = value; return this; }
+        Builder setStorage(final Map<Integer, LocationCounterPool> storage) { _storage = storage; return this; }
 
-        public Builder setName(
-            final String name
-        ) {
-            _name = name;
-            return this;
-        }
-
-        public Builder setArithmeticFaultCompatibilityMode(
-            final boolean flag
-        ) {
-            _requiresArithmeticFaultCompatibilityMode = flag;
-            return this;
-        }
-
-        public Builder setArithmeticFaultNonInterruptMode(
-            final boolean flag
-        ) {
-            _requiresArithmeticFaultNonInterruptMode = flag;
-            return this;
-        }
-
-        public Builder setRequiresQuarterWordMode(
-            final boolean flag
-        ) {
-            _requiresQuarterWordMode = flag;
-            return this;
-        }
-
-        public Builder setRequiresThirdWordMode(
-            final boolean flag
-        ) {
-            _requiresThirdWordMode = flag;
-            return this;
-        }
-
-        public Builder setStorage(
-            final Map<Integer, LocationCounterPool> storage
-        ) {
-            _storage = storage;
-            return this;
-        }
-
-        public RelocatableModule build() {
+        RelocatableModule build(
+        ) throws InvalidParameterException {
             if (_name == null) {
-                throw new RuntimeException("No name specified for relocatable module");
+                throw new InvalidParameterException("No name specified");
             }
+
+            if (_storage == null) {
+                throw new InvalidParameterException("No storage provided");
+            }
+
             if ((_requiresQuarterWordMode && _requiresThirdWordMode)
                 || (_requiresArithmeticFaultCompatibilityMode && _requiresArithmeticFaultNonInterruptMode)) {
-                throw new RuntimeException("Incompatible mode configuration for relocatable module");
+                throw new InvalidParameterException("Incompatible mode configuration");
             }
 
             return new RelocatableModule(_name,

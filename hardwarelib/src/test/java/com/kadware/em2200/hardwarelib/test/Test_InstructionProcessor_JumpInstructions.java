@@ -57,7 +57,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -106,7 +106,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -157,7 +157,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -211,7 +211,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -261,7 +261,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -307,7 +307,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -315,7 +315,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, ip.getLatestStopReason());
-        assertEquals(absoluteModule._startingAddress + 4, ip.getProgramAddressRegister().getProgramCounter());
+        assertEquals(absoluteModule._entryPointAddress + 4, ip.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
@@ -353,7 +353,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -361,7 +361,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, ip.getLatestStopReason());
-        assertEquals(absoluteModule._startingAddress + 4, ip.getProgramAddressRegister().getProgramCounter());
+        assertEquals(absoluteModule._entryPointAddress + 4, ip.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
@@ -400,7 +400,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setProcessorPrivilege(1);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -447,7 +447,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setProcessorPrivilege(1);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -498,7 +498,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -548,7 +548,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -599,7 +599,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -650,7 +650,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -699,7 +699,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -756,7 +756,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -804,7 +804,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -863,7 +863,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -911,7 +911,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -930,17 +930,6 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-//        long[] code = {
-//            (new InstructionWord(010, 016, 0, 0, 0, 0, 010)).getW(),    //  000 L,U     A0,010
-//            (new InstructionWord(010, 017, 1, 0, 0777776)).getW(),      //  001 L,XU    A1,0777776
-//            (new InstructionWord(010, 016, 2, 0, 0, 0, 0)).getW(),      //  002 L,U     A2,0
-//            (new InstructionWord(070, 0, 015, 0, 0, 0, 007)).getW(),    //  003 JGD     A1,007 . should not happen (A1 is 015)
-//            (new InstructionWord(070, 0, 016, 0, 0, 0, 007)).getW(),    //  004 JGD     A2,007 . should not happen (A2 is 016)
-//            (new InstructionWord(014, 016, 2, 0, 0, 0, 02)).getW(),     //  005 A,U     A2,2   . should happen 9 times
-//            (new InstructionWord(070, 0, 014, 0, 0, 0, 005)).getW(),    //  006 JGD     A0,005 . should happen 8 times (A0 is 014)
-//            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  007 IAR     d,x,b
-//        };
-
         String[] source = {
             "          $EXTEND",
             "",
@@ -976,7 +965,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1044,7 +1033,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1099,7 +1088,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
@@ -1149,7 +1138,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
@@ -1200,7 +1189,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
@@ -1252,7 +1241,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
         startAndWait(ip);
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());

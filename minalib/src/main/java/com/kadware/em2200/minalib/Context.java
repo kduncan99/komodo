@@ -29,9 +29,9 @@ public class Context {
     public static class GeneratedWord extends HashMap<FieldDescriptor, IntegerValue> {
 
         public final Locale _locale;
-        public RelocatableWord36 _relocatableWord = null;
+        RelocatableWord36 _relocatableWord = null;
 
-        public GeneratedWord(
+        GeneratedWord(
             final Locale locale
         ) {
             _locale = locale;
@@ -48,7 +48,7 @@ public class Context {
         ) {
             if (_relocatableWord == null) {
                 long discreteValue = 0;
-                List<RelocatableWord36.UndefinedReference> relRefs = new LinkedList<>();
+                List<UndefinedReference> relRefs = new LinkedList<>();
                 for (Entry<FieldDescriptor, IntegerValue> entry : entrySet()) {
                     //  convert value from twos- to ones-complement, check for 36-bit truncation
                     long fieldValue = entry.getValue()._value;
@@ -74,20 +74,17 @@ public class Context {
                                                                     fd._startingBit + fd._fieldSize - 1));
                     }
 
-                    long bitMask = (1L << fd._fieldSize) - 1;
                     int shiftCount = 36 - fd._startingBit - fd._fieldSize;
                     discreteValue |= (maskedValue << shiftCount);
 
                     //  Propagate any remaining external references
-                    for (IntegerValue.UndefinedReference intURef : entry.getValue()._undefinedReferences) {
-                        RelocatableWord36.UndefinedReference relURef =
-                                new RelocatableWord36.UndefinedReference(intURef._reference, fd, intURef._isNegative);
-                        relRefs.add(relURef);
+                    for (UndefinedReference uRef : entry.getValue()._undefinedReferences) {
+                        relRefs.add(uRef.copy(fd));
                     }
                 }
 
                 _relocatableWord =
-                        new RelocatableWord36(discreteValue, relRefs.toArray(new RelocatableWord36.UndefinedReference[0]));
+                        new RelocatableWord36(discreteValue, relRefs.toArray(new UndefinedReference[0]));
             }
 
             return _relocatableWord;
@@ -100,13 +97,15 @@ public class Context {
      * of incrementing _nextOffset without adding a value.
      */
     public static class GeneratedPool extends TreeMap<Integer, GeneratedWord> {
+
+        public boolean _extendedModeFlag = false;
         private int _nextOffset = 0;
 
         /**
          * Advances the next offset value without generating words - mainly for $RES
-         * @param count
+         * @param count number of words to be advanced
          */
-        public void advance( final int count ) { _nextOffset += count; }
+        void advance( final int count ) { _nextOffset += count; }
 
         /**
          * How bit is the pool?
@@ -116,7 +115,7 @@ public class Context {
 
         /**
          * Store a new GeneratedWord at the next location in this pool, and advance the offset
-         * @param value
+         * @param value value to be stored
          */
         public void store(
             final GeneratedWord value
@@ -129,7 +128,7 @@ public class Context {
          * @param diagnostics where we store any diagnostics we produce
          * @return array
          */
-        public LocationCounterPool produceLocationCounterPool(
+        LocationCounterPool produceLocationCounterPool(
             final Diagnostics diagnostics
         ) {
             RelocatableWord36[] pool = new RelocatableWord36[_nextOffset];
@@ -139,7 +138,7 @@ public class Context {
                 pool[lcOffset] = gw.produceRelocatableWord36(diagnostics);
             }
 
-            return new LocationCounterPool(pool);
+            return new LocationCounterPool(pool, _extendedModeFlag);
         }
     }
 
@@ -229,14 +228,14 @@ public class Context {
 
     /**
      * Generates the given word as a set of subfields for a given location counter index and offset,
-     * and places it into the given TextLine objects's set of generated words.
+     * and places it into the appropriate location counter pool within the given context.
      * @param locale locale of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param form indicates the bit fields - there should be one value per bit-field
      * @param values the values to be used
      * @return value indicating the location which applies to the word which was just generated
      */
-    public Value generate(
+    public IntegerValue generate(
         final Locale locale,
         final int lcIndex,
         final Form form,
@@ -258,8 +257,9 @@ public class Context {
         int lcOffset = gp._nextOffset;
         gp.store(gw);
 
-        String ref = String.format("%s_LC$BASE_%d", _moduleName, lcIndex);
-        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference(ref, false) };
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                                              false,
+                                                                              lcIndex) };
         return new IntegerValue(false, lcOffset, refs);
     }
 
@@ -272,31 +272,10 @@ public class Context {
     ) {
         GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
         int lcOffset = gp._nextOffset;
-        String ref = String.format("%s_LC$BASE_%d", _moduleName, _currentGenerationLCIndex);
-        IntegerValue.UndefinedReference[] refs = { new IntegerValue.UndefinedReference(ref, false) };
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                                              false,
+                                                                              _currentGenerationLCIndex) };
         return new IntegerValue(false, lcOffset, refs);
-    }
-
-    /**
-     * Produces a list of words generated for the given line number
-     * @param lineNumber of interest
-     * @return list of words (could be empty)
-     */
-    public List<GeneratedWord> getGeneratedWords(
-        final int lineNumber
-    ) {
-        List<GeneratedWord> result = new LinkedList<>();
-        for (Map.Entry<Integer, GeneratedPool> poolEntry : _generatedPools.entrySet()) {
-            int lcIndex = poolEntry.getKey();
-            for (Map.Entry<Integer, GeneratedWord> wordEntry : poolEntry.getValue().entrySet()) {
-                GeneratedWord gWord = wordEntry.getValue();
-                if (gWord._locale.getLineNumber() == lineNumber) {
-                    result.add(gWord);
-                }
-            }
-        }
-
-        return result;
     }
 
     /**
@@ -304,7 +283,7 @@ public class Context {
      * @param diagnostics where we store any necessary diagnostics
      * @return the map
      */
-    public Map<Integer, LocationCounterPool> produceLocationCounterPools(
+    Map<Integer, LocationCounterPool> produceLocationCounterPools(
         final Diagnostics diagnostics
     ) {
         Map<Integer, LocationCounterPool> result = new TreeMap<>();

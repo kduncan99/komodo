@@ -50,7 +50,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -94,7 +94,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -139,7 +139,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -185,7 +185,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -231,7 +231,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -277,7 +277,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -323,7 +323,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -367,7 +367,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -412,7 +412,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -457,7 +457,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -501,7 +501,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -548,7 +548,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setOperationTrapEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -590,7 +590,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -636,7 +636,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setQuarterWordModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -684,7 +684,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -732,7 +732,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -781,7 +781,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -828,7 +828,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -876,7 +876,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -924,7 +924,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -971,7 +971,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1016,7 +1016,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1064,7 +1064,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1110,7 +1110,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1158,7 +1158,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1205,7 +1205,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1254,7 +1254,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setDivideCheck(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1302,7 +1302,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setArithmeticExceptionEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1349,7 +1349,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1398,7 +1398,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(true);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1445,7 +1445,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1489,7 +1489,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1530,7 +1530,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1579,7 +1579,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1624,7 +1624,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1675,7 +1675,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setProcessorPrivilege(1);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1720,7 +1720,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1771,7 +1771,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setProcessorPrivilege(1);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1822,7 +1822,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1880,7 +1880,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1936,7 +1936,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -1992,7 +1992,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
@@ -2048,7 +2048,7 @@ public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test
         dReg.setBasicModeEnabled(false);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._startingAddress);
+        par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
 
