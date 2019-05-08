@@ -25,8 +25,8 @@ public class AbsoluteModule {
     public final boolean _setThird;
 
     //  Entry point
-    public LoadableBank _entryPointBank = null;
     public final Integer _entryPointAddress;
+    public final LoadableBank _entryPointBank;
 
     /**
      * Constructor
@@ -36,6 +36,7 @@ public class AbsoluteModule {
         final String name,
         final LoadableBank[] loadableBanks,
         final Integer entryPointAddress,
+        final LoadableBank entryPointBank,
         final boolean afcmClear,
         final boolean afcmSet,
         final boolean setQuarter,
@@ -51,6 +52,7 @@ public class AbsoluteModule {
         }
 
         _entryPointAddress = entryPointAddress;
+        _entryPointBank = entryPointBank;
         _afcmClear = afcmClear;
         _afcmSet = afcmSet;
         _setQuarter = setQuarter;
@@ -96,6 +98,7 @@ public class AbsoluteModule {
     static class Builder {
 
         private Integer _entryPointAddress = null;
+        private LoadableBank _entryPointBank = null;
         private String _name = null;
         private LoadableBank[] _loadableBanks = null;
         private boolean _afcmClear = false;
@@ -105,6 +108,7 @@ public class AbsoluteModule {
         private boolean _allowNoEntryPoint = false;
 
         Builder setEntryPointAddress(final Integer value) { _entryPointAddress = value; return this; }
+        Builder setEntryPointBank(final LoadableBank value) { _entryPointBank = value; return this; }
         Builder setLoadableBanks(final LoadableBank[] value) { _loadableBanks = value; return this; }
         Builder setName(final String value) { _name = value; return this; }
         Builder setAFCMClear(final boolean value) { _afcmClear = value; return this; }
@@ -131,12 +135,22 @@ public class AbsoluteModule {
                 throw new InvalidParameterException("THIRD and QUARTER WORD modes are both set");
             }
 
-            if ((!_allowNoEntryPoint) && (_entryPointAddress == null)) {
-                throw new InvalidParameterException("No entry point address specified");
+            if (!_allowNoEntryPoint) {
+                if (_entryPointAddress == null) {
+                    throw new InvalidParameterException("No entry point address specified");
+                }
+
+                if (_entryPointBank == null) {
+                    throw new InvalidParameterException("No entry point bank specified");
+                }
             }
+
+            //  TODO check entry point address against entry point bank if specified
+
             return new AbsoluteModule(_name,
                                       _loadableBanks,
                                       _entryPointAddress,
+                                      _entryPointBank,
                                       _afcmClear,
                                       _afcmSet,
                                       _setQuarter,

@@ -1015,6 +1015,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             dReg.setArithmeticExceptionEnabled(false);
         }
 
+        dReg.setBasicModeEnabled(!absoluteModule._entryPointBank._isExtendedMode);
+
         //  Set processor address
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         par.setProgramCounter(absoluteModule._entryPointAddress);

@@ -7,6 +7,8 @@ package com.kadware.em2200.minalib;
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+
+import javax.xml.stream.Location;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -196,7 +198,10 @@ public class Linker {
     private final Set<RelocatableModule> _modules = new HashSet<>();
 
     //  Entry point (program start address)
-    private Integer _entryPointAddress = null;
+    private Integer _entryPointAddress = null;                      //  virtual address relative to bank limits
+    private LoadableBank _entryPointBank = null;                    //  bank containing the entry point
+    private RelocatableModule _entryPointRelocatableModule = null;  //  Module containing the entry point
+    private LocationCounterPool _entryPointLCPool = null;           //  LC Pool containing the entry point
 
     //  Options
     private boolean _noEntryPoint = false;
@@ -280,7 +285,13 @@ public class Linker {
     private void display(
         final AbsoluteModule module
     ) {
-        //TODO code
+        for (LoadableBank bank : module._loadableBanks.values()) {
+            System.out.println(String.format("    Bank %s Level:%d BDI:%06o",
+                                             bank._bankName,
+                                             bank._bankLevel,
+                                             bank._bankDescriptorIndex));
+            //TODO show other bank things
+        }
 
         System.out.println("Dictionary:");
         for (Map.Entry<String, Long> entry : _dictionary.entrySet()) {
@@ -318,6 +329,65 @@ public class Linker {
                 }
 
                 establishLabel(label, value);
+            }
+        }
+    }
+
+    /**
+     * Find START$ label if it exists.
+     * If it does, it should have an undefined LC which tells us the LC pool containing the label,
+     * and a discrete value indicating the lc pool offset.  With that, we can find the containing bank.
+     */
+    private void findStart(
+        final LoadableBank[] loadableBanks
+    ) {
+        for (RelocatableModule module : _modules) {
+            if (module._externalLabels.containsKey("START$")) {
+                IntegerValue iv = module._externalLabels.get("START$");
+                UndefinedReference[] urs = iv._undefinedReferences;
+                if (urs.length != 1) {
+                    raise("Improper START$ label - wrong number of undef refs");
+                    continue;
+                }
+
+                UndefinedReference ur = urs[0];
+                if (!(ur instanceof UndefinedReferenceToLocationCounter)) {
+                    raise("Improper START$ label - wrong undef ref");
+                    continue;
+                }
+
+                if (_entryPointRelocatableModule != null) {
+                    raise("Duplicate START$ label");
+                    continue;
+                }
+
+                //  We have the relocatable module and pool
+                UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
+                _entryPointRelocatableModule = module;
+                _entryPointLCPool = module._storage.get(lcRef._locationCounterIndex);
+
+                //  Go get the virtual address and the containing bank
+                _entryPointAddress = (int) (long) _dictionary.get("START$");
+                for (BankDeclaration bd : _bankDeclarations) {
+                    if (_entryPointBank != null) {
+                        break;
+                    }
+
+                    for (LCPoolSpecification poolSpec : bd._poolSpecifications) {
+                        if (_entryPointBank != null) {
+                            break;
+                        }
+
+                        if ((poolSpec._module == _entryPointRelocatableModule)
+                            && (poolSpec._lcIndex == lcRef._locationCounterIndex)) {
+                            for (LoadableBank bank : loadableBanks) {
+                                if (bank._bankDescriptorIndex == bd._bankDescriptorIndex) {
+                                    _entryPointBank = bank;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -519,9 +589,7 @@ public class Linker {
         }
 
         //  Find entry point address - need bank and offset
-        if (_dictionary.containsKey("START$")) {
-            _entryPointAddress = (int)(long) _dictionary.get("START$");
-        }
+        findStart(loadableBanks);
 
         AbsoluteModule module = null;
         if (_errors == 0) {
@@ -534,7 +602,13 @@ public class Linker {
 
             if (partialWordMode == PartialWordMode.NONE) {
                 if (_relThirdWordMode && _relQuarterWordMode) {
-                    //TODO
+                    if (_entryPointRelocatableModule != null) {
+                        quarterWordMode = _entryPointRelocatableModule._requiresQuarterWordMode;
+                        thirdWordMode = _entryPointRelocatableModule._requiresThirdWordMode;
+                    } else {
+                        quarterWordMode = false;
+                        thirdWordMode = true;
+                    }
                 } else {
                     quarterWordMode = _relQuarterWordMode;
                     thirdWordMode = _relThirdWordMode;
@@ -546,7 +620,13 @@ public class Linker {
 
             if (arithmeticFaultMode == ArithmeticFaultMode.NONE) {
                 if (_relAFCM && _relNonAFCM) {
-                    //TODO
+                    if (_entryPointRelocatableModule != null) {
+                        afcmSet = _entryPointRelocatableModule._requiresArithmeticFaultCompatibilityMode;
+                        afcmClear = _entryPointRelocatableModule._requiresArithmeticFaultNonInterruptMode;
+                    } else {
+                        afcmClear = false;
+                        afcmSet = true;
+                    }
                 } else {
                     afcmClear = _relNonAFCM;
                     afcmSet = _relAFCM;
@@ -561,6 +641,7 @@ public class Linker {
                 module = new AbsoluteModule.Builder().setName(moduleName)
                                                      .setLoadableBanks(loadableBanks)
                                                      .setEntryPointAddress(_entryPointAddress)
+                                                     .setEntryPointBank(_entryPointBank)
                                                      .setQuarter(quarterWordMode)
                                                      .setThird(thirdWordMode)
                                                      .setAFCMSet(afcmSet)

@@ -40,12 +40,7 @@ public class Test_InstructionProcessor_Addressing_BasicMode extends Test_Instruc
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
-
         Processors processors = loadModule(absoluteModule);
-        DesignatorRegister dReg = processors._instructionProcessor.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(true);
-
         startAndWait(processors._instructionProcessor);
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
@@ -64,37 +59,23 @@ public class Test_InstructionProcessor_Addressing_BasicMode extends Test_Instruc
              UPINotAssignedException {
         String[] source = {
             "          $BASIC .",
-            "$(1) .",
+            "",
+            "$(1),START$* .",
             "          LA,XU     A0,01000",
             "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(true);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test

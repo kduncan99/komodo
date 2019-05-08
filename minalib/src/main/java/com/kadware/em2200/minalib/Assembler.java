@@ -566,9 +566,6 @@ public class Assembler {
                            diagnostics);
         }
 
-        //  Is this a special instruction? (such as JGD, BT, etc)
-        //TODO
-
         //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
         int jField = 0;
         if (iinfo._jFlag) {
@@ -905,7 +902,7 @@ public class Assembler {
         resolveReferences();
         RelocatableModule module = generateRelocatableModule(_moduleName);
 
-        if (display) {
+        if (display && (module != null)) {
             displayResults();
             displayModuleSummary(module);
         }
