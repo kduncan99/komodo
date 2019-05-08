@@ -7,14 +7,11 @@ package com.kadware.em2200.hardwarelib.functions.systemControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
-import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
-import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.interrupts.*;
 
 /**
  * Handles the HALT instruction (f=077 j=017 a=017)
  * Causes the processor to error halt and notify the SCF.
- * <p>
- * @throws MachineInterrupt
  */
 public class HALTFunctionHandler extends FunctionHandler {
 
@@ -23,7 +20,7 @@ public class HALTFunctionHandler extends FunctionHandler {
         final InstructionProcessor ip,
         final InstructionWord instructionWord
     ) throws MachineInterrupt {
-        if (ip.getDesignatorRegister().getProcessorPrivilege() > 0) {
+        if (!ip.getDevelopmentMode() && (ip.getDesignatorRegister().getProcessorPrivilege() > 0)) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
 

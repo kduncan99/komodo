@@ -265,17 +265,22 @@ public class Linker {
             loadPool(bankDeclaration, lcps, wArray);
         }
 
-        return new LoadableBank.Builder().setBankDescriptorIndex(bankDeclaration._bankDescriptorIndex)
-                                         .setBankLevel(bankDeclaration._bankLevel)
-                                         .setBankName(bankDeclaration._bankName)
-                                         .setContent(wArray)
-                                         .setIsExtendedMode(needsExtended)
-                                         .setStartingAddress(bankDeclaration._startingAddress)
-                                         .setInitialBaseRegister(bankDeclaration._initialBaseRegister)
-                                         .setAccessInfo(bankDeclaration._accessInfo)
-                                         .setGeneralPermissions(bankDeclaration._generalAccessPermissions)
-                                         .setSpecialPermissions(bankDeclaration._specialAccessPermissions)
-                                         .build();
+        try {
+            return new LoadableBank.Builder().setBankDescriptorIndex(bankDeclaration._bankDescriptorIndex)
+                                             .setBankLevel(bankDeclaration._bankLevel)
+                                             .setBankName(bankDeclaration._bankName)
+                                             .setContent(wArray)
+                                             .setIsExtendedMode(needsExtended)
+                                             .setStartingAddress(bankDeclaration._startingAddress)
+                                             .setInitialBaseRegister(bankDeclaration._initialBaseRegister)
+                                             .setAccessInfo(bankDeclaration._accessInfo)
+                                             .setGeneralPermissions(bankDeclaration._generalAccessPermissions)
+                                             .setSpecialPermissions(bankDeclaration._specialAccessPermissions)
+                                             .build();
+        } catch (InvalidParameterException ex) {
+            raise("Internal Error:" + ex.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -286,10 +291,11 @@ public class Linker {
         final AbsoluteModule module
     ) {
         for (LoadableBank bank : module._loadableBanks.values()) {
-            System.out.println(String.format("    Bank %s Level:%d BDI:%06o",
+            System.out.println(String.format("    Bank %s Level:%d BDI:%06o %s",
                                              bank._bankName,
                                              bank._bankLevel,
-                                             bank._bankDescriptorIndex));
+                                             bank._bankDescriptorIndex,
+                                             bank._isExtendedMode ? "Extended" : "Basic"));
             //TODO show other bank things
         }
 

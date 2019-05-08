@@ -659,7 +659,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
 
         Linker.Option[] options = { Linker.Option.OPTION_NO_ENTRY_POINT };
         Linker linker = new Linker(bankDeclarations, options);
-        _bankModule = linker.link("BDT-IH", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, true);
+        _bankModule = linker.link("BDT-IH", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, false);
         assert(_bankModule != null);
     }
 
@@ -771,7 +771,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param bankDescriptorIndex BDI of the bank within the BDT
      * @return the bank descriptor describing the bank we just loaded
      */
-    static BankDescriptor loadBank(
+    private static BankDescriptor loadBank(
         final InstructionProcessor ip,
         final ExtMainStorageProcessor msp,
         final LoadableBank bank,
@@ -986,7 +986,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param absoluteModule module to be loaded
      * @return Processors object so that calling code has access to the created IP and MSP
      */
-    public static Processors loadModule(
+    static Processors loadModule(
         final AbsoluteModule absoluteModule
     ) throws MachineInterrupt,
              NodeNameConflictException,
@@ -998,7 +998,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
 
         establishBankingEnvironment(ip, msp);
         //TODO let loadBanks() use the bank level in the LoadableBank object after we remove obsolete methods
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule, 4);
 
         //  Update designator register if directed by the absolute module
         DesignatorRegister dReg = ip.getDesignatorRegister();
@@ -1016,6 +1016,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         dReg.setBasicModeEnabled(!absoluteModule._entryPointBank._isExtendedMode);
+        dReg.setProcessorPrivilege(3);
 
         //  Set processor address
         ProgramAddressRegister par = ip.getProgramAddressRegister();
@@ -1077,39 +1078,78 @@ being not sensitive.
     /**
      * Brute-force dump of almost everything we might want to know.
      * Includes elements of IP state, as well as the content of all loaded banks in the MSP
-     * @param ip of interest
-     * @param msp of interest
+     * @param processors contains the IP and MSP of interest
      */
     static void showDebugInfo(
-        final InstructionProcessor ip,
-        final MainStorageProcessor msp
+        final Processors processors
     ) {
+        ExtInstructionProcessor ip = processors._instructionProcessor;
+        ExtMainStorageProcessor msp = processors._mainStorageProcessor;
         try {
             System.out.println("Debug Info:");
-            System.out.println("  Processor Registers:");
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.X0 + x);
-                System.out.println(String.format("    X%d %012o", x, gr.getW()));
+            System.out.println(String.format("  PAR: %012o", ip.getProgramAddressRegister().getW()));
+            System.out.println(String.format("  DR:  %012o", ip.getDesignatorRegister().getW()));
+            final int regsPerLine = 4;
+
+            System.out.println("  GRS:");
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  X%d-X%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.X0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.A0 + x);
-                System.out.println(String.format("    A%d %012o", x, gr.getW()));
+
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  A%d-A%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.A0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.R0 + x);
-                System.out.println(String.format("    R%d %012o", x, gr.getW()));
+
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  R%d-R%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.R0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.EX0 + x);
-                System.out.println(String.format("    EX%d %012o", x, gr.getW()));
+
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  EX%d-EX%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EX0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.EA0 + x);
-                System.out.println(String.format("    EA%d %012o", x, gr.getW()));
+
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  EA%d-EA%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EA0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
-            for (int x = 0; x < 16; ++x) {
-                GeneralRegister gr = ip.getGeneralRegister(GeneralRegisterSet.ER0 + x);
-                System.out.println(String.format("    ER%d %012o", x, gr.getW()));
+
+            for (int x = 0; x < 16; x += regsPerLine) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  ER%d-ER%d:", x, x + regsPerLine - 1));
+                while (sb.length() < 12) { sb.append(' '); }
+                for (int y = 0; y < regsPerLine; ++y) {
+                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.ER0 + x + y).getW()));
+                }
+                System.out.println(sb.toString());
             }
 
             System.out.println("  Base Registers:");

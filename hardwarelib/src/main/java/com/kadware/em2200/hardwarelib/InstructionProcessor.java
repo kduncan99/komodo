@@ -120,6 +120,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private FunctionHandler                 _currentInstructionHandler = null;
     private RunMode                         _currentRunMode = RunMode.Normal;
     private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
+    private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
     private final IndicatorKeyRegister      _indicatorKeyRegister = new IndicatorKeyRegister();
     private final InventoryManager          _inventoryManager = InventoryManager.getInstance();
@@ -133,7 +134,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean                         _midInstructionInterruptPoint = false;
     private MachineInterrupt                _pendingInterrupt = null;
     private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();
-    private boolean                         _preservedProgramAddressRegisterValid = false;  //  do we need this if the above is null?
+    private boolean                         _preservedProgramAddressRegisterValid = false;  //  do we need this if the above can be null?
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private final Word36                    _quantumTimer = new Word36();
@@ -237,6 +238,15 @@ public class InstructionProcessor extends Processor implements Worker {
     public DesignatorRegister getDesignatorRegister(
     ) {
         return _designatorRegister;
+    }
+
+    /**
+     * Getter
+     * @return value
+     */
+    public boolean getDevelopmentMode(
+    ) {
+        return _developmentMode;
     }
 
     /**

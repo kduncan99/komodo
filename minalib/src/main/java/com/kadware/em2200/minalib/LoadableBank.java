@@ -5,6 +5,7 @@
 package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.minalib.exceptions.InvalidParameterException;
 
 /**
  * Represents a loadable bank, part of an AbsoluteModule object.
@@ -122,8 +123,12 @@ public class LoadableBank {
         Builder setStartingAddress(final Integer value) { _startingAddress = value; return this; }
         Builder setContent(final Word36Array value) { _content = value; return this; }
 
-        LoadableBank build() {
-            assert(_bankName != null);
+        LoadableBank build(
+        ) throws InvalidParameterException {
+            if (_bankName == null) {
+                throw new InvalidParameterException("bank name not specified in LoadableBank builder");
+            }
+
             return new LoadableBank(_bankDescriptorIndex,
                                     _bankLevel,
                                     _bankName,

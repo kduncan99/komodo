@@ -159,9 +159,12 @@ public class Assembler {
                                          _setArithFaultNonInterrupt ? "ANON " : ""));
 
         for (Map.Entry<Integer, LocationCounterPool> entry : module._storage.entrySet()) {
-            System.out.println(String.format("LCPool %d: %d word(s) generated",
-                                             entry.getKey(),
-                                             entry.getValue()._storage.length));
+            int lcIndex = entry.getKey();
+            LocationCounterPool lcp = entry.getValue();
+            System.out.println(String.format("LCPool %d: %d word(s) generated %s",
+                                             lcIndex,
+                                             lcp._storage.length,
+                                             lcp._needsExtendedMode ? "$INFO 10" : ""));
         }
 
         Set<UndefinedReference> references = new HashSet<>();
@@ -170,7 +173,11 @@ public class Assembler {
             LocationCounterPool lcPool = poolEntry.getValue();
             for (RelocatableWord36 word36 : lcPool._storage) {
                 if (word36 != null) {
-                    references.addAll(Arrays.asList(word36._undefinedReferences));
+                    for (UndefinedReference ur : word36._undefinedReferences) {
+                        if (ur instanceof UndefinedReferenceToLabel) {
+                            references.add(ur);
+                        }
+                    }
                 }
             }
         }
@@ -826,6 +833,8 @@ public class Assembler {
                                     //  reference is still not found - propagate it
                                     newURefs.add(uRef);
                                 }
+                            } else {
+                                newURefs.add(uRef);
                             }
                         }
 

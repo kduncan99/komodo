@@ -1,8 +1,4 @@
 InProgress
-minalib support specification of starting address START$
-  assembler->linker->unit tester
-minalib $INFO group 1 from assembler through linker to unit tester
-minalib $INFO group 10 ditto
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
 

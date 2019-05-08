@@ -57,7 +57,6 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
-        showDebugInfo(ip, msp);
 
         InstructionProcessor.StopReason reason = ip.getLatestStopReason();
         long detail = ip.getLatestStopDetail();
