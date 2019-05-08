@@ -18,6 +18,11 @@ import java.util.Set;
 @SuppressWarnings("Duplicates")
 public class Linker {
 
+    public static enum Option {
+        OPTION_NO_ENTRY_POINT,
+    }
+
+    //TODO make this and the next, options
     public static enum PartialWordMode {
         NONE,
         QUARTER_WORD,
@@ -187,16 +192,14 @@ public class Linker {
     //  Maps LCPools to their virtual addresses within the bank which will contain them
     private final Map<LCPoolSpecification, Integer> _lcPoolMap = new HashMap<>();
 
-    //  Maps LC indicies to their corresponding LCPools
-    private final Map<Integer, LCPoolSpecification> _lcPoolSpecMap = new HashMap<>();
-
     //  Unique set of the relocatable modules we're taking as input
     private final Set<RelocatableModule> _modules = new HashSet<>();
 
     //  Entry point (program start address)
-    private LoadableBank _entryPointBank = null;
-    private LCPoolSpecification _entryPointLCSpec = null;
-    private int _entryPointAddress = 0;
+    private Integer _entryPointAddress = null;
+
+    //  Options
+    private boolean _noEntryPoint = false;
 
     //  Modes discovered within the relocatable modules / pools
     private boolean _relQuarterWordMode = false;
@@ -303,7 +306,6 @@ public class Linker {
 
     /**
      * Extracts externalized labels from the modules and puts them into our dictionary.
-     * Contains special handling for the START$ label (indicating program starting address).
      */
     private void extractLabels(
     ) {
@@ -312,24 +314,10 @@ public class Linker {
                 String label = entry.getKey();
                 long value = entry.getValue()._value;
                 for (UndefinedReference ur : entry.getValue()._undefinedReferences) {
-                    if (ur instanceof UndefinedReferenceToLabel) {
-                        //TODO
-                    } else if (ur instanceof UndefinedReferenceToLocationCounter) {
-                        //TODO
-                    }
-//                    if (_dictionary.containsKey(ur._reference)) {
-//                        value += (ur._isNegative ? -1 : 1) * _dictionary.get(ur._reference);
-//                    } else {
-//                        raise(String.format("Module %s contains an external label with an undefined reference:%s",
-//                                            module._name,
-//                                            ur._reference));
-//                    }
+                    value += resolveUndefinedReference(ur, module._name);
                 }
 
                 establishLabel(label, value);
-                if (label.equals("START$")) {
-                    //TODO
-                }
             }
         }
     }
@@ -362,7 +350,7 @@ public class Linker {
                 if (rw36._undefinedReferences.length > 0) {
                     for (UndefinedReference ur : rw36._undefinedReferences) {
                         FieldDescriptor fd = ur._fieldDescriptor;
-                        long refValue = resolveUndefinedReference(ur, poolSpec, rwx, fd);
+                        long refValue = resolveUndefinedReference(ur, poolSpec._module._name);
                         long mask = (1 << fd._fieldSize) - 1;
                         long msbMask = 1 << (fd._fieldSize - 1);
                         long notMask = mask ^ 0_777777_777777L;
@@ -424,7 +412,6 @@ public class Linker {
             for (LCPoolSpecification lcps : bd._poolSpecifications) {
                 _modules.add(lcps._module);
                 _lcPoolMap.put(lcps, address);
-                _lcPoolSpecMap.put(lcps._lcIndex, lcps);
                 establishLabel(String.format("%s_LC$BDI_%d", lcps._module._name, lcps._lcIndex),
                                bd._bankDescriptorIndex);
                 address += lcps._module._storage.get(lcps._lcIndex)._storage.length;
@@ -448,41 +435,32 @@ public class Linker {
      */
     private long resolveUndefinedReference(
         final UndefinedReference reference,
-        final LCPoolSpecification poolSpecification,
-        final int offset,
-        final FieldDescriptor fieldDescriptor
+        final String relocatableModuleName
     ) {
         if (reference instanceof UndefinedReferenceToLabel) {
             UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) reference;
             if (_dictionary.containsKey(lRef._label)) {
                 return _dictionary.get(lRef._label);
-            } else {
-                raise(String.format("Value in %s LC(%d) offset %d - undefined reference %s in field %s",
-                                    poolSpecification._module._name,
-                                    poolSpecification._lcIndex,
-                                    offset,
-                                    lRef._label,
-                                    fieldDescriptor.toString()));
-                return 0;
             }
         } else if (reference instanceof UndefinedReferenceToLocationCounter) {
+            //  I *think* every location counter reference will be local to the containing module.
+            //  Let's proceed on that assumption.  Find the LCPoolSpec which corresponds to the LC index,
+            //  it has the virtual address we need to resolve the reference.
             UndefinedReferenceToLocationCounter lRef = (UndefinedReferenceToLocationCounter) reference;
-            Integer lcIndex = lRef._locationCounterIndex;
-            if (_lcPoolSpecMap.containsKey(lcIndex)) {
-                return _lcPoolMap.get(_lcPoolSpecMap.get(lcIndex));
-            } else {
-                raise(String.format("Value in %s LC(%d) offset %d - $LC(%d) in field %s does not exist",
-                                    poolSpecification._module._name,
-                                    poolSpecification._lcIndex,
-                                    offset,
-                                    lRef._locationCounterIndex,
-                                    fieldDescriptor.toString()));
-                return 0;
+            for (Map.Entry<LCPoolSpecification, Integer> pSpecEntry : _lcPoolMap.entrySet()) {
+                if (pSpecEntry.getKey()._lcIndex == lRef._locationCounterIndex) {
+                    return (lRef._isNegative ? -1 : 1) * pSpecEntry.getValue();
+                }
             }
         } else {
             raise("Internal Error unknown type of undefined reference");
             return 0;
         }
+
+        raise(String.format("Value in %s contains undefined reference %s",
+                            relocatableModuleName,
+                            reference.toString()));
+        return 0;
     }
 
 
@@ -491,12 +469,29 @@ public class Linker {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Constructor
+     * Constructor with no options
      */
     public Linker(
         final BankDeclaration[] bankDeclarations
     ) {
         _bankDeclarations = bankDeclarations;
+    }
+
+    /**
+     * Constructor with options
+     */
+    public Linker(
+        final BankDeclaration[] bankDeclarations,
+        final Option[] options
+    ) {
+        _bankDeclarations = bankDeclarations;
+        for (Option opt : options) {
+            switch (opt) {
+                case OPTION_NO_ENTRY_POINT:
+                    _noEntryPoint = true;
+                    break;
+            }
+        }
     }
 
     /**
@@ -524,7 +519,9 @@ public class Linker {
         }
 
         //  Find entry point address - need bank and offset
-        //TODO
+        if (_dictionary.containsKey("START$")) {
+            _entryPointAddress = (int)(long) _dictionary.get("START$");
+        }
 
         AbsoluteModule module = null;
         if (_errors == 0) {
@@ -563,11 +560,12 @@ public class Linker {
             try {
                 module = new AbsoluteModule.Builder().setName(moduleName)
                                                      .setLoadableBanks(loadableBanks)
-//TODO                                                     .setEntryPoint()
+                                                     .setEntryPointAddress(_entryPointAddress)
                                                      .setQuarter(quarterWordMode)
                                                      .setThird(thirdWordMode)
                                                      .setAFCMSet(afcmSet)
                                                      .setAFCMClear(afcmClear)
+                                                     .setAllowNoEntryPoint(_noEntryPoint)
                                                      .build();
                 if (display) {
                     display(module);

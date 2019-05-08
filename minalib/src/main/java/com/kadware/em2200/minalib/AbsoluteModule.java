@@ -26,7 +26,7 @@ public class AbsoluteModule {
 
     //  Entry point
     public LoadableBank _entryPointBank = null;
-    public int _entryPointAddress = 0;
+    public final Integer _entryPointAddress;
 
     /**
      * Constructor
@@ -35,9 +35,7 @@ public class AbsoluteModule {
     private AbsoluteModule(
         final String name,
         final LoadableBank[] loadableBanks,
-        final int startingAddress,
-        final LoadableBank entryPointBank,  //  must refer to one of the banks in loadableBanks
-        final int entryPointAddress,        //  must refer to an address in the above entryPointBank
+        final Integer entryPointAddress,
         final boolean afcmClear,
         final boolean afcmSet,
         final boolean setQuarter,
@@ -52,6 +50,7 @@ public class AbsoluteModule {
             _loadableBanks.put(lb._bankDescriptorIndex, lb);
         }
 
+        _entryPointAddress = entryPointAddress;
         _afcmClear = afcmClear;
         _afcmSet = afcmSet;
         _setQuarter = setQuarter;
@@ -96,30 +95,21 @@ public class AbsoluteModule {
 
     static class Builder {
 
-        private int _entryPointAddress = 0;
-        private LoadableBank _entryPointBank = null;
+        private Integer _entryPointAddress = null;
         private String _name = null;
         private LoadableBank[] _loadableBanks = null;
-        private Integer _startingAddress = null;
-        private Boolean _afcmClear = false;
-        private Boolean _afcmSet = false;
-        private Boolean _setQuarter = false;
-        private Boolean _setThird = false;
+        private boolean _afcmClear = false;
+        private boolean _afcmSet = false;
+        private boolean _setQuarter = false;
+        private boolean _setThird = false;
+        private boolean _allowNoEntryPoint = false;
 
-        Builder setEntryPoint(
-            final LoadableBank entryPointBank,
-            final int entryPointAddress
-        ) {
-            _entryPointBank = entryPointBank;
-            _entryPointAddress = entryPointAddress;
-            return this;
-        }
-
+        Builder setEntryPointAddress(final Integer value) { _entryPointAddress = value; return this; }
         Builder setLoadableBanks(final LoadableBank[] value) { _loadableBanks = value; return this; }
         Builder setName(final String value) { _name = value; return this; }
-        Builder setStartingAddress(final int value) { _startingAddress = value; return this; }
         Builder setAFCMClear(final boolean value) { _afcmClear = value; return this; }
         Builder setAFCMSet(final boolean value) { _afcmSet = value; return this; }
+        Builder setAllowNoEntryPoint(final boolean value) { _allowNoEntryPoint = value; return this; }
         Builder setQuarter(final boolean value) { _setQuarter = value; return this; }
         Builder setThird(final boolean value) { _setThird = value; return this; }
 
@@ -141,29 +131,11 @@ public class AbsoluteModule {
                 throw new InvalidParameterException("THIRD and QUARTER WORD modes are both set");
             }
 
-            if (_entryPointBank == null) {
-                throw new InvalidParameterException("Entry point not specified");
+            if ((!_allowNoEntryPoint) && (_entryPointAddress == null)) {
+                throw new InvalidParameterException("No entry point address specified");
             }
-
-            boolean found = false;
-            for (int bx = 0; !found && (bx < _loadableBanks.length); ++bx) {
-                if (_loadableBanks[bx] == _entryPointBank) {
-                    found = true;
-                }
-            }
-            if (!found) {
-                throw new InvalidParameterException("Entry point bank is not in the array of loadable banks");
-            }
-
-            if ((_entryPointAddress < _entryPointBank._startingAddress)
-                || (_entryPointAddress >= (_entryPointBank._startingAddress + _entryPointBank._content.getArraySize()))) {
-                throw new InvalidParameterException("Entry point address is outside of the limits of the entry point bank");
-            }
-
             return new AbsoluteModule(_name,
                                       _loadableBanks,
-                                      _startingAddress,
-                                      _entryPointBank,
                                       _entryPointAddress,
                                       _afcmClear,
                                       _afcmSet,

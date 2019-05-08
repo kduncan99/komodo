@@ -657,7 +657,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                 .build();
 
 
-        Linker linker = new Linker(bankDeclarations);
+        Linker.Option[] options = { Linker.Option.OPTION_NO_ENTRY_POINT };
+        Linker linker = new Linker(bankDeclarations, options);
         _bankModule = linker.link("BDT-IH", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, true);
         assert(_bankModule != null);
     }
