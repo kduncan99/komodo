@@ -9,6 +9,7 @@ import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.em2200.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -18,298 +19,475 @@ import org.junit.*;
 public class Test_InstructionProcessor_TestInstructions extends Test_InstructionProcessor {
 
     @Test
-    public void testEvenOddParity(
+    public void testEvenParity(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_777777_771356l,
-            0_000000_007777l,
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0777777771356",
+            "          + 0000000007777",
+            "",
+            "$(1),START$*",
+            "          LA        A1,DATA,,B2",
+            "          TEP,Q4    A1,DATA+1,,B2",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TEP       A1,DATA+1,,B2",
+            "          HALT      0                   . should not be skipped",
+            "          HALT      076",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-            (new InstructionWord(010,   0, 1, 0, 0, 0, 1, 0)).getW(),   //  LA      A1,0,,B1
-            (new InstructionWord(044, 005, 1, 0, 0, 0, 1, 1)).getW(),   //  TEP,Q4  A1,1,,B1
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A0,1        . this should be skipped
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A2,0
-            (new InstructionWord(010,   0, 1, 0, 0, 0, 1, 0)).getW(),   //  LA      A1,0,,B1
-            (new InstructionWord(045, 001, 1, 0, 0, 0, 1, 1)).getW(),   //  TOP,H2  A1,1,,B1
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A2,1        . this should be skipped
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
-
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     @Test
-    public void testZeroNonZeroPosNegZero(
+    public void testOddParity(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_0l,
-            0_777777_777777l,
-            0_1l
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0777777771356",
+            "          + 0000000007777",
+            "",
+            "$(1),START$*",
+            "          LA        A1,DATA,,B2",
+            "          TOP,H2    A1,DATA+1,,B2",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TOP,Q4    A1,DATA+1,,B2",
+            "          HALT      0                   . should not be skipped",
+            "          HALT      076"
         };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-            (new InstructionWord(010, 016, 1, 0, 0)).getW(),            //  LA,U    A1,0
-            (new InstructionWord(010, 016, 2, 0, 0)).getW(),            //  LA,U    A2,0
-            (new InstructionWord(010, 016, 3, 0, 0)).getW(),            //  LA,U    A3,0
-            (new InstructionWord(010, 016, 4, 0, 0)).getW(),            //  LA,U    A4,0
-            (new InstructionWord(010, 016, 5, 0, 0)).getW(),            //  LA,U    A5,0
-            (new InstructionWord(010, 016, 6, 0, 0)).getW(),            //  LA,U    A6,0
-            (new InstructionWord(010, 016, 7, 0, 0)).getW(),            //  LA,U    A7,0
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-            (new InstructionWord(050, 00, 06, 0, 0, 0, 1, 0)).getW(),   //  TZ      0,,B1
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A0,1    . this should be skipped
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-            (new InstructionWord(050, 00, 06, 0, 0, 0, 1, 1)).getW(),   //  TZ      1,,B1
-            (new InstructionWord(010, 016, 1, 0, 1)).getW(),            //  LA,U    A1,1    . this should be skipped
-
-            (new InstructionWord(050, 00, 06, 0, 0, 0, 1, 2)).getW(),   //  TZ      2,,B1
-            (new InstructionWord(010, 016, 2, 0, 1)).getW(),            //  LA,U    A2,1    . should not be skipped
-
-            (new InstructionWord(050, 00, 011, 0, 0, 0, 1, 0)).getW(),  //  TNZ     0,,B1
-            (new InstructionWord(010, 016, 3, 0, 1)).getW(),            //  LA,U    A3,1    . should not be skipped
-
-            (new InstructionWord(050, 00, 011, 0, 0, 0, 1, 1)).getW(),  //  TNZ     1,,B1
-            (new InstructionWord(010, 016, 4, 0, 1)).getW(),            //  LA,U    A4,1    . should not be skipped
-
-            (new InstructionWord(050, 00, 011, 0, 0, 0, 1, 2)).getW(),  //  TNZ     2,,B1
-            (new InstructionWord(010, 016, 5, 0, 1)).getW(),            //  LA,U    A5,1    . this should be skipped
-
-            (new InstructionWord(050, 00, 02, 0, 0, 0, 1, 0)).getW(),   //  TPZ     0,,B1
-            (new InstructionWord(010, 016, 6, 0, 1)).getW(),            //  LA,U    A6,1    . this should be skipped
-
-            (new InstructionWord(050, 00, 04, 0, 0, 0, 1, 0)).getW(),   //  TMZ     0,,B1
-            (new InstructionWord(010, 016, 7, 0, 1)).getW(),            //  LA,U    A7,1    . this should be skipped
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
-
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     @Test
-    public void testPosNeg(
+    public void testZero(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_0l,
-            0_777777_777777l,
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TZ        DATA,,B2",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TZ        DATA+1,,B2",
+            "          HALT      076                 . this should be skipped",
+            "",
+            "          TZ        DATA+2,,B2",
+            "          J         TARGET1             . should not be skipped",
+            "          HALT      075",
+            "",
+            "TARGET1",
+            "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-            (new InstructionWord(010, 016, 1, 0, 0)).getW(),            //  LA,U    A1,0
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-            (new InstructionWord(050, 00, 03, 0, 0, 0, 1, 0)).getW(),   //  TP      0,,B1
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A0,1    . this should be skipped
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-            (new InstructionWord(050, 00, 014, 0, 0, 0, 1, 1)).getW(),  //  TN      1,,B1
-            (new InstructionWord(010, 016, 1, 0, 1)).getW(),            //  LA,U    A1,1    . this should be skipped
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
-
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     @Test
-    public void testNOPAndTestSkip(
+    public void testNonZero(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_0l,
-            0_0l,
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TNZ       DATA,,B2",
+            "          J         TARGET2             . should not be skipped",
+            "          HALT      074",
+            "",
+            "TARGET2",
+            "          TNZ       DATA+1,,B2",
+            "          J         TARGET3             . should not be skipped",
+            "          HALT      073",
+            "",
+            "TARGET3",
+            "          TNZ       DATA+2,,B2",
+            "          HALT      072                 . should be skipped",
+            "",
+            "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-            (new InstructionWord(010, 016, 1, 0, 0)).getW(),            //  LA,U    A1,0
-            (new InstructionWord(026, 016, 02, 0, 0, 0, 0)).getW(),     //  LXM,U   X2,0
-            (new InstructionWord(046, 016, 02, 0, 0, 0, 1)).getW(),     //  LXI,U   X2,1
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-            (new InstructionWord(050, 00,  0, 2, 1, 0, 1, 0)).getW(),   //  TNOP    0,*X2,B1
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A0,1    . this should not be skipped
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-            (new InstructionWord(050, 00, 017, 2, 1, 0, 1, 0)).getW(),  //  TSKP    0,*X2,B1
-            (new InstructionWord(010, 016, 1, 0, 1)).getW(),            //  LA,U    A1,1    . this should be skipped
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
-        };
-
-        long[][] sourceData = { code, data };
-
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-
-        loadBanks(ip, msp, 0, sourceData);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0_000001_000002l, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     @Test
-    public void testEqualNotEqual(
+    public void testPosZero(
     ) throws MachineInterrupt,
-             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        long[] data = {
-            0_0l,
-            0_0777777_777777l,
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TPZ       DATA,,B2",
+            "          HALT      071                 . should be skipped",
+            "",
+            "          TPZ       DATA+1,,B2",
+            "          J         TARGET4             . should not be skipped",
+            "          HALT      070",
+            "",
+            "TARGET4",
+            "          TPZ       DATA+2,,B2",
+            "          J         TARGET5             . should not be skipped",
+            "          HALT      067",
+            "",
+            "TARGET5",
+            "          HALT      0",
         };
 
-        long[] code = {
-            (new InstructionWord(010, 016, 0, 0, 0)).getW(),            //  LA,U    A0,0
-            (new InstructionWord(010, 016, 1, 0, 0)).getW(),            //  LA,U    A1,0
-            (new InstructionWord(010, 016, 2, 0, 0)).getW(),            //  LA,U    A2,0
-            (new InstructionWord(010, 016, 3, 0, 0)).getW(),            //  LA,U    A3,0
-            (new InstructionWord(010, 016, 4, 0, 0)).getW(),            //  LA,U    A4,0
-            (new InstructionWord(010, 016, 10, 0, 0)).getW(),           //  LA,U    A10,0
-            (new InstructionWord(010, 0, 11, 0, 0, 0, 1, 1)).getW(),    //  LA      A11,1,,1
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-            (new InstructionWord(052, 0, 10, 0, 0, 0, 1, 0)).getW(),    //  TE      A10,0,,1    . should skip
-            (new InstructionWord(010, 016, 0, 0, 1)).getW(),            //  LA,U    A0,1
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-            (new InstructionWord(052, 0, 10, 0, 0, 0, 1, 1)).getW(),    //  TE      A10,1,,1    . should not skip
-            (new InstructionWord(010, 016, 1, 0, 1)).getW(),            //  LA,U    A1,1
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
-            (new InstructionWord(052, 0, 11, 0, 0, 0, 1, 0)).getW(),    //  TE      A11,0,,1    . should not skip
-            (new InstructionWord(010, 016, 2, 0, 1)).getW(),            //  LA,U    A2,1
-
-            (new InstructionWord(052, 0, 11, 0, 0, 0, 1, 1)).getW(),    //  TE      A11,1,,1    . should skip
-            (new InstructionWord(010, 016, 3, 0, 1)).getW(),            //  LA,U    A3,1
-
-            (new InstructionWord(071, 017, 10, 0, 0, 0, 1, 0)).getW(),  //  DTE     A10,0,,1    . should skip
-            (new InstructionWord(010, 016, 4, 0, 1)).getW(),            //  LA,U    A4,1
-
-            (new InstructionWord(073, 017, 06, 0, 0, 0, 0 ,0)).getW(),  //  IAR     d,x,b
+    @Test
+    public void testMinusZero(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TMZ       DATA,,B2",
+            "          J         TARGET6             . should not be skipped",
+            "          HALT      066",
+            "",
+            "TARGET6",
+            "          TMZ       DATA+1,,B2",
+            "          HALT      065                 . should be skipped",
+            "",
+            "          TMZ       DATA+2,,B2",
+            "          J         TARGET7             . should not be skipped",
+            "          HALT      064",
+            "",
+            "TARGET7",
+            "          HALT      0",
         };
 
-        long[][] sourceData = { code, data };
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        loadBanks(ip, msp, 0, sourceData);
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
+    @Test
+    public void testPos(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          TP        DATA,,B2",
+            "          HALT      077        . skipped",
+            "",
+            "          TP        DATA+1,,B2",
+            "          J         TARGET1    . not skipped",
+            "          HALT      076",
+            "",
+            "TARGET1",
+            "          HALT      0",
+        };
 
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(0);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        startAndWait(ip);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(1l, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0l, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+    @Test
+    public void testNeg(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          TN        DATA,,B2",
+            "          J         TARGET2    . not skipped",
+            "          HALT      075",
+            "",
+            "TARGET2",
+            "          TN        DATA+1,,B2",
+            "          HALT      074        . skipped",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testNOP(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "",
+            "$(1),START$*",
+            "          LXM,U     X2,0",
+            "          LXI,U     X2,1",
+            "          TNOP      DATA,*X2,B2",
+            "          J         TARGET      . never skipped",
+            "          HALT      076",
+            "",
+            "TARGET",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testSkip(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "",
+            "$(1),START$*",
+            "          LXM,U     X2,0",
+            "          LXI,U     X2,1",
+            "          TSKP      DATA,*X2,B2",
+            "          HALT      076          . always skipped",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testEqual(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          LA,U      A10,0",
+            "          TE        A10,DATA,,B2      . should skip",
+            "          HALT      077",
+            "          TE        A10,DATA+1,,B2    . should not skip",
+            "          HALT      0",
+            "          HALT      076",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testNotEqual(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          LA,U      A10,0",
+            "          TNE       A10,DATA+1,,B2    . should skip",
+            "          HALT      077",
+            "          TNE       A10,DATA,,B2      . should not skip",
+            "          HALT      0",
+            "          HALT      076",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     //  TLEM

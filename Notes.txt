@@ -1,6 +1,7 @@
 InProgress
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
+BUG:For some reason, we started getting InterruptHandlerInvalidBankType exceptions when things go sideways
 
 TODO
 minalib support procs

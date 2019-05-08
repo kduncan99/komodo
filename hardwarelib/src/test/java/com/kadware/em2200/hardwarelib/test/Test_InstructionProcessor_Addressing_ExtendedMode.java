@@ -8,7 +8,6 @@ import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
 import static org.junit.Assert.*;
 import org.junit.*;

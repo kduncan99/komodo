@@ -22,10 +22,10 @@ public class TNEFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  Skip NI if (U) > != A(a)
+        //  Skip NI if (U) != A(a)
         long op1 = ip.getExecOrUserARegister((int)iw.getA()).getW();
         long op2 = ip.getOperand(true, true, true, true);
-        if (op1 == op2) {
+        if (op1 != op2) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

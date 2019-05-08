@@ -7,7 +7,6 @@ package com.kadware.em2200.hardwarelib.test;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
 import java.util.Arrays;
 import static org.junit.Assert.*;
@@ -32,6 +31,9 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
 
         String[] source = {
             "          $EXTEND",
+            "          $INFO 1, 3",
+            "          $INFO 10 1",
+            "",
             "$(0)",
             "FLAGS     $RES 1001                     . Index is the integer, the flag is true",
             "                                        .   (non-zero) if the integer is prime.",
@@ -41,7 +43,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "                                        .          [1] and beyond are the values we've found,",
             "                                        .              one integer per word.",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          . Mark zero and one as non-prime (zero).",
             "          SZ        flags,,B2",
             "          SZ        flags+1,,B2",
@@ -107,32 +109,38 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             "          HALT      0",
         };
 
-
-        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+//        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, true);
+//        assert(absoluteModule != null);
+//
+//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+//        InventoryManager.getInstance().addInstructionProcessor(ip);
+//        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+//        InventoryManager.getInstance().addMainStorageProcessor(msp);
+//
+//        establishBankingEnvironment(ip, msp);
+//        loadBanks(ip, msp, absoluteModule, 7);
+//
+//        DesignatorRegister dReg = ip.getDesignatorRegister();
+//        dReg.setQuarterWordModeEnabled(true);
+//        dReg.setBasicModeEnabled(false);
+//
+//        ProgramAddressRegister par = ip.getProgramAddressRegister();
+//        par.setProgramCounter(absoluteModule._entryPointAddress);
+//
+//        startAndWait(ip);
+//
+//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
+//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         long[] expected = {
             168,    //  number of prime values following
@@ -155,7 +163,7 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
             947, 953, 967, 971, 977, 983, 991, 997
         };
 
-        long[] result = getBank(ip, 3);
+        long[] result = getBank(processors._instructionProcessor, 3);
         assertArrayEquals(Arrays.copyOf(expected, result.length), result);
     }
 }
