@@ -116,28 +116,6 @@ public class Test_InstructionProcessor_Algorithms extends Test_InstructionProces
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-//        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, true);
-//        assert(absoluteModule != null);
-//
-//        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-//        InventoryManager.getInstance().addInstructionProcessor(ip);
-//        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-//        InventoryManager.getInstance().addMainStorageProcessor(msp);
-//
-//        establishBankingEnvironment(ip, msp);
-//        loadBanks(ip, msp, absoluteModule, 7);
-//
-//        DesignatorRegister dReg = ip.getDesignatorRegister();
-//        dReg.setQuarterWordModeEnabled(true);
-//        dReg.setBasicModeEnabled(false);
-//
-//        ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(absoluteModule._entryPointAddress);
-//
-//        startAndWait(ip);
-//
-//        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
