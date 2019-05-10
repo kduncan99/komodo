@@ -27,9 +27,10 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA        A0,(0111111111111),,B2",
             "          OR        A0,(0222222222222),,B2",
             "          HALT      0",
@@ -44,7 +45,7 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -72,9 +73,10 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA        A2,(0777000777000),,B2",
             "          XOR,H1    A2,(0750750777777),,B2",
             "          HALT      0",
@@ -89,7 +91,7 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -117,9 +119,10 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA        A4,(0777777777123),,B2",
             "          AND,U     A4,0543321",
             "          HALT      0",
@@ -134,7 +137,7 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -162,9 +165,10 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA        A8,(0777777000000),,B2",
             "          LR        R2,(0707070707070),,B2",
             "          MLU       A8,(0000000777777),,B2",
@@ -180,7 +184,7 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);

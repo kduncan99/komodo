@@ -31,7 +31,7 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         String[] source = {
             "          $EXTEND",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A5,1",
             "          +0 . illegal operation",
             "          LA,U      A5,2",
@@ -47,7 +47,7 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);

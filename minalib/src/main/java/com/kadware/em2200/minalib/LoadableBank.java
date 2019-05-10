@@ -54,9 +54,9 @@ public class LoadableBank {
     public final boolean _isExtendedMode;
 
     /**
-     * wth is this?
+     * starting address of the bank
      */
-    public final Integer _startingAddress;  //  null if none specified
+    public final int _startingAddress;
 
     /**
      * content of this bank
@@ -101,15 +101,15 @@ public class LoadableBank {
     }
 
     static class Builder{
-        private AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
-        private AccessPermissions _generalPermissions = new AccessPermissions();
-        private AccessPermissions _specialPermissions = new AccessPermissions();
-        private int _bankDescriptorIndex;
-        private int _bankLevel;
+        private AccessInfo _accessInfo = null;
+        private AccessPermissions _generalPermissions = null;
+        private AccessPermissions _specialPermissions = null;
+        private Integer _bankDescriptorIndex = null;
+        private Integer _bankLevel = null;
         private String _bankName = null;
         private Integer _initialBaseRegister = null;
         private boolean _isExtendedMode = false;
-        private int _startingAddress;
+        private Integer _startingAddress = null;
         private Word36Array _content = null;
 
         Builder setAccessInfo(final AccessInfo value) { _accessInfo = value; return this; }
@@ -125,8 +125,36 @@ public class LoadableBank {
 
         LoadableBank build(
         ) throws InvalidParameterException {
+            if (_accessInfo == null) {
+                throw new InvalidParameterException("ring/domain access info not specified");
+            }
+
+            if (_generalPermissions == null) {
+                throw new InvalidParameterException("general permissions not specified");
+            }
+
+            if (_specialPermissions == null) {
+                throw new InvalidParameterException("special permissions not specified");
+            }
+
+            if (_bankDescriptorIndex == null) {
+                throw new InvalidParameterException("bank desriptor index not specified");
+            }
+
+            if (_bankLevel == null) {
+                throw new InvalidParameterException("bank level not specified");
+            }
+
             if (_bankName == null) {
-                throw new InvalidParameterException("bank name not specified in LoadableBank builder");
+                throw new InvalidParameterException("bank name not specified");
+            }
+
+            if (_startingAddress == null) {
+                throw new InvalidParameterException("bank starting address not specified");
+            }
+
+            if (_content == null) {
+                throw new InvalidParameterException("no content specified");
             }
 
             return new LoadableBank(_bankDescriptorIndex,

@@ -32,7 +32,7 @@ public class BaseRegister {
      * Execute, Read, and Write general permissions
      * For access from a ring of lower privilege (i.e., higher value)
      */
-    public final AccessPermissions _generalAccessPermissions = new AccessPermissions();
+    public final AccessPermissions _generalAccessPermissions;
 
     /**
      * If true, the base register describes an area not exceeding 2^24 bytes.
@@ -51,7 +51,7 @@ public class BaseRegister {
      * Execute, Read, and Write special permissions
      * For access from a ring of higher or equal privilege (i.e., lower or equal value)
      */
-    public final AccessPermissions _specialAccessPermissions = new AccessPermissions();
+    public final AccessPermissions _specialAccessPermissions;
 
     /**
      * An object which describes the entirety of the bank.
@@ -78,8 +78,10 @@ public class BaseRegister {
     ) {
         _accessLock = new AccessInfo();
         _baseAddress = new AbsoluteAddress();
+        _generalAccessPermissions = new AccessPermissions(false, false, false);
         _largeSizeFlag = false;
         _lowerLimitNormalized = 0;
+        _specialAccessPermissions = new AccessPermissions(false, false, false);
         _storage = null;
         _upperLimitNormalized = 0;
         _voidFlag = true;
@@ -111,8 +113,8 @@ public class BaseRegister {
         _lowerLimitNormalized = lowerLimitNormalized;
         _upperLimitNormalized = upperLimitNormalized;
         _accessLock = accessLock;
-        _generalAccessPermissions.set(generalAccessPermissions);
-        _specialAccessPermissions.set(specialAccessPermissions);
+        _generalAccessPermissions = generalAccessPermissions;
+        _specialAccessPermissions = specialAccessPermissions;
         _storage = storage;
         _voidFlag = false;
     }

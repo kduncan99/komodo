@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
@@ -9,9 +9,9 @@ package com.kadware.em2200.baselib;
  */
 public class AccessPermissions {
 
-    private boolean _execute;
-    private boolean _read;
-    private boolean _write;
+    public final boolean _execute;
+    public final boolean _read;
+    public final boolean _write;
 
     /**
      * Standard constructor
@@ -25,8 +25,7 @@ public class AccessPermissions {
 
     /**
      * Copy constructor
-     * <p>
-     * @param source
+     * @param source object to be copied
      */
     public AccessPermissions(
         final AccessPermissions source
@@ -38,10 +37,9 @@ public class AccessPermissions {
 
     /**
      * Initial value constructor
-     * <p>
-     * @param execute
-     * @param read
-     * @param write
+     * @param execute value for execute permission
+     * @param read value for read permission
+     * @param write value for write permission
      */
     public AccessPermissions(
         final boolean execute,
@@ -55,7 +53,6 @@ public class AccessPermissions {
 
     /**
      * Alternate initial value constructor
-     * <p>
      * @param value composite value of 3 significant bits
      *                  04:Execute enabled flag
      *                  02:Read enabled flag
@@ -70,104 +67,14 @@ public class AccessPermissions {
     }
 
     /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getExecute(
-    ) {
-        return _execute;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getRead(
-    ) {
-        return _read;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getWrite(
-    ) {
-        return _write;
-    }
-
-    /**
      * Retrieves the discrete settings as a composite value.
      * Bit2: execute flag (MSB)
      * Bit1: read flag
      * Bit0: write flag (LSB)
-     * <p>
-     * @return
+     * @return composite value
      */
     public byte get(
     ) {
         return (byte)((_execute ? 04 : 0) | (_read ? 02 : 0) | (_write ? 01 : 0));
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setExecute(
-        final boolean value
-    ) {
-        _execute = value;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setRead(
-        final boolean value
-    ) {
-        _read = value;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setWrite(
-        final boolean value
-    ) {
-        _write = value;
-    }
-
-    /**
-     * Composite value setter (see constructor)
-     * <p>
-     * @param value
-     */
-    public void set(
-        final byte value
-    ) {
-        _execute = (value & 04) != 0;
-        _read = (value & 02) != 0;
-        _write = (value & 01) != 0;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param permissions
-     */
-    public void set(
-        final AccessPermissions permissions
-    ) {
-        _execute = permissions._execute;
-        _read = permissions._read;
-        _write = permissions._write;
     }
 }

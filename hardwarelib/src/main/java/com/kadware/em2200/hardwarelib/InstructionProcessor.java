@@ -1036,12 +1036,12 @@ public class InstructionProcessor extends Processor implements Worker {
         _programAddressRegister.setW(intStorage.getValue(intOffset));
 
         // Set designator register per IP PRM 5.1.5
+        //  We'll set/clear Basic Mode later once we've got the interrupt handler bank
         boolean bmBaseRegSel = _designatorRegister.getBasicModeBaseRegisterSelection();
         boolean fhip = _designatorRegister.getFaultHandlingInProgress();
         _designatorRegister.clear();
         _designatorRegister.setExecRegisterSetSelected(true);
         _designatorRegister.setArithmeticExceptionEnabled(true);
-        _designatorRegister.setBasicModeBaseRegisterSelection(bmBaseRegSel);
         _designatorRegister.setFaultHandlingInProgress(fhip);
 
         if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck) {
@@ -1098,6 +1098,8 @@ public class InstructionProcessor extends Processor implements Worker {
                                              bankDescriptor.getGeneraAccessPermissions(),
                                              bankDescriptor.getSpecialAccessPermissions(),
                                              bdStorage);
+
+        _designatorRegister.setBasicModeBaseRegisterSelection(bankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode);
     }
 
     /**
@@ -1110,7 +1112,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean isExecuteAllowed(
         final BaseRegister baseRegister
     ) {
-        return getEffectivePermissions(baseRegister).getExecute();
+        return getEffectivePermissions(baseRegister)._execute;
     }
 
     /**
@@ -1123,7 +1125,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean isReadAllowed(
         final BaseRegister baseRegister
     ) {
-        return getEffectivePermissions(baseRegister).getRead();
+        return getEffectivePermissions(baseRegister)._read;
     }
 
     /**
@@ -1154,7 +1156,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean isWriteAllowed(
         final BaseRegister baseRegister
     ) {
-        return getEffectivePermissions(baseRegister).getWrite();
+        return getEffectivePermissions(baseRegister)._write;
     }
 
     /**

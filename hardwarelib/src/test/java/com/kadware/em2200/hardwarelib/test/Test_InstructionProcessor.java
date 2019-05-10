@@ -110,6 +110,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     //  Assembler source for the interrupt handlers
     static private final String[] IH_CODE = {
         "          $EXTEND",
+        "          $INFO 1 3",
+        "          $INFO 10 1",
+        "",
         "$(0)",
         "          $LIT",
         "",
@@ -277,12 +280,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         AccessPermissions _generalAccessPermissions = ALL_ACCESS;
         AccessPermissions _specialAccessPermissions = ALL_ACCESS;
         int _lowerLimit = 0;
-
-        LoadBankInfo(
-            final long[] source
-        ) {
-            _source = source;
-        }
     }
 
     private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
@@ -335,8 +332,8 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
                                                                  .build());
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
+        Linker linker = new Linker();
+        return linker.link("TEST", bankDeclarations.toArray(new Linker.BankDeclaration[0]), new Linker.Option[0]);
     }
 
     /**
@@ -398,8 +395,16 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                      .build());
         }
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
+        Linker linker = new Linker();
+        List<Linker.Option> optionList = new LinkedList<>();
+        if (display) {
+            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
+            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
+            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
+        }
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           optionList.toArray(new Linker.Option[0]));
     }
 
     /**
@@ -481,8 +486,16 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
                                                                  .build());
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
+        Linker linker = new Linker();
+        List<Linker.Option> optionList = new LinkedList<>();
+        if (display) {
+            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
+            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
+            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
+        }
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           optionList.toArray(new Linker.Option[0]));
     }
 
     /**
@@ -537,8 +550,16 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
                                                                  .build());
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
+        Linker linker = new Linker();
+        List<Linker.Option> optionList = new LinkedList<>();
+        if (display) {
+            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
+            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
+            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
+        }
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           optionList.toArray(new Linker.Option[0]));
     }
 
     /**
@@ -594,8 +615,16 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                     .build());
         }
 
-        Linker linker = new Linker(bankDeclarations.toArray(new Linker.BankDeclaration[0]));
-        return linker.link("TEST", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, display);
+        Linker linker = new Linker();
+        List<Linker.Option> optionList = new LinkedList<>();
+        if (display) {
+            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
+            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
+            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
+        }
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           optionList.toArray(new Linker.Option[0]));
     }
 
     /**
@@ -657,9 +686,11 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                 .build();
 
 
-        Linker.Option[] options = { Linker.Option.OPTION_NO_ENTRY_POINT };
-        Linker linker = new Linker(bankDeclarations, options);
-        _bankModule = linker.link("BDT-IH", Linker.PartialWordMode.NONE, Linker.ArithmeticFaultMode.NONE, false);
+        Linker.Option[] options = {
+            Linker.Option.OPTION_NO_ENTRY_POINT,
+        };
+        Linker linker = new Linker();
+        _bankModule = linker.link("BDT-IH", bankDeclarations, options);
         assert(_bankModule != null);
     }
 
@@ -824,17 +855,14 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param ip instruction processor of interest
      * @param msp main storage processor of interest
      * @param module absolute module to be loaded
-     * @param bdtLevel indicates which bdt the bank should be loaded into (0 to 7)
      */
     static void loadBanks(
         final InstructionProcessor ip,
         final ExtMainStorageProcessor msp,
-        final AbsoluteModule module,
-        final int bdtLevel
+        final AbsoluteModule module
     ) {
-        assert((bdtLevel >= 0) && (bdtLevel < 8));
         for (LoadableBank loadableBank : module._loadableBanks.values()) {
-            BankDescriptor bd = loadBank(ip, msp, loadableBank, bdtLevel, loadableBank._bankDescriptorIndex);
+            BankDescriptor bd = loadBank(ip, msp, loadableBank, loadableBank._bankLevel, loadableBank._bankDescriptorIndex);
 
             if (loadableBank._initialBaseRegister != null) {
                 Word36ArraySlice storageSubset =
@@ -862,126 +890,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     }
 
     /**
-     * Loads the various banks from the given absolute element, into the given MSP
-     * and applies initial base registers for the given IP as appropriate.
-     * @param ip instruction processor of interest
-     * @param msp main storage processor of interest
-     * @param module absolute module to be loaded
-     */
-    //TODO obsolete
-    static void loadBanks(
-            final InstructionProcessor ip,
-            final MainStorageProcessor msp,
-            final AbsoluteModule module
-    ) {
-        Word36Array storage = msp.getStorage();
-        short mspUpi = msp.getUPI();
-
-        int mspOffset = 0;
-        for (LoadableBank loadableBank : module._loadableBanks.values()) {
-            storage.load(mspOffset, loadableBank._content);
-            AbsoluteAddress absoluteAddress = new AbsoluteAddress(mspUpi, mspOffset);
-            System.out.println(String.format("Loaded Bank %s BDI=%06o Starting Address=%06o Length=%06o at Absolute Address=%012o",
-                                             loadableBank._bankName,
-                                             loadableBank._bankDescriptorIndex,
-                                             loadableBank._startingAddress,
-                                             loadableBank._content.getArraySize(),
-                                             absoluteAddress._offset));
-
-            if (loadableBank._initialBaseRegister != null) {
-                Word36ArraySlice storageSubset = new Word36ArraySlice(storage, mspOffset, loadableBank._content.getArraySize());
-                int bankLower = loadableBank._startingAddress;
-                int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
-                BaseRegister bReg = new BaseRegister(absoluteAddress,
-                                                     false,
-                                                     bankLower,
-                                                     bankUpper,
-                                                     loadableBank._accessInfo,
-                                                     loadableBank._generalPermissions,
-                                                     loadableBank._specialPermissions,
-                                                     storageSubset);
-                ip.setBaseRegister(loadableBank._initialBaseRegister, bReg);
-
-                System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
-                                                 loadableBank._initialBaseRegister,
-                                                 bReg._lowerLimitNormalized,
-                                                 bReg._upperLimitNormalized));
-            }
-
-            mspOffset += loadableBank._content.getArraySize();
-        }
-    }
-
-    /**
-     * Given an array of LoadBankInfo objects, we load the described data as individual banks, into consecutive locations
-     * into the given MainStorageProcessor.  For each bank, we create a BankRegister and establish that bank register
-     * of the given InstructionProcessor as B0, B1, ...
-     * @param ip reference to an IP to be used
-     * @param msp reference to an MSP to be used
-     * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
-     * @param bankInfos contains the various banks to be loaded
-     */
-    //TODO obsolete
-    protected static void loadBanks(
-        final InstructionProcessor ip,
-        final MainStorageProcessor msp,
-        final int brIndex,
-        final LoadBankInfo[] bankInfos
-    ) {
-        Word36Array storage = msp.getStorage();
-        short mspUpi = msp.getUPI();
-
-        int mspOffset = 0;
-        for (int sx = 0; sx < bankInfos.length; ++sx) {
-            storage.load(mspOffset, bankInfos[sx]._source);
-            AbsoluteAddress absoluteAddress = new AbsoluteAddress(mspUpi, mspOffset);
-            Word36ArraySlice storageSubset = new Word36ArraySlice(storage, mspOffset, bankInfos[sx]._source.length);
-
-            BaseRegister bReg = new BaseRegister(absoluteAddress,
-                                                 false,
-                                                 bankInfos[sx]._lowerLimit,
-                                                 bankInfos[sx]._lowerLimit + bankInfos[sx]._source.length - 1,
-                                                 bankInfos[sx]._accessInfo,
-                                                 bankInfos[sx]._generalAccessPermissions,
-                                                 bankInfos[sx]._specialAccessPermissions,
-                                                 storageSubset);
-            ip.setBaseRegister(brIndex + sx, bReg);
-            mspOffset += bankInfos[sx]._source.length;
-            System.out.println(String.format("Loaded Bank B%d Abs=%s llNorm=0%o ulNorm=0%o",
-                                             brIndex + sx,
-                                             absoluteAddress,
-                                             bReg._lowerLimitNormalized,
-                                             bReg._upperLimitNormalized));
-        }
-    }
-
-    /**
-     * Given an array of long arrays, we treat each of the long arrays as a source of 36-bit values (wrapped in longs).
-     * Each of the arrays of longs represents data which is to be stored consecutively into an area of memory and which will
-     * subsequently be considered a bank.  Each successive source array loaded into unique non-overlapping areas of
-     * storage in the given MainStorageProcessor, and for each, a BankRegister is created and established in the given
-     * InstructionProcessor at B0, B1, etc..
-     * @param ip reference to an IP to be used
-     * @param msp reference to an MSP to be used
-     * @param brIndex first base register index to be loaded (usually 0 for extended mode, 12 for basic mode)
-     * @param sourceData array of source data arrays to be loaded
-     */
-    //TODO obsolete
-    public static void loadBanks(
-        final InstructionProcessor ip,
-        final MainStorageProcessor msp,
-        final int brIndex,
-        final long[][] sourceData
-    ) {
-        LoadBankInfo[] bankInfos = new LoadBankInfo[sourceData.length];
-        for (int sx = 0; sx < sourceData.length; ++sx) {
-            bankInfos[sx] = new LoadBankInfo(sourceData[sx]);
-        }
-
-        loadBanks(ip, msp, brIndex, bankInfos);
-    }
-
-    /**
      * Instantiates IP and MSP, loads a module, and sets up the processor state as needed
      * @param absoluteModule module to be loaded
      * @return Processors object so that calling code has access to the created IP and MSP
@@ -997,8 +905,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        //TODO let loadBanks() use the bank level in the LoadableBank object after we remove obsolete methods
-        loadBanks(ip, msp, absoluteModule, 4);
+        loadBanks(ip, msp, absoluteModule);
 
         //  Update designator register if directed by the absolute module
         DesignatorRegister dReg = ip.getDesignatorRegister();
@@ -1022,56 +929,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         par.setProgramCounter(absoluteModule._entryPointAddress);
 
-        //TODO remove the following
-/*
-5.2. Absolute Element Arithmetic Fault Mode Determination
-The Collector marks the arithmetic fault mode of an absolute element or relocatable
-element produced by the Collector in the following order of precedence:
-1. If explicit sensitivity is given on the TYPE directive, the output element is marked
-accordingly, regardless of the sensitivities of the input relocatable elements.
-2. If all input relocatable elements have the same sensitivity, the output element is
-marked with the sensitivity.
-3. If both SETAFCM and CLRAFCM relocatable elements are present, the presence or
-absence of INSAFCM for relocatable elements where the sensitivity is not specified
-is irrelevant. In this case (both the SETAFCM and CLRAFCM relocatable elements
-are present), the output element is marked with the sensitivity of the relocatable
-element containing the program start address; if that element is marked INSAFCM
-or if no starting address exists, the output element is marked UNKNOWN.
-4. If SETAFCM relocatable elements are present in addition to INSAFCM and for
-relocatable elements where the sensitivity is not specified, the output element is
-marked SETAFCM.
-5. If CLRAFCM relocatable elements are present in addition to INSAFCM and for
-relocatable elements where the sensitivity is not specified, the output element is
-marked CLRAFCM.
-6. If INSAFCM and for conditions where sensitivity is not specified on relocatable
-elements existing by themselves, the output element is marked UNKNOWN.
-For more information on arithmetic fault compatibility mode, see the processor and
-storage reference manual for your Series 1100 and 2200 systems.
-
-5.3. Exec Action Produced by Absolute Element
-The arithmetic fault mode sensitivity of the absolute element is used by the Executive in
-determining the initial setting of PSR bit D20 on 1100/60, 1100/70, and 1100/80 systems
-or bit DB29 on the extended mode architecture systems. For more information about
-these bit settings, see the systems processor and storage reference manual for the OS
-1100 system in use at your site. The following actions are taken by the Executive:
-1. If the absolute element’s sensitivity is UNKNOWN, the system standard value set at
-system generation is used.
-2. If the absolute element’s sensitivity is SETAFCM, D20 (DB29) is initially set.
-3. If the absolute element’s sensitivity is CLRAFCM, D20 (DB29) is initially cleared.
-4. If the absolute element’s sensitivity is INSAFCM, D20 (DB29) is initially cleared.
-
-5.4. Third- and Quarter-Word Sensitivity
-If sensitivity is not specified by option or TYPE directive, program sensitivity is
-determined as follows:
-1. If only third-word sensitive elements and elements with neither T nor F sensitivity
-are present, T is used.
-2. If only quarter-word sensitive elements and elements with neither T nor F sensitivity
-are present, F is used.
-3. If both third-word and quarter-word sensitive elements are present, the sensitivity of
-the element containing the program starting address as specified by the ENT
-directive is used. If the ENT directive is not used, the absolute element is marked as
-being not sensitive.
-*/
         return new Processors(ip, msp);
     }
 
@@ -1085,6 +942,10 @@ being not sensitive.
     ) {
         ExtInstructionProcessor ip = processors._instructionProcessor;
         ExtMainStorageProcessor msp = processors._mainStorageProcessor;
+        DesignatorRegister dr = ip.getDesignatorRegister();
+        int oldpp = dr.getProcessorPrivilege();
+        dr.setProcessorPrivilege(0);
+
         try {
             System.out.println("Debug Info:");
             System.out.println(String.format("  PAR: %012o", ip.getProgramAddressRegister().getW()));
@@ -1212,6 +1073,8 @@ being not sensitive.
         } catch (MachineInterrupt ex) {
             System.out.println("Caught:" + ex.getMessage());
         }
+
+        dr.setProcessorPrivilege(oldpp);
     }
 
     /**

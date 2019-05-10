@@ -1,9 +1,8 @@
 /*
- * Copyright (c) 2018-2 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.minalib.exceptions.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

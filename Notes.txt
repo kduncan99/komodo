@@ -1,9 +1,9 @@
 InProgress
 Convert IP unit tests from octal to assembler and minalib them (in progress)
 Lose unnecessary accessors (in progress)
-BUG:For some reason, we started getting InterruptHandlerInvalidBankType exceptions when things go sideways
 
 TODO
+pick up the rest of the tests we need to do but haven't yet
 minalib support procs
 minalib generate system procs for special instructions such as JGD, BT, JK, SLJ
 minalib $USE (A.2.8) specifies base register to use if none given
@@ -57,4 +57,3 @@ hardwarelib Device.IoInfo objects: add Builder class, make constructors private
 Mina - wrapper around minalib
 
 Exec - using Mina (or minalib, but hopefully mina)
-

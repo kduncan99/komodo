@@ -61,7 +61,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -120,7 +120,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -194,7 +194,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(false);
@@ -262,7 +262,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -331,7 +331,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -403,7 +403,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -471,7 +471,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -581,7 +581,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);

@@ -1,14 +1,12 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -33,7 +31,11 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
             "DATA      + 0777777771356",
             "          + 0000000007777",
             "",
-            "$(1),START$*",
+            "$(1)",
+            "          NOP       DATA",
+            "          NOP       DATA",
+            "          NOP       DATA",
+            "START$*",
             "          LA        A1,DATA,,B2",
             "          TEP,Q4    A1,DATA+1,,B2",
             "          HALT      077                 . this should be skipped",

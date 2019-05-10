@@ -28,7 +28,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         String[] source = {
             "          $BASIC",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          NOP",
             "          J         TARGET",
             "          HALT      0",
@@ -50,7 +50,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -76,8 +76,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          NOP",
             "          J         TARGET",
             "          HALT      0",
@@ -99,7 +100,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -125,8 +126,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          NOP",
             "          LXM,U     X5,3",
             "          J         TARGET,X5",
@@ -150,7 +152,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -175,9 +177,10 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $BASIC",
+            "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          NOP       0",
             "          LXM,U     X5,3",
             "          LXI,U     X5,1",
@@ -204,7 +207,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -230,9 +233,10 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $BASIC",
+            "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          NOP",
             "          HJ        TARGET",
             "          HALT      0",
@@ -254,7 +258,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -281,7 +285,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         String[] source = {
             "          $BASIC",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          HLTJ      TARGET",
             "          LA,U      A0,5",
@@ -300,7 +304,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -326,8 +330,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          HLTJ      TARGET",
             "          LA,U      A0,5",
@@ -346,7 +351,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -373,15 +378,11 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         String[] source = {
             "          $BASIC",
             "",
-            "$(1),START*",
-            "          LA,U      A0,0",
-            "          HLTJ      TARGET",
-            "          LA,U      A0,5",
-            "          HALT      0",
-            "",
-            "TARGET",
-            "          HALT      1",
-            };
+            "$(1),START$*",
+            "          HLTJ      TARGET . should throw interrupt",
+            "          HALT      077    . should not get here",
+            "TARGET "
+        };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
@@ -392,7 +393,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -404,10 +405,11 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
 
         startAndWait(ip);
 
+        showDebugInfo(new Processors(ip, msp));//TODO
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());//TODO  breaks here
         assertEquals(01016, ip.getLatestStopDetail());
     }
 
@@ -419,8 +421,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          HLTJ      TARGET",
             "          LA,U      A0,5",
@@ -428,7 +431,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "",
             "TARGET",
             "          HALT      1",
-            };
+        };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
@@ -439,7 +442,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -450,6 +453,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         par.setProgramCounter(absoluteModule._entryPointAddress);
 
         startAndWait(ip);
+        showDebugInfo(new Processors(ip, msp));
 
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
@@ -467,7 +471,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         String[] source = {
             "          $BASIC",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
             //TODO minalib needs an SLJ proc to deal with this- hard code for now
@@ -491,7 +495,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -519,8 +523,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
             "          LMJ       X11,SUBROUTINE",
@@ -541,7 +546,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -569,8 +574,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,1",
             "          JZ        A0,GO_HERE",
@@ -592,7 +598,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -618,8 +624,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
             "          LA,U      A2,0",
@@ -643,7 +650,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -669,8 +676,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,1",
             "          JNZ       A1,GO_HERE",
@@ -692,7 +700,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -718,8 +726,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,1",
             "          LNA,U     A2,1",
@@ -749,7 +758,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -775,8 +784,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,010",
             "          LA,XU     A1,0777776",
             "          JPS       A0,GO_HERE",
@@ -797,7 +807,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -825,8 +835,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,1",
             "          LNA,U     A2,1",
@@ -856,7 +867,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -882,8 +893,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,010",
             "          LA,XU     A1,0777776",
             "          JNS       A1,GO_HERE",
@@ -904,7 +916,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -932,8 +944,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,010",
             "          LA,XU     A1,0777776",
             "          LA,U      A2,0",
@@ -958,7 +971,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -987,7 +1000,8 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $BASIC",
-            "$(1),START*         .",
+            "",
+            "$(1),START$*         .",
             "          LXI,U     X0,02           . set up X0 so we take a jump",
             "          LXM,U     X0,02           .",
             "          JMGI      X0,TARGET1      . we should take this jump",
@@ -1026,7 +1040,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -1057,8 +1071,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          AA,XU     A0,1                . Does not generate carry",
             "          JC        BAD                 . Should not jump",
@@ -1081,7 +1096,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -1106,8 +1121,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          AA,XU     A0,1                . Does not generate carry",
             "          JNC       TARGET              . Should jump",
@@ -1131,7 +1147,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -1156,10 +1172,11 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "$(0)",
             "DATA      + 0377777777777",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          AA,XU     A0,1                . Does not generate overflow",
             "          JO        BAD                 . Should not jump",
@@ -1182,7 +1199,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
@@ -1207,10 +1224,12 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPINotAssignedException {
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
+            "",
             "$(0)",
             "DATA      + 0377777777777",
             "",
-            "$(1),START*",
+            "$(1),START$*",
             "          LA,U      A0,0",
             "          AA,XU     A0,1                . Does not generate overflow",
             "          JNO       TARGET              . Should jump",
@@ -1234,7 +1253,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule, 7);
+        loadBanks(ip, msp, absoluteModule);
 
         DesignatorRegister dReg = ip.getDesignatorRegister();
         dReg.setQuarterWordModeEnabled(true);
