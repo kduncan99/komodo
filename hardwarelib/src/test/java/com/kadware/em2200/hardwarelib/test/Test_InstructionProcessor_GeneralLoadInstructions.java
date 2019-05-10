@@ -8,7 +8,6 @@ import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -31,7 +30,10 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  Write some load instructions starting at absolute address 01000 for the MSP's UPI
         String[] source = {
             "          $EXTEND .",
-            "$(1) . ",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(1),START$* . ",
             "          LA,U      A0,01000     . ",
             "          LNA,U     A1,1         . ",
             "          LNA,XU    A2,0777776   . ",
@@ -54,43 +56,28 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_777777_777773L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        assertEquals(0_000100_022020L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(0_111100_000000L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
-        assertEquals(0_777777_755332L, ip.getGeneralRegister(GeneralRegisterSet.R8).getW());
-        assertEquals(0_357777_777776L, ip.getGeneralRegister(GeneralRegisterSet.X6).getW());
-        assertEquals(0_003300_444444L, ip.getGeneralRegister(GeneralRegisterSet.X7).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777776L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(01, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(02, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(03, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_777777_777773L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_777777_777772L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        assertEquals(0_000100_022020L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(0_111100_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(01234, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        assertEquals(0_777777_755332L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R8).getW());
+        assertEquals(0_357777_777776L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X6).getW());
+        assertEquals(0_003300_444444L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X7).getW());
     }
 
     @Test
@@ -103,7 +90,10 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  This will be extended mode.
         String[] source = {
             "          $EXTEND",
-            "$(1)",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(1),START$*",
             "          LA,U      A0,01000",
             "          LA,U      A1,02000",
             "          LA,U      A2,03000",
@@ -113,33 +103,20 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01000L, ip.getGeneralRegister(GeneralRegisterSet.X12).getW());
-        assertEquals(02000L, ip.getGeneralRegister(GeneralRegisterSet.X13).getW());
-        assertEquals(03000L, ip.getGeneralRegister(GeneralRegisterSet.X14).getW());
-        assertEquals(04000L, ip.getGeneralRegister(GeneralRegisterSet.X15).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X12).getW());
+        assertEquals(02000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X13).getW());
+        assertEquals(03000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X14).getW());
+        assertEquals(04000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X15).getW());
     }
 
     @Test
@@ -152,6 +129,9 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  This will be extended mode.
         String[] source = {
             "          $EXTEND",
+            "          $INFO 1 5",
+            "          $INFO 10 1",
+            "",
             "$(0) .",
             "DATA_W     + 0112233445566          . for LA,W",
             "DATA_H2   + 0112233,0445566         . for LA,H2",
@@ -168,7 +148,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
             "DATA_T1N  + 04444,03333,02222       . for LA,T1 negative operand",
 
             "",
-            "$(1) .",
+            "$(1),START$* .",
             "          LA,W      A0,DATA_W,,B2",
             "          LA,H2     A1,DATA_H2,,B2",
             "          LA,H1     A2,DATA_H1,,B2",
@@ -187,42 +167,27 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(false);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000000_445566L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0_000000_112233L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_000000_377777L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0_777777_400000L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_000000_355555L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertEquals(0_777777_455555L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        assertEquals(0_000000_003333L, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        assertEquals(0_777777_776666L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(0_000000_002222L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
-        assertEquals(0_777777_775555L, ip.getGeneralRegister(GeneralRegisterSet.A10).getW());
-        assertEquals(0_000000_001111L, ip.getGeneralRegister(GeneralRegisterSet.A11).getW());
-        assertEquals(0_777777_774444L, ip.getGeneralRegister(GeneralRegisterSet.A12).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_112233_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_000000_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_000000_112233L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_000000_377777L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_777777_400000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_000000_355555L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_777777_455555L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        assertEquals(0_000000_003333L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        assertEquals(0_777777_776666L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(0_000000_002222L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        assertEquals(0_777777_775555L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A10).getW());
+        assertEquals(0_000000_001111L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A11).getW());
+        assertEquals(0_777777_774444L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
     }
 
     @Test
@@ -235,11 +200,14 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  This will be extended mode.
         String[] source = {
             "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
             "$(0)",
             "DATA_QW   + 0111,0222,0333,0444",
             "DATA_SW   + 011,022,033,044,055,066",
             "",
-            "$(1)",
+            "$(1),START$*",
             "          LR,Q2     R0,DATA_QW,,B2",
             "          LR,Q4     R1,DATA_QW,,B2",
             "          LR,Q3     R2,DATA_QW,,B2",
@@ -255,39 +223,24 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0222, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        assertEquals(0444, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        assertEquals(0333, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        assertEquals(0111, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        assertEquals(066, ip.getGeneralRegister(GeneralRegisterSet.R4).getW());
-        assertEquals(055, ip.getGeneralRegister(GeneralRegisterSet.R5).getW());
-        assertEquals(044, ip.getGeneralRegister(GeneralRegisterSet.R6).getW());
-        assertEquals(033, ip.getGeneralRegister(GeneralRegisterSet.R7).getW());
-        assertEquals(022, ip.getGeneralRegister(GeneralRegisterSet.R8).getW());
-        assertEquals(011, ip.getGeneralRegister(GeneralRegisterSet.R9).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0222, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        assertEquals(0444, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        assertEquals(0333, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        assertEquals(0111, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        assertEquals(066, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R4).getW());
+        assertEquals(055, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R5).getW());
+        assertEquals(044, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R6).getW());
+        assertEquals(033, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R7).getW());
+        assertEquals(022, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R8).getW());
+        assertEquals(011, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R9).getW());
     }
 
     //TODO need some various register-to-register loads
@@ -303,6 +256,9 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
             "$(0),DATA .",
             "          + 1",
             "          + 2",
@@ -316,54 +272,34 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
             "          + 10",
             "          + 11",
             "          + 12",
+            "DESCRIPTOR + 6,X0,4,R0",
             "",
-            "$(1),START*",
+            "$(1),START$*",
+            "          LA        A4,DESCRIPTOR,,B2",
             "          LRS       A4,DATA,,B2",
             "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        long count1 = 4;
-        long area1 = GeneralRegisterSet.R0;
-        long count2 = 6;
-        long area2 = GeneralRegisterSet.X0;
-        long descriptor = (count2 << 27) | (area2 << 18) | (count1 << 9) | area1;
-        ip.setGeneralRegister(GeneralRegisterSet.A4, descriptor);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        assertEquals(04, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(06, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        assertEquals(010, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        assertEquals(011, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        assertEquals(012, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        assertEquals(02, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        assertEquals(03, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        assertEquals(04, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        assertEquals(05, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(06, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(07, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        assertEquals(010, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        assertEquals(011, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        assertEquals(012, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
@@ -375,6 +311,9 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
             "$(0),DATA .",
             "          + 1",
             "          + 2",
@@ -388,50 +327,32 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
             "          + 10",
             "          + 11",
             "          + 12",
+            "DESCRIPTOR + 6,X0,0,R0",
             "",
-            "$(1),START*",
+            "$(1),START$*",
+            "          LA        A4,DESCRIPTOR,,B2",
             "          LRS       A4,DATA,,B2",
             "          HALT      0",
             };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        long count1 = 0;
-        long area1 = GeneralRegisterSet.R0;
-        long count2 = 6;
-        long area2 = GeneralRegisterSet.X0;
-        long descriptor = (count2 << 27) | (area2 << 18) | (count1 << 9) | area1;
-        ip.setGeneralRegister(GeneralRegisterSet.A4, descriptor);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        assertEquals(04, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        assertEquals(06, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(02, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(03, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        assertEquals(04, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        assertEquals(05, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        assertEquals(06, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
@@ -443,7 +364,11 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
-            "$(0),DATA .",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA",
             "          + 1",
             "          + 2",
             "          + 3",
@@ -456,54 +381,34 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
             "          + 10",
             "          + 11",
             "          + 12",
+            "DESCRIPTOR + 0,X0,0,R0",
             "",
-            "$(1),START*",
+            "$(1),START$*",
+            "          LA        A4,DESCRIPTOR,,B2",
             "          LRS       A4,DATA,,B2",
             "          HALT      0",
             };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        long count1 = 0;
-        long area1 = GeneralRegisterSet.R0;
-        long count2 = 0;
-        long area2 = GeneralRegisterSet.X0;
-        long descriptor = (count2 << 27) | (area2 << 18) | (count1 << 9) | area1;
-        ip.setGeneralRegister(GeneralRegisterSet.A4, descriptor);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
@@ -545,7 +450,7 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
             "          + 0333,0444,0555,0666",
             "          + 0444,0555,0666,0777",
             "",
-            "$(1),START* .",
+            "$(1),START$* .",
             "          . Some special load instructions",
             "          DL        A0,DATA1+2,,B2",
             "          DLN       A2,DATA2,,B3",
@@ -574,44 +479,29 @@ public class Test_InstructionProcessor_GeneralLoadInstructions extends Test_Inst
 
         AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(01_000001, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(01_000002, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0777776_777774L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0777776_777773L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(1, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertEquals(01_000005, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        assertEquals(01_000006, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(2, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
-        assertEquals(0_667733_445566L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(0111, ip.getGeneralRegister(GeneralRegisterSet.A12).getW());
-        assertEquals(0333, ip.getGeneralRegister(GeneralRegisterSet.A13).getW());
-        assertEquals(0555, ip.getGeneralRegister(GeneralRegisterSet.A14).getW());
-        assertEquals(0777, ip.getGeneralRegister(GeneralRegisterSet.A15).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000001, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(01_000002, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0777776_777774L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0777776_777773L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(1, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(01_000005, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        assertEquals(01_000006, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(2, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        assertEquals(0_667733_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertEquals(0111, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
+        assertEquals(0333, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A13).getW());
+        assertEquals(0555, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A14).getW());
+        assertEquals(0777, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A15).getW());
     }
 
     //TODO test generating various interrupts
