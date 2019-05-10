@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcessor {
+public class Test_InstructionProcessor_Interrupts extends Test_InstructionProcessor {
 
     @Test
     public void illegalOperation(
@@ -31,39 +31,21 @@ public class Test_InstructionProcessor_MiscTests extends Test_InstructionProcess
 
         String[] source = {
             "          $EXTEND",
+            "          $INFO 10 1",
             "$(1),START$*",
-            "          LA,U      A5,1",
             "          +0 . illegal operation",
-            "          LA,U      A5,2",
             "          HALT      07777",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InstructionProcessor.StopReason reason = ip.getLatestStopReason();
-        long detail = ip.getLatestStopDetail();
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, reason);
-        assertEquals(01016, detail);
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
     }
 }
