@@ -77,8 +77,8 @@ public class TYPEFunction extends BuiltInFunction {
             case String:            iType = 3; break;
             case Node:              iType = 4; break;
             case InternalName:      iType = 5; break;
-            case ProcName:          iType = 6; break;
-            case FuncName:          iType = 7; break;
+            case Procedure:         iType = 6; break;
+            case UserFunction:      iType = 7; break;
             case Directive:         iType = 8; break;
             case BuiltInFunction:   iType = 9; break;
             case Form:              iType = 10; break;  //  this one is non-standard

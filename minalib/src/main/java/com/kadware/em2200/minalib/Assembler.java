@@ -98,12 +98,23 @@ public class Assembler {
             return;
         }
 
-        //  Not a mnemonic - is it a directive?  (check the operation field subfield 0 against the dictionary)
-        if (processDirective(textLine, lfc, operationField, _diagnostics)) {
-            return;
+        //  Check the dictionary...
+        try {
+            Value v = _context._dictionary.getValue(operationField._subfields.get(0)._text.toUpperCase());
+            if (v instanceof ProcedureValue) {
+                //  TODO
+            }
+            else if (v instanceof FormValue) {
+                //  TODO
+            } else if (v instanceof DirectiveValue) {
+                processDirective((DirectiveValue) v, textLine, lfc, operationField, _diagnostics);
+                return;
+            }
+        } catch (NotFoundException ex) {
+            //  ignore it and drop through
         }
 
-        //  Hmm.  Is it an expression (or a list of expressions)?
+        //  Is it an expression (or a list of expressions)?
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
         if (processDataGeneration(lfc, operationField, _diagnostics)) {
             if (textLine._fields.size() > 2) {
@@ -462,49 +473,32 @@ public class Assembler {
 
     /**
      * Handles directives
+     * @param directiveValue the DirectiveValue we are processing
      * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      * @param diagnostics where we post diagnostics if needed
-     * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private boolean processDirective(
-            final TextLine textLine,
-            final LabelFieldComponents labelFieldComponents,
-            final TextField operationField,
-            final Diagnostics diagnostics
+    private void processDirective(
+        final DirectiveValue directiveValue,
+        final TextLine textLine,
+        final LabelFieldComponents labelFieldComponents,
+        final TextField operationField,
+        final Diagnostics diagnostics
     ) {
-        if ((operationField == null) || (operationField._subfields.isEmpty())) {
-            return false;
+        try {
+            Class<?> clazz = ((DirectiveValue) directiveValue)._clazz;
+            Constructor<?> ctor = clazz.getConstructor();
+            Directive directive = (Directive) (ctor.newInstance());
+            directive.process(this, _context, textLine, labelFieldComponents, diagnostics);
+        } catch (IllegalAccessException
+                 | InstantiationException
+                 | NoSuchMethodException
+                 | InvocationTargetException ex) {
+            System.out.println("Caught:%s" + ex.toString() + ":" + ex.getMessage());
+            diagnostics.append(new FatalDiagnostic(operationField._locale,
+                                                   "Internal Error in Assembler.processDirective()"));
         }
-
-        String text = operationField._subfields.get(0)._text;
-        if (text.startsWith("$")) {
-            try {
-                Value v = _context._dictionary.getValue(text.toUpperCase());
-                if (!(v instanceof DirectiveValue)) {
-                    return false;
-                }
-
-                Class<?> clazz = ((DirectiveValue) v)._clazz;
-                Constructor<?> ctor = clazz.getConstructor();
-                Directive directive = (Directive) (ctor.newInstance());
-                directive.process(this, _context, textLine, labelFieldComponents, diagnostics);
-            } catch (NotFoundException ex) {
-                diagnostics.append(new ErrorDiagnostic(operationField._locale, "Unrecognized directive"));
-            } catch (IllegalAccessException
-                     | InstantiationException
-                     | NoSuchMethodException
-                     | InvocationTargetException ex) {
-                System.out.println("Caught:%s" + ex.toString() + ":" + ex.getMessage());
-                diagnostics.append(new FatalDiagnostic(operationField._locale,
-                                                       "Internal Error in Assembler.processDirective()"));
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     /**
