@@ -2109,6 +2109,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * @throws MachineInterrupt for general errors, TestAndSetInterrupt of the lock is already in the state indicated by flag
      * @throws UnresolvedAddressException
      */
+    //TODO do we need to synchronize on something here?
     public void testAndStore(
         final boolean flag
     ) throws MachineInterrupt,

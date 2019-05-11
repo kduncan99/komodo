@@ -14,6 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.shift.*;
 import com.kadware.em2200.hardwarelib.functions.special.*;
 import com.kadware.em2200.hardwarelib.functions.systemControl.*;
 import com.kadware.em2200.hardwarelib.functions.test.*;
+import org.apache.logging.log4j.core.config.CronScheduledFuture;
 
 
 /**
@@ -141,9 +142,9 @@ public abstract class FunctionTable {
      * Basic Mode function handlers for f-field 073, j-field 017, indexed by a-field
      */
     private static final FunctionHandler[] BASIC_MODE_FUNCTION073_017_HANDLERS = {
-        null,           //  000
-        null,           //  001
-        null,           //  002
+        new TSFunctionHandler(),    //  000
+        new TSSFunctionHandler(),   //  001
+        new TCSFunctionHandler(),   //  002
         null,           //  003
         null,           //  004
         null,           //  005
@@ -585,9 +586,9 @@ public abstract class FunctionTable {
      * Extended Mode function handlers for f-field 073, j-field 017, indexed by a-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_017_HANDLERS = {
-        null,           //  000
-        null,           //  001
-        null,           //  002
+        new TSFunctionHandler(),    //  000
+        new TSSFunctionHandler(),   //  001
+        new TCSFunctionHandler(),   //  002
         null,           //  003
         null,           //  004
         null,           //  005

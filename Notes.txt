@@ -5,7 +5,7 @@ Lose unnecessary accessors (in progress)
 TODO
 pick up the rest of the tests we need to do but haven't yet
 minalib support procs
-minalib generate system procs for special instructions such as JGD, BT, JK, SLJ
+minalib generate system procs for special instructions such as JGD, BT, JK, SLJ, TZ, TNZ, TP, TN
 minalib $USE (A.2.8) specifies base register to use if none given
 minalib add test cases for interrupts (many of them already marked TODO)
 minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
@@ -46,6 +46,8 @@ minalib directives
 
 hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
 hardwarelib Finish adding instructions to IP
+    CR from test categories
+    Other categories
 hardwarelib UPI send/ack mechanism
 hardwarelib Figure out how to do channel programs
   do we need a cleaner IO path?
