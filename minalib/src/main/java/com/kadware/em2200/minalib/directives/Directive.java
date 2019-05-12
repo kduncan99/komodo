@@ -52,7 +52,6 @@ public abstract class Directive {
 
     /**
      * Processes this directive
-     * @param assembler reference to the assembler
      * @param context reference to the context in which this directive is to execute
      * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
      *                 make different usages of the fields - and $INFO even uses an extra field
@@ -60,7 +59,6 @@ public abstract class Directive {
      * @param diagnostics where diagnostics should be posted if necessary
      */
     public abstract void process(
-            final Assembler assembler,
             final Context context,
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents,

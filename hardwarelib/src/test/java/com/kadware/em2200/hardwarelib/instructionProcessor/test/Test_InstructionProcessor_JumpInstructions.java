@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.test;
+package com.kadware.em2200.hardwarelib.instructionProcessor.test;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
@@ -177,8 +177,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
+            "          $BASIC",
             "",
             "$(1),START$*",
             "          NOP       0",

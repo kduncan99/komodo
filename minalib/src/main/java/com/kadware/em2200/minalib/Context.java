@@ -170,6 +170,12 @@ public class Context {
     //  name of the relocatable module
     public final String _moduleName;
 
+    //  Things relating to the relocatable module as a whole
+    private boolean _arithmeticFaultCompatibilityMode = false;
+    private boolean _arithmeticFaultNonInterruptMode = false;
+    private boolean _quarterWordMode = false;
+    private boolean _thirdWordMode = false;
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  constructor
@@ -207,6 +213,21 @@ public class Context {
         }
         return gp;
     }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  special accessors - the sub context overrides these to call its parent instead of using its regular values
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public boolean getArithmeticFaultCompatibilityMode() { return _arithmeticFaultCompatibilityMode; }
+    public boolean getArithmeticFaultNonInterruptMode() { return _arithmeticFaultNonInterruptMode; }
+    public boolean getQuarterWordMode() { return _quarterWordMode; }
+    public boolean getThirdWordMode() { return _thirdWordMode; }
+
+    public void setArithmeticFaultCompatibilityMode( final boolean value ) { _arithmeticFaultCompatibilityMode = value; }
+    public void setArithmeticFaultNonInterruptMode( final boolean value ) { _arithmeticFaultNonInterruptMode = value; }
+    public void setQuarterWordMode( final boolean value ) { _quarterWordMode = value; }
+    public void setThirdWordMode( final boolean value ) { _thirdWordMode = value; }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

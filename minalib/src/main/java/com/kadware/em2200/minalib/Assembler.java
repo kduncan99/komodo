@@ -27,29 +27,18 @@ import java.util.TreeMap;
 @SuppressWarnings("Duplicates")
 public class Assembler {
 
-    //  The Context object contains things which specifically apply to a particular sub-assembly...
-    //  that is to say, whenever we enter a proc or a proc definition, we get a new one.  I think...
-    private final Context _context;
+    public enum Option {
+        EMIT_DICTIONARY,
+        EMIT_GENERATED_CODE,
+        EMIT_MODULE_SUMMARY,
+        EMIT_SOURCE,
+    }
 
-    //  Aggregation of all TextLine diagnostics.
-    //  This is rarely (if at all) up-to-date, until we reach the end of the assembly process.
-    //  Diagnostics, when generated, should be appended to the TextLine objects' _diagnostic members.
-    private final Diagnostics _diagnostics = new Diagnostics();
+    //  Diagnostics generated during the most recent call to assemble()
+    private Diagnostics _lastDiagnostics = null;
 
-    //  The various TextLine object which comprise the source and assembled code...
-    //  These objects are where most of the work is done throughout the assembly process
-    private final TextLine[] _sourceCode;
-
-    //  Name of the module to be created
-    private final String _moduleName;
-
-    private final Dictionary _globalDictionary;
-
-    //  Things relating to the relocatable module as a whole
-    public boolean _setArithFaultCompatibility = false;
-    public boolean _setArithFaultNonInterrupt = false;
-    public boolean _setQuarterWordMode = false;
-    public boolean _setThirdWordMode = false;
+    //  The parsed code from the most recent call to assemble()
+    private TextLine[] _parsedCode = null;
 
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
@@ -62,15 +51,20 @@ public class Assembler {
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
 
+
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Assemble a single TextLine object into the Relocatable Module
+     * @param context under which we operate
+     * @diagnostics where we post errors
      * @param textLine entity to be assembled
      */
-    private void assembleTextLine(
+    private static void assembleTextLine(
+        final Context context,
+        final Diagnostics diagnostics,
         final TextLine textLine
     ) {
         if (textLine._fields.isEmpty()) {
@@ -85,29 +79,29 @@ public class Assembler {
         //  We can't do anything with the label at this point (what we do depends on the operator field),
         //  but if there is a location counter spec, it will always set the current generation lc index.
         //  So do that part of it here.
-        LabelFieldComponents lfc = interpretLabelField(labelField, _diagnostics);
+        LabelFieldComponents lfc = interpretLabelField(labelField, diagnostics);
         if (lfc._lcIndex != null) {
-            _context._currentGenerationLCIndex = lfc._lcIndex;
+            context._currentGenerationLCIndex = lfc._lcIndex;
         }
 
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(lfc, operationField, operandField, _diagnostics)) {
+        if (processMnemonic(context, lfc, operationField, operandField, diagnostics)) {
             if (textLine._fields.size() > 3) {
-                _diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale, "Extraneous fields ignored"));
+                diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale, "Extraneous fields ignored"));
             }
             return;
         }
 
         //  Check the dictionary...
         try {
-            Value v = _context._dictionary.getValue(operationField._subfields.get(0)._text.toUpperCase());
+            Value v = context._dictionary.getValue(operationField._subfields.get(0)._text.toUpperCase());
             if (v instanceof ProcedureValue) {
                 //  TODO
             }
             else if (v instanceof FormValue) {
                 //  TODO
             } else if (v instanceof DirectiveValue) {
-                processDirective((DirectiveValue) v, textLine, lfc, operationField, _diagnostics);
+                processDirective(context, (DirectiveValue) v, textLine, lfc, operationField, diagnostics);
                 return;
             }
         } catch (NotFoundException ex) {
@@ -116,14 +110,14 @@ public class Assembler {
 
         //  Is it an expression (or a list of expressions)?
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
-        if (processDataGeneration(lfc, operationField, _diagnostics)) {
+        if (processDataGeneration(context, lfc, operationField, diagnostics)) {
             if (textLine._fields.size() > 2) {
-                _diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale, "Extraneous fields ignored"));
+                diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale, "Extraneous fields ignored"));
             }
             return;
         }
 
-        _diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "Unrecognizable source code"));
+        diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1), "Unrecognizable source code"));
     }
 
     /**
@@ -159,15 +153,15 @@ public class Assembler {
      * Summary of module
      * @param module module
      */
-    private void displayModuleSummary(
+    private static void displayModuleSummary(
         final RelocatableModule module
     ) {
         System.out.println("Rel Module Settings:");
         System.out.println(String.format("  Modes:%s%s%s%s",
-                                         _setQuarterWordMode ? "QWORD " : "",
-                                         _setThirdWordMode ? "TWORD " : "",
-                                         _setArithFaultCompatibility ? "ACOMP " : "",
-                                         _setArithFaultNonInterrupt ? "ANON " : ""));
+                                         module._requiresQuarterWordMode ? "QWORD " : "",
+                                         module._requiresThirdWordMode ? "TWORD " : "",
+                                         module._requiresArithmeticFaultCompatibilityMode ? "ACOMP " : "",
+                                         module._requiresArithmeticFaultNonInterruptMode ? "ANON " : ""));
 
         for (Map.Entry<Integer, LocationCounterPool> entry : module._storage.entrySet()) {
             int lcIndex = entry.getKey();
@@ -201,40 +195,44 @@ public class Assembler {
     /**
      * Displays output upon the console
      */
-    private void displayResults(
+    private static void displayResults(
+        final Context context,
+        final TextLine[] sourceCode,
+        final Diagnostics diagnostics,
+        final boolean displayCode
     ) {
         //  This is inefficient, but it only applies when the caller wants to display source output.
-        for (TextLine line : _sourceCode) {
+        for (TextLine line : sourceCode) {
             System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
 
-            for (Diagnostic d : _diagnostics.getDiagnostics(line._lineNumber)) {
-                System.out.println( d.getMessage() );
+            for (Diagnostic d : diagnostics.getDiagnostics(line._lineNumber)) {
+                System.out.println(d.getMessage());
             }
 
-            for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : _context._generatedPools.entrySet()) {
-                int lcIndex = poolEntry.getKey();
-                Context.GeneratedPool gPool = poolEntry.getValue();
-                for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : gPool.entrySet()) {
-                    int lcOffset = wordEntry.getKey();
-                    Context.GeneratedWord gWord = wordEntry.getValue();
-                    if (gWord._locale.getLineNumber() == line._lineNumber) {
-                        RelocatableWord36 rw36 = gWord.produceRelocatableWord36(_diagnostics);
-                        String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
-                        if (rw36._undefinedReferences.length == 0) {
-                            System.out.println(gwBase);
-                        } else {
-                            for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
-                                System.out.println(String.format("%s %s",
-                                                                 urx == 0 ? gwBase : "                           ",
-                                                                 rw36._undefinedReferences[urx].toString()));
+            if (displayCode) {
+                for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context._generatedPools.entrySet()) {
+                    int lcIndex = poolEntry.getKey();
+                    Context.GeneratedPool gPool = poolEntry.getValue();
+                    for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : gPool.entrySet()) {
+                        int lcOffset = wordEntry.getKey();
+                        Context.GeneratedWord gWord = wordEntry.getValue();
+                        if (gWord._locale.getLineNumber() == line._lineNumber) {
+                            RelocatableWord36 rw36 = gWord.produceRelocatableWord36(diagnostics);
+                            String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
+                            if (rw36._undefinedReferences.length == 0) {
+                                System.out.println(gwBase);
+                            } else {
+                                for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+                                    System.out.println(String.format("%s %s",
+                                                                     urx == 0 ? gwBase : "                           ",
+                                                                     rw36._undefinedReferences[urx].toString()));
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
-        displayDictionary(_context._dictionary);
     }
 
     /**
@@ -242,13 +240,16 @@ public class Assembler {
      * @param moduleName name of the module
      * @return RelocatableModule object unless there's a fatal error (then we return null)
      */
-    private RelocatableModule generateRelocatableModule(
-        final String moduleName
+    private static RelocatableModule generateRelocatableModule(
+        final String moduleName,
+        final Context context,
+        final Dictionary globalDictionary,
+        final Diagnostics diagnostics
     ) {
         Map<String, IntegerValue> externalLabels = new TreeMap<>();
-        for (String label : _globalDictionary.getLabels()) {
+        for (String label : globalDictionary.getLabels()) {
             try {
-                Dictionary.ValueAndLevel val = _globalDictionary.getValueAndLevel(label);
+                Dictionary.ValueAndLevel val = globalDictionary.getValueAndLevel(label);
                 if (val._level == 0) {
                     if ( val._value.getType() == ValueType.Integer ) {
                         externalLabels.put(label, (IntegerValue) val._value);
@@ -261,27 +262,18 @@ public class Assembler {
 
         try {
             return new RelocatableModule.Builder().setName(moduleName)
-                                                  .setStorage(_context.produceLocationCounterPools(_diagnostics))
+                                                  .setStorage(context.produceLocationCounterPools(diagnostics))
                                                   .setExternalLabels(externalLabels)
-                                                  .setRequiresQuarterWordMode(_setQuarterWordMode)
-                                                  .setRequiresThirdWordMode(_setThirdWordMode)
-                                                  .setArithmeticFaultCompatibilityMode(_setArithFaultCompatibility)
-                                                  .setArithmeticFaultNonInterruptMode(_setArithFaultNonInterrupt)
+                                                  .setRequiresQuarterWordMode(context.getQuarterWordMode())
+                                                  .setRequiresThirdWordMode(context.getThirdWordMode())
+                                                  .setArithmeticFaultCompatibilityMode(context.getArithmeticFaultCompatibilityMode())
+                                                  .setArithmeticFaultNonInterruptMode(context.getArithmeticFaultNonInterruptMode())
                                                   .build();
         } catch (InvalidParameterException ex) {
-            _diagnostics.append(new FatalDiagnostic(new Locale(1, 1),
-                                                    "Could not generate relocatable module:" + ex.getMessage()));
+            diagnostics.append(new FatalDiagnostic(new Locale(1, 1),
+                                                   "Could not generate relocatable module:" + ex.getMessage()));
             return null;
         }
-    }
-
-    /**
-     * Getter for unit tests
-     * @return array of TextLine objects comprising the source code
-     */
-    TextLine[] getParsedCode(
-    ) {
-        return _sourceCode;
     }
 
     /**
@@ -291,7 +283,7 @@ public class Assembler {
      * @param diagnostics where we post any appropriate diagnostics
      * @return an appropriately populated LabelFieldComponents object
      */
-    private LabelFieldComponents interpretLabelField(
+    private static LabelFieldComponents interpretLabelField(
             final TextField labelField,
             final Diagnostics diagnostics
     ) {
@@ -358,12 +350,14 @@ public class Assembler {
      * If it is a string, then we allow no other subfields, and we generate as many words as necessary.
      * If it is a float, we generate one word, and allow no other subfields
      * If it is an integer, we then expect any other subfields to also evaluate to integers, and proceed accordingly.
+     * @param context under which we operate
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operandField represents the operand field, if any
      * @param diagnostics where we post diagnostics if needed
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private boolean processDataGeneration(
+    private static boolean processDataGeneration(
+        final Context context,
         final LabelFieldComponents labelFieldComponents,
         final TextField operandField,
         final Diagnostics diagnostics
@@ -378,21 +372,21 @@ public class Assembler {
         Value firstValue = null;
         try {
             ExpressionParser p1 = new ExpressionParser(sf0Text, sf0Locale);
-            Expression e1 = p1.parse(_context, diagnostics);
+            Expression e1 = p1.parse(context, diagnostics);
             if (e1 == null) {
                 return false;
             }
-            firstValue = e1.evaluate(_context, diagnostics);
+            firstValue = e1.evaluate(context, diagnostics);
         } catch (ExpressionException eex) {
             diagnostics.append(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
         }
 
         if (labelFieldComponents._label != null) {
             establishLabel(labelFieldComponents._labelLocale,
-                           _context._dictionary,
+                           context._dictionary,
                            labelFieldComponents._label,
                            labelFieldComponents._labelLevel,
-                           _context.getCurrentLocation(),
+                           context.getCurrentLocation(),
                            diagnostics);
         }
 
@@ -437,13 +431,13 @@ public class Assembler {
                 Locale sfNextLocale = sfNext._locale;
                 try {
                     ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
-                    Expression eNext = pNext.parse(_context, diagnostics);
+                    Expression eNext = pNext.parse(context, diagnostics);
                     if (eNext == null) {
                         diagnostics.append(new ErrorDiagnostic(sf0Locale, "Expression expected"));
                         continue;
                     }
 
-                    Value vNext = eNext.evaluate(_context, diagnostics);
+                    Value vNext = eNext.evaluate(context, diagnostics);
                     if (vNext instanceof IntegerValue) {
                         values[vx] = (IntegerValue) vNext;
                     } else {
@@ -460,10 +454,10 @@ public class Assembler {
                 fieldSizes[fx] = fieldSize;
             }
 
-            _context.generate(operandField._locale,
-                              _context._currentGenerationLCIndex,
-                              new Form(fieldSizes),
-                              values);
+            context.generate(operandField._locale,
+                             context._currentGenerationLCIndex,
+                             new Form(fieldSizes),
+                             values);
             return true;
         }
 
@@ -473,13 +467,15 @@ public class Assembler {
 
     /**
      * Handles directives
+     * @param context under which we operate
      * @param directiveValue the DirectiveValue we are processing
      * @param textLine where this came from
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      * @param diagnostics where we post diagnostics if needed
      */
-    private void processDirective(
+    private static void processDirective(
+        final Context context,
         final DirectiveValue directiveValue,
         final TextLine textLine,
         final LabelFieldComponents labelFieldComponents,
@@ -490,7 +486,7 @@ public class Assembler {
             Class<?> clazz = ((DirectiveValue) directiveValue)._clazz;
             Constructor<?> ctor = clazz.getConstructor();
             Directive directive = (Directive) (ctor.newInstance());
-            directive.process(this, _context, textLine, labelFieldComponents, diagnostics);
+            directive.process(context, textLine, labelFieldComponents, diagnostics);
         } catch (IllegalAccessException
                  | InstantiationException
                  | NoSuchMethodException
@@ -503,13 +499,15 @@ public class Assembler {
 
     /**
      * Handles instruction mnemonic lines of code, and blank lines
+     * @param context scratchpad of assembler state
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      * @param operandField represents the operand field, if any
      * @param diagnostics where we post diagnostics if needed
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private boolean processMnemonic(
+    private static boolean processMnemonic(
+        final Context context,
         final LabelFieldComponents labelFieldComponents,
         final TextField operationField,
         final TextField operandField,
@@ -520,10 +518,10 @@ public class Assembler {
             //  Do label stuff, then return true indicating that the line has been processed.
             if (labelFieldComponents._label != null) {
                 establishLabel(labelFieldComponents._labelLocale,
-                               _context._dictionary,
+                               context._dictionary,
                                labelFieldComponents._label,
                                labelFieldComponents._labelLevel,
-                               _context.getCurrentLocation(),
+                               context.getCurrentLocation(),
                                diagnostics);
             }
             return true;
@@ -531,228 +529,46 @@ public class Assembler {
 
         //  Deal with the operation field
         TextSubfield mnemonicSubfield = operationField.getSubfield(0);
-        String mnemonic = mnemonicSubfield._text;
-        InstructionWord.InstructionInfo iinfo;
+        InstructionWord.InstructionInfo iinfo = null;
         try {
-            InstructionWord.Mode imode =
-                    _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
-            iinfo = InstructionWord.getInstructionInfo(mnemonic, imode);
+            iinfo = processMnemonicOperationField(context, mnemonicSubfield, diagnostics);
         } catch (NotFoundException ex) {
-            //  Mnemonic not found - is it dependent on code mode?
-            //  If so, coder is asking for a mnemonic in a mode it doesn't exist in; raise a diagnostic and
-            //  return true so the assemble method doesn't go any further with this line.
-            //  Otherwise, it's just flat not a mnemonic, so return false and let the assemble method do
-            //  something else.
-            try {
-                InstructionWord.Mode imode =
-                    _context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
-                InstructionWord.getInstructionInfo(mnemonic, imode);
-                diagnostics.append(new ErrorDiagnostic(mnemonicSubfield._locale,
-                                                       "Opcode not valid for the current code mode"));
-                return true;
-            } catch (NotFoundException ex2) {
-                //  The mnemonic truly isn't found - return false, this is not an instruction operation
-                return false;
-            }
+            //  mnemonic not found - return false
+            return false;
+        }
+
+        if (operandField == null) {
+            diagnostics.append(new ErrorDiagnostic(operationField._locale,
+                                                   "Instruction mnemonic requires an operand field"));
+            return true;
         }
 
         //  Establish the label to refer to the current lc pool's current offset (if there is a label).
         //  Use the label level to establish which dictionary level it should be placed in.
         if (labelFieldComponents._label != null) {
             establishLabel(labelFieldComponents._labelLocale,
-                           _context._dictionary,
+                           context._dictionary,
                            labelFieldComponents._label,
                            labelFieldComponents._labelLevel,
-                           _context.getCurrentLocation(),
+                           context.getCurrentLocation(),
                            diagnostics);
         }
 
-        //  If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
-        int jField = 0;
-        if (iinfo._jFlag) {
-            jField = iinfo._jField;
-            if (operationField._subfields.size() > 1) {
-                diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1)._locale,
-                                                      "Extraneous subfields in operation field"));
-            }
-        } else if (operationField._subfields.size() > 1) {
-            TextSubfield jSubField = operationField.getSubfield(1);
-            try {
-                jField = InstructionWord.getJFieldValue(jSubField._text);
-            } catch ( NotFoundException e ) {
-                diagnostics.append(new ErrorDiagnostic(jSubField._locale,
-                                                       "Invalid text for j-field of instruction"));
-            }
-
-            if ( operationField._subfields.size() > 2 ) {
-                diagnostics.append(new ErrorDiagnostic(
-                    operationField.getSubfield(1)._locale,
-                    "Extraneous subfields in operation field"));
-            }
-        }
-
-        //  Deal with the operand field - initialize resulting values here, as we do make every attempt to generate
-        //  a word, even in the presence of errors which might short-circuit other stuff inside the conditional
-        //  expression(s).
-        IntegerValue aValue;                //  register value
-        IntegerValue bValue = _zeroValue;   //  base register subfield
-        IntegerValue uValue;                //  displacement/address/value subfield
-        IntegerValue xValue = _zeroValue;   //  index register subfield
-
-        if (operandField == null) {
-            diagnostics.append(new ErrorDiagnostic(operationField._locale,
-                                                    "Instruction mnemonic requires an operand field"));
-            return true;
-        }
+        int jField = processMnemonicGetJField(iinfo, operationField, diagnostics);
 
         //  We have to be in extended mode, *not* using basic mode semantics, and
         //  either the j-field is part of the instruction, or else it is no U or XU...
         //  If that is the case, then we allow (maybe even require) a base register specification.
-        boolean sfBaseAllowed =
-                (_context._codeMode == CodeMode.Extended)
+        boolean baseSubfieldAllowed =
+                (context._codeMode == CodeMode.Extended)
                 && !iinfo._useBMSemantics
                 && (iinfo._jFlag || (jField < 016));
 
-        //  Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
-        //  a field, and there isn't one in the syntax for the operand field.
-        //  If the flag is clear, then the first subfield is a register specification... which can get a bit
-        //  complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
-        TextSubfield sfRegister = null;
-        TextSubfield sfValue = null;
-        TextSubfield sfIndex = null;
-        TextSubfield sfBase = null;
-
-        int sfx = 0;
-        int sfc = operandField._subfields.size();
-        if (!iinfo._aFlag && (sfc > sfx)) {
-            sfRegister = operandField.getSubfield( sfx++ );
-        }
-        if (sfc > sfx) {
-            sfValue = operandField.getSubfield( sfx++ );
-        }
-        if (sfc > sfx) {
-            sfIndex = operandField.getSubfield( sfx++ );
-        }
-        if ((sfc > sfx) && sfBaseAllowed) {
-            sfBase = operandField.getSubfield( sfx++ );
-        }
-        if (sfc > sfx) {
-            diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
-                                                     "Extreanous subfields in operand field ignored") );
-        }
-
-        //  Interpret the subfields
-        if (iinfo._aFlag) {
-            aValue = new IntegerValue( false, iinfo._aField, null );
-        } else {
-            if ((sfRegister == null) || (sfRegister._text.isEmpty())) {
-                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Missing register specification"));
-                return true;
-            }
-
-            try {
-                ExpressionParser p = new ExpressionParser(sfRegister._text, sfRegister._locale);
-                Expression e = p.parse(_context, diagnostics);
-                if (e == null) {
-                    diagnostics.append(new ErrorDiagnostic(sfRegister._locale, "Syntax Error"));
-                    return true;
-                }
-
-                Value v = e.evaluate(_context, diagnostics);
-                if (!(v instanceof IntegerValue)) {
-                    diagnostics.append(new ValueDiagnostic(sfRegister._locale, "Wrong value type"));
-                    return true;
-                }
-
-                //  Reduce the value appropriately for the a-field
-                aValue = (IntegerValue) v;
-                switch (iinfo._aSemantics) {
-                    case A:
-                        aValue = new IntegerValue(aValue._flagged, aValue._value - 12, aValue._undefinedReferences);
-                        break;
-
-                    case R:
-                        aValue = new IntegerValue(aValue._flagged, aValue._value - 64, aValue._undefinedReferences);
-                        break;
-                }
-            } catch (ExpressionException ex) {
-                diagnostics.append(new ErrorDiagnostic(sfRegister._locale, "Syntax Error"));
-                return true;
-            }
-        }
-
-        if ((sfValue == null) || (sfValue._text.isEmpty())) {
-            diagnostics.append(new ErrorDiagnostic(operationField._locale,
-                                                   "Missing operand value (U, u, or d subfield)"));
-            return true;
-        }
-
-        try {
-            ExpressionParser p = new ExpressionParser( sfValue._text, sfValue._locale );
-            Expression e = p.parse(_context, diagnostics);
-            if (e == null) {
-                diagnostics.append(new ErrorDiagnostic(sfValue._locale, "Syntax Error"));
-                return true;
-            }
-
-            Value v = e.evaluate(_context, diagnostics);
-            if (!(v instanceof IntegerValue)) {
-                diagnostics.append(new ValueDiagnostic(sfValue._locale, "Wrong value type"));
-                return true;
-            }
-
-            uValue = (IntegerValue) v;
-        } catch ( ExpressionException ex ) {
-            diagnostics.append(new ErrorDiagnostic(sfValue._locale, "Syntax Error"));
-            return true;
-        }
-
-        if ((sfIndex != null) && !sfIndex._text.isEmpty()) {
-            try {
-                ExpressionParser p = new ExpressionParser( sfIndex._text, sfIndex._locale );
-                Expression e = p.parse(_context, diagnostics);
-                if (e == null) {
-                    diagnostics.append(new ErrorDiagnostic(sfIndex._locale, "Syntax Error"));
-                    return true;
-                }
-
-                Value v = e.evaluate(_context, diagnostics);
-                if (!(v instanceof IntegerValue)) {
-                    diagnostics.append(new ValueDiagnostic(sfIndex._locale, "Wrong value type"));
-                    return true;
-                }
-
-                xValue = (IntegerValue) v;
-            } catch (ExpressionException ex) {
-                diagnostics.append(new ErrorDiagnostic(sfIndex._locale, "Syntax Error"));
-                return true;
-            }
-        }
-
-        if (sfBaseAllowed) {
-            if ((sfBase != null) && !sfBase._text.isEmpty()) {
-                try {
-                    ExpressionParser p = new ExpressionParser( sfBase._text, sfBase._locale );
-                    Expression e = p.parse( _context, diagnostics );
-                    if (e == null) {
-                        diagnostics.append(new ErrorDiagnostic(sfBase._locale, "Syntax Error"));
-                        return true;
-                    }
-
-                    Value v = e.evaluate( _context, diagnostics );
-                    if (!(v instanceof IntegerValue)) {
-                        diagnostics.append(new ValueDiagnostic(sfBase._locale, "Wrong value type"));
-                        return true;
-                    }
-
-                    bValue = (IntegerValue) v;
-                } catch (ExpressionException ex) {
-                    diagnostics.append( new ErrorDiagnostic( sfBase._locale,
-                                                             "Syntax Error:" + ex.getMessage() ) );
-                    return true;
-                }
-            }
-        }
+        TextSubfield[] opSubfields = processMnemonicGetOperandSubfields(iinfo, operandField, baseSubfieldAllowed, diagnostics);
+        IntegerValue aValue = processMnemonicGetAField(context, iinfo, operandField, opSubfields[0], diagnostics);
+        IntegerValue uValue = processMnemonicGetUField(context, operandField, opSubfields[1], diagnostics);
+        IntegerValue xValue = processMnemonicGetXField(context, opSubfields[2], diagnostics);
+        IntegerValue bValue = baseSubfieldAllowed ? processMnemonicGetBField(context, opSubfields[3], diagnostics) : _zeroValue;
 
         //  Create the instruction word
         Form form;
@@ -765,7 +581,7 @@ public class Assembler {
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
-        } else if ((_context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
+        } else if ((context._codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
             form = _fjaxhiuForm;
             values = new IntegerValue[7];
             values[0] = new IntegerValue(false, iinfo._fField, null);
@@ -788,8 +604,295 @@ public class Assembler {
             values[7] = uValue;
         }
 
-        _context.generate(operationField._locale, _context._currentGenerationLCIndex, form, values);
+        context.generate(operationField._locale, context._currentGenerationLCIndex, form, values);
         return true;
+    }
+
+    /**
+     * Determine the value for the instruction's a-field
+     * @param context which we operate under
+     * @param instructionInfo InstructionInfo for the instruction we're generating
+     * @param operandField operand field in case we need that locale
+     * @param registerSubfield register (a-field) subfield text
+     * @param diagnostics where we post diagnostics
+     * @return value representing the A-field (which might have a flagged value)
+     */
+    private static IntegerValue processMnemonicGetAField(
+        final Context context,
+        final InstructionWord.InstructionInfo instructionInfo,
+        final TextField operandField,
+        final TextSubfield registerSubfield,
+        final Diagnostics diagnostics
+    ) {
+        IntegerValue aValue = _zeroValue;
+
+        if (instructionInfo._aFlag) {
+            aValue = new IntegerValue(false, instructionInfo._aField, null);
+        } else {
+            if ((registerSubfield == null) || (registerSubfield._text.isEmpty())) {
+                diagnostics.append(new ErrorDiagnostic(operandField._locale, "Missing register specification"));
+            } else {
+                try {
+                    ExpressionParser p = new ExpressionParser(registerSubfield._text, registerSubfield._locale);
+                    Expression e = p.parse(context, diagnostics);
+                    if (e == null) {
+                        diagnostics.append(new ErrorDiagnostic(registerSubfield._locale, "Syntax Error"));
+                    } else {
+                        Value v = e.evaluate(context, diagnostics);
+                        if (!(v instanceof IntegerValue)) {
+                            diagnostics.append(new ValueDiagnostic(registerSubfield._locale, "Wrong value type"));
+                        } else {
+                            //  Reduce the value appropriately for the a-field
+                            aValue = (IntegerValue) v;
+                            switch (instructionInfo._aSemantics) {
+                                case A:
+                                    aValue = new IntegerValue(aValue._flagged, aValue._value - 12, aValue._undefinedReferences);
+                                    break;
+
+                                case R:
+                                    aValue = new IntegerValue(aValue._flagged, aValue._value - 64, aValue._undefinedReferences);
+                                    break;
+                            }
+                        }
+                    }
+                } catch (ExpressionException ex) {
+                    diagnostics.append(new ErrorDiagnostic(registerSubfield._locale, "Syntax Error"));
+                }
+            }
+        }
+
+        return aValue;
+    }
+
+    /**
+     * Determine the value for the instruction's b-field
+     * @param context which we operate under
+     * @param baseSubfield index (b-field) subfield text
+     * @param diagnostics where we post diagnostics
+     * @return value representing the B-field
+     */
+    private static IntegerValue processMnemonicGetBField(
+        final Context context,
+        final TextSubfield baseSubfield,
+        final Diagnostics diagnostics
+    ) {
+        IntegerValue bValue = _zeroValue;
+
+        if ((baseSubfield != null) && !baseSubfield._text.isEmpty()) {
+            try {
+                ExpressionParser p = new ExpressionParser(baseSubfield._text, baseSubfield._locale);
+                Expression e = p.parse(context, diagnostics);
+                if (e == null) {
+                    diagnostics.append(new ErrorDiagnostic(baseSubfield._locale, "Syntax Error"));
+                } else {
+                    Value v = e.evaluate(context, diagnostics);
+                    if (!(v instanceof IntegerValue)) {
+                        diagnostics.append(new ValueDiagnostic(baseSubfield._locale, "Wrong value type"));
+                    } else {
+                        bValue = (IntegerValue) v;
+                    }
+                }
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(baseSubfield._locale, "Syntax Error"));
+            }
+        }
+
+        return bValue;
+    }
+
+    /**
+     * Processes the mnemonic in order to determine the j-field for the instruction word.
+     * If j-flag is set, we pull j-field from the iinfo object.  Otherwise, we interpret the j-field.
+     * @param instructionInfo InstructionInfo object describing the instruction we're building
+     * @param operationField operation field which might contain a j-field specification
+     * @param diagnostics where we post diagnostics if necessary
+     * @return value for instruction's j-field
+     */
+    private static int processMnemonicGetJField(
+        final InstructionWord.InstructionInfo instructionInfo,
+        final TextField operationField,
+        final Diagnostics diagnostics
+    ) {
+        int jField = 0;
+        if (instructionInfo._jFlag) {
+            jField = instructionInfo._jField;
+            if (operationField._subfields.size() > 1) {
+                diagnostics.append(new ErrorDiagnostic(operationField.getSubfield(1)._locale,
+                                                       "Extraneous subfields in operation field"));
+            }
+        } else if (operationField._subfields.size() > 1) {
+            TextSubfield jSubField = operationField.getSubfield(1);
+            try {
+                jField = InstructionWord.getJFieldValue(jSubField._text);
+            } catch ( NotFoundException e ) {
+                diagnostics.append(new ErrorDiagnostic(jSubField._locale,
+                                                       "Invalid text for j-field of instruction"));
+            }
+
+            if ( operationField._subfields.size() > 2 ) {
+                diagnostics.append(new ErrorDiagnostic(
+                    operationField.getSubfield(1)._locale,
+                    "Extraneous subfields in operation field"));
+            }
+        }
+
+        return jField;
+    }
+
+    /**
+     * Find the subfields... if iinfo's a-flag is set, then the iinfo a-field is used for the instruction
+     * a field, and there isn't one in the syntax for the operand field.
+     * If the flag is clear, then the first subfield is a register specification... which can get a bit
+     * complicated as well, since it might be an a-register, an x-register, or an r-register (or even a b...)
+     * @return array of four TextSubfield references, some of which might be null
+     */
+    private static TextSubfield[] processMnemonicGetOperandSubfields(
+        final InstructionWord.InstructionInfo instructionInfo,
+        final TextField operandField,
+        final boolean baseSubfieldAllowed,
+        final Diagnostics diagnostics
+    ) {
+        TextSubfield sfRegister = null;
+        TextSubfield sfValue = null;
+        TextSubfield sfIndex = null;
+        TextSubfield sfBase = null;
+
+        int sfx = 0;
+        int sfc = operandField._subfields.size();
+
+        if (!instructionInfo._aFlag && (sfc > sfx)) {
+            sfRegister = operandField.getSubfield(sfx++);
+        }
+
+        if (sfc > sfx) {
+            sfValue = operandField.getSubfield(sfx++);
+        }
+
+        if (sfc > sfx) {
+            sfIndex = operandField.getSubfield(sfx++);
+        }
+
+        if ((sfc > sfx) && baseSubfieldAllowed) {
+            sfBase = operandField.getSubfield(sfx++);
+        }
+
+        if (sfc > sfx) {
+            diagnostics.append( new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
+                                                     "Extreanous subfields in operand field ignored") );
+        }
+
+        TextSubfield[] result = { sfRegister, sfValue, sfIndex, sfBase };
+        return result;
+    }
+
+    /**
+     * Determine the value for the instruction's u-field (or d-field)
+     * Whatever we do here is valid for u-field for basic mode, and d-field for extended mode.
+     * @param context which we operate under
+     * @param operandField operand field in case we need that locale
+     * @param valueSubfield value (u-field) subfield text
+     * @param diagnostics where we post diagnostics
+     * @return value representing the U-field (which might have a flagged value)
+     */
+    private static IntegerValue processMnemonicGetUField(
+        final Context context,
+        final TextField operandField,
+        final TextSubfield valueSubfield,
+        final Diagnostics diagnostics
+    ) {
+        IntegerValue uValue = _zeroValue;
+
+        if ((valueSubfield == null) || (valueSubfield._text.isEmpty())) {
+            diagnostics.append(new ErrorDiagnostic(operandField._locale,
+                                                   "Missing operand value (U, u, or d subfield)"));
+        } else {
+            try {
+                ExpressionParser p = new ExpressionParser(valueSubfield._text, valueSubfield._locale);
+                Expression e = p.parse(context, diagnostics);
+                if (e == null) {
+                    diagnostics.append(new ErrorDiagnostic(valueSubfield._locale, "Syntax Error"));
+                } else {
+                    Value v = e.evaluate(context, diagnostics);
+                    if (!(v instanceof IntegerValue)) {
+                        diagnostics.append(new ValueDiagnostic(valueSubfield._locale, "Wrong value type"));
+                    } else {
+                        uValue = (IntegerValue) v;
+                    }
+                }
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(valueSubfield._locale, "Syntax Error"));
+            }
+        }
+
+        return uValue;
+    }
+
+    /**
+     * Determine the value for the instruction's x-field
+     * @param context which we operate under
+     * @param indexSubfield index (x-field) subfield text
+     * @param diagnostics where we post diagnostics
+     * @return value representing the X-field (which might have a flagged value)
+     */
+    private static IntegerValue processMnemonicGetXField(
+        final Context context,
+        final TextSubfield indexSubfield,
+        final Diagnostics diagnostics
+    ) {
+        IntegerValue xValue = _zeroValue;
+
+        if ((indexSubfield != null) && !indexSubfield._text.isEmpty()) {
+            try {
+                ExpressionParser p = new ExpressionParser(indexSubfield._text, indexSubfield._locale);
+                Expression e = p.parse(context, diagnostics);
+                if (e == null) {
+                    diagnostics.append(new ErrorDiagnostic(indexSubfield._locale, "Syntax Error"));
+                } else {
+                    Value v = e.evaluate(context, diagnostics);
+                    if (!(v instanceof IntegerValue)) {
+                        diagnostics.append(new ValueDiagnostic(indexSubfield._locale, "Wrong value type"));
+                    } else {
+                        xValue = (IntegerValue) v;
+                    }
+                }
+            } catch (ExpressionException ex) {
+                diagnostics.append(new ErrorDiagnostic(indexSubfield._locale, "Syntax Error"));
+            }
+        }
+
+        return xValue;
+    }
+
+    /**
+     * Process the subfield presumably containing the mnemonic
+     * @param context context we operate under
+     * @param subfield subfield containing the mnemonic
+     * @param diagnostics where we post a diagnostic if appropriate
+     * @return pointer to InstructionInfo object if found - note that it might not be appropriate for the given context
+     * @throws NotFoundException if we don't find a valid mnemonic at all
+     */
+    private static InstructionWord.InstructionInfo processMnemonicOperationField(
+        final Context context,
+        final TextSubfield subfield,
+        final Diagnostics diagnostics
+    ) throws NotFoundException {
+        try {
+            InstructionWord.Mode imode =
+                context._codeMode == CodeMode.Extended ? InstructionWord.Mode.EXTENDED : InstructionWord.Mode.BASIC;
+            return InstructionWord.getInstructionInfo(subfield._text, imode);
+        } catch (NotFoundException ex) {
+            //  Mnemonic not found - is it dependent on code mode?
+            //  If so, coder is asking for a mnemonic in a mode it doesn't exist in; raise a diagnostic and
+            //  return true so the assemble method doesn't go any further with this line.
+            //  Otherwise, it's just flat not a mnemonic, so return false and let the assemble method do
+            //  something else.
+            InstructionWord.Mode imode =
+                context._codeMode == CodeMode.Extended ? InstructionWord.Mode.BASIC : InstructionWord.Mode.EXTENDED;
+            InstructionWord.InstructionInfo iinfo = InstructionWord.getInstructionInfo(subfield._text, imode);
+            diagnostics.append(new ErrorDiagnostic(subfield._locale,
+                                                   "Opcode not valid for the current code mode"));
+            return iinfo;
+        }
     }
 
     /**
@@ -797,9 +900,11 @@ public class Assembler {
      * These will be the forward-references we picked up along the way.
      * No point checking for loc ctr refs, those aren't resolved until link time.
      */
-    private void resolveReferences(
+    private static void resolveReferences(
+        final Context context,
+        final Diagnostics diagnostics
     ) {
-        for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : _context._generatedPools.entrySet()) {
+        for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context._generatedPools.entrySet()) {
             Context.GeneratedPool pool = poolEntry.getValue();
             for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : pool.entrySet()) {
                 Context.GeneratedWord gWord = wordEntry.getValue();
@@ -813,9 +918,9 @@ public class Assembler {
                             if (uRef instanceof UndefinedReferenceToLabel) {
                                 UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
                                 try {
-                                    Value lookupValue = _context._dictionary.getValue(lRef._label);
+                                    Value lookupValue = context._dictionary.getValue(lRef._label);
                                     if (lookupValue.getType() != ValueType.Integer) {
-                                        _diagnostics.append(
+                                        diagnostics.append(
                                             new ValueDiagnostic(gWord._locale,
                                                                 "Forward reference does not resolve to an integer"));
                                     } else {
@@ -848,79 +953,97 @@ public class Assembler {
     //  ---------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Create an Assembler object and load it with text from the given array of source lines
-     * @param source array of strings comprising the source code to be assembled
-     * @param moduleName name to be given to the relocatable module
-     */
-    public Assembler(
-        final String[] source,
-        final String moduleName
-    ) {
-        _globalDictionary = new Dictionary(new SystemDictionary());
-        _context = new Context(_globalDictionary, moduleName);
-        _sourceCode = new TextLine[source.length];
-        for (int sx = 0; sx < source.length; ++sx) {
-            int lineNumber = sx + 1;
-            _sourceCode[sx] = new TextLine(lineNumber, source[sx]);
-        }
-        _moduleName = moduleName;
-    }
-
-    /**
      * Assemble the source code in the object.
      * We do not do things quite in the same way as MASM.
-     * @param display true to display source, code generation, etc on console
+     * @param moduleName name to be given to the relocatable module
+     * @param source array of strings comprising the source code to be assembled
+     * @param optionSet Selection of options which should apply to this assembly
      * @return RelocatableModule we create if successful, else null
      */
     public RelocatableModule assemble(
-        final boolean display
+        final String moduleName,
+        final String[] source,
+        final Option[] optionSet
     ) {
-        if (display) {
-            System.out.println(String.format("Assembling module %s -----------------------------------", _moduleName));
+        Dictionary globalDictionary = new Dictionary(new SystemDictionary());
+        Context context = new Context(globalDictionary, moduleName);
+        TextLine[] sourceCode = new TextLine[source.length];
+        for (int sx = 0; sx < source.length; ++sx) {
+            int lineNumber = sx + 1;
+            sourceCode[sx] = new TextLine(lineNumber, source[sx]);
         }
 
+        System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
+
         //  setup
-        _context._characterMode = CharacterMode.ASCII;
-        _context._codeMode = CodeMode.Basic;
-        _diagnostics.clear();
+        context._characterMode = CharacterMode.ASCII;
+        context._codeMode = CodeMode.Basic;
+        Diagnostics diagnostics = new Diagnostics();
+        _lastDiagnostics = diagnostics;
+        _parsedCode = sourceCode;
 
         //  First step - parse all the source code into fields/subfields.
-        for (TextLine line : _sourceCode) {
-            line.parseFields(_diagnostics);
-            if (_diagnostics.hasFatal()) {
-                displayResults();
+        for (TextLine line : sourceCode) {
+            line.parseFields(diagnostics);
+            if (diagnostics.hasFatal()) {
+                displayResults(context, sourceCode, diagnostics, false);
                 return null;
             }
         }
 
         //  Next step - assemble all the things
-        for (TextLine line : _sourceCode) {
-            assembleTextLine(line);
-            if (_diagnostics.hasFatal()) {
-                displayResults();
+        for (TextLine line : sourceCode) {
+            assembleTextLine(context, diagnostics, line);
+            if (diagnostics.hasFatal()) {
+                displayResults(context, sourceCode, diagnostics, false);
                 return null;
             }
         }
 
-        resolveReferences();
-        RelocatableModule module = generateRelocatableModule(_moduleName);
+        resolveReferences(context, diagnostics);
+        RelocatableModule module = generateRelocatableModule(moduleName, context, globalDictionary, diagnostics);
 
-        if (display && (module != null)) {
-            displayResults();
+        boolean displayCode = false;
+        boolean displayDictionary = false;
+        boolean displaySource = false;
+        boolean displayModuleSummary = false;
+        for (Option opt : optionSet) {
+            switch (opt) {
+                case EMIT_DICTIONARY:
+                    displayDictionary = true;
+                    break;
+                case EMIT_GENERATED_CODE:
+                    displayCode = true;
+                    displaySource = true;   //  implied
+                    break;
+                case EMIT_SOURCE:
+                    displaySource = true;
+                    break;
+                case EMIT_MODULE_SUMMARY:
+                    displayModuleSummary = true;
+                    break;
+            }
+        }
+
+        if (displaySource) {
+            displayResults(context, sourceCode, diagnostics, displayCode);
+        }
+        if (displayModuleSummary && (module != null)) {
             displayModuleSummary(module);
         }
-
-        if (display) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Summary: Lines=%d", _sourceCode.length));
-            for (Map.Entry<Diagnostic.Level, Integer> entry : _diagnostics.getCounters().entrySet()) {
-                if (entry.getValue() > 0) {
-                    sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
-                }
-            }
-            System.out.println(sb.toString());
-            System.out.println("Assembly Ends -------------------------------------------------------");
+        if (displayDictionary) {
+            displayDictionary(context._dictionary);
         }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Summary: Lines=%d", sourceCode.length));
+        for (Map.Entry<Diagnostic.Level, Integer> entry : diagnostics.getCounters().entrySet()) {
+            if (entry.getValue() > 0) {
+                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+            }
+        }
+        System.out.println(sb.toString());
+        System.out.println("Assembly Ends -------------------------------------------------------");
 
         return module;
     }
@@ -953,8 +1076,17 @@ public class Assembler {
      * Getter
      * @return Diagnostics object produced during assembly
      */
-    public Diagnostics getDiagnostics(
+    public Diagnostics getLastDiagnostics(
     ) {
-        return _diagnostics;
+        return _lastDiagnostics;
+    }
+
+    /**
+     * Getter
+     * @return parsed code
+     */
+    public TextLine[] getParsedCode(
+    ) {
+        return _parsedCode;
     }
 }

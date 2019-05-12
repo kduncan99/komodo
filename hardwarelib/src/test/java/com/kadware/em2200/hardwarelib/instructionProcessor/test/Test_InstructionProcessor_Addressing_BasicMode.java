@@ -2,42 +2,42 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.test;
+package com.kadware.em2200.hardwarelib.instructionProcessor.test;
 
-import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
-import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.minalib.*;
-import static org.junit.Assert.*;
-import org.junit.*;
+import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.minalib.AbsoluteModule;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_InstructionProcessor {
+public class Test_InstructionProcessor_Addressing_BasicMode extends Test_InstructionProcessor {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Tests for addressing modes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @Test
-    public void immediateUnsigned_ExtendedMode(
+    public void immediateUnsigned_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
             "",
-            "$(1),START$*",
-            "          LA,U      A0,01000",
-            "          HALT      0",
+            "$(1),START$* .",
+            "          LA,U      A0,01000 .",
+            "          HALT      0 .",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -51,22 +51,21 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void immediateSignedExtended_Positive_ExtendedMode(
+    public void immediateSignedExtended_Positive_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
             "",
-            "$(1),START$*",
+            "$(1),START$* .",
             "          LA,XU     A0,01000",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -80,23 +79,22 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void immediateSignedExtended_NegativeZero_ExtendedMode(
+    public void immediateSignedExtended_NegativeZero_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         //  Negative zero is converted to positive zero before sign-extension, per hardware docs
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
             "",
-            "$(1),START$*",
+            "$(1),START$* .",
             "          LA,XU     A0,0777777",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -110,23 +108,21 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void immediateSignedExtended_Negative_ExtendedMode(
+    public void immediateSignedExtended_Negative_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  Negative zero is converted to positive zero before sign-extension, per hardware docs
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
             "",
-            "$(1),START$*",
+            "$(1),START$* .",
             "          LA,XU     A0,-1",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -140,23 +136,22 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void grs_ExtendedMode(
+    public void grs_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 1 3",
-            "          $INFO 10 1",
+            "          $BASIC .",
+            "          $INFO 1 5",
             "",
-            "$(1),START$*",
+            "$(1),START$* .",
             "          LR,U      R5,01234",
             "          LA        A0,R5",
-            "          HALT      0",
+            "          HALT      0"
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -170,57 +165,24 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void storage_ExtendedMode(
+    public void grs_indexed_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 1 3",
-            "          $INFO 10 1",
+            "          $BASIC .",
+            "          $INFO 1 5",
             "",
-            "$(2),DATA",
-            "          01122,03344,05566",
-            "",
-            "$(1),START$*",
-            "          LA        A0,DATA,,B2",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_112233_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-    }
-
-    @Test
-    public void grs_indexed_ExtendedMode(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 1 3",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LR,U      R5,01234",
-            "          LXM,U     X1,4",
+            "$(1),START$* .",
+            "          LR,U      R5,01234    . Put the test value in R5",
+            "          LXM,U     X1,4        . Set X modifier to 4 and increment to 2",
             "          LXI,U     X1,2",
-            "          LA        A0,R1,*X1",
+            "          LA        A0,R1,*X1   . Use X-reg modifying R1 GRS to get to R5",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -235,75 +197,86 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void storage_indexed_18BitModifier_ExtendedMode(
+    public void grs_indirect_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
             "",
-            "$(0)",
-            "DATA1     0",
-            "          01",
-            "          0",
-            "          0",
-            "          02",
-            "          0",
-            "          0",
-            "          03",
-            "          0",
-            "          0",
-            "          05",
-            "          0",
-            "          0",
-            "          010",
+            "$(2)      $LIT",
+            "INDIRECT* +R5                    . Only using the x,h,i, and u fields",
             "",
-            "$(2),DATA2 . for auto-increment testing",
-            "          $RES 8",
+            "$(1),START$* .",
+            "          LR,U      R5,01234      . Put the test value in R5",
+            "          LA        A0,*INDIRECT  . Indirection through INDIRECT",
+            "                                  .   will transfer content from R5 to A0",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01234, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+    }
+
+    @Test
+    public void storage_indexed_BasicMode(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC .",
+            "          $INFO 1 3",
             "",
-            "$(4),DATA3 . for X0 testing",
-            "          $RES 8",
+            "$(0)      $LIT",
+            "DATA1     +0",
+            "          +01",
+            "          +0",
+            "          +0",
+            "          +02",
+            "          +0",
+            "          +0",
+            "          +03",
+            "          +0",
+            "          +0",
+            "          +05",
+            "          +0",
+            "          +0",
+            "          +010",
             "",
-            "$(6),DATA4 . for non-auto-increment testing",
-            "          $RES 8",
+            "$(2)",
+            "DATA2     $res      8",
             "",
             "$(1),START$*",
             "          LXM,U     X5,1",
             "          LXI,U     X5,3",
             "          LXM,U     X7,0",
             "          LXI,U     X7,1",
-            "          LXM,U     X0,1 . should do nothing",
-            "          LXI,U     X0,1 . as above",
-            "          LXM,U     X0,1",
-            "          LXI,U     X1,1",
-            "          LXM,U     X1,0",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          SA        A3,DATA3,*X0,B4",
-            "          SA        A3,DATA4,*X1,B5",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          SA        A3,DATA3,*X0,B4",
-            "          SA        A3,DATA4,*X1,B5",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          SA        A3,DATA3,*X0,B4",
-            "          SA        A3,DATA4,*X1,B5",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          SA        A3,DATA3,*X0,B4",
-            "          SA        A3,DATA4,*X1,B5",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          SA        A3,DATA3,*X0,B4",
-            "          SA        A3,DATA4,*X1,B5",
+            "          LA        A3,DATA1,*X5",
+            "          SA        A3,DATA2,*X7",
+            "          LA        A3,DATA1,*X5",
+            "          SA        A3,DATA2,*X7",
+            "          LA        A3,DATA1,*X5",
+            "          SA        A3,DATA2,*X7",
+            "          LA        A3,DATA1,*X5",
+            "          SA        A3,DATA2,*X7",
+            "          LA        A3,DATA1,*X5",
+            "          SA        A3,DATA2,*X7",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -313,87 +286,8 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long[] bank3Data = getBank(processors._instructionProcessor, 3);
-        assertEquals(01, bank3Data[0]);
-        assertEquals(02, bank3Data[1]);
-        assertEquals(03, bank3Data[2]);
-        assertEquals(05, bank3Data[3]);
-        assertEquals(010, bank3Data[4]);
-
-        long[] bank4Data = getBank(processors._instructionProcessor, 4);
-        assertEquals(010, bank4Data[0]);
-        assertEquals(0, bank4Data[1]);
-        assertEquals(0, bank4Data[2]);
-        assertEquals(0, bank4Data[3]);
-
-        long[] bank5Data = getBank(processors._instructionProcessor, 4);
-        assertEquals(010, bank5Data[0]);
-        assertEquals(0, bank5Data[1]);
-        assertEquals(0, bank5Data[2]);
-        assertEquals(0, bank5Data[3]);
-    }
-
-    @Test
-    public void storage_indexed_24BitModifier_ExtendedMode(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 1 3",
-            "          $INFO 10 1",
-            "",
-            "$(0)",
-            "DATA1     0",
-            "          01",
-            "          0",
-            "          0",
-            "          02",
-            "          0",
-            "          0",
-            "          03",
-            "          0",
-            "          0",
-            "          05",
-            "          0",
-            "          0",
-            "          010",
-            "",
-            "$(2),DATA2",
-            "          $RES 8",
-            "",
-            "$(1),START$*",
-            "          LXM,U     X5,1",
-            "          LXI,U     X5,0300",
-            "          LXM,U     X7,0",
-            "          LXI,U     X7,0100",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          LA        A3,DATA1,*X5,B2",
-            "          SA        A3,DATA2,*X7,B3",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
-        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long[] bankData = getBank(processors._instructionProcessor, 3);
+        long[] bankData = getBank(processors._instructionProcessor, 15);
+        showDebugInfo(processors);
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
         assertEquals(03, bankData[2]);
@@ -402,24 +296,64 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
     }
 
     @Test
-    public void execRegisterSelection_ExtendedMode(
+    public void storage_indirect_BasicMode(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
+            "          $BASIC .",
             "          $INFO 1 3",
-            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA1",
+            "          NOP       0,*DATA2",
+            "          NOP       0,*DATA1+2",
+            "          NOP       0,*DATA1+3",
+            "          NOP       0,*DATA1+4",
+            "          NOP       0,DATA2+1",
+            "",
+            "$(2)",
+            "DATA2",
+            "          NOP       0,*DATA1+1",
+            "          +         011,022,033,044,055,066",
             "",
             "$(1),START$*",
-            "          LA,U      EA5,01",
-            "          LX,U      EX5,05",
-            "          LR,U      ER5,077",
-            "          HALT      0",
+            "          LA        A0,*DATA1",
+            "          HALT      0"
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_112233_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+    }
+
+    @Test
+    public void execRegisterSelection_BasicMode(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC .",
+            "          $INFO 1 5",
+            "",
+            "$(1),START$* .",
+            "          LA,U      EA5,01              . ",
+            "          LX,U      EX5,05              . ",
+            "          LR,U      ER5,077             . ",
+            "          HALT      0                   . "
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         processors._instructionProcessor.getDesignatorRegister().setExecRegisterSetSelected(true);
@@ -429,11 +363,41 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         assertEquals(01, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EA5).getW());
         assertEquals(05, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX5).getW());
         assertEquals(077, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.ER5).getW());
+    }
+
+    @Test
+    public void storage_BasicMode(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC . ",
+            "          $INFO 1 5",
+            "",
+            "$(0),DATA +0112233,0445566",
+            "",
+            "$(1),START$*",
+            "          LA        A0,DATA",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_112233_445566L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     //TODO read reference violation GAP
@@ -448,8 +412,5 @@ public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_Inst
 
     //TODO execute reference violation SAP
 
-    //TODO reference out of limits EXTENDED mode
-
-    //TODO unbased Base Register reference EXTENDED mode
-
+    //TODO reference out of limits BASIC mode
 }

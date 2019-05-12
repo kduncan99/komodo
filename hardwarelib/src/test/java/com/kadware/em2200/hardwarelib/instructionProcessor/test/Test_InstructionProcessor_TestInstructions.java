@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.test;
+package com.kadware.em2200.hardwarelib.instructionProcessor.test;
 
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
@@ -44,7 +44,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
             "          HALT      076",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);

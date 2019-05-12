@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.test;
+package com.kadware.em2200.hardwarelib.instructionProcessor.test;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
@@ -272,17 +272,35 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     //  IH code will be in bank 33 (2nd BD in level 0 BDT) (our convention, it'll work)
     static private AbsoluteModule _bankModule = null;
 
-    //  Class which describes a bank to be loaded into the existing BDT environment
-    static class LoadBankInfo {
+    //TODO obsolete?
+//    //  Class which describes a bank to be loaded into the existing BDT environment
+//    static class LoadBankInfo {
+//
+//        long[] _source;
+//        AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
+//        AccessPermissions _generalAccessPermissions = ALL_ACCESS;
+//        AccessPermissions _specialAccessPermissions = ALL_ACCESS;
+//        int _lowerLimit = 0;
+//    }
 
-        long[] _source;
-        AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
-        AccessPermissions _generalAccessPermissions = ALL_ACCESS;
-        AccessPermissions _specialAccessPermissions = ALL_ACCESS;
-        int _lowerLimit = 0;
-    }
+//    private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
 
-    private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
+    private static final Assembler.Option[] _assemblerDisplayAll = {
+        Assembler.Option.EMIT_MODULE_SUMMARY,
+        Assembler.Option.EMIT_DICTIONARY,
+        Assembler.Option.EMIT_GENERATED_CODE,
+        Assembler.Option.EMIT_SOURCE,
+    };
+
+    private static final Assembler.Option[] _assemblerDisplayNone = {};
+
+    private static final Linker.Option[] _linkerDisplayAll = {
+        Linker.Option.OPTION_EMIT_DICTIONARY,
+        Linker.Option.OPTION_EMIT_GENERATED_CODE,
+        Linker.Option.OPTION_EMIT_SUMMARY,
+    };
+
+    private static final Linker.Option[] _linkerDisplayNone = {};
 
     /**
      * Assembles sets of code into a relocatable module, then links it such that the odd-numbered lc pools
@@ -295,8 +313,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code, "TEST");
-        RelocatableModule relModule = asm.assemble(display);
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        assert(relModule != null);
+
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         for (Integer lcIndex : relModule._storage.keySet()) {
@@ -333,7 +353,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .build());
 
         Linker linker = new Linker();
-        return linker.link("TEST", bankDeclarations.toArray(new Linker.BankDeclaration[0]), new Linker.Option[0]);
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
     /**
@@ -353,11 +375,12 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
 
+        Assembler asm = new Assembler();
         for (String[] codeSet : code) {
             String moduleName = String.format("TEST%d", relocatableModules.size() + 1);
-            Assembler a = new Assembler(codeSet, moduleName);
-            RelocatableModule relModule = a.assemble(display);
+            RelocatableModule relModule = asm.assemble(moduleName, codeSet, display ? _assemblerDisplayAll : _assemblerDisplayNone);
             assert(relModule != null);
+
             relocatableModules.add(relModule);
 
             for (Integer lcIndex : relModule._storage.keySet()) {
@@ -396,15 +419,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         Linker linker = new Linker();
-        List<Linker.Option> optionList = new LinkedList<>();
-        if (display) {
-            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
-            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
-            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
-        }
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-                           optionList.toArray(new Linker.Option[0]));
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
     /**
@@ -421,9 +438,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code, "TEST");
-        RelocatableModule relModule = asm.assemble(display);
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
+
         List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs05 = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecs06 = new LinkedList<>();
@@ -487,15 +505,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .build());
 
         Linker linker = new Linker();
-        List<Linker.Option> optionList = new LinkedList<>();
-        if (display) {
-            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
-            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
-            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
-        }
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-                           optionList.toArray(new Linker.Option[0]));
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
     /**
@@ -510,9 +522,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         final String[] code,
         final boolean display
     ) {
-        Assembler asm = new Assembler(code, "TEST");
-        RelocatableModule relModule = asm.assemble(display);
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
+
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
         List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
         for (Integer lcIndex : relModule._storage.keySet()) {
@@ -551,15 +564,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .build());
 
         Linker linker = new Linker();
-        List<Linker.Option> optionList = new LinkedList<>();
-        if (display) {
-            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
-            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
-            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
-        }
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-                           optionList.toArray(new Linker.Option[0]));
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
     /**
@@ -574,8 +581,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             final String[] code,
             final boolean display
     ) {
-        Assembler asm = new Assembler(code, "TEST");
-        RelocatableModule relModule = asm.assemble(display);
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        assert(relModule != null);
+
         Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
         int nextDBankBDI = 05;
         for (Integer lcIndex : relModule._storage.keySet()) {
@@ -616,15 +625,9 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
         }
 
         Linker linker = new Linker();
-        List<Linker.Option> optionList = new LinkedList<>();
-        if (display) {
-            optionList.add(Linker.Option.OPTION_EMIT_SUMMARY);
-            optionList.add(Linker.Option.OPTION_EMIT_DICTIONARY);
-            optionList.add(Linker.Option.OPTION_EMIT_GENERATED_CODE);
-        }
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-                           optionList.toArray(new Linker.Option[0]));
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
     /**
@@ -634,16 +637,15 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     ) {
         //  Assemble banking source - there will be 8 location counter pools 0 through 7
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
-        Assembler asm = new Assembler(BDT_CODE, "BDT");
-        RelocatableModule bdtModule = asm.assemble(false);
-        assert(asm.getDiagnostics().getDiagnostics().isEmpty());
+        Assembler asm = new Assembler();
+        RelocatableModule bdtModule = asm.assemble("BDT", BDT_CODE, _assemblerDisplayNone);
+        assert(bdtModule != null);
 
         //  Assemble interrupt handler code into a separate relocatable module...
         //  we have no particular expectations with respect to location counters;
         //  For simplicity, we put all of this code into one IH bank - again, see linking step.
-        asm = new Assembler(IH_CODE, "IH");
-        RelocatableModule ihModule = asm.assemble(false);
-        assert(asm.getDiagnostics().isEmpty());
+        RelocatableModule ihModule = asm.assemble("IH", IH_CODE, _assemblerDisplayNone);
+        assert(ihModule != null);
 
         //  Now we link - we need to create a separate bank for each of the Bank Descriptor Tables
         //  (to make loading it into the MSP easier), and one bank for the interrupt handler code.
@@ -684,7 +686,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                 .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
                                                 .build();
-
 
         Linker.Option[] options = {
             Linker.Option.OPTION_NO_ENTRY_POINT,

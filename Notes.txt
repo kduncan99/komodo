@@ -1,18 +1,15 @@
-InProgress
-Convert IP unit tests from octal to assembler and minalib them (in progress)
+-- InProgress
 Lose unnecessary accessors (in progress)
 
-TODO
+-- TODO
 pick up the rest of the tests we need to do but haven't yet
 minalib support procs
 minalib generate system procs for special instructions such as JGD, BT, JK, SLJ, TZ, TNZ, TP, TN
 minalib $USE (A.2.8) specifies base register to use if none given
 minalib add test cases for interrupts (many of them already marked TODO)
-minalib should we raise a diag on any $xxxx in op field which is not in the dictionary?
 minalib data generation - strings
-minalib float values - firm this up
+minalib float values - firm this up (how do we support it)
 minalib data generation - floats
-minalib put directives into the system dictionary
 minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
 minalib make sure we don't propagate flagged attribute in any of the operators
 minalib support user-defined functions

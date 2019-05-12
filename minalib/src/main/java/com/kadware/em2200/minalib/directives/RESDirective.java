@@ -15,7 +15,6 @@ public class RESDirective extends Directive {
 
     @Override
     public void process(
-            final Assembler assembler,
             final Context context,
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents,

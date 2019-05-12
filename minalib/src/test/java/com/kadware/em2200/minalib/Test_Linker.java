@@ -99,8 +99,8 @@ public class Test_Linker {
             "          LA        A2,DATA2,,B2",
         };
 
-        Assembler asm = new Assembler(source, "TEST_REL");
-        RelocatableModule rel = asm.assemble(false);
+        Assembler asm = new Assembler();
+        RelocatableModule rel = asm.assemble("TESTREL", source, new Assembler.Option[0]);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
             new Linker.LCPoolSpecification(rel, 1),
@@ -174,8 +174,8 @@ public class Test_Linker {
             "          LA        A1,DATA2,,B2",
         };
 
-        Assembler asm = new Assembler(source, "TEST_REL");
-        RelocatableModule rel = asm.assemble(false);
+        Assembler asm = new Assembler();
+        RelocatableModule rel = asm.assemble("TESTREL", source, new Assembler.Option[0]);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
             new Linker.LCPoolSpecification(rel, 1),
@@ -259,14 +259,10 @@ public class Test_Linker {
             "          J         0,X11",
         };
 
-        Assembler asm1 = new Assembler(source1, "TESTREL1");
-        RelocatableModule rel1 = asm1.assemble(true);
-
-        Assembler asm2 = new Assembler(source2, "TESTREL2");
-        RelocatableModule rel2 = asm2.assemble(true);
-
-        Assembler asm3 = new Assembler(source3, "TESTREL3");
-        RelocatableModule rel3 = asm3.assemble(true);
+        Assembler asm = new Assembler();
+        RelocatableModule rel1 = asm.assemble("TESTREL1", source1, new Assembler.Option[0]);
+        RelocatableModule rel2 = asm.assemble("TESTREL2", source2, new Assembler.Option[0]);
+        RelocatableModule rel3 = asm.assemble("TESTREL3", source3, new Assembler.Option[0]);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
             new Linker.LCPoolSpecification(rel3, 1),
@@ -301,7 +297,6 @@ public class Test_Linker {
         };
 
         Linker.Option[] options = {
-            Linker.Option.OPTION_NO_ENTRY_POINT,//TODO remove this
             Linker.Option.OPTION_EMIT_SUMMARY,
             Linker.Option.OPTION_EMIT_DICTIONARY,
             Linker.Option.OPTION_EMIT_GENERATED_CODE,

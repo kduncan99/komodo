@@ -66,12 +66,10 @@ public class INFODirective extends Directive {
 
     /**
      * Group 1 handler
-     * @param assembler reference to the assembler
      * @param context reference to the context in which this directive is to execute
      * @param diagnostics where diagnostics should be posted if necessary
      */
     private void handleProcessorModeSettings(
-        final Assembler assembler,
         final Context context,
         final Diagnostics diagnostics
     ) {
@@ -100,10 +98,10 @@ public class INFODirective extends Directive {
                 return;
             }
 
-            assembler._setQuarterWordMode = (iv._value & 03) == 03;
-            assembler._setThirdWordMode = (iv._value & 05) == 05;
-            assembler._setArithFaultCompatibility = (iv._value & 030) == 030;
-            assembler._setArithFaultNonInterrupt = (iv._value & 050) == 050;
+            context.setQuarterWordMode((iv._value & 03) == 03);
+            context.setThirdWordMode((iv._value & 05) == 05);
+            context.setArithmeticFaultCompatibilityMode((iv._value & 030) == 030);
+            context.setArithmeticFaultNonInterruptMode((iv._value & 050) == 050);
         } catch (ExpressionException ex) {
             diagnostics.append(new ErrorDiagnostic(sf._locale, "Syntax error"));
         }
@@ -116,7 +114,6 @@ public class INFODirective extends Directive {
 
     /**
      * Main routine
-     * @param assembler reference to the assembler
      * @param context reference to the context in which this directive is to execute
      * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
      *                 make different usages of the fields - and $INFO even uses an extra field
@@ -125,7 +122,6 @@ public class INFODirective extends Directive {
      */
     @Override
     public void process(
-            final Assembler assembler,
             final Context context,
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents,
@@ -143,7 +139,7 @@ public class INFODirective extends Directive {
                 } else {
                     switch ((int) ((IntegerValue) v)._value) {
                         case 1:     //  Processor Mode Settings
-                            handleProcessorModeSettings(assembler, context, diagnostics);
+                            handleProcessorModeSettings(context, diagnostics);
                             break;
 
                         case 10:    //  Extended Mode Location Counter
