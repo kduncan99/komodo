@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
@@ -62,34 +61,32 @@ public class SRFunction extends BuiltInFunction {
     /**
      * Evaluator
      * @param context evaluation-time contextual information
-     * @param diagnostics where we append diagnostics if necessary
      * @return Value object representing the result of the evaluation
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
     public Value evaluate(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        Value[] arguments = evaluateArguments(context, diagnostics);
+        Value[] arguments = evaluateArguments(context);
         if (arguments[0].getType() != ValueType.String) {
-            diagnostics.append(getValueDiagnostic(1));
+            context._diagnostics.append(getValueDiagnostic(1));
             throw new ExpressionException();
         }
 
         if (arguments[1].getType() != ValueType.Integer) {
-            diagnostics.append(getValueDiagnostic(2));
+            context._diagnostics.append(getValueDiagnostic(2));
             throw new ExpressionException();
         }
 
         StringValue sarg = (StringValue)arguments[0];
         IntegerValue iarg = (IntegerValue)arguments[1];
         if (iarg._undefinedReferences.length != 0) {
-            diagnostics.append(new RelocationDiagnostic(getLocale()));
+            context._diagnostics.append(new RelocationDiagnostic(getLocale()));
         }
 
         if (iarg._value < 0) {
-            diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
+            context._diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
             throw new ExpressionException();
         }
 

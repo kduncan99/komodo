@@ -6,22 +6,19 @@ package com.kadware.em2200.minalib.expressions;
 
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.operators.Operator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-import java.util.function.BinaryOperator;
 
 /**
  * Expression evaluator
  */
 public class Expression {
 
-    public Context _context;
-    public final List<IExpressionItem> _items = new LinkedList<>();
+    final List<IExpressionItem> _items = new LinkedList<>();
 
     /**
      * constructor
@@ -33,19 +30,15 @@ public class Expression {
         _items.addAll(items);
     }
 
-
     /**
      * Evaluates the (putative) expression in the given text
      * @param context under which we evaluate the given expression
-     * @param diagnostics where we post any appropriate diagnostics
      * @return a Value object representing the final evaluated value of the exptression
      * @throws ExpressionException if the expression evaluation fails at any point
      */
     public Value evaluate(
-        final Context context,
-        final Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        _context = context;
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
@@ -72,14 +65,14 @@ public class Expression {
             //  on that stack, of equal or greater prcedence, are evaluated.
             if (item instanceof OperandItem) {
                 OperandItem opItem = (OperandItem)item;
-                Value value = opItem.resolve(context, diagnostics);
+                Value value = opItem.resolve(context);
                 valueStack.push(value);
             } else if (item instanceof OperatorItem) {
                 OperatorItem opItem = (OperatorItem)item;
                 Operator op = opItem._operator;
                 while ( !operatorStack.empty() && (operatorStack.peek().getPrecedence() >= op.getPrecedence()) ) {
                     Operator stackedOp = operatorStack.pop();
-                    stackedOp.evaluate(_context, valueStack, diagnostics);
+                    stackedOp.evaluate(context, valueStack);
                 }
                 operatorStack.push(op);
             }
@@ -89,7 +82,7 @@ public class Expression {
         //  Evaluate them.
         while (!operatorStack.empty()) {
             Operator op = operatorStack.pop();
-            op.evaluate(_context, valueStack, diagnostics);
+            op.evaluate(context, valueStack);
         }
 
         //  There should now be exactly one value on the value stack.

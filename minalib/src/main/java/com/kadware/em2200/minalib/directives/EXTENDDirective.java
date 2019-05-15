@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.directives;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 
 @SuppressWarnings("Duplicates")
 public class EXTENDDirective extends Directive {
@@ -14,10 +13,9 @@ public class EXTENDDirective extends Directive {
     public void process(
             final Context context,
             final TextLine textLine,
-            final LabelFieldComponents labelFieldComponents,
-            final Diagnostics diagnostics
+            final LabelFieldComponents labelFieldComponents
     ) {
-        if (extractFields(textLine, false, 2, diagnostics)) {
+        if (extractFields(context, textLine, false, 2)) {
             context._codeMode = CodeMode.Extended;
         }
     }

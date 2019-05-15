@@ -24,9 +24,9 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(1, 1), val));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0], "TEST");
         Diagnostics diagnostics = new Diagnostics();
-        Value result = exp.evaluate(context, diagnostics);
+        Value result = exp.evaluate(context);
 
         assertTrue(diagnostics.isEmpty());
         assertEquals(val, result);
@@ -45,9 +45,9 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(1, 11), addend2));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0], "TEST");
         Diagnostics diagnostics = new Diagnostics();
-        Value result = exp.evaluate(context, diagnostics);
+        Value result = exp.evaluate(context);
 
         assertTrue(diagnostics.isEmpty());
         assertEquals(expected, result);
@@ -70,9 +70,9 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(1, 50), term3));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0], "TEST");
         Diagnostics diagnostics = new Diagnostics();
-        Value result = exp.evaluate(context, diagnostics);
+        Value result = exp.evaluate(context);
 
         assertTrue(diagnostics.isEmpty());
         assertEquals(expected, result);

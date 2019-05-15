@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.Expression;
@@ -59,22 +58,17 @@ public class SLFunction extends BuiltInFunction {
 
     /**
      * Evaluator
-     * <p>
      * @param context evaluation-time contextual information
-     * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @return Value object representing the result of the evaluation
-     * <p>
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
     public Value evaluate(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        Value[] arguments = evaluateArguments(context, diagnostics);
+        Value[] arguments = evaluateArguments(context);
         if (arguments[0].getType() != ValueType.String) {
-            diagnostics.append(getValueDiagnostic(1));
+            context._diagnostics.append(getValueDiagnostic(1));
             throw new ExpressionException();
         }
 

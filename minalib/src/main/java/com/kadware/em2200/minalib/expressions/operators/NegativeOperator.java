@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.expressions.operators;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import java.util.Stack;
@@ -49,14 +48,12 @@ public class NegativeOperator extends Operator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         Value operand = getOperands(valueStack)[0];
         switch(operand.getType()) {
@@ -78,7 +75,7 @@ public class NegativeOperator extends Operator {
                 break;
 
             default:
-                postValueDiagnostic(false, diagnostics);
+                postValueDiagnostic(false, context._diagnostics);
                 throw new ExpressionException();
         }
     }

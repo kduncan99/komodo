@@ -34,14 +34,12 @@ public class ReferenceItem extends OperandItem {
     /**
      * Evaluates the reference based on the dictionary
      * @param context context of execution
-     * @param diagnostics where we post diagnostics if necessary
      * @return true if successful, false to discontinue evaluation
      * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     @Override
     public Value resolve(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         try {
             //  Look up the reference in the dictionary.
@@ -54,7 +52,7 @@ public class ReferenceItem extends OperandItem {
                     return v;
 
                 default:
-                    diagnostics.append( new ValueDiagnostic( _locale, "Wrong value type referenced" ));
+                    context._diagnostics.append( new ValueDiagnostic( _locale, "Wrong value type referenced" ));
                     throw new ExpressionException();
             }
         } catch ( NotFoundException ex ) {

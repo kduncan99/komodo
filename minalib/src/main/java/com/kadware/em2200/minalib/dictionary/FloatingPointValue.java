@@ -50,10 +50,8 @@ public class FloatingPointValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
-     * <p>
-     * @param newFlagged
-     * <p>
-     * @return
+     * @param newFlagged new value
+     * @return new object
      */
     @Override
     public Value copy(
@@ -86,11 +84,9 @@ public class FloatingPointValue extends Value {
 
     /**
      * Simply return this object
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post diagnostics if necessary
+     * @return new object
      */
     @Override
     public FloatingPointValue toFloatingPointValue(
@@ -105,11 +101,9 @@ public class FloatingPointValue extends Value {
      * This is NOT an arithmetic conversion - we are merely creating an IntegerValue which contains
      * the same two 36-bit words as would represent the floating point number we represent.
      * The result is generally... not useful
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics
-     * <p>
-     * @return
+     * @param diagnostics where we post diagnostics if necessary
+     * @return new object
      */
     @Override
     public IntegerValue toIntegerValue(
@@ -121,13 +115,10 @@ public class FloatingPointValue extends Value {
 
     /**
      * Transform the value to a StringValue, if possible.  Actually, it's not possible.
-     * <p>
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param characterMode desired character mode
      * @param diagnostics where we post any necessary diagnostics
-     * <p>
-     * @return
-     * <p>
+     * @return new object
      * @throws TypeException always - we cannot translate to a string
      */
     @Override
@@ -145,7 +136,8 @@ public class FloatingPointValue extends Value {
      * @return displayable string
      */
     @Override
-    public String toString() {
+    public String toString(
+    ) {
         return String.format("%s%f", _flagged, _value);
     }
 }

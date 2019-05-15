@@ -4,8 +4,7 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
-import com.kadware.em2200.minalib.CharacterMode;
-import com.kadware.em2200.minalib.Locale;
+import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.exceptions.TypeException;
 
@@ -14,14 +13,18 @@ import com.kadware.em2200.minalib.exceptions.TypeException;
  */
 public class ProcedureValue extends Value {
 
+    public final TextLine[] _source;
+
     /**
      * constructor
      * @param flagged if this is flagged (probably it isn't)
      */
     public ProcedureValue(
-        final boolean flagged
+        final boolean flagged,
+        final TextLine[] source
     ) {
         super(flagged);
+        _source = source;
     }
 
     /**
@@ -48,7 +51,7 @@ public class ProcedureValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new ProcedureValue(newFlagged);
+        return new ProcedureValue(newFlagged, _source);
     }
 
     /**
@@ -60,12 +63,7 @@ public class ProcedureValue extends Value {
     public boolean equals(
         final Object obj
     ) {
-        if (obj instanceof ProcedureValue) {
-            ProcedureValue fvobj = (ProcedureValue) obj;
-            return true;//TODO
-        } else {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -127,7 +125,8 @@ public class ProcedureValue extends Value {
      * @return displayable string
      */
     @Override
-    public String toString() {
-        return String.format("%s", _flagged ? "*" : "");
-    }//TODO
+    public String toString(
+    ) {
+        return String.format("%s<proc>", _flagged ? "*" : "");
+    }
 }

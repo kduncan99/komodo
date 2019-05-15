@@ -17,10 +17,9 @@ public abstract class RelationalOperator extends Operator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale locale of operator
      */
-    public RelationalOperator(
+    RelationalOperator(
         final Locale locale
     ) {
         super(locale);
@@ -28,18 +27,14 @@ public abstract class RelationalOperator extends Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException;
 
     /**
@@ -50,12 +45,9 @@ public abstract class RelationalOperator extends Operator {
      *          Else, if either operand is integer, the other is converted to integer.
      *      Else, the operands are returned unchanged
      * If we find any invalid types, we post one or more diagnostics, and we throw TypeException.
-     * <p>
      * @param valueStack the value stack from which we get the operators
      * @param diagnostics Diagnostics object to which we post any necessary diagnostics
-     * <p>
      * @return left-hand possibly adjusted operand in result[0], right-hand in result[1]
-     * <p>
      * @throws TypeException if either operand is other than floating point, integer, or string
      */
     protected Value[] getTransformedOperands(
@@ -107,8 +99,7 @@ public abstract class RelationalOperator extends Operator {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public final int getPrecedence(
@@ -118,8 +109,7 @@ public abstract class RelationalOperator extends Operator {
 
     /**
      * Retrieves the type of this operator
-     * <p>
-     * @return
+     * @return value
      */
     @Override
     public final Type getType(

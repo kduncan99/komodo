@@ -16,8 +16,9 @@ public abstract class FunctionItem extends OperandItem {
 
     /**
      * constructor
+     * @param locale where the item is found in the source code
      */
-    public FunctionItem(
+    FunctionItem(
         final Locale locale
     ) {
         super(locale);
@@ -25,17 +26,12 @@ public abstract class FunctionItem extends OperandItem {
 
     /**
      * Evaluates the function against the parameter list
-     * <p>
-     * @param context
-     * @param diagnostics
-     * <p>
+     * @param context assembly context
      * @return true if successful, false to discontinue evaluation
-     * <p>
-     * @throws ExpressionException
+     * @throws ExpressionException if something is wrong with the expression
      */
     @Override
     public abstract Value resolve(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException;
 }

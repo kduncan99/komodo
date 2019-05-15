@@ -5,14 +5,10 @@
 package com.kadware.em2200.minalib.directives;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.Diagnostics;
-import com.kadware.em2200.minalib.diagnostics.ErrorDiagnostic;
-import com.kadware.em2200.minalib.diagnostics.ValueDiagnostic;
-import com.kadware.em2200.minalib.dictionary.IntegerValue;
-import com.kadware.em2200.minalib.dictionary.Value;
-import com.kadware.em2200.minalib.exceptions.ExpressionException;
-import com.kadware.em2200.minalib.expressions.Expression;
-import com.kadware.em2200.minalib.expressions.ExpressionParser;
+import com.kadware.em2200.minalib.diagnostics.*;
+import com.kadware.em2200.minalib.dictionary.*;
+import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.em2200.minalib.expressions.*;
 
 @SuppressWarnings("Duplicates")
 public class GFORMDirective extends Directive {
@@ -21,13 +17,13 @@ public class GFORMDirective extends Directive {
     public void process(
             final Context context,
             final TextLine textLine,
-            final LabelFieldComponents labelFieldComponents,
-            final Diagnostics diagnostics
+            final LabelFieldComponents labelFieldComponents
     ) {
-        if (extractFields(textLine, true, 3, diagnostics)) {
+        if (extractFields(context, textLine, true, 3)) {
             if ((_operandField._subfields.size() % 2) != 0) {
                 Locale loc = _operationField._locale;
-                diagnostics.append(new ErrorDiagnostic(loc, "Even number of operands required for $GFORM directive"));
+                context._diagnostics.append(new ErrorDiagnostic(loc,
+                                                                "Even number of operands required for $GFORM directive"));
                 return;
             }
 
@@ -50,24 +46,22 @@ public class GFORMDirective extends Directive {
                 ExpressionParser epValue = new ExpressionParser(sfValue._text, sfValue._locale);
 
                 try {
-                    Expression e = epFieldSize.parse(context, diagnostics);
+                    Expression e = epFieldSize.parse(context);
                     if (e == null) {
-                        diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                               "Expected an expression for field size"));
+                        context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                        "Expected an expression for field size"));
                         error = true;
                     } else {
-                        Value v = e.evaluate(context, diagnostics);
+                        Value v = e.evaluate(context);
                         if (!(v instanceof IntegerValue)) {
-                            diagnostics.append(new ValueDiagnostic(
-                                sfFieldSize._locale,
-                                "Invalid value for field size"));
+                            context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
+                                                                            "Invalid value for field size"));
                             error = true;
                         } else {
                             IntegerValue iv = (IntegerValue) v;
                             if ((iv._undefinedReferences.length > 0) || (iv._value <= 0) || (iv._value > 36)) {
-                                diagnostics.append(new ValueDiagnostic(
-                                    sfFieldSize._locale,
-                                    "Invalid value for field size"));
+                                context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
+                                                                                "Invalid value for field size"));
                                 error = true;
                             } else {
                                 fieldSizes[enx] = (int) iv._value;
@@ -75,31 +69,30 @@ public class GFORMDirective extends Directive {
                         }
                     }
                 } catch (ExpressionException ex) {
-                    diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                           "Syntax error in field size"));
+                    context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                    "Syntax error in field size"));
                     error = true;
                 }
 
                 try {
-                    Expression e = epValue.parse(context, diagnostics);
+                    Expression e = epValue.parse(context);
                     if (e == null) {
-                        diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                               "Expected a value expression"));
+                        context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                        "Expected a value expression"));
                         error = true;
                     } else {
-                        Value v = e.evaluate(context, diagnostics);
+                        Value v = e.evaluate(context);
                         if (!(v instanceof IntegerValue)) {
-                            diagnostics.append(new ValueDiagnostic(
-                                sfFieldSize._locale,
-                                "Invalid value for field size"));
+                            context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
+                                                                            "Invalid value for field size"));
                             error = true;
                         } else {
                             values[enx] = (IntegerValue) v;
                         }
                     }
                 } catch (ExpressionException ex) {
-                    diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                           "Syntax error in value expression"));
+                    context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                    "Syntax error in value expression"));
                     error = true;
                 }
 
@@ -110,12 +103,10 @@ public class GFORMDirective extends Directive {
 
             if (!error) {
                 if (labelFieldComponents._label != null) {
-                    Assembler.establishLabel(labelFieldComponents._labelLocale,
-                                             context._dictionary,
-                                             labelFieldComponents._label,
-                                             labelFieldComponents._labelLevel,
-                                             context.getCurrentLocation(),
-                                             diagnostics);
+                    context.establishLabel(labelFieldComponents._labelLocale,
+                                           labelFieldComponents._label,
+                                           labelFieldComponents._labelLevel,
+                                           context.getCurrentLocation());
                 }
 
                 context.generate(_operandField._locale,

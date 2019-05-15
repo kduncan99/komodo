@@ -12,7 +12,6 @@ import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 import com.kadware.em2200.minalib.expressions.operators.*;
 import java.lang.reflect.*;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,16 +36,6 @@ public class ExpressionParser {
         _text = text;
         _textLocale = textLocale;
         _index = 0;
-    }
-
-    public ExpressionParser(
-        final String text,
-        final int offset,
-        final Locale textLocale
-    ) {
-        _text = text;
-        _index = offset;
-        _textLocale = textLocale;
     }
 
 
@@ -129,16 +118,12 @@ public class ExpressionParser {
 
     /**
      * Skips past whitespace - not usually a thing, except inside grouping symbols
-     * @return number of whitespaces we skipped, if any
      */
-    private int skipWhitespace(
+    private void skipWhitespace(
     ) {
-        int count = 0;
         while (!atEnd() && (_text.charAt(_index) == ' ')) {
             ++_index;
-            ++count;
         }
-        return count;
     }
 
 
@@ -150,13 +135,11 @@ public class ExpressionParser {
      * Parses an expression - starts at the current _index, and continues until we find something that doesn't
      * belong in the expression.
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return a parsed Expression object if we found one, else null
      * @throws ExpressionException if we detect an obvious error
      */
     private Expression parseExpression(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         List<IExpressionItem> expItems = new LinkedList<>();
 
@@ -181,7 +164,7 @@ public class ExpressionParser {
             }
 
             if (allowOperand) {
-                IExpressionItem item = parseOperand(context, diagnostics);
+                IExpressionItem item = parseOperand(context);
                 if (item != null) {
                     expItems.add(item);
                     allowInfixOperator = true;
@@ -219,7 +202,7 @@ public class ExpressionParser {
             } else {
                 //  end of expression is not allowed if we are expecting an operand
                 if (allowOperand) {
-                    diagnostics.append(new ErrorDiagnostic(getLocale(), "Incomplete expression"));
+                    context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Incomplete expression"));
                     throw new ExpressionException();
                 }
                 break;
@@ -234,13 +217,11 @@ public class ExpressionParser {
      * Such a structure is formatted as:
      *      '(' [ expression [ ',' expression ]* ')'
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return an array of parsed Expression objects if we found a group, else null
      * @throws ExpressionException if we detect an obvious error
      */
-    protected Expression[] parseExpressionGroup(
-        final Context context,
-        Diagnostics diagnostics
+    private Expression[] parseExpressionGroup(
+        final Context context
     ) throws ExpressionException {
         if (!skipToken("(")) {
             return null;
@@ -248,10 +229,10 @@ public class ExpressionParser {
 
         List<Expression> expressions = new LinkedList<>();
         while (!skipToken(")")) {
-            Expression exp = parseExpression(context, diagnostics);
+            Expression exp = parseExpression(context);
             if (exp == null) {
                 //  didn't find an expression, and we didn't find a closing paren either... something is wrong
-                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
                 throw new ExpressionException();
             }
 
@@ -264,7 +245,7 @@ public class ExpressionParser {
             skipWhitespace();
             if (nextChar() != ')') {
                 //  next char isn't a comma, nor a closing paren - again, something is wrong
-                diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
                 throw new ExpressionException();
             }
         }
@@ -275,17 +256,15 @@ public class ExpressionParser {
     /**
      * Parses a function specification from _index
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return newly created FunctionItem object
      * @throws ExpressionException if something is syntactically wrong
      */
     FunctionItem parseFunction(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         Locale funcLocale = getLocale();
         int holdIndex = _index;
-        String name = parseLabel(diagnostics);
+        String name = parseLabel(context);
         if (name == null) {
             return null;
         }
@@ -296,7 +275,7 @@ public class ExpressionParser {
             value = context._dictionary.getValue(name);
             //TODO handle user functions as well
             if (value.getType() == ValueType.BuiltInFunction) {
-                Expression[] argExpressions = parseExpressionGroup(context, diagnostics);
+                Expression[] argExpressions = parseExpressionGroup(context);
                 if (argExpressions == null) {
                     argExpressions = new Expression[0];
                 }
@@ -325,14 +304,9 @@ public class ExpressionParser {
 
     /**
      * Parses a floating point literal value
-     * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return floating point value OperandItem
-     * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      */
     private OperandItem parseFloatingPointLiteral(
-        final Context context,
-        Diagnostics diagnostics
     ) {
         //TODO parse the flpt thing
         return null;
@@ -392,12 +366,12 @@ public class ExpressionParser {
 
     /**
      * Parses an integer literal value
-     * @param diagnostics where we post diagnostics if appropriate
+     * @param context assembler context
      * @return integer literal OperandItem if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      */
     private OperandItem parseIntegerLiteral(
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         if (atEnd() || !Character.isDigit(nextChar())) {
             return null;
@@ -409,7 +383,7 @@ public class ExpressionParser {
         while (!atEnd() && Character.isDigit(nextChar())) {
             char ch = getNextChar();
             if ((radix == 8) && ((ch == '8') || (ch == '9'))) {
-                diagnostics.append(new ErrorDiagnostic(getLocale(), "Invalid digit in octal literal"));
+                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Invalid digit in octal literal"));
                 throw new ExpressionException();
             }
 
@@ -427,11 +401,11 @@ public class ExpressionParser {
 
     /**
      * Parses a label or reference (okay, a label would be a reference) from _index
-     * @param diagnostics where we post diagnostics if appropriate
+     * @param context assembler context
      * @return the label if found, else null
      */
     String parseLabel(
-        Diagnostics diagnostics
+        final Context context
     ) {
         //  Check first character - it must be acceptable as the first character of a label.
         if (atEnd()) {
@@ -456,7 +430,7 @@ public class ExpressionParser {
             }
 
             if (sb.length() == 12) {
-                diagnostics.append(new ErrorDiagnostic(getLocale(), "Label or Reference too long"));
+                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Label or Reference too long"));
             }
 
             skipNextChar();
@@ -469,20 +443,18 @@ public class ExpressionParser {
     /**
      * Parses a literal
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return OperandItem representing the literal if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      */
     private OperandItem parseLiteral(
-        final Context context,
-        final Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        OperandItem opItem = parseStringLiteral(context, diagnostics);
+        OperandItem opItem = parseStringLiteral(context);
         if (opItem == null) {
-            opItem = parseFloatingPointLiteral(context, diagnostics);
+            opItem = parseFloatingPointLiteral();
         }
         if (opItem == null) {
-            opItem = parseIntegerLiteral(diagnostics);
+            opItem = parseIntegerLiteral(context);
         }
 
         return opItem;
@@ -491,26 +463,24 @@ public class ExpressionParser {
     /**
      * Parses anything which could be an operand
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return parsed OperandItem if found, else null
      * @throws ExpressionException if we find something wrong with the integer literal (presuming we found one)
      */
     private OperandItem parseOperand(
-        final Context context,
-        final Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        Expression[] expGroup = parseExpressionGroup(context, diagnostics);
+        Expression[] expGroup = parseExpressionGroup(context);
         if (expGroup != null) {
             return new ExpressionGroupItem(_textLocale, expGroup);
         }
 
-        OperandItem opItem = parseLiteral(context, diagnostics);
+        OperandItem opItem = parseLiteral(context);
         if (opItem == null) {
-            opItem = parseFunction(context, diagnostics);
+            opItem = parseFunction(context);
         }
 
         if (opItem == null) {
-            opItem = parseReference(diagnostics);
+            opItem = parseReference(context);
         }
 
         return opItem;
@@ -550,13 +520,13 @@ public class ExpressionParser {
 
     /**
      * Parses a reference of one type or another
-     * @param diagnostics where we post diagnostics if necessary
+     * @param context assembler context
      * @return OperandItem representing the reference if one was found, else null
      */
     private OperandItem parseReference(
-        final Diagnostics diagnostics
+        final Context context
     ) {
-        String label = parseLabel(diagnostics);
+        String label = parseLabel(context);
         if (label != null) {
             return new ReferenceItem(new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index), label);
         }
@@ -567,13 +537,11 @@ public class ExpressionParser {
     /**
      * Parses a string literal into an appropriate Value object
      * @param context context
-     * @param diagnostics where we post any diagnostics
      * @return OperandItem object if we find a valid string literal, null if we don't find any string literal
      * @throws ExpressionException if there is an error in the formatting of the string literal
      */
     private OperandItem parseStringLiteral(
-        final Context context,
-        final Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         if (atEnd() || (nextChar() != '\'')) {
             return null;
@@ -600,7 +568,7 @@ public class ExpressionParser {
 
         //  Did we hit atEnd() before we found a terminating quote?
         if (!terminated) {
-            diagnostics.append(new QuoteDiagnostic(getLocale(), "Unterminated string literal"));
+            context._diagnostics.append(new QuoteDiagnostic(getLocale(), "Unterminated string literal"));
             throw new ExpressionException();
         }
 
@@ -616,22 +584,14 @@ public class ExpressionParser {
     /**
      * Parses the given text, within the given context, into the IExpressionItem list in an Expression object
      * @param context Current assembler context
-     * @param diagnostics Where we post any necessary diagnostics
      * @return A properly formatted Expression object which can subsequently be evaluated
      * @throws ExpressionException if we run into a problem while we are working on a valid expressoin
-     * @throws NotFoundException if we don't find anything that even looks like an expression
      */
     public Expression parse(
-        final Context context,
-        final Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         _index = 0;
 
-        Expression exp = parseExpression(context, diagnostics);
-        if (exp == null) {
-            return null;
-        }
-
-        return exp;
+        return parseExpression(context);
     }
 }

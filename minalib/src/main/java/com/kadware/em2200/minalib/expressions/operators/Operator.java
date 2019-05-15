@@ -26,8 +26,7 @@ public abstract class Operator {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
+     * @param locale locale of the operator in the source code
      */
     public Operator(
         final Locale locale
@@ -37,23 +36,18 @@ public abstract class Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     public abstract void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException;
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return locale value
      */
     public Locale getLocale(
     ) {
@@ -63,15 +57,13 @@ public abstract class Operator {
     /**
      * Retrieves the precedence for this operator.
      * higher values are evaluated before lower values.
-     * <p>
-     * @return
+     * @return precedence
      */
     public abstract int getPrecedence();
 
     /**
      * Retrieves the type of this operator
-     * <p>
-     * @return
+     * @return type
      */
     public abstract Type getType();
 
@@ -79,10 +71,8 @@ public abstract class Operator {
      * Ensures we have the proper number of operands, and retrieves them.
      * For Infix, result[0] is left-hand operand and result[1] is right-hand operand
      * For Prefix and Postfix, result[0] is the only operand
-     * <p>
-     * @param valueStack
-     * <p>
-     * @return
+     * @param valueStack stack of values
+     * @return operand values
      */
     protected Value[] getOperands(
         Stack<Value> valueStack
@@ -92,7 +82,7 @@ public abstract class Operator {
                 result[1] = valueStack.pop();
                 result[0] = valueStack.pop();
                 return result;
-        } else if ((getType() != Type.Infix) && (valueStack.size() > 0)) {
+        } else if ((getType() != Type.Infix) && !valueStack.isEmpty()) {
             Value[] result = new Value[1];
             result[0] = valueStack.pop();
             return result;
@@ -107,7 +97,7 @@ public abstract class Operator {
      * @param leftOperand true if the offending operand is on the left of the operator; otherwise, on the right
      * @param diagnostics Diagnostics object to which the new Diagnostic is appended
      */
-    protected void postValueDiagnostic(
+    void postValueDiagnostic(
         final boolean leftOperand,
         Diagnostics diagnostics
     ) {

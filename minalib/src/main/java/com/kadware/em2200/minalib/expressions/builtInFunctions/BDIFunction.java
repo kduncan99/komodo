@@ -6,7 +6,6 @@ package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
 import com.kadware.em2200.baselib.FieldDescriptor;
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
@@ -62,24 +61,22 @@ public class BDIFunction extends BuiltInFunction {
     /**
      * Evaluator
      * @param context evaluation-time contextual information
-     * @param diagnostics where we append diagnostics if necessary
      * @return Value object representing the result of the evaluation
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
     public Value evaluate(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        Value[] arguments = evaluateArguments(context, diagnostics);
+        Value[] arguments = evaluateArguments(context);
         if (!(arguments[0] instanceof IntegerValue)) {
-            diagnostics.append(this.getValueDiagnostic(1));
+            context._diagnostics.append(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
 
         int lcIndex = (int)((IntegerValue) arguments[0])._value;
         if ((lcIndex < 0) || (lcIndex > 063)) {
-            diagnostics.append(this.getValueDiagnostic(1));
+            context._diagnostics.append(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
 

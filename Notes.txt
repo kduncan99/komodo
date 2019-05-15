@@ -1,10 +1,12 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
+minalib support procs
+$END directive
 
 -- TODO
 BUG: NOP isn't being handled correctly by mina...
 pick up the rest of the tests we need to do but haven't yet
-minalib support procs
+minalib microstrings
 minalib generate system procs for special instructions such as JGD, BT, JK, SLJ, TZ, TNZ, TP, TN
 minalib $USE (A.2.8) specifies base register to use if none given
 minalib add test cases for interrupts (many of them already marked TODO)
@@ -28,7 +30,6 @@ minalib functions
   $LCV
   $(n)
 minalib directives
-  $EQU
   $EQUF
   $USE (implicit base register)
   $INSERT
@@ -36,7 +37,6 @@ minalib directives
   $IF / $ELSE / $ELSF / $ENDF
   $DO / $ENDD
   $REPEAT / $ENDR
-  $END
   $FORM
   $GEN
   $INCLUDE

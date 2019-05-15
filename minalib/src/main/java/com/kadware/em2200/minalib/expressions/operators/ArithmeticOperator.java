@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.expressions.operators;
@@ -15,11 +15,6 @@ import java.util.Stack;
  */
 public abstract class ArithmeticOperator extends Operator {
 
-    /**
-     * Constructor
-     * <p>
-     * @param locale
-     */
     public ArithmeticOperator(
         final Locale locale
     ) {
@@ -28,18 +23,14 @@ public abstract class ArithmeticOperator extends Operator {
 
     /**
      * Evaluator
-     * <p>
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException;
 
     /**
@@ -49,13 +40,10 @@ public abstract class ArithmeticOperator extends Operator {
      *          If either operand is floating point, the other is converted to floating point.
      *          Otherwise, anything not an integer is converted to integer.
      * If we find any invalid types, we post one or more diagnostics, and we throw TypeException.
-     * <p>
      * @param valueStack the value stack from which we get the operators
-     * @param allowFloatingPoint
+     * @param allowFloatingPoint true to allow floating operands
      * @param diagnostics Diagnostics object to which we post any necessary diagnostics
-     * <p>
      * @return left-hand possibly adjusted operand in result[0], right-hand in result[1]
-     * <p>
      * @throws TypeException if either operand is other than floating point, integer, or string
      */
     protected Value[] getTransformedOperands(
@@ -93,11 +81,6 @@ public abstract class ArithmeticOperator extends Operator {
         return operands;
     }
 
-    /**
-     * Retrieves the type of this operator
-     * <p>
-     * @return
-     */
     @Override
     public final Type getType(
     ) {

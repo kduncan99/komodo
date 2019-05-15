@@ -26,7 +26,7 @@ public class Context {
      * During assembly, each generated word is placed in this table, keyed by the location counter index and offset.
      * It is comprised of the component values which make up the sub-fields of the word, in no particular order.
      */
-    public static class GeneratedWord extends HashMap<FieldDescriptor, IntegerValue> {
+    public class GeneratedWord extends HashMap<FieldDescriptor, IntegerValue> {
 
         public final Locale _locale;
         RelocatableWord36 _relocatableWord = null;
@@ -147,10 +147,12 @@ public class Context {
     //  Data / Attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * And here is the map of LC indices to the various GeneratedPool objects...
-     */
-    public Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
+    //  Source code objects
+    final TextLine[] _sourceObjects;
+    private int _nextSourceIndex = 0;
+
+    //  Map of LC indices to the various GeneratedPool objects...
+    Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
 
     //  What mode are string literals generated in
     public CharacterMode _characterMode = CharacterMode.ASCII;
@@ -164,17 +166,20 @@ public class Context {
     //  What is the default LC index for literal pool generation?
     public int _currentLitLCIndex = 0;
 
+    //  Where diagnostics are posted
+    public final Diagnostics _diagnostics;
+
     //  What dictionary should be used for lookups and label establishment?
     public final Dictionary _dictionary;
 
-    //  name of the relocatable module
+    //TODO temporarily needed for BDIFunction
     public final String _moduleName;
 
     //  Things relating to the relocatable module as a whole
-    private boolean _arithmeticFaultCompatibilityMode = false;
-    private boolean _arithmeticFaultNonInterruptMode = false;
-    private boolean _quarterWordMode = false;
-    private boolean _thirdWordMode = false;
+    public boolean _arithmeticFaultCompatibilityMode = false;
+    public boolean _arithmeticFaultNonInterruptMode = false;
+    public boolean _quarterWordMode = false;
+    public boolean _thirdWordMode = false;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -186,48 +191,17 @@ public class Context {
      */
     public Context(
         final Dictionary upperLevelDictionary,
+        final String[] sourceText,
         final String moduleName
     ) {
         _dictionary = new Dictionary(upperLevelDictionary);
+        _sourceObjects = new TextLine[sourceText.length];
+        for (int sx = 0; sx < sourceText.length; ++sx) {
+            _sourceObjects[sx] = new TextLine(sx + 1, sourceText[sx]);
+        }
+        _diagnostics = new Diagnostics();
         _moduleName = moduleName;
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  private methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
-     * If such a pool does not exist, it is created.
-     * @param lcIndex index of the desired pool
-     * @return reference to the pool
-     */
-    private GeneratedPool obtainPool(
-        final int lcIndex
-    ) {
-        GeneratedPool gp = _generatedPools.get(lcIndex);
-        if (gp == null) {
-            gp = new GeneratedPool();
-            _generatedPools.put(lcIndex, gp);
-        }
-        return gp;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  special accessors - the sub context overrides these to call its parent instead of using its regular values
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public boolean getArithmeticFaultCompatibilityMode() { return _arithmeticFaultCompatibilityMode; }
-    public boolean getArithmeticFaultNonInterruptMode() { return _arithmeticFaultNonInterruptMode; }
-    public boolean getQuarterWordMode() { return _quarterWordMode; }
-    public boolean getThirdWordMode() { return _thirdWordMode; }
-
-    public void setArithmeticFaultCompatibilityMode( final boolean value ) { _arithmeticFaultCompatibilityMode = value; }
-    public void setArithmeticFaultNonInterruptMode( final boolean value ) { _arithmeticFaultNonInterruptMode = value; }
-    public void setQuarterWordMode( final boolean value ) { _quarterWordMode = value; }
-    public void setThirdWordMode( final boolean value ) { _thirdWordMode = value; }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -245,6 +219,26 @@ public class Context {
     ) {
         GeneratedPool gp = obtainPool(lcIndex);
         gp.advance(count);
+    }
+
+    /**
+     * Establishes a label value in the current (or a super-ordinate) dictionary
+     * @param locale locale of label (for posting diagnostics)
+     * @param label label
+     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
+     * @param value value to be associated with the level
+     */
+    public void establishLabel(
+        final Locale locale,
+        final String label,
+        final int labelLevel,
+        final Value value
+    ) {
+        if (_dictionary.hasValue(label)) {
+            _diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
+        } else {
+            _dictionary.addValue(labelLevel, label, value);
+        }
     }
 
     /**
@@ -300,16 +294,52 @@ public class Context {
     }
 
     /**
+     * Retrieves the next not-yet-assembled line of source code from this object
+     * @return TextLine object
+     */
+    TextLine getNextSourceLine() {
+        TextLine result = null;
+        if (_nextSourceIndex < _sourceObjects.length) {
+            result = _sourceObjects[_nextSourceIndex++];
+            result.parseFields(_diagnostics);
+        }
+        return result;
+    }
+
+    /**
+     * Indicates whether there is another line of source avaialble
+     * @return true if we can return at least one more line of source
+     */
+    boolean hasNextSourceLine() {
+        return _nextSourceIndex < _sourceObjects.length;
+    }
+
+    /**
+     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
+     * If such a pool does not exist, it is created.
+     * @param lcIndex index of the desired pool
+     * @return reference to the pool
+     */
+    public GeneratedPool obtainPool(
+        final int lcIndex
+    ) {
+        GeneratedPool gp = _generatedPools.get(lcIndex);
+        if (gp == null) {
+            gp = new GeneratedPool();
+            _generatedPools.put(lcIndex, gp);
+        }
+        return gp;
+    }
+
+    /**
      * Generates a map of location counter indices to LocationCounterPool object
-     * @param diagnostics where we store any necessary diagnostics
      * @return the map
      */
     Map<Integer, LocationCounterPool> produceLocationCounterPools(
-        final Diagnostics diagnostics
     ) {
         Map<Integer, LocationCounterPool> result = new TreeMap<>();
         for (Map.Entry<Integer, GeneratedPool> entry : _generatedPools.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(diagnostics));
+            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(_diagnostics));
         }
         return result;
     }

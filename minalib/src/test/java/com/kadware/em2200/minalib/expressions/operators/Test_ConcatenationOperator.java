@@ -26,11 +26,11 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
-        op.evaluate(context, valueStack, diags);
+        op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
         assertEquals(1, valueStack.size());
@@ -49,12 +49,12 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.Fieldata));
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0],  "TEST");
         context._characterMode = CharacterMode.Fieldata;
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
-        op.evaluate(context, valueStack, diags);
+        op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
         assertEquals(1, valueStack.size());
@@ -73,11 +73,11 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
         valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
-        op.evaluate(context, valueStack, diags);
+        op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
         assertEquals(1, valueStack.size());
@@ -96,11 +96,11 @@ public class Test_ConcatenationOperator {
         valueStack.push(new IntegerValue(false, 0_101_102_103_104L, null));
         valueStack.push(new IntegerValue(false, 0_105_106_107_110L, null));
 
-        Context context = new Context(new Dictionary(), "TEST");
+        Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
-        op.evaluate(context, valueStack, diags);
+        op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
         assertEquals(1, valueStack.size());
@@ -119,17 +119,15 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
         valueStack.push(new FloatingPointValue(false, 1.0));
 
-        Context context = new Context(new Dictionary(), "TEST");
-        Diagnostics diags = new Diagnostics();
-
+        Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Operator op = new ConcatenationOperator(new Locale(12, 18));
         try {
-            op.evaluate(context, valueStack, diags);
+            op.evaluate(context, valueStack);
         } catch (ExpressionException ex) {
             //  drop through
         }
 
-        List<Diagnostic> diagList = diags.getDiagnostics();
+        List<Diagnostic> diagList = context._diagnostics.getDiagnostics();
         assertEquals(1, diagList.size());
         assertEquals(Diagnostic.Level.Value, diagList.get(0).getLevel());
     }

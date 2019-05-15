@@ -22,9 +22,8 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("14458", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        Expression exp = parser.parse(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Expression exp = parser.parse(context);
 
         assertEquals(1, exp._items.size());
         IExpressionItem item = exp._items.get(0);
@@ -41,15 +40,14 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("-14458", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        Expression exp = parser.parse(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Expression exp = parser.parse(context);
 
         assertEquals(2, exp._items.size());
 
         IExpressionItem item0 = exp._items.get(0);
         assertTrue(item0 instanceof OperatorItem);
-        Operator op = ((OperatorItem) item0)._operator;
+        Operator op = ((OperatorItem) item0)._operator; //  TODO check this value if we can, somehow
 
         IExpressionItem item1 = exp._items.get(1);
         assertTrue(item1 instanceof ValueItem);
@@ -65,9 +63,8 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("'Hello'", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        Expression exp = parser.parse(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Expression exp = parser.parse(context);
 
         assertEquals(1, exp._items.size());
         IExpressionItem item = exp._items.get(0);
@@ -84,9 +81,8 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("'Hello ':'Stupid ':'Moron'", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        Expression exp = parser.parse(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Expression exp = parser.parse(context);
 
         assertEquals(5, exp._items.size());
     }
@@ -98,9 +94,8 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("1+3", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        Expression exp = parser.parse(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Expression exp = parser.parse(context);
 
         assertEquals(3, exp._items.size());
     }
@@ -111,8 +106,9 @@ public class Test_ExpressionParser {
         Locale locale = new Locale(10, 10);
         ExpressionParser parser = new ExpressionParser("$Label", locale);
 
-        Diagnostics diagnostics = new Diagnostics();
-        String label = parser.parseLabel(diagnostics);
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        String label = parser.parseLabel(context);
         assertEquals("$Label", label);
     }
 
@@ -123,9 +119,8 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("$sl('Test')", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), "TEST");
-        Diagnostics diagnostics = new Diagnostics();
-        FunctionItem fi = parser.parseFunction(context, diagnostics);
+        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        FunctionItem fi = parser.parseFunction(context);
         assertTrue(fi instanceof BuiltInFunctionItem);
         BuiltInFunctionItem bifItem = (BuiltInFunctionItem)fi;
         BuiltInFunction bif = bifItem._function;

@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.expressions.operators;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.ExpressionException;
 import java.util.Stack;
@@ -19,7 +18,7 @@ public abstract class LogicalOperator extends Operator {
      * Constructor
      * @param locale indicates the line and column where this operator was specified
      */
-    public LogicalOperator(
+    LogicalOperator(
         final Locale locale
     ) {
         super(locale);
@@ -29,14 +28,12 @@ public abstract class LogicalOperator extends Operator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException;
 
     /**

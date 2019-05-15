@@ -40,32 +40,30 @@ public class OrOperator extends LogicalOperator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         Value[] operands = getOperands(valueStack);
 
         try {
-            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
+            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context._diagnostics);
             if (leftValue._undefinedReferences.length != 0) {
-                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
             if (leftValue._flagged) {
-                diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
+                context._diagnostics.append( new ValueDiagnostic( getLocale(), "Left operand cannot be flagged" ) );
             }
 
-            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
+            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context._diagnostics);
             if (rightValue._undefinedReferences.length != 0) {
-                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
             }
             if (rightValue._flagged) {
-                diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
+                context._diagnostics.append( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
             }
 
             long result = leftValue._value | rightValue._value;

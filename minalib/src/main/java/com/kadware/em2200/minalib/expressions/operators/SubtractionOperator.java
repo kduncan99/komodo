@@ -7,7 +7,6 @@ package com.kadware.em2200.minalib.expressions.operators;
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.Locale;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 
@@ -43,17 +42,15 @@ public class SubtractionOperator extends ArithmeticOperator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, true, context._diagnostics);
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {

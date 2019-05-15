@@ -36,27 +36,27 @@ public class ExpressionGroupItem extends OperandItem {
     //  This entity does not know which of the above two cases apply, nor does the creating entity.
     //  Prior to evaluation, the calling code must make that determination and set the sub-expression
     //  flag accordingly - it defaults to true.
-    public final Expression[] _expressions;
-    public boolean _isSubExpression = true;     //  true if case 1 applies (above), false for case 2.
+    private final Expression[] _expressions;
+    boolean _isSubExpression = true;        //  true if case 1 applies (above), false for case 2.
 
     /**
      * Represents a grouped sub-expression.
      * It must have exactly one expression, which we evaluate and propagate the return value
      * @param context assembler context
-     * @param diagnostics where we post diagnostics
      * @return the resulting value
      * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase1(
-            final Context context,
-            Diagnostics diagnostics
+            final Context context
     ) throws ExpressionException {
         if (_expressions.length != 1) {
-            diagnostics.append(new ErrorDiagnostic(_locale, "Expected one expression inside the grouping symbols"));
+            context._diagnostics.append(
+                new ErrorDiagnostic(_locale,
+                                    "Expected one expression inside the grouping symbols"));
             throw new ExpressionException();
         }
 
-        return _expressions[0].evaluate(context, diagnostics);
+        return _expressions[0].evaluate(context);
     }
 
     /**
@@ -66,18 +66,16 @@ public class ExpressionGroupItem extends OperandItem {
      * the result is made up of one bitfield per expression, the sizes of which are the
      * dividend of 36 bits by the number of fields.
      * @param context assembler context
-     * @param diagnostics where we post diagnostics
      * @return the resulting value
      * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase2(
-            final Context context,
-            Diagnostics diagnostics
+            final Context context
     ) throws ExpressionException {
         if ((_expressions.length < 1) || (_expressions.length > 36)) {
-            diagnostics.append(
-                    new ErrorDiagnostic(_locale,
-                                        "Expected one to thirty-six expressions inside the literal pool specification"));
+            context._diagnostics.append(
+                new ErrorDiagnostic(_locale,
+                                    "Expected one to thirty-six expressions inside the literal pool specification"));
             throw new ExpressionException();
         }
 
@@ -85,17 +83,17 @@ public class ExpressionGroupItem extends OperandItem {
         IntegerValue[] values;
         if (_expressions.length == 1) {
             int[] fs = { 36 };
-            IntegerValue[] ivs = { (IntegerValue) _expressions[0].evaluate(context, diagnostics) };
+            IntegerValue[] ivs = { (IntegerValue) _expressions[0].evaluate(context) };
             fieldSizes = fs;
             values = ivs;
         } else {
             values = new IntegerValue[_expressions.length];
             for (int ex = 0; ex < _expressions.length; ++ex) {
-                Value v = _expressions[ex].evaluate(context, diagnostics);
+                Value v = _expressions[ex].evaluate(context);
                 if (!(v instanceof IntegerValue)) {
-                    diagnostics.append(
-                            new ErrorDiagnostic(_locale,
-                                                "Bit-field values inside the literal pool specifier must be integers."));
+                    context._diagnostics.append(
+                        new ErrorDiagnostic(_locale,
+                                            "Bit-field values inside the literal pool specifier must be integers."));
                     throw new ExpressionException();
                 }
                 values[ex] = (IntegerValue) v;
@@ -117,7 +115,7 @@ public class ExpressionGroupItem extends OperandItem {
      * @param locale location of this item
      * @param expressions expressions contained within this group
      */
-    public ExpressionGroupItem(
+    ExpressionGroupItem(
         final Locale locale,
         final Expression[] expressions
     ) {
@@ -128,15 +126,13 @@ public class ExpressionGroupItem extends OperandItem {
     /**
      * Resolves the value of this item.
      * @param context assembler context - we don't need this
-     * @param diagnostics where we store any diagnostics we need to generate - we don't need this either
      * @return a Value representing this operand
      * @throws ExpressionException if the underlying sub-expression throws it
      */
     @Override
     public Value resolve(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        return (_isSubExpression ? resolveForCase1(context, diagnostics) : resolveForCase2(context, diagnostics));
+        return (_isSubExpression ? resolveForCase1(context) : resolveForCase2(context));
     }
 }

@@ -61,29 +61,27 @@ public class SSFunction extends BuiltInFunction {
     /**
      * Evaluator
      * @param context evaluation-time contextual information
-     * @param diagnostics where we append diagnostics if necessary
      * @return Value object representing the result of the evaluation
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
     public Value evaluate(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         try {
-            Value[] arguments = evaluateArguments(context, diagnostics);
+            Value[] arguments = evaluateArguments(context);
             if (arguments[0].getType() != ValueType.String) {
-                diagnostics.append(getValueDiagnostic(1));
+                context._diagnostics.append(getValueDiagnostic(1));
                 throw new ExpressionException();
             }
 
             if (arguments[1].getType() != ValueType.Integer) {
-                diagnostics.append(getValueDiagnostic(2));
+                context._diagnostics.append(getValueDiagnostic(2));
                 throw new ExpressionException();
             }
 
             if ((arguments.length == 3) && (arguments[2].getType() != ValueType.Integer)) {
-                diagnostics.append(getValueDiagnostic(3));
+                context._diagnostics.append(getValueDiagnostic(3));
                 throw new ExpressionException();
             }
 
@@ -92,20 +90,20 @@ public class SSFunction extends BuiltInFunction {
             IntegerValue iarg2 = (arguments.length == 3) ? (IntegerValue)arguments[2] : null;
 
             if (iarg1._undefinedReferences.length != 0) {
-                diagnostics.append(new RelocationDiagnostic(getLocale()));
+                context._diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
             if ((iarg2 != null) && (iarg2._undefinedReferences.length != 0)) {
-                diagnostics.append(new RelocationDiagnostic(getLocale()));
+                context._diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
             if (iarg1._value < 1) {
-                diagnostics.append(new ValueDiagnostic(getLocale(), "Index argument must be > 0"));
+                context._diagnostics.append(new ValueDiagnostic(getLocale(), "Index argument must be > 0"));
                 throw new ExpressionException();
             }
 
             if ((iarg2 != null) && (iarg2._value < 1)) {
-                diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument must be > 0"));
+                context._diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument must be > 0"));
                 throw new ExpressionException();
             }
 
@@ -122,7 +120,7 @@ public class SSFunction extends BuiltInFunction {
 
             return new StringValue(false, sb.toString(), sarg._characterMode);
         } catch (ExpressionException ex) {
-            diagnostics.append(new ErrorDiagnostic(getLocale(), ex.getMessage()));
+            context._diagnostics.append(new ErrorDiagnostic(getLocale(), ex.getMessage()));
             throw ex;
         }
     }

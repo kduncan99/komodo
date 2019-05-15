@@ -142,7 +142,8 @@ public class BuiltInFunctionValue extends Value {
      * @return displayable string
      */
     @Override
-    public String toString() {
+    public String toString(
+    ) {
         return "<function>";
     }
 }

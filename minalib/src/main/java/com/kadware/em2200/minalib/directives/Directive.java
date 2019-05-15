@@ -9,42 +9,44 @@ import com.kadware.em2200.minalib.diagnostics.*;
 
 public abstract class Directive {
 
-    protected TextField _operationField;
-    protected TextField _operandField;
-    protected TextField _additionalOperandField;    //  primarily for $INFO
+    TextField _operationField;
+    TextField _operandField;
+    TextField _additionalOperandField;      //  primarily for $INFO
 
     /**
      * Extracts the fields from the TextLine object, and checks for extranous fields
+     * @param context context of the assembler
      * @param textLine object from which we extract the fields
      * @param requiresOperand true if the operand field is required
      * @param maxFields maximum number of fields we allow
-     * @param diagnostics where we post diagnostics if necessary
      * @return true if we found no errors which would preclude continuation of directive processing, else false
      */
-    protected boolean extractFields(
+    boolean extractFields(
+        final Context context,
         final TextLine textLine,
         final boolean requiresOperand,
-        final int maxFields,
-        final Diagnostics diagnostics
+        final int maxFields
     ) {
         _operationField = textLine._fields.size() > 1 ? textLine._fields.get(1) : null;
         _operandField = textLine._fields.size() > 2 ? textLine._fields.get(2) : null;
         _additionalOperandField = textLine._fields.size() > 3 ? textLine._fields.get(3) : null;
 
-        if (requiresOperand && ((_operandField == null) || (_operandField._subfields.size() == 0))) {
-            diagnostics.append(new ErrorDiagnostic(_operandField._locale,
-                                                   "Directive requires an operand field"));
-            return false;
-        }
+        if (requiresOperand) {
+        if ((_operandField == null) || _operandField._subfields.isEmpty()) {
+                context._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+                                                                "Directive requires an operand field"));
+                return false;
+            }
 
-        if (_operationField._subfields.size() > 1) {
-            diagnostics.append(new ErrorDiagnostic(_operationField._subfields.get(1)._locale,
-                                                   "Extranous subfields on operation field ignored"));
+            if (_operationField._subfields.size() > 1) {
+                context._diagnostics.append(new ErrorDiagnostic(_operationField._subfields.get(1)._locale,
+                                                                 "Extranous subfields on operation field ignored"));
+            }
         }
 
         if (textLine._fields.size() > maxFields) {
-            diagnostics.append(new ErrorDiagnostic(textLine._fields.get(maxFields)._locale,
-                                                   "Extraneous fields in directive are ignored"));
+            context._diagnostics.append(new ErrorDiagnostic(textLine._fields.get(maxFields)._locale,
+                                                             "Extraneous fields in directive are ignored"));
         }
 
         return true;
@@ -56,12 +58,10 @@ public abstract class Directive {
      * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
      *                 make different usages of the fields - and $INFO even uses an extra field
      * @param labelFieldComponents LabelFieldComponents describing the label field on the line containing this directive
-     * @param diagnostics where diagnostics should be posted if necessary
      */
     public abstract void process(
             final Context context,
             final TextLine textLine,
-            final LabelFieldComponents labelFieldComponents,
-            final Diagnostics diagnostics
+            final LabelFieldComponents labelFieldComponents
     );
 }

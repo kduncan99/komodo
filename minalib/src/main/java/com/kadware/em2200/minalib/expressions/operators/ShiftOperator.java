@@ -40,24 +40,22 @@ public class ShiftOperator extends ArithmeticOperator {
      * We do *NOT* flag T's on left shifts out of MSBit, contra MASM.
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, false, context._diagnostics);
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
             //  Undefined references not allowed for the right-hand operand
-            if ( iopRight._undefinedReferences.length != 0 ) {
-                diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+            if (iopRight._undefinedReferences.length != 0) {
+                context._diagnostics.append(new RelocationDiagnostic(getLocale()));
             }
 
             long result = iopLeft._value;
@@ -68,7 +66,7 @@ public class ShiftOperator extends ArithmeticOperator {
                 result <<= count;
             }
 
-            valueStack.push( new IntegerValue( iopLeft._flagged, result, iopLeft._undefinedReferences ) );
+            valueStack.push(new IntegerValue(iopLeft._flagged, result, iopLeft._undefinedReferences));
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.expressions.operators;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import java.util.Stack;
@@ -49,20 +48,18 @@ public class ConcatenationOperator extends Operator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         Value[] operands = getOperands(valueStack);
 
         try {
-            StringValue leftValue = operands[0].toStringValue(getLocale(), context._characterMode, diagnostics);
-            StringValue rightValue = operands[1].toStringValue(getLocale(), context._characterMode, diagnostics);
+            StringValue leftValue = operands[0].toStringValue(getLocale(), context._characterMode, context._diagnostics);
+            StringValue rightValue = operands[1].toStringValue(getLocale(), context._characterMode, context._diagnostics);
             String newValue = leftValue._value + rightValue._value;
 
             boolean ascii = (leftValue._characterMode == CharacterMode.ASCII)

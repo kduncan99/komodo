@@ -40,32 +40,30 @@ public class DivisionOperator extends ArithmeticOperator {
      * Evaluator
      * @param context current contextual information one of our subclasses might need to know
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * @param diagnostics where we append diagnostics if necessary
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
         final Context context,
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, true, context._diagnostics);
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
-                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), diagnostics);
+                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context._diagnostics);
                 if (leftValue._undefinedReferences.length != 0) {
-                    diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                    context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
                 }
 
-                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), diagnostics);
+                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context._diagnostics);
                 if (rightValue._undefinedReferences.length != 0) {
-                    diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                    context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
                 }
 
                 if (rightValue._value == 0) {
-                    diagnostics.append(new TruncationDiagnostic(getLocale(), "Division by zero"));
+                    context._diagnostics.append(new TruncationDiagnostic(getLocale(), "Division by zero"));
                     throw new ExpressionException();
                 }
 

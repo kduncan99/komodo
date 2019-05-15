@@ -5,7 +5,6 @@
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.Expression;
@@ -17,9 +16,8 @@ public class CASFunction extends BuiltInFunction {
 
     /**
      * Constructor
-     * <p>
-     * @param locale
-     * @param argumentExpressions
+     * @param locale location of the text for the function
+     * @param argumentExpressions argument expressions
      */
     public CASFunction(
         final Locale locale,
@@ -30,8 +28,7 @@ public class CASFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return the function name
      */
     @Override
     public String getFunctionName(
@@ -41,8 +38,7 @@ public class CASFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return max arguments we expect
      */
     @Override
     public int getMaximumArguments(
@@ -52,8 +48,7 @@ public class CASFunction extends BuiltInFunction {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return min arguments we expect
      */
     @Override
     public int getMinimumArguments(
@@ -63,24 +58,19 @@ public class CASFunction extends BuiltInFunction {
 
     /**
      * Evaluator
-     * <p>
      * @param context evaluation-time contextual information
-     * @param diagnostics where we append diagnostics if necessary
-     * <p>
      * @return Value object representing the result of the evaluation
-     * <p>
      * @throws ExpressionException if something goes wrong with the evaluation process
      */
     @Override
     public Value evaluate(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
         try {
-            Value[] arguments = evaluateArguments(context, diagnostics);
-            return arguments[0].toStringValue(getLocale(), CharacterMode.ASCII, diagnostics);
+            Value[] arguments = evaluateArguments(context);
+            return arguments[0].toStringValue(getLocale(), CharacterMode.ASCII, context._diagnostics);
         } catch (TypeException ex) {
-            diagnostics.append(this.getValueDiagnostic(1));
+            context._diagnostics.append(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
     }

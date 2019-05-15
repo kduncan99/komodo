@@ -31,13 +31,11 @@ public class ValueItem extends OperandItem {
     /**
      * Resolves the value of this item - basically, we just return the Value object
      * @param context assembler context - we don't need this
-     * @param diagnostics where we store any diagnostics we need to generate - we don't need this either
      * @return a Value representing this operand
      */
     @Override
     public Value resolve(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) {
         return _value;
     }

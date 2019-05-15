@@ -19,8 +19,7 @@ public class BuiltInFunctionItem extends FunctionItem {
 
     /**
      * constructor
-     * <p>
-     * @param function
+     * @param function of interest
      */
     public BuiltInFunctionItem(
         final BuiltInFunction function
@@ -31,19 +30,14 @@ public class BuiltInFunctionItem extends FunctionItem {
 
     /**
      * Evaluates the function against its parameter list
-     * <p>
      * @param context
-     * @param diagnostics
-     * <p>
      * @return true if successful, false to discontinue evaluation
-     * <p>
-     * @throws ExpressionException
+     * @throws ExpressionException if something is wrong with the expression
      */
     @Override
     public Value resolve(
-        final Context context,
-        Diagnostics diagnostics
+        final Context context
     ) throws ExpressionException {
-        return _function.evaluate(context, diagnostics);
+        return _function.evaluate(context);
     }
 }
