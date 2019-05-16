@@ -48,83 +48,22 @@ public class Assembler {
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     private static final IntegerValue _zeroValue = new IntegerValue( false, 0, null );
 
+    //  Singleton instance
+    private final Assembler _instance;
+
+
+    //  ---------------------------------------------------------------------------------------------------------------------------
+    //  Constructor
+    //  ---------------------------------------------------------------------------------------------------------------------------
+
+    public Assembler() {
+        _instance = this;
+    }
+
 
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Assemble a single TextLine object into the Relocatable Module
-     * @param textLine entity to be assembled
-     */
-    private void assembleTextLine(
-        final TextLine textLine
-    ) {
-        if (textLine._fields.isEmpty()) {
-            return;
-        }
-
-        TextField labelField = textLine.getField(0);
-        TextField operationField = textLine.getField(1);
-        TextField operandField = textLine.getField(2);
-
-        //  Interpret label field and update current location counter index if appropriate.
-        //  We can't do anything with the label at this point (what we do depends on the operator field),
-        //  but if there is a location counter spec, it will always set the current generation lc index.
-        //  So do that part of it here.
-        LabelFieldComponents lfc = interpretLabelField(labelField);
-        if (lfc._lcIndex != null) {
-            _context._currentGenerationLCIndex = lfc._lcIndex;
-        }
-
-        if ((operationField == null) || (operationField._subfields.isEmpty())) {
-            //  This is a no-op line - but it might have a label.  Honor the label, if there is one.
-            if (lfc._label != null) {
-                _context.establishLabel(lfc._labelLocale, lfc._label, lfc._labelLevel, _context.getCurrentLocation());
-            }
-            return;
-        }
-
-        String operation = operationField._subfields.get(0)._text.toUpperCase();
-
-        //  Check the dictionary...
-        try {
-            Value v = _context._dictionary.getValue(operation);
-            if (v instanceof ProcedureValue) {
-                //  TODO
-            }
-            else if (v instanceof FormValue) {
-                //  TODO
-            } else if (v instanceof DirectiveValue) {
-                processDirective((DirectiveValue) v, textLine, lfc, operationField);
-                return;
-            }
-        } catch (NotFoundException ex) {
-            //  ignore it and drop through
-        }
-
-        //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
-        if (processMnemonic(lfc, operationField, operandField)) {
-            if (textLine._fields.size() > 3) {
-                _context._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
-                                                                 "Extraneous fields ignored"));
-            }
-            return;
-        }
-
-        //  Is it an expression (or a list of expressions)?
-        //  In this case, the operation field actually contains the operand, while the operand field should be empty.
-        if (processDataGeneration(lfc, operationField)) {
-            if (textLine._fields.size() > 2) {
-                _context._diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale,
-                                                                 "Extraneous fields ignored"));
-            }
-            return;
-        }
-
-        _context._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
-                                                         "Unrecognizable source code"));
-    }
 
     /**
      * Displays the content of a particular dictionary
@@ -983,6 +922,88 @@ public class Assembler {
         System.out.println("Assembly Ends -------------------------------------------------------");
 
         return module;
+    }
+
+    /**
+     * Assemble a single TextLine object into the Relocatable Module
+     * @param textLine entity to be assembled
+     */
+    //TODO this might go back to being private
+    public void assembleTextLine(
+        final TextLine textLine
+    ) {
+        if (textLine._fields.isEmpty()) {
+            return;
+        }
+
+        TextField labelField = textLine.getField(0);
+        TextField operationField = textLine.getField(1);
+        TextField operandField = textLine.getField(2);
+
+        //  Interpret label field and update current location counter index if appropriate.
+        //  We can't do anything with the label at this point (what we do depends on the operator field),
+        //  but if there is a location counter spec, it will always set the current generation lc index.
+        //  So do that part of it here.
+        LabelFieldComponents lfc = interpretLabelField(labelField);
+        if (lfc._lcIndex != null) {
+            _context._currentGenerationLCIndex = lfc._lcIndex;
+        }
+
+        if ((operationField == null) || (operationField._subfields.isEmpty())) {
+            //  This is a no-op line - but it might have a label.  Honor the label, if there is one.
+            if (lfc._label != null) {
+                _context.establishLabel(lfc._labelLocale, lfc._label, lfc._labelLevel, _context.getCurrentLocation());
+            }
+            return;
+        }
+
+        String operation = operationField._subfields.get(0)._text.toUpperCase();
+
+        //  Check the dictionary...
+        try {
+            Value v = _context._dictionary.getValue(operation);
+            if (v instanceof ProcedureValue) {
+                //  TODO
+            }
+            else if (v instanceof FormValue) {
+                //  TODO
+            } else if (v instanceof DirectiveValue) {
+                processDirective((DirectiveValue) v, textLine, lfc, operationField);
+                return;
+            }
+        } catch (NotFoundException ex) {
+            //  ignore it and drop through
+        }
+
+        //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
+        if (processMnemonic(lfc, operationField, operandField)) {
+            if (textLine._fields.size() > 3) {
+                _context._diagnostics.append(new ErrorDiagnostic(textLine.getField(3)._locale,
+                                                                 "Extraneous fields ignored"));
+            }
+            return;
+        }
+
+        //  Is it an expression (or a list of expressions)?
+        //  In this case, the operation field actually contains the operand, while the operand field should be empty.
+        if (processDataGeneration(lfc, operationField)) {
+            if (textLine._fields.size() > 2) {
+                _context._diagnostics.append(new ErrorDiagnostic(textLine.getField(2)._locale,
+                                                                 "Extraneous fields ignored"));
+            }
+            return;
+        }
+
+        _context._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+                                                         "Unrecognizable source code"));
+    }
+
+    /**
+     * Singleton instance getter
+     * @return
+     */
+    public Assembler getInstance() {
+        return _instance;
     }
 
     /**

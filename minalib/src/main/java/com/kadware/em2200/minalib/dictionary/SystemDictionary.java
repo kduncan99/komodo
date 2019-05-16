@@ -45,6 +45,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
         _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
         _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
+        _initialValues.put("$PROC", new DirectiveValue(PROCDirective.class));
         _initialValues.put("$RES", new DirectiveValue(RESDirective.class));
 
         //  built-in function names

@@ -297,7 +297,7 @@ public class Context {
      * Retrieves the next not-yet-assembled line of source code from this object
      * @return TextLine object
      */
-    TextLine getNextSourceLine() {
+    public TextLine getNextSourceLine() {
         TextLine result = null;
         if (_nextSourceIndex < _sourceObjects.length) {
             result = _sourceObjects[_nextSourceIndex++];
@@ -310,7 +310,7 @@ public class Context {
      * Indicates whether there is another line of source avaialble
      * @return true if we can return at least one more line of source
      */
-    boolean hasNextSourceLine() {
+    public boolean hasNextSourceLine() {
         return _nextSourceIndex < _sourceObjects.length;
     }
 
@@ -342,5 +342,13 @@ public class Context {
             result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(_diagnostics));
         }
         return result;
+    }
+
+    /**
+     * Returns the number of lines of source code
+     * @return
+     */
+    public int sourceLineCount() {
+        return _sourceObjects.length;
     }
 }
