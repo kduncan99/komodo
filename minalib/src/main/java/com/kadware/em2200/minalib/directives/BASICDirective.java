@@ -16,7 +16,7 @@ public class BASICDirective extends Directive {
             final LabelFieldComponents labelFieldComponents
     ) {
         if (extractFields(context, textLine, false, 2)) {
-            context._codeMode = CodeMode.Basic;
+            context.setCodeMode(CodeMode.Basic);
         }
     }
 }

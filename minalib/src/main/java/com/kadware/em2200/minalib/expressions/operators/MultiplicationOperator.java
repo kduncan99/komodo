@@ -48,18 +48,18 @@ public class MultiplicationOperator extends ArithmeticOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, true, context.getDiagnostics());
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
-                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context._diagnostics);
+                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
                 if (leftValue._undefinedReferences.length != 0) {
-                    context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                    context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
                 }
 
-                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context._diagnostics);
+                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
                 if (rightValue._undefinedReferences.length != 0) {
-                    context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                    context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
                 }
 
                 long result = leftValue._value * rightValue._value;

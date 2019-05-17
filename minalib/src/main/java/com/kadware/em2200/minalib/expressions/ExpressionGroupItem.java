@@ -50,7 +50,7 @@ public class ExpressionGroupItem extends OperandItem {
             final Context context
     ) throws ExpressionException {
         if (_expressions.length != 1) {
-            context._diagnostics.append(
+            context.appendDiagnostic(
                 new ErrorDiagnostic(_locale,
                                     "Expected one expression inside the grouping symbols"));
             throw new ExpressionException();
@@ -73,7 +73,7 @@ public class ExpressionGroupItem extends OperandItem {
             final Context context
     ) throws ExpressionException {
         if ((_expressions.length < 1) || (_expressions.length > 36)) {
-            context._diagnostics.append(
+            context.appendDiagnostic(
                 new ErrorDiagnostic(_locale,
                                     "Expected one to thirty-six expressions inside the literal pool specification"));
             throw new ExpressionException();
@@ -91,7 +91,7 @@ public class ExpressionGroupItem extends OperandItem {
             for (int ex = 0; ex < _expressions.length; ++ex) {
                 Value v = _expressions[ex].evaluate(context);
                 if (!(v instanceof IntegerValue)) {
-                    context._diagnostics.append(
+                    context.appendDiagnostic(
                         new ErrorDiagnostic(_locale,
                                             "Bit-field values inside the literal pool specifier must be integers."));
                     throw new ExpressionException();
@@ -107,7 +107,7 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return context.generate(_locale, context._currentLitLCIndex, form, values);
+        return context.generate(_locale, context.getCurrentLitLCIndex(), form, values);
     }
 
     /**

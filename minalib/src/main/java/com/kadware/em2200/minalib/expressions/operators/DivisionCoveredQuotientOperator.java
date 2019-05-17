@@ -48,20 +48,20 @@ public class DivisionCoveredQuotientOperator extends ArithmeticOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, false, context.getDiagnostics());
 
-            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context._diagnostics);
+            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
             if (leftValue._undefinedReferences.length != 0) {
-                context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
             }
 
-            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context._diagnostics);
+            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
             if (rightValue._undefinedReferences.length != 0) {
-                context._diagnostics.append( new RelocationDiagnostic( getLocale() ) );
+                context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
             }
 
             if (rightValue._value == 0) {
-                context._diagnostics.append(new TruncationDiagnostic(getLocale(), "Division by zero"));
+                context.appendDiagnostic(new TruncationDiagnostic(getLocale(), "Division by zero"));
                 throw new ExpressionException();
             }
 

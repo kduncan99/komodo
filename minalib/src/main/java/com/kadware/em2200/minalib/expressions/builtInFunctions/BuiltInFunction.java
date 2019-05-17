@@ -69,8 +69,8 @@ public abstract class BuiltInFunction {
         final Context context
     ) throws ExpressionException {
         if ((_argumentExpressions.length < getMinimumArguments()) || (_argumentExpressions.length > getMaximumArguments())) {
-            context._diagnostics.append(new ErrorDiagnostic(_locale,
-                                                            String.format("Wrong number of arguments for %s", getFunctionName())));
+            context.appendDiagnostic(new ErrorDiagnostic(_locale,
+                                                         String.format("Wrong number of arguments for %s", getFunctionName())));
             throw new ExpressionException();
         }
 

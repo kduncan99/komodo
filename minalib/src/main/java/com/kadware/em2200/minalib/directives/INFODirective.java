@@ -21,8 +21,8 @@ public class INFODirective extends Directive {
         final Context context
     ) {
         if ((_additionalOperandField == null) || (_additionalOperandField._subfields.isEmpty())) {
-            context._diagnostics.append(new ErrorDiagnostic(_operandField._locale,
-                                                            "No LCs specified for $INFO group 10"));
+            context.appendDiagnostic(new ErrorDiagnostic(_operandField._locale,
+                                                         "No LCs specified for $INFO group 10"));
             return;
         }
 
@@ -33,27 +33,27 @@ public class INFODirective extends Directive {
 
                 Value v = e.evaluate(context);
                 if (!(v instanceof IntegerValue)) {
-                    context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
-                                                                    "Invalid value type"));
+                    context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
+                                                                 "Invalid value type"));
                     return;
                 }
 
                 int lcIndex = (int) ((IntegerValue) v)._value;
                 if ((lcIndex < 0) || (lcIndex > 063)) {
-                    context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
-                                                                    "Illegal location counter index value"));
+                    context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
+                                                                 "Illegal location counter index value"));
                     return;
                 }
 
                 Context.GeneratedPool gp = context.obtainPool(lcIndex);
                 gp._extendedModeFlag = true;
             } catch (ExpressionException ex) {
-                context._diagnostics.append(new ErrorDiagnostic(sf._locale, "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(sf._locale, "Syntax error"));
             }
         }
 
         if (_additionalOperandField._subfields.size() > 1) {
-            context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale,
+            context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
                                                             "Ignoring extraneous subfields"));
         }
     }
@@ -66,7 +66,7 @@ public class INFODirective extends Directive {
         final Context context
     ) {
         if ((_additionalOperandField == null) || (_additionalOperandField._subfields.isEmpty())) {
-            context._diagnostics.append(new ErrorDiagnostic(_operandField._locale,
+            context.appendDiagnostic(new ErrorDiagnostic(_operandField._locale,
                                                             "No value specified for $INFO group 1"));
             return;
         }
@@ -78,26 +78,34 @@ public class INFODirective extends Directive {
 
             Value v = e.evaluate(context);
             if (!(v instanceof IntegerValue)) {
-                context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale, "Invalid value type"));
+                context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale, "Invalid value type"));
                 return;
             }
 
             IntegerValue iv = (IntegerValue) v;
             if ((iv._value < 0) || ((iv._value & 07) == 07) || ((iv._value & 070) == 070)) {
-                context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale, "Illegal value"));
+                context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale, "Illegal value"));
                 return;
             }
 
-            context._quarterWordMode = (iv._value & 03) == 03;
-            context._thirdWordMode = (iv._value & 05) == 05;
-            context._arithmeticFaultCompatibilityMode = (iv._value & 030) == 030;
-            context._arithmeticFaultNonInterruptMode = (iv._value & 050) == 050;
+            if ((iv._value & 03) == 03) {
+                context.setQuarterWordMode();
+            }
+            if ((iv._value & 05) == 05) {
+                context.setThirdWordMode();
+            }
+            if ((iv._value & 030) == 030) {
+                context.setArithmeticFaultCompatibilityMode();
+            }
+            if ((iv._value & 050) == 050) {
+                context.setArithmeticFaultNonInterruptMode();
+            }
         } catch (ExpressionException ex) {
-            context._diagnostics.append(new ErrorDiagnostic(sf._locale, "Syntax error"));
+            context.appendDiagnostic(new ErrorDiagnostic(sf._locale, "Syntax error"));
         }
 
         if (_additionalOperandField._subfields.size() > 1) {
-            context._diagnostics.append(new ErrorDiagnostic(_additionalOperandField._locale, "Ignoring extraneous subfields"));
+            context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale, "Ignoring extraneous subfields"));
         }
     }
 
@@ -122,7 +130,7 @@ public class INFODirective extends Directive {
                 Expression e = p.parse(context);
                 Value v = e.evaluate(context);
                 if ((!(v instanceof IntegerValue)) || (((IntegerValue) v)._undefinedReferences.length > 0)) {
-                    context._diagnostics.append(new ValueDiagnostic(opLoc,
+                    context.appendDiagnostic(new ValueDiagnostic(opLoc,
                                                                     "Invalid value type for $INFO group cateogry"));
                 } else {
                     switch ((int) ((IntegerValue) v)._value) {
@@ -145,16 +153,16 @@ public class INFODirective extends Directive {
                         case 11:    //  Void Bank
                         case 12:    //  Library Search File
                         default:
-                            context._diagnostics.append(new ErrorDiagnostic(opLoc,
+                            context.appendDiagnostic(new ErrorDiagnostic(opLoc,
                                                                             "Unknown or unimplemented $INFO group"));
                     }
                 }
             } catch (ExpressionException ex) {
-                context._diagnostics.append(new ErrorDiagnostic(opLoc, "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(opLoc, "Syntax error"));
             }
 
             if (_operandField._subfields.size() > 1) {
-                context._diagnostics.append(new ErrorDiagnostic(_operandField._subfields.get(1)._locale,
+                context.appendDiagnostic(new ErrorDiagnostic(_operandField._subfields.get(1)._locale,
                                                                 "Extraneous subfields ignored"));
             }
         }

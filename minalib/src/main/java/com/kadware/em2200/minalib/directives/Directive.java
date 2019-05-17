@@ -33,20 +33,20 @@ public abstract class Directive {
 
         if (requiresOperand) {
         if ((_operandField == null) || _operandField._subfields.isEmpty()) {
-                context._diagnostics.append(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
-                                                                "Directive requires an operand field"));
+                context.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+                                                             "Directive requires an operand field"));
                 return false;
             }
 
             if (_operationField._subfields.size() > 1) {
-                context._diagnostics.append(new ErrorDiagnostic(_operationField._subfields.get(1)._locale,
-                                                                 "Extranous subfields on operation field ignored"));
+                context.appendDiagnostic(new ErrorDiagnostic(_operationField._subfields.get(1)._locale,
+                                                             "Extranous subfields on operation field ignored"));
             }
         }
 
         if (textLine._fields.size() > maxFields) {
-            context._diagnostics.append(new ErrorDiagnostic(textLine._fields.get(maxFields)._locale,
-                                                             "Extraneous fields in directive are ignored"));
+            context.appendDiagnostic(new ErrorDiagnostic(textLine._fields.get(maxFields)._locale,
+                                                         "Extraneous fields in directive are ignored"));
         }
 
         return true;

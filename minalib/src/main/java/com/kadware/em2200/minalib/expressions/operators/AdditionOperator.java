@@ -53,7 +53,7 @@ public class AdditionOperator extends ArithmeticOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, true, context.getDiagnostics());
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {

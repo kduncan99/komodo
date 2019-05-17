@@ -75,7 +75,7 @@ public class NegativeOperator extends Operator {
                 break;
 
             default:
-                postValueDiagnostic(false, context._diagnostics);
+                postValueDiagnostic(false, context.getDiagnostics());
                 throw new ExpressionException();
         }
     }

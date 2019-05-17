@@ -7,10 +7,13 @@ package com.kadware.em2200.minalib;
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
+import sun.util.resources.cldr.gl.CurrencyNames_gl;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -142,44 +145,81 @@ public class Context {
         }
     }
 
+    //  Class data which is global - that is, there is one copy regardless of the level of
+    //  context nesting
+    private class Global {
+        //  relocatable module flags
+        private boolean _arithmeticFaultCompatibilityMode = false;
+        private boolean _arithmeticFaultNonInterruptMode = false;
+        private boolean _quarterWordMode = false;
+        private boolean _thirdWordMode = false;
+
+        //  Where diagnostics are posted
+        private final Diagnostics _diagnostics;
+
+        //TODO temporarily needed for BDIFunction
+        private final String _moduleName;
+
+        //  Map of LC indices to the various GeneratedPool objects...
+        private final Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
+
+        private Global(
+            Diagnostics diagnostics,
+            String moduleName
+        ) {
+            _diagnostics = diagnostics;
+            _moduleName = moduleName;
+        }
+    }
+
+    //  Class data which is local to a particular context object
+    private class Local {
+        //  What mode are string literals generated in
+        private CharacterMode _characterMode = CharacterMode.ASCII;
+
+        //  basic or extended mode generation?
+        private CodeMode _codeMode = CodeMode.Extended;
+
+        //  What is the default LC index for code generation?
+        private int _currentGenerationLCIndex = 1;
+
+        //  What is the default LC index for literal pool generation?
+        private int _currentLitLCIndex = 0;
+
+        //  What dictionary should be used for lookups and label establishment?
+        private final Dictionary _dictionary;
+
+        //  Source code objects
+        private final TextLine[] _sourceObjects;
+        private int _nextSourceIndex = 0;
+
+        private Local(
+            Dictionary dictionary,
+            String[] sourceText
+        ) {
+            _dictionary = dictionary;
+            _sourceObjects = new TextLine[sourceText.length];
+            for (int sx = 0; sx < sourceText.length; ++sx) {
+                _sourceObjects[sx] = new TextLine(sx + 1, sourceText[sx]);
+            }
+        }
+
+        private Local(
+            Dictionary dictionary,
+            TextLine[] parsedCode
+        ) {
+            _dictionary = dictionary;
+            _sourceObjects = parsedCode;
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Data / Attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //  Source code objects
-    final TextLine[] _sourceObjects;
-    private int _nextSourceIndex = 0;
-
-    //  Map of LC indices to the various GeneratedPool objects...
-    Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
-
-    //  What mode are string literals generated in
-    public CharacterMode _characterMode = CharacterMode.ASCII;
-
-    //  basic or extended mode generation?
-    public CodeMode _codeMode = CodeMode.Extended;
-
-    //  What is the default LC index for code generation?
-    public int _currentGenerationLCIndex = 1;
-
-    //  What is the default LC index for literal pool generation?
-    public int _currentLitLCIndex = 0;
-
-    //  Where diagnostics are posted
-    public final Diagnostics _diagnostics;
-
-    //  What dictionary should be used for lookups and label establishment?
-    public final Dictionary _dictionary;
-
-    //TODO temporarily needed for BDIFunction
-    public final String _moduleName;
-
-    //  Things relating to the relocatable module as a whole
-    public boolean _arithmeticFaultCompatibilityMode = false;
-    public boolean _arithmeticFaultNonInterruptMode = false;
-    public boolean _quarterWordMode = false;
-    public boolean _thirdWordMode = false;
+    private final Global _globalData;
+    private final Local _localData;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -187,20 +227,23 @@ public class Context {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * General constructor
+     * General constructor for the top-level context
      */
     public Context(
         final Dictionary upperLevelDictionary,
         final String[] sourceText,
         final String moduleName
     ) {
-        _dictionary = new Dictionary(upperLevelDictionary);
-        _sourceObjects = new TextLine[sourceText.length];
-        for (int sx = 0; sx < sourceText.length; ++sx) {
-            _sourceObjects[sx] = new TextLine(sx + 1, sourceText[sx]);
-        }
-        _diagnostics = new Diagnostics();
-        _moduleName = moduleName;
+        _globalData = new Global(new Diagnostics(), moduleName);
+        _localData = new Local(new Dictionary(upperLevelDictionary), sourceText);
+    }
+
+    public Context(
+        final Context parent,
+        final TextLine[] nestedParsedCode
+    ) {
+        _globalData = parent._globalData;
+        _localData = new Local(new Dictionary(parent._localData._dictionary), nestedParsedCode);
     }
 
 
@@ -222,6 +265,16 @@ public class Context {
     }
 
     /**
+     * Convenience method
+     * @param diag diagnostic to be added
+     */
+    public void appendDiagnostic(
+        final Diagnostic diag
+    ) {
+        _globalData._diagnostics.append(diag);
+    }
+
+    /**
      * Establishes a label value in the current (or a super-ordinate) dictionary
      * @param locale locale of label (for posting diagnostics)
      * @param label label
@@ -234,10 +287,10 @@ public class Context {
         final int labelLevel,
         final Value value
     ) {
-        if (_dictionary.hasValue(label)) {
-            _diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
+        if (_localData._dictionary.hasValue(label)) {
+            _globalData._diagnostics.append(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
         } else {
-            _dictionary.addValue(labelLevel, label, value);
+            _localData._dictionary.addValue(labelLevel, label, value);
         }
     }
 
@@ -278,6 +331,20 @@ public class Context {
         return new IntegerValue(false, lcOffset, refs);
     }
 
+    public boolean getArithmeticFaultCompatibilityMode() { return _globalData._arithmeticFaultCompatibilityMode; }
+    public boolean getArithmeticFaultNonInterruptMode() { return _globalData._arithmeticFaultNonInterruptMode; }
+    public CharacterMode getCharacterMode() { return _localData._characterMode; }
+    public CodeMode getCodeMode() { return _localData._codeMode; }
+    public int getCurrentGenerationLCIndex() { return _localData._currentGenerationLCIndex; }
+    public int getCurrentLitLCIndex() { return _localData._currentLitLCIndex; }
+    public Diagnostics getDiagnostics() { return _globalData._diagnostics; }
+    public Dictionary getDictionary() { return _localData._dictionary; }
+    public Set<Map.Entry<Integer, GeneratedPool>> getGeneratedPools() { return _globalData._generatedPools.entrySet(); }
+    public String getModuleName() { return _globalData._moduleName; }
+    public TextLine[] getParsedCode() { return _localData._sourceObjects; }
+    public boolean getQuarterWordMode() { return _globalData._quarterWordMode; }
+    public boolean getThirdWordMode() { return _globalData._thirdWordMode; }
+
     /**
      * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
      * current generation location counter (e.g., for interpreting '$' or whatever).
@@ -285,11 +352,11 @@ public class Context {
      */
     public IntegerValue getCurrentLocation(
     ) {
-        GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
+        GeneratedPool gp = obtainPool(_localData._currentGenerationLCIndex);
         int lcOffset = gp._nextOffset;
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
                                                                               false,
-                                                                              _currentGenerationLCIndex) };
+                                                                              _localData._currentGenerationLCIndex) };
         return new IntegerValue(false, lcOffset, refs);
     }
 
@@ -299,9 +366,9 @@ public class Context {
      */
     public TextLine getNextSourceLine() {
         TextLine result = null;
-        if (_nextSourceIndex < _sourceObjects.length) {
-            result = _sourceObjects[_nextSourceIndex++];
-            result.parseFields(_diagnostics);
+        if (_localData._nextSourceIndex < _localData._sourceObjects.length) {
+            result = _localData._sourceObjects[_localData._nextSourceIndex++];
+            result.parseFields(_globalData._diagnostics);
         }
         return result;
     }
@@ -311,7 +378,7 @@ public class Context {
      * @return true if we can return at least one more line of source
      */
     public boolean hasNextSourceLine() {
-        return _nextSourceIndex < _sourceObjects.length;
+        return _localData._nextSourceIndex < _localData._sourceObjects.length;
     }
 
     /**
@@ -323,10 +390,10 @@ public class Context {
     public GeneratedPool obtainPool(
         final int lcIndex
     ) {
-        GeneratedPool gp = _generatedPools.get(lcIndex);
+        GeneratedPool gp = _globalData._generatedPools.get(lcIndex);
         if (gp == null) {
             gp = new GeneratedPool();
-            _generatedPools.put(lcIndex, gp);
+            _globalData._generatedPools.put(lcIndex, gp);
         }
         return gp;
     }
@@ -338,17 +405,33 @@ public class Context {
     Map<Integer, LocationCounterPool> produceLocationCounterPools(
     ) {
         Map<Integer, LocationCounterPool> result = new TreeMap<>();
-        for (Map.Entry<Integer, GeneratedPool> entry : _generatedPools.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(_diagnostics));
+        for (Map.Entry<Integer, GeneratedPool> entry : _globalData._generatedPools.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(_globalData._diagnostics));
         }
         return result;
     }
 
+    public void setArithmeticFaultCompatibilityMode() { _globalData._arithmeticFaultCompatibilityMode = true; }
+    public void setArithmeticFaultNonInterruptMode() { _globalData._arithmeticFaultNonInterruptMode = true; }
+    public void setCharacterMode( CharacterMode mode ) { _localData._characterMode = mode; }
+    public void setCodeMode( CodeMode mode ) { _localData._codeMode = mode; }
+    public void setCurrentGenerationLCIndex( int index ) { _localData._currentGenerationLCIndex = index; }
+    public void setCurrentLitLCIndex( int index ) { _localData._currentLitLCIndex = index; }
+    public void setQuarterWordMode() { _globalData._quarterWordMode = true; }
+    public void setThirdWordMode() { _globalData._thirdWordMode = true; }
+
+    /**
+     * Resets our source textline pointer for a new iteration over the source code
+     */
+    void resetSource() {
+        _localData._nextSourceIndex = 0;
+    }
+
     /**
      * Returns the number of lines of source code
-     * @return
+     * @return requested value
      */
     public int sourceLineCount() {
-        return _sourceObjects.length;
+        return _localData._sourceObjects.length;
     }
 }

@@ -61,24 +61,24 @@ public class PROCDirective extends Directive {
 
             if (nesting > 0) {
                 Locale loc = new Locale(context.sourceLineCount() + 1, 1);
-                context._diagnostics.append((new ErrorDiagnostic(loc,
-                                                                 "Reached end of file before end of proc")));
+                context.appendDiagnostic((new ErrorDiagnostic(loc,
+                                                              "Reached end of file before end of proc")));
             }
 
             ProcedureValue procValue = new ProcedureValue(false, textLines.toArray(new TextLine[0]));
             if (labelFieldComponents._label == null) {
                 Locale loc = new Locale(procLineNumber, 1);
-                context._diagnostics.append(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
+                context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
                 return;
             }
 
-            if (context._dictionary.hasValue(labelFieldComponents._label)) {
+            if (context.getDictionary().hasValue(labelFieldComponents._label)) {
                 Locale loc = new Locale(procLineNumber, 1);
-                context._diagnostics.append(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
+                context.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
             } else {
-                context._dictionary.addValue(labelFieldComponents._labelLevel,
-                                             labelFieldComponents._label,
-                                             procValue);
+                context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                                                 labelFieldComponents._label,
+                                                 procValue);
             }
         }
     }

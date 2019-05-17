@@ -37,12 +37,12 @@ public class LessThanOperator extends RelationalOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (operands[0].compareTo(operands[1]) < 0) ? 1 : 0;
             valueStack.push( new IntegerValue( false, result, null ) );
         } catch (RelocationException ex) {
             //  thrown by compareTo() - we need to post a diag
-            context._diagnostics.append(new RelocationDiagnostic(getLocale()));
+            context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             throw new ExpressionException();
         } catch (TypeException ex) {
             //  thrown by getTransformedOperands() - diagnostic already posted

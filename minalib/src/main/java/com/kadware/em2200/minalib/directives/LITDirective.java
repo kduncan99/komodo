@@ -18,11 +18,11 @@ public class LITDirective extends Directive {
     ) {
         if (labelFieldComponents._label != null) {
             Locale loc = new Locale(textLine._lineNumber, 1);
-            context._diagnostics.append(new ErrorDiagnostic(loc, "Label ignored for $LIT directive"));
+            context.appendDiagnostic(new ErrorDiagnostic(loc, "Label ignored for $LIT directive"));
         }
 
         if (extractFields(context, textLine, false, 2)) {
-            context._currentLitLCIndex = context._currentGenerationLCIndex;
+            context.setCurrentLitLCIndex(context.getCurrentGenerationLCIndex());
         }
     }
 }

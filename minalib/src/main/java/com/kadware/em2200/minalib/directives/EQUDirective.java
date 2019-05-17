@@ -22,7 +22,7 @@ public class EQUDirective extends Directive {
         if (extractFields(context, textLine, true, 3)) {
             if (labelFieldComponents._label == null) {
                 Locale loc = new Locale(textLine._lineNumber, 1);
-                context._diagnostics.append(new ErrorDiagnostic(loc, "Label required for $EQU directive"));
+                context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $EQU directive"));
                 return;
             }
 
@@ -34,15 +34,15 @@ public class EQUDirective extends Directive {
                 ExpressionParser p = new ExpressionParser(expText, expLocale);
                 Expression e = p.parse(context);
                 if (e == null) {
-                    context._diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+                    context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                     return;
                 }
 
-                context._dictionary.addValue(labelFieldComponents._labelLevel,
-                                             labelFieldComponents._label,
-                                             e.evaluate(context));
+                context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                                                 labelFieldComponents._label,
+                                                 e.evaluate(context));
             } catch (ExpressionException ex) {
-                context._diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
             }
         }
     }

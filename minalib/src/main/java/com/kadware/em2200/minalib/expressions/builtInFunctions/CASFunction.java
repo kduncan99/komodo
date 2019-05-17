@@ -68,9 +68,9 @@ public class CASFunction extends BuiltInFunction {
     ) throws ExpressionException {
         try {
             Value[] arguments = evaluateArguments(context);
-            return arguments[0].toStringValue(getLocale(), CharacterMode.ASCII, context._diagnostics);
+            return arguments[0].toStringValue(getLocale(), CharacterMode.ASCII, context.getDiagnostics());
         } catch (TypeException ex) {
-            context._diagnostics.append(this.getValueDiagnostic(1));
+            context.appendDiagnostic(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
     }

@@ -44,7 +44,7 @@ public class ReferenceItem extends OperandItem {
         try {
             //  Look up the reference in the dictionary.
             //  It must be a particular type of value, else we have an expression exception.
-            Value v = context._dictionary.getValue(_reference);
+            Value v = context.getDictionary().getValue(_reference);
             switch (v.getType()) {
                 case Integer:
                 case FloatingPoint:
@@ -52,7 +52,7 @@ public class ReferenceItem extends OperandItem {
                     return v;
 
                 default:
-                    context._diagnostics.append( new ValueDiagnostic( _locale, "Wrong value type referenced" ));
+                    context.appendDiagnostic(new ValueDiagnostic( _locale, "Wrong value type referenced"));
                     throw new ExpressionException();
             }
         } catch ( NotFoundException ex ) {

@@ -48,14 +48,14 @@ public class ShiftOperator extends ArithmeticOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, false, context.getDiagnostics());
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
             //  Undefined references not allowed for the right-hand operand
             if (iopRight._undefinedReferences.length != 0) {
-                context._diagnostics.append(new RelocationDiagnostic(getLocale()));
+                context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             }
 
             long result = iopLeft._value;

@@ -16,7 +16,7 @@ public class EXTENDDirective extends Directive {
             final LabelFieldComponents labelFieldComponents
     ) {
         if (extractFields(context, textLine, false, 2)) {
-            context._codeMode = CodeMode.Extended;
+            context.setCodeMode(CodeMode.Extended);
         }
     }
 }

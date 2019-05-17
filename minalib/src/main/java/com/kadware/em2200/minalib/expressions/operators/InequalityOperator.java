@@ -36,7 +36,7 @@ public class InequalityOperator extends RelationalOperator {
         Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, context._diagnostics);
+            Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (!operands[0].equals(operands[1])) ? 1 : 0;
             valueStack.push(new IntegerValue( false, result, null ) );
         } catch (TypeException ex) {

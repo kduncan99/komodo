@@ -68,7 +68,7 @@ public class SLFunction extends BuiltInFunction {
     ) throws ExpressionException {
         Value[] arguments = evaluateArguments(context);
         if (arguments[0].getType() != ValueType.String) {
-            context._diagnostics.append(getValueDiagnostic(1));
+            context.appendDiagnostic(getValueDiagnostic(1));
             throw new ExpressionException();
         }
 

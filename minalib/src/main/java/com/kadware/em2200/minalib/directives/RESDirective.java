@@ -34,25 +34,25 @@ public class RESDirective extends Directive {
                 ExpressionParser p = new ExpressionParser(expText, expLocale);
                 Expression e = p.parse(context);
                 if (e == null) {
-                    context._diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+                    context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                     return;
                 }
 
                 Value v = e.evaluate(context);
                 if (!(v instanceof IntegerValue) || (((IntegerValue) v)._undefinedReferences.length != 0)) {
-                    context._diagnostics.append(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
+                    context.appendDiagnostic(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
                     return;
                 }
 
-                context.advanceLocation(context._currentGenerationLCIndex, (int) ((IntegerValue) v)._value);
+                context.advanceLocation(context.getCurrentGenerationLCIndex(), (int) ((IntegerValue) v)._value);
             } catch (ExpressionException ex) {
-                context._diagnostics.append(new ErrorDiagnostic(expLocale, "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                 return;
             }
 
             if (_operandField._subfields.size() > 1) {
                 Locale loc = _operandField._subfields.get(1)._locale;
-                context._diagnostics.append(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
+                context.appendDiagnostic(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
             }
         }
     }

@@ -70,17 +70,17 @@ public class BDIFunction extends BuiltInFunction {
     ) throws ExpressionException {
         Value[] arguments = evaluateArguments(context);
         if (!(arguments[0] instanceof IntegerValue)) {
-            context._diagnostics.append(this.getValueDiagnostic(1));
+            context.appendDiagnostic(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
 
         int lcIndex = (int)((IntegerValue) arguments[0])._value;
         if ((lcIndex < 0) || (lcIndex > 063)) {
-            context._diagnostics.append(this.getValueDiagnostic(1));
+            context.appendDiagnostic(this.getValueDiagnostic(1));
             throw new ExpressionException();
         }
 
-        String ref = String.format("%s_LC$BDI_%d", context._moduleName, lcIndex);
+        String ref = String.format("%s_LC$BDI_%d", context.getModuleName(), lcIndex);
         UndefinedReference[] refs = {
             new UndefinedReferenceToLabel(new FieldDescriptor(0, 26), false, ref),
         };

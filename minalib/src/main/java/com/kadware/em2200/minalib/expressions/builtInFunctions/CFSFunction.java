@@ -68,9 +68,9 @@ public class CFSFunction extends BuiltInFunction {
     ) throws ExpressionException {
         try {
             Value[] arguments = evaluateArguments(context);
-            return arguments[0].toStringValue(getLocale(), CharacterMode.Fieldata, context._diagnostics);
+            return arguments[0].toStringValue(getLocale(), CharacterMode.Fieldata, context.getDiagnostics());
         } catch (TypeException ex) {
-            context._diagnostics.append(getValueDiagnostic(1));
+            context.appendDiagnostic(getValueDiagnostic(1));
             throw new ExpressionException();
         }
     }

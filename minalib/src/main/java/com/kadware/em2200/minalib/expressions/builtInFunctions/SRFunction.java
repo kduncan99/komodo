@@ -70,23 +70,23 @@ public class SRFunction extends BuiltInFunction {
     ) throws ExpressionException {
         Value[] arguments = evaluateArguments(context);
         if (arguments[0].getType() != ValueType.String) {
-            context._diagnostics.append(getValueDiagnostic(1));
+            context.appendDiagnostic(getValueDiagnostic(1));
             throw new ExpressionException();
         }
 
         if (arguments[1].getType() != ValueType.Integer) {
-            context._diagnostics.append(getValueDiagnostic(2));
+            context.appendDiagnostic(getValueDiagnostic(2));
             throw new ExpressionException();
         }
 
         StringValue sarg = (StringValue)arguments[0];
         IntegerValue iarg = (IntegerValue)arguments[1];
         if (iarg._undefinedReferences.length != 0) {
-            context._diagnostics.append(new RelocationDiagnostic(getLocale()));
+            context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
         }
 
         if (iarg._value < 0) {
-            context._diagnostics.append(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
+            context.appendDiagnostic(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
             throw new ExpressionException();
         }
 

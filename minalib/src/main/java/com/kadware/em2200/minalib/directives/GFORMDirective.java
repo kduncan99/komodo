@@ -22,8 +22,8 @@ public class GFORMDirective extends Directive {
         if (extractFields(context, textLine, true, 3)) {
             if ((_operandField._subfields.size() % 2) != 0) {
                 Locale loc = _operationField._locale;
-                context._diagnostics.append(new ErrorDiagnostic(loc,
-                                                                "Even number of operands required for $GFORM directive"));
+                context.appendDiagnostic(new ErrorDiagnostic(loc,
+                                                             "Even number of operands required for $GFORM directive"));
                 return;
             }
 
@@ -48,20 +48,20 @@ public class GFORMDirective extends Directive {
                 try {
                     Expression e = epFieldSize.parse(context);
                     if (e == null) {
-                        context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                                        "Expected an expression for field size"));
+                        context.appendDiagnostic(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                     "Expected an expression for field size"));
                         error = true;
                     } else {
                         Value v = e.evaluate(context);
                         if (!(v instanceof IntegerValue)) {
-                            context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
-                                                                            "Invalid value for field size"));
+                            context.appendDiagnostic(new ValueDiagnostic(sfFieldSize._locale,
+                                                                         "Invalid value for field size"));
                             error = true;
                         } else {
                             IntegerValue iv = (IntegerValue) v;
                             if ((iv._undefinedReferences.length > 0) || (iv._value <= 0) || (iv._value > 36)) {
-                                context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
-                                                                                "Invalid value for field size"));
+                                context.appendDiagnostic(new ValueDiagnostic(sfFieldSize._locale,
+                                                                             "Invalid value for field size"));
                                 error = true;
                             } else {
                                 fieldSizes[enx] = (int) iv._value;
@@ -69,30 +69,30 @@ public class GFORMDirective extends Directive {
                         }
                     }
                 } catch (ExpressionException ex) {
-                    context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                                    "Syntax error in field size"));
+                    context.appendDiagnostic(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                 "Syntax error in field size"));
                     error = true;
                 }
 
                 try {
                     Expression e = epValue.parse(context);
                     if (e == null) {
-                        context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                                        "Expected a value expression"));
+                        context.appendDiagnostic(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                     "Expected a value expression"));
                         error = true;
                     } else {
                         Value v = e.evaluate(context);
                         if (!(v instanceof IntegerValue)) {
-                            context._diagnostics.append(new ValueDiagnostic(sfFieldSize._locale,
-                                                                            "Invalid value for field size"));
+                            context.appendDiagnostic(new ValueDiagnostic(sfFieldSize._locale,
+                                                                         "Invalid value for field size"));
                             error = true;
                         } else {
                             values[enx] = (IntegerValue) v;
                         }
                     }
                 } catch (ExpressionException ex) {
-                    context._diagnostics.append(new ErrorDiagnostic(sfFieldSize._locale,
-                                                                    "Syntax error in value expression"));
+                    context.appendDiagnostic(new ErrorDiagnostic(sfFieldSize._locale,
+                                                                 "Syntax error in value expression"));
                     error = true;
                 }
 
@@ -110,7 +110,7 @@ public class GFORMDirective extends Directive {
                 }
 
                 context.generate(_operandField._locale,
-                                 context._currentGenerationLCIndex,
+                                 context.getCurrentGenerationLCIndex(),
                                  new Form(fieldSizes),
                                  values);
             }

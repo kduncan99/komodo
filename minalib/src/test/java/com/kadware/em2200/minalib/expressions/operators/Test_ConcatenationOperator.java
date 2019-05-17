@@ -50,7 +50,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue(false, "DEF", CharacterMode.Fieldata));
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
-        context._characterMode = CharacterMode.Fieldata;
+        context.setCharacterMode(CharacterMode.Fieldata);
         Diagnostics diags = new Diagnostics();
 
         Operator op = new ConcatenationOperator(new Locale(12, 18));
@@ -127,7 +127,7 @@ public class Test_ConcatenationOperator {
             //  drop through
         }
 
-        List<Diagnostic> diagList = context._diagnostics.getDiagnostics();
+        List<Diagnostic> diagList = context.getDiagnostics().getDiagnostics();
         assertEquals(1, diagList.size());
         assertEquals(Diagnostic.Level.Value, diagList.get(0).getLevel());
     }

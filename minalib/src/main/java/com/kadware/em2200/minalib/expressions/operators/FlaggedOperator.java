@@ -61,7 +61,7 @@ public class FlaggedOperator extends Operator {
         try {
             valueStack.push(operand.copy(true));
         } catch (TypeException ex) {
-            context._diagnostics.append(new ValueDiagnostic(getLocale(), "Cannot apply flag to this operand"));
+            context.appendDiagnostic(new ValueDiagnostic(getLocale(), "Cannot apply flag to this operand"));
             throw new ExpressionException();
         }
     }

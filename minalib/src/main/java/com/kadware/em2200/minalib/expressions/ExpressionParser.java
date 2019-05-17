@@ -202,7 +202,7 @@ public class ExpressionParser {
             } else {
                 //  end of expression is not allowed if we are expecting an operand
                 if (allowOperand) {
-                    context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Incomplete expression"));
+                    context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Incomplete expression"));
                     throw new ExpressionException();
                 }
                 break;
@@ -232,7 +232,7 @@ public class ExpressionParser {
             Expression exp = parseExpression(context);
             if (exp == null) {
                 //  didn't find an expression, and we didn't find a closing paren either... something is wrong
-                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Syntax error"));
                 throw new ExpressionException();
             }
 
@@ -245,7 +245,7 @@ public class ExpressionParser {
             skipWhitespace();
             if (nextChar() != ')') {
                 //  next char isn't a comma, nor a closing paren - again, something is wrong
-                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Syntax error"));
+                context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Syntax error"));
                 throw new ExpressionException();
             }
         }
@@ -272,7 +272,7 @@ public class ExpressionParser {
         //  Is the label found in the dictionary as a function definition?
         Value value;
         try {
-            value = context._dictionary.getValue(name);
+            value = context.getDictionary().getValue(name);
             //TODO handle user functions as well
             if (value.getType() == ValueType.BuiltInFunction) {
                 Expression[] argExpressions = parseExpressionGroup(context);
@@ -383,7 +383,7 @@ public class ExpressionParser {
         while (!atEnd() && Character.isDigit(nextChar())) {
             char ch = getNextChar();
             if ((radix == 8) && ((ch == '8') || (ch == '9'))) {
-                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Invalid digit in octal literal"));
+                context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Invalid digit in octal literal"));
                 throw new ExpressionException();
             }
 
@@ -430,7 +430,7 @@ public class ExpressionParser {
             }
 
             if (sb.length() == 12) {
-                context._diagnostics.append(new ErrorDiagnostic(getLocale(), "Label or Reference too long"));
+                context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Label or Reference too long"));
             }
 
             skipNextChar();
@@ -568,12 +568,12 @@ public class ExpressionParser {
 
         //  Did we hit atEnd() before we found a terminating quote?
         if (!terminated) {
-            context._diagnostics.append(new QuoteDiagnostic(getLocale(), "Unterminated string literal"));
+            context.appendDiagnostic(new QuoteDiagnostic(getLocale(), "Unterminated string literal"));
             throw new ExpressionException();
         }
 
         return new ValueItem(getLocale(),
-                             new StringValue(false, sb.toString(), context._characterMode));
+                             new StringValue(false, sb.toString(), context.getCharacterMode()));
     }
 
 
