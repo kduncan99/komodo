@@ -13,12 +13,32 @@ import java.util.List;
 @SuppressWarnings("Duplicates")
 public class PROCDirective extends Directive {
 
-    private static boolean checkForEnd(
+    /**
+     * Checks the textline for nest level change.
+     * If the textline is $PROC or $FUNC, we return 1 to indicate a further level of nesting.
+     * If the textline is an $END directive, we return -1 to indicate a level of nesting has ended.
+     * Otherwise, we return 0 to indicate no chnage
+     * @param textLine textline to analyze
+     * @return the nesting level change: -1, 0, or 1
+     */
+    private static int checkNesting(
         final TextLine textLine
     ) {
-        return ((textLine._fields.size() >= 2)
-                && (textLine._fields.get(1) != null)
-                && (textLine._fields.get(1)._text.equalsIgnoreCase("$END")));
+        if (textLine._fields.size() >= 2) {
+            TextField operationField = textLine._fields.get(1);
+            if (operationField._subfields.size() >= 1) {
+                String directive = operationField._subfields.get(0)._text;
+                if (directive.equalsIgnoreCase("$END")) {
+                    return -1;
+                } else if (directive.equalsIgnoreCase("$PROC")) {
+                    return 1;
+                } else if (directive.equalsIgnoreCase("$FUNC")) {
+                    return 1;
+                }
+            }
+        }
+
+        return 0;
     }
 
     @Override
@@ -30,21 +50,19 @@ public class PROCDirective extends Directive {
         if (extractFields(context, textLine, true, 3)) {
             int procLineNumber = textLine._lineNumber;
             List<TextLine> textLines = new LinkedList<>();
-            boolean done = false;
-            while (!done) {
-                if (!context.hasNextSourceLine()) {
-                    Locale loc = new Locale(context.sourceLineCount() + 1, 1);
-                    context._diagnostics.append((new ErrorDiagnostic(loc,
-                                                                     "Reached end of file before end of proc")));
-                    done = true;
-                } else {
-                    TextLine procLine = context.getNextSourceLine();
-                    if (checkForEnd(procLine)) {
-                        done = true;
-                    } else {
-                        textLines.add(procLine);
-                    }
+            int nesting = 1;
+            while (context.hasNextSourceLine()) {
+                TextLine nestedLine = context.getNextSourceLine();
+                nesting += checkNesting(nestedLine);
+                if (nesting > 0) {
+                    textLines.add(nestedLine);
                 }
+            }
+
+            if (nesting > 0) {
+                Locale loc = new Locale(context.sourceLineCount() + 1, 1);
+                context._diagnostics.append((new ErrorDiagnostic(loc,
+                                                                 "Reached end of file before end of proc")));
             }
 
             ProcedureValue procValue = new ProcedureValue(false, textLines.toArray(new TextLine[0]));
