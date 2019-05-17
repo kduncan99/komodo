@@ -17,15 +17,17 @@ public class Test_TextField {
 
     @Test
     public void getLocaleLimit() {
-        TextField fld = new TextField(new Locale(10, 20), "ABCDE");
-        Locale expected = new Locale(10, 25);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextField fld = new TextField(new Locale(ls, 20), "ABCDE");
+        Locale expected = new Locale(ls, 25);
         assertEquals(expected, fld.getLocaleLimit());
     }
 
     @Test
     public void parseSubFields_normal1() {
         String code = "LABEL";
-        Locale loc = new Locale(1, 1);
+        LineSpecifier ls = new LineSpecifier(0, 1);
+        Locale loc = new Locale(ls, 1);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
         assertTrue(diag.getDiagnostics().isEmpty());
@@ -34,15 +36,17 @@ public class Test_TextField {
         assertEquals(1, sfCount);
 
         TextSubfield sf0 = fld.getSubfield(0);
-        Locale expLoc0 = new Locale(1, 1);
+        Locale expLoc0 = new Locale(ls, 1);
         assertEquals(expLoc0, sf0._locale);
         assertEquals("LABEL", sf0._text);
     }
 
     @Test
     public void parseSubFields_normal2() {
+        LineSpecifier ls = new LineSpecifier(0, 1);
+
         String code = "Subfield1,  Subfield2";
-        Locale loc = new Locale(1, 8);
+        Locale loc = new Locale(ls, 8);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
         assertTrue(diag.getDiagnostics().isEmpty());
@@ -51,20 +55,22 @@ public class Test_TextField {
         assertEquals(2, sfCount);
 
         TextSubfield sf0 = fld.getSubfield(0);
-        Locale expLoc0 = new Locale(1, 8);
+        Locale expLoc0 = new Locale(ls, 8);
         assertEquals(expLoc0, sf0._locale);
         assertEquals("Subfield1", sf0._text);
 
         TextSubfield sf1 = fld.getSubfield(1);
-        Locale expLoc1 = new Locale(1, 20);
+        Locale expLoc1 = new Locale(ls, 20);
         assertEquals(expLoc1, sf1._locale);
         assertEquals("Subfield2", sf1._text);
     }
 
     @Test
     public void parseSubfields_normal3() {
+        LineSpecifier ls = new LineSpecifier(0, 10);
+
         String code = "A0,0112,  *X5,";
-        Locale loc = new Locale(10, 21);
+        Locale loc = new Locale(ls, 21);
         TextField fld = new TextField(loc, code);
         Diagnostics diag = fld.parseSubfields();
         assertTrue(diag.getDiagnostics().isEmpty());
@@ -73,22 +79,22 @@ public class Test_TextField {
         assertEquals(4, sfCount);
 
         TextSubfield sf0 = fld.getSubfield(0);
-        Locale expLoc0 = new Locale(10, 21);
+        Locale expLoc0 = new Locale(ls, 21);
         assertEquals(expLoc0, sf0._locale);
         assertEquals("A0", sf0._text);
 
         TextSubfield sf1 = fld.getSubfield(1);
-        Locale expLoc1 = new Locale(10, 24);
+        Locale expLoc1 = new Locale(ls, 24);
         assertEquals(expLoc1, sf1._locale);
         assertEquals("0112", sf1._text);
 
         TextSubfield sf2 = fld.getSubfield(2);
-        Locale expLoc2 = new Locale(10, 31);
+        Locale expLoc2 = new Locale(ls, 31);
         assertEquals(expLoc2, sf2._locale);
         assertEquals("*X5", sf2._text);
 
         TextSubfield sf3 = fld.getSubfield(3);
-        Locale expLoc3 = new Locale(10, 35);
+        Locale expLoc3 = new Locale(ls, 35);
         assertEquals(expLoc3, sf3._locale);
         assertEquals("", sf3._text);
     }

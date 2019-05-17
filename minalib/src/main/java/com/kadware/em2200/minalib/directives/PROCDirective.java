@@ -47,8 +47,7 @@ public class PROCDirective extends Directive {
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents
     ) {
-        if (extractFields(context, textLine, true, 3)) {
-            int procLineNumber = textLine._lineNumber;
+        if (extractFields(context, textLine, false, 3)) {
             List<TextLine> textLines = new LinkedList<>();
             int nesting = 1;
             while (context.hasNextSourceLine()) {
@@ -60,20 +59,20 @@ public class PROCDirective extends Directive {
             }
 
             if (nesting > 0) {
-                Locale loc = new Locale(context.sourceLineCount() + 1, 1);
+                Locale loc = new Locale(new LineSpecifier(0, context.sourceLineCount() + 1), 1);
                 context.appendDiagnostic((new ErrorDiagnostic(loc,
                                                               "Reached end of file before end of proc")));
             }
 
             ProcedureValue procValue = new ProcedureValue(false, textLines.toArray(new TextLine[0]));
             if (labelFieldComponents._label == null) {
-                Locale loc = new Locale(procLineNumber, 1);
+                Locale loc = new Locale(textLine._lineSpecifier, 1);
                 context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
                 return;
             }
 
             if (context.getDictionary().hasValue(labelFieldComponents._label)) {
-                Locale loc = new Locale(procLineNumber, 1);
+                Locale loc = new Locale(textLine._lineSpecifier, 1);
                 context.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
             } else {
                 context.getDictionary().addValue(labelFieldComponents._labelLevel,

@@ -22,20 +22,20 @@ public class Test_CASFunction {
 
     @Test
     public void test(
-    ) throws ExpressionException,
-             NotFoundException {
+    ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
         IntegerValue iv = new IntegerValue(false, 060061062063L, null);
-        items.add(new ValueItem(new Locale(1, 1), iv));
+        LineSpecifier ls01 = new LineSpecifier(0, 1);
+        items.add(new ValueItem(new Locale(ls01, 1), iv));
 
         Expression[] expressions = new Expression[1];
         expressions[0] = new Expression(items);
 
-        BuiltInFunction bif = new CASFunction(new Locale(10, 16), expressions);
+        LineSpecifier ls10 = new LineSpecifier(0, 10);
+        BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
-        Diagnostics diagnostics = new Diagnostics();
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue(false, "0123", CharacterMode.ASCII);

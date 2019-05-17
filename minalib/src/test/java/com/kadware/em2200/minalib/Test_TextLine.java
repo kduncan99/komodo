@@ -9,6 +9,8 @@ import com.kadware.em2200.minalib.TextField;
 import com.kadware.em2200.minalib.TextLine;
 import com.kadware.em2200.minalib.diagnostics.*;
 import java.util.List;
+
+import org.apache.logging.log4j.core.pattern.LineSeparatorPatternConverter;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -22,7 +24,8 @@ public class Test_TextLine {
     public void parseFields_normal(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015  . This is a comment.");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "LABEL     LA,U      A0,015  . This is a comment.");
         tline.parseFields(d);
         assertTrue(d.isEmpty());
 
@@ -30,17 +33,17 @@ public class Test_TextLine {
 
         TextField tf0 = tline.getField(0);
         Locale loc0 = tf0._locale;
-        assertEquals(new Locale(10, 1), loc0);
+        assertEquals(new Locale(ls, 1), loc0);
         assertEquals("LABEL", tf0._text);
 
         TextField tf1 = tline.getField(1);
         Locale loc1 = tf1._locale;
-        assertEquals(new Locale(10, 11), loc1);
+        assertEquals(new Locale(ls, 11), loc1);
         assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
         Locale loc2 = tf2._locale;
-        assertEquals(new Locale(10, 21), loc2);
+        assertEquals(new Locale(ls, 21), loc2);
         assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
@@ -50,7 +53,8 @@ public class Test_TextLine {
     public void parseFields_noComment(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "LABEL     LA,U      A0,015");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "LABEL     LA,U      A0,015");
         tline.parseFields(d);
         assertTrue(d.isEmpty());
 
@@ -58,17 +62,17 @@ public class Test_TextLine {
 
         TextField tf0 = tline.getField(0);
         Locale loc0 = tf0._locale;
-        assertEquals(new Locale(10, 1), loc0);
+        assertEquals(new Locale(ls, 1), loc0);
         assertEquals("LABEL", tf0._text);
 
         TextField tf1 = tline.getField(1);
         Locale loc1 = tf1._locale;
-        assertEquals(new Locale(10, 11), loc1);
+        assertEquals(new Locale(ls, 11), loc1);
         assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
         Locale loc2 = tf2._locale;
-        assertEquals(new Locale(10, 21), loc2);
+        assertEquals(new Locale(ls, 21), loc2);
         assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
@@ -78,7 +82,8 @@ public class Test_TextLine {
     public void parseFields_noLabel(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "          LA,U      A0,015  . This is a comment.");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "          LA,U      A0,015  . This is a comment.");
         tline.parseFields(d);
         assertTrue(d.isEmpty());
 
@@ -87,12 +92,12 @@ public class Test_TextLine {
 
         TextField tf1 = tline.getField(1);
         Locale loc1 = tf1._locale;
-        assertEquals(new Locale(10, 11), loc1);
+        assertEquals(new Locale(ls, 11), loc1);
         assertEquals("LA,U", tf1._text);
 
         TextField tf2 = tline.getField(2);
         Locale loc2 = tf2._locale;
-        assertEquals(new Locale(10, 21), loc2);
+        assertEquals(new Locale(ls, 21), loc2);
         assertEquals("A0,015", tf2._text);
 
         assertNull(tline.getField(3));
@@ -102,7 +107,8 @@ public class Test_TextLine {
     public void parseFields_parenLevel1(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "          LA,U      A0,('@ASG  '");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "          LA,U      A0,('@ASG  '");
         tline.parseFields(d);
         List<Diagnostic> diags = d.getDiagnostics();
         assertEquals(1, diags.size());
@@ -113,7 +119,8 @@ public class Test_TextLine {
     public void parseFields_parenLevel2(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "          LA,U      A0,'@ASG  ')");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "          LA,U      A0,'@ASG  ')");
         tline.parseFields(d);
         List<Diagnostic> diags = d.getDiagnostics();
         assertEquals(1, diags.size());
@@ -124,7 +131,8 @@ public class Test_TextLine {
     public void parseFields_unterminatedQuote(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "TAG       $EQU      '@ASG  .");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "TAG       $EQU      '@ASG  .");
         tline.parseFields(d);
         List<Diagnostic> diags = d.getDiagnostics();
         assertEquals(1, diags.size());
@@ -135,7 +143,8 @@ public class Test_TextLine {
     public void parseFields_splitSign(
     ) {
         Diagnostics d = new Diagnostics();
-        TextLine tline = new TextLine(10, "          + (100, 100)  . This should be ONE field");
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        TextLine tline = new TextLine(ls, "          + (100, 100)  . This should be ONE field");
         tline.parseFields(d);
         assertTrue(d.isEmpty());
 
@@ -146,7 +155,7 @@ public class Test_TextLine {
 
         TextField tf1 = tline.getField(1);
         Locale loc1 = tf1._locale;
-        assertEquals(new Locale(10, 11), loc1);
+        assertEquals(new Locale(ls, 11), loc1);
         assertEquals("+ (100, 100)", tf1._text);
     }
 

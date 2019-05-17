@@ -29,7 +29,8 @@ public class Test_ConcatenationOperator {
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
-        Operator op = new ConcatenationOperator(new Locale(12, 18));
+        LineSpecifier ls = new LineSpecifier(0, 12);
+        Operator op = new ConcatenationOperator(new Locale(ls, 18));
         op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
@@ -53,7 +54,8 @@ public class Test_ConcatenationOperator {
         context.setCharacterMode(CharacterMode.Fieldata);
         Diagnostics diags = new Diagnostics();
 
-        Operator op = new ConcatenationOperator(new Locale(12, 18));
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Operator op = new ConcatenationOperator(new Locale(ls, 18));
         op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
@@ -76,7 +78,8 @@ public class Test_ConcatenationOperator {
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
-        Operator op = new ConcatenationOperator(new Locale(12, 18));
+        LineSpecifier ls = new LineSpecifier(0, 22);
+        Operator op = new ConcatenationOperator(new Locale(ls, 18));
         op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
@@ -99,7 +102,8 @@ public class Test_ConcatenationOperator {
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
 
-        Operator op = new ConcatenationOperator(new Locale(12, 18));
+        LineSpecifier ls = new LineSpecifier(0, 15);
+        Operator op = new ConcatenationOperator(new Locale(ls, 18));
         op.evaluate(context, valueStack);
 
         assertTrue(diags.getDiagnostics().isEmpty());
@@ -120,7 +124,8 @@ public class Test_ConcatenationOperator {
         valueStack.push(new FloatingPointValue(false, 1.0));
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
-        Operator op = new ConcatenationOperator(new Locale(12, 18));
+        LineSpecifier ls = new LineSpecifier(0, 123);
+        Operator op = new ConcatenationOperator(new Locale(ls, 18));
         try {
             op.evaluate(context, valueStack);
         } catch (ExpressionException ex) {

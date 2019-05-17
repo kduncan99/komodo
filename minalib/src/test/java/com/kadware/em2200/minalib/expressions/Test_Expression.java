@@ -21,7 +21,8 @@ public class Test_Expression {
     ) throws ExpressionException {
         Value val = new IntegerValue(false, 42, null);
         List<IExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(new Locale(1, 1), val));
+        LineSpecifier ls = new LineSpecifier(0, 1);
+        items.add(new ValueItem(new Locale(ls, 1), val));
         Expression exp = new Expression(items);
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");
@@ -40,9 +41,10 @@ public class Test_Expression {
         Value expected = new IntegerValue(false, 154, null);
 
         List<IExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(new Locale(1, 1), addend1));
-        items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
-        items.add(new ValueItem(new Locale(1, 11), addend2));
+        LineSpecifier ls10 = new LineSpecifier(0, 10);
+        items.add(new ValueItem(new Locale(ls10, 1), addend1));
+        items.add(new OperatorItem(new AdditionOperator(new Locale(ls10, 10))));
+        items.add(new ValueItem(new Locale(ls10, 11), addend2));
         Expression exp = new Expression(items);
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");
@@ -63,11 +65,12 @@ public class Test_Expression {
         Value expected = new IntegerValue(false, 89, null);
 
         List<IExpressionItem> items = new LinkedList<>();
-        items.add(new ValueItem(new Locale(1, 1), term1));
-        items.add(new OperatorItem(new AdditionOperator(new Locale(10, 10))));
-        items.add(new ValueItem(new Locale(1, 30), term2));
-        items.add(new OperatorItem(new MultiplicationOperator(new Locale(10, 12))));
-        items.add(new ValueItem(new Locale(1, 50), term3));
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        items.add(new ValueItem(new Locale(ls, 1), term1));
+        items.add(new OperatorItem(new AdditionOperator(new Locale(ls, 10))));
+        items.add(new ValueItem(new Locale(ls, 30), term2));
+        items.add(new OperatorItem(new MultiplicationOperator(new Locale(ls, 12))));
+        items.add(new ValueItem(new Locale(ls, 50), term3));
         Expression exp = new Expression(items);
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class TextLine {
 
     //  line number of this line of text
-    public final int _lineNumber;
+    public final LineSpecifier _lineSpecifier;
 
     //  source code for this line of text
     public final String _text;
@@ -23,14 +23,14 @@ public class TextLine {
 
     /**
      * Constructor
-     * @param lineNumber line number of this object
+     * @param lineSpecifier level/line number of this object
      * @param text original text for this object
      */
     TextLine(
-        final int lineNumber,
+        final LineSpecifier lineSpecifier,
         final String text
     ) {
-        _lineNumber = lineNumber;
+        _lineSpecifier = lineSpecifier;
         _text = text;
     }
 
@@ -82,7 +82,7 @@ public class TextLine {
         boolean prevSign = false;
         boolean quoted = false;
         StringBuilder sb = new StringBuilder();
-        Locale locale = new Locale(_lineNumber, tx + 1);
+        Locale locale = new Locale(_lineSpecifier, tx + 1);
         while (tx < cleanText.length()) {
             char ch = cleanText.charAt(tx++);
 
@@ -120,7 +120,7 @@ public class TextLine {
                             ++tx;
                         }
                         sb = new StringBuilder();
-                        locale = new Locale(_lineNumber, tx + 1);
+                        locale = new Locale(_lineSpecifier, tx + 1);
                     }
                 } else {
                     sb.append(ch);
@@ -138,7 +138,7 @@ public class TextLine {
                         ++parenLevel;
                     } else if (ch == ')') {
                         if (parenLevel == 0) {
-                            Locale diagLoc = new Locale(_lineNumber, tx);
+                            Locale diagLoc = new Locale(_lineSpecifier, tx);
                             diagnostics.append(new ErrorDiagnostic(diagLoc, "Too many closing parentheses"));
                             return;
                         }
@@ -164,7 +164,7 @@ public class TextLine {
             diagnostics.append(parseDiags);
         }
 
-        Locale endloc = new Locale(_lineNumber, tx - 1);
+        Locale endloc = new Locale(_lineSpecifier, tx - 1);
         if (quoted) {
             diagnostics.append(new QuoteDiagnostic(endloc, "Unterminated string"));
         }

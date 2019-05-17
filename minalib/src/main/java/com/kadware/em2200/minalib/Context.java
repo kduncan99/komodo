@@ -200,7 +200,8 @@ public class Context {
             _dictionary = dictionary;
             _sourceObjects = new TextLine[sourceText.length];
             for (int sx = 0; sx < sourceText.length; ++sx) {
-                _sourceObjects[sx] = new TextLine(sx + 1, sourceText[sx]);
+                _sourceObjects[sx] = new TextLine(new LineSpecifier(getNestingLevel(), sx + 1),
+                                                  sourceText[sx]);
             }
         }
 
@@ -220,6 +221,7 @@ public class Context {
 
     private final Global _globalData;
     private final Local _localData;
+    private final Context _parent;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -236,14 +238,21 @@ public class Context {
     ) {
         _globalData = new Global(new Diagnostics(), moduleName);
         _localData = new Local(new Dictionary(upperLevelDictionary), sourceText);
+        _parent = null;
     }
 
+    /**
+     * General constructor for a nested context
+     * @param parent parent context
+     * @param nestedParsedCode code segment for which we are responsible
+     */
     public Context(
         final Context parent,
         final TextLine[] nestedParsedCode
     ) {
         _globalData = parent._globalData;
         _localData = new Local(new Dictionary(parent._localData._dictionary), nestedParsedCode);
+        _parent = parent;
     }
 
 
@@ -341,6 +350,7 @@ public class Context {
     public Dictionary getDictionary() { return _localData._dictionary; }
     public Set<Map.Entry<Integer, GeneratedPool>> getGeneratedPools() { return _globalData._generatedPools.entrySet(); }
     public String getModuleName() { return _globalData._moduleName; }
+    public int getNestingLevel() { return (_parent == null) ? 0 : _parent.getNestingLevel() + 1; }
     public TextLine[] getParsedCode() { return _localData._sourceObjects; }
     public boolean getQuarterWordMode() { return _globalData._quarterWordMode; }
     public boolean getThirdWordMode() { return _globalData._thirdWordMode; }

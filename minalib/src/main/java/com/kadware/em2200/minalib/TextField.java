@@ -45,7 +45,7 @@ public class TextField {
         final String text,
         final int column
     ) {
-        Locale loc = new Locale(_locale.getLineNumber(), column);
+        Locale loc = new Locale(_locale.getLineSpecifier(), column);
         _subfields.add(new TextSubfield(loc, text));
     }
 
@@ -56,7 +56,7 @@ public class TextField {
      */
     Locale getLocaleLimit(
     ) {
-        return new Locale(_locale.getLineNumber(), _locale.getColumn() + _text.length());
+        return new Locale(_locale.getLineSpecifier(), _locale.getColumn() + _text.length());
     }
 
     /**
@@ -109,7 +109,7 @@ public class TextField {
                         ++parenLevel;
                     } else if (ch == ')') {
                         if (parenLevel == 0) {
-                            Locale diagLoc = new Locale(_locale.getLineNumber(), baseColumn);
+                            Locale diagLoc = new Locale(_locale.getLineSpecifier(), baseColumn);
                             diagnostics.append(new ErrorDiagnostic(diagLoc, "Too many closing parentheses"));
                             return diagnostics;
                         }

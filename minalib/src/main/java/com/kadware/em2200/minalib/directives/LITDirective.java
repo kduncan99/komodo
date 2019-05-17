@@ -17,7 +17,7 @@ public class LITDirective extends Directive {
             final LabelFieldComponents labelFieldComponents
     ) {
         if (labelFieldComponents._label != null) {
-            Locale loc = new Locale(textLine._lineNumber, 1);
+            Locale loc = new Locale(textLine._lineSpecifier, 1);
             context.appendDiagnostic(new ErrorDiagnostic(loc, "Label ignored for $LIT directive"));
         }
 

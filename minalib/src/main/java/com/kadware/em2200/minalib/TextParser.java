@@ -25,11 +25,12 @@ class TextParser {
      * @param sourceCode lines of text to be parsed
      */
     TextParser(
+        final int sourceLevel,
         final String[] sourceCode
     ) {
         int lineNumber = 1;
         for (String sourceLine : sourceCode) {
-            _sourceCodeSet.add(new TextLine(lineNumber++, sourceLine));
+            _sourceCodeSet.add(new TextLine(new LineSpecifier(sourceLevel, lineNumber++), sourceLine));
         }
     }
 

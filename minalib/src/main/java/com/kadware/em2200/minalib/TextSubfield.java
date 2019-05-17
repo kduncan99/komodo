@@ -32,6 +32,6 @@ public class TextSubfield {
      */
     Locale getLocaleLimit(
     ) {
-        return new Locale(_locale.getLineNumber(), _locale.getColumn() + _text.length());
+        return new Locale(_locale.getLineSpecifier(), _locale.getColumn() + _text.length());
     }
 }

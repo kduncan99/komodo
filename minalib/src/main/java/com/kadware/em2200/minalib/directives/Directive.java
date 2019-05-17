@@ -33,7 +33,7 @@ public abstract class Directive {
 
         if (requiresOperand) {
         if ((_operandField == null) || _operandField._subfields.isEmpty()) {
-                context.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+                context.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineSpecifier, 1),
                                                              "Directive requires an operand field"));
                 return false;
             }

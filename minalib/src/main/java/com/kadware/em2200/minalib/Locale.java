@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
+
 package com.kadware.em2200.minalib;
 
 /**
@@ -8,29 +9,26 @@ package com.kadware.em2200.minalib;
  */
 public class Locale {
 
-    private final int _lineNumber;
+    private final LineSpecifier _lineSpecifier;
     private final int _column;
 
     /**
      * Constructor
-     * <p>
-     * @param lineNumber 1-based line number of the containing line, within the source code set, of this subfield's text
+     * @param lineSpecifier indicates the nesting level and line number of this locale
      * @param column 1-based column number of the first character of this subfield's text
      */
     public Locale(
-        final int lineNumber,
+        final LineSpecifier lineSpecifier,
         final int column
     ) {
-        _lineNumber = lineNumber;
+        _lineSpecifier = lineSpecifier;
         _column = column;
     }
 
     /**
      * check for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if objects are equal, else false
      */
     @Override
     public boolean equals(
@@ -38,7 +36,7 @@ public class Locale {
     ) {
         if (obj instanceof Locale) {
             Locale loc = (Locale)obj;
-            return ((loc._column == _column) && (loc._lineNumber == _lineNumber));
+            return ((loc._column == _column) && (loc._lineSpecifier.equals(_lineSpecifier)));
         }
 
         return false;
@@ -46,8 +44,7 @@ public class Locale {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return column
      */
     public int getColumn(
     ) {
@@ -56,22 +53,20 @@ public class Locale {
 
     /**
      * Getter
-     * <p>
-     * @return
+     * @return level and line number
      */
-    public int getLineNumber(
+    public LineSpecifier getLineSpecifier(
     ) {
-        return _lineNumber;
+        return _lineSpecifier;
     }
 
     /**
      * toString() override
-     * <p>
-     * @return
+     * @return displayable string
      */
     @Override
     public String toString(
     ) {
-        return String.format("[L%d.C%d]", _lineNumber, _column);
+        return String.format("[L%s.C%d]", _lineSpecifier.toString(), _column);
     }
 }

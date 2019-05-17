@@ -21,7 +21,7 @@ public class EQUDirective extends Directive {
     ) {
         if (extractFields(context, textLine, true, 3)) {
             if (labelFieldComponents._label == null) {
-                Locale loc = new Locale(textLine._lineNumber, 1);
+                Locale loc = new Locale(textLine._lineSpecifier, 1);
                 context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $EQU directive"));
                 return;
             }

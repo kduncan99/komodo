@@ -58,7 +58,7 @@ public class ExpressionParser {
      */
     private Locale getLocale(
     ) {
-        return new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index);
+        return new Locale(_textLocale.getLineSpecifier(), _textLocale.getColumn() + _index);
     }
 
     /**
@@ -528,7 +528,7 @@ public class ExpressionParser {
     ) {
         String label = parseLabel(context);
         if (label != null) {
-            return new ReferenceItem(new Locale(_textLocale.getLineNumber(), _textLocale.getColumn() + _index), label);
+            return new ReferenceItem(new Locale(_textLocale.getLineSpecifier(), _textLocale.getColumn() + _index), label);
         }
 
         return null;

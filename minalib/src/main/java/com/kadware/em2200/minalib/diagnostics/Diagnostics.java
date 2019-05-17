@@ -4,6 +4,8 @@
 
 package com.kadware.em2200.minalib.diagnostics;
 
+import com.kadware.em2200.minalib.LineSpecifier;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,15 +81,15 @@ public class Diagnostics {
 
     /**
      * Getter
-     * @param lineNumber indicates we only want those related to a particular line number
+     * @param lineSpecifier indicates we only want those related to a particular line of text
      * @return array of diagnostics for the line number
      */
     public List<Diagnostic> getDiagnostics(
-        final int lineNumber
-    ) {
+        final LineSpecifier lineSpecifier
+        ) {
         List<Diagnostic> result = new LinkedList<>();
         for (Diagnostic d : _diagnostics) {
-            if (d._locale.getLineNumber() == lineNumber) {
+            if (d._locale.getLineSpecifier().equals(lineSpecifier)) {
                 result.add(d);
             }
         }

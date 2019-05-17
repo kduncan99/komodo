@@ -18,7 +18,8 @@ public class Test_ExpressionParser {
     @Test
     public void parseIntegerLiteral(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("14458", locale);
 
         Dictionary system = new SystemDictionary();
@@ -36,7 +37,8 @@ public class Test_ExpressionParser {
     @Test
     public void parseNegativeIntegerLiteral(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("-14458", locale);
 
         Dictionary system = new SystemDictionary();
@@ -47,7 +49,7 @@ public class Test_ExpressionParser {
 
         IExpressionItem item0 = exp._items.get(0);
         assertTrue(item0 instanceof OperatorItem);
-        Operator op = ((OperatorItem) item0)._operator; //  TODO check this value if we can, somehow
+//        Operator op = ((OperatorItem) item0)._operator; //  TODO check this value if we can, somehow
 
         IExpressionItem item1 = exp._items.get(1);
         assertTrue(item1 instanceof ValueItem);
@@ -59,7 +61,8 @@ public class Test_ExpressionParser {
     @Test
     public void parseStringLiteral(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("'Hello'", locale);
 
         Dictionary system = new SystemDictionary();
@@ -77,7 +80,8 @@ public class Test_ExpressionParser {
     @Test
     public void simpleConcatenation(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("'Hello ':'Stupid ':'Moron'", locale);
 
         Dictionary system = new SystemDictionary();
@@ -90,7 +94,8 @@ public class Test_ExpressionParser {
     @Test
     public void simpleMath(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("1+3", locale);
 
         Dictionary system = new SystemDictionary();
@@ -103,7 +108,8 @@ public class Test_ExpressionParser {
     @Test
     public void parseLabel(
     ) {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("$Label", locale);
 
         Dictionary system = new SystemDictionary();
@@ -115,7 +121,8 @@ public class Test_ExpressionParser {
     @Test
     public void parseBuiltInFunction(
     ) throws ExpressionException {
-        Locale locale = new Locale(10, 10);
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
         ExpressionParser parser = new ExpressionParser("$sl('Test')", locale);
 
         Dictionary system = new SystemDictionary();

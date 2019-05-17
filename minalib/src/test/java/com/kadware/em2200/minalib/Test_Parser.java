@@ -30,7 +30,7 @@ public class Test_Parser {
         };
 
         Diagnostics d = new Diagnostics();
-        TextParser parser = new TextParser(source);
+        TextParser parser = new TextParser(0, source);
         parser.parse(d);
         assertTrue(d.isEmpty());
 
@@ -48,13 +48,16 @@ public class Test_Parser {
 
         assertNull(scset.get(0).getField(0));
 
-        assertEquals(new Locale(3, 1), scset.get(2).getField(0)._locale);
+        assertEquals(new Locale(new LineSpecifier(0, 3), 1),
+                     scset.get(2).getField(0)._locale);
         assertEquals("$(0)", scset.get(2).getField(0)._text);
 
-        assertEquals(new Locale(5, 11), scset.get(4).getField(1)._locale);
+        assertEquals(new Locale(new LineSpecifier(0, 5), 11),
+                     scset.get(4).getField(1)._locale);
         assertEquals("LA", scset.get(4).getField(1)._text);
 
-        assertEquals(new Locale(7, 21), scset.get(6).getField(2)._locale);
+        assertEquals(new Locale(new LineSpecifier(0, 7), 21),
+                     scset.get(6).getField(2)._locale);
         assertEquals("EXIT$", scset.get(6).getField(2)._text);
 
         assertEquals("+ (25)", scset.get(7).getField(1)._text);

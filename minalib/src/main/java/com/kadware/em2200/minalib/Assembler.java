@@ -127,7 +127,7 @@ public class Assembler {
             return;
         }
 
-        context.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineNumber, 1),
+        context.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineSpecifier, 1),
                                                      "Unrecognizable source code"));
     }
 
@@ -216,9 +216,9 @@ public class Assembler {
         context.resetSource();
         while (context.hasNextSourceLine()) {
             TextLine line = context.getNextSourceLine();
-            System.out.println(String.format("%04d:%s", line._lineNumber, line._text));
+            System.out.println(String.format("%s:%s", line._lineSpecifier, line._text));
 
-            for (Diagnostic d : context.getDiagnostics().getDiagnostics(line._lineNumber)) {
+            for (Diagnostic d : context.getDiagnostics().getDiagnostics(line._lineSpecifier)) {
                 System.out.println(d.getMessage());
             }
 
@@ -229,7 +229,7 @@ public class Assembler {
                     for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : gPool.entrySet()) {
                         int lcOffset = wordEntry.getKey();
                         Context.GeneratedWord gWord = wordEntry.getValue();
-                        if (gWord._locale.getLineNumber() == line._lineNumber) {
+                        if (gWord._locale.getLineSpecifier() == line._lineSpecifier) {
                             RelocatableWord36 rw36 = gWord.produceRelocatableWord36(context.getDiagnostics());
                             String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
                             if (rw36._undefinedReferences.length == 0) {
@@ -284,7 +284,7 @@ public class Assembler {
                                                   .setArithmeticFaultNonInterruptMode(context.getArithmeticFaultNonInterruptMode())
                                                   .build();
         } catch (InvalidParameterException ex) {
-            context.appendDiagnostic(new FatalDiagnostic(new Locale(1, 1),
+            context.appendDiagnostic(new FatalDiagnostic(new Locale(new LineSpecifier(0,1), 1),
                                                          "Could not generate relocatable module:" + ex.getMessage()));
             return null;
         }
@@ -882,11 +882,20 @@ public class Assembler {
         }
     }
 
+    /**
+     * Code is invoking a procedure.  Make it so.
+     * @param context parent context
+     * @param procedureValue indicates the procedure to be invoked
+     */
     private void processProcedure(
         final Context context,
         final ProcedureValue procedureValue
     ) {
-        //TODO
+        Context subContext = new Context(context, procedureValue._source);
+        //  TODO Load dictionary with local parameters
+        for (TextLine textLine : procedureValue._source) {
+            assembleTextLine(subContext, textLine);
+        }
     }
 
     /**
