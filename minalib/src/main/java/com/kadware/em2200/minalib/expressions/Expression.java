@@ -8,6 +8,10 @@ import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.ExpressionGroupItem;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.IExpressionItem;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.OperandItem;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.OperatorItem;
 import com.kadware.em2200.minalib.expressions.operators.Operator;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,7 +59,7 @@ public class Expression {
         }
 
         if ((egItem != null) && (nonEgItem == null)) {
-            egItem._isSubExpression = false;
+            egItem.setIsSubExpression(false);
         }
 
         for (IExpressionItem item : _items) {

@@ -34,6 +34,7 @@ minalib functions
   $LCN
   $SSS
   $LCV
+  $NODE (an empty node - this is maybe a built-in value, not a function?)
 minalib directives
   $EQUF
   $USE (implicit base register)

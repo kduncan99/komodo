@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items;
+
+import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.em2200.minalib.*;
+import com.kadware.em2200.minalib.diagnostics.*;
+import com.kadware.em2200.minalib.dictionary.*;
+import com.kadware.em2200.minalib.exceptions.*;
+
+/**
+ * Represents a dictionary reference within an expression
+ */
+public class ReferenceItem extends OperandItem {
+
+    private final String _reference;
+
+    /**
+     * constructor
+     * @param locale location of this entity
+     * @param reference reference for this entity
+     */
+    public ReferenceItem(
+        final Locale locale,
+        final String reference
+    ) {
+        super(locale);
+        _reference = reference;
+    }
+
+    public String getReference() { return _reference; }
+
+    /**
+     * Evaluates the reference based on the dictionary
+     * @param context context of execution
+     * @return true if successful, false to discontinue evaluation
+     * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
+     */
+    @Override
+    public Value resolve(
+        final Context context
+    ) throws ExpressionException {
+        try {
+            //  Look up the reference in the dictionary.
+            //  It must be a particular type of value, else we have an expression exception.
+            Value v = context.getDictionary().getValue(_reference);
+            switch (v.getType()) {
+                case Integer:
+                case FloatingPoint:
+                case String:
+                    return v;
+
+                default:
+                    context.appendDiagnostic(new ValueDiagnostic( _locale, "Wrong value type referenced"));
+                    throw new ExpressionException();
+            }
+        } catch ( NotFoundException ex ) {
+            //  reference not found - create an IntegerValue with a value of zero
+            //  and an attached positive UndefinedReference.
+            UndefinedReference[] refs = { new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                                        false,
+                                                                        _reference) };
+            return new IntegerValue(false, 0, refs);
+        }
+    }
+}

@@ -5,11 +5,10 @@
 package com.kadware.em2200.minalib.expressions;
 
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
-import com.kadware.em2200.minalib.expressions.operators.*;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -127,7 +126,7 @@ public class Test_ExpressionParser {
 
         Dictionary system = new SystemDictionary();
         Context context = new Context(new Dictionary(system), new String[0], "TEST");
-        FunctionItem fi = parser.parseFunction(context);
+        FunctionItem fi = parser.parseFunctionReference(context);
         assertTrue(fi instanceof BuiltInFunctionItem);
         BuiltInFunctionItem bifItem = (BuiltInFunctionItem)fi;
         BuiltInFunction bif = bifItem._function;

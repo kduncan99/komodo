@@ -4,14 +4,15 @@
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
-import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.IExpressionItem;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.ValueItem;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

@@ -10,6 +10,7 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.*;
 import com.kadware.em2200.minalib.expressions.operators.*;
 import java.lang.reflect.*;
 import java.util.LinkedList;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * Expression evaluator
  */
+@SuppressWarnings("Duplicates")
 public class ExpressionParser {
 
     private final String _text;
@@ -259,7 +261,7 @@ public class ExpressionParser {
      * @return newly created FunctionItem object
      * @throws ExpressionException if something is syntactically wrong
      */
-    FunctionItem parseFunction(
+    FunctionItem parseFunctionReference(
         final Context context
     ) throws ExpressionException {
         Locale funcLocale = getLocale();
@@ -461,6 +463,48 @@ public class ExpressionParser {
     }
 
     /**
+     * Parses a node specification from _index
+     * @param context Current assembler context
+     * @return newly created FunctionItem object
+     * @throws ExpressionException if something is syntactically wrong
+     */
+    NodeReferenceItem parseNodeReference(
+        final Context context
+    ) throws ExpressionException {
+        Locale funcLocale = getLocale();
+        int holdIndex = _index;
+        String nodeName = parseLabel(context);
+        if (nodeName == null) {
+            return null;
+        }
+
+        //  Is the label found in the dictionary as a node definition?
+        NodeValue nodeValue = null;
+        try {
+            Value value = context.getDictionary().getValue(nodeName);
+            if (value.getType() == ValueType.Node) {
+                nodeValue = (NodeValue) value;
+            }
+        } catch (NotFoundException ex) {
+        }
+
+        if (nodeValue == null) {
+            _index = holdIndex;
+            return null;
+        }
+
+        //  Parse the expression group (if there is one)... there actually doesn't have to be one.
+        Expression[] argExpressions = parseExpressionGroup(context);
+        if (argExpressions == null) {
+            argExpressions = new Expression[0];
+        }
+
+        return new NodeReferenceItem(new Locale(_textLocale.getLineSpecifier(), _textLocale.getColumn() + _index),
+                                     nodeName,
+                                     argExpressions);
+    }
+
+    /**
      * Parses anything which could be an operand
      * @param context Current assembler context
      * @return parsed OperandItem if found, else null
@@ -476,7 +520,11 @@ public class ExpressionParser {
 
         OperandItem opItem = parseLiteral(context);
         if (opItem == null) {
-            opItem = parseFunction(context);
+            opItem = parseFunctionReference(context);
+        }
+
+        if (opItem == null) {
+            opItem = parseNodeReference(context);
         }
 
         if (opItem == null) {

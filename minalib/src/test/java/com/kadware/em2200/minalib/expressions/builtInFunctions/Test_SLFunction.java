@@ -4,14 +4,15 @@
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
-import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
-import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.IExpressionItem;
+import com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items.ValueItem;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -27,7 +28,7 @@ public class Test_SLFunction {
         List<IExpressionItem> items = new LinkedList<>();
         StringValue sv = new StringValue(false, "Hello Stupid", CharacterMode.ASCII);
         LineSpecifier ls01 = new LineSpecifier(0, 1);
-        items.add(new ValueItem(new Locale( ls01, 1), sv));
+        items.add(new ValueItem(new Locale(ls01, 1), sv));
 
         Expression[] expressions = new Expression[1];
         expressions[0] = new Expression(items);

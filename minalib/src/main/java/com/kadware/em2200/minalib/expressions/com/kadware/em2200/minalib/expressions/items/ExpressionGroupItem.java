@@ -2,12 +2,13 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.minalib.expressions;
+package com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items;
 
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.em2200.minalib.expressions.Expression;
 
 /**
  * expression item containing zero or more sub-expressions.
@@ -40,6 +41,34 @@ public class ExpressionGroupItem extends OperandItem {
     boolean _isSubExpression = true;        //  true if case 1 applies (above), false for case 2.
 
     /**
+     * Constructor
+     * @param locale location of this item
+     * @param expressions expressions contained within this group
+     */
+    public ExpressionGroupItem(
+        final Locale locale,
+        final Expression[] expressions
+    ) {
+        super(locale);
+        _expressions = expressions;
+    }
+
+    public boolean isSubExpression() { return _isSubExpression; }
+
+    /**
+     * Resolves the value of this item.
+     * @param context assembler context - we don't need this
+     * @return a Value representing this operand
+     * @throws ExpressionException if the underlying sub-expression throws it
+     */
+    @Override
+    public Value resolve(
+        final Context context
+    ) throws ExpressionException {
+        return (_isSubExpression ? resolveForCase1(context) : resolveForCase2(context));
+    }
+
+    /**
      * Represents a grouped sub-expression.
      * It must have exactly one expression, which we evaluate and propagate the return value
      * @param context assembler context
@@ -47,7 +76,7 @@ public class ExpressionGroupItem extends OperandItem {
      * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase1(
-            final Context context
+        final Context context
     ) throws ExpressionException {
         if (_expressions.length != 1) {
             context.appendDiagnostic(
@@ -70,7 +99,7 @@ public class ExpressionGroupItem extends OperandItem {
      * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase2(
-            final Context context
+        final Context context
     ) throws ExpressionException {
         if ((_expressions.length < 1) || (_expressions.length > 36)) {
             context.appendDiagnostic(
@@ -110,29 +139,5 @@ public class ExpressionGroupItem extends OperandItem {
         return context.generate(_locale.getLineSpecifier(), context.getCurrentLitLCIndex(), form, values);
     }
 
-    /**
-     * Constructor
-     * @param locale location of this item
-     * @param expressions expressions contained within this group
-     */
-    ExpressionGroupItem(
-        final Locale locale,
-        final Expression[] expressions
-    ) {
-        super(locale);
-        _expressions = expressions;
-    }
-
-    /**
-     * Resolves the value of this item.
-     * @param context assembler context - we don't need this
-     * @return a Value representing this operand
-     * @throws ExpressionException if the underlying sub-expression throws it
-     */
-    @Override
-    public Value resolve(
-        final Context context
-    ) throws ExpressionException {
-        return (_isSubExpression ? resolveForCase1(context) : resolveForCase2(context));
-    }
+    public void setIsSubExpression(boolean flag) { _isSubExpression = flag; }
 }
