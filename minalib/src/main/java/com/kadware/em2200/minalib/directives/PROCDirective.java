@@ -50,7 +50,7 @@ public class PROCDirective extends Directive {
         if (extractFields(context, textLine, false, 3)) {
             List<TextLine> textLines = new LinkedList<>();
             int nesting = 1;
-            while (context.hasNextSourceLine()) {
+            while (context.hasNextSourceLine() && (nesting > 0)) {
                 TextLine nestedLine = context.getNextSourceLine();
                 nesting += checkNesting(nestedLine);
                 if (nesting > 0) {

@@ -107,7 +107,7 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return context.generate(_locale, context.getCurrentLitLCIndex(), form, values);
+        return context.generate(_locale.getLineSpecifier(), context.getCurrentLitLCIndex(), form, values);
     }
 
     /**

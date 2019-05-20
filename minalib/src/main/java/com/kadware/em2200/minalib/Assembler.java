@@ -218,32 +218,49 @@ public class Assembler {
             TextLine line = context.getNextSourceLine();
             System.out.println(String.format("%s:%s", line._lineSpecifier, line._text));
 
-            for (Diagnostic d : context.getDiagnostics().getDiagnostics(line._lineSpecifier)) {
+            for (Diagnostic d : line._diagnostics) {
                 System.out.println(d.getMessage());
             }
 
             if (displayCode) {
-                for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context.getGeneratedPools()) {
-                    int lcIndex = poolEntry.getKey();
-                    Context.GeneratedPool gPool = poolEntry.getValue();
-                    for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : gPool.entrySet()) {
-                        int lcOffset = wordEntry.getKey();
-                        Context.GeneratedWord gWord = wordEntry.getValue();
-                        if (gWord._locale.getLineSpecifier() == line._lineSpecifier) {
-                            RelocatableWord36 rw36 = gWord.produceRelocatableWord36(context.getDiagnostics());
-                            String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
-                            if (rw36._undefinedReferences.length == 0) {
-                                System.out.println(gwBase);
-                            } else {
-                                for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
-                                    System.out.println(String.format("%s %s",
-                                                                     urx == 0 ? gwBase : "                           ",
-                                                                     rw36._undefinedReferences[urx].toString()));
-                                }
-                            }
+                for (GeneratedWord gw : line._generatedWords) {
+                    RelocatableWord36 rw36 = gw._relocatableWord;
+                    String gwBase = String.format("  $(%2d) %06o:  %012o",
+                                                  gw._locationCounterIndex,
+                                                  gw._locationCounterOffset,
+                                                  rw36.getW());
+                    if (rw36._undefinedReferences.length == 0) {
+                        System.out.println(gwBase);
+                    } else {
+                        for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+                            System.out.println(String.format("%s %s",
+                                                             urx == 0 ? gwBase : "                           ",
+                                                             rw36._undefinedReferences[urx].toString()));
                         }
                     }
                 }
+                //TODO
+//                for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context.getGeneratedPools()) {
+//                    int lcIndex = poolEntry.getKey();
+//                    Context.GeneratedPool gPool = poolEntry.getValue();
+//                    for (Map.Entry<Integer, GeneratedWord> wordEntry : gPool.entrySet()) {
+//                        int lcOffset = wordEntry.getKey();
+//                        GeneratedWord gWord = wordEntry.getValue();
+//                        if (gWord._lineSpecifier == line._lineSpecifier) {
+//                            RelocatableWord36 rw36 = gWord.produceRelocatableWord36(context.getDiagnostics());
+//                            String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
+//                            if (rw36._undefinedReferences.length == 0) {
+//                                System.out.println(gwBase);
+//                            } else {
+//                                for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+//                                    System.out.println(String.format("%s %s",
+//                                                                     urx == 0 ? gwBase : "                           ",
+//                                                                     rw36._undefinedReferences[urx].toString()));
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
             }
         }
     }
@@ -464,7 +481,7 @@ public class Assembler {
                 fieldSizes[fx] = fieldSize;
             }
 
-            context.generate(operandField._locale,
+            context.generate(operandField._locale.getLineSpecifier(),
                              context.getCurrentGenerationLCIndex(),
                              new Form(fieldSizes),
                              values);
@@ -594,7 +611,7 @@ public class Assembler {
             values[7] = uValue;
         }
 
-        context.generate(operationField._locale, context.getCurrentGenerationLCIndex(), form, values);
+        context.generate(operationField._locale.getLineSpecifier(), context.getCurrentGenerationLCIndex(), form, values);
         return true;
     }
 
@@ -771,7 +788,7 @@ public class Assembler {
 
         if (sfc > sfx) {
             context.appendDiagnostic(new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
-                                                              "Extreanous subfields in operand field ignored"));
+                                                              "Extraneous subfields in operand field ignored"));
         }
 
         TextSubfield[] result = { sfRegister, sfValue, sfIndex, sfBase };
@@ -910,8 +927,8 @@ public class Assembler {
         context.resetSource();
         for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context.getGeneratedPools()) {
             Context.GeneratedPool pool = poolEntry.getValue();
-            for (Map.Entry<Integer, Context.GeneratedWord> wordEntry : pool.entrySet()) {
-                Context.GeneratedWord gWord = wordEntry.getValue();
+            for (Map.Entry<Integer, GeneratedWord> wordEntry : pool.entrySet()) {
+                GeneratedWord gWord = wordEntry.getValue();
                 for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
                     FieldDescriptor fd = entry.getKey();
                     IntegerValue originalIV = entry.getValue();
@@ -924,9 +941,10 @@ public class Assembler {
                                 try {
                                     Value lookupValue = context.getDictionary().getValue(lRef._label);
                                     if (lookupValue.getType() != ValueType.Integer) {
-                                        context.appendDiagnostic(
-                                            new ValueDiagnostic(gWord._locale,
-                                                                "Forward reference does not resolve to an integer"));
+                                        String msg = String.format("Forward reference '%s' does not resolve to an integer",
+                                                                   lRef._label);
+                                        context.appendDiagnostic(new ValueDiagnostic(new Locale(gWord._lineSpecifier, 1),
+                                                                                     msg));
                                     } else {
                                         IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
                                         newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;

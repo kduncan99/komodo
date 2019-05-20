@@ -8,8 +8,8 @@ package com.kadware.em2200.minalib;
  * A specification of a level and line number to indicate where a parsed line was generated from
  */
 public class LineSpecifier {
-    public final int _level;
-    public final int _lineNumber;
+    private final int _level;
+    private final int _lineNumber;
 
     public LineSpecifier(
         final int level,
@@ -30,6 +30,6 @@ public class LineSpecifier {
 
     @Override
     public String toString() {
-        return String.format("%d.%06d", _level, _lineNumber);
+        return String.format("%d.%6d", _level, _lineNumber);
     }
 }

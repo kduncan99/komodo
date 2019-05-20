@@ -4,6 +4,7 @@
 
 package com.kadware.em2200.minalib.diagnostics;
 
+import com.kadware.em2200.minalib.LineSpecifier;
 import com.kadware.em2200.minalib.Locale;
 
 /**
@@ -56,21 +57,9 @@ public abstract class Diagnostic {
     };
 
     /**
-     * Construct and return a message to be displayed, describing this diagnostic
-     * <p>
-     * @return
-     */
-    public final String getMessage(
-    ) {
-        return String.format("%c%s:%s", getLevelIndicator(), _locale.toString(), _message);
-    }
-
-    /**
      * Retrieves the single-character level indicator for this particular Diagnostic Level
-     * <p>
-     * @param level
-     * <p>
-     * @return
+     * @param level level of diagnostic
+     * @return character value
      */
     public static char getLevelIndicator(
         final Level level
@@ -87,5 +76,14 @@ public abstract class Diagnostic {
             case Value:                 return 'V';
         }
         return '?';
+    }
+
+    /**
+     * Construct and return a message to be displayed, describing this diagnostic
+     * @return value
+     */
+    public final String getMessage(
+    ) {
+        return String.format("%c%s:%s", getLevelIndicator(), _locale.toString().replace(" ",""), _message);
     }
 }

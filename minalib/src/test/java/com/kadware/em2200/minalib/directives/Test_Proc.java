@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.minalib.directives;
@@ -20,9 +20,11 @@ public class Test_Proc {
             "          $END",
             "",
             "$(1),START*",
+            "          HALT 0",
             "          FOO",
             "          FOO",
             "          FOO",
+            "          HALT 0",
         };
 
         Assembler.Option[] optionSet = {

@@ -26,78 +26,9 @@ public class Context {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * During assembly, each generated word is placed in this table, keyed by the location counter index and offset.
-     * It is comprised of the component values which make up the sub-fields of the word, in no particular order.
-     */
-    public class GeneratedWord extends HashMap<FieldDescriptor, IntegerValue> {
-
-        public final Locale _locale;
-        RelocatableWord36 _relocatableWord = null;
-
-        GeneratedWord(
-            final Locale locale
-        ) {
-            _locale = locale;
-        }
-
-        /**
-         * Constructs a composite RelocatableWord36 object based upon the various component field definitions.
-         * Should be called after we've resolved all references local to the containing module.
-         * If the word has already been constructed, don't do it twice...
-         * @return composite word
-         */
-        RelocatableWord36 produceRelocatableWord36(
-            final Diagnostics diagnostics
-        ) {
-            if (_relocatableWord == null) {
-                long discreteValue = 0;
-                List<UndefinedReference> relRefs = new LinkedList<>();
-                for (Entry<FieldDescriptor, IntegerValue> entry : entrySet()) {
-                    //  convert value from twos- to ones-complement, check for 36-bit truncation
-                    long fieldValue = entry.getValue()._value;
-                    OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
-                    OnesComplement.getOnesComplement36(fieldValue, ocr);
-                    boolean trunc = ocr._overflow;
-                    long value36 = ocr._result;
-
-                    FieldDescriptor fd = entry.getKey();
-                    long mask = (1L << fd._fieldSize) - 1;
-                    long maskedValue = value36 & mask;
-
-                    //  Check for field size truncation
-                    if (fieldValue > 0) {
-                        trunc = (value36 != maskedValue);
-                    } else if (fieldValue < 0) {
-                        trunc = ((mask | value36) != 0_777777_777777L);
-                    }
-
-                    if (trunc) {
-                        diagnostics.append(new TruncationDiagnostic(_locale,
-                                                                    fd._startingBit,
-                                                                    fd._startingBit + fd._fieldSize - 1));
-                    }
-
-                    int shiftCount = 36 - fd._startingBit - fd._fieldSize;
-                    discreteValue |= (maskedValue << shiftCount);
-
-                    //  Propagate any remaining external references
-                    for (UndefinedReference uRef : entry.getValue()._undefinedReferences) {
-                        relRefs.add(uRef.copy(fd));
-                    }
-                }
-
-                _relocatableWord =
-                        new RelocatableWord36(discreteValue, relRefs.toArray(new UndefinedReference[0]));
-            }
-
-            return _relocatableWord;
-        }
-    }
-
-    /**
      * During assembly, location counter pools are built up.  This is a map of lc offsets to GeneratedWords,
-     * in offset order.  It is not necessaryl monotonically increasing - it could have holes in it by virtual
-     * of incrementing _nextOffset without adding a value.
+     * in offset order.  It is not necessarily monotonically increasing - it could have holes in it by virtue
+     * of incrementing _nextOffset without adding a value (such as happens with $RES directives)
      */
     public static class GeneratedPool extends TreeMap<Integer, GeneratedWord> {
 
@@ -281,6 +212,7 @@ public class Context {
         final Diagnostic diag
     ) {
         _globalData._diagnostics.append(diag);
+        getTopLevelTextLine()._diagnostics.add(diag);
     }
 
     /**
@@ -306,14 +238,15 @@ public class Context {
     /**
      * Generates the given word as a set of subfields for a given location counter index and offset,
      * and places it into the appropriate location counter pool within the given context.
-     * @param locale locale of the text entity generating this word
+     * Also associates it with the current top-level text line.
+     * @param lineSpecifier location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param form indicates the bit fields - there should be one value per bit-field
      * @param values the values to be used
      * @return value indicating the location which applies to the word which was just generated
      */
     public IntegerValue generate(
-        final Locale locale,
+        final LineSpecifier lineSpecifier,
         final int lcIndex,
         final Form form,
         final IntegerValue[] values
@@ -322,17 +255,19 @@ public class Context {
             throw new RuntimeException("Number of bit-fields in the form differ from number of values");
         }
 
+        GeneratedPool gp = obtainPool(lcIndex);
+        int lcOffset = gp._nextOffset;
+
         int startingBit = form._leftSlop;
-        GeneratedWord gw = new GeneratedWord(locale);
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset);
         for (int fx = 0; fx < values.length; ++fx) {
             FieldDescriptor fd = new FieldDescriptor(startingBit, form._fieldSizes[fx]);
             gw.put(fd, values[fx]);
             startingBit += form._fieldSizes[fx];
         }
 
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp._nextOffset;
         gp.store(gw);
+        gw._topLevelTextLine._generatedWords.add(gw);
 
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
                                                                               false,
@@ -371,7 +306,10 @@ public class Context {
     }
 
     /**
-     * Retrieves the next not-yet-assembled line of source code from this object
+     * Retrieves the next not-yet-assembled line of source code from this object,
+     * after updating its top-level TextLine object to indicate the text from which this derives.
+     * For top-level source, this will be the same as the returned object.
+     * For proc/func source, this will be the zero-level TextLine at the top of the invoke nesting...
      * @return TextLine object
      */
     public TextLine getNextSourceLine() {
@@ -381,6 +319,18 @@ public class Context {
             result.parseFields(_globalData._diagnostics);
         }
         return result;
+    }
+
+    /**
+     * Determines the zero-level text line involved in this particular retrieval
+     * @return
+     */
+    private TextLine getTopLevelTextLine() {
+        if (_parent != null) {
+            return _parent.getTopLevelTextLine();
+        } else {
+            return _localData._sourceObjects[_localData._nextSourceIndex - 1];
+        }
     }
 
     /**

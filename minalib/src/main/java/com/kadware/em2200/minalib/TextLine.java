@@ -6,6 +6,8 @@ package com.kadware.em2200.minalib;
 
 import com.kadware.em2200.minalib.diagnostics.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Represents a line of source code
@@ -20,6 +22,11 @@ public class TextLine {
 
     //  parsed TextField objects parsed from the line of text - may be empty
     public final ArrayList<TextField> _fields = new ArrayList<>();
+
+    //  References to all Diagnostic and GeneratedWord objects created for this line of text.
+    //  Only applies to top-level TextLine objects (not to temporary func or proc objects)
+    public final List<Diagnostic> _diagnostics = new LinkedList<>();
+    public final List<GeneratedWord> _generatedWords = new LinkedList<>();
 
     /**
      * Constructor

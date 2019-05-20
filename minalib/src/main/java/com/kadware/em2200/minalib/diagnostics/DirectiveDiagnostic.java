@@ -7,7 +7,7 @@ package com.kadware.em2200.minalib.diagnostics;
 import com.kadware.em2200.minalib.Locale;
 
 /**
- * Class for informational diagnostic messages
+ * Class for diagnostics specific to directives
  */
 public abstract class DirectiveDiagnostic extends Diagnostic {
 

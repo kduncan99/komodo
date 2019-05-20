@@ -109,7 +109,7 @@ public class GFORMDirective extends Directive {
                                            context.getCurrentLocation());
                 }
 
-                context.generate(_operandField._locale,
+                context.generate(_operandField._locale.getLineSpecifier(),
                                  context.getCurrentGenerationLCIndex(),
                                  new Form(fieldSizes),
                                  values);
