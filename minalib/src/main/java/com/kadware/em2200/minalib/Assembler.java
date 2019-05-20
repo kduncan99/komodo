@@ -93,7 +93,7 @@ public class Assembler {
         try {
             Value v = context.getDictionary().getValue(operation);
             if (v instanceof ProcedureValue) {
-                processProcedure(context, (ProcedureValue) v);
+                processProcedure(context, (ProcedureValue) v, textLine);
                 return;
             } else if (v instanceof FormValue) {
 //                processFormValue(context, (FormValue) v);
@@ -901,17 +901,55 @@ public class Assembler {
 
     /**
      * Code is invoking a procedure.  Make it so.
+     * Note that we have a simpler concept of $PROCs than per convention.
+     * Specifically, we have no $NAME (at least for now).  Thus, in order to provide the ability to invoke
+     * a proc names FOO as such:
+     *     FOO,x,y  a,b,c
+     * we fill in the parameter node at major index 0 as it would have been done for a $NAME directive...
+     * that is:  FOO(0,0) = 'FOO'
+     *           FOO(0,1) = x
+     * etc.
+     * Also, we support all the fields in the text line beyond the label field...
      * @param context parent context
      * @param procedureValue indicates the procedure to be invoked
+     * @param textLine the parsed code from which we build the parameter list
      */
     private void processProcedure(
         final Context context,
-        final ProcedureValue procedureValue
+        final ProcedureValue procedureValue,
+        final TextLine textLine
     ) {
         Context subContext = new Context(context, procedureValue._source);
-        //  TODO Load dictionary with local parameters
-        for (TextLine textLine : procedureValue._source) {
-            assembleTextLine(subContext, textLine);
+
+        NodeValue mainNode = new NodeValue(false);
+        for (int fx = 1; fx < textLine._fields.size(); ++fx) {
+            TextField field = textLine._fields.get(fx);
+            for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
+                TextSubfield subField = field._subfields.get(sfx);
+                NodeValue subNode = new NodeValue(false);
+                mainNode.setValue(new IntegerValue(false, fx - 1, null), subNode);
+                if ((fx == 1) && (sfx == 0)) {
+                    //  This is the proc name - handle it accordingly (no expression evaluation)
+                    subNode.setValue(_zeroValue, new StringValue(false, subField._text, CharacterMode.ASCII));
+                } else {
+                    try {
+                        //  Evaluate the given subfield, and place the result in the appropriate position of nv
+                        ExpressionParser sfParser = new ExpressionParser(subField._text, subField._locale);
+                        Expression sfExpression = sfParser.parse(context);
+                        Value sfValue = sfExpression.evaluate(context);
+                        subNode.setValue(new IntegerValue(false, sfx, null), sfValue);
+                    } catch (ExpressionException ex) {
+                        subNode.setValue(new IntegerValue(false, sfx, null), _zeroValue);
+                        Diagnostic diag = new ErrorDiagnostic(subField._locale, "Syntax error");
+                        context.appendDiagnostic(diag);
+                    }
+                }
+            }
+        }
+
+        mainNode.emitNodeTree("");//TODO testing
+        for (TextLine procTextLine : procedureValue._source) {
+            assembleTextLine(subContext, procTextLine);
         }
     }
 

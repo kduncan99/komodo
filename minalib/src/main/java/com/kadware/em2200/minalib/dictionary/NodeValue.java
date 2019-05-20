@@ -12,7 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Class which represents a node value
+ * Class which represents a node value.
+ * Because node trees are fairly unstructured, we implement them as such:
+ *  N(4) is the value of nodeValue1.get(IntegerValue(4))
+ *  N(2,'foo') is nodeValue1.get(IntegerValue(2))  // this returns a nested NodeValue...
+ *                   .get(StringValue("foo"))      // ... and this produces the final value.
+ * Thus, a node with n dimensions will have (n-1) levels of nested NodeValue objects
  */
 public class NodeValue extends Value {
 
@@ -53,6 +58,25 @@ public class NodeValue extends Value {
         final boolean newFlagged
     ) {
         return new NodeValue(newFlagged);
+    }
+
+    /**
+     * For development / debugging
+     */
+    public void emitNodeTree(
+        final String indent
+    ) {
+        if (indent.isEmpty()) {
+            System.out.println("Node Tree:");
+        }
+        for (Map.Entry<Value, Value> entry : _values.entrySet()) {
+            if (entry.getValue() instanceof NodeValue) {
+                System.out.println(indent + entry.getKey().toString() + ":<NodeTree>");
+                ((NodeValue) entry.getValue()).emitNodeTree(indent + "    ");
+            } else {
+                System.out.println(indent + entry.getKey().toString() + ":" + entry.getValue().toString());
+            }
+        }
     }
 
     /**

@@ -41,6 +41,16 @@ public class PROCDirective extends Directive {
         return 0;
     }
 
+    /**
+     * We handle $PROC slightly differently than convention.
+     * The label is always assumed to be specified at the outer level, so it does not need to be externalized
+     * to be accessible to the assembly which contains it.  Also, we do not (at least currently) implement the
+     * $NAME, so it makes no sense to have a $PROC label accessible only within the proc.
+     * @param context reference to the context in which this directive is to execute
+     * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
+     *                 make different usages of the fields - and $INFO even uses an extra field
+     * @param labelFieldComponents LabelFieldComponents describing the label field on the line containing this directive
+     */
     @Override
     public void process(
             final Context context,
