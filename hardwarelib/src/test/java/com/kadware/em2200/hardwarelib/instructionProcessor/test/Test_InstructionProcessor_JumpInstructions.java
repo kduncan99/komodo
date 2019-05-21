@@ -957,7 +957,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "BAD2      HALT      076",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);

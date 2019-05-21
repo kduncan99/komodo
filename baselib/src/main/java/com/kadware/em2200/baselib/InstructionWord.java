@@ -845,11 +845,15 @@ public class InstructionWord extends Word36 {
 
         //  First line is for the assembler which requires a specific A-field
         new InstructionInfo(Mode.BASIC,    074, 004, 001, true,  true,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
-        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false, false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
 
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  true,  false, false, ASemantics.NONE,  "HJ",    true),	// a-field == 0
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  false, false, false, ASemantics.NONE,  "HKJ",   true),	// a-field > 0
+
+        //  First line is for the assembler which requires a specific A-field
+        new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  true,  true,  false, ASemantics.A,     "NOP",   false),
         new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  false, true,  false, ASemantics.A,     "NOP",   false),
+
         new InstructionInfo(Mode.BASIC,    074, 007, 000, true,  false, false, false, ASemantics.NONE,  "AAIJ",  true),
         new InstructionInfo(Mode.EITHER,   074, 010, 000, true,  false, false, false, ASemantics.A,     "JNB",   true),
         new InstructionInfo(Mode.EITHER,   074, 011, 000, true,  false, false, false, ASemantics.A,     "JB",    true),

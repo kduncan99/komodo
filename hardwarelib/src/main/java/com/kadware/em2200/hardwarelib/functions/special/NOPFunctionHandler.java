@@ -21,7 +21,7 @@ public class NOPFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  Do nothing other than index register incrementation
-        ip.incrementIndexRegisterInF0();
+        //  TODO does this work as expected?
+        long operand = ip.getJumpOperand();
     }
 }
