@@ -76,6 +76,17 @@ public class ProcedureValue extends Value {
         return ValueType.Procedure;
     }
 
+    @Override
+    public int hashCode(
+
+    ) {
+        int code = 0;
+        for (TextLine textLine : _source) {
+            code ^= textLine._text.hashCode();
+        }
+        return code;
+    }
+
     /**
      * Transform the value to an IntegerValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

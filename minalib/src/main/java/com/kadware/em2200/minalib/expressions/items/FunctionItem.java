@@ -2,28 +2,25 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items;
+package com.kadware.em2200.minalib.expressions.items;
 
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.dictionary.Value;
 import com.kadware.em2200.minalib.exceptions.ExpressionException;
 
 /**
- * Base class for an expression item which represents an operand.
- * This could be a value, a built-in function reference, etc.
+ * Represents a function call within an expression
  */
-public abstract class OperandItem implements IExpressionItem {
-
-    final Locale _locale;
+public abstract class FunctionItem extends OperandItem {
 
     /**
      * constructor
      * @param locale where the item is found in the source code
      */
-    OperandItem(
+    FunctionItem(
         final Locale locale
     ) {
-        _locale = locale;
+        super(locale);
     }
 
     /**
@@ -32,6 +29,7 @@ public abstract class OperandItem implements IExpressionItem {
      * @return true if successful, false to discontinue evaluation
      * @throws ExpressionException if something is wrong with the expression
      */
+    @Override
     public abstract Value resolve(
         final Context context
     ) throws ExpressionException;

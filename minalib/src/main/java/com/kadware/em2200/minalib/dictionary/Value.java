@@ -66,6 +66,9 @@ public abstract class Value {
      */
     public abstract ValueType getType();
 
+    @Override
+    public abstract int hashCode();
+
     /**
      * Transform the value to an FloatPointValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

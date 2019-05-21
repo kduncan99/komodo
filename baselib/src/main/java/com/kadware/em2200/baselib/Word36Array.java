@@ -42,6 +42,19 @@ public class Word36Array {
     }
 
     /**
+     * Constructor which pulls data from a true array of Word36 objects
+     * @param array reference to base array
+     */
+    public Word36Array(
+        final Word36[] array
+    ) {
+        _array = new long[array.length];
+        for (int ax = 0; ax < _array.length; ++ax) {
+            _array[ax] = array[ax].getW();
+        }
+    }
+
+    /**
      * tests for equality of content
      * @param obj comparison object
      * @return value
@@ -94,6 +107,18 @@ public class Word36Array {
         final int index
     ) {
         return _array[index];
+    }
+
+    /**
+     * Retrieves a copy of the underlying values for this array
+     * @return copy of the array (or slice, for the Word36ArraySlice object)
+     */
+    public final long[] getValues() {
+        long[] newArray = new long[getArraySize()];
+        for (int ax = 0; ax < _array.length; ++ax) {
+            newArray[ax] = getValue(ax);
+        }
+        return newArray;
     }
 
     /**
@@ -357,6 +382,55 @@ public class Word36Array {
         }
 
         return builder.toString();
+    }
+
+
+    //  text conversions -----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Populates this object with quarter-words derived from the ASCII characters in the source string.
+     * The last word is padded with ascii spaces if so needed.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static Word36Array stringToWord36ASCII(
+        final String source
+    ) {
+        int words = source.length() / 4;
+        if (source.length() % 4 > 0) {
+            words++;
+        }
+
+        Word36[] temp = new Word36[words];
+        int tx = 0;
+        for (int sx = 0; sx < source.length(); sx += 4) {
+            temp[tx++] = Word36.stringToWord36ASCII(source.substring(sx));
+        }
+
+        return new Word36Array(temp);
+    }
+
+    /**
+     * Populates this object with sixth-words representing the fieldata characters in the source string.
+     * The last word is padded with fieldata spaces if so needed.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static Word36Array stringToWord36Fieldata(
+        final String source
+    ) {
+        int words = source.length();
+        if (source.length() % 6 > 0) {
+            words++;
+        }
+
+        Word36[] temp = new Word36[words];
+        int tx = 0;
+        for (int sx = 0; sx < source.length(); sx += 6) {
+            temp[tx++] = Word36.stringToWord36Fieldata(source.substring(sx));
+        }
+
+        return new Word36Array(temp);
     }
 
 

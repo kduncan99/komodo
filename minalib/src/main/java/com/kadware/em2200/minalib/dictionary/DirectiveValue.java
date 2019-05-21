@@ -82,6 +82,9 @@ public class DirectiveValue extends Value {
         return ValueType.Directive;
     }
 
+    @Override
+    public int hashCode() { return _clazz.hashCode(); }
+
     /**
      * Transform the value to an FloatingPointValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

@@ -71,6 +71,9 @@ public class BuiltInFunctionValue extends Value {
         return (_clazz == bif._clazz);
     }
 
+    @Override
+    public int hashCode() { return _clazz.hashCode(); }
+
     /**
      * Getter
      * @return request value

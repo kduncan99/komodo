@@ -91,6 +91,16 @@ public class FormValue extends Value {
         return _form;
     }
 
+    @Override
+    public int hashCode()
+    {
+        int code = 0;
+        for (int fieldSize : _form._fieldSizes) {
+            code = code << 1 * fieldSize;
+        }
+        return code;
+    }
+
     /**
      * Transform the value to an IntegerValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

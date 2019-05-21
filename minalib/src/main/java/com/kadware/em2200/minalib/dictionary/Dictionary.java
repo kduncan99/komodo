@@ -67,7 +67,7 @@ public class Dictionary {
         final String label,
         final Value value
     ) {
-        if ((_upperLevelDictionary != null) && (level > 0)) {
+        if ((level > 0) && (_upperLevelDictionary != null) && !(_upperLevelDictionary instanceof SystemDictionary)) {
             _upperLevelDictionary.addValue(level - 1, label, value);
         } else {
             _values.put(label.toUpperCase(), value);

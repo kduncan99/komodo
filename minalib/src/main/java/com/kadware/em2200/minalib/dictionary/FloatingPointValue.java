@@ -82,6 +82,9 @@ public class FloatingPointValue extends Value {
         return ValueType.FloatingPoint;
     }
 
+    @Override
+    public int hashCode() { return (int)_value; }
+
     /**
      * Simply return this object
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

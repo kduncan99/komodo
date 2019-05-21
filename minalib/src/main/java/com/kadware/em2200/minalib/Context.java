@@ -9,6 +9,7 @@ import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import sun.util.resources.cldr.gl.CurrencyNames_gl;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -154,6 +155,8 @@ public class Context {
     private final Local _localData;
     private final Context _parent;
 
+    private static FieldDescriptor _fullField = new FieldDescriptor(0, 36);
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  constructor
@@ -269,9 +272,35 @@ public class Context {
         gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
 
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
-                                                                              false,
-                                                                              lcIndex) };
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(_fullField, false, lcIndex) };
+        return new IntegerValue(false, lcOffset, refs);
+    }
+
+    /**
+     * Generates the multiple words for a given location counter index and offset,
+     * and places them into the appropriate location counter pool within the given context.
+     * Also associates it with the current top-level text line.
+     * @param lineSpecifier location of the text entity generating this word
+     * @param lcIndex index of the location counter pool where-in the value is to be placed
+     * @param values the values to be used
+     * @return value indicating the location which applies to the word which was just generated
+     */
+    public IntegerValue generate(
+        final LineSpecifier lineSpecifier,
+        final int lcIndex,
+        final long[] values
+    ) {
+        GeneratedPool gp = obtainPool(lcIndex);
+        int lcOffset = gp._nextOffset;
+
+        for (int vx = 0; vx < values.length; ++vx) {
+            GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset + vx);
+            gw.put(_fullField, new IntegerValue(false, values[vx], null));
+            gp.store(gw);
+            gw._topLevelTextLine._generatedWords.add(gw);
+        }
+
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(_fullField, false, lcIndex) };
         return new IntegerValue(false, lcOffset, refs);
     }
 

@@ -105,6 +105,9 @@ public class StringValue extends Value {
         return ValueType.String;
     }
 
+    @Override
+    public int hashCode() { return _value.hashCode(); }
+
     /**
      * Transform the value to an FloatingPointValue, if possible - probably won't mean anything though.
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary

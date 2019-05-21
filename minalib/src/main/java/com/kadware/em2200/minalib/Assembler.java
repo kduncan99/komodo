@@ -93,7 +93,7 @@ public class Assembler {
         try {
             Value v = context.getDictionary().getValue(operation);
             if (v instanceof ProcedureValue) {
-                processProcedure(context, (ProcedureValue) v, textLine);
+                processProcedure(context, operation, (ProcedureValue) v, textLine);
                 return;
             } else if (v instanceof FormValue) {
 //                processFormValue(context, (FormValue) v);
@@ -239,28 +239,6 @@ public class Assembler {
                         }
                     }
                 }
-                //TODO
-//                for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context.getGeneratedPools()) {
-//                    int lcIndex = poolEntry.getKey();
-//                    Context.GeneratedPool gPool = poolEntry.getValue();
-//                    for (Map.Entry<Integer, GeneratedWord> wordEntry : gPool.entrySet()) {
-//                        int lcOffset = wordEntry.getKey();
-//                        GeneratedWord gWord = wordEntry.getValue();
-//                        if (gWord._lineSpecifier == line._lineSpecifier) {
-//                            RelocatableWord36 rw36 = gWord.produceRelocatableWord36(context.getDiagnostics());
-//                            String gwBase = String.format("  $(%2d) %06o:  %012o", lcIndex, lcOffset, rw36.getW());
-//                            if (rw36._undefinedReferences.length == 0) {
-//                                System.out.println(gwBase);
-//                            } else {
-//                                for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
-//                                    System.out.println(String.format("%s %s",
-//                                                                     urx == 0 ? gwBase : "                           ",
-//                                                                     rw36._undefinedReferences[urx].toString()));
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
             }
         }
     }
@@ -417,11 +395,9 @@ public class Assembler {
                                     context.getCurrentLocation());
         }
 
-        //TODO implement fp and string value handling
-
         if (firstValue instanceof FloatingPointValue) {
             FloatingPointValue fpValue = (FloatingPointValue) firstValue;
-            //TODO here
+            //TODO implement floating point handling
             if (operandField._subfields.size() > 1) {
                 Locale loc = operandField._subfields.get(1)._locale;
                 context.appendDiagnostic(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
@@ -432,10 +408,22 @@ public class Assembler {
 
         if (firstValue instanceof StringValue) {
             StringValue sValue = (StringValue) firstValue;
-            //TODO and here
+
             if (operandField._subfields.size() > 1) {
                 Locale loc = operandField._subfields.get(1)._locale;
                 context.appendDiagnostic(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
+            }
+
+            if (sValue._characterMode == CharacterMode.ASCII) {
+                Word36Array wordArray = Word36Array.stringToWord36ASCII(sValue._value);
+                context.generate(operandField._locale.getLineSpecifier(),
+                                 context.getCurrentGenerationLCIndex(),
+                                 wordArray.getValues());
+                return true;
+            } else if (sValue._characterMode == CharacterMode.Fieldata) {
+                Word36Array wordArray = Word36Array.stringToWord36Fieldata(sValue._value);
+            } else {
+                //TODO internal error
             }
 
             return true;
@@ -911,11 +899,13 @@ public class Assembler {
      * etc.
      * Also, we support all the fields in the text line beyond the label field...
      * @param context parent context
+     * @param procedureName name of the procedure being invoked
      * @param procedureValue indicates the procedure to be invoked
      * @param textLine the parsed code from which we build the parameter list
      */
     private void processProcedure(
         final Context context,
+        final String procedureName,
         final ProcedureValue procedureValue,
         final TextLine textLine
     ) {
@@ -923,11 +913,11 @@ public class Assembler {
 
         NodeValue mainNode = new NodeValue(false);
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
+            NodeValue subNode = new NodeValue(false);
+            mainNode.setValue(new IntegerValue(false, fx - 1, null), subNode);
             TextField field = textLine._fields.get(fx);
             for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
                 TextSubfield subField = field._subfields.get(sfx);
-                NodeValue subNode = new NodeValue(false);
-                mainNode.setValue(new IntegerValue(false, fx - 1, null), subNode);
                 if ((fx == 1) && (sfx == 0)) {
                     //  This is the proc name - handle it accordingly (no expression evaluation)
                     subNode.setValue(_zeroValue, new StringValue(false, subField._text, CharacterMode.ASCII));
@@ -947,7 +937,7 @@ public class Assembler {
             }
         }
 
-        mainNode.emitNodeTree("");//TODO testing
+        subContext.getDictionary().addValue(0, procedureName, mainNode);
         for (TextLine procTextLine : procedureValue._source) {
             assembleTextLine(subContext, procTextLine);
         }

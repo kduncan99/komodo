@@ -716,22 +716,23 @@ public class Word36 {
      * Populates this object with quarter-words derived from the ASCII characters in the source string.
      * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
      * Any characters in the string beyond the fourth are ignored.
-     * <p>
-     * @param source
-     * <p>
-     * @return
+     * @param source string to be converted
+     * @return converted data
      */
     public static Word36 stringToWord36ASCII(
         final String source
     ) {
-        Word36 w = new Word36(0_040_040_040_040l);
+        Word36 w = new Word36(0_040_040_040_040L);
         switch (source.length() > 4 ? 4 : source.length()) {
             case 4:
                 w.setQ4(source.charAt(3) & 0xff);
+                //  fall thru
             case 3:
                 w.setQ3(source.charAt(2) & 0xff);
+                //  fall thru
             case 2:
                 w.setQ2(source.charAt(1) & 0xff);
+                //  fall thru
             case 1:
                 w.setQ1(source.charAt(0) & 0xff);
         }
@@ -743,26 +744,29 @@ public class Word36 {
      * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
      * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
      * blanks as necessary. Any characters in the string beyond the sixth are ignored.
-     * <p>
-     * @param source
-     * <p>
-     * @return
+     * @param source string to be converted
+     * @return converted data
      */
     public static Word36 stringToWord36Fieldata(
         final String source
     ) {
-        Word36 w = new Word36(0_050505_050505l);
+        Word36 w = new Word36(0_050505_050505L);
         switch (source.length() > 6 ? 6 : source.length()) {
             case 6:
                 w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
+                //  fall thru
             case 5:
                 w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
+                //  fall thru
             case 4:
                 w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
+                //  fall thru
             case 3:
                 w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
+                //  fall thru
             case 2:
                 w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
+                //  fall thru
             case 1:
                 w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
         }

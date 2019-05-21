@@ -57,7 +57,25 @@ public class NodeValue extends Value {
     public NodeValue copy(
         final boolean newFlagged
     ) {
-        return new NodeValue(newFlagged);
+        NodeValue newValue = new NodeValue(newFlagged);
+        newValue._values.putAll(_values);
+        return newValue;
+    }
+
+    /**
+     * Removes a value given a selector
+     * @param key selector key
+     * @throws NotFoundException if the key is not a selector
+     */
+    public void deleteValue(
+        final Value key
+    ) throws NotFoundException {
+        Value value = _values.get(key);
+        if (value == null) {
+            throw new NotFoundException();
+        } else {
+            _values.remove(key);
+        }
     }
 
     /**
@@ -121,6 +139,53 @@ public class NodeValue extends Value {
     }
 
     /**
+     * Retrieves the value associated with a given selector
+     * @param selectorValue chosen selector value
+     * @return value associated with the selector
+     * @throws NotFoundException if we don't have a value for the selector
+     */
+    public Value getValue(
+        final Value selectorValue
+    ) throws NotFoundException {
+        Value value = _values.get(selectorValue);
+        if (value == null) {
+            throw new NotFoundException();
+        } else {
+            return value;
+        }
+    }
+
+    @Override
+    public int hashCode(
+    ) {
+        int code = _flagged ? 0x40000000 : 0;
+        for (Value v : _values.keySet()) {
+            code ^= v.hashCode();
+        }
+        return code;
+    }
+
+    /**
+     * Retrieve number of entities subordinate to this node
+     * @return value
+     */
+    public int getValueCount() {
+        return _values.size();
+    }
+
+    /**
+     * Establishes or replaces a value for a given selector
+     * @param key selector key
+     * @param value value associated with this key
+     */
+    public void setValue(
+        final Value key,
+        final Value value
+    ) {
+        _values.put(key, value);
+    }
+
+    /**
      * Transform the value to an FloatingPointValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param diagnostics where we post any necessary diagnostics
@@ -151,6 +216,16 @@ public class NodeValue extends Value {
     }
 
     /**
+     * For display purposes
+     * @return displayable string
+     */
+    @Override
+    public String toString(
+    ) {
+        return String.format("%s<node>", _flagged ? "*" : "");
+    }
+
+    /**
      * Transform the value to a StringValue, if possible
      * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
      * @param diagnostics where we post any necessary diagnostics
@@ -164,60 +239,5 @@ public class NodeValue extends Value {
         Diagnostics diagnostics
     ) throws TypeException {
         throw new TypeException();
-    }
-
-    /**
-     * Retrieves the value associated with a given selector
-     * @param selectorValue chosen selector value
-     * @return value associated with the selector
-     * @throws NotFoundException if we don't have a value for the selector
-     */
-    public Value getValue(
-        final Value selectorValue
-    ) throws NotFoundException {
-        Value value = _values.get(selectorValue);
-        if (value == null) {
-            throw new NotFoundException();
-        } else {
-            return value;
-        }
-    }
-
-    /**
-     * Establishes or replaces a value for a given selector
-     * @param key selector key
-     * @param value value associated with this key
-     */
-    public void setValue(
-        final Value key,
-        final Value value
-    ) {
-        _values.put(key, value);
-    }
-
-    /**
-     * Removes a value given a selector
-     * @param key selector key
-     * @throws NotFoundException if the key is not a selector
-     */
-    public void deleteValue(
-        final Value key
-    ) throws NotFoundException {
-        Value value = _values.get(key);
-        if (value == null) {
-            throw new NotFoundException();
-        } else {
-            _values.remove(key);
-        }
-    }
-
-    /**
-     * For display purposes
-     * @return displayable string
-     */
-    @Override
-    public String toString(
-    ) {
-        return String.format("%s<node>", _flagged ? "*" : "");
     }
 }

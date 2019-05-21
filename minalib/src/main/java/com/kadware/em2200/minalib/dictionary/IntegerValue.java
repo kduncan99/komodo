@@ -97,11 +97,22 @@ public class IntegerValue extends Value {
         }
 
         //  This check isn't quite right, but it's close enough
-        if (!Arrays.equals(iobj._undefinedReferences, _undefinedReferences)) {
-            return false;
+        if ((iobj._undefinedReferences != null) && (_undefinedReferences != null)) {
+            if (!Arrays.equals(iobj._undefinedReferences, _undefinedReferences)) {
+                return false;
+            }
         }
 
         return _value == iobj._value;
+    }
+
+    /**
+     * Generate hash code
+     * @return
+     */
+    @Override
+    public int hashCode() {
+        return (int)(_value * 31);
     }
 
     /**

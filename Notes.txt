@@ -7,6 +7,7 @@ May as well support them on LHS (as labels) as well as RHS
 
 -- TODO
 BUG: NOP isn't being handled correctly by mina...
+minalib unit tests for node references and assignments
 minalib need to put partial-words into the dictionary
 minalib use UndefinedReferenceDiagnostic for urefs
 minalib use DiagnosticDirective for stuff

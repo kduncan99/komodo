@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.minalib.expressions.com.kadware.em2200.minalib.expressions.items;
+package com.kadware.em2200.minalib.expressions.items;
 
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.dictionary.Value;
