@@ -183,9 +183,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          NOP       0",
             "          LXM,U     X5,3",
             "          LXI,U     X5,1",
-            //TODO fix minalib to handle JK properly - for now, we'll hard code that dang thing
-//            "          JK        TARGET,*X5 . Will not jump, will drop through",
-            "          $GFORM 6,074,4,04,4,01,4,X5,1,1,1,0,16,TARGET+3",
+            "          JK        TARGET,*X5 . Will not jump, will drop through",
             "",
             "TARGET",
             "          HALT      0",
@@ -197,7 +195,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          HALT      6",
             };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
         assert(absoluteModule != null);
 
         ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
@@ -404,11 +402,10 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
 
         startAndWait(ip);
 
-        showDebugInfo(new Processors(ip, msp));//TODO
         InventoryManager.getInstance().deleteProcessor(ip.getUPI());
         InventoryManager.getInstance().deleteProcessor(msp.getUPI());
 
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());//TODO  breaks here
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
         assertEquals(01016, ip.getLatestStopDetail());
     }
 
@@ -473,8 +470,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "$(1),START$*",
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
-            //TODO minalib needs an SLJ proc to deal with this- hard code for now
-//            "          SLJ       SUBROUTINE",
+            "          SLJ       SUBROUTINE",
             "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
             "          LA,U      A1,5         . change A1 value post-subroutine",
             "          HALT      0            . done",
@@ -959,7 +955,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "",
             "BAD1      HALT      077",
             "BAD2      HALT      076",
-            };
+        };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, true);
         assert(absoluteModule != null);

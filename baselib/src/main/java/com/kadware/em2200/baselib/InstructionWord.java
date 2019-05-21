@@ -682,7 +682,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   045, 000, 000, false, false, true,  true,  ASemantics.A,     "TOP",   false),
         new InstructionInfo(Mode.EITHER,   046, 000, 000, false, false, true,  true,  ASemantics.X,     "LXI",   false),
         new InstructionInfo(Mode.EITHER,   047, 000, 000, false, false, true,  true,  ASemantics.A,     "TLEM",  false),
+
+        //  The first one is for the assembler, which needs a specific A field
+        new InstructionInfo(Mode.BASIC,    050, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TZ",    false),
         new InstructionInfo(Mode.BASIC,    050, 000, 000, false, false, true,  true,  ASemantics.NONE,  "TZ",    false),
+
         new InstructionInfo(Mode.EXTENDED, 050, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TNOP",  false),
         new InstructionInfo(Mode.EXTENDED, 050, 000, 001, false, true,  true,  true,  ASemantics.NONE,  "TGZ",   false),
         new InstructionInfo(Mode.EXTENDED, 050, 000, 002, false, true,  true,  true,  ASemantics.NONE,  "TPZ",   false),
@@ -699,7 +703,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EXTENDED, 050, 000, 015, false, true,  true,  true,  ASemantics.NONE,  "TNPZ",  false),
         new InstructionInfo(Mode.EXTENDED, 050, 000, 016, false, true,  true,  true,  ASemantics.NONE,  "TNGZ",  false),
         new InstructionInfo(Mode.EXTENDED, 050, 000, 017, false, true,  true,  true,  ASemantics.NONE,  "TSKP",  false),
-        new InstructionInfo(Mode.BASIC,    051, 000, 000, false, false, true,  true,  ASemantics.NONE,  "TNX",   false),
+
+        //  The first one is for the assembler, which needs a specific A field
+        new InstructionInfo(Mode.BASIC,    051, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TNZ",   false),
+        new InstructionInfo(Mode.BASIC,    051, 000, 000, false, false, true,  true,  ASemantics.NONE,  "TNZ",   false),
+
         new InstructionInfo(Mode.EXTENDED, 051, 000, 000, false, false, true,  true,  ASemantics.X,     "LXSI",  false),
         new InstructionInfo(Mode.EITHER,   052, 000, 000, false, false, true,  true,  ASemantics.A,     "TE",    false),
         new InstructionInfo(Mode.EITHER,   053, 000, 000, false, false, true,  true,  ASemantics.A,     "TNE",   false),
@@ -707,9 +715,17 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   055, 000, 000, false, false, true,  true,  ASemantics.A,     "TG",    false),
         new InstructionInfo(Mode.EITHER,   056, 000, 000, false, false, true,  true,  ASemantics.A,     "TW",    false),
         new InstructionInfo(Mode.EITHER,   057, 000, 000, false, false, true,  true,  ASemantics.A,     "TNW",   false),
+
+        //  The first one is for the assembler, which needs a specific A field
+        new InstructionInfo(Mode.BASIC,    060, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TP",    false),
         new InstructionInfo(Mode.BASIC,    060, 000, 000, false, false, true,  true,  ASemantics.NONE,  "TP",    false),
+
         new InstructionInfo(Mode.EXTENDED, 060, 000, 000, false, false, true,  true,  ASemantics.X,     "LSBO",  false),
+
+        //  The first one is for the assembler, which needs a specific A field
+        new InstructionInfo(Mode.BASIC,    061, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TN",    false),
         new InstructionInfo(Mode.BASIC,    061, 000, 000, false, false, true,  true,  ASemantics.NONE,  "TN",    false),
+
         new InstructionInfo(Mode.EXTENDED, 061, 000, 000, false, false, true,  true,  ASemantics.X,     "LSBL",  false),
         new InstructionInfo(Mode.EITHER,   062, 000, 000, false, false, true,  true,  ASemantics.A,     "SE",    false),
         new InstructionInfo(Mode.EITHER,   063, 000, 000, false, false, true,  true,  ASemantics.A,     "SNE",   false),
@@ -742,7 +758,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   071, 015, 000, true,  false, true,  false, ASemantics.A,     "DLM",   false),
         new InstructionInfo(Mode.EITHER,   071, 016, 000, true,  false, false, false, ASemantics.A,     "DJZ",   true),
         new InstructionInfo(Mode.EITHER,   071, 017, 000, true,  false, true,  false, ASemantics.A,     "DTE",   false),
+
+        //  First line is for the assembler which needs a value for the a field
+        new InstructionInfo(Mode.BASIC,    072, 001, 000, true,  true,  false, false, ASemantics.NONE,  "SLJ",   false),
         new InstructionInfo(Mode.BASIC,    072, 001, 000, true,  false, false, false, ASemantics.NONE,  "SLJ",   false),
+
         new InstructionInfo(Mode.EITHER,   072, 002, 000, true,  false, false, false, ASemantics.A,     "JPS",   false),
         new InstructionInfo(Mode.EITHER,   072, 003, 000, true,  false, false, false, ASemantics.A,     "JNS",   false),
         new InstructionInfo(Mode.EITHER,   072, 004, 000, true,  false, true,  false, ASemantics.A,     "AH",    false),
@@ -822,7 +842,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   074, 002, 000, true,  false, false, false, ASemantics.A,     "JP",    true),
         new InstructionInfo(Mode.EITHER,   074, 003, 000, true,  false, false, false, ASemantics.A,     "JN",    true),
         new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  true,  false, false, ASemantics.NONE,  "J",	     true),	// a-field == 0
-        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  true,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+
+        //  First line is for the assembler which requires a specific A-field
+        new InstructionInfo(Mode.BASIC,    074, 004, 001, true,  true,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  true,  false, false, ASemantics.NONE,  "HJ",    true),	// a-field == 0
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  false, false, false, ASemantics.NONE,  "HKJ",   true),	// a-field > 0
         new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  false, true,  false, ASemantics.A,     "NOP",   false),

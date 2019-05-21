@@ -1,23 +1,25 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
-minalib support procs
-$END directive
-Need expressions to handle node references to support $PROC
-May as well support them on LHS (as labels) as well as RHS
+minalib unit tests for node references
+
+-- BUGS
+BUG: NOP isn't being handled correctly by mina...
+BUG: JK, and possibly all conditional jumps - if calculated U is out of limits we get reference violation
+  even if we don't take the jump - we shouldn't do this for not-jumping (I think, verify with express 2200)
 
 -- TODO
-BUG: NOP isn't being handled correctly by mina...
-minalib unit tests for node references and assignments
+baselib put TNGM in the table right after TLEM as an alias, so minalib can assemble it
+minalib unit tests for string value generation
+minalib support special form for JGD instruction
+minalib support node references on LHS of $EQU statements
 minalib need to put partial-words into the dictionary
 minalib use UndefinedReferenceDiagnostic for urefs
 minalib use DiagnosticDirective for stuff
-pick up the rest of the tests we need to do but haven't yet
-minalib microstrings... ?
-minalib generate system procs for special instructions such as JGD, BT, JK, SLJ, TZ, TNZ, TP, TN
-  except, for TZ, etc, we might get away with adjusting the table in InstructionWord...
+pick up the rest of the unit tests we need to do but haven't yet
+minalib do we need microstrings?
+minalib support special form for BT instruction
 minalib $USE (A.2.8) specifies base register to use if none given
 minalib add test cases for interrupts (many of them already marked TODO)
-minalib data generation - strings
 minalib float values - firm this up (how do we support it)
 minalib data generation - floats
 minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
@@ -37,6 +39,7 @@ minalib functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 minalib directives
+  $END directive on top-level code (do we require it?)
   $EQUF
   $USE (implicit base register)
   $INSERT (maybe)

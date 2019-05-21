@@ -170,48 +170,47 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //TODO need special code in assembler for this to work
-//    @Test
-//    public void testZeroBasic(
-//    ) throws MachineInterrupt,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "          $INFO 1 3",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      + 0",
-//            "          + 0777777777777",
-//            "          + 01",
-//            "",
-//            "$(1),START$*",
-//            "          TZ        DATA",
-//            "          HALT      077                 . this should be skipped",
-//            "",
-//            "          TZ        DATA+1",
-//            "          HALT      076                 . this should be skipped",
-//            "",
-//            "          TZ        DATA+2",
-//            "          J         TARGET1             . should not be skipped",
-//            "          HALT      075",
-//            "",
-//            "TARGET1",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//    }
+    @Test
+    public void testZeroBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TZ        DATA",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TZ        DATA+1",
+            "          HALT      076                 . this should be skipped",
+            "",
+            "          TZ        DATA+2",
+            "          J         TARGET1             . should not be skipped",
+            "          HALT      075",
+            "",
+            "TARGET1",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void testZeroExtended(
@@ -256,50 +255,49 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //TODO need special code in assembler for this to work
-//    @Test
-//    public void testNonZeroBasic(
-//    ) throws MachineInterrupt,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "          $INFO 1 3",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      + 0",
-//            "          + 0777777777777",
-//            "          + 01",
-//            "",
-//            "$(1),START$*",
-//            "          TNZ       DATA",
-//            "          J         TARGET2             . should not be skipped",
-//            "          HALT      074",
-//            "",
-//            "TARGET2",
-//            "          TNZ       DATA+1",
-//            "          J         TARGET3             . should not be skipped",
-//            "          HALT      073",
-//            "",
-//            "TARGET3",
-//            "          TNZ       DATA+2",
-//            "          HALT      072                 . should be skipped",
-//            "",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//    }
+    @Test
+    public void testNonZeroBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "          + 01",
+            "",
+            "$(1),START$*",
+            "          TNZ       DATA",
+            "          J         TARGET2             . should not be skipped",
+            "          HALT      074",
+            "",
+            "TARGET2",
+            "          TNZ       DATA+1",
+            "          J         TARGET3             . should not be skipped",
+            "          HALT      073",
+            "",
+            "TARGET3",
+            "          TNZ       DATA+2",
+            "          HALT      072                 . should be skipped",
+            "",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void testNonZeroExtended(
@@ -346,7 +344,6 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //TODO
     @Test
     public void testPosZeroExtended(
     ) throws MachineInterrupt,
@@ -439,7 +436,43 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //  TODO Need special assembler code for TP basic
+    @Test
+    public void testPosBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          TP        DATA",
+            "          HALT      077        . skipped",
+            "",
+            "          TP        DATA+1",
+            "          J         TARGET1    . not skipped",
+            "          HALT      076",
+            "",
+            "TARGET1",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void testPosExtended(
@@ -480,7 +513,42 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //TODO need special assember code for TN
+    @Test
+    public void testNegBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0",
+            "          + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          TN        DATA",
+            "          J         TARGET2    . not skipped",
+            "          HALT      075",
+            "",
+            "TARGET2",
+            "          TN        DATA+1",
+            "          HALT      074        . skipped",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void testNegExtended(
@@ -736,8 +804,6 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
-
-    //  TODO Need Basic *AND* Extended mode versions of all of the above
 
     //  TODO TLEM
     //  TODO TGZ
