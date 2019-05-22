@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.instructionProcessor.test;
+package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
 import com.kadware.em2200.hardwarelib.*;
 import static org.junit.Assert.*;

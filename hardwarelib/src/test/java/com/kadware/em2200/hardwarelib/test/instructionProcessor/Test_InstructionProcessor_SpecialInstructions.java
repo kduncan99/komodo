@@ -2,17 +2,14 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.instructionProcessor.test;
+package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
-import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import org.junit.Test;
 

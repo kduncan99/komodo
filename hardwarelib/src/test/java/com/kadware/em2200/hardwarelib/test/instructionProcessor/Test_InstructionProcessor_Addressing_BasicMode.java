@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.instructionProcessor.test;
+package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
 import com.kadware.em2200.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.*;
@@ -307,15 +307,15 @@ public class Test_InstructionProcessor_Addressing_BasicMode extends Test_Instruc
             "",
             "$(0)      $LIT",
             "DATA1",
-            "          NOP       0,*DATA2",
-            "          NOP       0,*DATA1+2",
-            "          NOP       0,*DATA1+3",
-            "          NOP       0,*DATA1+4",
-            "          NOP       0,DATA2+1",
+            "          NOP       *DATA2",
+            "          NOP       *DATA1+2",
+            "          NOP       *DATA1+3",
+            "          NOP       *DATA1+4",
+            "          NOP       DATA2+1",
             "",
             "$(2)",
             "DATA2",
-            "          NOP       0,*DATA1+1",
+            "          NOP       *DATA1+1",
             "          +         011,022,033,044,055,066",
             "",
             "$(1),START$*",

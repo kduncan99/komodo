@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
@@ -9,14 +9,12 @@ import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.functions.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -158,8 +156,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Constructor
-     * <p>
-     * @param name
+     * @param name node name
      * @param upi unique identifier for this processor
      */
     public InstructionProcessor(
@@ -187,129 +184,27 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Getter
-     * <p>
-     * @param index
-     * <p>
-     * @return
-     */
-    public BaseRegister getBaseRegister(
-        final int index
-    ) {
-        return _baseRegisters[index];
-    }
+    public BaseRegister getBaseRegister(final int index) { return _baseRegisters[index]; }
+    public boolean getBroadcastInterruptEligibility() { return _broadcastInterruptEligibility; }
+    public InstructionWord getCurrentInstruction() { return _currentInstruction; }
+    public RunMode getCurrentRunMode() { return _currentRunMode; }
+    public DesignatorRegister getDesignatorRegister() { return _designatorRegister; }
+    public boolean getDevelopmentMode() { return _developmentMode; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getBroadcastInterruptEligibility(
-    ) {
-        return _broadcastInterruptEligibility;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public InstructionWord getCurrentInstruction(
-    ) {
-        return _currentInstruction;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public RunMode getCurrentRunMode(
-    ) {
-        return _currentRunMode;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public DesignatorRegister getDesignatorRegister(
-    ) {
-        return _designatorRegister;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public boolean getDevelopmentMode(
-    ) {
-        return _developmentMode;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @param index GRS index
-     * <p>
-     * @return
-     * <p>
-     * @throws MachineInterrupt
-     */
     public GeneralRegister getGeneralRegister(
         final int index
     ) throws MachineInterrupt {
         if (!GeneralRegisterSet.isAccessAllowed(index, _designatorRegister.getProcessorPrivilege(), false)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
         }
-
         return _generalRegisterSet.getRegister(index);
     }
 
-    /**
-     * Getter
-     * @return reason for the latest stop
-     */
-    public StopReason getLatestStopReason(
-    ) {
-        return _latestStopReason;
-    }
+    public StopReason getLatestStopReason() { return _latestStopReason; }
+    public long getLatestStopDetail() { return _latestStopDetail; }
+    public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
+    public boolean getRunningFlag() { return _runningFlag; }
 
-    /**
-     * Getter
-     * @return detail for the latest stop
-     */
-    public long getLatestStopDetail(
-    ) {
-        return _latestStopDetail;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public ProgramAddressRegister getProgramAddressRegister(
-    ) {
-        return _programAddressRegister;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public boolean getRunningFlag(
-    ) {
-        return _runningFlag;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param index
-     * @param baseRegister
-     */
     public void setBaseRegister(
         final int index,
         final BaseRegister baseRegister
@@ -317,25 +212,8 @@ public class InstructionProcessor extends Processor implements Worker {
         _baseRegisters[index] = baseRegister;
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
-    public void setBroadcastInterruptEligibility(
-        final boolean flag
-    ) {
-        _broadcastInterruptEligibility = flag;
-    }
+    public void setBroadcastInterruptEligibility(final boolean flag) { _broadcastInterruptEligibility = flag; }
 
-    /**
-     * Setter
-     * <p>
-     * @param index
-     * @param value
-     * <p>
-     * @throws MachineInterrupt
-     */
     public void setGeneralRegister(
         final int index,
         final long value
@@ -343,43 +221,18 @@ public class InstructionProcessor extends Processor implements Worker {
         if (!GeneralRegisterSet.isAccessAllowed(index, _designatorRegister.getProcessorPrivilege(), true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
         }
-
         _generalRegisterSet.setRegister(index, value);
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
-    public void setJumpHistoryFullInterruptEnabled(
-        final boolean flag
-    ) {
-        _jumpHistoryFullInterruptEnabled = flag;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setProgramAddressRegister(
-        final long value
-    ) {
-        _programAddressRegister.setW(value);
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public void setJumpHistoryFullInterruptEnabled(final boolean flag) { _jumpHistoryFullInterruptEnabled = flag; }
+    public void setProgramAddressRegister(final long value) { _programAddressRegister.setW(value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private instance methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
+    /*
      * //TODO:Move this comment somewhere more appropriate
      * When an interrupt is raised and the IP recognizes such, it saves interrupt information and other machine state
      * information on the ICS (Interrupt Control Stack) and the Jump History table.  The Program Address Register is
@@ -439,10 +292,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Calculates the raw relative address (the U) for the current instruction.
      * Does NOT increment any x registers, even if their content contributes to the result.
-     * <p>
      * @param offset For multiple transfer instructions which need to calculate U for each transfer,
      *                  this value increments from zero upward by one.
-     * @return
+     * @return relative address for the current instruction
      */
     private int calculateRelativeAddressForGRSOrStorage(
         final int offset
@@ -484,9 +336,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Checks the given absolute address and comparison type against the breakpoint register to see whether
      * we should take a breakpoint.  Updates IKR appropriately.
-     * <p>
-     * @param comparison
-     * @param absoluteAddress
+     * @param comparison comparison type
+     * @param absoluteAddress absolute address to be compared
      */
     private void checkBreakpoint(
         final BreakpointComparison comparison,
@@ -505,9 +356,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * If an interrupt is pending, handle it.
      * If not, check certain conditions to see if one of several certain interrupt classes needs to be raised.
-     * <p>
      * @return true if we did something useful, else false
-     * <p>
      * @throws MachineInterrupt if we need to cause an interrupt to be raised
      */
     private boolean checkPendingInterrupts(
@@ -548,7 +397,6 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Creates a new entry in the jump history table.
      * If we cross the interrupt threshold, set the threshold-reached flag.
-     * <p>
      * @param value absolute address to be placed into the jump history table
      */
     private void createJumpHistoryTableEntry(
@@ -568,9 +416,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Starts or continues the process of executing the instruction in _currentInstruction.
      * Don't call this if IKR.INF is not set.
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if a basic mode indirect address is not entirely resolved
      */
     protected void executeInstruction(
     ) throws MachineInterrupt,
@@ -606,8 +453,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Diverts code to either the basic mode or extended mode fetch handler
-     * <p>
-     * @throws MachineInterrupt
+     * @throws MachineInterrupt if an interrupt needs to be raised
      */
     private void fetchInstruction(
     ) throws MachineInterrupt {
@@ -622,8 +468,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Fetches the next instruction based on the current program address register,
      * and places it in the current instruction register -- for basic mode.
-     * <p>
-     * @throws MachineInterrupt
+     * @throws MachineInterrupt if an interrupt needs to be raised
      */
     private void fetchInstructionBasicMode(
     ) throws MachineInterrupt {
@@ -674,9 +519,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Fetches the next instruction based on the current program address register,
-     * and placces it in the current instruction register -- for extended mode.
-     * <p>
-     * @throws MachineInterrupt
+     * and places it in the current instruction register -- for extended mode.
+     * @throws MachineInterrupt if an interrupt needs to be raised
      */
     private void fetchInstructionExtendedMode(
     ) throws MachineInterrupt {
@@ -715,10 +559,8 @@ public class InstructionProcessor extends Processor implements Worker {
      * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
      * are to be selected for that address.
      * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
-     * <p>
      * @param relativeAddress relative address for which we search for a containing bank
      * @param updateDB31 set true to update DB31 if we cross primary/secondary bank pairs
-     * <p>
      * @return the bank register index for the bank which contains the given relative address if found,
      *          else zero if the address is not within any based bank limits.
      */
@@ -751,12 +593,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Locates the index of the base register which represents the bank which contains the given relative address.
      * Does appropriate limits checking.  Delegates to the appropriate basic or extended mode implementation.
-     * <p>
      * @param relativeAddress relative address to be considered
      * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
-     * <p>
-     * @return
-     * <p>
+     * @return base register index
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
@@ -784,12 +623,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Locates the index of the base register which represents the bank which contains the given relative address.
      * Does appropriate limits checking.
-     * <p>
      * @param relativeAddress relative address to be considered
      * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
-     * <p>
-     * @return
-     * <p>
+     * @return base register index
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
@@ -853,14 +689,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Locates the index of the base register which represents the bank which contains the given relative address.
      * Does appropriate limits checking.
-     * <p>
      * @param relativeAddress relative address to be considered
      * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
-     * <p>
      * @return generated relative address.
-     * <p>
-     * @return
-     * <p>
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      */
@@ -889,8 +720,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * using the designator bit to indicate whether to use exec or user banks,
      * and whether we are using the I bit to extend the B field.
      * (Exec base registers are B16-B31).
-     * <p>
-     * @return
+     * @return base register index
      */
     private int getEffectiveBaseRegisterIndex(
     ) {
@@ -906,10 +736,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves the AccessPermissions object applicable for the bank described by the given baseRegister,
      * within the context of our current key/ring.
-     * <p>
-     * @param baseRegister
-     * <p>
-     * @return
+     * @param baseRegister base register of interest
+     * @return access permissions object
      */
     private AccessPermissions getEffectivePermissions(
         final BaseRegister baseRegister
@@ -932,11 +760,9 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Retrieves the GRS index of the exec or user register indicated by the register index...
-     * i.e., registerIndex == 0 returns the GRS index for either R0 or ER0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * e.g., registerIndex == 0 returns the GRS index for either R0 or ER0, depending on the designator register.
+     * @param registerIndex R register index of interest
+     * @return GRS index
      */
     private int getExecOrUserRRegisterIndex(
         final int registerIndex
@@ -946,11 +772,9 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Retrieves the GRS index of the exec or user register indicated by the register index...
-     * i.e., registerIndex == 0 returns the GRS index for either X0 or EX0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * e.g., registerIndex == 0 returns the GRS index for either X0 or EX0, depending on the designator register.
+     * @param registerIndex X register index of interest
+     * @return GRS index
      */
     private int getExecOrUserXRegisterIndex(
         final int registerIndex
@@ -960,8 +784,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the current pending interrupt.  Do not call if no interrupt is pending.
-     * <p>
-     * @throws MachineInterrupt
+     * @throws MachineInterrupt if some other interrupt needs to be raised
      */
     private void handleInterrupt(
     ) throws MachineInterrupt {
@@ -1104,10 +927,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Checks a base register to see if we can execute within it, given our current key/ring
-     * <p>
-     * @param baseRegister
-     * <p>
-     * @return
+     * @param baseRegister register of interest
+     * @return true if we have execute permission for the bank based on the given register
      */
     private boolean isExecuteAllowed(
         final BaseRegister baseRegister
@@ -1117,10 +938,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Checks a base register to see if we can read from it, given our current key/ring
-     * <p>
-     * @param baseRegister
-     * <p>
-     * @return
+     * @param baseRegister register of interest
+     * @return true if we have read permission for the bank based on the given register
      */
     private boolean isReadAllowed(
         final BaseRegister baseRegister
@@ -1131,11 +950,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Indicates whether the given offset is within the addressing limits of the bank based on the given register.
      * If the bank is void, then the offset is clearly not within limits.
-     * <p>
-     * @param baseRegister
-     * @param offset
-     * <p>
-     * @return
+     * @param baseRegister register of interest
+     * @param offset address offset
+     * @return true if the address is within the limits of the bank based on the given register
      */
     private boolean isWithinLimits(
         final BaseRegister baseRegister,
@@ -1148,10 +965,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Checks a base register to see if we can write to it, given our current key/ring
-     * <p>
-     * @param baseRegister
-     * <p>
-     * @return
+     * @param baseRegister register of interest
+     * @return true if we have write permission for the bank based on the given register
      */
     private boolean isWriteAllowed(
         final BaseRegister baseRegister
@@ -1163,8 +978,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * Loads the program counter from the value at u, presumably as part of a jump instruction.
      * Sets the prevent PC Increment flag, since PAR.PC will have the value we want, and we don't want it
      * auto-incremented.  For Extended Mode.
-     * <p>
-     * @param effectiveU
+     * @param effectiveU value to be loaded into the PAR
      */
     private void loadProgramCounterExtendedMode(
         final int effectiveU
@@ -1178,8 +992,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * If no other interrupt is pending, or the new interrupt is of a higher priority,
      * set the new interrupt as the pending interrupt.  Any lower-priority interrupt is dropped or ignored.
-     * <p>
-     * @param interrupt
+     * @param interrupt interrupt of interest
      */
     private void raiseInterrupt(
         final MachineInterrupt interrupt
@@ -1192,14 +1005,12 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Set a storage lock for the given absolute address.
-     * <p>
      * If this IP already has locks, we die horribly - this is how we avoid internal deadlocks
      * If the address is already locked by any other IP, then we wait until it is not.
      * Then we lock it to this IP.
-     * <p>
-     * @param absAddress
+     * @param absAddress absolute address of interest
      */
-    public void setStorageLock(
+    private void setStorageLock(
         final AbsoluteAddress absAddress
     ) {
         synchronized(_storageLocks) {
@@ -1210,9 +1021,9 @@ public class InstructionProcessor extends Processor implements Worker {
         while (!done) {
             synchronized(_storageLocks) {
                 boolean okay = true;
-                Iterator it = _storageLocks.entrySet().iterator();
+                Iterator<Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>>> it = _storageLocks.entrySet().iterator();
                 while (okay && it.hasNext()) {
-                    Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>> pair = (Map.Entry)it.next();
+                    Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>> pair = it.next();
                     InstructionProcessor ip = pair.getKey();
                     HashSet<AbsoluteAddress> lockedAddresses = pair.getValue();
                     if (ip != this) {
@@ -1237,10 +1048,9 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * As above, but for multiple addresses.
-     * <p>
-     * @param absAddresses
+     * @param absAddresses array of addresses
      */
-    public void setStorageLocks(
+    private void setStorageLocks(
         final AbsoluteAddress[] absAddresses
     ) {
         synchronized(_storageLocks) {
@@ -1251,9 +1061,9 @@ public class InstructionProcessor extends Processor implements Worker {
         while (!done) {
             synchronized(_storageLocks) {
                 boolean okay = true;
-                Iterator it = _storageLocks.entrySet().iterator();
+                Iterator<Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>>> it = _storageLocks.entrySet().iterator();
                 while (okay && it.hasNext()) {
-                    Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>> pair = (Map.Entry)it.next();
+                    Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>> pair = it.next();
                     InstructionProcessor ip = pair.getKey();
                     HashSet<AbsoluteAddress> lockedAddresses = pair.getValue();
                     if (ip != this) {
@@ -1388,12 +1198,10 @@ public class InstructionProcessor extends Processor implements Worker {
      * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
      * We presume we are retrieving from GRS or from storage - i.e., NOT allowing immediate addressing.
      * Also, we presume that we are doing full-word transfers - no partial word.
-     * <p>
      * @param grsCheck true if we should check U to see if it is a GRS location
      * @param operands Where we store the resulting operands - the length of this array defines how many operands we retrieve
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
      */
     public void getConsecutiveOperands(
         final boolean grsCheck,
@@ -1463,10 +1271,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves a reference to the GeneralRegister indicated by the register index...
      * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * @param registerIndex A register index of interest
+     * @return GRS register
      */
     public GeneralRegister getExecOrUserARegister(
         final int registerIndex
@@ -1477,10 +1283,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves the GRS index of the exec or user register indicated by the register index...
      * i.e., registerIndex == 0 returns the GRS index for either A0 or EA0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * @param registerIndex A register index of interest
+     * @return GRS register index
      */
     public int getExecOrUserARegisterIndex(
         final int registerIndex
@@ -1491,10 +1295,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves a reference to the GeneralRegister indicated by the register index...
      * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * @param registerIndex R register index of interest
+     * @return GRS register
      */
     public GeneralRegister getExecOrUserRRegister(
         final int registerIndex
@@ -1505,10 +1307,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves a reference to the IndexRegister indicated by the register index...
      * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
-     * <p>
-     * @param registerIndex
-     * <p>
-     * @return
+     * @param registerIndex X register index of interest
+     * @return GRS register
      */
     public IndexRegister getExecOrUserXRegister(
         final int registerIndex
@@ -1528,8 +1328,7 @@ public class InstructionProcessor extends Processor implements Worker {
      *      For Extended Mode, with Processor Privilege 0,1 and DR.11 set, index modifiers are 24 bits; otherwise, they are 18 bits.
      *      For Basic Mode, index modifiers are always 18 bits.
      * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
-     * <p>
-     * @return
+     * @return immediate operand value
      */
     public long getImmediateOperand(
     ) {
@@ -1547,7 +1346,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             if ((_currentInstruction.getJ() == 017) && ((value & 0400000) != 0)) {
-                value |= 0_777777_000000l;
+                value |= 0_777777_000000L;
             }
 
         } else {
@@ -1578,14 +1377,14 @@ public class InstructionProcessor extends Processor implements Worker {
         //  Truncate the result to the proper size, then sign-extend if appropriate to do so.
         boolean extend = _currentInstruction.getJ() == 017;
         if (valueIs24Bits) {
-            value &= 077_777777l;
-            if (extend && (value & 040_000000l) != 0) {
-                value |= 0_777700_000000l;
+            value &= 077_777777L;
+            if (extend && (value & 040_000000L) != 0) {
+                value |= 0_777700_000000L;
             }
         } else {
-            value &= 0_777777l;
+            value &= 0_777777L;
             if (extend && (value & 0_400000) != 0) {
-                value |= 0_777777_000000l;
+                value |= 0_777777_000000L;
             }
         }
 
@@ -1596,11 +1395,9 @@ public class InstructionProcessor extends Processor implements Worker {
      * See getImmediateOperand() above.
      * This is similar, however the calculated U field is only ever 16 or 18 bits, and is never sign-extended.
      * Also, we do not rely upon j-field for anything, as that has no meaning for jump instructions.
-     * <p>
-     * @return
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @return jump operand value
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
      */
     public int getJumpOperand(
     ) throws MachineInterrupt,
@@ -1621,14 +1418,11 @@ public class InstructionProcessor extends Processor implements Worker {
      * The general case of retrieving an operand, including all forms of addressing and partial word access.
      * Instructions which use the j-field as part of the function code will likely set allowImmediate and
      * allowPartial false.
-     * <p>
      * @param grsDestination true if we are going to put this value into a GRS location
      * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
      * @param allowImmediate true if we should allow immediate addressing
      * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
-     * <p>
-     * @return
-     * <p>
+     * @return operand value
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
@@ -1702,12 +1496,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Retrieves a partial-word operand from storage, depending upon the values of jField and quarterWordMode.
      * This is never a GRS reference, nor immediate (nor a jump or shift, for that matter).
-     * <p>
      * @param jField not necessarily from j-field, this indicates the partial word to be stored
      * @param quarterWordMode needs to be set true for storing quarter words
-     * <p>
-     * @return
-     * <p>
+     * @return operand value
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
@@ -1760,14 +1551,11 @@ public class InstructionProcessor extends Processor implements Worker {
      * The general case of incrementing an operand by some value, including all forms of addressing and partial word access.
      * Instructions which use the j-field as part of the function code will likely set allowPartial false.
      * Sets carry and overflow designators if appropriate.
-     * <p>
      * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
      * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
      * @param incrementValue how much we increment storage by - positive or negative, but always ones-complement
      * @param twosComplement true to use twos-complement arithmetic - otherwise use ones-complement
-     * <p>
      * @return true if either the starting or ending value of the operand is +/- zero
-     * <p>
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
      * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
@@ -1883,9 +1671,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Updates PAR.PC and sets the prevent-increment flag according to the given parameters.
      * Used for simple jump instructions.
-     * <p>
-     * @param counter
-     * @param preventIncrement
+     * @param counter program counter value
+     * @param preventIncrement true to set the prevent-increment flag
      */
     public void setProgramCounter(
         final int counter,
@@ -1897,9 +1684,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * For handlers to set a particular register.  We do no access checking here.
-     * <p>
-     * @param grsIndex
-     * @param value
+     * @param grsIndex GRS index of the register in question
+     * @param value value to be set
      */
     public void setRegisterValue(
         final int grsIndex,
@@ -1913,12 +1699,13 @@ public class InstructionProcessor extends Processor implements Worker {
      * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
      * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
      * We presume that we are doing full-word transfers - no partial word.
-     * <p>
      * @param grsCheck true if we should check U to see if it is a GRS location
      * @param operands The operands to be stored
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
      */
     public void storeConsecutiveOperands(
         final boolean grsCheck,
@@ -1987,15 +1774,16 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * General case of storing an operand either to storage or to a GRS location
-     * <p>
      * @param grsSource true if the value came from a register, so we know whether we need to ignore partial-word transfers
      * @param grsCheck true if relative addresses < 0200 should be considered GRS locations
      * @param checkImmediate true if we should consider j-fields 016 and 017 as immediate addressing (and throw away the operand)
      * @param allowPartial true if we should allow partial-word transfers (subject to GRS-GRS transfers)
      * @param operand value to be stored (36 bits significant)
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
      */
     public void storeOperand(
         final boolean grsSource,
@@ -2064,13 +1852,14 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Stores the right-most bits of an operand to a partial word in storage.
-     * <p>
      * @param operand value to be stored (up to 36 bits significant)
      * @param jField not necessarily from j-field, this indicates the partial word to be stored
      * @param quarterWordMode needs to be set true for storing quarter words
-     * <p>
-     * @throws MachineInterrupt
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
      */
     public void storePartialOperand(
         final long operand,
@@ -2102,12 +1891,13 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Updates S1 of a lock word under storage lock.
      * Does *NOT* increment the x-register in F0 (if specified), even if the h-bit is set.
-     * <p>
      * @param flag if true, we expect the lock to be clear, and we set it.
      *              if false, we expect the lock to be set, and we clear it.
-     * <p>
-     * @throws MachineInterrupt for general errors, TestAndSetInterrupt of the lock is already in the state indicated by flag
-     * @throws UnresolvedAddressException
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
      */
     //TODO do we need to synchronize on something here?
     public void testAndStore(
@@ -2158,15 +1948,13 @@ public class InstructionProcessor extends Processor implements Worker {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public instance methods (for real)
+    //  Public instance methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * IPs have no ancestors
-     * <p>
-     * @param ancestor
-     * <p>
-     * @return
+     * @param ancestor proposed ancestor node
+     * @return false always
      */
     @Override
     public boolean canConnect(
@@ -2177,8 +1965,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * For debugging
-     * <p>
-     * @param writer
+     * @param writer where we write the dump
      */
     @Override
     public void dump(
@@ -2194,7 +1981,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Worker interface implementation
-     * <p>
      * @return our node name
      */
     @Override
@@ -2220,14 +2006,13 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Invoked when any other node decides to signal us
-     * <p>
-     * @param source
+     * @param source node from which the signal came
      */
     @Override
     public void signal(
         final Node source
     ) {
-        //  anything to do here?
+        //TODO IPL interrupts
     }
 
     /**
@@ -2254,10 +2039,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * Stops the processor.
      * More accurately, it puts the worker thread into not-running state, such that it no longer processes instructions.
      * Rather, it will simply sleep until such time as it is placed back into running state.
-     * <p>
-     * This version is for stops with additional detail
-     * <p>
-     * @param stopReason
+     * @param stopReason enumeration indicating the reason for the stop
      * @param detail 36-bit word further describing the stop reason
      */
     public void stop(
@@ -2309,12 +2091,10 @@ public class InstructionProcessor extends Processor implements Worker {
      * Takes a 36-bit value as input, and returns a partial-word value depending upon
      * the partialWordIndicator (presumably taken from the j-field of an instruction)
      * and the quarterWordMode flag (presumably taken from the designator register).
-     * <p>
-     * @param source
-     * @param partialWordIndicator
-     * @param quarterWordMode
-     * <p>
-     * @return
+     * @param source 36-bit source word
+     * @param partialWordIndicator indicator of the desired partial word
+     * @param quarterWordMode true if we're in quarter word mode, else false
+     * @return partial word
      */
     private static long extractPartialWord(
         final long source,
@@ -2363,16 +2143,14 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Converts a relative address to an absolute address.
-     * <p>
-     * @param relativeAddress
-     * @param relativeAddress
-     *  <p>
-     * @throws MachineInterrupt
+     * @param baseRegister base register associated with the relative address
+     * @param relativeAddress address to be converted
+     * @return absolute address object
      */
     private static AbsoluteAddress getAbsoluteAddress(
         final BaseRegister baseRegister,
         final int relativeAddress
-    ) throws MachineInterrupt {
+    ) {
         short upi = baseRegister._baseAddress._upi;
         int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
@@ -2382,12 +2160,10 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Takes 36-bit values as original and new values, and injects the new value as a partial word of the original value
      * depending upon the partialWordIndicator (presumably taken from the j-field of an instruction).
-     * <p>
      * @param originalValue original value 36-bits significant
      * @param newValue new value right-aligned in a 6, 9, 12, 18, or 36-bit significant field
      * @param partialWordIndicator corresponds to the j-field of an instruction word
      * @param quarterWordMode true to do quarter-word mode transfers, false for third-word mode
-     * <p>
      * @return composite value with right-most significant bits of newValue replacing a partial word portion of the
      *          original value
      */
