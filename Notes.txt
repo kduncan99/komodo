@@ -1,12 +1,11 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
 minalib unit tests for node references
+minalib unit tests for test instructions (some are missing)
 
 -- BUGS
 
 -- TODO
-baselib put TNGM in the table right after TLEM as an alias, so minalib can assemble it
-  and add a unit test for it
 hardwarelib make sure TNOP instruction accesses the word at U even though it doesn't use it (see 6.7.4 of IP PRM)
 minalib need some conditional jump tests which would incur reference violation if they jumped
     both jumping and not jumping

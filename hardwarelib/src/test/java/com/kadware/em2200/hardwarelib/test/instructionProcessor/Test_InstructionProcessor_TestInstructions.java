@@ -805,7 +805,79 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //  TODO TLEM
+    @Test
+    public void testLessOrEqualToModifierBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "ARM       + 000135,0471234",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,2",
+            "          LXM,U     X5,061234",
+            "          TLEM      X5,ARM            . should not skip",
+            "          TNGM,S5   X5,ARM            . alias for TLEM, should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(2,processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
+        assertEquals(061240,processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+    }
+
+    @Test
+    public void testLessOrEqualToModifierExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "ARM       + 000135,0471234",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,2",
+            "          LXM,U     X5,061234",
+            "          TLEM      X5,ARM,,B2        . should not skip",
+            "          TNGM,S5   X5,ARM,,B2        . alias for TLEM, should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(2,processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
+        assertEquals(061240,processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+    }
+
     //  TODO TGZ
     //  TODO TMZG
     //  TODO TNLZ

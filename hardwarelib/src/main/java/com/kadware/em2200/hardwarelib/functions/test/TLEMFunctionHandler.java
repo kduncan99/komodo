@@ -35,8 +35,7 @@ public class TLEMFunctionHandler extends FunctionHandler {
         long uValue = (ip.getOperand(true, true, true, true) & 0_777777);
         long modValue = xreg.getXM();
         if (uValue <= modValue) {
-            int counter = (int)ip.getJumpOperand();
-            ip.setProgramCounter(counter, true);
+            ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
 
         if (!dr.getBasicModeEnabled() || (iw.getA() != iw.getX()) || (iw.getH() == 0)) {

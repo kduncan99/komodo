@@ -681,7 +681,10 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   044, 000, 000, false, false, true,  true,  ASemantics.A,     "TEP",   false),
         new InstructionInfo(Mode.EITHER,   045, 000, 000, false, false, true,  true,  ASemantics.A,     "TOP",   false),
         new InstructionInfo(Mode.EITHER,   046, 000, 000, false, false, true,  true,  ASemantics.X,     "LXI",   false),
-        new InstructionInfo(Mode.EITHER,   047, 000, 000, false, false, true,  true,  ASemantics.A,     "TLEM",  false),
+        new InstructionInfo(Mode.EITHER,   047, 000, 000, false, false, true,  true,  ASemantics.X,     "TLEM",  false),
+
+        //  TNGM is an alias for TLEM - we put it here for the assembler
+        new InstructionInfo(Mode.EITHER,   047, 000, 000, false, false, true,  true,  ASemantics.X,     "TNGM",  false),
 
         //  The first one is for the assembler, which needs a specific A field
         new InstructionInfo(Mode.BASIC,    050, 000, 000, false, true,  true,  true,  ASemantics.NONE,  "TZ",    false),
