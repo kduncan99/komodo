@@ -638,7 +638,8 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         //  Find the bank containing the current offset.
-        //  We don't need to check for storage limits, since this is done for us by findBasicModeBank().
+        //  We don't need to check for storage limits, since this is done for us by findBasicModeBank() in terms of
+        //  returning a zero.
         int brIndex = findBasicModeBank(relativeAddress, false);
         if (brIndex == 0) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
@@ -1409,8 +1410,36 @@ public class InstructionProcessor extends Processor implements Worker {
         //  then throw UnresolvedAddressException which will eventually route us back through here again, but this
         //  time with new address info (in reladdress), and we keep doing this until we're not doing indirect addressing.
         //  We never actually use the result of findBaseRegisterIndex...
-        findBaseRegisterIndex(relAddress, false);
-        incrementIndexRegisterInF0();
+        if (_designatorRegister.getBasicModeEnabled() && (_currentInstruction.getI() != 0)) {
+            int brIndex = findBasicModeBank(relAddress, false);
+            if (brIndex == 0) {
+                incrementIndexRegisterInF0();
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
+
+            BaseRegister bReg = _baseRegisters[brIndex];
+            incrementIndexRegisterInF0();
+            if (!isReadAllowed(bReg)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+            }
+
+            //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+            //  then throw UnresolvedAddressException so the caller knows we're not done here.
+            try {
+                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._offset);
+                _fbrAbsoluteAddress.addOffset(relAddress - bReg._lowerLimitNormalized);
+                long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
+                _currentInstruction.setXHIU(replacementValue);
+            } catch (AddressLimitsException
+                | UPINotAssignedException
+                | UPIProcessorTypeException ex) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
+
+            throw new UnresolvedAddressException();
+        } else {
+            incrementIndexRegisterInF0();
+        }
         return relAddress;
     }
 

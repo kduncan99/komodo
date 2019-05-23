@@ -77,7 +77,7 @@ public class Test_InstructionProcessor_SpecialInstructions extends Test_Instruct
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
         assertEquals(4, processors._instructionProcessor.getGeneralRegister(2).getH1());
-        assertEquals(2, processors._instructionProcessor.getGeneralRegister(2).getH2());
+        assertEquals(6, processors._instructionProcessor.getGeneralRegister(2).getH2());
     }
 
     @Test

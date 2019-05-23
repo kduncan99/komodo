@@ -11,7 +11,7 @@ import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JP instruction f=074 j=03
+ * Handles the JN instruction f=074 j=03
  */
 public class JNFunctionHandler extends FunctionHandler {
 

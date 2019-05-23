@@ -9,6 +9,7 @@ import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
+import com.kadware.em2200.hardwarelib.interrupts.ReferenceViolationInterrupt;
 
 /**
  * Handles the NOP instruction - extended mode f=073 j=014 a=00, basic mode f=074 j=06
@@ -22,6 +23,6 @@ public class NOPFunctionHandler extends FunctionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         //  TODO does this work as expected?
-        long operand = ip.getJumpOperand();
+        ip.getJumpOperand();
     }
 }

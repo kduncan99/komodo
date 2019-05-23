@@ -3,17 +3,13 @@ Lose unnecessary accessors (in progress)
 minalib unit tests for node references
 
 -- BUGS
-BUG: JK, and possibly all conditional jumps - if calculated U is out of limits we get reference violation
-  even if we don't take the jump - we shouldn't do this for not-jumping (I think, verify with express 2200)
-  this is due to the fact that index register incrementation happens during the big pile of address resolution
-  activities... and if we don't do the latter, we end up not doing the former either... and I *think* we
-  need to auto-increment X-registers whether we take the conditional jump or not.
-BUG: NOP does reference violations on the generated U but it shouldn't (see JK bug above)
 
 -- TODO
 baselib put TNGM in the table right after TLEM as an alias, so minalib can assemble it
+  and add a unit test for it
 hardwarelib make sure TNOP instruction accesses the word at U even though it doesn't use it (see 6.7.4 of IP PRM)
-minalib simplify jump unit tests
+minalib need some conditional jump tests which would incur reference violation if they jumped
+    both jumping and not jumping
 minalib unit tests for string value generation
 minalib support special form for JGD instruction
 minalib support special form for BT instruction
