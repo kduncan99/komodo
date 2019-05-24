@@ -1576,14 +1576,298 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //  TODO MTE
-    //  TODO MTNE
-    //  TODO MTLE
-    //  TODO MTG
-    //  TODO MTW
-    //  TODO MTNW
-    //  TODO MATL
-    //  TODO MATG
+    //  No MTE for basic mode
+
+    @Test
+    public void testMaskedTestEqualExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0253444123457",
+            "",
+            "$(1),START$*",
+            "          LR        R2,(0777000000001),,B2",
+            "          LA        A2,(0253012333403),,B2",
+            "          MTE       A2,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MTNE for basic mode
+
+    @Test
+    public void testMaskedTestNotEqualExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0253444123457",
+            "",
+            "$(1),START$*",
+            "          LR        R2,(0777000000001),,B2",
+            "          LA        A2,(0253012333403),,B2",
+            "          MTNE      A2,DATA,,B2       . should not skip",
+            "          HALT      0                 . should happen",
+            "          HALT      077               . should not happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MTLE for basic mode
+    //  MTNG is an alias for MTLE
+
+    @Test
+    public void testMaskedTestLessThanOrEqualExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "SIX       + 044444012034",
+            "",
+            "$(1),START$*",
+            "          LR,U      R2,077",
+            "          LA        A1,(0123456012345),,B2",
+            "          MTLE      A1,SIX,,B2        . should skip",
+            "          HALT      077               . should not happen",
+            "          MTNG      A1,SIX,,B2        . should skip",
+            "          HALT      076               . should not happen",
+            "          HALT      0                 . should stop here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MTG for basic mode
+
+    @Test
+    public void testMaskedTestGreaterExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 044444012034",
+            "",
+            "$(1),START$*",
+            "          LR,U      R2,077",
+            "          LA        A3,(0123456012345),,B2",
+            "          MTG       A3,DATA,,B2       . should not skip",
+            "          HALT      0                 . should stop here",
+            "          HALT      077               . should not happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MTW for basic mode
+
+    @Test
+    public void testMaskedTestWithinRangeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 066",
+            "",
+            "$(1),START$*",
+            "          LR,U      R2,45",
+            "          LA        A1,(012345000123),,B2",
+            "          LA        A2,(0115451234777),,B2",
+            "          MTW       A1,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should stop here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MTNW for basic mode
+
+    @Test
+    public void testMaskedTestNotWithinRangeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0711711",
+            "",
+            "$(1),START$*",
+            "          LR        R2,(0543321),,B2",
+            "          LA        A6,(01),,B2",
+            "          LA        A7,(0144),,B2",
+            "          MTNW      A6,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should stop here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MATL for basic mode
+
+    @Test
+    public void testMaskedAlphaTestLessThanOrEqualExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0311753276514",
+            "",
+            "$(1),START$*",
+            "          LR        R2,(0466123111111),,B2",
+            "          LA        A7,(0157724561),,B2",
+            "          MATL      A7,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should stop here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No MATG for basic mode
+
+    @Test
+    public void testMaskedAlphaTestGreaterExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0311753276514",
+            "",
+            "$(1),START$*",
+            "          LR        R2,(0466123111111),,B2",
+            "          LA        A7,(0157724561),,B2",
+            "          MATG      A7,DATA,,B2       . should not skip",
+            "          HALT      0                 . should stop here",
+            "          HALT      077               . should not happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void testAndSetBasic(
@@ -1806,6 +2090,9 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0_007777_777777L, bank[1]);
     }
 
-    //  TODO CR
+    //  TODO CR Basic
+    //  TODO CR Basic PP>0 (illegal op)
+    //  TODO CR Extended
+
     //  TODO Need at least a few test instructions where the operand access causes a reference violation
 }

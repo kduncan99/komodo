@@ -23,7 +23,7 @@ public class MATGFunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         //  Skip NI if ((U) AND R2) > (A(a) AND R2) - unsigned
 
-        long uValue = ip.getOperand(true, true, true, true);
+        long uValue = ip.getOperand(true, true, false, false);
         long aValue = ip.getExecOrUserARegister((int)iw.getA()).getW();
         long opMask = ip.getExecOrUserRRegister(2).getW();
 

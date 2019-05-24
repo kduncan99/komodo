@@ -22,8 +22,8 @@ public class MTNEFunctionHandler extends FunctionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         //  Skip NI if (U) AND R2 == A(a) AND R2
-        long op1 = ip.getExecOrUserARegisterIndex((int)iw.getA());
-        long op2 = ip.getOperand(true, true, true, true);
+        long op1 = ip.getExecOrUserARegister((int)iw.getA()).getW();
+        long op2 = ip.getOperand(true, true, false, false);
         long opMask = ip.getExecOrUserRRegister(2).getW();
 
         if ((op1 & opMask) != (op2 & opMask)) {

@@ -751,7 +751,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.BASIC,    071, 007, 000, true,  false, true,  false, ASemantics.A,     "MASG",  false),
         new InstructionInfo(Mode.EXTENDED, 071, 000, 000, true,  false, true,  false, ASemantics.A,     "MTE",   false),
         new InstructionInfo(Mode.EXTENDED, 071, 001, 000, true,  false, true,  false, ASemantics.A,     "MTNE",  false),
+
+        //  MTNG is an alias for MTLE
         new InstructionInfo(Mode.EXTENDED, 071, 002, 000, true,  false, true,  false, ASemantics.A,     "MTLE",  false),
+        new InstructionInfo(Mode.EXTENDED, 071, 002, 000, true,  false, true,  false, ASemantics.A,     "MTNG",  false),
+
         new InstructionInfo(Mode.EXTENDED, 071, 003, 000, true,  false, true,  false, ASemantics.A,     "MTG",   false),
         new InstructionInfo(Mode.EXTENDED, 071, 004, 000, true,  false, true,  false, ASemantics.A,     "MTW",   false),
         new InstructionInfo(Mode.EXTENDED, 071, 005, 000, true,  false, true,  false, ASemantics.A,     "MTNW",  false),

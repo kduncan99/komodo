@@ -24,7 +24,7 @@ public class MTWFunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         //  Skip NI if (A(a) AND R2) < ((U) AND R2) <= (A(a+1) AND R2)
 
-        long uValue = ip.getOperand(true, true, true, true);
+        long uValue = ip.getOperand(true, true, false, false);
         long aValueLow = ip.getExecOrUserARegister((int)iw.getA()).getW();
         long aValueHigh = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
         long opMask = ip.getExecOrUserRRegister(2).getW();
