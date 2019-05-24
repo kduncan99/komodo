@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -51,17 +51,20 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
 
     /**
      * Constructor
-     * <p>
-     * @param reason
-     * @param baseRegister
-     * @param relativeAddress
+     * @param reason reason code
+     * @param baseRegister base register involved in the stack operation
+     * @param relativeAddress relative address involved in the stack operation
      */
     public RCSGenericStackUnderflowOverflowInterrupt(
         final Reason reason,
         final int baseRegister,
         final int relativeAddress
     ) {
-        super(InterruptClass.Diagnostic, ConditionCategory.Fault, Synchrony.Pended, Deferrability.Exigent, InterruptPoint.MidExecution);
+        super(InterruptClass.RCSGenericStackUnderflowOverflow,
+              ConditionCategory.Fault,
+              Synchrony.Pended,
+              Deferrability.Exigent,
+              InterruptPoint.MidExecution);
         _reason = reason;
         _baseRegister = (byte)(baseRegister & 037);
         _relativeAddress = relativeAddress & 077777777;
@@ -72,41 +75,10 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public byte getBaseRegister(
-    ) {
-        return _baseRegister;
-    }
+    public byte getBaseRegister() { return _baseRegister; }
+    public Reason getReason() { return _reason; }
+    public int getRelativeAddress() { return _relativeAddress; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
-        return _reason;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public int getRelativeAddress(
-    ) {
-        return _relativeAddress;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public Word36 getInterruptStatusWord1(
     ) {
@@ -115,11 +87,6 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
         return result;
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public byte getShortStatusField(
     ) {

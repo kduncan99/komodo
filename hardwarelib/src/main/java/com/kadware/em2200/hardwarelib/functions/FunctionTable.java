@@ -12,6 +12,7 @@ import com.kadware.em2200.hardwarelib.functions.conditionalJump.*;
 import com.kadware.em2200.hardwarelib.functions.logical.*;
 import com.kadware.em2200.hardwarelib.functions.shift.*;
 import com.kadware.em2200.hardwarelib.functions.special.*;
+import com.kadware.em2200.hardwarelib.functions.stackManipulation.*;
 import com.kadware.em2200.hardwarelib.functions.systemControl.*;
 import com.kadware.em2200.hardwarelib.functions.test.*;
 import com.kadware.em2200.hardwarelib.functions.unconditionalJump.*;
@@ -544,8 +545,8 @@ public abstract class FunctionTable {
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION073_014_HANDLERS = {
         new NOPFunctionHandler(),   //  000
         null,           //  001
-        null,           //  002
-        null,           //  003
+        new BUYFunctionHandler(),   //  002
+        new SELLFunctionHandler(),  //  003
         null,           //  004
         null,           //  005
         null,           //  006

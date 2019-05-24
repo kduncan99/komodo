@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
@@ -8,7 +8,6 @@ import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.hardwarelib.misc.*;
 import static org.junit.Assert.*;
 
 import com.kadware.em2200.minalib.AbsoluteModule;
@@ -20,99 +19,37 @@ import org.junit.*;
 public class Test_InstructionProcessor_LogicalInstructions extends Test_InstructionProcessor {
 
     @Test
-    public void logicalOR(
+    public void logicalANDBasic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
+            "          $BASIC",
             "",
             "$(0)      $LIT",
             "$(1),START$*",
-            "          LA        A0,(0111111111111),,B2",
-            "          OR        A0,(0222222222222),,B2",
+            "          LA        A4,(0777777777123)",
+            "          AND,U     A4,0543321",
             "          HALT      0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0_111111_111111L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_333333_333333L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777777_777123L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_000000_543121L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
-    public void logicalXOR(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(0)      $LIT",
-            "$(1),START$*",
-            "          LA        A2,(0777000777000),,B2",
-            "          XOR,H1    A2,(0750750777777),,B2",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
-
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0_777000_777000L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_777000_027750L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
-    }
-
-    @Test
-    public void logicalAND(
+    public void logicalANDExtended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -130,35 +67,51 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
-
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
-
-        startAndWait(ip);
-
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0_777777_777123L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_000000_543121L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777777_777123L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_000000_543121L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
-    public void logicalMLU(
+    public void logicalMLUBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "$(1),START$*",
+            "          LA        A8,(0777777000000)",
+            "          LR        R2,(0707070707070)",
+            "          MLU       A8,(0000000777777)",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777777_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(0_070707_707070L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+    }
+
+    @Test
+    public void logicalMLUExtended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -177,30 +130,137 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        establishBankingEnvironment(ip, msp);
-        loadBanks(ip, msp, absoluteModule);
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777777_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(0_070707_707070L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+    }
 
-        DesignatorRegister dReg = ip.getDesignatorRegister();
-        dReg.setQuarterWordModeEnabled(true);
-        dReg.setBasicModeEnabled(false);
+    @Test
+    public void logicalORBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "$(1),START$*",
+            "          LA        A0,(0111111111111)",
+            "          OR        A0,(0222222222222)",
+            "          HALT      0",
+        };
 
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(absoluteModule._entryPointAddress);
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
 
-        startAndWait(ip);
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
-        InventoryManager.getInstance().deleteProcessor(ip.getUPI());
-        InventoryManager.getInstance().deleteProcessor(msp.getUPI());
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_111111_111111L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_333333L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
 
-        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
-        assertEquals(0, ip.getLatestStopDetail());
-        assertEquals(0_777777_000000L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(0_070707_707070L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
+    @Test
+    public void logicalORExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "$(1),START$*",
+            "          LA        A0,(0111111111111),,B2",
+            "          OR        A0,(0222222222222),,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_111111_111111L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_333333L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void logicalXORBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "$(1),START$*",
+            "          LA        A2,(0777000777000)",
+            "          XOR,H1    A2,(0750750777777)",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777000_777000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_777000_027750L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+    }
+
+    @Test
+    public void logicalXORExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "$(1),START$*",
+            "          LA        A2,(0777000777000),,B2",
+            "          XOR,H1    A2,(0750750777777),,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_777000_777000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_777000_027750L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 }

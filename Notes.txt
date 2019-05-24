@@ -1,6 +1,8 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
-minalib unit tests for node references
+hardwarelib stack manipulation instructions (and unit tests)
+  BUY
+  SELL
 
 -- BUGS
 
@@ -63,9 +65,6 @@ hardwarelib activity control instructions (and unit tests)
   ACEL
   DCEL
   SKQT
-hardwarelib stack manipulation instructions (and unit tests)
-  BUY
-  SELL
 hardwarelib interrupt control instructinos (and unit tests)
   ER
   SGNL
@@ -138,6 +137,7 @@ hardwarelib search and masked search instructions (and unit tests)
   MASG
 
 minalib unit tests for string value generation
+minalib unit tests for node references - need to check results
 minalib support special form for JGD instruction
 minalib support special form for BT instruction
 minalib support node references on LHS of $EQU statements
