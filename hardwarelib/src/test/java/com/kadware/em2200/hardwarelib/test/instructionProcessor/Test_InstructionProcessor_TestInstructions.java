@@ -1158,7 +1158,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
     }
 
     @Test
-    public void testLessThanOrEqualBasci(
+    public void testLessThanOrEqualBasic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -1224,12 +1224,357 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
-    //  TODO TG
-    //  TODO TGM
-    //  TODO TW
-    //  TODO TNW
+    @Test
+    public void testGreaterBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 000074416513",
+            "DATA2     + 055167",
+            "COMP1     + 02,211334",
+            "COMP2     + 077665215761",
+            "",
+            "$(1),START$*",
+            "          LA        A3,DATA1",
+            "          LA        A8,DATA2",
+            "          TG        A3,COMP1          . should not skip",
+            "          TG,H1     A8,COMP2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
 
-    //  TODO DTGM
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testGreaterExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 000074416513",
+            "DATA2     + 055167",
+            "COMP1     + 02,211334",
+            "COMP2     + 077665215761",
+            "",
+            "$(1),START$*",
+            "          LA        A3,DATA1,,B2",
+            "          LA        A8,DATA2,,B2",
+            "          TG        A3,COMP1,,B2      . should not skip",
+            "          TG,H1     A8,COMP2,,B2      . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No TGM for basic mode
+
+    @Test
+    public void testGreaterMagnitudeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0777777777577",
+            "",
+            "$(1),START$*",
+            "          LA,U      A3,0144",
+            "          TGM       A3,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testWithinRangeBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 0443",
+            "",
+            "$(1),START$*",
+            "STEP1",
+            "          LA,U      A2,0441",
+            "          LA,U      A3,0443",
+            "          TW        A2,DATA1          . should skip",
+            "          HALT      077               . should not happen",
+            "",
+            "STEP2",
+            "          LA,U      A2,0300",
+            "          LA,U      A3,0301",
+            "          TW,U      A2,0300           . no skip, A2 is not less than 0300",
+            "          J         STEP3",
+            "          HALT      076",
+            "",
+            "STEP3",
+            "          LA,U      A2,0277",
+            "          LA,U      A3,0277",
+            "          TW,U      A2,0300           . no skip, A3 is less than 0300",
+            "          J         DONE",
+            "          HALT      075",
+            "",
+            "DONE",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testWithinRangeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 0443",
+            "",
+            "$(1),START$*",
+            "STEP1",
+            "          LA,U      A2,0441",
+            "          LA,U      A3,0443",
+            "          TW        A2,DATA1,,B2      . should skip",
+            "          HALT      077               . should not happen",
+            "",
+            "STEP2",
+            "          LA,U      A2,0300",
+            "          LA,U      A3,0301",
+            "          TW,U      A2,0300           . no skip, A2 is not less than 0300",
+            "          J         STEP3",
+            "          HALT      076",
+            "",
+            "STEP3",
+            "          LA,U      A2,0277",
+            "          LA,U      A3,0277",
+            "          TW,U      A2,0300           . no skip, A3 is less than 0300",
+            "          J         DONE",
+            "          HALT      075",
+            "",
+            "DONE",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testNotWithinRangeBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        //Skip NI if (U) ≤ (Aa) or (U) > (Aa+1)
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 0443",
+            "",
+            "$(1),START$*",
+            "STEP1",
+            "          LA,U      A2,0441",
+            "          LA,U      A3,0443",
+            "          TNW       A2,DATA1          . should not skip",
+            "          J         STEP2",
+            "          HALT      077               . should not happen",
+            "",
+            "STEP2",
+            "          LA,U      A2,0300",
+            "          LA,U      A3,0301",
+            "          TNW,U     A2,0300           . skips, A2 is not less than 0300",
+            "          HALT      076",
+            "",
+            "STEP3",
+            "          LA,U      A2,0277",
+            "          LA,U      A3,0277",
+            "          TNW,U     A2,0300           . skips, A3 is less than 0300",
+            "          HALT      075",
+            "",
+            "DONE",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testNotWithinRangeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 0443",
+            "",
+            "$(1),START$*",
+            "STEP1",
+            "          LA,U      A2,0441",
+            "          LA,U      A3,0443",
+            "          TNW       A2,DATA1,,B2      . should not skip",
+            "          J         STEP2",
+            "          HALT      077               . should not happen",
+            "",
+            "STEP2",
+            "          LA,U      A2,0300",
+            "          LA,U      A3,0301",
+            "          TNW,U     A2,0300           . skips, A2 is not less than 0300",
+            "          HALT      076",
+            "",
+            "STEP3",
+            "          LA,U      A2,0277",
+            "          LA,U      A3,0277",
+            "          TNW,U     A2,0300           . skips, A3 is less than 0300",
+            "          HALT      075",
+            "",
+            "DONE",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  No DTGM for basic mode
+
+    @Test
+    public void testDoubleTestGreaterMagnitudeExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0777777777577",
+            "          + 0222222222222",
+            "",
+            "$(1),START$*",
+            "STEP1",
+            "          LA,U      A1,0200",
+            "          LA        A2,(0555555555555),,B2",
+            "          DTGM      A1,DATA,,B2       . should not skip",
+            "          J         DONE",
+            "          HALT      077               . should not happen",
+            "",
+            "DONE",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     //  TODO MTE
     //  TODO MTNE
@@ -1462,4 +1807,5 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
     }
 
     //  TODO CR
+    //  TODO Need at least a few test instructions where the operand access causes a reference violation
 }

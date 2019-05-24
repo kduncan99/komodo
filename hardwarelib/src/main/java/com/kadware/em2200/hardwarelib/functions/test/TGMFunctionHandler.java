@@ -24,14 +24,15 @@ public class TGMFunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         //  Skip NI if |(U)| > A(a)
 
-        long uValue = ip.getOperand(true, true, true, true);
-        if (uValue < 0) {
-            uValue = 0 - uValue;
+        long uValue = ip.getOperand(true, true, true, false);
+        long uNative = OnesComplement.getNative36(uValue);
+        if (uNative < 0) {
+            uNative = 0 - uNative;
         }
 
         long aValue = ip.getExecOrUserARegister((int)iw.getA()).getW();
-
-        if (OnesComplement.getNative36(uValue) > OnesComplement.getNative36(aValue)) {
+        long aNative = OnesComplement.getNative36(aValue);
+        if (uNative > aNative) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
