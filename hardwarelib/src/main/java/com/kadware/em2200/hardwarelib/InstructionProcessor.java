@@ -85,7 +85,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private static final int JUMP_HISTORY_TABLE_THRESHOLD   = 120;
 
     /**
-     * Size of the jump history table
+     * Size of the conditionalJump history table
      */
     private static final int JUMP_HISTORY_TABLE_SIZE        = 128;
 
@@ -395,9 +395,9 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Creates a new entry in the jump history table.
+     * Creates a new entry in the conditionalJump history table.
      * If we cross the interrupt threshold, set the threshold-reached flag.
-     * @param value absolute address to be placed into the jump history table
+     * @param value absolute address to be placed into the conditionalJump history table
      */
     private void createJumpHistoryTableEntry(
         final long value
@@ -838,7 +838,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //pStack[6].setS1( m_PreservedProgramAddressRegisterValid ? 1 : 0 );
         //pStack[7].setValue( m_PreservedProgramAddressRegister.getW() );
 
-        // Create jump history table entry
+        // Create conditionalJump history table entry
         createJumpHistoryTableEntry(_programAddressRegister.getW());
 
         // The bank described by B16 begins with 64 contiguous words, indexed by interrupt class (of which there are 64).
@@ -976,7 +976,7 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Loads the program counter from the value at u, presumably as part of a jump instruction.
+     * Loads the program counter from the value at u, presumably as part of a conditionalJump instruction.
      * Sets the prevent PC Increment flag, since PAR.PC will have the value we want, and we don't want it
      * auto-incremented.  For Extended Mode.
      * @param effectiveU value to be loaded into the PAR
@@ -984,7 +984,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private void loadProgramCounterExtendedMode(
         final int effectiveU
     ) {
-        //  Update jump history table, then PAR.PC, and prevent automatic PAR.PC increment.
+        //  Update conditionalJump history table, then PAR.PC, and prevent automatic PAR.PC increment.
         createJumpHistoryTableEntry(_programAddressRegister.getW());
         _programAddressRegister.setProgramCounter(effectiveU);
         _preventProgramCounterIncrement = true;
@@ -1009,6 +1009,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * If this IP already has locks, we die horribly - this is how we avoid internal deadlocks
      * If the address is already locked by any other IP, then we wait until it is not.
      * Then we lock it to this IP.
+     * NOTE: All storage locks are cleared automatically at the conclusion of processing an instruction.
      * @param absAddress absolute address of interest
      */
     private void setStorageLock(
@@ -1049,6 +1050,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * As above, but for multiple addresses.
+     * NOTE: All storage locks are cleared automatically at the conclusion of processing an instruction.
      * @param absAddresses array of addresses
      */
     private void setStorageLocks(
@@ -1192,6 +1194,48 @@ public class InstructionProcessor extends Processor implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Public instance methods (only for consumption by FunctionHandlers)
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Protected workings of the CR instruction.
+     * If A(a) matches the contents of U, then A(a+1) is written to U
+     * @return true if A(a) matched the contents of U, else false
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
+     */
+    public boolean conditionalReplace(
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int relAddress = calculateRelativeAddressForGRSOrStorage(0);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        setStorageLock(absAddress);
+
+        long value;
+        checkBreakpoint(BreakpointComparison.Read, absAddress);
+        try {
+            value = _inventoryManager.getStorageValue(absAddress);
+        } catch (AddressLimitsException
+            | UPINotAssignedException
+            | UPIProcessorTypeException ex) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+        }
+
+        if (value == this.getExecOrUserARegister((int)_currentInstruction.getA()).getW()) {
+            checkBreakpoint(BreakpointComparison.Write, absAddress);
+            long newValue = this.getExecOrUserARegister((int)_currentInstruction.getA() + 1).getW();
+            try {
+                _inventoryManager.setStorageValue(absAddress, newValue);
+                return true;
+            } catch (AddressLimitsException
+                | UPINotAssignedException
+                | UPIProcessorTypeException ex) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+            }
+        }
+
+        return false;
+    }
 
     /**
      * Retrieves consecutive word values for double or multiple-word transfer operations (e.g., DL, LRS, etc).
@@ -1395,8 +1439,8 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * See getImmediateOperand() above.
      * This is similar, however the calculated U field is only ever 16 or 18 bits, and is never sign-extended.
-     * Also, we do not rely upon j-field for anything, as that has no meaning for jump instructions.
-     * @return jump operand value
+     * Also, we do not rely upon j-field for anything, as that has no meaning for conditionalJump instructions.
+     * @return conditionalJump operand value
      * @throws MachineInterrupt if an interrupt needs to be raised
      * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
      */
@@ -1524,7 +1568,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Retrieves a partial-word operand from storage, depending upon the values of jField and quarterWordMode.
-     * This is never a GRS reference, nor immediate (nor a jump or shift, for that matter).
+     * This is never a GRS reference, nor immediate (nor a conditionalJump or shift, for that matter).
      * @param jField not necessarily from j-field, this indicates the partial word to be stored
      * @param quarterWordMode needs to be set true for storing quarter words
      * @return operand value
@@ -1699,7 +1743,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Updates PAR.PC and sets the prevent-increment flag according to the given parameters.
-     * Used for simple jump instructions.
+     * Used for simple conditionalJump instructions.
      * @param counter program counter value
      * @param preventIncrement true to set the prevent-increment flag
      */
@@ -1928,7 +1972,6 @@ public class InstructionProcessor extends Processor implements Worker {
      *                                    Indirect Addressing).  In this case, caller should call back here again after
      *                                    checking for any pending interrupts.
      */
-    //TODO do we need to synchronize on something here?
     public void testAndStore(
         final boolean flag
     ) throws MachineInterrupt,

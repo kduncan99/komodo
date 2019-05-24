@@ -2,19 +2,19 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
-import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the LMJ instruction basic mode f=074 j=013
+ * Handles the JDF instruction f=074 j=014 a=03
  */
-public class LMJFunctionHandler extends FunctionHandler {
+public class JDFFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -22,9 +22,11 @@ public class LMJFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  Increment PAR.PC and store it in X(a)Modifier, then set PAR.PC to U
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        ip.getExecOrUserXRegister((int)iw.getA()).setH2(par.getProgramCounter() + 1);
-        ip.setProgramCounter(ip.getJumpOperand(), true);
+        DesignatorRegister dreg = ip.getDesignatorRegister();
+        if (dreg.getDivideCheck()) {
+            int counter = (int)ip.getJumpOperand();
+            ip.setProgramCounter(counter, true);
+            dreg.setDivideCheck(false);
+        }
     }
 }

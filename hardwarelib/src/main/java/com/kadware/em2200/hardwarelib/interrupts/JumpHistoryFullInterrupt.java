@@ -6,8 +6,8 @@ package com.kadware.em2200.hardwarelib.interrupts;
 
 /**
  * Represents a particular machine interrupt class
- * When enabled, this interrupt is generated when the jump history buffer if full.
- * Software must store the buffer *somewhere* to avoid losing jump history.
+ * When enabled, this interrupt is generated when the conditionalJump history buffer if full.
+ * Software must store the buffer *somewhere* to avoid losing conditionalJump history.
  */
 
 public class JumpHistoryFullInterrupt extends MachineInterrupt {

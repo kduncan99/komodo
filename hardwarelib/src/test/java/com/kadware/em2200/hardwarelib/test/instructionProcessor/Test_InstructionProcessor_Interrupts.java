@@ -45,4 +45,7 @@ public class Test_InstructionProcessor_Interrupts extends Test_InstructionProces
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
     }
+
+    //  TODO make sure maskable interrupts are prevented by PAIJ
+
 }

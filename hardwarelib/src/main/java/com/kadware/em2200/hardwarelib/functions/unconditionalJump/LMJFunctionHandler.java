@@ -2,18 +2,19 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
+import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JZ instruction f=074 j=00
+ * Handles the LMJ instruction basic mode f=074 j=013
  */
-public class JZFunctionHandler extends FunctionHandler {
+public class LMJFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,9 +22,9 @@ public class JZFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (ip.getExecOrUserARegister((int)iw.getA()).isZero()) {
-            int counter = (int)ip.getJumpOperand();
-            ip.setProgramCounter(counter, true);
-        }
+        //  Increment PAR.PC and store it in X(a)Modifier, then set PAR.PC to U
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        ip.getExecOrUserXRegister((int)iw.getA()).setH2(par.getProgramCounter() + 1);
+        ip.setProgramCounter(ip.getJumpOperand(), true);
     }
 }

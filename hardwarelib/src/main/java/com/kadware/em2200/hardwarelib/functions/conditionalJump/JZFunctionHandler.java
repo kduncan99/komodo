@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
@@ -11,9 +11,9 @@ import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the HJ instruction basic mode f=074 j=05
+ * Handles the JZ instruction f=074 j=00
  */
-public class HJFunctionHandler extends FunctionHandler {
+public class JZFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,8 +21,9 @@ public class HJFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  Always jump
-        int counter = (int)ip.getJumpOperand();
-        ip.setProgramCounter(counter, true);
+        if (ip.getExecOrUserARegister((int)iw.getA()).isZero()) {
+            int counter = (int)ip.getJumpOperand();
+            ip.setProgramCounter(counter, true);
+        }
     }
 }

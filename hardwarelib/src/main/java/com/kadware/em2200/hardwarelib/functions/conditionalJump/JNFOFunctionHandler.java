@@ -2,18 +2,19 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JNO instruction f=074 j=015 a=00
+ * Handles the JNFO instruction f=074 j=015 a=02
  */
-public class JNOFunctionHandler extends FunctionHandler {
+public class JNFOFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,9 +22,11 @@ public class JNOFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (!ip.getDesignatorRegister().getOverflow()) {
+        DesignatorRegister dreg = ip.getDesignatorRegister();
+        if (!dreg.getCharacteristicOverflow()) {
             int counter = (int)ip.getJumpOperand();
             ip.setProgramCounter(counter, true);
         }
+        dreg.setCharacteristicOverflow(false);
     }
 }

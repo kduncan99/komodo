@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.IndexRegister;
 import com.kadware.em2200.baselib.InstructionWord;
@@ -24,7 +24,7 @@ public class JMGIFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  If X(a).mod > 0, effect a jump to U
+        //  If X(a).mod > 0, effect a conditionalJump to U
         //  In any case Increment X(a).mod by X(a).inc
         //  In Basic Mode if F0.h is true (U resolution x-reg incrementation) and F0.a == F0.x, we increment only once
         //  X(0) is used for X(a) if a == 0 (contrast to F0.x == 0 -> no indexing)

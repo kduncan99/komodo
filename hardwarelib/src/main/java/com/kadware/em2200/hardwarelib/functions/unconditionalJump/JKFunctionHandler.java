@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
@@ -11,9 +11,9 @@ import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JNZ instruction f=074 j=01
+ * Handles the JK instruction basic mode f=074 j=04 a=01-017
  */
-public class JNZFunctionHandler extends FunctionHandler {
+public class JKFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,9 +21,8 @@ public class JNZFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (!ip.getExecOrUserARegister((int)iw.getA()).isZero()) {
-            int counter = (int)ip.getJumpOperand();
-            ip.setProgramCounter(counter, true);
-        }
+
+        //  Get the conditionalJump operand, but don't conditionalJump.
+        ip.getJumpOperand();
     }
 }

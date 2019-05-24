@@ -1899,7 +1899,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01000+13, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 13);
+        long[] bank = getBank(processors._instructionProcessor, 13);
         assertEquals(0_010000_000000L, bank[0]);
         assertEquals(0_0770000_000000L, bank[1]);
     }
@@ -1935,7 +1935,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01000+13, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 2);
+        long[] bank = getBank(processors._instructionProcessor, 2);
         assertEquals(0_010000_000000L, bank[0]);
         assertEquals(0_0770000_000000L, bank[1]);
     }
@@ -1972,7 +1972,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 13);
+        long[] bank = getBank(processors._instructionProcessor, 13);
         assertEquals(0_010000_000000L, bank[0]);
         assertEquals(0_0770000_000000L, bank[1]);
     }
@@ -2010,7 +2010,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 2);
+        long[] bank = getBank(processors._instructionProcessor, 2);
         assertEquals(0_010000_000000L, bank[0]);
         assertEquals(0_0770000_000000L, bank[1]);
     }
@@ -2047,7 +2047,7 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 13);
+        long[] bank = getBank(processors._instructionProcessor, 13);
         assertEquals(0L, bank[0]);
         assertEquals(0_007777_777777L, bank[1]);
     }
@@ -2085,14 +2085,294 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        long bank[] = getBank(processors._instructionProcessor, 2);
+        long[] bank = getBank(processors._instructionProcessor, 2);
         assertEquals(0L, bank[0]);
         assertEquals(0_007777_777777L, bank[1]);
     }
 
-    //  TODO CR Basic
-    //  TODO CR Basic PP>0 (illegal op)
-    //  TODO CR Extended
+    @Test
+    public void testConditionalReplaceBasic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 010",
+            "DATA2     + 014",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,010",
+            "          LA,U      A1,020",
+            "          LA,U      A2,030",
+            "          CR        A0,DATA1          . should skip NI",
+            "          HALT      077",
+            "",
+            "          CR        A1,DATA2          . should not skip NI",
+            "          HALT      0                 . should stop get here",
+            "          HALT      076               . should not get here",
+        };
 
-    //  TODO Need at least a few test instructions where the operand access causes a reference violation
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        long[] bank = getBank(processors._instructionProcessor, 13);
+        assertEquals(020L, bank[0]);
+        assertEquals(014L, bank[1]);
+    }
+
+    @Test
+    public void testConditionalReplaceBasicBadPP(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 010",
+            "DATA2     + 014",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,010",
+            "          LA,U      A1,020",
+            "          LA,U      A2,030",
+            "          CR        A0,DATA1          . should skip NI",
+            "          HALT      077",
+            "",
+            "          CR        A1,DATA2          . should not skip NI",
+            "          HALT      0                 . should stop get here",
+            "          HALT      076               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testConditionalReplaceExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA1     + 010",
+            "DATA2     + 014",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,010",
+            "          LA,U      A1,020",
+            "          LA,U      A2,030",
+            "          CR        A0,DATA1,,B2      . should skip NI",
+            "          HALT      077",
+            "",
+            "          CR        A1,DATA2,,B2      . should not skip NI",
+            "          HALT      0                 . should stop get here",
+            "          HALT      076               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        long[] bank = getBank(processors._instructionProcessor, 2);
+        assertEquals(020L, bank[0]);
+        assertEquals(014L, bank[1]);
+    }
+
+    @Test
+    public void testReferenceViolationBasic1(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      +0",
+            "",
+            "$(1),START$*",
+            "          TZ        DATA              . should skip",
+            "          HALT      077               . should skip this",
+            "          LXM,U     X5,0100",
+            "          TZ        DATA,X5           . should fail",
+            "          HALT      076               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testReferenceViolationBasic2(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      +0",
+            "",
+            "$(1),START$*",
+            "          DTE       A0,DATA           . should fail",
+            "          HALT      076               . should not get here",
+            "          HALT      077               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testReferenceViolationExtended1(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      +0",
+            "",
+            "$(1),START$*",
+            "          TZ        DATA,,B2          . should skip",
+            "          HALT      077               . should skip this",
+            "          LXM,U     X5,0100",
+            "          TZ        DATA,X5,,B2       . should fail",
+            "          HALT      076               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testReferenceViolationExtended2(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      +0",
+            "",
+            "$(1),START$*",
+            "          TZ        DATA,,B2          . should skip",
+            "          HALT      077               . should skip this",
+            "          TZ        DATA,,B3          . should fail",
+            "          HALT      076               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testReferenceViolationExtended3(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      +0",
+            "",
+            "$(1),START$*",
+            "          DTE       A0,DATA,,B2       . should fail",
+            "          HALT      076               . should not get here",
+            "          HALT      077               . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+    }
 }

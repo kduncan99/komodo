@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib;
@@ -236,7 +236,7 @@ public class InstructionWord extends Word36 {
         public final SpecialHandler _handler;
 
         /**
-         * For Extended Mode jump instructions which use u field instead of b and d fields
+         * For Extended Mode conditionalJump instructions which use u field instead of b and d fields
          */
         public final boolean _useBMSemantics;
 
@@ -1760,7 +1760,7 @@ public class InstructionWord extends Word36 {
             // Use the GRS register name for the u field.
             builder.append(GeneralRegisterSet.NAMES[(int)u]);
         } else if (extendedMode && !forceBMSemantics && !immediate) {
-            // Extended mode, BM not forced (i.e., not a jump or similar), and not immediate...
+            // Extended mode, BM not forced (i.e., not a conditionalJump or similar), and not immediate...
             // Decode the d field
             builder.append(String.format("0%o", d));
         } else if (immediate) {

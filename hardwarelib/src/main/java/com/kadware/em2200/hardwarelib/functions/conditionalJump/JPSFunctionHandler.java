@@ -2,18 +2,20 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
+import com.kadware.em2200.baselib.GeneralRegister;
 import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JO instruction f=074 j=014 a=00
+ * Handles the JPS instruction f=072 j=02
  */
-public class JOFunctionHandler extends FunctionHandler {
+public class JPSFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,9 +23,13 @@ public class JOFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (ip.getDesignatorRegister().getOverflow()) {
+        GeneralRegister reg = ip.getExecOrUserARegister((int)iw.getA());
+        long operand = reg.getW();
+        if (OnesComplement.isPositive36(operand)) {
             int counter = (int)ip.getJumpOperand();
             ip.setProgramCounter(counter, true);
         }
+
+        reg.setW(OnesComplement.leftShiftCircular36(operand, 1));
     }
 }

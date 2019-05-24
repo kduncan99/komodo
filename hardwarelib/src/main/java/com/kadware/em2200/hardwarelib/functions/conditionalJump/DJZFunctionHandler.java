@@ -2,26 +2,31 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JC instruction - extended f=074 j=014 a=04, basic f=074 j=016
+ * Handles the DJZ instruction f=071 j=016
  */
-public class JCFunctionHandler extends FunctionHandler {
+public class DJZFunctionHandler extends FunctionHandler {
+
+    private final long[] _operand = new long[2];
 
     @Override
-    public void handle(
+    public synchronized void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (ip.getDesignatorRegister().getCarry()) {
+        _operand[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
+        _operand[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
+        if (OnesComplement.isZero72(_operand)) {
             int counter = (int)ip.getJumpOperand();
             ip.setProgramCounter(counter, true);
         }

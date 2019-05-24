@@ -2,18 +2,19 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.jump;
+package com.kadware.em2200.hardwarelib.functions.conditionalJump;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.functions.*;
 
 /**
- * Handles the JN instruction f=074 j=03
+ * Handles the JNDF instruction f=074 j=015 a=03
  */
-public class JNFunctionHandler extends FunctionHandler {
+public class JNDFFunctionHandler extends FunctionHandler {
 
     @Override
     public void handle(
@@ -21,9 +22,12 @@ public class JNFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        if (ip.getExecOrUserARegister((int)iw.getA()).isNegative()) {
+        DesignatorRegister dreg = ip.getDesignatorRegister();
+        if (!dreg.getDivideCheck()) {
             int counter = (int)ip.getJumpOperand();
             ip.setProgramCounter(counter, true);
+        } else {
+            dreg.setDivideCheck(false);
         }
     }
 }

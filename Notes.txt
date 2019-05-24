@@ -1,14 +1,142 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
 minalib unit tests for node references
-minalib unit tests for test instructions (some are missing)
 
 -- BUGS
 
 -- TODO
-hardwarelib make sure TNOP instruction accesses the word at U even though it doesn't use it (see 6.7.4 of IP PRM)
-minalib need some conditional jump tests which would incur reference violation if they jumped
+hardwarelib need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
+hardwarelib do active base table entry thing
+hardwarelib missing jump instructions (and unit tests)
+  JB
+  JNB
+hardwarelib storage-to-storage instructions (and unit tests)
+  BT
+  BIM
+  BIC
+  BIMT
+  BICL
+  BIML
+  BN
+  BBN
+  BTP
+  BTU
+hardwarelib string instructions (and unit tests)
+  LS
+  LSA
+  SS
+  TES
+  TNES
+hardwarelib address space management instructions (and unit tests)
+  LBU
+  LBE
+  LBUD
+  LBED
+  SBUD
+  SBED
+  SBU
+  LBN
+  TRA
+  TVA
+  DABT
+hardwarelib extended mode procedure call instructions (and unit tests)
+  GOTO
+  CALL
+  LOCL
+  RTN
+hardwarelib basic mode procedure call instructions (and unit tests)
+  LBJ
+  LIJ
+  LDJ
+hardwarelib queuing instructions (maybe later)
+hardwarelib paging control instructions (never)
+hardwarelib activity control instructions (and unit tests)
+  LD
+  SD
+  LPD
+  SPD
+  LUD
+  SUD
+  LAE
+  UR
+  ACEL
+  DCEL
+  SKQT
+hardwarelib stack manipulation instructions (and unit tests)
+  BUY
+  SELL
+hardwarelib interrupt control instructinos (and unit tests)
+  ER
+  SGNL
+  PAIJ
+  AAIJ
+hardwarelib dayclock control instructions (and unit tests)
+  LRD
+  SMD
+  RMD
+  LMC
+  SDMN
+  SDMS
+  SDMF
+  RDC
+hardwarelib UPI operations control instructions (and unit tests)
+  SEND
+  ACK
+hardwarelib system instrumentation instructions
+  LBRX
+  CJHE
+  SJH
+hardwarelib performance monitoring instructions (never)
+hardwarelib special instructions (and unit tests)
+  EX
+  EXR
+  DCB
+hardwarelib floating point binary instructions (and unit tests)
+  FA
+  FAN
+  DFA
+  DFAN
+  FM
+  DFM
+  FD
+  DFD
+  LUF
+  DFU
+  LCF
+  DFP,DLCF
+  FEL
+  FCL
+  MCDU
+  CDU
+hardwarelib fixed point decimal instructions (and unit tests)
+  ADE
+  DADE
+  SDE
+  DSDE
+  DEI
+  DDEI
+  IDE
+  DIDE
+  BDE
+  DEB
+  EDDE
+hardwarelib search and masked search instructions (and unit tests)
+  SE
+  SNE
+  SNG
+  SG
+  SW
+  SNW
+  MSE
+  MSNE
+  MSLE,MSNG
+  MSG
+  MSW
+  MSNW
+  MASL
+  MASG
+
 minalib unit tests for string value generation
 minalib support special form for JGD instruction
 minalib support special form for BT instruction

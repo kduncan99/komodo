@@ -8,13 +8,13 @@ import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
 import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
 import com.kadware.em2200.hardwarelib.functions.generalStore.*;
-import com.kadware.em2200.hardwarelib.functions.jump.*;
+import com.kadware.em2200.hardwarelib.functions.conditionalJump.*;
 import com.kadware.em2200.hardwarelib.functions.logical.*;
 import com.kadware.em2200.hardwarelib.functions.shift.*;
 import com.kadware.em2200.hardwarelib.functions.special.*;
 import com.kadware.em2200.hardwarelib.functions.systemControl.*;
 import com.kadware.em2200.hardwarelib.functions.test.*;
-import org.apache.logging.log4j.core.config.CronScheduledFuture;
+import com.kadware.em2200.hardwarelib.functions.unconditionalJump.*;
 
 
 /**
@@ -287,7 +287,7 @@ public abstract class FunctionTable {
         null,           //  012
         new LXLMFunctionHandler(),  //  013
         null,           //  014
-        null,           //  015
+        new CRFunctionHandler(),    //  015
         null,           //  016
         null,           //  017
     };
@@ -709,7 +709,7 @@ public abstract class FunctionTable {
         null,           //  012
         new LXLMFunctionHandler(),  //  013
         null,           //  014
-        null,           //  015
+        new CRFunctionHandler(),    //  015
         null,           //  016
         null,           //  017
     };

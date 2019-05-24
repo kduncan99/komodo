@@ -39,11 +39,11 @@ public class IPCFunctionHandler extends FunctionHandler {
                 //???? don't really know what this is yet...
                 break;
 
-            case 1: //  enable jump-history-full interrupt
+            case 1: //  enable conditionalJump-history-full interrupt
                 ip.setJumpHistoryFullInterruptEnabled(true);
                 break;
 
-            case 2: //  disable jump-history-full interrupt
+            case 2: //  disable conditionalJump-history-full interrupt
                 ip.setJumpHistoryFullInterruptEnabled(false);
                 break;
 
