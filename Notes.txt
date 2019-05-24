@@ -10,6 +10,15 @@ hardwarelib stack manipulation instructions (and unit tests)
 hardwarelib need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
 hardwarelib do active base table entry thing
+hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
+hardwarelib UPI send/ack mechanism
+hardwarelib Figure out how to do channel programs
+  do we need a cleaner IO path?
+  we'd still like word and byte operations... don't we?
+hardwarelib Rewrite disk (and maybe tape) devices using async IO
+hardwarelib All Device objects: add Builder class, make constructors private
+hardwarelib Device.IoInfo objects: add Builder class, make constructors private
+
 hardwarelib missing jump instructions (and unit tests)
   JB
   JNB
@@ -179,18 +188,6 @@ minalib directives
   $GEN
   $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
-
-hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
-hardwarelib Finish adding instructions to IP
-    CR from test categories
-    Other categories
-hardwarelib UPI send/ack mechanism
-hardwarelib Figure out how to do channel programs
-  do we need a cleaner IO path?
-  we'd still like word and byte operations... don't we?
-hardwarelib Rewrite disk (and maybe tape) devices using async IO
-hardwarelib All Device objects: add Builder class, make constructors private
-hardwarelib Device.IoInfo objects: add Builder class, make constructors private
 
 Mina - wrapper around minalib
 
