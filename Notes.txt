@@ -8,7 +8,7 @@ minalib unit tests for test instructions (some are missing)
 -- TODO
 hardwarelib make sure TNOP instruction accesses the word at U even though it doesn't use it (see 6.7.4 of IP PRM)
 minalib need some conditional jump tests which would incur reference violation if they jumped
-    both jumping and not jumping
+    both jumping (ref violation) and not jumping (no ref violation)
 minalib unit tests for string value generation
 minalib support special form for JGD instruction
 minalib support special form for BT instruction

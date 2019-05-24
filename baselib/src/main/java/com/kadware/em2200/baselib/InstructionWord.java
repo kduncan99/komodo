@@ -715,6 +715,10 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   052, 000, 000, false, false, true,  true,  ASemantics.A,     "TE",    false),
         new InstructionInfo(Mode.EITHER,   053, 000, 000, false, false, true,  true,  ASemantics.A,     "TNE",   false),
         new InstructionInfo(Mode.EITHER,   054, 000, 000, false, false, true,  true,  ASemantics.A,     "TLE",   false),
+
+        //  For the assembler - an alias for TLE
+        new InstructionInfo(Mode.EITHER,   054, 000, 000, false, false, true,  true,  ASemantics.A,     "TNG",   false),
+
         new InstructionInfo(Mode.EITHER,   055, 000, 000, false, false, true,  true,  ASemantics.A,     "TG",    false),
         new InstructionInfo(Mode.EITHER,   056, 000, 000, false, false, true,  true,  ASemantics.A,     "TW",    false),
         new InstructionInfo(Mode.EITHER,   057, 000, 000, false, false, true,  true,  ASemantics.A,     "TNW",   false),

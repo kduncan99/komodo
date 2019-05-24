@@ -878,15 +878,352 @@ public class Test_InstructionProcessor_TestInstructions extends Test_Instruction
         assertEquals(061240,processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
     }
 
-    //  TODO TGZ
-    //  TODO TMZG
-    //  TODO TNLZ
-    //  TODO TLZ
-    //  TODO TPZL
-    //  TODO TNMZ
-    //  TODO TNPZ
-    //  TODO TNGZ
-    //  TODO TLE
+    //  no basic mode version of TGZ
+
+    @Test
+    public void testGreaterThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "TEST      + 01,0777776",
+            "",
+            "$(1),START$*",
+            "          TGZ,XH2   TEST,,B2          . should not skip",
+            "          TGZ       TEST,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TMZG
+
+    @Test
+    public void testMinusZeroOrGreaterThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 5",
+            "",
+            "$(0)      $LIT",
+            "TEST      + 0777775000002",
+            "",
+            "$(1),START$*",
+            "          TMZG,XH1  TEST,,B2          . should not skip",
+            "          TMZG,XH2  TEST,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TNLZ
+
+    @Test
+    public void testNotLessThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 5",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0555500007775",
+            "",
+            "$(1),START$*",
+            "          TNLZ,T3   DATA,,B2          . should not skip",
+            "          TNLZ,T2   DATA,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TLZ
+
+    @Test
+    public void testLessThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 5",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0,0777775",
+            "",
+            "$(1),START$*",
+            "          TLZ,H2    DATA,,B2          . should not skip",
+            "          TLZ,XH2   DATA,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TPZL
+
+    @Test
+    public void testPositiveZeroOrLessThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 5",
+            "",
+            "$(0)      $LIT",
+            "",
+            "$(1),START$*",
+            "          TPZL,U    5                 . should not skip",
+            "          TPZL,XU   -5                . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TNMZ
+
+    @Test
+    public void testNotMinusZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0777777777777",
+            "",
+            "$(1),START$*",
+            "          TNMZ      DATA,,B2          . should not skip",
+            "          TNMZ,Q1   DATA,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TNPZ
+
+    @Test
+    public void testNotPositiveZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 000111222333",
+            "",
+            "$(1),START$*",
+            "          TNPZ,Q1   DATA,,B2          . should not skip",
+            "          TNPZ,Q2   DATA,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no basic mode version of TNGZ
+
+    @Test
+    public void testNotGreaterThanZeroExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 5",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0444555666777",
+            "",
+            "$(1),START$*",
+            "          TNGZ,H1   DATA,,B2          . should not skip",
+            "          TNMZ,XH1  DATA,,B2          . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testLessThanOrEqualBasci(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 062,003567",
+            "",
+            "$(1),START$*",
+            "          LA,U      A9,03567",
+            "          TLE       A9,DATA           . should not skip",
+            "          TNG,H1    A9,DATA           . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void testLessThanOrEqualExtended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "          $INFO 1 3",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 062,003567",
+            "",
+            "$(1),START$*",
+            "          LA,U      A9,03567",
+            "          TLE       A9,DATA,,B2       . should not skip",
+            "          TNG,H1    A9,DATA,,B2       . should skip",
+            "          HALT      077               . should not happen",
+            "          HALT      0                 . should happen",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
     //  TODO TG
     //  TODO TGM
     //  TODO TW
