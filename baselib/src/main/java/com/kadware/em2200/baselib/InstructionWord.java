@@ -782,7 +782,11 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   072, 007, 000, true,  false, true,  false, ASemantics.A,     "ANT",   false),
         new InstructionInfo(Mode.BASIC,    072, 010, 000, true,  false, false, false, ASemantics.NONE,  "EX",    false),
         new InstructionInfo(Mode.EXTENDED, 072, 010, 000, true,  false, false, false, ASemantics.A,     "BDE",   false),
+
+        //  second one is for the assembler
         new InstructionInfo(Mode.BASIC,    072, 011, 000, true,  false, false, false, ASemantics.NONE,  "ER",    false, new ERHandler()),
+        new InstructionInfo(Mode.BASIC,    072, 011, 000, true,  true,  false, false, ASemantics.NONE,  "ER",    false, new ERHandler()),
+
         new InstructionInfo(Mode.EXTENDED, 072, 011, 000, true,  false, false, false, ASemantics.A,     "DEB",   false),
         new InstructionInfo(Mode.EITHER,   072, 012, 000, true,  false, true,  false, ASemantics.X,     "BN",    false),
         new InstructionInfo(Mode.EXTENDED, 072, 013, 000, true,  false, false, false, ASemantics.A,     "BAO",   false),
@@ -865,7 +869,10 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  true,  true,  false, ASemantics.A,     "NOP",   false),
         new InstructionInfo(Mode.BASIC,    074, 006, 000, true,  false, true,  false, ASemantics.A,     "NOP",   false),
 
+        //  First line is for the assembler...
+        new InstructionInfo(Mode.BASIC,    074, 007, 000, true,  true,  false, false, ASemantics.NONE,  "AAIJ",  true),
         new InstructionInfo(Mode.BASIC,    074, 007, 000, true,  false, false, false, ASemantics.NONE,  "AAIJ",  true),
+
         new InstructionInfo(Mode.EITHER,   074, 010, 000, true,  false, false, false, ASemantics.A,     "JNB",   true),
         new InstructionInfo(Mode.EITHER,   074, 011, 000, true,  false, false, false, ASemantics.A,     "JB",    true),
         new InstructionInfo(Mode.EITHER,   074, 012, 000, true,  false, false, false, ASemantics.X,     "JMGI",  true),

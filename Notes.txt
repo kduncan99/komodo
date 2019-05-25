@@ -71,11 +71,6 @@ hardwarelib activity control instructions (and unit tests)
   ACEL
   DCEL
   SKQT
-hardwarelib interrupt control instructinos (and unit tests)
-  ER
-  SGNL
-  PAIJ
-  AAIJ
 hardwarelib dayclock control instructions (and unit tests)
   LRD
   SMD

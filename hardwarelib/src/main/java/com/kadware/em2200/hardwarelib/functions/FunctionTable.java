@@ -9,6 +9,7 @@ import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
 import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
 import com.kadware.em2200.hardwarelib.functions.generalStore.*;
 import com.kadware.em2200.hardwarelib.functions.conditionalJump.*;
+import com.kadware.em2200.hardwarelib.functions.interruptControl.*;
 import com.kadware.em2200.hardwarelib.functions.logical.*;
 import com.kadware.em2200.hardwarelib.functions.shift.*;
 import com.kadware.em2200.hardwarelib.functions.special.*;
@@ -108,7 +109,7 @@ public abstract class FunctionTable {
         new ATFunctionHandler(),    //  006
         new ANTFunctionHandler(),   //  007
         null,           //  010
-        null,           //  011
+        new ERFunctionHandler(),    //  011
         null,           //  012
         null,           //  013
         null,           //  014
@@ -136,7 +137,7 @@ public abstract class FunctionTable {
         null,           //  014
         null,           //  015
         null,           //  016
-        null,           //  017
+        new SGNLFunctionHandler(),  //  017
     };
 
     /**
@@ -216,7 +217,7 @@ public abstract class FunctionTable {
         null,           //  004
         null,           //  005
         null,           //  006
-        null,           //  007
+        new PAIJFunctionHandler(),  //  007
         null,           //  010
         null,           //  011
         null,           //  012
@@ -260,7 +261,7 @@ public abstract class FunctionTable {
         new SubSubFunctionHandler(BASIC_MODE_FUNCTION074_004_HANDLERS), //  004
         new HJFunctionHandler(),    //  005
         new NOPFunctionHandler(),   //  006
-        null,           //  007
+        new AAIJFunctionHandler(),  //  007
         null,           //  010
         null,           //  011
         new JMGIFunctionHandler(),  //  012
@@ -580,7 +581,7 @@ public abstract class FunctionTable {
         null,           //  014
         null,           //  015
         null,           //  016
-        null,           //  017
+        new SGNLFunctionHandler(),  //  017
     };
 
     /**
@@ -637,8 +638,8 @@ public abstract class FunctionTable {
         null,           //  003
         new JCFunctionHandler(),    //  004
         new JNCFunctionHandler(),   //  005
-        null,           //  006
-        null,           //  007
+        new AAIJFunctionHandler(),  //  006
+        new PAIJFunctionHandler(),  //  007
         null,           //  010
         null,           //  011
         null,           //  012
