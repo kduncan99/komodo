@@ -860,7 +860,7 @@ public class InstructionWord extends Word36 {
 
         //  First line is for the assembler which requires a specific A-field
         new InstructionInfo(Mode.BASIC,    074, 004, 001, true,  true,  false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
-        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false, false, false, ASemantics.NONE,  "JK",    true),	// a-field > 0
+        new InstructionInfo(Mode.BASIC,    074, 004, 000, true,  false, false, false, ASemantics.NONE,  "JK",    true),	// a-field == 0
 
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  true,  false, false, ASemantics.NONE,  "HJ",    true),	// a-field == 0
         new InstructionInfo(Mode.BASIC,    074, 005, 000, true,  false, false, false, ASemantics.NONE,  "HKJ",   true),	// a-field > 0
@@ -891,8 +891,15 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   074, 015, 003, true,  true,  false, false, ASemantics.NONE,  "JNDF",  true),
         new InstructionInfo(Mode.EXTENDED, 074, 015, 004, true,  true,  false, false, ASemantics.NONE,  "J",	    true),
         new InstructionInfo(Mode.EITHER,   074, 015, 005, true,  true,  false, false, ASemantics.NONE,  "HLTJ",  true),
+
+        //  First one is for the assembler
+        new InstructionInfo(Mode.BASIC,    074, 016, 000, true,  true, false, false, ASemantics.NONE,  "JC",    true),
         new InstructionInfo(Mode.BASIC,    074, 016, 000, true,  false, false, false, ASemantics.NONE,  "JC",    true),
+
+        //  First one is for the assembler
+        new InstructionInfo(Mode.BASIC,    074, 017, 000, true,  true,  false, false, ASemantics.NONE,  "JNC",   true),
         new InstructionInfo(Mode.BASIC,    074, 017, 000, true,  false, false, false, ASemantics.NONE,  "JNC",   true),
+
         new InstructionInfo(Mode.EITHER,   075, 000, 000, true,  false, true,  false, ASemantics.B,     "LBU",   false),
         new InstructionInfo(Mode.EITHER,   075, 002, 000, true,  false, true,  false, ASemantics.B,     "SBU",   false),
         new InstructionInfo(Mode.EITHER,   075, 003, 000, true,  false, true,  false, ASemantics.B_EXEC,"LBE",   false),

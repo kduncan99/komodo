@@ -213,7 +213,7 @@ public abstract class FunctionTable {
         new JOFunctionHandler(),    //  000
         null,           //  001
         null,           //  002
-        null,           //  003
+        new JDFFunctionHandler(),   //  003
         null,           //  004
         null,           //  005
         null,           //  006
@@ -229,13 +229,13 @@ public abstract class FunctionTable {
     };
 
     /**
-     * Basic Mode function handlers for f-field 074 j-field 004, indexed by a-field
+     * Basic Mode function handlers for f-field 074 j-field 015, indexed by a-field
      */
     private static final FunctionHandler[] BASIC_MODE_FUNCTION074_015_HANDLERS = {
         new JNOFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
-        null,           //  003
+        new JNDFFunctionHandler(),  //  003
         null,           //  004
         new HLTJFunctionHandler(),  //  005
         null,           //  006
@@ -262,8 +262,8 @@ public abstract class FunctionTable {
         new HJFunctionHandler(),    //  005
         new NOPFunctionHandler(),   //  006
         new AAIJFunctionHandler(),  //  007
-        null,           //  010
-        null,           //  011
+        new JNBFunctionHandler(),   //  010
+        new JBFunctionHandler(),    //  011
         new JMGIFunctionHandler(),  //  012
         new LMJFunctionHandler(),   //  013
         new SubSubFunctionHandler(BASIC_MODE_FUNCTION074_014_HANDLERS), //  014
@@ -635,7 +635,7 @@ public abstract class FunctionTable {
         new JOFunctionHandler(),    //  000
         null,           //  001
         null,           //  002
-        null,           //  003
+        new JDFFunctionHandler(),   //  003
         new JCFunctionHandler(),    //  004
         new JNCFunctionHandler(),   //  005
         new AAIJFunctionHandler(),  //  006
@@ -657,7 +657,7 @@ public abstract class FunctionTable {
         new JNOFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
-        null,           //  003
+        new JNDFFunctionHandler(),  //  003
         new JFunctionHandler(),     //  004
         new HLTJFunctionHandler(),  //  005
         null,           //  006
@@ -684,8 +684,8 @@ public abstract class FunctionTable {
         null,           //  005
         null,           //  006
         null,           //  007
-        null,           //  010
-        null,           //  011
+        new JNBFunctionHandler(),   //  010
+        new JBFunctionHandler(),    //  011
         new JMGIFunctionHandler(),  //  012
         new LMJFunctionHandler(),   //  013
         new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION074_014_HANDLERS),  //  014

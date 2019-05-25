@@ -335,6 +335,50 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Calculates the raw relative address (the U) for the current instruction.
+     * Does NOT increment any x registers, even if their content contributes to the result.
+     * @param offset For multiple transfer instructions which need to calculate U for each transfer,
+     *                  this value increments from zero upward by one.
+     * @return relative address for the current instruction
+     */
+    private int calculateRelativeAddressForJump(
+        final int offset
+    ) {
+        IndexRegister xReg = null;
+        int xx = (int)_currentInstruction.getX();
+        if (xx != 0) {
+            xReg = getExecOrUserXRegister(xx);
+        }
+
+        long addend1;
+        long addend2 = 0;
+        if (_designatorRegister.getBasicModeEnabled()) {
+            addend1 = _currentInstruction.getU();
+            if (xReg != null) {
+                addend2 = xReg.getSignedXM();
+            }
+        } else {
+            addend1 = _currentInstruction.getU();
+            if (xReg != null) {
+                if (_designatorRegister.getExecutive24BitIndexingEnabled()
+                    && (_designatorRegister.getProcessorPrivilege() < 2)) {
+                    //  Exec 24-bit indexing is requested
+                    addend2 = xReg.getSignedXM24();
+                } else {
+                    addend2 = xReg.getSignedXM();
+                }
+            }
+        }
+
+        long result = OnesComplement.add36Simple(addend1, addend2);
+        if (offset != 0) {
+            result = OnesComplement.add36Simple(result, offset);
+        }
+
+        return (int)result;
+    }
+
+    /**
      * Checks the given absolute address and comparison type against the breakpoint register to see whether
      * we should take a breakpoint.  Updates IKR appropriately.
      * @param comparison comparison type
@@ -1448,7 +1492,7 @@ public class InstructionProcessor extends Processor implements Worker {
     public int getJumpOperand(
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForGRSOrStorage(0);
+        int relAddress = calculateRelativeAddressForJump(0);
 
         //  The following bit is how we deal with indirect addressing for basic mode.
         //  If we are doing that, it will update the U portion of the current instruction with new address information,

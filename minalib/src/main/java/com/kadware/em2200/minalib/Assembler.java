@@ -552,7 +552,7 @@ public class Assembler {
         int jField = processMnemonicGetJField(context, iinfo, operationField);
 
         //  We have to be in extended mode, *not* using basic mode semantics, and
-        //  either the j-field is part of the instruction, or else it is no U or XU...
+        //  either the j-field is part of the instruction, or else it is not U or XU...
         //  If that is the case, then we allow (maybe even require) a base register specification.
         boolean baseSubfieldAllowed =
                 (context.getCodeMode() == CodeMode.Extended)

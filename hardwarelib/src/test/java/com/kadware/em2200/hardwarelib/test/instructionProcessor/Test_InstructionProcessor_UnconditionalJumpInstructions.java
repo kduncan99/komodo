@@ -4,21 +4,22 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
-import static org.junit.Assert.*;
-import org.junit.*;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_JumpInstructions extends Test_InstructionProcessor {
+public class Test_InstructionProcessor_UnconditionalJumpInstructions extends Test_InstructionProcessor {
 
     @Test
-    public void jump_normal_basic(
+    public void jump_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -52,7 +53,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
     }
 
     @Test
-    public void jump_normal_basic_referenceViolation(
+    public void jump_indexed_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -62,8 +63,18 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "",
             "$(1),START$*",
             "          NOP",
-            "          J         050000",
+            "          LXI,U     X3,1",
+            "          LXM,U     X3,5",
+            "          J         TARGET,*X3",
             "          HALT      077",
+            "",
+            "TARGET",
+            "          HALT      076",
+            "          HALT      075",
+            "          HALT      074",
+            "          HALT      073",
+            "          HALT      072",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
@@ -75,11 +86,95 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000006L, processors._instructionProcessor.getGeneralRegister(3).getW());
     }
 
     @Test
-    public void jump_normal_extended(
+    public void jump_indirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          J         *TARGET2",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          J         DONE",
+            "          HALT      075",
+            "",
+            "TARGET2",
+            "          J         *TARGET1",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jump_indexed_indirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,2",
+            "          LXI,U     X3,1",
+            "          LXM,U     X3,1",
+            "          J         *TARGET2,*X2",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          HALT      073",
+            "          J         DONE",
+            "          HALT      072",
+            "",
+            "TARGET2",
+            "          HALT      076",
+            "          HALT      075",
+            "          J         *TARGET1,*X3",
+            "          HALT      074",
+            "",
+            "DONE",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000003, processors._instructionProcessor.getGeneralRegister(2).getW());
+        assertEquals(01_000002, processors._instructionProcessor.getGeneralRegister(3).getW());
+    }
+
+    @Test
+    public void jump_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -94,6 +189,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          HALT      0",
             "          HALT      1",
             "          HALT      2",
+            "          $RES      040000 . use large jump to ensure we use U, not D",
             "TARGET",
             "          HALT      3",
             "          HALT      4",
@@ -124,9 +220,9 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          $INFO 10 1",
             "",
             "$(1),START$*",
-            "          NOP",
+            "          LXI,U     X5,2",
             "          LXM,U     X5,3",
-            "          J         TARGET,X5",
+            "          J         TARGET,*X5",
             "",
             "TARGET",
             "          HALT      0",
@@ -148,6 +244,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(02_000005, processors._instructionProcessor.getGeneralRegister(5).getW());
     }
 
     @Test
@@ -345,6 +442,8 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
     }
 
+    //  no extended mode version of SLJ
+
     @Test
     public void storeLocationAndJump(
     ) throws MachineInterrupt,
@@ -383,7 +482,42 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
     }
 
     @Test
-    public void loadModifierAndJump(
+    public void loadModifierAndJump_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          LMJ       X11,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         0,X11        . return to caller",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void loadModifierAndJump_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -398,6 +532,7 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          LMJ       X11,SUBROUTINE",
             "          LA,U      A1,5         . change A1 value post-subroutine",
             "          HALT      0            . done",
+            "          $RES      020000       . use large jump to ensure we use U, not D",
             "",
             "SUBROUTINE .",
             "          LA,U      A0,5         . update A0 value",
@@ -419,348 +554,19 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
     }
 
     @Test
-    public void jumpZero(
+    public void jump_basic_referenceViolation1(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0         . set up initial values",
-            "          LA,U      A1,1",
-            "          JZ        A0,GO_HERE",
-            "          HALT      077          . should not happen",
-            "GO_HERE",
-            "          JZ        A1,NOT_HERE",
-            "          HALT      0            . should stop here",
-            "",
-            "NOT_HERE",
-            "          HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void doubleJumpZero(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0         . set up initial values",
-            "          LA,U      A1,0",
-            "          LA,U      A2,0",
-            "          LA,U      A3,1",
-            "          DJZ       A0,GO_HERE",
-            "          HALT      077          . should not happen",
-            "GO_HERE",
-            "          DJZ       A2,NOT_HERE",
-            "          HALT      0            . should stop here",
-            "",
-            "NOT_HERE",
-            "          HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpNonZero(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0         . set up initial values",
-            "          LA,U      A1,1",
-            "          JNZ       A1,GO_HERE",
-            "          HALT      077          . should not happen",
-            "GO_HERE",
-            "          JNZ       A0,NOT_HERE",
-            "          HALT      0            . should stop here",
-            "",
-            "NOT_HERE",
-            "          HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpPositive(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0         . set up initial values",
-            "          LA,U      A1,1",
-            "          LNA,U     A2,1",
-            "          SNZ       A3",
-            "          JP        A0,GO_HERE",
-            "          HALT      077          . should not happen",
-            "GO_HERE",
-            "          JP        A1,AND_HERE",
-            "          HALT      076          . nor this",
-            "AND_HERE",
-            "          JP        A2,NOT_HERE",
-            "          JP        A3,NOR_HERE",
-            "          HALT      0            . should stop here",
-            "",
-            "NOT_HERE",
-            "          HALT      075",
-            "NOR_HERE",
-            "          HALT      074",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpPositiveAndShift(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,010",
-            "          LA,XU     A1,0777776",
-            "          JPS       A0,GO_HERE",
-            "          HALT      077           . should not get here",
-            "GO_HERE",
-            "          JPS       A1,NOT_HERE",
-            "          HALT      0             . should stop here",
-            "NOT_HERE",
-            "          HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(020L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_777777_777775L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-    }
-
-    @Test
-    public void jumpNegative(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0         . set up initial values",
-            "          LA,U      A1,1",
-            "          LNA,U     A2,1",
-            "          SNZ       A3",
-            "          JN        A2,GO_HERE",
-            "          HALT      077          . should not happen",
-            "GO_HERE",
-            "          JN        A3,AND_HERE",
-            "          HALT      076          . nor this",
-            "AND_HERE",
-            "          JN        A0,NOT_HERE",
-            "          JN        A1,NOR_HERE",
-            "          HALT      0            . should stop here",
-            "",
-            "NOT_HERE",
-            "          HALT      075",
-            "NOR_HERE",
-            "          HALT      074",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpNegativeAndShift(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,010",
-            "          LA,XU     A1,0777776",
-            "          JNS       A1,GO_HERE",
-            "          HALT      077           . should not get here",
-            "GO_HERE",
-            "          JNS       A0,NOT_HERE",
-            "          HALT      0             . should stop here",
-            "NOT_HERE",
-            "          HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(020L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_777777_777775L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-    }
-
-    @Test
-    public void jumpGreaterAndDecrement(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,010",
-            "          LA,XU     A1,0777776",
-            "          LA,U      A2,0",
-            "          JGD       A1,BAD1       . should not happen (a1 is 015)",
-            "          JGD       A2,BAD2       . also should not happen",
-            "",
-            "LOOP",
-            "          AA,U      A2,2          . should happen 9 times",
-            "          JGD       A0,LOOP       . should happen 8 times",
-            "          HALT      0             . should finish here",
-            "",
-            "BAD1      HALT      077",
-            "BAD2      HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_777776L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_777777_777775L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(021, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-    }
-
-    @Test
-    public void jumpModifierGreaterAndIncrement_basic(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+        //  address out of limits
         String[] source = {
             "          $BASIC",
             "",
-            "$(1),START$*         .",
-            "          LXI,U     X0,02           . set up X0 so we take a conditionalJump",
-            "          LXM,U     X0,02           .",
-            "          JMGI      X0,TARGET1      . we should take this conditionalJump",
-            "          HALT      077             . should not happen",
-            "",
-            "TARGET1             .",
-            "          LXI,U     X1,02           . set up X1 so we do not take a conditionalJump",
-            "          LXM,U     X1,0            .",
-            "          JMGI      X1,BAD1         . should not happen",
-            "",
-            "          LXI,U     X2,01           . set up X2 so we take a conditionalJump to zero,",
-            "          LXM,U     X2,TARGET2      .   but indexed by the address in X2",
-            "          JMGI      X2,0,*X2        . should take this",
-            "          HALT      075             . should not happen",
-            "",
-            "TARGET2             .",
-            "          LXI,XU    X3,0777776      . set up X3 so we take a conditionalJump",
-            "          LXM,U     X3,010          .",
-            "          LXI,U     X4,02           . set up X4 so we take a conditionalJump to zero,",
-            "          LXM,U     X4,TARGET3      .    indexed by X4",
-            "          JMGI      X3,0,*X4        . should take this",
-            "          HALT      074             . should not happen",
-            "",
-            "TARGET3             .",
-            "          HALT      0               . should finish here.",
-            "",
-            "BAD1      HALT      076             . should not get here",
+            "$(1),START$*",
+            "          NOP",
+            "          J         050000",
+            "          HALT      077",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasic(source, false);
@@ -772,16 +578,78 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000002_000004L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertEquals(0_000002_000002L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        assertEquals(0_000001_022014L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        assertEquals(0_777776_000007L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        assertEquals(0_000002_022023L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
     @Test
-    public void jumpCarry(
+    public void jump_basic_referenceViolation2(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        //  address out of limits
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X3,010",
+            "          LXM,U     X3,0100",
+            "          J         0,*X3",
+            "          HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(010_000110L, processors._instructionProcessor.getGeneralRegister(3).getW());
+    }
+
+    @Test
+    public void jump_basic_referenceViolation3(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        //  address non-executable
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(2),DATA",
+            "          HALT      076",
+            "",
+            "$(1),START$*",
+            "          NOP",
+            "          J         DATA",
+            "          HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.ReadAccessViolation.getCode() << 4) + 1,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void jump_extended_referenceViolation1(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -791,17 +659,8 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
             "          $INFO 10 1",
             "",
             "$(1),START$*",
-            "          LA,U      A0,0",
-            "          AA,XU     A0,1                . Does not generate carry",
-            "          JC        BAD                 . Should not conditionalJump",
-            "          LA,U      A1,2",
-            "          AA,XU     A1,0777776          . This generates a carry",
-            "          JC        DONE                . Should conditionalJump",
+            "          J         START$+02000",
             "          HALT      077",
-            "",
-            "BAD       HALT      076",
-            "",
-            "DONE      HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -813,127 +672,8 @@ public class Test_InstructionProcessor_JumpInstructions extends Test_Instruction
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
-
-    @Test
-    public void jumpNoCarry(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0",
-            "          AA,XU     A0,1                . Does not generate carry",
-            "          JNC       TARGET              . Should conditionalJump",
-            "          HALT      077",
-            "",
-            "TARGET",
-            "          LA,U      A1,2",
-            "          AA,XU     A1,0777776          . This generates a carry",
-            "          JNC       BAD                 . Should not conditionalJump",
-            "DONE      HALT      0",
-            "",
-            "BAD       HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpOverflow(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "$(0)",
-            "DATA      + 0377777777777",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0",
-            "          AA,XU     A0,1                . Does not generate overflow",
-            "          JO        BAD                 . Should not conditionalJump",
-            "          LA        A1,DATA,,B2",
-            "          AA        A1,DATA,,B2         . This generates overflow",
-            "          JO        DONE                . Should conditionalJump",
-            "          HALT      077",
-            "",
-            "BAD       HALT      076",
-            "",
-            "DONE      HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    @Test
-    public void jumpNoOverflow(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "",
-            "$(0)",
-            "DATA      + 0377777777777",
-            "",
-            "$(1),START$*",
-            "          LA,U      A0,0",
-            "          AA,XU     A0,1                . Does not generate overflow",
-            "          JNO       TARGET              . Should conditionalJump",
-            "          HALT      077",
-            "",
-            "TARGET",
-            "          LA        A1,DATA,,B2",
-            "          AA        A1,DATA,,B2         . This generates overflow",
-            "          JNO       BAD                 . Should not conditionalJump",
-            "DONE      HALT      0",
-            "",
-            "BAD       HALT      076",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-    }
-
-    //TODO many tests above need both basic AND extended versions
-
-    //TODO Need unit tests for JDF, JNDF, JFO, JNFO, JFU, JNFU
-
-    //TODO  need tests for jumps to invalid destinations, once we can handle interrupts
 }
