@@ -200,6 +200,7 @@ public class InstructionProcessor extends Processor implements Worker {
         return _generalRegisterSet.getRegister(index);
     }
 
+    public MachineInterrupt getLastInterrupt() { return _lastInterrupt; }
     public StopReason getLatestStopReason() { return _latestStopReason; }
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }

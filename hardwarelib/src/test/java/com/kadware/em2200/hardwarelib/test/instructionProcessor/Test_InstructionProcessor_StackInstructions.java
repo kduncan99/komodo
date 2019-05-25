@@ -164,6 +164,112 @@ public class Test_InstructionProcessor_StackInstructions extends Test_Instructio
         assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI12());
     }
 
-    //  TODO tests with non-zero displacement values
-    //  TODO test for overflow/underflow
+    @Test
+    public void buyWithDisplacement(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000",
+            "          BUY       010,*X5,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000 + (128 - 16) - 010, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
+    }
+
+    @Test
+    public void buyOverflow(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,01000",
+            "          BUY       0,*X5,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(01000, processors._instructionProcessor.getGeneralRegister(5).getH2());
+        assertEquals(16, processors._instructionProcessor.getGeneralRegister(5).getH1());
+    }
+
+    @Test
+    public void sellUnderflow(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000",
+            "          SELL      0,*X5,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(01000+128, processors._instructionProcessor.getGeneralRegister(5).getH2());
+        assertEquals(16, processors._instructionProcessor.getGeneralRegister(5).getH1());
+    }
 }

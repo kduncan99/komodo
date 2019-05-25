@@ -1,8 +1,5 @@
 -- InProgress
 Lose unnecessary accessors (in progress)
-hardwarelib stack manipulation instructions (and unit tests)
-  BUY
-  SELL
 
 -- BUGS
 
