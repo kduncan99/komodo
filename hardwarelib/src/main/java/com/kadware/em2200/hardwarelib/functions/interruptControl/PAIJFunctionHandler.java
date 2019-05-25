@@ -8,10 +8,11 @@ import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
-import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.interrupts.*;
 
 /**
  * Handles the PAIJ instruction f=074 j=014 a=07
+ * requires PP = 0
  */
 public class PAIJFunctionHandler extends FunctionHandler {
 
@@ -21,6 +22,10 @@ public class PAIJFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
+        if (ip.getDesignatorRegister().getProcessorPrivilege() > 0) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+        }
+
         ip.getDesignatorRegister().setDeferrableInterruptEnabled(false);
         int counter = (int)ip.getJumpOperand();
         ip.setProgramCounter(counter, true);
