@@ -1,15 +1,12 @@
 -- InProgress
-implement jump instructions (and unit tests) for JB, JNB
-implement unit tests for JDF, JNDF
-need some conditional jump tests which would incur reference violation if they jumped
-    both jumping (ref violation) and not jumping (no ref violation)
-fixed bug in JC, JNC instruction definition for basic mode
-fixed bug where EM jumps used D instead of U for target
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 
 -- TODO implemeent
+baselib some new instructions
+need some conditional jump tests which would incur reference violation if they jumped
+    both jumping (ref violation) and not jumping (no ref violation)
 hardwarelib do active base table entry thing
 hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
 hardwarelib UPI send/ack mechanism
@@ -19,9 +16,10 @@ hardwarelib Figure out how to do channel programs
 hardwarelib Rewrite disk (and maybe tape) devices using async IO
 hardwarelib All Device objects: add Builder class, make constructors private
 hardwarelib Device.IoInfo objects: add Builder class, make constructors private
-
+hardwarelib UNLK instruction
+hardwarelib SPID see new info
 hardwarelib storage-to-storage instructions (and unit tests)
-  BT
+  BT (note special version to indicate processor idle)
   BIM
   BIC
   BIMT
@@ -47,6 +45,7 @@ hardwarelib address space management instructions (and unit tests)
   SBU
   LBN
   TRA
+  TRARS
   TVA
   DABT
 hardwarelib extended mode procedure call instructions (and unit tests)
@@ -58,7 +57,13 @@ hardwarelib basic mode procedure call instructions (and unit tests)
   LBJ
   LIJ
   LDJ
-hardwarelib queuing instructions (maybe later)
+hardwarelib queuing instructions
+  ENQ
+  ENQF
+  DEQ
+  DEQW
+  DEPOSITQB
+  WITHDRAWQB
 hardwarelib paging control instructions (never)
 hardwarelib activity control instructions (and unit tests)
   LD
@@ -72,6 +77,7 @@ hardwarelib activity control instructions (and unit tests)
   ACEL
   DCEL
   SKQT
+  KCHG
 hardwarelib dayclock control instructions (and unit tests)
   LRD
   SMD
