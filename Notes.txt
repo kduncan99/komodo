@@ -4,21 +4,29 @@
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 
 -- TODO implemeent
-baselib some new instructions
+* baselib
+some new instructions
+
+* hardwarelib
 need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
-hardwarelib do active base table entry thing
-hardwareLib note - when changing code banks, observe q/t word mode, and arithfault modes
-hardwarelib UPI send/ack mechanism
-hardwarelib Figure out how to do channel programs
-  do we need a cleaner IO path?
-  we'd still like word and byte operations... don't we?
-hardwarelib Rewrite disk (and maybe tape) devices using async IO
-hardwarelib All Device objects: add Builder class, make constructors private
-hardwarelib Device.IoInfo objects: add Builder class, make constructors private
-hardwarelib UNLK instruction
-hardwarelib SPID see new info
-hardwarelib storage-to-storage instructions (and unit tests)
+IP: do active base table thing
+IP,IOP: UPI send/ack mechanism for IOs
+IP: operations control instructions (and unit tests)
+  SEND
+  ACK
+MSP: add support for banks dynamically allocated from native system
+IP: IPC instruction for dynamic bank allocation
+IP: implement standard bank switching logic
+IP: interrupt processing, use standard bank switching logic
+IP: IPC instruction for console communication
+SCP: For starting/monitoring/stopping system, and for console communication
+IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
+Rewrite disk (and maybe tape) devices using async IO
+All Device objects: add Builder class, make constructors private
+IP: UNLK instruction
+IP: SPID see new info
+IP: storage-to-storage instructions (and unit tests)
   BT (note special version to indicate processor idle)
   BIM
   BIC
@@ -29,13 +37,13 @@ hardwarelib storage-to-storage instructions (and unit tests)
   BBN
   BTP
   BTU
-hardwarelib string instructions (and unit tests)
+IP: string instructions (and unit tests)
   LS
   LSA
   SS
   TES
   TNES
-hardwarelib address space management instructions (and unit tests)
+IP: address space management instructions (and unit tests)
   LBU
   LBE
   LBUD
@@ -48,24 +56,23 @@ hardwarelib address space management instructions (and unit tests)
   TRARS
   TVA
   DABT
-hardwarelib extended mode procedure call instructions (and unit tests)
+IP: extended mode procedure call instructions (and unit tests)
   GOTO
   CALL
   LOCL
   RTN
-hardwarelib basic mode procedure call instructions (and unit tests)
+IP: basic mode procedure call instructions (and unit tests)
   LBJ
   LIJ
   LDJ
-hardwarelib queuing instructions
+IP: queuing instructions
   ENQ
   ENQF
   DEQ
   DEQW
   DEPOSITQB
   WITHDRAWQB
-hardwarelib paging control instructions (never)
-hardwarelib activity control instructions (and unit tests)
+IP: activity control instructions (and unit tests)
   LD
   SD
   LPD
@@ -78,7 +85,7 @@ hardwarelib activity control instructions (and unit tests)
   DCEL
   SKQT
   KCHG
-hardwarelib dayclock control instructions (and unit tests)
+IP: dayclock control instructions (and unit tests)
   LRD
   SMD
   RMD
@@ -87,19 +94,15 @@ hardwarelib dayclock control instructions (and unit tests)
   SDMS
   SDMF
   RDC
-hardwarelib UPI operations control instructions (and unit tests)
-  SEND
-  ACK
-hardwarelib system instrumentation instructions
+IP: system instrumentation instructions
   LBRX
   CJHE
   SJH
-hardwarelib performance monitoring instructions (never)
-hardwarelib special instructions (and unit tests)
+IP: special instructions (and unit tests)
   EX
   EXR
   DCB
-hardwarelib floating point binary instructions (and unit tests)
+IP: floating point binary instructions (and unit tests)
   FA
   FAN
   DFA
@@ -116,12 +119,12 @@ hardwarelib floating point binary instructions (and unit tests)
   FCL
   MCDU
   CDU
-hardwarelib floating point conditional jumps (requires floating point instructions to be implemented)
+IP: floating point conditional jumps (requires floating point instructions to be implemented)
   JFO
   JNFO
   JFU
   JNFU
-hardwarelib fixed point decimal instructions (and unit tests)
+IP: fixed point decimal instructions (and unit tests)
   ADE
   DADE
   SDE
@@ -133,7 +136,7 @@ hardwarelib fixed point decimal instructions (and unit tests)
   BDE
   DEB
   EDDE
-hardwarelib search and masked search instructions (and unit tests)
+IP: search and masked search instructions (and unit tests)
   SE
   SNE
   SNG
@@ -149,27 +152,26 @@ hardwarelib search and masked search instructions (and unit tests)
   MASL
   MASG
 
-minalib unit tests for string value generation
-minalib unit tests for node references - need to check results
-minalib support special form for JGD instruction
-minalib support special form for BT instruction
-minalib support node references on LHS of $EQU statements
-minalib need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
-minalib remove UndefinedReferenceDiagnostic (I think...)
-minalib use DiagnosticDirective for stuff
+* minalib
+unit tests for string value generation
+unit tests for node references - need to check results
+support special form for JGD instruction
+support special form for BT instruction
+support node references on LHS of $EQU statements
+need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
+remove UndefinedReferenceDiagnostic (I think...)
+use DiagnosticDirective for stuff
 pick up the rest of the unit tests we need to do but haven't yet
-minalib do we need microstrings?
-minalib $USE (A.2.8) specifies base register to use if none given
-minalib add test cases for interrupts (many of them already marked TODO)
-minalib float values - firm this up (how do we support it)
-minalib data generation - floats
-minalib can we do implicit base register (and do it right)?  also with the $LIT directive...
-minalib make sure we don't propagate flagged attribute in any of the operators
-minalib support user-defined functions
-minalib allow expression list inside literal which is part of expression
-  e.g., ((005, 007) + 12)
-
-minalib functions
+do we need microstrings?
+$USE (A.2.8) specifies base register to use if none given
+add test cases for interrupts (many of them already marked TODO)
+float values - firm this up (how do we support it)
+data generation - floats
+can we do implicit base register (and do it right)?  also with the $LIT directive...
+make sure we don't propagate flagged attribute in any of the operators
+support user-defined functions
+allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
+functions
   $ILCN
   $L0
   $L1
@@ -179,7 +181,7 @@ minalib functions
   $SSS
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
-minalib directives
+directives
   $END directive on top-level code (do we require it?)
   $EQUF
   $USE (implicit base register)
@@ -193,6 +195,6 @@ minalib directives
   $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
 
-Mina - wrapper around minalib
+* Mina - wrapper around minalib
 
-Exec - using Mina (or minalib, but hopefully mina)
+* Exec - using Mina (or minalib, but hopefully mina)
