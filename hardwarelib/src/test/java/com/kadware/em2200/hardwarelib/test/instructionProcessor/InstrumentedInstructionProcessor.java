@@ -11,9 +11,9 @@ import com.kadware.em2200.hardwarelib.interrupts.*;
 /**
  * Extended subclass of InstructionProcessor class, suitably instrumented for special testing
  */
-public class ExtInstructionProcessor extends InstructionProcessor {
+public class InstrumentedInstructionProcessor extends InstructionProcessor {
 
-    public ExtInstructionProcessor(
+    public InstrumentedInstructionProcessor(
         final String name,
         final short upi
     ) {

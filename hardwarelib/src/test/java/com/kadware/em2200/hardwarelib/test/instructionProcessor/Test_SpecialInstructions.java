@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_SpecialInstructions extends Test_InstructionProcessor {
+public class Test_SpecialInstructions extends BaseFunctions {
 
     @Test
     public void nop_basic(

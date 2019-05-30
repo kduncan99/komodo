@@ -12,6 +12,12 @@ import com.kadware.em2200.baselib.Word36;
 */
 public class ActiveBaseTableEntry extends Word36 {
 
+    public ActiveBaseTableEntry(
+        final long value
+    ) {
+        _value = value;
+    }
+
     public int getLevel() { return (int) (_value >> 33); }
     public int getBDI() { return (int) (_value >> 18) & 077777; }
     public int getLBDI() { return (int) (_value >> 18); }

@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
@@ -20,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_InterruptInstructions extends Test_InstructionProcessor {
+public class InterruptInstructions extends BaseFunctions {
 
     @Test
     public void erBasic(

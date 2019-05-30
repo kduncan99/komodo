@@ -16,7 +16,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_ShiftInstructions extends Test_InstructionProcessor {
+public class Test_ShiftInstructions extends BaseFunctions {
 
     @Test
     public void singleShiftAlgebraic(

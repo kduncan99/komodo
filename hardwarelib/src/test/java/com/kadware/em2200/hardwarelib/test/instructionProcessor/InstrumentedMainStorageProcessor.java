@@ -11,12 +11,12 @@ import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 /**
  * Extended subclass of MainStorageProcessor class, suitably instrumented for special testing
  */
-public class ExtMainStorageProcessor extends MainStorageProcessor {
+public class InstrumentedMainStorageProcessor extends MainStorageProcessor {
 
     //  Keep track of the areas of storage which we've allocated
     final RegionTracker _regions;
 
-    public ExtMainStorageProcessor(
+    public InstrumentedMainStorageProcessor(
         final String name,
         final short upi,
         final int sizeInWords

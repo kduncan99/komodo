@@ -14,7 +14,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_TestInstructions extends Test_InstructionProcessor {
+public class Test_TestInstructions extends BaseFunctions {
 
     @Test
     public void testEvenParityBasic(

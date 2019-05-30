@@ -1,55 +1,23 @@
 /*
- * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
-import com.kadware.em2200.hardwarelib.interrupts.*;
-import static org.junit.Assert.*;
-
+import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.minalib.AbsoluteModule;
-import org.junit.*;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_LogicalInstructions extends Test_InstructionProcessor {
+public class Test_StackInstructions extends BaseFunctions {
 
     @Test
-    public void logicalANDBasic(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $BASIC",
-            "",
-            "$(0)      $LIT",
-            "$(1),START$*",
-            "          LA        A4,(0777777777123)",
-            "          AND,U     A4,0543321",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_777123L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_000000_543121L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-    }
-
-    @Test
-    public void logicalANDExtended(
+    public void buySimple18(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -59,9 +27,14 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
             "$(1),START$*",
-            "          LA        A4,(0777777777123),,B2",
-            "          AND,U     A4,0543321",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000",
+            "          BUY       0,*X5,B2",
             "          HALT      0",
         };
 
@@ -75,43 +48,12 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_777123L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0_000000_543121L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(01000 + (128 - 16), processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
-    public void logicalMLUBasic(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $BASIC",
-            "",
-            "$(0)      $LIT",
-            "$(1),START$*",
-            "          LA        A8,(0777777000000)",
-            "          LR        R2,(0707070707070)",
-            "          MLU       A8,(0000000777777)",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(0_070707_707070L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
-    }
-
-    @Test
-    public void logicalMLUExtended(
+    public void buySimple24(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -121,10 +63,52 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "XVALUE    $GFORM 12,FRAMESIZE,24,STACKSIZE+01000",
+            "",
             "$(1),START$*",
-            "          LA        A8,(0777777000000),,B2",
-            "          LR        R2,(0707070707070),,B2",
-            "          MLU       A8,(0000000777777),,B2",
+            "          LXSI,U    X5,FRAMESIZE",
+            "          LXLM      X5,XVALUE,,B2",
+            "          BUY       0,*X5,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000 + (128 - 16), processors._instructionProcessor.getExecOrUserXRegister(5).getXM24());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI12());
+    }
+
+    @Test
+    public void sellSimple18(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000-FRAMESIZE",
+            "          SELL      0,*X5,B2",
             "          HALT      0",
         };
 
@@ -138,42 +122,12 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(0_070707_707070L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        assertEquals(01000 + 128, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
-    public void logicalORBasic(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $BASIC",
-            "",
-            "$(0)      $LIT",
-            "$(1),START$*",
-            "          LA        A0,(0111111111111)",
-            "          OR        A0,(0222222222222)",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_111111_111111L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_333333_333333L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-    }
-
-    @Test
-    public void logicalORExtended(
+    public void sellSimple24(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -183,9 +137,52 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "XVALUE    $GFORM 12,FRAMESIZE,24,STACKSIZE+01000-FRAMESIZE",
+            "",
             "$(1),START$*",
-            "          LA        A0,(0111111111111),,B2",
-            "          OR        A0,(0222222222222),,B2",
+            "          LXSI,U    X5,FRAMESIZE",
+            "          LXLM      X5,XVALUE,,B2",
+            "          SELL      0,*X5,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01000 + 128, processors._instructionProcessor.getExecOrUserXRegister(5).getXM24());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI12());
+    }
+
+    @Test
+    public void buyWithDisplacement(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000",
+            "          BUY       010,*X5,B2",
             "          HALT      0",
         };
 
@@ -199,42 +196,12 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_111111_111111L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_333333_333333L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(01000 + (128 - 16) - 010, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
-    public void logicalXORBasic(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        String[] source = {
-            "          $BASIC",
-            "",
-            "$(0)      $LIT",
-            "$(1),START$*",
-            "          LA        A2,(0777000777000)",
-            "          XOR,H1    A2,(0750750777777)",
-            "          HALT      0",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777000_777000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_777000_027750L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-    }
-
-    @Test
-    public void logicalXORExtended(
+    public void buyOverflow(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -244,11 +211,16 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
             "$(1),START$*",
-            "          LA        A2,(0777000777000),,B2",
-            "          XOR,H1    A2,(0750750777777),,B2",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,01000",
+            "          BUY       0,*X5,B2",
             "          HALT      0",
-        };
+            };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
@@ -259,8 +231,45 @@ public class Test_InstructionProcessor_LogicalInstructions extends Test_Instruct
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777000_777000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_777000_027750L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(01000, processors._instructionProcessor.getGeneralRegister(5).getH2());
+        assertEquals(16, processors._instructionProcessor.getGeneralRegister(5).getH1());
+    }
+
+    @Test
+    public void sellUnderflow(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "STACKSIZE $EQU 128",
+            "FRAMESIZE $EQU 16",
+            "STACK     $RES STACKSIZE",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X5,FRAMESIZE",
+            "          LXM,U     X5,STACKSIZE+01000",
+            "          SELL      0,*X5,B2",
+            "          HALT      0",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(01, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(01000+128, processors._instructionProcessor.getGeneralRegister(5).getH2());
+        assertEquals(16, processors._instructionProcessor.getGeneralRegister(5).getH1());
     }
 }

@@ -15,7 +15,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_ConditionalJumpInstructions extends Test_InstructionProcessor {
+public class Test_ConditionalJumpInstructions extends BaseFunctions {
 
     @Test
     public void doubleJumpZero_basic(

@@ -20,18 +20,18 @@ import java.util.Map;
 /**
  * Base class for all Test_InstructionProcessor_* classes
  */
-class Test_InstructionProcessor {
+class BaseFunctions {
 
     /**
      * Produced as a result of loadModule()
      */
     static class Processors {
-        final ExtInstructionProcessor _instructionProcessor;
-        final ExtMainStorageProcessor _mainStorageProcessor;
+        final InstrumentedInstructionProcessor _instructionProcessor;
+        final InstrumentedMainStorageProcessor _mainStorageProcessor;
 
         Processors(
-            final ExtInstructionProcessor ip,
-            final ExtMainStorageProcessor msp
+            final InstrumentedInstructionProcessor ip,
+            final InstrumentedMainStorageProcessor msp
         ) {
             _instructionProcessor = ip;
             _mainStorageProcessor = msp;
@@ -569,8 +569,8 @@ class Test_InstructionProcessor {
      * @param msp the MSP in which we'll create the environment
      */
     private static void establishBankingEnvironment(
-        final ExtInstructionProcessor ip,
-        final ExtMainStorageProcessor msp
+        final InstrumentedInstructionProcessor ip,
+        final InstrumentedMainStorageProcessor msp
     ) throws MachineInterrupt {
         //  Does the bank control absolute module already exist?  If not, create it
         if (_bankModule == null) {
@@ -679,7 +679,7 @@ class Test_InstructionProcessor {
      */
     private static BankDescriptor loadBank(
         final InstructionProcessor ip,
-        final ExtMainStorageProcessor msp,
+        final InstrumentedMainStorageProcessor msp,
         final LoadableBank bank,
         final int bankLevel,
         final int bankDescriptorIndex
@@ -733,7 +733,7 @@ class Test_InstructionProcessor {
      */
     private static void loadBanks(
         final InstructionProcessor ip,
-        final ExtMainStorageProcessor msp,
+        final InstrumentedMainStorageProcessor msp,
         final AbsoluteModule module
     ) {
         for (LoadableBank loadableBank : module._loadableBanks.values()) {
@@ -777,9 +777,9 @@ class Test_InstructionProcessor {
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException {
-        ExtInstructionProcessor ip = new ExtInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InstrumentedInstructionProcessor ip = new InstrumentedInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
         InventoryManager.getInstance().addInstructionProcessor(ip);
-        ExtMainStorageProcessor msp = new ExtMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
         InventoryManager.getInstance().addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
@@ -818,8 +818,8 @@ class Test_InstructionProcessor {
     static void showDebugInfo(
         final Processors processors
     ) {
-        ExtInstructionProcessor ip = processors._instructionProcessor;
-        ExtMainStorageProcessor msp = processors._mainStorageProcessor;
+        InstrumentedInstructionProcessor ip = processors._instructionProcessor;
+        InstrumentedMainStorageProcessor msp = processors._mainStorageProcessor;
         DesignatorRegister dr = ip.getDesignatorRegister();
         int oldpp = dr.getProcessorPrivilege();
         dr.setProcessorPrivilege(0);

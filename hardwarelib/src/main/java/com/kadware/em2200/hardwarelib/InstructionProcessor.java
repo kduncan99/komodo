@@ -170,7 +170,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * ActiveBaseTable entries - index 0 is for B1 .. index 14 is for B15.  There is no entry for B0.
      */
-    private static final ActiveBaseTableEntry[] _activeBaseTableEntries = new ActiveBaseTableEntry[15];
+    private final ActiveBaseTableEntry[] _activeBaseTableEntries = new ActiveBaseTableEntry[15];
 
     /**
      * Storage locks...
@@ -250,6 +250,8 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+
+    public ActiveBaseTableEntry[] getActiveBaseTableEntries() { return _activeBaseTableEntries; }
     public BaseRegister getBaseRegister(final int index) { return _baseRegisters[index]; }
     public boolean getBroadcastInterruptEligibility() { return _broadcastInterruptEligibility; }
     public InstructionWord getCurrentInstruction() { return _currentInstruction; }
@@ -271,6 +273,16 @@ public class InstructionProcessor extends Processor implements Worker {
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
     public boolean getRunningFlag() { return _runningFlag; }
+
+    public void loadActiveBaseTable(
+        final ActiveBaseTableEntry[] source
+    ) {
+        for (int ax = 0; ax < source.length; ++ax) {
+            if (ax < _activeBaseTableEntries.length) {
+                _activeBaseTableEntries[ax] = source[ax];
+            }
+        }
+    }
 
     public void setBaseRegister(
         final int index,
@@ -1917,8 +1929,6 @@ public class InstructionProcessor extends Processor implements Worker {
         if ((grsCheck)
                 && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
                 && (relAddress < 0200)) {
-            incrementIndexRegisterInF0();
-
             //  For multiple accesses, advancing beyond GRS 0177 wraps back to zero.
             //  Do accessibility checks for each GRS access
             int grsIndex = relAddress;
@@ -1934,40 +1944,42 @@ public class InstructionProcessor extends Processor implements Worker {
                 _generalRegisterSet.setRegister(grsIndex, operands[ox]);
             }
 
-            return;
-        }
+            incrementIndexRegisterInF0();
+        } else {
 
-        //  Storing to storage.
-        incrementIndexRegisterInF0();
-        try {
-            //  Iterate once through to create a container of absolute addresses which we're going to need presently.
-            AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
-            for (int ox = 0; ox < operands.length; ++ox) {
-                //  If this isn't the first trip through the loop, recalculate U
-                if (ox > 0) {
-                    relAddress = calculateRelativeAddressForGRSOrStorage(ox);
+            //  Storing to storage.
+            try {
+                //  Iterate once through to create a container of absolute addresses which we're going to need presently.
+                AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
+                for (int ox = 0; ox < operands.length; ++ox) {
+                    //  If this isn't the first trip through the loop, recalculate U (we already calculated for ox==0)
+                    if (ox > 0) {
+                        relAddress = calculateRelativeAddressForGRSOrStorage(ox);
+                    }
+
+                    //  We call findBaseRegisterIndex for the limits checking.  TODO this is kind of silly, can we do better?
+                    int brIndex = findBaseRegisterIndex(relAddress, true);
+                    BaseRegister baseReg = _baseRegisters[brIndex];
+
+                    //  Convert relative address to absolute, check the breakpoint, then retrieve the value
+                    absAddresses[ox] = getAbsoluteAddress(baseReg, relAddress);
                 }
 
-                int brIndex = findBaseRegisterIndex(relAddress, false);
-                BaseRegister baseReg = _baseRegisters[brIndex];
+                //  Now set storage locks for all the addresses
+                setStorageLocks(absAddresses);
 
-                //  Convert relative address to absolute, check the breakpoint, then retrieve the value
-                absAddresses[ox] = getAbsoluteAddress(baseReg, relAddress);
+                //  Now go store the operands, since all the addresses are under storage lock.
+                //  Do check for breakpoints along the way...
+                for (int ox = 0; ox < operands.length; ++ox) {
+                    checkBreakpoint(BreakpointComparison.Write, absAddresses[ox]);
+                    _inventoryManager.setStorageValue(absAddresses[ox], operands[ox]);
+                }
+                incrementIndexRegisterInF0();
+            } catch (AddressLimitsException
+                | UPINotAssignedException
+                | UPIProcessorTypeException ex) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
             }
-
-            //  Now set storage locks for all the addresses
-            setStorageLocks(absAddresses);
-
-            //  Now go store the operands, since all the addresses are under storage lock.
-            //  Do check for breakpoints along the way...
-            for (int ox = 0; ox < operands.length; ++ox) {
-                checkBreakpoint(BreakpointComparison.Read, absAddresses[ox]);
-                _inventoryManager.setStorageValue(absAddresses[ox], operands[ox]);
-            }
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
         }
     }
 

@@ -15,7 +15,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_Algorithms extends Test_InstructionProcessor {
+public class Test_Algorithms extends BaseFunctions {
 
     //TODO a recursive factorial, test with succeeding inputs from 0 to ... maybe 20
 

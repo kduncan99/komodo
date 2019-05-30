@@ -15,7 +15,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_FixedPointBinaryInstructions extends Test_InstructionProcessor {
+public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 
     @Test
     public void addAccumulator(

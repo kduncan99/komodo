@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_Interrupts extends Test_InstructionProcessor {
+public class Test_Interrupts extends BaseFunctions {
 
     @Test
     public void illegalOperation(

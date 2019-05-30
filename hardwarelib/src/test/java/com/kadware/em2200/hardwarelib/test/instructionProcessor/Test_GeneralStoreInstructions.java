@@ -14,7 +14,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_GeneralStoreInstructions extends Test_InstructionProcessor{
+public class Test_GeneralStoreInstructions extends BaseFunctions {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Testing Instructions which store data

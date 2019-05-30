@@ -15,7 +15,7 @@ import org.junit.*;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_InstructionProcessor_Addressing_ExtendedMode extends Test_InstructionProcessor {
+public class Test_ExtendedModeAddressing extends BaseFunctions {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Tests for addressing modes
