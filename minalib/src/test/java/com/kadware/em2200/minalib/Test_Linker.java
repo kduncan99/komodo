@@ -54,10 +54,10 @@ public class Test_Linker {
         LoadableBank ibank = abs._loadableBanks.get(04);
         assertEquals(0, ibank._accessInfo._ring);
         assertEquals(010, ibank._accessInfo._domain);
-        assertFalse(ibank._generalPermissions._execute);
+        assertFalse(ibank._generalPermissions._enter);
         assertFalse(ibank._generalPermissions._read);
         assertFalse(ibank._generalPermissions._write);
-        assertTrue(ibank._specialPermissions._execute);
+        assertTrue(ibank._specialPermissions._enter);
         assertTrue(ibank._specialPermissions._read);
         assertTrue(ibank._specialPermissions._write);
         assertEquals(2, ibank._bankLevel);
@@ -69,10 +69,10 @@ public class Test_Linker {
         LoadableBank dbank = abs._loadableBanks.get(05);
         assertEquals(03, dbank._accessInfo._ring);
         assertEquals(077, dbank._accessInfo._domain);
-        assertFalse(dbank._generalPermissions._execute);
+        assertFalse(dbank._generalPermissions._enter);
         assertFalse(dbank._generalPermissions._read);
         assertFalse(dbank._generalPermissions._write);
-        assertFalse(dbank._specialPermissions._execute);
+        assertFalse(dbank._specialPermissions._enter);
         assertTrue(dbank._specialPermissions._read);
         assertTrue(dbank._specialPermissions._write);
         assertEquals(4, dbank._bankLevel);

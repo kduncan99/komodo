@@ -54,59 +54,6 @@ class Test_InstructionProcessor {
         }
     }
 
-    //TODO remove the following
-    /*
-
-2.1.2 Base_Register Conventions
-The following table lists the architecturally defined conventions for Base_Register usage.
-Base_Register Usage
-0 Current Extended_Mode Code Bank, if any
-1 Reserved for activity-local storage stack
-2–15 Unassigned User, available in Extended_Mode
-12–15 Unassigned User, available in Basic_Mode
-16 L0 BDT Pointer and Interrupt_Vector_Area Pointer (see 3.1.1 and 3.6)
-17 L1 BDT Pointer (see 3.1.1)
-18 L2 BDT Pointer (see 3.1.1)
-19 L3 BDT Pointer (see 3.1.1)
-20 L4 BDT Pointer (see 3.1.1)
-21 L5 BDT Pointer (see 3.1.1)
-22 L6 BDT Pointer (see 3.1.1)
-23 L7 BDT Pointer (see 3.1.1)
-24 ASA Pointer (see 3.5)
-25 Return_Control_Stack (see 3.3.1)
-26 Interrupt_Control_Stack (see 3.3.2)
-27–31 Unassigned Exec
-
-The Bank_Descriptor_Table (BDT) is a series of 8-word Bank_Descriptors (BD). Up to eight such
-tables may be active at any one time, and each of the eight BDT Pointer Base_Registers, B16–B23,
-points to one of these. These eight parts of the address space are called level (L) 0–7, respectively.
-BDTs are referenced by the L-field (bits 0–2) of a Virtual_Address as described in 4.2.2.
-The L1–L7 BDTs may contain up to 32,768 BDs each. Because B16 is also used as the
-Interrupt_Vector_Area pointer (see 3.6), the L0 BDT may contain up to 32,736 BDs. Section 8
-contains the special addressing rules for BDTs.
-
-Version 3H models, hardware requires that B16 addresses 0120-0137 be available (that at least the
-limits support this address) for hardware read and write. Sometimes hardware needs to read and
-write a place in memory to control internal operations.
-
-Software Note: It is intended that L indicate scope, with L0 most global and L7 most local. No other
-architectural definition of L is made.
-
-The Activity Save Area is used by Executive software for the saving of Activity State
-Packets, Bank Descriptor Table Pointers, Return Control Stack data, Active Base Table
-data, and GRS. B24 is expected to be used as the ASA pointer.
-
-The Interrupt_Vector_Area is an array of 64 contiguous words (entries), starting at word 0 of the
-Bank described by B16, which are in the format of the Program_Address_Register (PAR; see 2.2.1).
-The Interrupt_Vector_Area entries provide a unique software entry point for each class of interrupt.
-The Interrupt_Vector_Area entries are ordered by interrupt class number, as shown in Table 5–1. As
-part of the interrupt sequence (see 5.1.5), the appropriate entry is fetched from the
-Interrupt_Vector_Area (using the interrupt class as an offset) and loaded into the hard-held PAR.
-There is no conflict between the Interrupt_Vector_Area and the Level 0 Bank_Descriptors because
-L,BDI 0,0 through 0,31 do not reference the BDT.
-
- */
-
     //  Assembler source for the interrupt handlers
     static private final String[] IH_CODE = {
         "          $EXTEND",
@@ -272,19 +219,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
     //  IH code will be in bank 33 (2nd BD in level 0 BDT) (our convention, it'll work)
     static private AbsoluteModule _bankModule = null;
 
-    //TODO obsolete?
-//    //  Class which describes a bank to be loaded into the existing BDT environment
-//    static class LoadBankInfo {
-//
-//        long[] _source;
-//        AccessInfo _accessInfo = new AccessInfo((byte)0, (short)0);
-//        AccessPermissions _generalAccessPermissions = ALL_ACCESS;
-//        AccessPermissions _specialAccessPermissions = ALL_ACCESS;
-//        int _lowerLimit = 0;
-//    }
-
-//    private static final AccessPermissions ALL_ACCESS = new AccessPermissions(true, true, true);
-
     private static final Assembler.Option[] _assemblerDisplayAll = {
         Assembler.Option.EMIT_MODULE_SUMMARY,
         Assembler.Option.EMIT_DICTIONARY,
@@ -351,72 +285,6 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                                                  .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
                                                                  .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
                                                                  .build());
-
-        Linker linker = new Linker();
-        return linker.link("TEST",
-                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-                           display ? _linkerDisplayAll : _linkerDisplayNone);
-    }
-
-    /**
-     * Assembles multiple codesets into as a sequence of relocatable modules.
-     * Odd numbered lc pools are placed into ibank I1 BDI=000004 based on B12
-     * Even numbered lc pools are placed into dbank D1 BDI=000005 based on B13
-     * @param code code to be assembled
-     * @param display true to display assembler and linker output
-     * @return absolute module
-     */
-    static AbsoluteModule buildCodeBasic(
-        final String[][] code,
-        final boolean display
-    ) {
-        List<RelocatableModule> relocatableModules = new LinkedList<>();
-        List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
-        List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
-        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-
-        Assembler asm = new Assembler();
-        for (String[] codeSet : code) {
-            String moduleName = String.format("TEST%d", relocatableModules.size() + 1);
-            RelocatableModule relModule = asm.assemble(moduleName, codeSet, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-            assert(relModule != null);
-
-            relocatableModules.add(relModule);
-
-            for (Integer lcIndex : relModule._storage.keySet()) {
-                if ((lcIndex & 01) == 01) {
-                    Linker.LCPoolSpecification oddPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-                    poolSpecsOdd.add(oddPoolSpec);
-                } else {
-                    Linker.LCPoolSpecification evenPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-                    poolSpecsEven.add(evenPoolSpec);
-                }
-            }
-        }
-
-        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-                                                                 .setBankName("I1")
-                                                                 .setBankDescriptorIndex(000004)
-                                                                 .setBankLevel(06)
-                                                                 .setStartingAddress(022000)
-                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-                                                                 .setInitialBaseRegister(12)
-                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                                 .build());
-
-        if (!poolSpecsEven.isEmpty()) {
-            bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-                                                                     .setBankName("D1")
-                                                                     .setBankDescriptorIndex(000005)
-                                                                     .setBankLevel(06)
-                                                                     .setStartingAddress(040000)
-                                                                     .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-                                                                     .setInitialBaseRegister(13)
-                                                                     .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-                                                                     .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                                                     .build());
-        }
 
         Linker linker = new Linker();
         return linker.link("TEST",
@@ -700,7 +568,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param ip the IP which will have its various registers set appropriately to account for the created environment
      * @param msp the MSP in which we'll create the environment
      */
-    static void establishBankingEnvironment(
+    private static void establishBankingEnvironment(
         final ExtInstructionProcessor ip,
         final ExtMainStorageProcessor msp
     ) throws MachineInterrupt {
@@ -733,8 +601,11 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                         new MSPRegionAttributes(attrString, 0, level));
                 AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), (int) subRegion._position);
 
+                BankDescriptor.BankType bankType =
+                    bdtBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
                 BaseRegister bReg =
-                    new BaseRegister(absAddr,
+                    new BaseRegister(bankType,
+                                     absAddr,
                                      false,
                                      bankLower,
                                      bankUpper,
@@ -755,8 +626,11 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
             RegionTracker.SubRegion stackSubRegion =
                 msp._regions.assign(stackSize,
                                     new MSPRegionAttributes("ICS", 0, 0));
+            BankDescriptor.BankType bankType =
+                ihBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
             BaseRegister bReg =
-                new BaseRegister(new AbsoluteAddress(msp.getUPI(), (int) stackSubRegion._position),
+                new BaseRegister(bankType,
+                                 new AbsoluteAddress(msp.getUPI(), (int) stackSubRegion._position),
                                  false,
                                  0,
                                  stackSize - 1,
@@ -857,7 +731,7 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
      * @param msp main storage processor of interest
      * @param module absolute module to be loaded
      */
-    static void loadBanks(
+    private static void loadBanks(
         final InstructionProcessor ip,
         final ExtMainStorageProcessor msp,
         final AbsoluteModule module
@@ -872,7 +746,10 @@ L,BDI 0,0 through 0,31 do not reference the BDT.
                                          bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
                 int bankLower = loadableBank._startingAddress;
                 int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
-                BaseRegister bReg = new BaseRegister(bd.getBaseAddress(),
+                BankDescriptor.BankType bankType =
+                    loadableBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
+                BaseRegister bReg = new BaseRegister(bankType,
+                                                     bd.getBaseAddress(),
                                                      false,
                                                      bankLower,
                                                      bankUpper,

@@ -61,6 +61,70 @@ public class InstructionProcessor extends Processor implements Worker {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Nested classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static class BasicModeBankName extends Word36 {
+
+        private BasicModeBankName(
+            boolean execFlag,
+            int level,
+            int bankDescriptorIndex
+        ) {
+            _value = ((execFlag ? 1L : 0) << 35) | ((level & 01) << 32) | ((bankDescriptorIndex & 07777) << 18);
+        }
+
+        private boolean getExecFlag() { return (_value >> 35) != 0; }
+        private int getLevel() { return (int)(_value >> 32) & 01; }
+        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 07777; }
+
+        private ExtendedModeBankName translate() {
+            if (getExecFlag()) {
+                if (getLevel() == 1) {
+                    return new ExtendedModeBankName(0, getBankDescriptorIndex());
+                } else {
+                    return new ExtendedModeBankName(2, getBankDescriptorIndex());
+                }
+            } else {
+                if (getLevel() == 0) {
+                    return new ExtendedModeBankName(4, getBankDescriptorIndex());
+                } else {
+                    return new ExtendedModeBankName(6, getBankDescriptorIndex());
+                }
+            }
+        }
+    }
+
+    private static class ExtendedModeBankName extends Word36 {
+
+        ExtendedModeBankName(
+            int level,
+            int bankDescriptorIndex
+        ) {
+            _value = ((level & 07) << 33) | ((bankDescriptorIndex & 077777) << 18);
+        }
+
+        private int getLevel() { return (int)(_value >> 33); }
+        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 077777; }
+
+        private BasicModeBankName translate() {
+            int bdi = getBankDescriptorIndex();
+            if (bdi > 07777) {
+                return new BasicModeBankName(true, 1, 0);
+            } else {
+                switch (getLevel()) {
+                    case 0:     return new BasicModeBankName(true, 1, bdi);
+                    case 2:     return new BasicModeBankName(true, 0, bdi);
+                    case 4:     return new BasicModeBankName(false, 0, bdi);
+                    case 6:     return new BasicModeBankName(false, 1, bdi);
+                    default:    return new BasicModeBankName(true, 1, 0);
+                }
+            }
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -95,28 +159,31 @@ public class InstructionProcessor extends Processor implements Worker {
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is false
      */
-    private static final int BASE_REGISTER_CANDIDATES_FALSE[] = {12, 14, 13, 15};
+    private static final int[] BASE_REGISTER_CANDIDATES_FALSE = {12, 14, 13, 15};
 
     /**
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is true
      */
-    private static final int BASE_REGISTER_CANDIDATES_TRUE[] = {13, 15, 12, 14};
+    private static final int[] BASE_REGISTER_CANDIDATES_TRUE = {13, 15, 12, 14};
 
     /**
-     * ActiveBaseTable entries - B1 is index 0, B15 is index 14.  There is no entry for B0.
+     * ActiveBaseTable entries - index 0 is for B1 .. index 14 is for B15.  There is no entry for B0.
      */
-    //TODO private ActiveBaseTableEntry _activeBaseTableEntries[] = new ActiveBaseTableEntry[15];
+    private static final ActiveBaseTableEntry[] _activeBaseTableEntries = new ActiveBaseTableEntry[15];
 
+    /**
+     * Storage locks...
+     */
     private static final Map<InstructionProcessor, HashSet<AbsoluteAddress>> _storageLocks = new HashMap<>();
 
-    private final BaseRegister              _baseRegisters[] = new BaseRegister[32];
+    private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
     private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, -1);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
     private final InstructionWord           _currentInstruction = new InstructionWord();
-    private FunctionHandler                 _currentInstructionHandler = null;
-    private RunMode                         _currentRunMode = RunMode.Normal;
+    private FunctionHandler                 _currentInstructionHandler = null;  //  TODO do we need this?
+    private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
     private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
@@ -131,8 +198,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private StopReason                      _latestStopReason = StopReason.Initial;
     private boolean                         _midInstructionInterruptPoint = false;
     private MachineInterrupt                _pendingInterrupt = null;
-    private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();
-    private boolean                         _preservedProgramAddressRegisterValid = false;  //  do we need this if the above can be null?
+    private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();    //  TODO do we need this?
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private final Word36                    _quantumTimer = new Word36();
@@ -168,7 +234,7 @@ public class InstructionProcessor extends Processor implements Worker {
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 
         for (int bx = 0; bx < _baseRegisters.length; ++bx) {
-            _baseRegisters[bx] = new BaseRegister();
+            _baseRegisters[bx] = new BaseRegister(BankDescriptor.BankType.ExtendedMode);
         }
 
         _workerThread = new Thread(this);
@@ -289,6 +355,14 @@ public class InstructionProcessor extends Processor implements Worker {
      *  +6      Interrupt Status Word 1
      *  +7 - ?  Reserved for software
      */
+
+
+    private void baseBank(
+        final int baseRegisterIndex,
+        final int levelBDI
+    ) throws MachineInterrupt {
+        //TODO all of this
+    }
 
     /**
      * Calculates the raw relative address (the U) for the current instruction.
@@ -531,7 +605,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Make sure we have execute permission here.
-        if (!isExecuteAllowed(bReg)) {
+        if (!isEnterAllowed(bReg)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
         }
 
@@ -835,10 +909,18 @@ public class InstructionProcessor extends Processor implements Worker {
     private void handleInterrupt(
     ) throws MachineInterrupt {
         // Get pending interrupt, save it to lastInterrupt, and clear pending.
-        //TODO are interrupts prevented?  If so, do not handle a deferable interrupt
         MachineInterrupt interrupt = _pendingInterrupt;
         _pendingInterrupt = null;
         _lastInterrupt = interrupt;
+
+        // Are deferrable interrupts allowed?  If not, ignore the interrupt
+        if (!_designatorRegister.getDeferrableInterruptEnabled()
+            && (interrupt.getDeferrability() == MachineInterrupt.Deferrability.Deferrable)) {
+            return;
+        }
+
+        //TODO If the Reset Indicator is set and this is a noninitial exigent interrupt, then error halt and set an
+        //      SCF readable “register” to indicate that a Reset failure occurred.
 
         // Update interrupt-specific portions of the IKR
         _indicatorKeyRegister.setShortStatusField(interrupt.getShortStatusField());
@@ -887,14 +969,17 @@ public class InstructionProcessor extends Processor implements Worker {
         createJumpHistoryTableEntry(_programAddressRegister.getW());
 
         // The bank described by B16 begins with 64 contiguous words, indexed by interrupt class (of which there are 64).
-        // Each word is a Program Address Register word, containg the L,BDI,Offset of the interrupt handling routine
-        // for the associated interrupt class.  Load the PAR appropriately.
+        // Each word is a Program Address Register word, containing the L,BDI,Offset of the interrupt handling routine
         // Make sure B16 is valid before dereferencing through it.
         if (_baseRegisters[L0_BDT_BASE_REGISTER]._voidFlag) {
             stop(StopReason.L0BaseRegisterInvalid, 0);
             return;
         }
 
+        //  intStorage points to level 0 BDT, the first 64 words of which comprise the interrupt vectors.
+        //  intOffset is the offset from the start of the BDT, to the vector we're interested in.
+        //  PAR will be set to L,BDI,Address of the appropriate interrupt handler.
+        //  Note that the interrupt handler code bank is NOT YET based on B0...
         Word36Array intStorage = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
         int intOffset = interrupt.getInterruptClass().getCode();
         if (intOffset >= icsStorage.getArraySize()) {
@@ -927,9 +1012,9 @@ public class InstructionProcessor extends Processor implements Worker {
 
         // Base the PAR-indicated interrupt handler bank on B0
         //TODO WE should use standard bank-manipulation algorithm here - see hardware manual 4.6.4
-        byte bankLevel = (byte)_programAddressRegister.getLevel();
-        short bankDescriptorIndex = (short)_programAddressRegister.getBankDescriptorIndex();
-        if ((bankLevel == 0) && (bankDescriptorIndex < 32)) {
+        byte ihBankLevel = (byte)_programAddressRegister.getLevel();
+        short ihBankDescriptorIndex = (short)_programAddressRegister.getBankDescriptorIndex();
+        if ((ihBankLevel == 0) && (ihBankDescriptorIndex < 32)) {
             stop(StopReason.InterruptHandlerInvalidLevelBDI, 0);
             return;
         }
@@ -937,49 +1022,45 @@ public class InstructionProcessor extends Processor implements Worker {
         // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
         // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
         // where {n} is the bank descriptor index.  Read the bank descriptor into B0.
-        int bankDescriptorBaseRegisterIndex = bankLevel + 16;
-        if ((bankLevel < 0) || (bankLevel > 7) || _baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
+        int bankDescriptorBaseRegisterIndex = ihBankLevel + 16;
+        if ((ihBankLevel < 0) || (ihBankLevel > 7) || _baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
+                                                   ihBankLevel,
+                                                   ihBankDescriptorIndex);
         }
 
+        //  bdStorage contains the BDT for the given interrupt handler's level
+        //  bdTableOffset indicates the offset into the BDT, where the descriptor for the interrupt handler's
+        //  code bank is to be found.
         Word36Array bdStorage = _baseRegisters[bankDescriptorBaseRegisterIndex]._storage;
-        int bankDescriptorTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bankDescriptorTableOffset + 8 > bdStorage.getArraySize()) {
+        int bdTableOffset = ihBankDescriptorIndex * 8;    // 8 being the size of a BD in words
+        if (bdTableOffset + 8 > bdStorage.getArraySize()) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
+                                                   ihBankLevel,
+                                                   ihBankDescriptorIndex);
         }
 
-        BankDescriptor bankDescriptor = new BankDescriptor(bdStorage, bankDescriptorTableOffset);
-        long bankType = bankDescriptor.getWord36(0).getS2() & 017;
-        if (bankType != 0) {
+        //  Create a BankDescriptor object, ensure the bank type is acceptable, and base the bank.
+        BankDescriptor bankDescriptor = new BankDescriptor(bdStorage, bdTableOffset);
+        BankDescriptor.BankType ihBankType = bankDescriptor.getBankType();
+        if ((ihBankType != BankDescriptor.BankType.ExtendedMode) && (ihBankType != BankDescriptor.BankType.BasicMode)) {
             stop(StopReason.InterruptHandlerInvalidBankType, 0);
             return;
         }
 
-        _baseRegisters[0] = new BaseRegister(bankDescriptor.getBaseAddress(),
-                                             bankDescriptor.getLargeBank(),
-                                             bankDescriptor.getLowerLimitNormalized(),
-                                             bankDescriptor.getUpperLimitNormalized(),
-                                             bankDescriptor.getAccessLock(),
-                                             bankDescriptor.getGeneraAccessPermissions(),
-                                             bankDescriptor.getSpecialAccessPermissions(),
-                                             bdStorage);
-
-        _designatorRegister.setBasicModeBaseRegisterSelection(bankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode);
+        _baseRegisters[0] = new BaseRegister(bankDescriptor);
+        _designatorRegister.setBasicModeBaseRegisterSelection(ihBankType == BankDescriptor.BankType.BasicMode);
     }
 
     /**
-     * Checks a base register to see if we can execute within it, given our current key/ring
+     * Checks a base register to see if we can enter within it, given our current key/ring
      * @param baseRegister register of interest
-     * @return true if we have execute permission for the bank based on the given register
+     * @return true if we have enter permission for the bank based on the given register
      */
-    private boolean isExecuteAllowed(
+    private boolean isEnterAllowed(
         final BaseRegister baseRegister
     ) {
-        return getEffectivePermissions(baseRegister)._execute;
+        return getEffectivePermissions(baseRegister)._enter;
     }
 
     /**

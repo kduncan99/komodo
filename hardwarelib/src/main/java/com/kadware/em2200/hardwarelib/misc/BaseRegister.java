@@ -7,16 +7,21 @@ package com.kadware.em2200.hardwarelib.misc;
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
 import com.kadware.em2200.baselib.Word36Array;
+import com.kadware.em2200.baselib.Word36ArraySlice;
+import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.
  */
+@SuppressWarnings("Duplicates")
 public class BaseRegister {
 
     /**
      * Describes the ring/domain for the described bank
      */
     public final AccessInfo _accessLock;
+
+    public final BankDescriptor.BankType _bankType;
 
     /**
      * Describes the physical location of the described bank.
@@ -73,10 +78,13 @@ public class BaseRegister {
 
     /**
      * Standard Constructor, used for Void bank
+     * @param bankType extended, basic, gate, indirect, queue
      */
     public BaseRegister(
+        final BankDescriptor.BankType bankType
     ) {
         _accessLock = new AccessInfo();
+        _bankType = bankType;
         _baseAddress = new AbsoluteAddress();
         _generalAccessPermissions = new AccessPermissions(false, false, false);
         _largeSizeFlag = false;
@@ -89,6 +97,7 @@ public class BaseRegister {
 
     /**
      * Initial value constructor for a non-void bank
+     * @param bankType extended, basic, gate, indirect, queue
      * @param baseAddress indicates UPI and offset indicating where in an MSP the storage for this bank is located
      * @param largeSizeFlag indicates a large size bank
      * @param lowerLimitNormalized actual normalized lower limit
@@ -99,6 +108,7 @@ public class BaseRegister {
      * @param storage word36 array slice representing the bank
      */
     public BaseRegister(
+        final BankDescriptor.BankType bankType,
         final AbsoluteAddress baseAddress,
         final boolean largeSizeFlag,
         final int lowerLimitNormalized,
@@ -108,6 +118,7 @@ public class BaseRegister {
         final AccessPermissions specialAccessPermissions,
         final Word36Array storage
     ) {
+        _bankType = bankType;
         _baseAddress = baseAddress;
         _largeSizeFlag = largeSizeFlag;
         _lowerLimitNormalized = lowerLimitNormalized;
@@ -116,6 +127,29 @@ public class BaseRegister {
         _generalAccessPermissions = generalAccessPermissions;
         _specialAccessPermissions = specialAccessPermissions;
         _storage = storage;
+        _voidFlag = false;
+    }
+
+    /**
+     * Constructor for building a BaseRegister from a bank descriptor with no subsetting
+     * @param bankDescriptor
+     */
+    public BaseRegister(
+        final BankDescriptor bankDescriptor
+    ) {
+        _accessLock = bankDescriptor.getAccessLock();
+        _bankType = bankDescriptor.getBankType();
+        _baseAddress = bankDescriptor.getBaseAddress();
+        _generalAccessPermissions = new AccessPermissions(false,
+                                                          bankDescriptor.getGeneraAccessPermissions()._read,
+                                                          bankDescriptor.getGeneraAccessPermissions()._write);
+        _largeSizeFlag = bankDescriptor.getLargeBank();
+        _lowerLimitNormalized = bankDescriptor.getLowerLimitNormalized();
+        _specialAccessPermissions = new AccessPermissions(false,
+                                                          bankDescriptor.getSpecialAccessPermissions()._read,
+                                                          bankDescriptor.getSpecialAccessPermissions()._write);
+        _storage = null;//TODO what to do here?
+        _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
         _voidFlag = false;
     }
 

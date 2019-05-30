@@ -25,12 +25,12 @@ public class BankDescriptor extends Word36ArraySlice {
      * Indicates the type of the bank
      */
     public enum BankType {
-            ExtendedMode(0),
-            BasicMode(1),       //  Requires BD.S == 0
-            Gate(2),            //  Requires BD.S == 0
-            Indirect(3),        //  Word1:H1 contains L,BDI of the target bank
+        ExtendedMode(0),
+        BasicMode(1),     //  Requires BD.S == 0
+        Gate(2),          //  Requires BD.S == 0
+        Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
                                 //  Only BD.Type, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
-            Queue(4);
+        Queue(4);
 
         private final int _code;
 
@@ -159,28 +159,6 @@ public class BankDescriptor extends Word36ArraySlice {
     public boolean getGeneralFault(
     ) {
         return (getValue(0) & 020_000000L) != 0;
-    }
-
-    /**
-     * Special Getter
-     * @return Inactive-flag
-     *          Has meaning only for Queue banks (see docs)
-     *          BD.INA:Word 2 Bit 0
-     */
-    public boolean getInactive(
-    ) {
-        return (getValue(2) & 0_400000_000000L) != 0;
-    }
-
-    /**
-     * Special Getter
-     * @return Inactive Queue BD List Next Pointer
-     *          For Inactive Queue Bank Descriptors, this is the address of the next entry in the
-     *          inactive queue BD list - for the last entry this will be zero.
-     */
-    public long getInactiveQueueNextPointer(
-    ) {
-        return getValue(3);
     }
 
     /**

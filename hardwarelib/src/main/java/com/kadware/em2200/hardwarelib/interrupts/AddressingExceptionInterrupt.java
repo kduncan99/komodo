@@ -65,7 +65,7 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
         final int bankLevel,
         final int bankDescriptorIndex
     ) {
-        super(InterruptClass.Diagnostic, ConditionCategory.Fault, Synchrony.Pended, Deferrability.Exigent, InterruptPoint.MidExecution);
+        super(InterruptClass.AddressingException, ConditionCategory.Fault, Synchrony.Pended, Deferrability.Exigent, InterruptPoint.MidExecution);
         _bankLevel = (byte)(bankLevel & 07);
         _bankDescriptorIndex = (short)(bankDescriptorIndex & 077777);
         _reason = reason;

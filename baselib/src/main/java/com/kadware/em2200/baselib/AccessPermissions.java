@@ -9,7 +9,7 @@ package com.kadware.em2200.baselib;
  */
 public class AccessPermissions {
 
-    public final boolean _execute;
+    public final boolean _enter;
     public final boolean _read;
     public final boolean _write;
 
@@ -18,7 +18,7 @@ public class AccessPermissions {
      */
     public AccessPermissions(
     ) {
-        _execute = false;
+        _enter = false;
         _read = false;
         _write = false;
     }
@@ -30,23 +30,23 @@ public class AccessPermissions {
     public AccessPermissions(
         final AccessPermissions source
     ) {
-        _execute = source._execute;
+        _enter = source._enter;
         _read = source._read;
         _write = source._write;
     }
 
     /**
      * Initial value constructor
-     * @param execute value for execute permission
+     * @param enter value for enter (jump, call, etc) permission
      * @param read value for read permission
      * @param write value for write permission
      */
     public AccessPermissions(
-        final boolean execute,
+        final boolean enter,
         final boolean read,
         final boolean write
     ) {
-        _execute = execute;
+        _enter = enter;
         _read = read;
         _write = write;
     }
@@ -54,27 +54,27 @@ public class AccessPermissions {
     /**
      * Alternate initial value constructor
      * @param value composite value of 3 significant bits
-     *                  04:Execute enabled flag
+     *                  04:Enter enabled flag
      *                  02:Read enabled flag
      *                  01:Write enabled flag
      */
     public AccessPermissions(
         final int value
     ) {
-        _execute = (value & 04) != 0;
+        _enter = (value & 04) != 0;
         _read = (value & 02) != 0;
         _write = (value & 01) != 0;
     }
 
     /**
      * Retrieves the discrete settings as a composite value.
-     * Bit2: execute flag (MSB)
+     * Bit2: enter flag (MSB)
      * Bit1: read flag
      * Bit0: write flag (LSB)
      * @return composite value
      */
     public byte get(
     ) {
-        return (byte)((_execute ? 04 : 0) | (_read ? 02 : 0) | (_write ? 01 : 0));
+        return (byte)((_enter ? 04 : 0) | (_read ? 02 : 0) | (_write ? 01 : 0));
     }
 }

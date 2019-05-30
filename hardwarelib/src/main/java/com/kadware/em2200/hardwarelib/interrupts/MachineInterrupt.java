@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -26,7 +26,6 @@ public abstract class MachineInterrupt extends Exception {
     public enum InterruptClass {
         HardwareDefault(000),
         HardwareCheck(001),
-        Diagnostic(002),
         ReferenceViolation(010),
         AddressingException(011),
         TerminalAddressingException(012),
@@ -50,26 +49,13 @@ public abstract class MachineInterrupt extends Exception {
 
         private final short _code;
 
-        /**
-        * Constructor
-        * <p>
-        * @param code
-        */
         InterruptClass(
             final int code
         ) {
             _code = (short)code;
         }
 
-        /**
-         * Getter
-         * <p>
-         * @return
-         */
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
 
     public enum ConditionCategory {
@@ -79,26 +65,13 @@ public abstract class MachineInterrupt extends Exception {
 
         public final short _code;
 
-        /**
-         * Constructor
-         * <p>
-         * @param code
-         */
         ConditionCategory(
             final int code
         ) {
             _code = (short)code;
         }
 
-        /**
-         * Getter
-         * <p>
-         * @return
-         */
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
 
     public enum Deferrability {
@@ -108,26 +81,13 @@ public abstract class MachineInterrupt extends Exception {
 
         private final short _code;
 
-        /**
-         * Constructor
-         * <p>
-         * @param code
-         */
         Deferrability(
             final int code
         ) {
             _code = (short)code;
         }
 
-        /**
-         * Getter
-         * <p>
-         * @return
-         */
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
 
     public enum InterruptPoint {
@@ -138,11 +98,6 @@ public abstract class MachineInterrupt extends Exception {
 
         public final short _code;
 
-        /**
-         * Constructor
-         * <p>
-         * @param code
-         */
         InterruptPoint(
             final int code
         ) {
@@ -171,32 +126,15 @@ public abstract class MachineInterrupt extends Exception {
 
         public final short _code;
 
-        /**
-         * Construtor
-         * <p>
-         * @param code
-         */
         Synchrony(
             final int code
         ) {
             _code = (short)code;
         }
 
-        /**
-         * Getter
-         * <p>
-         * @return
-         */
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     private final ConditionCategory _conditionCategory;
     private final Deferrability     _deferrability;
@@ -204,10 +142,6 @@ public abstract class MachineInterrupt extends Exception {
     private final InterruptPoint    _interruptPoint;
     private final Synchrony         _synchrony;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public MachineInterrupt(
         final InterruptClass interruptClass,
@@ -228,108 +162,22 @@ public abstract class MachineInterrupt extends Exception {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public ConditionCategory getConditionCategory(
-    ) {
-        return _conditionCategory;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Deferrability getDeferrability(
-    ) {
-        return _deferrability;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public InterruptClass getInterruptClass(
-    ) {
-        return _interruptClass;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public InterruptPoint getInterruptPoint(
-    ) {
-        return _interruptPoint;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Synchrony getSynchrony(
-    ) {
-        return _synchrony;
-    }
+    public final ConditionCategory getConditionCategory() { return _conditionCategory; }
+    public final Deferrability getDeferrability() { return _deferrability; }
+    public final InterruptClass getInterruptClass() { return _interruptClass; }
+    public final InterruptPoint getInterruptPoint() { return _interruptPoint; }
+    public final Synchrony getSynchrony() { return _synchrony; }
 
     /**
      * Get a displayable description of this interrupt
-     * <p>
-     * @return
+     * @return value
      */
-    public String getDescription(
+    public final String getDescription(
     ) {
         return String.format("%03o:%s", getInterruptClass().getCode(), this.getClass().getName());
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter which may be overridden by the subclass
-     * <p>
-     * @return
-     */
-    public Word36 getInterruptStatusWord0(
-    ) {
-        return new Word36();
-    }
-
-    /**
-     * Getter which may be overridden by the subclass
-     * <p>
-     * @return
-     */
-    public Word36 getInterruptStatusWord1(
-    ) {
-        return new Word36();
-    }
-
-    /**
-     * Getter which may be overridden by the subclass
-     * <p>
-     * @return
-     */
-    public byte getShortStatusField(
-    ) {
-        return 0;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public Word36 getInterruptStatusWord0() { return new Word36(); }
+    public Word36 getInterruptStatusWord1() { return new Word36(); }
+    public byte getShortStatusField() { return 0; }
 }
