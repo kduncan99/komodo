@@ -1,4 +1,6 @@
 -- InProgress
+IP: address space management instructions (and unit tests)
+  LBU, LBE, LBUD, LBED, SBUD, SBED, SBU, LBN, TRA, TRARS, TVA, *DABT
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -43,19 +45,6 @@ IP: string instructions (and unit tests)
   SS
   TES
   TNES
-IP: address space management instructions (and unit tests)
-  LBU
-  LBE
-  LBUD
-  LBED
-  SBUD
-  SBED
-  SBU
-  LBN
-  TRA
-  TRARS
-  TVA
-  DABT
 IP: extended mode procedure call instructions (and unit tests)
   GOTO
   CALL

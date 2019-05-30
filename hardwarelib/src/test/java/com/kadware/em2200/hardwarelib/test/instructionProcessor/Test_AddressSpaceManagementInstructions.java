@@ -78,4 +78,118 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertArrayEquals(expectedValues, processors._instructionProcessor.getActiveBaseTableEntries());
     }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error1(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 30",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "          DABT      DATA,*X2,B8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
+        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error2(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 30",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,150",
+            "          DABT      DATA,*X2,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
+        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error3(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 30",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "          DABT      DATA,*X2,B8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(2);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 }

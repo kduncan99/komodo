@@ -243,6 +243,10 @@ public class InstructionProcessor extends Processor implements Worker {
         for (int jx = 0; jx < JUMP_HISTORY_TABLE_SIZE; ++jx) {
             _jumpHistoryTable[jx] = new Word36();
         }
+
+        for (int ax = 0; ax < _activeBaseTableEntries.length; ++ax) {
+            _activeBaseTableEntries[ax] = new ActiveBaseTableEntry(0);
+        }
     }
 
 
