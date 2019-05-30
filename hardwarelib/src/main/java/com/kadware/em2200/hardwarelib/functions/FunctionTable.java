@@ -5,6 +5,7 @@
 package com.kadware.em2200.hardwarelib.functions;
 
 import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.em2200.hardwarelib.functions.addressSpaceManagement.*;
 import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
 import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
 import com.kadware.em2200.hardwarelib.functions.generalStore.*;
@@ -113,7 +114,7 @@ public abstract class FunctionTable {
         null,           //  012
         null,           //  013
         null,           //  014
-        null,           //  015
+        new TRAFunctionHandler(),   //  015
         new SRSFunctionHandler(),   //  016
         new LRSFunctionHandler(),   //  017
     };
@@ -276,19 +277,19 @@ public abstract class FunctionTable {
      * Basic Mode function handlers for f-field 075, indexed by j-field
      */
     private static final FunctionHandler[] BASIC_MODE_FUNCTION075_HANDLERS = {
-        null,           //  000
+        new LBUFunctionHandler(),   //  000
         null,           //  001
-        null,           //  002
-        null,           //  003
-        null,           //  004
-        null,           //  005
-        null,           //  006
-        null,           //  007
-        null,           //  010
+        new SBUFunctionHandler(),   //  002
+        new LBEFunctionHandler(),   //  003
+        new SBEDFunctionHandler(),  //  004
+        new LBEDFunctionHandler(),  //  005
+        new SBUDFunctionHandler(),  //  006
+        new LBUDFunctionHandler(),  //  007
+        new TVAFunctionHandler(),   //  010
         null,           //  011
         null,           //  012
         new LXLMFunctionHandler(),  //  013
-        null,           //  014
+        new LBNFunctionHandler(),   //  014
         new CRFunctionHandler(),    //  015
         null,           //  016
         null,           //  017
@@ -522,7 +523,7 @@ public abstract class FunctionTable {
      * Extended Mode function handlers for f-field 072, indexed by j-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION072_HANDLERS = {
-        null,           //  000
+        new TRARSFunctionHandler(), //  000
         null,           //  001
         new JPSFunctionHandler(),   //  002
         new JNSFunctionHandler(),   //  003
@@ -535,7 +536,7 @@ public abstract class FunctionTable {
         null,           //  012
         null,           //  013
         null,           //  014
-        null,           //  015
+        new TRAFunctionHandler(),   //  015
         new SRSFunctionHandler(),   //  016
         new LRSFunctionHandler(),   //  017
     };
@@ -572,7 +573,7 @@ public abstract class FunctionTable {
         null,           //  003
         null,           //  004
         new SPIDFunctionHandler(),  //  005
-        null,           //  006
+        new DABTFunctionHandler(),  //  006
         null,           //  007
         null,           //  010
         null,           //  011
@@ -698,19 +699,19 @@ public abstract class FunctionTable {
      * Extended Mode function handlers for f-field 075, indexed by j-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION075_HANDLERS = {
-        null,           //  000
+        new LBUFunctionHandler(),   //  000
         null,           //  001
-        null,           //  002
-        null,           //  003
-        null,           //  004
-        null,           //  005
-        null,           //  006
-        null,           //  007
-        null,           //  010
+        new SBUFunctionHandler(),   //  002
+        new LBEFunctionHandler(),   //  003
+        new SBEDFunctionHandler(),  //  004
+        new LBEDFunctionHandler(),  //  005
+        new SBUDFunctionHandler(),  //  006
+        new LBUDFunctionHandler(),  //  007
+        new TVAFunctionHandler(),   //  010
         null,           //  011
         null,           //  012
         new LXLMFunctionHandler(),  //  013
-        null,           //  014
+        new LBNFunctionHandler(),   //  014
         new CRFunctionHandler(),    //  015
         null,           //  016
         null,           //  017

@@ -769,6 +769,7 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   071, 015, 000, true,  false, true,  false, ASemantics.A,     "DLM",   false),
         new InstructionInfo(Mode.EITHER,   071, 016, 000, true,  false, false, false, ASemantics.A,     "DJZ",   true),
         new InstructionInfo(Mode.EITHER,   071, 017, 000, true,  false, true,  false, ASemantics.A,     "DTE",   false),
+        new InstructionInfo(Mode.EXTENDED, 072, 000, 000, true,  false, false, false, ASemantics.NONE,  "TRARS", false,null),
 
         //  First line is for the assembler which needs a value for the a field
         new InstructionInfo(Mode.BASIC,    072, 001, 000, true,  true,  false, false, ASemantics.NONE,  "SLJ",   false),
@@ -893,7 +894,7 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   074, 015, 005, true,  true,  false, false, ASemantics.NONE,  "HLTJ",  true),
 
         //  First one is for the assembler
-        new InstructionInfo(Mode.BASIC,    074, 016, 000, true,  true, false, false, ASemantics.NONE,  "JC",    true),
+        new InstructionInfo(Mode.BASIC,    074, 016, 000, true,  true,  false, false, ASemantics.NONE,  "JC",    true),
         new InstructionInfo(Mode.BASIC,    074, 016, 000, true,  false, false, false, ASemantics.NONE,  "JC",    true),
 
         //  First one is for the assembler
