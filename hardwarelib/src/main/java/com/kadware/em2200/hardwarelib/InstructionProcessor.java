@@ -288,6 +288,13 @@ public class InstructionProcessor extends Processor implements Worker {
         }
     }
 
+    public void loadActiveBaseTableEntry(
+        final int index,
+        final ActiveBaseTableEntry entry
+    ) {
+        _activeBaseTableEntries[index] = entry;
+    }
+
     public void setBaseRegister(
         final int index,
         final BaseRegister baseRegister

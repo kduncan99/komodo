@@ -192,4 +192,114 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
+
+    @Test
+    public void storeBasicUser_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 2",
+            "",
+            "$(1),START$*",
+            "          SBU       B12,DATA",
+            "          LXM,U     X2,1",
+            "          SBU       B13,DATA,X2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        long[] data = getBank(processors._instructionProcessor, 13);
+        assertEquals(0_600004_000000L, data[0]);
+        assertEquals(0_600005_000000L, data[1]);
+    }
+
+    @Test
+    public void storeBasicUser_basic_errorPP(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 2",
+            "",
+            "$(1),START$*",
+            "          SBU       B12,DATA",
+            "          LXM,U     X2,1",
+            "          SBU       B13,DATA,X2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void storeBasicUser_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 2",
+            "",
+            "$(1),START$*",
+            "          SBU       B0,DATA,,B2",
+            "          LXM,U     X2,1",
+            "          SBU       B2,DATA,X2,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        long[] data = getBank(processors._instructionProcessor, 2);
+        assertEquals(0_600004_000000L, data[0]);
+        assertEquals(0_600005_000000L, data[1]);
+    }
 }

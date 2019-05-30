@@ -8,7 +8,9 @@ import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 
 /**
  * Handles the SBU instruction f=075 j=02
@@ -21,19 +23,21 @@ public class SBUFunctionHandler extends FunctionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        /*
-Extended Mode unrestricted
-Basic Mode PP==0
+        DesignatorRegister dr = ip.getDesignatorRegister();
+        if (dr.getBasicModeEnabled() && (dr.getProcessorPrivilege() > 0)) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+        }
 
-Description:
-The SBU instruction retrieves the name of the Bank, in the form of a Virtual_Address
-(L,BDI,Offset), which currently resides in the user Base_Register specified by Ba.
-The Bank_Name is stored at the instruction operand address U.
-The Bank_Name is taken directly from the corresponding Active_Base_Table entry (ABT; see
-2.5): U.L,BDI,Offset := ABT(F0.a).L,BDI,Offset when F0.a > 0. For F0.a = 0 (B0),
-U.L,BDI := PAR.L,BDI and the U.Offset := 0
-         */
-        long operand = ip.getOperand(true, true, false, false);
-        ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
+        //  For f.a == 0, take L,BDI from PAR and offset is zero.
+        //  For others, take L,BDI,offset from active base table.
+        long operand;
+        int brIndex = (int) iw.getA();
+        if (brIndex == 0) {
+            operand = ip.getProgramAddressRegister().getH1() << 18;
+        } else {
+            operand = ip.getActiveBaseTableEntries()[brIndex - 1].getW();
+        }
+
+        ip.storeOperand(false, true, false, false, operand);
     }
 }

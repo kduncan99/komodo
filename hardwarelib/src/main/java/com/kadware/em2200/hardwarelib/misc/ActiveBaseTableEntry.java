@@ -18,6 +18,14 @@ public class ActiveBaseTableEntry extends Word36 {
         _value = value;
     }
 
+    public ActiveBaseTableEntry(
+        final int level,
+        final int bankDescriptorIndex,
+        final int offset
+    ) {
+        _value = (((long)level & 07) << 33) | (((long)bankDescriptorIndex & 077777) << 18) | (offset & 0777777);
+    }
+
     public int getLevel() { return (int) (_value >> 33); }
     public int getBDI() { return (int) (_value >> 18) & 077777; }
     public int getLBDI() { return (int) (_value >> 18); }

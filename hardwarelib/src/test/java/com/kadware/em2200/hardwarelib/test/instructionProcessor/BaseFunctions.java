@@ -415,8 +415,8 @@ class BaseFunctions {
                                                                  .setStartingAddress(01000)
                                                                  .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
                                                                  .setInitialBaseRegister(0)
-                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, false))
+                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
                                                                  .build());
 
         bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
@@ -482,13 +482,17 @@ class BaseFunctions {
                 new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
                                                     .setBankName(String.format("BANK%06o", bdi))
                                                     .setBankDescriptorIndex(bdi)
-                                                    .setBankLevel(0)
+                                                    .setBankLevel(6)
                                                     .setNeedsExtendedMode(bReg == 0)
                                                     .setStartingAddress(01000)
                                                     .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
                                                     .setInitialBaseRegister(bReg++)
-                                                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04, true, true))
-                                                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04, true, true))
+                                                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04,
+                                                                                                       true,
+                                                                                                       bReg > 0))
+                                                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04,
+                                                                                                       true,
+                                                                                                       bReg > 0))
                                                     .build());
         }
 
@@ -740,6 +744,7 @@ class BaseFunctions {
             BankDescriptor bd = loadBank(ip, msp, loadableBank, loadableBank._bankLevel, loadableBank._bankDescriptorIndex);
 
             if (loadableBank._initialBaseRegister != null) {
+                int brIndex = loadableBank._initialBaseRegister;
                 Word36ArraySlice storageSubset =
                     new Word36ArraySlice(msp.getStorage(),
                                          bd.getBaseAddress()._offset,
@@ -757,7 +762,18 @@ class BaseFunctions {
                                                      loadableBank._generalPermissions,
                                                      loadableBank._specialPermissions,
                                                      storageSubset);
-                ip.setBaseRegister(loadableBank._initialBaseRegister, bReg);
+                ip.setBaseRegister(brIndex, bReg);
+                if (brIndex == 0) {
+                    //  based on B0 - put L,BDI in PAR
+                    int lbdi = (loadableBank._bankLevel << 15) | loadableBank._bankDescriptorIndex;
+                    ip.setProgramAddressRegister((long) lbdi << 18);
+                } else {
+                    //  based on something other than B0, set active base table
+                    ActiveBaseTableEntry abte = new ActiveBaseTableEntry(loadableBank._bankLevel,
+                                                                         loadableBank._bankDescriptorIndex,
+                                                                         0);
+                    ip.loadActiveBaseTableEntry(brIndex - 1, abte);
+                }
 
                 System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
                                                  loadableBank._initialBaseRegister,
