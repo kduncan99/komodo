@@ -6,7 +6,7 @@ package com.kadware.em2200.hardwarelib.misc;
 
 /**
 * Represents an absolute address - this is a composite value which identifies a particular
-* MainStorageProcessor, and an offset from the beginning of the storage of that processor
+* StaticMainStorageProcessor, and an offset from the beginning of the storage of that processor
 * which identifies a particular word of storage.
 */
 public class AbsoluteAddress {

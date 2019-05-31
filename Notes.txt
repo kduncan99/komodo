@@ -1,6 +1,7 @@
 -- InProgress
+We need to set _storage in BaseResister from _baseAddress in two places.
 IP: address space management instructions (and unit tests)
-  LBU, LBE, LBUD, LBED, SBUD, SBED, SBU, LBN, TRA, TRARS, TVA, *DABT
+  LBU, LBE, LBUD, LBED, SBUD, SBED, *SBU, LBN, TRA, TRARS, TVA, *DABT
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)

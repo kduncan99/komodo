@@ -15,7 +15,7 @@ import com.kadware.em2200.baselib.Worker;
  * Base class which models a channel module node
  * <p>
  * Channel Module (CM) nodes are managed lightly by InputOutputProcessor (IOP) nodes.
- * The IOP passes (via a method call) the CM an absolute address which references a location within a MainStorageProcessor (MSP).
+ * The IOP passes (via a method call) the CM an absolute address which references a location within a StaticMainStorageProcessor (MSP).
  * This location contains a channel address word (CAW) (actually 2 words, of potentially varying formats).
  * Upon return from this method call, the CM releases the CAW for further use (it may preserve the content of the CAW for the
  * duration of the requested operation).

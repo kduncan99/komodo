@@ -4,14 +4,13 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.Region;
 import com.kadware.em2200.baselib.RegionTracker;
-import com.kadware.em2200.hardwarelib.MainStorageProcessor;
+import com.kadware.em2200.hardwarelib.StaticMainStorageProcessor;
 
 /**
- * Extended subclass of MainStorageProcessor class, suitably instrumented for special testing
+ * Extended subclass of StaticMainStorageProcessor class, suitably instrumented for special testing
  */
-public class InstrumentedMainStorageProcessor extends MainStorageProcessor {
+public class InstrumentedMainStorageProcessor extends StaticMainStorageProcessor {
 
     //  Keep track of the areas of storage which we've allocated
     final RegionTracker _regions;

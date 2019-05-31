@@ -14,63 +14,10 @@ import com.kadware.em2200.baselib.Word36Array;
 @SuppressWarnings("Duplicates")
 public class BaseRegister {
 
-    /*
-Base_Registers have the following format in Version E models:
-0
-Res
-GAP
-RW
-Res
-SAP
-RW
-Res V Res S
-Res
-Res
-Access_Lock
-0 1 2 3 4 5 6 9 10 11 14 15 16 17 18 35
-1 Lower_Limit Reserved Upper_Limit
-0 8 9 17 18 35
-2 Reserved Base_Address
-0 10 11 35
-3 Base_Address
-0 35     */
-
-    /**
-     * Retrieves the content of this base register in canonical/architecturally-correct format.
-     * Format is as such:
-     * Word 0:  bit 1:  GAP read
-     *          bit 2:  GAP write
-     *          bit 4:  SAP read
-     *          bit 5:  SAP write
-     *          bit 10: void flag
-     *          bit 15: large size flag
-     *          bits 18-19: Access lock ring
-     *          bits 20-35: Access lock domain
-     * Word 1:  bits 0-8: Lower Limit
-     *          bits 18-35: Upper limit
-     * Word 2:  bits 18-35: MSBits of absolute address
-     * Word 3:  bits 0-36:  LSBits of absolute address
-     *
-     * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
-     *               otherwise, it has 512 word granularity (9 bit shift)
-     * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
-     *               otherwise, it has 1 word granularity
-     * Absolute address is defined by the MSP architecture
-     * @return 4 word array of values
-     */
-    public long[] getBaseRegisterWords(
-    ) {
-        long[] result = new long[4];
-        //TODO ????
-        return result;
-    }
-
     /**
      * Describes the ring/domain for the described bank
      */
     public final AccessInfo _accessLock;
-
-    public final BankDescriptor.BankType _bankType;
 
     /**
      * Describes the physical location of the described bank.
@@ -99,7 +46,7 @@ Access_Lock
      * This value corresponds to the first word/value in the storage subset.
      * This is one-word-granularity normalized form the lowerLimit value according to the large size flag
      */
-    public final int _lowerLimitNormalized;
+    public final long _lowerLimitNormalized;
 
     /**
      * Execute, Read, and Write special permissions
@@ -118,7 +65,7 @@ Access_Lock
      * Relative address, upper limit - 24 bits significant.
      * This is one-word-granularity normalized form the upperLimit value according to the large size flag
      */
-    public final int _upperLimitNormalized;
+    public final long _upperLimitNormalized;
 
     /**
      * If true, this register does not describe a storage area (it is a void bank)
@@ -127,13 +74,10 @@ Access_Lock
 
     /**
      * Standard Constructor, used for Void bank
-     * @param bankType extended, basic, gate, indirect, queue
      */
     public BaseRegister(
-        final BankDescriptor.BankType bankType
     ) {
         _accessLock = new AccessInfo();
-        _bankType = bankType;
         _baseAddress = new AbsoluteAddress((short) 0, 0, 0);
         _generalAccessPermissions = new AccessPermissions(false, false, false);
         _largeSizeFlag = false;
@@ -146,7 +90,6 @@ Access_Lock
 
     /**
      * Initial value constructor for a non-void bank
-     * @param bankType extended, basic, gate, indirect, queue
      * @param baseAddress indicates UPI and offset indicating where in an MSP the storage for this bank is located
      * @param largeSizeFlag indicates a large size bank
      * @param lowerLimitNormalized actual normalized lower limit
@@ -157,7 +100,6 @@ Access_Lock
      * @param storage word36 array slice representing the bank
      */
     public BaseRegister(
-        final BankDescriptor.BankType bankType,
         final AbsoluteAddress baseAddress,
         final boolean largeSizeFlag,
         final int lowerLimitNormalized,
@@ -167,7 +109,6 @@ Access_Lock
         final AccessPermissions specialAccessPermissions,
         final Word36Array storage
     ) {
-        _bankType = bankType;
         _baseAddress = baseAddress;
         _largeSizeFlag = largeSizeFlag;
         _lowerLimitNormalized = lowerLimitNormalized;
@@ -187,7 +128,6 @@ Access_Lock
         final BankDescriptor bankDescriptor
     ) {
         _accessLock = bankDescriptor.getAccessLock();
-        _bankType = bankDescriptor.getBankType();
         _baseAddress = bankDescriptor.getBaseAddress();
         _generalAccessPermissions = new AccessPermissions(false,
                                                           bankDescriptor.getGeneraAccessPermissions()._read,
@@ -203,12 +143,54 @@ Access_Lock
     }
 
     /**
+     * Constructor for load base register direct (i.e., loading from 4-word packet in memory)
+     * @param values 4-word packet format as such:
+     * Word 0:  bit 1:  GAP read
+     *          bit 2:  GAP write
+     *          bit 4:  SAP read
+     *          bit 5:  SAP write
+     *          bit 10: void flag
+     *          bit 15: large size flag
+     *          bits 18-19: Access lock ring
+     *          bits 20-35: Access lock domain
+     * Word 1:  bits 0-8: Lower Limit
+     *          bits 18-35: Upper limit
+     * Word 2:  bits 18-35: MSBits of absolute address
+     * Word 3:  bits 0-36:  LSBits of absolute address
+     *
+     * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
+     *               otherwise, it has 512 word granularity (9 bit shift)
+     * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
+     *               otherwise, it has 1 word granularity (no shift)
+     * Absolute address is defined by the MSP architecture
+     */
+    public BaseRegister(
+        final long[] values
+    ) {
+        _generalAccessPermissions = new AccessPermissions(false,
+                                                          (values[0] & 0_200000_000000L) != 0,
+                                                          (values[0] & 0_100000_000000L) != 0);
+        _specialAccessPermissions = new AccessPermissions(false,
+                                                          (values[0] & 0_020000_000000L) != 0,
+                                                          (values[0] & 0_010000_000000L) != 0);
+        _voidFlag = (values[0] & 0_000200_000000L) != 0;
+        _largeSizeFlag = (values[0] & 0_000004_000000L) != 0;
+        _accessLock = new AccessInfo(values[0] & 0777777);
+        _lowerLimitNormalized = ((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9);
+        _upperLimitNormalized = (values[1] & 0777777) << (_largeSizeFlag ? 6 : 0);
+        _baseAddress = new AbsoluteAddress((short) (values[3] >> 32),
+                                           (int) (values[2] & 0777777),
+                                           (int) (values[3] & 0xFFFFFFFF));
+        _storage = null;//TODO what to do here?
+    }
+
+    /**
      * Getter
      * @return lower limit with granularity depending upon large size flag
      */
     public int getLowerLimit(
     ) {
-        return _largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9;
+        return (int) (_largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9);
     }
 
     /**
@@ -217,6 +199,52 @@ Access_Lock
      */
     public int getUpperLimit(
     ) {
-        return _largeSizeFlag ? _upperLimitNormalized >> 6 : _upperLimitNormalized;
+        return (int) (_largeSizeFlag ? _upperLimitNormalized >> 6 : _upperLimitNormalized);
+    }
+
+    /**
+     * Retrieves the content of this base register in canonical/architecturally-correct format.
+     * Format is as such:
+     * Word 0:  bit 1:  GAP read
+     *          bit 2:  GAP write
+     *          bit 4:  SAP read
+     *          bit 5:  SAP write
+     *          bit 10: void flag
+     *          bit 15: large size flag
+     *          bits 18-19: Access lock ring
+     *          bits 20-35: Access lock domain
+     * Word 1:  bits 0-8: Lower Limit
+     *          bits 18-35: Upper limit
+     * Word 2:  bits 18-35: MSBits of absolute address
+     * Word 3:  bits 0-36:  LSBits of absolute address
+     *
+     * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
+     *               otherwise, it has 512 word granularity (9 bit shift)
+     * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
+     *               otherwise, it has 1 word granularity (no shift)
+     * Absolute address is defined by the MSP architecture
+     * @return 4 word array of values
+     */
+    public long[] getBaseRegisterWords(
+    ) {
+        long[] result = new long[4];
+        for (int rx = 0; rx < 4; ++rx) { result[rx] = 0; }
+
+        if (_generalAccessPermissions._read) { result[0] |= 0_200000_000000L; }
+        if (_generalAccessPermissions._write) { result[0] |= 0_100000_000000L; }
+        if (_specialAccessPermissions._read) { result[0] |= 0_020000_000000L; }
+        if (_specialAccessPermissions._write) { result[0] |= 0_010000_000000L; }
+        if (_voidFlag) { result[0] |= 0_000200_000000L; }
+        if (_largeSizeFlag) { result[0] |= 0_000004_000000L; }
+        result[0] |= (_accessLock._ring) << 16;
+        result[0] |= _accessLock._domain;
+
+        result[1] = (_lowerLimitNormalized >> (_largeSizeFlag ? 15 : 9)) << 27;
+        result[1] |= _upperLimitNormalized >> (_largeSizeFlag ? 6 : 0);
+
+        result[2] = _baseAddress._segment;
+        result[3] = (((long) _baseAddress._upi) << 32) | (_baseAddress._offset);
+
+        return result;
     }
 }

@@ -591,7 +591,7 @@ class BaseFunctions {
                                                                             0,
                                                                             bdtBank._bankDescriptorIndex);
                 RegionTracker.SubRegion bdtSub = msp._regions.assign(bdtBankSize, bdtAttributes);
-                msp.getStorage().load((int) bdtSub._position, bdtBank._content);
+                msp.getStorage(0).load((int) bdtSub._position, bdtBank._content);
                 System.out.println(String.format("Loaded BDT bank at MSP offset %d for %d words",
                                                  bdtSub._position,
                                                  bdtSub._extent));
@@ -605,11 +605,8 @@ class BaseFunctions {
                                         new MSPRegionAttributes(attrString, 0, level));
                 AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
 
-                BankDescriptor.BankType bankType =
-                    bdtBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
                 BaseRegister bReg =
-                    new BaseRegister(bankType,
-                                     absAddr,
+                    new BaseRegister(absAddr,
                                      false,
                                      bankLower,
                                      bankUpper,
@@ -630,18 +627,15 @@ class BaseFunctions {
             RegionTracker.SubRegion stackSubRegion =
                 msp._regions.assign(stackSize,
                                     new MSPRegionAttributes("ICS", 0, 0));
-            BankDescriptor.BankType bankType =
-                ihBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
             BaseRegister bReg =
-                new BaseRegister(bankType,
-                                 new AbsoluteAddress(msp.getUPI(), 0, (int) stackSubRegion._position),
+                new BaseRegister(new AbsoluteAddress(msp.getUPI(), 0, (int) stackSubRegion._position),
                                  false,
                                  0,
                                  stackSize - 1,
                                  new AccessInfo((byte) 0, (short) 0),
                                  new AccessPermissions(false, false, false),
                                  new AccessPermissions(false, true, true),
-                                 new Word36ArraySlice(msp.getStorage(), (int) stackSubRegion._position, stackSize));
+                                 new Word36ArraySlice(msp.getStorage(0), (int) stackSubRegion._position, stackSize));
             ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, bReg);
             Word36 reg = new Word36();
             reg.setH1(8);
@@ -680,6 +674,7 @@ class BaseFunctions {
      * @param bankLevel BDT level where the bank is to be loaded
      * @param bankDescriptorIndex BDI of the bank within the BDT
      * @return the bank descriptor describing the bank we just loaded
+     * @throws AddressingExceptionInterrupt for an invalid MSP reference
      */
     private static BankDescriptor loadBank(
         final InstructionProcessor ip,
@@ -687,7 +682,7 @@ class BaseFunctions {
         final LoadableBank bank,
         final int bankLevel,
         final int bankDescriptorIndex
-    ) {
+    ) throws AddressingExceptionInterrupt {
         assert(bankLevel >= 0) && (bankLevel < 8);
 
         //  Load the bank into memory
@@ -700,7 +695,7 @@ class BaseFunctions {
                 msp._regions.assign(bank._content.getArraySize(),
                                     new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
             AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
-            msp.getStorage().load(absAddr._offset, bank._content);
+            msp.getStorage(0).load(absAddr._offset, bank._content);
 
             //  Create a bank descriptor for it in the appropriate bdt
             Word36Array bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
@@ -734,27 +729,25 @@ class BaseFunctions {
      * @param ip instruction processor of interest
      * @param msp main storage processor of interest
      * @param module absolute module to be loaded
+     * @throws AddressingExceptionInterrupt for an invalid MSP reference
      */
     private static void loadBanks(
         final InstructionProcessor ip,
         final InstrumentedMainStorageProcessor msp,
         final AbsoluteModule module
-    ) {
+    ) throws AddressingExceptionInterrupt {
         for (LoadableBank loadableBank : module._loadableBanks.values()) {
             BankDescriptor bd = loadBank(ip, msp, loadableBank, loadableBank._bankLevel, loadableBank._bankDescriptorIndex);
 
             if (loadableBank._initialBaseRegister != null) {
                 int brIndex = loadableBank._initialBaseRegister;
                 Word36ArraySlice storageSubset =
-                    new Word36ArraySlice(msp.getStorage(),
+                    new Word36ArraySlice(msp.getStorage(0),
                                          bd.getBaseAddress()._offset,
                                          bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
                 int bankLower = loadableBank._startingAddress;
                 int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
-                BankDescriptor.BankType bankType =
-                    loadableBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
-                BaseRegister bReg = new BaseRegister(bankType,
-                                                     bd.getBaseAddress(),
+                BaseRegister bReg = new BaseRegister(bd.getBaseAddress(),
                                                      false,
                                                      bankLower,
                                                      bankUpper,
@@ -956,7 +949,7 @@ class BaseFunctions {
                             for (int iy = 0; iy < 8; ++iy) {
                                 if (ix + iy < len) {
                                     sb.append(String.format(" %012o",
-                                                            msp.getStorage().getValue(ix + iy + bd.getBaseAddress()._offset)));
+                                                            msp.getStorage(bd.getBaseAddress()._segment).getValue(ix + iy + bd.getBaseAddress()._offset)));
                                 }
                             }
                             System.out.println(sb.toString());

@@ -234,7 +234,7 @@ public class InstructionProcessor extends Processor implements Worker {
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 
         for (int bx = 0; bx < _baseRegisters.length; ++bx) {
-            _baseRegisters[bx] = new BaseRegister(BankDescriptor.BankType.ExtendedMode);
+            _baseRegisters[bx] = new BaseRegister();
         }
 
         _workerThread = new Thread(this);
@@ -645,7 +645,7 @@ public class InstructionProcessor extends Processor implements Worker {
         _fetchInstructionAbsoluteAddress.set(bReg._baseAddress._upi,
                                              bReg._baseAddress._segment,
                                              bReg._baseAddress._offset);
-        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - bReg._lowerLimitNormalized);
+        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - (int)bReg._lowerLimitNormalized);
         checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
 
         try {
@@ -684,7 +684,7 @@ public class InstructionProcessor extends Processor implements Worker {
         _fetchInstructionAbsoluteAddress.set(_baseRegisters[0]._baseAddress._upi,
                                              _baseRegisters[0]._baseAddress._segment,
                                              _baseRegisters[0]._baseAddress._offset);
-        int offset = _programAddressRegister.getProgramCounter() - _baseRegisters[0]._lowerLimitNormalized;
+        int offset = _programAddressRegister.getProgramCounter() - (int)_baseRegisters[0]._lowerLimitNormalized;
         _fetchInstructionAbsoluteAddress.addOffset(offset);
         checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
 
@@ -805,7 +805,7 @@ public class InstructionProcessor extends Processor implements Worker {
             //  then throw UnresolvedAddressException so the caller knows we're not done here.
             try {
                 _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
-                _fbrAbsoluteAddress.addOffset(relativeAddress - bReg._lowerLimitNormalized);
+                _fbrAbsoluteAddress.addOffset(relativeAddress - (int)bReg._lowerLimitNormalized);
                 long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
                 _currentInstruction.setXHIU(replacementValue);
             } catch (AddressLimitsException
@@ -1622,7 +1622,7 @@ public class InstructionProcessor extends Processor implements Worker {
             //  then throw UnresolvedAddressException so the caller knows we're not done here.
             try {
                 _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
-                _fbrAbsoluteAddress.addOffset(relAddress - bReg._lowerLimitNormalized);
+                _fbrAbsoluteAddress.addOffset(relAddress - (int)bReg._lowerLimitNormalized);
                 long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
                 _currentInstruction.setXHIU(replacementValue);
             } catch (AddressLimitsException
@@ -2375,7 +2375,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final int relativeAddress
     ) {
         short upi = baseRegister._baseAddress._upi;
-        int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
+        int actualOffset = relativeAddress - (int)baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
     }

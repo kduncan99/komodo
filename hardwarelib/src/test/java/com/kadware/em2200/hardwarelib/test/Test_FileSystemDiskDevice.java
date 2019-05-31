@@ -150,9 +150,9 @@ public class Test_FileSystemDiskDevice {
         assertFalse(d.canConnect(new TapeController("TAPCUA", (short)0)));
 //????        assertFalse(d.canConnect(new SoftwareByteChannelModule("CM1-0")));
 //????        assertFalse(d.canConnect(new SoftwareWordChannelModule("CM1-1")));
-        assertFalse(d.canConnect(new MainStorageProcessor("MSP0",
-                                                          InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
-                                                          InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
+        assertFalse(d.canConnect(new StaticMainStorageProcessor("MSP0",
+                                                                InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
+                                                                InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
         assertFalse(d.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI)));
         assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI)));
     }

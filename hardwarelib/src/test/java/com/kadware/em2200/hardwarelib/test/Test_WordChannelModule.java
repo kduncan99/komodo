@@ -73,7 +73,7 @@ public class Test_WordChannelModule {
 //        assertFalse(cm.canConnect(new TapeController("TAPCUB", (short)0)));
 //        assertFalse(cm.canConnect(new SoftwareByteChannelModule("CM1-0")));
 //        assertFalse(cm.canConnect(new SoftwareWordChannelModule("CM1-1")));
-//        assertFalse(cm.canConnect(new MainStorageProcessor("MSP0",
+//        assertFalse(cm.canConnect(new StaticMainStorageProcessor("MSP0",
 //                                                           InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
 //                                                           InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
 //        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI)));
