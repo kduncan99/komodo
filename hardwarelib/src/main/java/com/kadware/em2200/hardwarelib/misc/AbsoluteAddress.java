@@ -17,38 +17,41 @@ public class AbsoluteAddress {
     public short _upi;
 
     /**
+     * Indicates a particular segment - the offset is relative to the segment.
+     * For hardware-emulated MSPs, there may be only one or a few segments, and the operating system is
+     * responsible for managing memory there-in.
+     * For pass-through MSPs, there will be a segment for every memory allocation.  The operating system
+     * is responsible for requesting and releasing segments in sizes most convenient for it.
+     */
+    public int _segment;
+
+    /**
      * A value corresponding to an offset from the start of that MSP's storage.
      * This value *can* be negative, but it should not be used to access storage until it is adjust upward.
      */
     public int _offset;
 
     /**
-     * Standard constructor
-     */
-    public AbsoluteAddress(
-    ) {
-        _upi = 0;
-        _offset = 0;
-    }
-
-    /**
-     * Initial value constructor
+     * Constructor
      * <p>
-     * @param upi
-     * @param offset
+     * @param upi UPI of an MSP
+     * @param segment segment of a particular MSP
+     * @param offset offset from the beginning of the indicated segment
      */
     public AbsoluteAddress(
         final short upi,
+        final int segment,
         final int offset
     ) {
         _upi = upi;
+        _segment = segment;
         _offset = offset;
     }
 
     /**
      * Adds another offset to the offset in this object
      * <p>
-     * @param offset
+     * @param offset offset to be added
      */
     public void addOffset(
         final int offset
@@ -58,21 +61,18 @@ public class AbsoluteAddress {
 
     /**
      * Generate a hash code based solely on the values of this object
-     * <p>
-     * @return
+     * @return hash code
      */
     @Override
     public int hashCode(
     ) {
-        return (new Integer(_upi)).hashCode() ^ (new Long(_offset)).hashCode();
+        return (new Integer(_upi)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer(_offset)).hashCode();
     }
 
     /**
      * equals method
-     * <p>
-     * @param obj
-     * <p>
-     * @return
+     * @param obj comparison object
+     * @return true if this object equals the comparison object
      */
     @Override
     public boolean equals(
@@ -80,7 +80,7 @@ public class AbsoluteAddress {
     ) {
         if ((obj != null) && (obj instanceof AbsoluteAddress)) {
             AbsoluteAddress comp = (AbsoluteAddress) obj;
-            return (_upi == comp._upi) && (_offset == comp._offset);
+            return (_upi == comp._upi) && (_segment == comp._segment) && (_offset == comp._offset);
         } else {
             return false;
         }
@@ -88,33 +88,32 @@ public class AbsoluteAddress {
 
     /**
      * Setter
-     * <p>
-     * @param upi
-     * @param offset
      */
     public void set(
         final short upi,
+        final int segment,
         final int offset
     ) {
         _upi = upi;
+        _segment = segment;
         _offset = offset;
     }
 
     /**
      * Setter
-     * <p>
      * @param address
      */
     public void set(
         final AbsoluteAddress address
     ) {
         _upi = address._upi;
+        _segment = address._segment;
         _offset = address._offset;
     }
 
     @Override
     public String toString(
     ) {
-        return String.format("0%o:%012o", _upi, _offset);
+        return String.format("0%o:0%o:%012o", _upi, _segment, _offset);
     }
 }

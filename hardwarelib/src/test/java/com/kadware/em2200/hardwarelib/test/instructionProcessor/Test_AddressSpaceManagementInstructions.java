@@ -194,7 +194,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void storeBasicUser_basic(
+    public void storeBaseRegisterUser_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -231,7 +231,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void storeBasicUser_basic_errorPP(
+    public void storeBaseRegisterUser_basic_errorPP(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -267,7 +267,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void storeBasicUser_extended(
+    public void storeBaseRegisterUser_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,

@@ -603,7 +603,7 @@ class BaseFunctions {
                 RegionTracker.SubRegion subRegion =
                     msp._regions.assign(bdtBank._content.getArraySize(),
                                         new MSPRegionAttributes(attrString, 0, level));
-                AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), (int) subRegion._position);
+                AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
 
                 BankDescriptor.BankType bankType =
                     bdtBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
@@ -634,7 +634,7 @@ class BaseFunctions {
                 ihBank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode;
             BaseRegister bReg =
                 new BaseRegister(bankType,
-                                 new AbsoluteAddress(msp.getUPI(), (int) stackSubRegion._position),
+                                 new AbsoluteAddress(msp.getUPI(), 0, (int) stackSubRegion._position),
                                  false,
                                  0,
                                  stackSize - 1,
@@ -699,7 +699,7 @@ class BaseFunctions {
             RegionTracker.SubRegion subRegion =
                 msp._regions.assign(bank._content.getArraySize(),
                                     new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
-            AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), (int) subRegion._position);
+            AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
             msp.getStorage().load(absAddr._offset, bank._content);
 
             //  Create a bank descriptor for it in the appropriate bdt

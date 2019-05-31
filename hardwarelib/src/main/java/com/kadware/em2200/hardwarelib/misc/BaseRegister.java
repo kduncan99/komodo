@@ -7,14 +7,63 @@ package com.kadware.em2200.hardwarelib.misc;
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
 import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.Word36ArraySlice;
-import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.
  */
 @SuppressWarnings("Duplicates")
 public class BaseRegister {
+
+    /*
+Base_Registers have the following format in Version E models:
+0
+Res
+GAP
+RW
+Res
+SAP
+RW
+Res V Res S
+Res
+Res
+Access_Lock
+0 1 2 3 4 5 6 9 10 11 14 15 16 17 18 35
+1 Lower_Limit Reserved Upper_Limit
+0 8 9 17 18 35
+2 Reserved Base_Address
+0 10 11 35
+3 Base_Address
+0 35     */
+
+    /**
+     * Retrieves the content of this base register in canonical/architecturally-correct format.
+     * Format is as such:
+     * Word 0:  bit 1:  GAP read
+     *          bit 2:  GAP write
+     *          bit 4:  SAP read
+     *          bit 5:  SAP write
+     *          bit 10: void flag
+     *          bit 15: large size flag
+     *          bits 18-19: Access lock ring
+     *          bits 20-35: Access lock domain
+     * Word 1:  bits 0-8: Lower Limit
+     *          bits 18-35: Upper limit
+     * Word 2:  bits 18-35: MSBits of absolute address
+     * Word 3:  bits 0-36:  LSBits of absolute address
+     *
+     * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
+     *               otherwise, it has 512 word granularity (9 bit shift)
+     * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
+     *               otherwise, it has 1 word granularity
+     * Absolute address is defined by the MSP architecture
+     * @return 4 word array of values
+     */
+    public long[] getBaseRegisterWords(
+    ) {
+        long[] result = new long[4];
+        //TODO ????
+        return result;
+    }
 
     /**
      * Describes the ring/domain for the described bank
@@ -85,7 +134,7 @@ public class BaseRegister {
     ) {
         _accessLock = new AccessInfo();
         _bankType = bankType;
-        _baseAddress = new AbsoluteAddress();
+        _baseAddress = new AbsoluteAddress((short) 0, 0, 0);
         _generalAccessPermissions = new AccessPermissions(false, false, false);
         _largeSizeFlag = false;
         _lowerLimitNormalized = 0;

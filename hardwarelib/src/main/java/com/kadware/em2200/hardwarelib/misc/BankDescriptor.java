@@ -113,7 +113,8 @@ public class BankDescriptor extends Word36ArraySlice {
      * Special Getter
      * @return Base Address - i.e., describes the logical physical address (if that makes sense) corresponding to the
      *          first word of this bank in memory.  The actual meaning of this depends upon the hardware architecture.
-     *          For us, the UPI portion is held in H2 of Word 2, while the offset is held in Word 3.
+     *          For us, the UPI portion is held in bits 0-3 of Word 3, the segment in H2 of Word 2,
+     *          and the offset is held in bits 4-35 of Word 3.
      *          Canonical architecture requires the offset to be an unsigned value, but hardware addressing had traditionally
      *          begun at an artificially high value (such as 0400000000000 or some such) -- which allowed the base value to be
      *          less than that (but still positive) in order to account for non-zero lower-limits.
@@ -127,7 +128,9 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public AbsoluteAddress getBaseAddress(
     ) {
-        return new AbsoluteAddress((short)(getValue(2) & 0x7FFF), (int)getValue(3));
+        return new AbsoluteAddress((short) (getValue(3) >> 32),
+                                   (int) getValue(2) & 0777777,
+                                   (int) getValue(3) & 0xFFFF);
     }
 
     /**
@@ -269,14 +272,18 @@ public class BankDescriptor extends Word36ArraySlice {
     }
 
     /**
-     * Special setter
+     * Special setter - see getBaseAddress() above
      * @param baseAddress new base address value
      */
     public void setBaseAddress(
         final AbsoluteAddress baseAddress
     ) {
-        setValue(2, (getValue(2) & 0_777777_000000L) | (baseAddress._upi & 0777777L));
-        setValue(3, baseAddress._offset);
+        long word2 = getValue(2) & 0_777777_000000L;
+        word2 |= baseAddress._segment;
+        long word3 = (long)(baseAddress._upi & 017) << 32;
+        word3 |= baseAddress._offset;
+        setValue(2, word2);
+        setValue(3, word3);
     }
 
     /**

@@ -178,7 +178,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private static final Map<InstructionProcessor, HashSet<AbsoluteAddress>> _storageLocks = new HashMap<>();
 
     private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
-    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, -1);
+    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, -1);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
     private final InstructionWord           _currentInstruction = new InstructionWord();
@@ -591,7 +591,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Fixed object for fetchInstruction() - helps mitigate proliferation of nasty little objects
      */
-    private final AbsoluteAddress _fetchInstructionAbsoluteAddress = new AbsoluteAddress();
+    private final AbsoluteAddress _fetchInstructionAbsoluteAddress = new AbsoluteAddress((short) 0, 0, 0);
 
     /**
      * Diverts code to either the basic mode or extended mode fetch handler
@@ -643,6 +643,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
         _fetchInstructionAbsoluteAddress.set(bReg._baseAddress._upi,
+                                             bReg._baseAddress._segment,
                                              bReg._baseAddress._offset);
         _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - bReg._lowerLimitNormalized);
         checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
@@ -681,6 +682,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
         //  Set the word (which is an instruction) in _currentInstruction, clear MidInstIntPt, and set IKR.INF.
         _fetchInstructionAbsoluteAddress.set(_baseRegisters[0]._baseAddress._upi,
+                                             _baseRegisters[0]._baseAddress._segment,
                                              _baseRegisters[0]._baseAddress._offset);
         int offset = _programAddressRegister.getProgramCounter() - _baseRegisters[0]._lowerLimitNormalized;
         _fetchInstructionAbsoluteAddress.addOffset(offset);
@@ -760,7 +762,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * Private fixed AbsoluteAddress object for findBaseRegister* methods.
      * Likely, we'll only use it during BasicMode indirect address resolution.
      */
-    private final AbsoluteAddress _fbrAbsoluteAddress = new AbsoluteAddress();
+    private final AbsoluteAddress _fbrAbsoluteAddress = new AbsoluteAddress((short) 0, 0, 0);
 
     /**
      * Locates the index of the base register which represents the bank which contains the given relative address.
@@ -802,7 +804,7 @@ public class InstructionProcessor extends Processor implements Worker {
             //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
             //  then throw UnresolvedAddressException so the caller knows we're not done here.
             try {
-                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._offset);
+                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
                 _fbrAbsoluteAddress.addOffset(relativeAddress - bReg._lowerLimitNormalized);
                 long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
                 _currentInstruction.setXHIU(replacementValue);
@@ -1619,7 +1621,7 @@ public class InstructionProcessor extends Processor implements Worker {
             //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
             //  then throw UnresolvedAddressException so the caller knows we're not done here.
             try {
-                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._offset);
+                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
                 _fbrAbsoluteAddress.addOffset(relAddress - bReg._lowerLimitNormalized);
                 long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
                 _currentInstruction.setXHIU(replacementValue);
@@ -2375,7 +2377,7 @@ public class InstructionProcessor extends Processor implements Worker {
         short upi = baseRegister._baseAddress._upi;
         int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
-        return new AbsoluteAddress(upi, offset);
+        return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
     }
 
     /**
