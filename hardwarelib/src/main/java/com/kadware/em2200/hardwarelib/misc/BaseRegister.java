@@ -7,6 +7,12 @@ package com.kadware.em2200.hardwarelib.misc;
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
 import com.kadware.em2200.baselib.Word36Array;
+import com.kadware.em2200.baselib.Word36ArraySlice;
+import com.kadware.em2200.hardwarelib.InventoryManager;
+import com.kadware.em2200.hardwarelib.MainStorageProcessor;
+import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.em2200.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.
@@ -126,7 +132,7 @@ public class BaseRegister {
      */
     public BaseRegister(
         final BankDescriptor bankDescriptor
-    ) {
+    ) throws AddressingExceptionInterrupt {
         _accessLock = bankDescriptor.getAccessLock();
         _baseAddress = bankDescriptor.getBaseAddress();
         _generalAccessPermissions = new AccessPermissions(false,
@@ -137,9 +143,19 @@ public class BaseRegister {
         _specialAccessPermissions = new AccessPermissions(false,
                                                           bankDescriptor.getSpecialAccessPermissions()._read,
                                                           bankDescriptor.getSpecialAccessPermissions()._write);
-        _storage = null;//TODO what to do here?
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
         _voidFlag = false;
+
+        try {
+            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
+            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
+            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
+            _storage = new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
+        } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   0,
+                                                   0);
+        }
     }
 
     /**
@@ -166,7 +182,7 @@ public class BaseRegister {
      */
     public BaseRegister(
         final long[] values
-    ) {
+    ) throws AddressingExceptionInterrupt {
         _generalAccessPermissions = new AccessPermissions(false,
                                                           (values[0] & 0_200000_000000L) != 0,
                                                           (values[0] & 0_100000_000000L) != 0);
@@ -181,7 +197,17 @@ public class BaseRegister {
         _baseAddress = new AbsoluteAddress((short) (values[3] >> 32),
                                            (int) (values[2] & 0777777),
                                            (int) (values[3] & 0xFFFFFFFF));
-        _storage = null;//TODO what to do here?
+
+        try {
+            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
+            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
+            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
+            _storage = new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
+        } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   0,
+                                                   0);
+        }
     }
 
     /**
