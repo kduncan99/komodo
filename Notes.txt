@@ -5,6 +5,7 @@ IP: address space management instructions (and unit tests)
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 When shifting left for upper limit, we should shift 1's in, right?
+  In any case, analyze the situation for lower/upper limits wrt bits shifted in or out
 
 -- TODO implemeent
 * baselib

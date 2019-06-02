@@ -96,7 +96,7 @@ public class InventoryManager {
     }
 
     /**
-     * Adds an existing StaticMainStorageProcessor to our inventory.
+     * Adds an existing MainStorageProcessor to our inventory.
      * The existing MSP should not yet have been initialized.
      * Only for unit tests.
      * @param msp object to be added
@@ -104,7 +104,7 @@ public class InventoryManager {
      * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addMainStorageProcessor(
-        final StaticMainStorageProcessor msp
+        final MainStorageProcessor msp
     ) throws NodeNameConflictException,
              UPIConflictException {
         if (_processors.get(msp.getUPI()) != null) {
@@ -121,26 +121,27 @@ public class InventoryManager {
         msp.initialize();
     }
 
+    //TODO take a parameter to indicate what type of MSP
     /**
-     * Creates a new StaticMainStorageProcessor with a unique name and UPI.
+     * Creates a new MainStorageProcessor with a unique name and UPI.
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */
-    public StaticMainStorageProcessor createMainStorageProcessor(
-    ) throws MaxNodesException {
-        short upi = FIRST_MAIN_STORAGE_PROCESSOR_UPI;
-        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upi) {
-            if (_processors.get(upi) == null) {
-                String name = String.format("MSP%d", px);
-                StaticMainStorageProcessor msp = new StaticMainStorageProcessor(name, upi, MAIN_STORAGE_PROCESSOR_SIZE);
-                _processors.put(upi, msp);
-                msp.initialize();
-                return msp;
-            }
-        }
-
-        throw new MaxNodesException(StaticMainStorageProcessor.class);
-    }
+//    public MainStorageProcessor createMainStorageProcessor(
+//    ) throws MaxNodesException {
+//        short upi = FIRST_MAIN_STORAGE_PROCESSOR_UPI;
+//        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upi) {
+//            if (_processors.get(upi) == null) {
+//                String name = String.format("MSP%d", px);
+//                MainStorageProcessor msp = new MainStorageProcessor(name, upi, MAIN_STORAGE_PROCESSOR_SIZE);
+//                _processors.put(upi, msp);
+//                msp.initialize();
+//                return msp;
+//            }
+//        }
+//
+//        throw new MaxNodesException(MainStorageProcessor.class);
+//    }
 
     /**
      * Creates a new InputOutputProcessor with a unique name and UPI.
@@ -219,21 +220,21 @@ public class InventoryManager {
     }
 
     /**
-     * Retrieves a specific StaticMainStorageProcessor
+     * Retrieves a specific MainStorageProcessor
      * @param upi UPI of processor of interest
      * @return processor of interest
      * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
      * @throws UPINotAssignedException if no processor can be found
      */
-    public StaticMainStorageProcessor getMainStorageProcessor(
+    public MainStorageProcessor getMainStorageProcessor(
         final short upi
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {
         Processor processor = getProcessor(upi);
-        if (processor instanceof StaticMainStorageProcessor) {
-            return (StaticMainStorageProcessor)processor;
+        if (processor instanceof MainStorageProcessor) {
+            return (MainStorageProcessor)processor;
         } else {
-            throw new UPIProcessorTypeException(upi, StaticMainStorageProcessor.class);
+            throw new UPIProcessorTypeException(upi, MainStorageProcessor.class);
         }
     }
 
@@ -290,7 +291,7 @@ public class InventoryManager {
              AddressLimitsException,
              UPIProcessorTypeException,
              UPINotAssignedException {
-        StaticMainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
+        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
         if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
             throw new AddressLimitsException(absoluteAddress);
         }
@@ -314,7 +315,7 @@ public class InventoryManager {
              AddressLimitsException,
              UPIProcessorTypeException,
              UPINotAssignedException {
-        StaticMainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
+        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
         if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
             throw new AddressLimitsException(absoluteAddress);
         }
@@ -338,7 +339,7 @@ public class InventoryManager {
              AddressLimitsException,
              UPIProcessorTypeException,
              UPINotAssignedException {
-        StaticMainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
+        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
         if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
             throw new AddressLimitsException(absoluteAddress);
         }
@@ -362,7 +363,7 @@ public class InventoryManager {
              AddressLimitsException,
              UPIProcessorTypeException,
              UPINotAssignedException {
-        StaticMainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
+        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
         if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
             throw new AddressLimitsException(absoluteAddress);
         }

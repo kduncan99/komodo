@@ -77,4 +77,28 @@ public class AccessPermissions {
     ) {
         return (byte)((_enter ? 04 : 0) | (_read ? 02 : 0) | (_write ? 01 : 0));
     }
+
+    @Override
+    public boolean equals(
+        final Object obj
+    ) {
+        if (obj instanceof AccessPermissions) {
+            AccessPermissions ap = (AccessPermissions) obj;
+            return (_enter == ap._enter) && (_read == ap._read) && (_write == ap._write);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (byte)((_enter ? 04 : 0) | (_read ? 02 : 0) | (_write ? 01 : 0));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%senter %sread %swrite",
+                             _enter ? "+" : "-",
+                             _read ? "+" : "-",
+                             _write ? "+" : "-");
+    }
 }

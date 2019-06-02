@@ -2375,7 +2375,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final int relativeAddress
     ) {
         short upi = baseRegister._baseAddress._upi;
-        int actualOffset = relativeAddress - (int)baseRegister._lowerLimitNormalized;
+        int actualOffset = relativeAddress - (int) baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
     }

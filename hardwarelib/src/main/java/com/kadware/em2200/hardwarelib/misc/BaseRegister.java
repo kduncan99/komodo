@@ -27,11 +27,6 @@ public class BaseRegister {
 
     /**
      * Describes the physical location of the described bank.
-     * It should be noted that banks can have a non-zero lower-limit address.  This address is the lowest acceptable value
-     * for a relative address access into the bank, and corresponds to the first word in the bank.  Addressing algorithms
-     * always add the base address value to the relative address (or displacement), which would cause an incorrect shift
-     * for banks with non-zero lower limits.  Thus, all bank descriptors will adjust the base address downward by the
-     * lower-limit value, so that the addresesing algorithm works properly.
      */
     public final AbsoluteAddress _baseAddress;
 
@@ -50,7 +45,8 @@ public class BaseRegister {
     /**
      * Relative address, lower limit - 24 bits significant.
      * This value corresponds to the first word/value in the storage subset.
-     * This is one-word-granularity normalized form the lowerLimit value according to the large size flag
+     * This is one-word-granularity normalized form the lowerLimit value according to the large size flag.
+     * Original (un-normalized) value is limited to 9 bits.
      */
     public final long _lowerLimitNormalized;
 
@@ -69,14 +65,48 @@ public class BaseRegister {
 
     /**
      * Relative address, upper limit - 24 bits significant.
-     * This is one-word-granularity normalized form the upperLimit value according to the large size flag
+     * This is one-word-granularity normalized form the upperLimit value according to the large size flag.
+     * Original (un-normalized) value is limited to 18 bits.
      */
-    public final long _upperLimitNormalized;
+    public final int _upperLimitNormalized;
 
     /**
      * If true, this register does not describe a storage area (it is a void bank)
      */
     public final boolean _voidFlag;
+
+    private void checkLimits() {
+        if (_largeSizeFlag) {
+            assert((_lowerLimitNormalized & 037700_077777) == 0);
+            assert((_upperLimitNormalized & 037700_000077) == 077);
+        } else {
+            assert((_lowerLimitNormalized & 037777_000777) == 0);
+            assert((_upperLimitNormalized & 037777_000000) == 0);
+        }
+    }
+
+    /**
+     * Creates a Word36ArraySlice to represent the bank as defined by the other attributes of this object
+     * @return as described, null if void or limits indicate no storage
+     * @throws AddressingExceptionInterrupt if something is wrong with the values
+     */
+    private Word36ArraySlice getStorage(
+    ) throws AddressingExceptionInterrupt{
+        if ((_voidFlag) || (_lowerLimitNormalized > _upperLimitNormalized)) {
+            return null;
+        }
+
+        try {
+            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
+            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
+            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
+            return new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
+        } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   0,
+                                                   0);
+        }
+    }
 
     /**
      * Standard Constructor, used for Void bank
@@ -92,6 +122,7 @@ public class BaseRegister {
         _storage = null;
         _upperLimitNormalized = 0;
         _voidFlag = true;
+        checkLimits();
     }
 
     /**
@@ -124,6 +155,7 @@ public class BaseRegister {
         _specialAccessPermissions = specialAccessPermissions;
         _storage = storage;
         _voidFlag = false;
+        checkLimits();
     }
 
     /**
@@ -145,17 +177,8 @@ public class BaseRegister {
                                                           bankDescriptor.getSpecialAccessPermissions()._write);
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
         _voidFlag = false;
-
-        try {
-            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
-            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
-            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
-            _storage = new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
-        } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   0,
-                                                   0);
-        }
+        _storage = getStorage();
+        checkLimits();
     }
 
     /**
@@ -192,22 +215,13 @@ public class BaseRegister {
         _voidFlag = (values[0] & 0_000200_000000L) != 0;
         _largeSizeFlag = (values[0] & 0_000004_000000L) != 0;
         _accessLock = new AccessInfo(values[0] & 0777777);
-        _lowerLimitNormalized = ((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9);
-        _upperLimitNormalized = (values[1] & 0777777) << (_largeSizeFlag ? 6 : 0);
+        _lowerLimitNormalized =(int)(((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9));
+        _upperLimitNormalized = (int) ((values[1] & 0777777) << (_largeSizeFlag ? 6 : 0)) | (_largeSizeFlag ? 077 : 0);
         _baseAddress = new AbsoluteAddress((short) (values[3] >> 32),
-                                           (int) (values[2] & 0777777),
-                                           (int) (values[3] & 0xFFFFFFFF));
-
-        try {
-            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
-            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
-            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
-            _storage = new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
-        } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   0,
-                                                   0);
-        }
+                                           (int) (values[2] & 0x1FFFFFF),
+                                           (int) values[3]);
+        _storage = getStorage();
+        checkLimits();
     }
 
     /**
@@ -265,11 +279,11 @@ public class BaseRegister {
         result[0] |= (_accessLock._ring) << 16;
         result[0] |= _accessLock._domain;
 
-        result[1] = (_lowerLimitNormalized >> (_largeSizeFlag ? 15 : 9)) << 27;
-        result[1] |= _upperLimitNormalized >> (_largeSizeFlag ? 6 : 0);
+        result[1] = ((long)_lowerLimitNormalized >> (_largeSizeFlag ? 15 : 9)) << 27;
+        result[1] |= (long)_upperLimitNormalized >> (_largeSizeFlag ? 6 : 0);
 
         result[2] = _baseAddress._segment;
-        result[3] = (((long) _baseAddress._upi) << 32) | (_baseAddress._offset);
+        result[3] = ((long) (_baseAddress._upi) << 32) | _baseAddress._offset;
 
         return result;
     }

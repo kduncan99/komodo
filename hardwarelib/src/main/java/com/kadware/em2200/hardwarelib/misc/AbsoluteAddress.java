@@ -13,6 +13,7 @@ public class AbsoluteAddress {
 
     /**
      * The UPI (Unique Processor Index) value identifying a particular MSP
+     * Range: 0:0x0F
      */
     public short _upi;
 
@@ -22,12 +23,13 @@ public class AbsoluteAddress {
      * responsible for managing memory there-in.
      * For pass-through MSPs, there will be a segment for every memory allocation.  The operating system
      * is responsible for requesting and releasing segments in sizes most convenient for it.
+     * Range: 0:0x7FFFFFF (25 bits)
      */
     public int _segment;
 
     /**
-     * A value corresponding to an offset from the start of that MSP's storage.
-     * This value *can* be negative, but it should not be used to access storage until it is adjust upward.
+     * A value corresponding to an offset from the start of that MSP's segment.
+     * Range: 0:0x7FFFFFFF (35 bits)
      */
     public int _offset;
 
@@ -43,6 +45,9 @@ public class AbsoluteAddress {
         final int segment,
         final int offset
     ) {
+        assert((upi >= 0) && (upi < 16));
+        assert((segment & 0xFE000000) == 0);
+        assert(_offset >= 0);
         _upi = upi;
         _segment = segment;
         _offset = offset;
@@ -50,11 +55,10 @@ public class AbsoluteAddress {
 
     /**
      * Adds another offset to the offset in this object
-     * <p>
      * @param offset offset to be added
      */
     public void addOffset(
-        final int offset
+        final long offset
     ) {
         _offset += offset;
     }
@@ -66,7 +70,7 @@ public class AbsoluteAddress {
     @Override
     public int hashCode(
     ) {
-        return (new Integer(_upi)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer(_offset)).hashCode();
+        return (new Integer(_upi)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer((int)_offset)).hashCode();
     }
 
     /**
@@ -78,7 +82,7 @@ public class AbsoluteAddress {
     public boolean equals(
         final Object obj
     ) {
-        if ((obj != null) && (obj instanceof AbsoluteAddress)) {
+        if (obj instanceof AbsoluteAddress) {
             AbsoluteAddress comp = (AbsoluteAddress) obj;
             return (_upi == comp._upi) && (_segment == comp._segment) && (_offset == comp._offset);
         } else {
@@ -101,7 +105,7 @@ public class AbsoluteAddress {
 
     /**
      * Setter
-     * @param address
+     * @param address source value
      */
     public void set(
         final AbsoluteAddress address

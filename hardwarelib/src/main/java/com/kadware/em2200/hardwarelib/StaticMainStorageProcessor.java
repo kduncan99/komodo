@@ -6,10 +6,9 @@ package com.kadware.em2200.hardwarelib;
 
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.baselib.Word36Array;
+import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
-
-import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
