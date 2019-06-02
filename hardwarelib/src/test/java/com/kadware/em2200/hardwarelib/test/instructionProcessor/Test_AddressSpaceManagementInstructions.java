@@ -193,6 +193,12 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
+    //  TODO we need unit tests for LBED basic /extended
+
+    //  TODO we need unit tests for LBUD basic /extended
+
+    //  TODO we need unit tests for SBED basic /extended
+
     @Test
     public void storeBaseRegisterUser_basic(
     ) throws MachineInterrupt,
@@ -302,4 +308,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(0_600004_000000L, data[0]);
         assertEquals(0_600005_000000L, data[1]);
     }
+
+    //  TODO we need unit tests for SBUD basic /extended
 }

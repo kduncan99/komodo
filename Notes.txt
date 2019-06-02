@@ -1,11 +1,9 @@
 -- InProgress
 IP: address space management instructions (and unit tests)
-  LBU, LBE, LBUD, LBED, SBUD, SBED, *SBU, LBN, TRA, TRARS, TVA, *DABT
+  LBU, LBE, LBN, TRA, TRARS, TVA
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
-When shifting left for upper limit, we should shift 1's in, right?
-  In any case, analyze the situation for lower/upper limits wrt bits shifted in or out
 
 -- TODO implemeent
 * baselib
@@ -14,7 +12,6 @@ some new instructions
 * hardwarelib
 need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
-IP: do active base table thing
 IP,IOP: UPI send/ack mechanism for IOs
 IP: operations control instructions (and unit tests)
   SEND
@@ -24,7 +21,7 @@ IP: IPC instruction for dynamic bank allocation
 IP: implement standard bank switching logic
 IP: interrupt processing, use standard bank switching logic
 IP: IPC instruction for console communication
-SCP: For starting/monitoring/stopping system, and for console communication
+SystemControlProcessor: For starting/monitoring/stopping system, and for console communication
 IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
 Rewrite disk (and maybe tape) devices using async IO
 All Device objects: add Builder class, make constructors private
