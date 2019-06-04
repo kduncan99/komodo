@@ -394,6 +394,7 @@ public class InstructionProcessor extends Processor implements Worker {
      *                  this value increments from zero upward by one.
      * @return relative address for the current instruction
      */
+    //TODO may not need offset parameter...
     private int calculateRelativeAddressForGRSOrStorage(
         final int offset
     ) {
@@ -438,6 +439,7 @@ public class InstructionProcessor extends Processor implements Worker {
      *                  this value increments from zero upward by one.
      * @return relative address for the current instruction
      */
+    //TODO may not need offset parameter
     private int calculateRelativeAddressForJump(
         final int offset
     ) {
@@ -503,15 +505,13 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private boolean checkPendingInterrupts(
     ) throws MachineInterrupt {
-        //TODO
-        // Is there an interrupt pending?  If so, handle it (but wait - is DB13 == 0?  Is the pending interrupt deferrable?
-        //      also, do we need to enqueue interrupts in case multiple interrupts occur?  I think maybe so...?
+        //  Is there an interrupt pending?  If so, handle it
         if (_pendingInterrupt != null) {
             handleInterrupt();
             return true;
         }
 
-        // Are there any pending conditions which need to be turned into interrupts?
+        //  Are there any pending conditions which need to be turned into interrupts?
         if (_indicatorKeyRegister.getBreakpointRegisterMatchCondition() && !_midInstructionInterruptPoint) {
             if (_breakpointRegister.getHaltFlag()) {
                 stop(StopReason.Breakpoint, 0);
@@ -804,7 +804,7 @@ public class InstructionProcessor extends Processor implements Worker {
             return;
         }
 
-        //TODO If the Reset Indicator is set and this is a noninitial exigent interrupt, then error halt and set an
+        //TODO If the Reset Indicator is set and this is a non-initial exigent interrupt, then error halt and set an
         //      SCF readable “register” to indicate that a Reset failure occurred.
 
         // Update interrupt-specific portions of the IKR
@@ -876,7 +876,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
         // Set designator register per IP PRM 5.1.5
         //  We'll set/clear Basic Mode later once we've got the interrupt handler bank
-        boolean bmBaseRegSel = _designatorRegister.getBasicModeBaseRegisterSelection();
         boolean fhip = _designatorRegister.getFaultHandlingInProgress();
         _designatorRegister.clear();
         _designatorRegister.setExecRegisterSetSelected(true);
@@ -938,17 +937,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Checks a base register to see if we can enter within it, given our current key/ring
-     * @param baseRegister register of interest
-     * @return true if we have enter permission for the bank based on the given register
-     */
-    private boolean isEnterAllowed(
-        final BaseRegister baseRegister
-    ) {
-        return getEffectivePermissions(baseRegister)._enter;
-    }
-
-    /**
      * Checks a base register to see if we can read from it, given our current key/ring
      * @param baseRegister register of interest
      * @return true if we have read permission for the bank based on the given register
@@ -973,32 +961,6 @@ public class InstructionProcessor extends Processor implements Worker {
         return !baseRegister._voidFlag
                && (offset >= baseRegister._lowerLimitNormalized)
                && (offset <= baseRegister._upperLimitNormalized);
-    }
-
-    /**
-     * Checks a base register to see if we can write to it, given our current key/ring
-     * @param baseRegister register of interest
-     * @return true if we have write permission for the bank based on the given register
-     */
-    private boolean isWriteAllowed(
-        final BaseRegister baseRegister
-    ) {
-        return getEffectivePermissions(baseRegister)._write;
-    }
-
-    /**
-     * Loads the program counter from the value at u, presumably as part of a conditionalJump instruction.
-     * Sets the prevent PC Increment flag, since PAR.PC will have the value we want, and we don't want it
-     * auto-incremented.  For Extended Mode.
-     * @param effectiveU value to be loaded into the PAR
-     */
-    private void loadProgramCounterExtendedMode(
-        final int effectiveU
-    ) {
-        //  Update conditionalJump history table, then PAR.PC, and prevent automatic PAR.PC increment.
-        createJumpHistoryTableEntry(_programAddressRegister.getW());
-        _programAddressRegister.setProgramCounter(effectiveU);
-        _preventProgramCounterIncrement = true;
     }
 
     /**
@@ -1233,9 +1195,9 @@ public class InstructionProcessor extends Processor implements Worker {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
         }
 
-        if (value == this.getExecOrUserARegister((int)_currentInstruction.getA()).getW()) {
+        if (value == this.getExecOrUserARegister((int) _currentInstruction.getA()).getW()) {
             checkBreakpoint(BreakpointComparison.Write, absAddress);
-            long newValue = this.getExecOrUserARegister((int)_currentInstruction.getA() + 1).getW();
+            long newValue = this.getExecOrUserARegister((int) _currentInstruction.getA() + 1).getW();
             try {
                 _inventoryManager.setStorageValue(absAddress, newValue);
                 return true;
@@ -1720,18 +1682,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * For handlers to set a particular register.  We do no access checking here.
-     * @param grsIndex GRS index of the register in question
-     * @param value value to be set
-     */
-    public void setRegisterValue(
-        final int grsIndex,
-        final long value
-    ) {
-        _generalRegisterSet.setRegister(grsIndex, value);
-    }
-
-    /**
      * Stores consecutive word values for double or multiple-word transfer operations (e.g., DS, SRS, etc).
      * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
      * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
@@ -2156,7 +2106,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final int relativeAddress
     ) {
         short upi = baseRegister._baseAddress._upi;
-        int actualOffset = relativeAddress - (int) baseRegister._lowerLimitNormalized;
+        int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
     }

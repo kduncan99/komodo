@@ -14,9 +14,6 @@ import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.ReferenceViolationInterrupt;
-import com.sun.jndi.cosnaming.IiopUrl;
-
-import java.sql.Ref;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.
@@ -101,7 +98,7 @@ public class BaseRegister {
         }
 
         try {
-            int bankSize = (int) (_upperLimitNormalized - _lowerLimitNormalized + 1);
+            int bankSize = (_upperLimitNormalized - _lowerLimitNormalized + 1);
             MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
             Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
             return new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
@@ -164,7 +161,7 @@ public class BaseRegister {
 
     /**
      * Constructor for building a BaseRegister from a bank descriptor with no subsetting
-     * @param bankDescriptor
+     * @param bankDescriptor source bank descriptor
      */
     public BaseRegister(
         final BankDescriptor bankDescriptor
@@ -234,7 +231,7 @@ public class BaseRegister {
      */
     public int getLowerLimit(
     ) {
-        return (int) (_largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9);
+        return (_largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9);
     }
 
     /**
@@ -313,7 +310,7 @@ public class BaseRegister {
      */
     public int getUpperLimit(
     ) {
-        return (int) (_largeSizeFlag ? _upperLimitNormalized >> 6 : _upperLimitNormalized);
+        return (_largeSizeFlag ? _upperLimitNormalized >> 6 : _upperLimitNormalized);
     }
 
     /**

@@ -1,6 +1,11 @@
 -- InProgress
+IP: implement standard bank switching logic
 IP: address space management instructions (and unit tests)
   LBU, LBE, LBN, TRA, TRARS, TVA
+IP: extended mode procedure call instructions (and unit tests)
+  GOTO, CALL, LOCL, RTN
+IP: basic mode procedure call instructions (and unit tests)
+  LBJ, LIJ, LDJ
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -19,7 +24,6 @@ IP: operations control instructions (and unit tests)
   ACK
 MSP: add support for banks dynamically allocated from native system
 IP: IPC instruction for dynamic bank allocation
-IP: implement standard bank switching logic
 IP: interrupt processing, use standard bank switching logic
 IP: IPC instruction for console communication
 SystemControlProcessor: For starting/monitoring/stopping system, and for console communication
@@ -45,15 +49,6 @@ IP: string instructions (and unit tests)
   SS
   TES
   TNES
-IP: extended mode procedure call instructions (and unit tests)
-  GOTO
-  CALL
-  LOCL
-  RTN
-IP: basic mode procedure call instructions (and unit tests)
-  LBJ
-  LIJ
-  LDJ
 IP: queuing instructions
   ENQ
   ENQF
