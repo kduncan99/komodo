@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.misc;
 
+import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.Word36;
 
 /**
@@ -20,8 +21,6 @@ public class IndicatorKeyRegister extends Word36 {
 
     /**
      * Initial value constructor
-     * <p>
-     * @param value
      */
     public IndicatorKeyRegister(
         final long value
@@ -29,212 +28,58 @@ public class IndicatorKeyRegister extends Word36 {
         super(value);
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getShortStatusField(
-    ) {
-        return getS1();
-    }
+    public long getShortStatusField() { return getS1(); }
+    public long getMidInstructionDescription() { return getS2() >> 3; }
+    public long getPendingInterruptInformation() { return getS2() & 07; }
+    public long getInterruptClassField() { return getS3(); }
+    public long getAccessKey() { return getH2(); }
+    public AccessInfo getAccessInfo() { return new AccessInfo(getAccessKey()); }
+    public boolean getInstructionInF0() { return (getMidInstructionDescription() & 04) != 0; }
+    public boolean getExecuteRepeatedInstruction() { return (getMidInstructionDescription() & 02) != 0; }
+    public boolean getBreakpointRegisterMatchCondition() { return (getPendingInterruptInformation() & 04) != 0; }
+    public boolean getSoftwareBreak() { return (getPendingInterruptInformation() & 02) != 0; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getMidInstructionDescription(
-    ) {
-        return getS2() >> 3;
-    }
+    public void setShortStatusField(long value) { setS1(value); }
+    public void setMidInstructionDescription(long value) { _value = (_value & 0_770777_777777L) | ((value & 07) << 27); }
+    public void setPendingInterruptInformation(long value) { _value = (_value & 0_777077_777777L) | ((value & 07) << 24); }
+    public void setInterruptClassField(long value) { setS3(value); }
+    public void setAccessKey(long value) { setH2(value); }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getPendingInterruptInformation(
-    ) {
-        return getS2() & 07;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getInterruptClassField(
-    ) {
-        return getS3();
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getAccessKey(
-    ) {
-        return getH2();
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getInstructionInF0(
-    ) {
-        return (getMidInstructionDescription() & 04) != 0;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getExecuteRepeatedInstruction(
-    ) {
-        return (getMidInstructionDescription() & 02) != 0;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getBreakpointRegisterMatchCondition(
-    ) {
-        return (getPendingInterruptInformation() & 04) != 0;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getSoftwareBreak(
-    ) {
-        return (getPendingInterruptInformation() & 02) != 0;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setShortStatusField(
-        final long value
-    ) {
-        setS1(value);
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setMidInstructionDescription(
-        final long value
-    ) {
-        _value = (_value & 0_770777_777777l) | ((value & 07) << 27);
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setPendingInterruptInformation(
-        final long value
-    ) {
-        _value = (_value & 0_777077_777777l) | ((value & 07) << 24);
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setInterruptClassField(
-        final long value
-    ) {
-        setS3(value);
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setAccessKey(
-        final long value
-    ) {
-        setH2(value);
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
     public void setInstructionInF0(
         final boolean flag
     ) {
-        _value &= 0_773777_777777l;
+        _value &= 0_773777_777777L;
         if (flag) {
-            _value |= 0_004000_000000l;
+            _value |= 0_004000_000000L;
         }
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
     public void setExecuteRepeatedInstruction(
         final boolean flag
     ) {
-        _value &= 0_775777_777777l;
+        _value &= 0_775777_777777L;
         if (flag) {
-            _value |= 0_002000_000000l;
+            _value |= 0_002000_000000L;
         }
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
     public void setBreakpointRegisterMatchCondition(
         final boolean flag
     ) {
-        _value &= 0_777377_777777l;
+        _value &= 0_777377_777777L;
         if (flag) {
-            _value |= 0_000400_000000l;
+            _value |= 0_000400_000000L;
         }
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param flag
-     */
     public void setSoftwareBreak(
         final boolean flag
     ) {
-        _value &= 0_777577_777777l;
+        _value &= 0_777577_777777L;
         if (flag) {
-            _value |= 0_000200_000000l;
+            _value |= 0_000200_000000L;
         }
     }
 
-    /**
-     * Clear the value to zero
-     */
-    public void clear(
-    ) {
-        _value = 0;
-    }
+    public void clear() { _value = 0; }
 }

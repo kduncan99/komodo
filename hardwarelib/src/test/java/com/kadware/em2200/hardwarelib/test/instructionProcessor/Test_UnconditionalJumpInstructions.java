@@ -616,39 +616,6 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     }
 
     @Test
-    public void jump_basic_referenceViolation3(
-    ) throws MachineInterrupt,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
-        //  address non-executable
-        String[] source = {
-            "          $BASIC",
-            "",
-            "$(2),DATA",
-            "          HALT      076",
-            "",
-            "$(1),START$*",
-            "          NOP",
-            "          J         DATA",
-            "          HALT      077",
-        };
-
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
-
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals((ReferenceViolationInterrupt.ErrorType.ReadAccessViolation.getCode() << 4) + 1,
-                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-    }
-
-    @Test
     public void jump_extended_referenceViolation1(
     ) throws MachineInterrupt,
              NodeNameConflictException,

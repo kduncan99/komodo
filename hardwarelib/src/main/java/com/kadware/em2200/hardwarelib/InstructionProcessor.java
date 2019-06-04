@@ -589,114 +589,50 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Fixed object for fetchInstruction() - helps mitigate proliferation of nasty little objects
-     */
-    private final AbsoluteAddress _fetchInstructionAbsoluteAddress = new AbsoluteAddress((short) 0, 0, 0);
-
-    /**
-     * Diverts code to either the basic mode or extended mode fetch handler
+     * Fetches the next instruction based on the current program address register,
+     * and places it in the current instruction register.
+     * Basic mode:
+     *  We cannot fetch from a large bank (EX, EXR can refer to an instruction in a large bank, but cannot be in one)
+     *  We must check upper and lower limits unless the program counter is 0777777 (why? I don't know...)
+     *  Since we use findBasicModeBank(), we are assured of this check automatically.
+     *  We need to determine which base register we execute from, and read permission is needed for the corresponding bank.
+     * Extended mode:
+     *  We cannot fetch from a large bank (EX, EXR can refer to an instruction in a large bank, but cannot be in one)
+     *  We must check upper and lower limits unless the program counter is 0777777 (why? I don't know...)
+     *  Access is not checked, as GAP and SAP for enter access are applied at the time the bank is based on B0,
+     *  and if that passes, GAP and SAP read access are automatically set true.
+     *  EX and EXR targets still require read-access checks.
      * @throws MachineInterrupt if an interrupt needs to be raised
      */
     private void fetchInstruction(
     ) throws MachineInterrupt {
         _midInstructionInterruptPoint = false;
-        if (_designatorRegister.getBasicModeEnabled()) {
-            fetchInstructionBasicMode();
+        boolean basicMode = _designatorRegister.getBasicModeEnabled();
+        int programCounter = _programAddressRegister.getProgramCounter();
+
+        BaseRegister bReg;
+        if (basicMode) {
+            int baseRegisterIndex = findBasicModeBank(programCounter, true);
+            if (baseRegisterIndex == 0) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
+            }
+
+            bReg = _baseRegisters[baseRegisterIndex];
+            if (!isReadAllowed(bReg)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+            }
         } else {
-            fetchInstructionExtendedMode();
+            bReg = _baseRegisters[0];
+            bReg.checkAccessLimits(programCounter, true, false, false, _indicatorKeyRegister.getAccessInfo());
         }
-    }
 
-    /**
-     * Fetches the next instruction based on the current program address register,
-     * and places it in the current instruction register -- for basic mode.
-     * @throws MachineInterrupt if an interrupt needs to be raised
-     */
-    private void fetchInstructionBasicMode(
-    ) throws MachineInterrupt {
-        //  Make sure program counter is within one of the BRs 12-15.
-        int baseRegisterIndex = findBasicModeBank(_programAddressRegister.getProgramCounter(), true);
-        if (baseRegisterIndex == 0) {
+        if (bReg._voidFlag || bReg._largeSizeFlag) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
         }
 
-        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
-
-        //  Make sure it is not a large size bank.
-        if (bReg._largeSizeFlag) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
-        }
-
-        //  Make sure we have execute permission here.
-        if (!isEnterAllowed(bReg)) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
-        }
-
-        //  Make sure that we have read access to this bank (whichever bank it is).
-        //  See PRM 4.4.1
-        if (!isReadAllowed(bReg)) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
-        }
-
-        //  No need to check limits - it is implicitly within limits of the bank described by the baseRegisterIndex
-        //  due to the operation of findBasicModeBank() above.
-
-        //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
-        _fetchInstructionAbsoluteAddress.set(bReg._baseAddress._upi,
-                                             bReg._baseAddress._segment,
-                                             bReg._baseAddress._offset);
-        _fetchInstructionAbsoluteAddress.addOffset(_programAddressRegister.getProgramCounter() - (int)bReg._lowerLimitNormalized);
-        checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
-
-        try {
-            long value = _inventoryManager.getStorageValue(_fetchInstructionAbsoluteAddress);
-            _currentInstruction.setW(value);
-            _indicatorKeyRegister.setInstructionInF0(true);
-            _midInstructionInterruptPoint = false;
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
-        }
-    }
-
-    /**
-     * Fetches the next instruction based on the current program address register,
-     * and places it in the current instruction register -- for extended mode.
-     * @throws MachineInterrupt if an interrupt needs to be raised
-     */
-    private void fetchInstructionExtendedMode(
-    ) throws MachineInterrupt {
-        //  Is the bank based on BR0 void, or a large bank?
-        if (_baseRegisters[0]._voidFlag || _baseRegisters[0]._largeSizeFlag) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
-        }
-
-        //  We don't need to check for execute permission - that check is performed at the time the bank is based on BR0.
-        //  Is PAR.PC in the addressing range of the bank based on BR0?
-        if ( (_programAddressRegister.getProgramCounter() > _baseRegisters[0].getUpperLimit())
-            || (_programAddressRegister.getProgramCounter() < _baseRegisters[0].getLowerLimit()) ) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
-        }
-
-        //  Get absolute address, compare it against the breakpoint register, and read the word from storage.
-        //  Set the word (which is an instruction) in _currentInstruction, clear MidInstIntPt, and set IKR.INF.
-        _fetchInstructionAbsoluteAddress.set(_baseRegisters[0]._baseAddress._upi,
-                                             _baseRegisters[0]._baseAddress._segment,
-                                             _baseRegisters[0]._baseAddress._offset);
-        int offset = _programAddressRegister.getProgramCounter() - (int)_baseRegisters[0]._lowerLimitNormalized;
-        _fetchInstructionAbsoluteAddress.addOffset(offset);
-        checkBreakpoint(BreakpointComparison.Fetch, _fetchInstructionAbsoluteAddress);
-
-        try {
-            long value = _inventoryManager.getStorageValue(_fetchInstructionAbsoluteAddress);
-            _currentInstruction.setW(value);
-            _indicatorKeyRegister.setInstructionInF0(true);
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
-        }
+        int pcOffset = programCounter - bReg._lowerLimitNormalized;
+        _currentInstruction.setW(bReg._storage.getValue(pcOffset));
+        _indicatorKeyRegister.setInstructionInF0(true);
     }
 
     /**
@@ -738,7 +674,6 @@ public class InstructionProcessor extends Processor implements Worker {
      * Locates the index of the base register which represents the bank which contains the given relative address.
      * Does appropriate limits checking.  Delegates to the appropriate basic or extended mode implementation.
      * @param relativeAddress relative address to be considered
-     * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
      * @return base register index
      * @throws MachineInterrupt if any interrupt needs to be raised.
      *                          In this case, the instruction is incomplete and should be retried if appropriate.
@@ -747,117 +682,42 @@ public class InstructionProcessor extends Processor implements Worker {
      *                                    checking for any pending interrupts.
      */
     private int findBaseRegisterIndex(
-        final int relativeAddress,
-        final boolean writeAccess
+        final int relativeAddress
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         if (_designatorRegister.getBasicModeEnabled()) {
-            return findBaseRegisterIndexBasicMode(relativeAddress, writeAccess);
-        } else {
-            return findBaseRegisterIndexExtendedMode(relativeAddress, writeAccess);
-        }
-    }
-
-    /**
-     * Private fixed AbsoluteAddress object for findBaseRegister* methods.
-     * Likely, we'll only use it during BasicMode indirect address resolution.
-     */
-    private final AbsoluteAddress _fbrAbsoluteAddress = new AbsoluteAddress((short) 0, 0, 0);
-
-    /**
-     * Locates the index of the base register which represents the bank which contains the given relative address.
-     * Does appropriate limits checking.
-     * @param relativeAddress relative address to be considered
-     * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
-     * @return base register index
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private int findBaseRegisterIndexBasicMode(
-        final int relativeAddress,
-        final boolean writeAccess
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        //  Find the bank containing the current offset.
-        //  We don't need to check for storage limits, since this is done for us by findBasicModeBank() in terms of
-        //  returning a zero.
-        int brIndex = findBasicModeBank(relativeAddress, false);
-        if (brIndex == 0) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-        }
-
-        BaseRegister bReg = _baseRegisters[brIndex];
-
-        //  Are we doing indirect addressing?
-        if (_currentInstruction.getI() != 0) {
-            //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
-            incrementIndexRegisterInF0();
-
-            //  Ensure we can read from the selected bank
-            if (!isReadAllowed(bReg)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-            }
-
-            //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
-            //  then throw UnresolvedAddressException so the caller knows we're not done here.
-            try {
-                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
-                _fbrAbsoluteAddress.addOffset(relativeAddress - (int)bReg._lowerLimitNormalized);
-                long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
-                _currentInstruction.setXHIU(replacementValue);
-            } catch (AddressLimitsException
-                     | UPINotAssignedException
-                     | UPIProcessorTypeException ex) {
+            //  Find the bank containing the current offset.
+            //  We don't need to check for storage limits, since this is done for us by findBasicModeBank() in terms of
+            //  returning a zero.
+            int brIndex = findBasicModeBank(relativeAddress, false);
+            if (brIndex == 0) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
             }
 
-            throw new UnresolvedAddressException();
-        }
+            //  Are we doing indirect addressing?
+            if (_currentInstruction.getI() != 0) {
+                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
+                incrementIndexRegisterInF0();
+                BaseRegister br = _baseRegisters[brIndex];
 
-        //  We're at our final destination.  Check accessibility
-        if (writeAccess) {
-            if (!isWriteAllowed(bReg)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+                //  Ensure we can read from the selected bank
+                if (!isReadAllowed(br)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+                br.checkAccessLimits(relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+                //  then throw UnresolvedAddressException so the caller knows we're not done here.
+                int wx = relativeAddress - br._lowerLimitNormalized;
+                _currentInstruction.setXHIU(br._storage.getValue(wx));
+                throw new UnresolvedAddressException();
             }
+
+            //  We're at our final destination
+            return brIndex;
         } else {
-            if (!isReadAllowed(bReg)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-            }
+            return getEffectiveBaseRegisterIndex();
         }
-
-        return brIndex;
-    }
-
-    /**
-     * Locates the index of the base register which represents the bank which contains the given relative address.
-     * Does appropriate limits checking.
-     * @param relativeAddress relative address to be considered
-     * @param writeAccess indicates the caller intends a write operation - if false, a read is intended
-     * @return generated relative address.
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     */
-    private int findBaseRegisterIndexExtendedMode(
-        final int relativeAddress,
-        final boolean writeAccess
-    ) throws MachineInterrupt {
-        int brIndex = getEffectiveBaseRegisterIndex();
-        BaseRegister bReg = _baseRegisters[brIndex];
-        if (bReg._voidFlag) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-        }
-
-        //  check limits of displacement and accessibility
-        if ((!isWithinLimits(bReg, relativeAddress))
-                || (!writeAccess && !isReadAllowed(bReg))
-                || (writeAccess && !isWriteAllowed(bReg))) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-        }
-
-        return brIndex;
     }
 
     /**
@@ -1357,8 +1217,9 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
         AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
         setStorageLock(absAddress);
 
@@ -1430,37 +1291,23 @@ public class InstructionProcessor extends Processor implements Worker {
             return;
         }
 
-        //  Loading from storage.  We need to resolve bank references (which does some storage limits checking for us)
-        try {
-            //  Iterate once through to create a container of absolute addresses which we're going to need presently.
-            AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
-            for (int ox = 0; ox < operands.length; ++ox) {
-                //  If this isn't the first trip through the loop, recalculate U
-                if (ox > 0) {
-                    relAddress = calculateRelativeAddressForGRSOrStorage(ox);
-                }
+        //  Get base register and check storage and access limits
+        int brIndex = findBaseRegisterIndex(relAddress);
+        BaseRegister bReg = _baseRegisters[brIndex];
+        bReg.checkAccessLimits(relAddress, operands.length, true, false, _indicatorKeyRegister.getAccessInfo());
 
-                int brIndex = findBaseRegisterIndex(relAddress, false);
-                BaseRegister baseReg = _baseRegisters[brIndex];
+        //  Lock the storage
+        AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
+        for (int ax = 0; ax < operands.length; ++ax ) {
+            absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
+        }
+        setStorageLocks(absAddresses);
 
-                //  Convert relative address to absolute, check the breakpoint, then retrieve the value
-                AbsoluteAddress absAddress = getAbsoluteAddress(baseReg, relAddress);
-                absAddresses[ox] = absAddress;
-            }
-
-            //  Now set storage locks for all the addresses
-            setStorageLocks(absAddresses);
-
-            //  Now go retrieve the operands, since all the addresses are under storage lock.
-            //  Do check for breakpoints along the way...
-            for (int ox = 0; ox < operands.length; ++ox) {
-                checkBreakpoint(BreakpointComparison.Read, absAddresses[ox]);
-                operands[ox] = _inventoryManager.getStorageValue(absAddresses[ox]);
-            }
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+        //  Retrieve the operands
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        for (int ox = 0; ox < operands.length; ++ox) {
+            checkBreakpoint(BreakpointComparison.Read, absAddresses[ox]);
+            operands[ox] = bReg._storage.getValue(offset++);
         }
     }
 
@@ -1604,37 +1451,12 @@ public class InstructionProcessor extends Processor implements Worker {
         //  If we are doing that, it will update the U portion of the current instruction with new address information,
         //  then throw UnresolvedAddressException which will eventually route us back through here again, but this
         //  time with new address info (in reladdress), and we keep doing this until we're not doing indirect addressing.
-        //  We never actually use the result of findBaseRegisterIndex...
         if (_designatorRegister.getBasicModeEnabled() && (_currentInstruction.getI() != 0)) {
-            int brIndex = findBasicModeBank(relAddress, false);
-            if (brIndex == 0) {
-                incrementIndexRegisterInF0();
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-            }
-
-            BaseRegister bReg = _baseRegisters[brIndex];
-            incrementIndexRegisterInF0();
-            if (!isReadAllowed(bReg)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-            }
-
-            //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
-            //  then throw UnresolvedAddressException so the caller knows we're not done here.
-            try {
-                _fbrAbsoluteAddress.set(bReg._baseAddress._upi, bReg._baseAddress._segment, bReg._baseAddress._offset);
-                _fbrAbsoluteAddress.addOffset(relAddress - (int)bReg._lowerLimitNormalized);
-                long replacementValue = _inventoryManager.getStorageValue(_fbrAbsoluteAddress);
-                _currentInstruction.setXHIU(replacementValue);
-            } catch (AddressLimitsException
-                | UPINotAssignedException
-                | UPIProcessorTypeException ex) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-            }
-
-            throw new UnresolvedAddressException();
+            findBaseRegisterIndex(relAddress);
         } else {
             incrementIndexRegisterInF0();
         }
+
         return relAddress;
     }
 
@@ -1694,27 +1516,24 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Loading from storage.  Do so, then (maybe) honor partial word handling.
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
         incrementIndexRegisterInF0();
 
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
         AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
         setStorageLock(absAddress);
-
         checkBreakpoint(BreakpointComparison.Read, absAddress);
-        try {
-            long value = _inventoryManager.getStorageValue(absAddress);
-            if (allowPartial) {
-                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-                value = extractPartialWord(value, jField, qWordMode);
-            }
 
-            return value;
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long value = baseRegister._storage.getValue(readOffset);
+        if (allowPartial) {
+            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+            value = extractPartialWord(value, jField, qWordMode);
         }
+
+        return value;
     }
 
     /**
@@ -1735,22 +1554,19 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
         incrementIndexRegisterInF0();
 
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
         AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
         setStorageLock(absAddress);
-
         checkBreakpoint(BreakpointComparison.Read, absAddress);
-        try {
-            long value = _inventoryManager.getStorageValue(absAddress);
-            return extractPartialWord(value, jField, quarterWordMode);
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-        }
+
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long value = baseRegister._storage.getValue(readOffset);
+        return extractPartialWord(value, jField, quarterWordMode);
     }
 
     /**
@@ -1843,53 +1659,50 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Storage operand.  Maybe do partial-word addressing
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
         incrementIndexRegisterInF0();
 
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
+
         AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
         setStorageLock(absAddress);
         checkBreakpoint(BreakpointComparison.Read, absAddress);
 
-        try {
-            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-            long storageValue = _inventoryManager.getStorageValue(absAddress);
-            long sum = allowPartial ? extractPartialWord(storageValue, jField, qWordMode) : storageValue;
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long storageValue = baseRegister._storage.getValue(readOffset);
+        boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+        long sum = allowPartial ? extractPartialWord(storageValue, jField, qWordMode) : storageValue;
 
-            if (twosComplement) {
-                if (sum == 0) {
-                    result = true;
-                }
-                sum += OnesComplement.getNative36(incrementValue);
-                if (sum == 0) {
-                    result = true;
-                }
-
-                _designatorRegister.setCarry(false);
-                _designatorRegister.setOverflow(false);
-            } else {
-                if (OnesComplement.isZero36(sum)) {
-                    result = true;
-                }
-                OnesComplement.Add36Result ocResult = new OnesComplement.Add36Result();
-                OnesComplement.add36(sum, incrementValue, ocResult);
-                if (OnesComplement.isZero36(ocResult._sum)) {
-                    result = true;
-                }
-
-                _designatorRegister.setCarry(ocResult._carry);
-                _designatorRegister.setOverflow(ocResult._overflow);
-                sum = ocResult._sum;
+        if (twosComplement) {
+            if (sum == 0) {
+                result = true;
+            }
+            sum += OnesComplement.getNative36(incrementValue);
+            if (sum == 0) {
+                result = true;
             }
 
-            long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
-            _inventoryManager.setStorageValue(absAddress, storageResult);
-            return result;
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+            _designatorRegister.setCarry(false);
+            _designatorRegister.setOverflow(false);
+        } else {
+            if (OnesComplement.isZero36(sum)) {
+                result = true;
+            }
+            OnesComplement.Add36Result ocResult = new OnesComplement.Add36Result();
+            OnesComplement.add36(sum, incrementValue, ocResult);
+            if (OnesComplement.isZero36(ocResult._sum)) {
+                result = true;
+            }
+
+            _designatorRegister.setCarry(ocResult._carry);
+            _designatorRegister.setOverflow(ocResult._overflow);
+            sum = ocResult._sum;
         }
+
+        long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
+        baseRegister._storage.setValue(readOffset, storageResult);
+        return result;
     }
 
     /**
@@ -1959,40 +1772,26 @@ public class InstructionProcessor extends Processor implements Worker {
 
             incrementIndexRegisterInF0();
         } else {
+            //  Get base register and check storage and access limits
+            int brIndex = findBaseRegisterIndex(relAddress);
+            BaseRegister bReg = _baseRegisters[brIndex];
+            bReg.checkAccessLimits(relAddress, operands.length, false, true, _indicatorKeyRegister.getAccessInfo());
 
-            //  Storing to storage.
-            try {
-                //  Iterate once through to create a container of absolute addresses which we're going to need presently.
-                AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
-                for (int ox = 0; ox < operands.length; ++ox) {
-                    //  If this isn't the first trip through the loop, recalculate U (we already calculated for ox==0)
-                    if (ox > 0) {
-                        relAddress = calculateRelativeAddressForGRSOrStorage(ox);
-                    }
-
-                    //  We call findBaseRegisterIndex for the limits checking.  TODO this is kind of silly, can we do better?
-                    int brIndex = findBaseRegisterIndex(relAddress, true);
-                    BaseRegister baseReg = _baseRegisters[brIndex];
-
-                    //  Convert relative address to absolute, check the breakpoint, then retrieve the value
-                    absAddresses[ox] = getAbsoluteAddress(baseReg, relAddress);
-                }
-
-                //  Now set storage locks for all the addresses
-                setStorageLocks(absAddresses);
-
-                //  Now go store the operands, since all the addresses are under storage lock.
-                //  Do check for breakpoints along the way...
-                for (int ox = 0; ox < operands.length; ++ox) {
-                    checkBreakpoint(BreakpointComparison.Write, absAddresses[ox]);
-                    _inventoryManager.setStorageValue(absAddresses[ox], operands[ox]);
-                }
-                incrementIndexRegisterInF0();
-            } catch (AddressLimitsException
-                | UPINotAssignedException
-                | UPIProcessorTypeException ex) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+            //  Lock the storage
+            AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
+            for (int ax = 0; ax < operands.length; ++ax ) {
+                absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
             }
+            setStorageLocks(absAddresses);
+
+            //  Store the operands
+            int offset = relAddress - bReg._lowerLimitNormalized;
+            for (int ox = 0; ox < operands.length; ++ox) {
+                checkBreakpoint(BreakpointComparison.Write, absAddresses[ox]);
+                bReg._storage.setValue(offset++, operands[ox]);
+            }
+
+            incrementIndexRegisterInF0();
         }
     }
 
@@ -2050,27 +1849,24 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  This is going to be a storage thing...
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, true);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
+
         incrementIndexRegisterInF0();
 
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
         setStorageLock(absAddress);
-
         checkBreakpoint(BreakpointComparison.Write, absAddress);
-        try {
-            if (allowPartial) {
-                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-                long originalValue = _inventoryManager.getStorageValue(absAddress);
-                long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
-                _inventoryManager.setStorageValue(absAddress, newValue);
-            } else {
-                _inventoryManager.setStorageValue(absAddress, operand);
-            }
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        if (allowPartial) {
+            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+            long originalValue = bReg._storage.getValue(offset);
+            long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
+            bReg._storage.setValue(offset, newValue);
+        } else {
+            bReg._storage.setValue(offset, operand);
         }
     }
 
@@ -2092,24 +1888,20 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
 
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, true);
         incrementIndexRegisterInF0();
 
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
         setStorageLock(absAddress);
-
         checkBreakpoint(BreakpointComparison.Write, absAddress);
-        try {
-            long originalValue = _inventoryManager.getStorageValue(absAddress);
-            long newValue = injectPartialWord(originalValue, operand, jField, quarterWordMode);
-            _inventoryManager.setStorageValue(absAddress, newValue);
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
-        }
+
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        long originalValue = bReg._storage.getValue(offset);
+        long newValue = injectPartialWord(originalValue, operand, jField, quarterWordMode);
+        bReg._storage.setValue(offset, newValue);
     }
 
     /**
@@ -2128,21 +1920,16 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
         setStorageLock(absAddress);
-
-        long value;
         checkBreakpoint(BreakpointComparison.Read, absAddress);
-        try {
-            value = _inventoryManager.getStorageValue(absAddress);
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-        }
 
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        long value = bReg._storage.getValue(offset);
         if (flag) {
             //  we want to set the lock, so it needs to be clear
             if ((value & 0_010000_000000) != 0) {
@@ -2160,13 +1947,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         checkBreakpoint(BreakpointComparison.Write, absAddress);
-        try {
-            _inventoryManager.setStorageValue(absAddress, value);
-        } catch (AddressLimitsException
-                 | UPINotAssignedException
-                 | UPIProcessorTypeException ex) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
-        }
+        bReg._storage.setValue(offset, value);
     }
 
 
@@ -2196,7 +1977,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format(""));//TODO actually, a whole lot to do here
+            writer.write("");//TODO actually, a whole lot to do here
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }

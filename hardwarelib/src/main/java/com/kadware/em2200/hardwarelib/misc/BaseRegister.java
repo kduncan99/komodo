@@ -13,6 +13,10 @@ import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
+import com.kadware.em2200.hardwarelib.interrupts.ReferenceViolationInterrupt;
+import com.sun.jndi.cosnaming.IiopUrl;
+
+import java.sql.Ref;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.
@@ -48,7 +52,7 @@ public class BaseRegister {
      * This is one-word-granularity normalized form the lowerLimit value according to the large size flag.
      * Original (un-normalized) value is limited to 9 bits.
      */
-    public final long _lowerLimitNormalized;
+    public final int _lowerLimitNormalized;
 
     /**
      * Execute, Read, and Write special permissions
@@ -231,6 +235,76 @@ public class BaseRegister {
     public int getLowerLimit(
     ) {
         return (int) (_largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9);
+    }
+
+    /**
+     * Checks a relative address against this bank's limits.
+     * @param relativeAddress relative address of interest
+     * @param fetchFlag true if this is related to an instruction fetch, else false
+     * @param readFlag true if this will result in a read
+     * @param writeFlag true if this will result in a write
+     * @param accessInfo access info of the client
+     * @throws ReferenceViolationInterrupt if the address is outside of limits
+     */
+    public void checkAccessLimits(
+        final int relativeAddress,
+        final boolean fetchFlag,
+        final boolean readFlag,
+        final boolean writeFlag,
+        final AccessInfo accessInfo
+    ) throws ReferenceViolationInterrupt {
+        if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress > _upperLimitNormalized)) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
+        }
+
+        //  Choose GAP or SAP based on caller's accessInfo, but only if necessary
+        if (readFlag || writeFlag) {
+            boolean useSAP = ((accessInfo._ring < _accessLock._ring) || (accessInfo._domain == _accessLock._domain));
+            AccessPermissions bankPermissions = useSAP ? _specialAccessPermissions : _generalAccessPermissions;
+
+            if (readFlag && !bankPermissions._read) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, fetchFlag);
+            }
+
+            if (writeFlag && !bankPermissions._write) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, fetchFlag);
+            }
+        }
+    }
+
+    /**
+     * As above, but checks a range of storage limits
+     * @param relativeAddress relative address of interest
+     * @param count number of consecutive words of the access
+     * @param readFlag true if this will result in a read
+     * @param writeFlag true if this will result in a write
+     * @param accessInfo access info of the client
+     * @throws ReferenceViolationInterrupt if the address is outside of limits
+     */
+    public void checkAccessLimits(
+        final int relativeAddress,
+        final int count,
+        final boolean readFlag,
+        final boolean writeFlag,
+        final AccessInfo accessInfo
+    ) throws ReferenceViolationInterrupt {
+        if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress + count - 1 > _upperLimitNormalized)) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+        }
+
+        //  Choose GAP or SAP based on caller's accessInfo, but only if necessary
+        if (readFlag || writeFlag) {
+            boolean useSAP = ((accessInfo._ring < _accessLock._ring) || (accessInfo._domain == _accessLock._domain));
+            AccessPermissions bankPermissions = useSAP ? _specialAccessPermissions : _generalAccessPermissions;
+
+            if (readFlag && !bankPermissions._read) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+            }
+
+            if (writeFlag && !bankPermissions._write) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+            }
+        }
     }
 
     /**
