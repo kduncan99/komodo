@@ -197,6 +197,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
     //  TODO we need unit tests for LBUD basic /extended
 
+    //  TODO need unit tests for LBN
+
     //  TODO we need unit tests for SBED basic /extended
 
     @Test

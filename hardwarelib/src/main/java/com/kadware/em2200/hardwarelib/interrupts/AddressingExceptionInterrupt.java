@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -23,7 +23,14 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
         GateBankBoundaryViolation(4),
         InvalidISValue(5),
         GoToInhibitSet(6),
-        BGitSetIndirect(9);
+        GeneralQueuingViolation(7),
+        MaxCountExceeded(010),          //  ENQ/ENQF
+        GBitSetIndirect(011),           //  BD.G = 1 in Indirecct Bank_Descriptor
+        InactiveQueueBDListEmpty(013),  //  on DEQ/DEQW
+        UpdateInProgress(014),          //  in queue structure
+        QueueBankRepositoryFull(015),
+        BDTypeInvalid(016),
+        QBRIndexInvalid(024);
 
         private final short _code;
 
@@ -55,10 +62,6 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
 
     /**
      * Constructor
-     * <p>
-     * @param reason
-     * @param bankLevel
-     * @param bankDescriptorIndex
      */
     public AddressingExceptionInterrupt(
         final Reason reason,
@@ -76,41 +79,10 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public short getBankDescriptorIndex(
-    ) {
-        return _bankDescriptorIndex;
-    }
+    public short getBankDescriptorIndex() { return _bankDescriptorIndex; }
+    public byte getBankLevel() { return _bankLevel; }
+    public Reason getReason() { return _reason; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public byte getBankLevel(
-    ) {
-        return _bankLevel;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
-        return _reason;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public Word36 getInterruptStatusWord1(
     ) {
@@ -120,23 +92,9 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
         return result;
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public byte getShortStatusField(
     ) {
         return (byte)_reason.getCode();
     }
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

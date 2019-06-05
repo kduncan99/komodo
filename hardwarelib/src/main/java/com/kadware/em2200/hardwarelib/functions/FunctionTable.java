@@ -12,6 +12,7 @@ import com.kadware.em2200.hardwarelib.functions.generalStore.*;
 import com.kadware.em2200.hardwarelib.functions.conditionalJump.*;
 import com.kadware.em2200.hardwarelib.functions.interruptControl.*;
 import com.kadware.em2200.hardwarelib.functions.logical.*;
+import com.kadware.em2200.hardwarelib.functions.procedureControl.*;
 import com.kadware.em2200.hardwarelib.functions.shift.*;
 import com.kadware.em2200.hardwarelib.functions.special.*;
 import com.kadware.em2200.hardwarelib.functions.stackManipulation.*;
@@ -67,12 +68,12 @@ public abstract class FunctionTable {
         null,           //  007
         null,           //  010
         null,           //  011
-        null,           //  012
-        null,           //  013
+        new LDJFunctionHandler(),   //  012
+        new LIJFunctionHandler(),   //  013
         null,           //  014
         null,           //  015
         null,           //  016
-        null,           //  017
+        new LBJFunctionHandler(),   //  017
     };
 
     /**
@@ -432,6 +433,50 @@ public abstract class FunctionTable {
     };
 
     /**
+     * Extended Mode function handlers for f-field 007, j-field 016, indexed by a-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION007_016_HANDLERS = {
+        new LOCLFunctionHandler(),  //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        new CALLFunctionHandler(),  //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        null,           //  017
+    };
+
+    /**
+     * Extended Mode function handlers for f-field 007, j-field 017, indexed by a-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION007_017_HANDLERS = {
+        new GOTOFunctionHandler(),  //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        null,           //  017
+    };
+
+    /**
      * Extended Mode function handlers for f-field 007, indexed by j-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION007_HANDLERS = {
@@ -449,8 +494,8 @@ public abstract class FunctionTable {
         null,           //  013
         null,           //  014
         null,           //  015
-        null,           //  016
-        null,           //  017
+        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION007_016_HANDLERS),  //  016
+        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION007_017_HANDLERS),  //  017
     };
 
     /**
@@ -592,7 +637,7 @@ public abstract class FunctionTable {
         new TSFunctionHandler(),    //  000
         new TSSFunctionHandler(),   //  001
         new TCSFunctionHandler(),   //  002
-        null,           //  003
+        new RTNFunctionHandler(),   //  003
         null,           //  004
         null,           //  005
         new IARFunctionHandler(),   //  006

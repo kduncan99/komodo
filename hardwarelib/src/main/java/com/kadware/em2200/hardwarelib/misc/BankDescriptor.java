@@ -30,7 +30,8 @@ public class BankDescriptor extends Word36ArraySlice {
         Gate(2),          //  Requires BD.S == 0
         Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
                                 //  Only BD.Type, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
-        Queue(4);
+        Queue(4),
+        QueueRepository(6);
 
         private final int _code;
 
@@ -49,6 +50,7 @@ public class BankDescriptor extends Word36ArraySlice {
                 case 2:     return Gate;
                 case 3:     return Indirect;
                 case 4:     return Queue;
+                case 6:     return QueueRepository;
             }
 
             throw new InvalidArgumentRuntimeException(String.format("Bad code passed to BankType.getValue:%d", code));

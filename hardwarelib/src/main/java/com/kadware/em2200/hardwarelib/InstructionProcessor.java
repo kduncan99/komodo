@@ -128,20 +128,11 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Base register for L=0 bank descriptor table
-     */
     public static final int L0_BDT_BASE_REGISTER            = 16;
-
-    /**
-     * Base register for interrupt control stack
-     */
     public static final int ICS_BASE_REGISTER               = 26;
-
-    /**
-     * Stack pointer register for interrupt control stack
-     */
     public static final int ICS_INDEX_REGISTER              = GeneralRegisterSet.EX1;
+    public static final int RCS_BASE_REGISTER               = 25;
+    public static final int RCS_INDEX_REGISTER              = GeneralRegisterSet.EX0;
 
     /**
      * Raise interrupt when this many new entries exist
@@ -272,6 +263,7 @@ public class InstructionProcessor extends Processor implements Worker {
         return _generalRegisterSet.getRegister(index);
     }
 
+    public IndicatorKeyRegister getIndicatorKeyRegister() { return _indicatorKeyRegister; }
     public MachineInterrupt getLastInterrupt() { return _lastInterrupt; }
     public StopReason getLatestStopReason() { return _latestStopReason; }
     public long getLatestStopDetail() { return _latestStopDetail; }
@@ -379,12 +371,393 @@ public class InstructionProcessor extends Processor implements Worker {
      *  +7 - ?  Reserved for software
      */
 
-
     private void baseBank(
         final int baseRegisterIndex,
         final int levelBDI
     ) throws MachineInterrupt {
-        //TODO all of this
+        //1. Illegal Instruction and Invalid Interface Check: For LBU if F0.a specifies B0 or B1, an Illegal
+        //Instruction interrupt occurs. For LXJ only, if Xa.IS = 3, an Addressing_Exception interrupt
+        //occurs.
+
+        //2. Prior L,BDI Fetch: For CALL only, the name of the Bank currently loaded into B0 is obtained
+        //from hard-held L,BDI. For LXJ and LXJ/CALL only, the name of the Bank currently loaded into
+        //the Base_Register to be altered is obtained from the appropriate ABT entry: For LBJ,
+        //specified by Xa.BDR (BDR+12). For LDJ, B14 if DB31 = 0; B15 if DB31 = 1. For LIJ, B12 if
+        //DB31 = 0; B13 if DB31 = 1.
+
+        //3. Source L,BDI,Offset Determination: The Source L,BDI,Offset which is a Jump_to_Address for
+        //transfers or a subsetting specification for loads is determined. Note: there is special
+        //handling for Gates and for transfers to and from Basic_Mode. If read from storage or GRS,
+        //a Reference_Violation interrupt (limits violation, Read access violation or GRS violation) may
+        //occur.
+
+        //4. Valid L,BDI Check: For all instructions, if the Source L,BDI is in the range 0,1 to 0,31, an
+        //Addressing_Exception interrupt occurs (as specified in Section 10). If the processor is in the
+        //interrupt sequence, the processor error halts setting an SCF readable "register" with an
+        //indication that a software causable failure occurred.
+
+        //5. Void Check: A void Bank may be loaded by certain instructions by specifying a Source L,BDI of
+        //0,0. A void Bank is loaded by marking the B.V := 1. When a void Bank is to be loaded, as
+        //indicated below, processing continues with step 10. An Addressing_Exception interrupt (as
+        //specified in Section 10) occurs for the instructions below marked "Addressing_Exception".
+
+        //6. Source BD Fetch: Source L,BDI has been determined to be > 0,31. For all instructions, the BD
+        //described by source L,BDI is fetched as follows:
+        //a. Bank_Descriptor_Table_Pointer (BDTP) selection is made by using B = 16+L.
+        //b. An address is constructed by multiplying BDI by 8.
+        //c. An Addressing_Exception interrupt is generated if the BD address formed is not
+        //within the limits of the selected BDTP (except for the interrupt sequence, in which
+        //case the processor error halts, setting an SCF readable 'register' with an indication
+        //that a software causable failure occurred during the interrupt sequence). See Section
+        //8 for special BD addressing rules.
+        //d. The BD at the address BDI*8 relative to B16+L is fetched.
+
+        //7. Source BD.Type Examination: The BD.Type is examined and various actions are taken
+        //according to BD.Type and instruction. The following phrases are used in the instruction
+        //breakdowns:
+        //Addressing_Exception: With this BD.Type, an Addressing_Exception interrupt (as
+        //specified in Table 10–1) occurs.
+        //Indirect_BD_processing: The Source BD.Type = Indirect and a new BD, the
+        //Indirected-to BD, is to be fetched. Base_Register is loaded
+        //from the Indirected-to BD. Proceed with step 8.
+        //Gate_BD_processing: The Source BD.Type = Gate and a Gate is to be processed.
+        //Proceed with step 9.
+        //Source_becomes_target: Target BD is the Source BD for loading the Base_Register.
+        //Proceed with step 10.
+        //Treated_as_void: Set: B.V := 1. Proceed with step 10.
+        //Terminal_Addressing_Exception: With this BD.Type, a Terminal_Addressing_Exception
+        //interrupt (as specified in Table 10–1) occurs. The
+        //Terminal_Addressing_Exception is determined in this step
+        //but reported in step 21 after determining the priorities of the
+        //particular Terminal_Addressing_Exceptions to report.
+        //Proceed with step 10.
+
+        //8. Indirect BD: A Source BD.Type = Indirect has now been fetched for an instruction for which
+        //an Indirect BD is valid (Addressing_Exception interrupt was not detected in step 7). If the
+        //Indirect BD.G = 1, an Addressing_Exception interrupt occurs. If the Indirect L,BDI of the
+        //Indirect BD is in the range 0,0 through 0,31, an Addressing_Exception interrupt occurs. The
+        //priority of the above two interrupts is model_dependent.
+        //Otherwise, another BD (the Indirected-to BD) is fetched, using the Indirect L,BDI of the
+        //Indirect BD, as described in step 6, sub-steps a through d (except that any
+        //Addressing_Exception interrupt generated is fatal). The Indirected-to BD.Type is examined
+        //and various actions are taken according to Indirected-to BD.Type and instruction. The
+        //following phrases are used in the instruction breakdowns:
+        //Gate BD processing: The Indirected-to BD is a Gate BD and a Gate is to be processed.
+        //Proceed with step 9.
+        //Indirected-to BD
+        //becomes target:
+        //Indirected-to BD is Target BD. The Base_Register is loaded from the
+        //Target BD. Proceed with step 10.
+        //Treated as void: Set B.V := 1. Proceed with step 10.
+
+        //9. Gate BD: A Source BD.Type = Gate has now been fetched for an instruction that can invoke
+        //Gate processing. If the Gate BD.G = 1, an Addressing_Exception interrupt occurs. If Enter
+        //access to the Gate Bank is denied (current Access_Key is checked against the Access_Lock
+        //of the Gate BD to select either GAP or SAP), an Addressing_Exception interrupt occurs*.
+        //Otherwise, the Gate is fetched as follows:
+        //a. Source Offset is limits checked against the Gate BD; if a limits violation is detected an
+        //Addressing_Exception interrupt occurs.
+        //b. If either (model_dependent) an absolute boundary violation is detected on the Gate
+        //address or the Xa.Offset does not specify an 8-word Offset [implementation must detect
+        //invalid Offset one way or the other], an Addressing_Exception interrupt occurs†. See
+        //Section 8 for special Gate addressing rules.
+        //c. Source Offset is applied to the Base_Address of the Gate BD and the Gate is fetched
+        //from storage (paging is invoked on this access).
+        //d. The current Access_Key is checked for Enter access against the Access_Lock, GAP and
+        //SAP of the Gate (the GAP and SAP fields of the Gate correspond to the BD.GAP.E and
+        //BD.SAP.E); an Addressing_Exception interrupt occurs if access is denied. Thus, to use a
+        //Gate, one must have Enter access to both the Gate Bank (via the Gate BD) and the
+        //particular Gate.
+        //e. If a GOTO or an LBJ with Xa.IS = 1 operation is being performed, an Addressing_Exception
+        //interrupt occurs when the Gate.GI = 1 (GOTO_Inhibit), regardless of the Target BD.
+        //f. If the Target L,BDI is in the range 0,0 to 0,31, an Addressing_Exception interrupt occurs*.
+        //g. If the GateBD.LIB = 1 processing continues with step 9a.
+        //h. The Designator Bits, Access_Key, Latent Parameters and B fields from the Gate must be
+        //retained if enabled or applicable (see 3.1.3).
+        //i. The Target BD is fetched as described in step 6, sub-steps a through d (except that any
+        //Addressing_Exception interrupt generated is fatal).
+        //j. The Target BD.Type is examined and if a BD.Type  Extended_Mode and
+        //BD.Type  Basic_Mode, instruction results are Architecturally_Undefined (any
+        //Addressing_Exceptions associated with the Source BD must be noted as
+        //Terminal_Addressing_Exceptions for reporting in step 21). Otherwise, processing
+        //continues with step 10. Note: the Target BD.Type determines the resulting
+        //environment (Basic_Mode or Extended_Mode) and that step 21 does not check Enter
+        //access in the Target BD on gated transfers.
+
+        //9a. If the model does not support library gates, or if the library gate was not called in extended
+        //mode (CALL or GOTO), or if the Library_Name is not defined, by that model, an
+        //Addressing_exception interrupt occurs.
+        //If the library gate was called by the CALL instruction an RCS entry is created prior to calling
+        //the Library_Name. Once the Library has returned control to the instruction processor a
+        //pseudo RTN operation is performed on the RCS entry. Note that the RCS may have been
+        //manipulated by the Library call. If the pseudo RTN operation fails the instruction processor
+        //will halt.
+
+        //10. Base_Register Determination: The Target BD has now been determined or the Base_Register
+        //is to be marked void. A determination is made of the Base_Register to be loaded. Also for
+        //mixed-mode transfers, the Base_Register loaded with the Bank being exited is modified as
+        //described in step 11.
+        //Loads: LBU – Specified by F0.a (Ba).
+        //LBE – Specified by F0.a (Ba+16).
+        //LAE – Loads all of B1–B15.
+        //EM to EM Transfers: Loads B0.
+        //BM to BM Transfers: LXJ – For LBJ, specified by Xa.BDR (BDR+12). For LDJ, B14 if DB31 = 0; B15 if
+        //DB31 = 1. For LIJ, B12 if DB31 = 0; B13 if DB31 = 1.
+        //LXJ/RTN to BM – Specified by the RCS B-field (B+12).
+        //EM to BM Transfers: GOTO to BM, CALL to BM – Nongated, loads B12; gated, specified by the Gate
+        //B-field (B+12).
+        //RTN to BM – Specified by the RCS B-field (B+12).
+        //BM to EM Transfers: Loads B0.
+        //User Return: Loads B0.
+        //Interrupt Sequence: Loads B0.
+
+        //11. Prior Bank Processing: On certain transfers, the Base_Register loaded with the Bank being
+        //exited is modified depending on the BD.Type of transfer.
+        //Loads: Not applicable.
+        //EM to EM Transfers: Not applicable.
+        //BM to BM Transfers: Not applicable.
+        //EM to BM Transfers: GOTO to BM, CALL to BM, RTN to BM – B0.V := 1 and hard-held L,BDI := 0,0,
+        //marking B0 as void.
+        //BM to EM Transfers: LXJ/GOTO, LXJ/CALL – For LBJ, specified by Xa.BDR (BDR+12). For LDJ, B14 if
+        //DB31 = 0; B15 if DB31 = 1. For LIJ, B12 if DB31 = 0; B13 if DB31 = 1. The
+        //Basic_Mode Base_Register specified B.V := 1. The associated
+        //ABT.L,BDI := 0,0; ABT.Offset is Architecturally_Undefined.
+        //LXJ/RTN to EM – The Basic_Mode Base_Register B(RCS.B+12).V := 1. The
+        //associated ABT.L,BDI := 0,0; ABT.Offset is Architecturally_Undefined.
+        //User Return: Not applicable.
+        //Interrupt Sequence: Not applicable.
+
+        //12. RCS Write: On certain transfer instructions, certain activity state (at time of instruction
+        //execution) is captured on the Return_Control_Stack.
+        //A spurious RCS entry can be written by transfer instructions that do not require an RCS write
+        //(for example, normal LXJ), provided no RCS Overflow condition exists. If an RCS Overflow
+        //condition exists, the condition must be suppressed and no RCS write can occur.
+        //EM to EM Transfers: GOTO, RTN – Not applicable.
+        //CALL – The RCS frame is written with the following information:
+        // RCS.Reentry_Point_Program_Address.L,BDI := Prior L,BDI (retained
+        //in step 2).
+        // RCS.Reentry_Point_Program_Address.Offset := PAR.PC + 1 (points
+        //to instruction following CALL).
+        // RCS.DB12-17 := current DB12–17 and
+        //RCS.Access_Key := Indicator/Key_Register.Access_Key.
+        // RCS.B := 0, RCS.Trap := 0, and RCS.Must_Be_Zero := 0.
+        //BM to BM Transfers: Not applicable.
+        //EM to BM Transfers:  GOTO to BM, RTN to BM – Not applicable.
+        // CALL to BM – The RCS frame is written with the following
+        //information:
+        // RCS.Reentry_Point_Program_Address.L,BDI := prior L,BDI (retained
+        //in step 2).
+        // RCS.Reentry_Point_Program_Address.Offset := PAR.PC + 1 (points
+        //to instruction following CALL to BM).
+        // RCS.DB12-17 := current DB12–17 and
+        //RCS.Access_Key := Indicator/Key_Register.Access_Key.
+        // RCS.B := Gate.B or RCS.B := 0 if no Gate was processed.
+        // RCS.Trap := 0 and RCS.Must_Be_Zero := 0.
+        //BM to EM Transfers: LXJ/GOTO, LXJ/RTN to EM – Not applicable.
+        //LXJ/CALL to EM – The RCS frame is written with the following
+        //information:
+        // RCS/Reentry_Point_Program_Address.L,BDI := prior L,BDI from the
+        //selected Base_Registers ABT entry (retained in step 2).
+        // RCS.Reentry_Point_Program_Address.Offset := PAR.PC + 1 (points
+        //to instruction following LBJ/CALL).
+        // RCS.DB12-17 := current DB12–17 and
+        //RCS.Access_Key := Indicator/Key_Register.Access_Key.
+        // Write BDR to be loaded on return to RCS.B. For LBJ, specified by
+        //RCS.B := Xa.BDR (BDR + 12). For LDJ, RCS.B := B14 if DB31 = 0;
+        //RCS.B := B15 if DB31 = 1. For LIJ, RCS.B := B12 if DB31 = 0;
+        //RCS.B := B13 if DB31 = 1.
+        // RCS.Trap := 0 and RCS.Must_Be_Zero := 0.
+        //User Return: Not applicable.
+        //Interrupt Sequence: Not applicable.
+
+        //13. Xa Write: On normal LXJ only, Prior L,BDI is translated to E, LS, BDI as described in 4.6.3.1 and,
+        //together with PAR.PC + 1 (points to instruction following the transfer instruction), is written to
+        //Xa as follows:
+        //Xa E BDR LS IS  BDI  PAR,PC+1
+        //   0 1 2 3  4 5 6 17 18 35
+        //BDR reflects the Base_Register that was loaded. Note: the Xa.IS := 0.
+        //On CALL to BM only, Xa.IS := 2; the remaining bits are Architecturally_Undefined. The value of
+        //DB17 in effect at instruction initiation determines whether User or Executive X11 is written.
+        //X11 is then ready to be used as the Xa of an LBJ/RTN.
+
+        //14. User X0 Write: On some transfer instructions, User X0 (regardless of the value of DB17) is
+        //written to contain certain activity state (at time of instruction execution) as follows:
+        //User X0
+        //DB16  Zeros  Access Key
+        //0     1  17  18      35
+        //Loads: Not applicable.
+        //EM to EM Transfers: GOTO, CALL – User X0 written.
+        //RTN – Not applicable.
+        //BM to BM Transfers: LXJ – User X0 written.
+        //LXJ/RTN to BM – Not applicable.
+        //EM to BM Transfers: GOTO to BM, CALL to BM – User X0 written.
+        //RTN to BM – Not applicable.
+        //BM to EM Transfers: LXJ/GOTO to EM, LXJ/CALL to EM – User X0 written.
+        //LXJ/RTN to EM – Not applicable.
+        //User Return: Not applicable.
+        //Interrupt Sequence: Not applicable.
+
+        //15. Gate Fields Transfer: On transfer instructions that process a Gate (executed step 9), certain
+        //fields from the Gate are transferred as follows:
+        //a. Load Designator Bits as appropriate. If Gate.DBI = 0,
+        //Designator_Register.DB12-15 := Gate.DB12-15 and Designator_Register.DB17 := Gate.DB17.
+        //b. Load Access_Key as appropriate. If Gate.AKI = 0, the hard-held
+        //Indicator/Key_Register.Access_Key := Gate.Access_Key.
+        //c. Load Latent Parameters as appropriate. If Gate.LP0I = 0, then if current DB17 = 0,
+        //UR0 := Gate.Latent_Parameter_0 else ER0 := Gate.Latent_Parameter_0. If Gate.LP1I = 0,
+        //then if current DB17 = 0, UR1 := Gate.Latent_Parameter_1 else
+        //ER1 := Gate.Latent_Parameter_1. GRS selection (user or exec) is controlled by the current
+        //value of DB17 (that is, Gate.DB17 if DBI = 0 or initial DB17 if DBI = 1).
+
+        //16. Hard-held ASP Write: On certain transfer instructions, the hard-held ASP may be altered.
+        //Note: the action listed below and the listed in step 15 are mutually exclusive; action listed
+        //below is either on instructions which cannot invoke Gates or affects only DB16, which is
+        //not altered in step 15.
+        //Loads: Not applicable.
+        //EM to EM Transfers: GOTO, CALL – Not applicable.
+        //RTN – Hard-held Access_Key and DB12–17 are replaced by the corresponding
+        //fields in the RCS.
+        //BM to BM Transfers: LXJ – Not applicable.
+        //LXJ/RTN to BM – Hard-held Access_Key and DB12–17 are replaced by the
+        //corresponding fields in the RCS.
+        //EM to BM Transfers: GOTO to BM, CALL to BM – DB16 := 1.
+        //RTN to BM – Hard-held Access_Key and DB12–17 are replaced by the
+        //corresponding fields in the RCS.
+        //BM to EM Transfers: LXJ/GOTO to EM, LXJ/CALL to EM – DB16 := 0.
+        //LXJ/RTN to EM – Hard-held Access_Key and DB12–17 are replaced by the
+        //corresponding fields in the RCS.
+        //User Return: Entire ASP (except the Short_Status_Field of the Indicator/Key_Register and
+        //the Interrupt_Status_Words) is replaced with operand contents.
+        //Interrupt Sequence: New hard-held ASP formed by hardware (see step 3 of 5.1.5).
+
+        //17. Hard-held PAR.PC Update: For transfer instructions only, the 18-bit Offset determined in step
+        //3 (or step 9 on a gated transfer) is written to the hard-held PAR.PC to be used to fetch the
+        //first instruction at the jump target (unless an error is detected before instruction termination).
+        //The jump target does not have to reside in the new Bank.
+
+        //18. ABT Entry or Hard-held L,BDI Update: The ABT entry corresponding to the Base_Register to
+        //be loaded or hard-held PAR.L,BDI is written to reflect the Bank selected in steps 3 through 9.
+        //If B0 is to be loaded, hard-held PAR.L,BDI is written with the Target L,BDI.
+        //Else, if a void Bank is to be loaded due to an L,BDI of 0,0 or due to an attempted LBU load of a
+        //Basic_Mode Bank at PP > 1 without Enter access, ABT.L,BDI is written to 0,0 and the contents
+        //of ABT.Offset are Architecturally_Undefined.
+        //Else, the L,BDI portion of the ABT entry is written with the Target L,BDI. For loads,
+        //ABT.Offset is written with the 18-bit Offset determined in step 3. For transfers when the
+        //ABT is written, ABT.Offset := 0.
+
+        //19. Base_Register Loading: When the LAE instruction generates a Class 9 interrupt according to
+        //BD.Type errors, it does not complete this step of the algorithm.
+        //The Base_Register selected in step 10 is loaded with the BD information (or the B.V := 1) as
+        //determined in steps 3 through 9.
+        //For nonvoid load instructions, subsetting occurs if the 18-bit Offset ≠ 0 (as determined in step
+        //3); see 4.6.6.
+        //Architecturally_Undefined: For nonvoid transfer instructions, if B.S =1 then B.Lower_Limit
+        //and B.Upper_Limit is undefined.
+
+        //20. DB31 Toggle: On transfers to Basic_Mode, DB31 is toggled as described in 4.4.2.3.
+
+        //21. Exception Checks: The BD loaded in step 19 is checked for certain exception conditions. If a
+        //void bank was loaded, these checks are not made. If one or more of these exceptions are
+        //present a Terminal_Addressing_Exception interrupt is generated and the Base_Register
+        //loaded in step 19 remains loaded (note, however, that B0 is reloaded during the interrupt
+        //sequence.
+        //Architecturally_Undefined: If the void resulted from a calculation of a negative
+        //Upper_Limit while subsetting, it is undefined whether these checks are made.
+        //Code Exception Meaning
+        //G General. BD.G = 1.
+        //E Entry. An attempt was made to do a nongated transfer to an Extended_Mode Bank for which
+        //  Enter access is denied.
+        //V Validated Entry. An attempt was made to do a nongated transfer to a Basic_Mode Bank for
+        //  which Enter access is denied, at a Relative_Address unequal to the starting Relative_Address of
+        //  the Bank; that is, the 18-bit Offset (Jump_to_Address) is not equal to the Target BD’s
+        //  Lower_Limit concatenated with nine trailing zeros (this check need not take into account the
+        //  BD.S, since instructions cannot be fetched from Large_Banks). This check, combined with the
+        //  following one, provides the functional equivalent of the Validated Entry Point mechanism of
+        //  previous architectures; that is, a GAP.R = 1 or SAP.R = 1 for a Basic_Mode Bank implies Validated
+        //  Entry Point.
+        //  Software note: Banks that are intended to be protected by the Validated Entry Point
+        //  mechanism must have both GAP.E = 0 and SAP.E = 0 in order to guarantee that the Bank
+        //  cannot be accessed by the LBU instruction.
+        //S Selection of Base_Register. An attempt was made to do either a gated transfer, or a nongated
+        //  transfer for which Enter access is denied, to a Basic_Mode Bank, but new PAR.PC (U or the
+        //  Offset from the Gate) does not select (using Basic_Mode Base_Register selection; see 4.4.6) the
+        //  Base_Register being modified.
+        //T RCS Trap. RCS.Trap := 1.
+
+        //Notes:
+        // For those sequences which check multiple exception conditions, priority order checking
+        //is required as specified in Class 10 interrupts; see 5.2.6.
+        // No Read or Write access checks are performed on the Target Bank when it is being
+        //loaded into a Base_Register; such checks are made on every read or write attempt using
+        //that Base_Register. Conversely, Enter access is checked only at base loading; thus, the
+        //GAP.E and SAP.E are not provided in the Base_Register.
+        // BD.Type compared to the particular Base_Register Manipulation algorithm (from step 7, 8,
+        //or 9 of the algorithm where the checks were made).
+        //
+        //Instruction Breakdown Exception Check – G
+        //Loads: LBU, LBE – BD.G checked. BD.G is not checked for
+        //Queue_Bank_Repository, and it is Architecturally_Undefined whether BD.G
+        //is checked for Queue_Bank since the Queue_Bank must be active to be
+        //visible in a BDT in order to be loaded.
+        //LAE – BD.G not checked.
+        //EM to EM Transfers: BD.G checked.
+        //BM to BM Transfers: BD.G checked.
+        //EM to BM Transfers: BD.G checked.
+        //BM to EM Transfers: BD.G checked.
+        //User Return: BD.G not checked.
+        //Interrupt Sequence: BD.G not checked.
+        //
+        //Instruction Breakdown Exception Check – E
+        //Loads: Not checked.
+        //EM to EM Transfers: GOTO, CALL – Checked unless a Gate is invoked.
+        //RTN – Not checked.
+        //BM to BM Transfers: LXJ – Enter access to nongated Extended_Mode Bank on LXJ is accorded
+        //special treatment. No Addressing_Exception occurs; rather, when Enter
+        //access is denied, no mixed-mode transfer occurs; see 4.6.3.3.
+        //LXJ/RTN to BM – Not checked.
+        //EM to BM Transfers: Not checked.
+        //BM to EM Transfers: LXJ/GOTO to EM, LXJ/CALL to EM – See note for LXJ above.
+        //LXJ/RTN to EM – Not checked.
+        //User Return: Not checked.
+        //Interrupt Sequence: Not checked.
+        //
+        //Instruction Breakdown Exception Check – V
+        //Loads: Not checked.
+        //EM to EM Transfers: Not Checked.
+        //BM to BM Transfers: LXJ – Checked when nongated, Target BD.Type = Basic_Mode and Enter
+        //access is denied.
+        //LXJ/RTN to BM – Not checked.
+        //EM to BM Transfers: GOTO to BM, CALL to BM – Checked when nongated and Enter access is
+        //denied.
+        //RTN to BM – Not checked.
+        //BM to EM Transfers: Not checked.
+        //User Return: Not checked.
+        //Interrupt Sequence: Not checked.
+        //
+        //Instruction Breakdown Exception Check – S
+        //Loads: Not checked.
+        //EM to EM Transfers: Not checked.
+        //BM to BM Transfers: LXJ – Checked when a) gated; or b) nongated, Target BD.Type =
+        //Basic_Mode and Enter access is denied.
+        //LXJ/RTN to BM – Not checked.
+        //EM to BM Transfers: GOTO to BM, CALL to BM – Checked when a) gated; or b) nongated and
+        //Enter access is denied.
+        //RTN to BM – Not checked.
+        //BM to EM Transfers: Not checked.
+        //User Return: Not checked.
+        //Interrupt Sequence: Not checked.
+        //
+        //Instruction Breakdown Exception Check – T
+        //Loads: Not checked.
+        //EM to EM Transfers: GOTO, CALL – Not checked.
+        //RTN  Checked.
+        //BM to BM Transfers: LXJ – Not checked.
+        //LXJ/RTN to BM  Checked.
+        //EM to BM Transfers: Not checked.
+        //BM to EM Transfers: LXJ/GOTO to EM, LXJ/CALL to EM  Not checked.
+        //LXJ/RTN to EM  Checked
+        //User Return: Not checked.
+        //Interrupt Sequence: Not checked.
     }
 
     /**
@@ -903,29 +1276,8 @@ public class InstructionProcessor extends Processor implements Worker {
             return;
         }
 
-        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
-        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
-        // where {n} is the bank descriptor index.  Read the bank descriptor into B0.
-        int bankDescriptorBaseRegisterIndex = ihBankLevel + 16;
-        if ((ihBankLevel < 0) || (ihBankLevel > 7) || _baseRegisters[bankDescriptorBaseRegisterIndex]._voidFlag) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   ihBankLevel,
-                                                   ihBankDescriptorIndex);
-        }
-
-        //  bdStorage contains the BDT for the given interrupt handler's level
-        //  bdTableOffset indicates the offset into the BDT, where the descriptor for the interrupt handler's
-        //  code bank is to be found.
-        Word36Array bdStorage = _baseRegisters[bankDescriptorBaseRegisterIndex]._storage;
-        int bdTableOffset = ihBankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bdTableOffset + 8 > bdStorage.getArraySize()) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   ihBankLevel,
-                                                   ihBankDescriptorIndex);
-        }
-
-        //  Create a BankDescriptor object, ensure the bank type is acceptable, and base the bank.
-        BankDescriptor bankDescriptor = new BankDescriptor(bdStorage, bdTableOffset);
+        //  Retrieve a BankDescriptor object, ensure the bank type is acceptable, and base the bank.
+        BankDescriptor bankDescriptor = findBankDescriptor(ihBankLevel, ihBankDescriptorIndex);
         BankDescriptor.BankType ihBankType = bankDescriptor.getBankType();
         if ((ihBankType != BankDescriptor.BankType.ExtendedMode) && (ihBankType != BankDescriptor.BankType.BasicMode)) {
             stop(StopReason.InterruptHandlerInvalidBankType, 0);
@@ -1209,6 +1561,44 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         return false;
+    }
+
+    /**
+     * Retrieves a BankDescriptor to describe the given named bank.
+     * The bank name is in L,BDI format.
+     * @param bankLevel level of the bank, 0 to 7
+     * @param bankDescriptorIndex BDI of the bank
+     * @return BankDescriptor object
+     */
+    public BankDescriptor findBankDescriptor(
+        final int bankLevel,
+        final int bankDescriptorIndex
+    ) throws MachineInterrupt {
+        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
+        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
+        // where {n} is the bank descriptor index.
+        assert((bankLevel >= 0) && (bankLevel <= 7));
+        assert((bankDescriptorIndex >= 0) && (bankDescriptorIndex <= 077777));
+
+        int bdRegIndex = bankLevel + 16;
+        if (_baseRegisters[bdRegIndex]._voidFlag) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  bdStorage contains the BDT for the given bank_name level
+        //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
+        Word36Array bdStorage = _baseRegisters[bdRegIndex]._storage;
+        int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
+        if (bdTableOffset + 8 > bdStorage.getArraySize()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  Create and return a BankDescriptor object
+        return new BankDescriptor(bdStorage, bdTableOffset);
     }
 
     /**
@@ -1956,6 +2346,54 @@ public class InstructionProcessor extends Processor implements Worker {
             } catch (InterruptedException ex) {
             }
         }
+    }
+
+    /**
+     * Sells a 2-word RCS stack frame after applying the contents of the most recently-pushed frame
+     * to the processor state.
+     * @throws MachineInterrupt
+     */
+    public void rcsPop(
+    ) throws MachineInterrupt {
+        //TODO all of this
+    }
+
+    /**
+     * Buys a 2-word RCS stack frame and populates it appropriately
+     * @param bField value to be placed in the .B field of the stack frame.
+     * @throws MachineInterrupt if anything goes awry
+     */
+    public void rcsPush(
+        final int bField
+    ) throws MachineInterrupt {
+        // Make sure the return control stack base register is valid
+        BaseRegister rcsBReg = _baseRegisters[RCS_BASE_REGISTER];
+        if (rcsBReg._voidFlag) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                                                                RCS_BASE_REGISTER,
+                                                                0);
+        }
+
+        IndexRegister rcsXReg = (IndexRegister)_generalRegisterSet.getRegister(RCS_INDEX_REGISTER);
+        int framePointer = (int) rcsXReg.getXM() - 2;
+        if (framePointer < rcsBReg._lowerLimitNormalized) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                                                                RCS_BASE_REGISTER,
+                                                                framePointer);
+        }
+
+        rcsXReg.setXM(framePointer);
+
+        long reentry = _programAddressRegister.getH1() << 18;
+        reentry |= (_programAddressRegister.getH2() + 1) & 0777777;
+
+        long state = (bField & 03) << 24;
+        state |= _designatorRegister.getW() & 0_000077_000000;
+        state |= _indicatorKeyRegister.getAccessKey();
+
+        int offset = framePointer - rcsBReg._lowerLimitNormalized;
+        rcsBReg._storage.setValue(offset++, reentry);
+        rcsBReg._storage.setValue(offset, state);
     }
 
     /**
