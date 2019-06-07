@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.BaseRegister;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.misc.BaseRegister;
 /**
  * Handles the SBED instruction f=075 j=04
  */
-public class SBEDFunctionHandler extends FunctionHandler {
+public class SBEDFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -30,4 +30,7 @@ public class SBEDFunctionHandler extends FunctionHandler {
         BaseRegister bReg = ip.getBaseRegister((int)iw.getA() + 16);
         ip.storeConsecutiveOperands(false, bReg.getBaseRegisterWords());
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SBED; }
 }

@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.procedureControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the LBJ instruction f=07 j=017
  */
-public class LBJFunctionHandler extends FunctionHandler {
+public class LBJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -266,4 +266,7 @@ Set_to_Zero. In Version E models, if DB14 is set DB17 is Set_to_Zero.
 7 DB16 := 0 on a transfer to Extended_Mode.
          */
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LBJ; }
 }

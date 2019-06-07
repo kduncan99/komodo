@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LMJ instruction basic mode f=074 j=013
  */
-public class LMJFunctionHandler extends FunctionHandler {
+public class LMJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -27,4 +27,7 @@ public class LMJFunctionHandler extends FunctionHandler {
         ip.getExecOrUserXRegister((int)iw.getA()).setH2(par.getProgramCounter() + 1);
         ip.setProgramCounter(ip.getJumpOperand(), true);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LMJ; }
 }

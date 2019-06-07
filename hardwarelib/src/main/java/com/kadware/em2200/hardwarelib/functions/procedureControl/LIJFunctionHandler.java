@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.procedureControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the LIJ instruction f=07 j=013
  */
-public class LIJFunctionHandler extends FunctionHandler {
+public class LIJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -34,4 +34,7 @@ All information and algorithms pertaining to the LBJ instruction apply to the LI
 that DB31 determines the Base_Register selected as described the preceding paragraph.
          */
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LIJ; }
 }

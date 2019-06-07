@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
 
 import com.kadware.em2200.baselib.InstructionWord;
-import com.kadware.em2200.baselib.OnesComplement;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
@@ -14,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TE instruction f=053
  */
-public class TNEFunctionHandler extends FunctionHandler {
+public class TNEFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -29,4 +28,7 @@ public class TNEFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TNE; }
 }

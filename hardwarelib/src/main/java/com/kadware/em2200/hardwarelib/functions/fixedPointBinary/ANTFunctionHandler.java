@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -15,7 +15,8 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the ANT instruction f=072 j=06
  */
-public class ANTFunctionHandler extends FunctionHandler {
+@SuppressWarnings("Duplicates")
+public class ANTFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -40,4 +41,7 @@ public class ANTFunctionHandler extends FunctionHandler {
 
         ip.getExecOrUserARegister((int)iw.getA()).setW(result);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.ANT; }
 }

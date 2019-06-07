@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalLoad;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LNA instruction f=012
  */
-public class LNMAFunctionHandler extends FunctionHandler {
+public class LNMAFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -27,4 +27,7 @@ public class LNMAFunctionHandler extends FunctionHandler {
         }
         ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LNMA; }
 }

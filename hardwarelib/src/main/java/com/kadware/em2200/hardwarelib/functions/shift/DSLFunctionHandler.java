@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.shift;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DSL instruction f=073 j=003
  */
-public class DSLFunctionHandler extends FunctionHandler {
+public class DSLFunctionHandler extends InstructionHandler {
 
     private final long[] _operand = new long[2];
     private final long[] _result = new long[2];
@@ -33,4 +33,7 @@ public class DSLFunctionHandler extends FunctionHandler {
         ip.getExecOrUserARegister((int)iw.getA()).setW(_result[0]);
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(_result[1]);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DSL; }
 }

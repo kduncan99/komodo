@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TNOP instruction extended mode f=050 a=00
  */
-public class TNOPFunctionHandler extends FunctionHandler {
+public class TNOPFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -24,4 +24,7 @@ public class TNOPFunctionHandler extends FunctionHandler {
         //  Get the content of U, and toss it. Never skip NI.
         ip.getOperand(true, true, true, true);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TNOP; }
 }

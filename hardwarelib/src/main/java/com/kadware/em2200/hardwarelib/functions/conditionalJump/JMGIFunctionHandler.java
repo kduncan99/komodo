@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.conditionalJump;
@@ -16,7 +16,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JMGI instruction f=074 j=012
  */
-public class JMGIFunctionHandler extends FunctionHandler {
+public class JMGIFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -41,4 +41,7 @@ public class JMGIFunctionHandler extends FunctionHandler {
             xreg.incrementModifier18();
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JMGI; }
 }

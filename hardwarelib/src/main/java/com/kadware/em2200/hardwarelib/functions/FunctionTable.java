@@ -880,7 +880,7 @@ public abstract class FunctionTable {
      * Retrieves the proper instruction/function handler given the instruction word
      * @param iw instruction word of interest
      * @param basicMode true if we are in basic mode, false if extended mode
-     * @return FunctionHandler if found, else null
+     * @return InstructionHandler if found, else null
      */
     public static FunctionHandler lookup(
         final InstructionWord iw,

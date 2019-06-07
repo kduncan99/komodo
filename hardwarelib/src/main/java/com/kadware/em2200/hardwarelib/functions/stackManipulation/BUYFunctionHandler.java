@@ -6,7 +6,7 @@ package com.kadware.em2200.hardwarelib.functions.stackManipulation;
 
 import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.misc.*;
  * Handles the BUY instruction (f=073 j=014 a=02) extended mode only
  */
 @SuppressWarnings("Duplicates")
-public class BUYFunctionHandler extends FunctionHandler {
+public class BUYFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -42,4 +42,7 @@ public class BUYFunctionHandler extends FunctionHandler {
             xreg.setXM(newModifier);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.BUY; }
 }

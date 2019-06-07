@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.systemControl;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SYSC instruction f=073 j=017 a=012
  */
-public class SYSCFunctionHandler extends FunctionHandler {
+public class SYSCFunctionHandler extends InstructionHandler {
 
     @Override
     public synchronized void handle(
@@ -36,4 +36,7 @@ public class SYSCFunctionHandler extends FunctionHandler {
         //  For now, we do not recognize any sub-functions, so we always throw a machine interrupt
         throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SYSC; }
 }

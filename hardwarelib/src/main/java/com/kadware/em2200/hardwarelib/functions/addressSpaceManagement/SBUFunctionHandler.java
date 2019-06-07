@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 /**
  * Handles the SBU instruction f=075 j=02
  */
-public class SBUFunctionHandler extends FunctionHandler {
+public class SBUFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -40,4 +40,7 @@ public class SBUFunctionHandler extends FunctionHandler {
 
         ip.storeOperand(false, true, false, false, operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SBU; }
 }

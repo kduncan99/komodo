@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions;
@@ -17,7 +17,7 @@ public class SubFunctionHandler extends FunctionHandler {
 
     private final FunctionHandler[] _table;
 
-    public SubFunctionHandler(
+    SubFunctionHandler(
         final FunctionHandler[] table
     ) {
         _table = table;
@@ -38,12 +38,10 @@ public class SubFunctionHandler extends FunctionHandler {
 
     /**
      * Retrieves ths sub-handler we know about which corresponds to the given j-field
-     * <p>
-     * @param jField
-     * <p>
-     * @return
+     * @param jField value for j field
+     * @return handler associated with a particular combination of f and j fields
      */
-    public FunctionHandler getHandler(
+    FunctionHandler getHandler(
         final int jField
     ) {
         return ((jField < 0) || (jField >= _table.length)) ? null : _table[jField];

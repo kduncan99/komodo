@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MTE instruction extended mode f=071 j=00
  */
-public class MTEFunctionHandler extends FunctionHandler {
+public class MTEFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -30,4 +30,7 @@ public class MTEFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MTE; }
 }

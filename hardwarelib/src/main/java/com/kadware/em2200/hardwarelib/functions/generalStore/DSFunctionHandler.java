@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DS instruction f=071 j=012
  */
-public class DSFunctionHandler extends FunctionHandler {
+public class DSFunctionHandler extends InstructionHandler {
 
     //  Mitigates object proliferation, but requires sync'd thread protection
     private final long operands[] = new long[2];
@@ -29,4 +29,7 @@ public class DSFunctionHandler extends FunctionHandler {
         operands[1] = ip.getGeneralRegister(grsIndex + 1).getW();
         ip.storeConsecutiveOperands(true, operands);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DS; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalLoad;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LXM instruction f=026
  */
-public class LXMFunctionHandler extends FunctionHandler {
+public class LXMFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -26,4 +26,7 @@ public class LXMFunctionHandler extends FunctionHandler {
         IndexRegister xReg = (IndexRegister)ip.getExecOrUserXRegister((int)iw.getA());
         xReg.setXM(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LXM; }
 }

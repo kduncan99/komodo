@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.shift;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SSL instruction f=073 j=002
  */
-public class SSLFunctionHandler extends FunctionHandler {
+public class SSLFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -28,4 +28,7 @@ public class SSLFunctionHandler extends FunctionHandler {
 
         ip.getExecOrUserARegister((int)iw.getA()).setW(result);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SSL; }
 }

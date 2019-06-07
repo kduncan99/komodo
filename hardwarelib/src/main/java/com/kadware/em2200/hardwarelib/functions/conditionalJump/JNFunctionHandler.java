@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.conditionalJump;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JN instruction f=074 j=03
  */
-public class JNFunctionHandler extends FunctionHandler {
+public class JNFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -26,4 +26,7 @@ public class JNFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(counter, true);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JN; }
 }

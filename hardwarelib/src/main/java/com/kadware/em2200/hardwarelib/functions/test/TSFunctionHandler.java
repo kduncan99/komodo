@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TS instruction f=073 j=017 a=00
  */
-public class TSFunctionHandler extends FunctionHandler {
+public class TSFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -24,4 +24,7 @@ public class TSFunctionHandler extends FunctionHandler {
         ip.testAndStore(true);
         ip.incrementIndexRegisterInF0();
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TS; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -16,7 +16,7 @@ import java.math.BigInteger;
 /**
  * Handles the DTGM instruction extended mode f=033 j=014
  */
-public class DTGMFunctionHandler extends FunctionHandler {
+public class DTGMFunctionHandler extends InstructionHandler {
 
     private final long[] _aValue = new long[2];
     private final long[] _uValue = new long[2];
@@ -43,4 +43,7 @@ public class DTGMFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DTGM; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalLoad;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LXI instruction f=046
  */
-public class LXIFunctionHandler extends FunctionHandler {
+public class LXIFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -26,4 +26,7 @@ public class LXIFunctionHandler extends FunctionHandler {
         IndexRegister xReg = (IndexRegister)ip.getExecOrUserXRegister((int)iw.getA());
         xReg.setXI(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LXI; }
 }

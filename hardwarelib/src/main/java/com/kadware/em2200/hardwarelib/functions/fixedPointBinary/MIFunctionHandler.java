@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MI instruction f=030
  */
-public class MIFunctionHandler extends FunctionHandler {
+public class MIFunctionHandler extends InstructionHandler {
 
     private final long[] _product = { 0, 0 };
 
@@ -31,4 +31,7 @@ public class MIFunctionHandler extends FunctionHandler {
         ip.getExecOrUserARegister((int)iw.getA()).setW(_product[0]);
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(_product[1]);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MI; }
 }

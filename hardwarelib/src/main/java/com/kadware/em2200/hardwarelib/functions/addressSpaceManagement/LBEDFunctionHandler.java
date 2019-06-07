@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.ActiveBaseTableEntry;
@@ -17,7 +17,7 @@ import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 /**
  * Handles the LBED instruction f=075 j=05
  */
-public class LBEDFunctionHandler extends FunctionHandler {
+public class LBEDFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -45,4 +45,7 @@ public class LBEDFunctionHandler extends FunctionHandler {
             }
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LBED; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.conditionalJump;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JFU instruction f=074 j=014 a=01
  */
-public class JFUFunctionHandler extends FunctionHandler {
+public class JFUFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -29,4 +29,7 @@ public class JFUFunctionHandler extends FunctionHandler {
         }
         dreg.setCharacteristicUnderflow(false);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JFU; }
 }

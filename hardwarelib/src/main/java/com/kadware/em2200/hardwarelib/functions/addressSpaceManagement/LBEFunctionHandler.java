@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the LBE instruction f=075 j=03
  */
-public class LBEFunctionHandler extends FunctionHandler {
+public class LBEFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -51,4 +51,7 @@ acceleration schemes (see 4.6.5).
         long operand = ip.getOperand(true, true, false, false);
         ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LBE; }
 }

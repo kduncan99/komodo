@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SLJ instruction basic mode f=072 j=001
  */
-public class SLJFunctionHandler extends FunctionHandler {
+public class SLJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -29,4 +29,7 @@ public class SLJFunctionHandler extends FunctionHandler {
         int newPC = ip.getJumpOperand();
         ip.setProgramCounter(newPC + 1, true);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SLJ; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the HLTJ instruction basic mode f=074 j=015 a=05
  */
-public class HLTJFunctionHandler extends FunctionHandler {
+public class HLTJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -31,4 +31,7 @@ public class HLTJFunctionHandler extends FunctionHandler {
         ip.setProgramCounter(counter, true);
         ip.stop(InstructionProcessor.StopReason.HaltJumpExecuted, 0);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.HLTJ; }
 }

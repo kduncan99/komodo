@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.shift;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DLSC instruction f=073 j=007
  */
-public class DLSCFunctionHandler extends FunctionHandler {
+public class DLSCFunctionHandler extends InstructionHandler {
 
     private final long[] _operand = new long[2];
 
@@ -45,4 +45,7 @@ public class DLSCFunctionHandler extends FunctionHandler {
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(_operand[1]);
         ip.getExecOrUserARegister((int)iw.getA() + 2).setW(count);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DLSC; }
 }

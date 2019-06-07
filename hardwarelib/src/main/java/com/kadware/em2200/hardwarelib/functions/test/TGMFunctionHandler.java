@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TGM instruction extended mode f=033 j=013
  */
-public class TGMFunctionHandler extends FunctionHandler {
+public class TGMFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -36,4 +36,7 @@ public class TGMFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TGM; }
 }

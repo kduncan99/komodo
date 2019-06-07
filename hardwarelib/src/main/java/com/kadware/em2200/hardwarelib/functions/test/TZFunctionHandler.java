@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TZ instruction - extended mode f=050 a=06, basic mode f=050
  */
-public class TZFunctionHandler extends FunctionHandler {
+public class TZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -28,4 +28,7 @@ public class TZFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TZ; }
 }

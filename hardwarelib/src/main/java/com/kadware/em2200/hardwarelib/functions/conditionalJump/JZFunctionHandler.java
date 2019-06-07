@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.conditionalJump;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JZ instruction f=074 j=00
  */
-public class JZFunctionHandler extends FunctionHandler {
+public class JZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -26,4 +26,7 @@ public class JZFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(counter, true);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JZ; }
 }

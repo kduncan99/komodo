@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.conditionalJump;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JPS instruction f=072 j=02
  */
-public class JPSFunctionHandler extends FunctionHandler {
+public class JPSFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -32,4 +32,7 @@ public class JPSFunctionHandler extends FunctionHandler {
 
         reg.setW(OnesComplement.leftShiftCircular36(operand, 1));
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JPS; }
 }

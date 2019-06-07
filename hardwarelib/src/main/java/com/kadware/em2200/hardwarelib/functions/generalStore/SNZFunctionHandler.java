@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SNZ instruction f=005 a=001
  */
-public class SNZFunctionHandler extends FunctionHandler {
+public class SNZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -24,4 +24,7 @@ public class SNZFunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         ip.storeOperand(true, true, true, true, OnesComplement.NEGATIVE_ZERO_36);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SNZ; }
 }

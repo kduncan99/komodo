@@ -7,14 +7,14 @@ package com.kadware.em2200.hardwarelib.functions.interruptControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 
 /**
  * Handles the AAIJ instruction f=074 j=014 a=06 for extended mode (requires PP=0),
  *                              f=074 j=07  a=not-used for basic mode (any PP)
  */
-public class AAIJFunctionHandler extends FunctionHandler {
+public class AAIJFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -31,4 +31,7 @@ public class AAIJFunctionHandler extends FunctionHandler {
         int counter = (int)ip.getJumpOperand();
         ip.setProgramCounter(counter, true);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.AAIJ; }
 }

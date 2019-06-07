@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the INC2 instruction f=005, a=012
  */
-public class INC2FunctionHandler extends FunctionHandler {
+public class INC2FunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -35,4 +35,7 @@ public class INC2FunctionHandler extends FunctionHandler {
             ip.skipNextInstruction();
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.INC2; }
 }

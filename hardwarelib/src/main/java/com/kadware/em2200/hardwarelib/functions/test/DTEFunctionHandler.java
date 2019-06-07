@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DTE instruction f=071 j=017
  */
-public class DTEFunctionHandler extends FunctionHandler {
+public class DTEFunctionHandler extends InstructionHandler {
 
     private final long[] _operand1 = new long[2];
     private final long[] _operand2 = new long[2];
@@ -33,4 +33,7 @@ public class DTEFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DTE; }
 }

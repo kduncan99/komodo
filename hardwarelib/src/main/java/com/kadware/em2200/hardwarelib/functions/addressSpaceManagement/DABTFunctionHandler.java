@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.ActiveBaseTableEntry;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.misc.ActiveBaseTableEntry;
 /**
  * Handles the DABT instruction f=073 j=015 a=06
  */
-public class DABTFunctionHandler extends FunctionHandler {
+public class DABTFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -36,4 +36,7 @@ public class DABTFunctionHandler extends FunctionHandler {
 
         ip.storeConsecutiveOperands(false, values);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DABT; }
 }

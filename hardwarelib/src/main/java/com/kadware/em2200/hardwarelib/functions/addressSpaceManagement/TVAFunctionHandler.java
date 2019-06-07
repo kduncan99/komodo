@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the TVA instruction f=075 j=010
  */
-public class TVAFunctionHandler extends FunctionHandler {
+public class TVAFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -53,4 +53,7 @@ see Section 11 for a discussion of the use of the DISP.
         long operand = ip.getOperand(true, true, false, false);
         ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TVA; }
 }

@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MATG instruction extended mode f=071 j=07
  */
-public class MATGFunctionHandler extends FunctionHandler {
+public class MATGFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -31,4 +31,7 @@ public class MATGFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MATG; }
 }

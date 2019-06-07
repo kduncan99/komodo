@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SMA instruction f=003
  */
-public class SMAFunctionHandler extends FunctionHandler {
+public class SMAFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -28,4 +28,7 @@ public class SMAFunctionHandler extends FunctionHandler {
         }
         ip.storeOperand(true, true, true, true, op);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SMA; }
 }

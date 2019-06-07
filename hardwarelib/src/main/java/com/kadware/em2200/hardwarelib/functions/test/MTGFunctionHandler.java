@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MTG instruction extended mode f=071 j=03
  */
-public class MTGFunctionHandler extends FunctionHandler {
+public class MTGFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -32,4 +32,7 @@ public class MTGFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MTG; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TNPZ instruction extended mode f=050 a=015
  */
-public class TNPZFunctionHandler extends FunctionHandler {
+public class TNPZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -28,4 +28,7 @@ public class TNPZFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TNPZ; }
 }

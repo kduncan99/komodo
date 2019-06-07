@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.shift;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LSC instruction f=073 j=006
  */
-public class LSCFunctionHandler extends FunctionHandler {
+public class LSCFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -42,4 +42,7 @@ public class LSCFunctionHandler extends FunctionHandler {
         ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(count);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LSC; }
 }

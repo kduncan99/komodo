@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.systemControl;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the IPC instruction f=073 j=017 a=010
  */
-public class IPCFunctionHandler extends FunctionHandler {
+public class IPCFunctionHandler extends InstructionHandler {
 
     @Override
     public synchronized void handle(
@@ -63,4 +63,7 @@ public class IPCFunctionHandler extends FunctionHandler {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.IPC; }
 }

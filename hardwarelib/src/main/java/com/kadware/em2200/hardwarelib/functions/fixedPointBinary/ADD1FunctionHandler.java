@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -16,7 +16,8 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the ADD1 instruction f=005, a=015
  */
-public class ADD1FunctionHandler extends FunctionHandler {
+@SuppressWarnings("Duplicates")
+public class ADD1FunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -35,4 +36,7 @@ public class ADD1FunctionHandler extends FunctionHandler {
             throw new OperationTrapInterrupt(OperationTrapInterrupt.Reason.FixedPointBinaryIntegerOverflow);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.ADD1; }
 }

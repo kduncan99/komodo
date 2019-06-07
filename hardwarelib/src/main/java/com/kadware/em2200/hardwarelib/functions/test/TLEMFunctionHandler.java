@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.test;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the TLEM / TNGM instruction f=047
  */
-public class TLEMFunctionHandler extends FunctionHandler {
+public class TLEMFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -42,4 +42,7 @@ public class TLEMFunctionHandler extends FunctionHandler {
             xreg.incrementModifier18();
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.TLEM; }
 }

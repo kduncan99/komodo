@@ -173,7 +173,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
     private final InstructionWord           _currentInstruction = new InstructionWord();
-    private FunctionHandler                 _currentInstructionHandler = null;  //  TODO do we need this?
+    private InstructionHandler _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
     private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
@@ -2346,54 +2346,6 @@ public class InstructionProcessor extends Processor implements Worker {
             } catch (InterruptedException ex) {
             }
         }
-    }
-
-    /**
-     * Sells a 2-word RCS stack frame after applying the contents of the most recently-pushed frame
-     * to the processor state.
-     * @throws MachineInterrupt
-     */
-    public void rcsPop(
-    ) throws MachineInterrupt {
-        //TODO all of this
-    }
-
-    /**
-     * Buys a 2-word RCS stack frame and populates it appropriately
-     * @param bField value to be placed in the .B field of the stack frame.
-     * @throws MachineInterrupt if anything goes awry
-     */
-    public void rcsPush(
-        final int bField
-    ) throws MachineInterrupt {
-        // Make sure the return control stack base register is valid
-        BaseRegister rcsBReg = _baseRegisters[RCS_BASE_REGISTER];
-        if (rcsBReg._voidFlag) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                RCS_BASE_REGISTER,
-                                                                0);
-        }
-
-        IndexRegister rcsXReg = (IndexRegister)_generalRegisterSet.getRegister(RCS_INDEX_REGISTER);
-        int framePointer = (int) rcsXReg.getXM() - 2;
-        if (framePointer < rcsBReg._lowerLimitNormalized) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                RCS_BASE_REGISTER,
-                                                                framePointer);
-        }
-
-        rcsXReg.setXM(framePointer);
-
-        long reentry = _programAddressRegister.getH1() << 18;
-        reentry |= (_programAddressRegister.getH2() + 1) & 0777777;
-
-        long state = (bField & 03) << 24;
-        state |= _designatorRegister.getW() & 0_000077_000000;
-        state |= _indicatorKeyRegister.getAccessKey();
-
-        int offset = framePointer - rcsBReg._lowerLimitNormalized;
-        rcsBReg._storage.setValue(offset++, reentry);
-        rcsBReg._storage.setValue(offset, state);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.systemControl;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
  * <p>
  * @throws MachineInterrupt
  */
-public class IARFunctionHandler extends FunctionHandler {
+public class IARFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -29,4 +29,7 @@ public class IARFunctionHandler extends FunctionHandler {
         long detail = ip.getImmediateOperand();
         ip.stop(InstructionProcessor.StopReason.InitiateAutoRecovery, detail);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.IAR; }
 }

@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.ActiveBaseTableEntry;
@@ -17,7 +17,7 @@ import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 /**
  * Handles the LBUD instruction f=075 j=07
  */
-public class LBUDFunctionHandler extends FunctionHandler {
+public class LBUDFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -44,4 +44,7 @@ public class LBUDFunctionHandler extends FunctionHandler {
         ip.setBaseRegister(brIndex, new BaseRegister(data));
         ip.loadActiveBaseTableEntry(brIndex + 1, new ActiveBaseTableEntry(0));
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LBUD; }
 }

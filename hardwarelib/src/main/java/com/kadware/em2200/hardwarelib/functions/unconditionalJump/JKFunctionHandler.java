@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the JK instruction basic mode f=074 j=04 a=01-017
  */
-public class JKFunctionHandler extends FunctionHandler {
+public class JKFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -25,4 +25,7 @@ public class JKFunctionHandler extends FunctionHandler {
         //  Get the conditionalJump operand, but don't conditionalJump.
         ip.getJumpOperand();
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.JK; }
 }

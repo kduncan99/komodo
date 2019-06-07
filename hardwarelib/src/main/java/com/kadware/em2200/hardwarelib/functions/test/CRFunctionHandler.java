@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.test;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 
 /**
  * Handles the CR instruction f=075 j=015
  */
-public class CRFunctionHandler extends FunctionHandler {
+public class CRFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -32,4 +32,7 @@ public class CRFunctionHandler extends FunctionHandler {
 
         ip.incrementIndexRegisterInF0();
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.CR; }
 }

@@ -8,14 +8,13 @@ import com.kadware.em2200.baselib.IndexRegister;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.BankDescriptor;
 import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.misc.VirtualAddress;
-import sun.jvm.hotspot.debugger.Address;
 
 /**
  * Handles the LBN instruction f=075 j=014
@@ -24,7 +23,7 @@ import sun.jvm.hotspot.debugger.Address;
  * Otherwise L,BDI indicates a bank descriptor from which we get the true bank name,
  * subject to indirect and gate banks.
  */
-public class LBNFunctionHandler extends FunctionHandler {
+public class LBNFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -67,4 +66,8 @@ public class LBNFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LBN; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -15,7 +15,8 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DEC instruction f=005, a=011
  */
-public class DECFunctionHandler extends FunctionHandler {
+@SuppressWarnings("Duplicates")
+public class DECFunctionHandler extends InstructionHandler {
 
     private static final long NEGATIVE_ONE_36 = 0_777777_777776l;
 
@@ -37,4 +38,7 @@ public class DECFunctionHandler extends FunctionHandler {
             ip.skipNextInstruction();
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DEC; }
 }

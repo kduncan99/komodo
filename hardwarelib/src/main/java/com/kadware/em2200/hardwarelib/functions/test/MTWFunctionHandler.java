@@ -14,7 +14,8 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MTW instruction extended mode f=071 j=04
  */
-public class MTWFunctionHandler extends FunctionHandler {
+@SuppressWarnings("Duplicates")
+public class MTWFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -38,4 +39,7 @@ public class MTWFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MTW; }
 }

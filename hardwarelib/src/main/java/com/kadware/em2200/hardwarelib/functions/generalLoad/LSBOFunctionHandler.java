@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalLoad;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the LSBO instruction f=060, extended mode only
  */
-public class LSBOFunctionHandler extends FunctionHandler {
+public class LSBOFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -24,4 +24,7 @@ public class LSBOFunctionHandler extends FunctionHandler {
         long operand = ip.getOperand(true, true, true, true);
         ip.getExecOrUserXRegister((int)iw.getA()).setS1(operand);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.LSBO; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.systemControl;
@@ -14,7 +14,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SPID instruction f=073 j=015 a=005
  */
-public class SPIDFunctionHandler extends FunctionHandler {
+public class SPIDFunctionHandler extends InstructionHandler {
 
     //  Mitigates object proliferation, but requires sync'd thread protection
     private final long operands[] = new long[2];
@@ -45,4 +45,7 @@ public class SPIDFunctionHandler extends FunctionHandler {
         operands[1] = (3l << 18);
         ip.storeConsecutiveOperands(true, operands);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SPID; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -16,7 +16,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the DSF instruction f=035
  */
-public class DSFFunctionHandler extends FunctionHandler {
+public class DSFFunctionHandler extends InstructionHandler {
 
     private final long[] _dividend = { 0, 0 };
     private final long[] _divisor = { 0, 0 };
@@ -60,4 +60,7 @@ public class DSFFunctionHandler extends FunctionHandler {
 
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(quotient);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.DSF; }
 }

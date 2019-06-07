@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
  * Operates much like SA,[q1-q4], except that the quarter-word designation is taken from bits 4-5 of X(x).
  * X-incrementation is not supported - results are undefined.
  */
-public class SAQWFunctionHandler extends FunctionHandler {
+public class SAQWFunctionHandler extends InstructionHandler {
 
     //  Array of j-field values indexed by the quarter-word designator where
     //  des==0 -> Q1, des==1 -> Q2, etc.
@@ -32,4 +32,7 @@ public class SAQWFunctionHandler extends FunctionHandler {
         long value = ip.getGeneralRegister(ip.getExecOrUserARegisterIndex((int)iw.getA())).getW();
         ip.storePartialOperand(value, jField, true);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SAQW; }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -34,7 +34,8 @@ import com.kadware.em2200.hardwarelib.functions.*;
  *
  * If count1 or count2 are zero, the corresponding register transfer is effectively a NOP.
  */
-public class SRSFunctionHandler extends FunctionHandler {
+@SuppressWarnings("Duplicates")
+public class SRSFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -73,4 +74,7 @@ public class SRSFunctionHandler extends FunctionHandler {
         //  Now store them
         ip.storeConsecutiveOperands(false, operands);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SRS; }
 }

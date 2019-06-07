@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
@@ -15,7 +15,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the ENZ instruction f=005, a=014
  */
-public class ENZFunctionHandler extends FunctionHandler {
+public class ENZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -35,4 +35,7 @@ public class ENZFunctionHandler extends FunctionHandler {
             ip.skipNextInstruction();
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.ENZ; }
 }

@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.procedureControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the CALL instruction f=07 j=016 a=013
  */
-public class CALLFunctionHandler extends FunctionHandler {
+public class CALLFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -136,4 +136,7 @@ DB15 is Set_to_Zero. In Version E models, if DB14 is set DB17 is Set_to_Zero.
 6 Set to one on a transfer to Basic_Mode.
          */
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.CALL; }
 }

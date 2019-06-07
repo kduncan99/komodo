@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SP1 instruction f=005 a=002
  */
-public class SP1FunctionHandler extends FunctionHandler {
+public class SP1FunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -23,4 +23,7 @@ public class SP1FunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         ip.storeOperand(true, true, true, true, 1);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SP1; }
 }

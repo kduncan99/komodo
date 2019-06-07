@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.generalStore;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the SZ instruction f=005 a=000
  */
-public class SZFunctionHandler extends FunctionHandler {
+public class SZFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -23,4 +23,7 @@ public class SZFunctionHandler extends FunctionHandler {
              UnresolvedAddressException {
         ip.storeOperand(true, true, true, true, 0);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.SZ; }
 }

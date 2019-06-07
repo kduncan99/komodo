@@ -7,13 +7,13 @@ package com.kadware.em2200.hardwarelib.functions.procedureControl;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
-import com.kadware.em2200.hardwarelib.functions.FunctionHandler;
+import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 
 /**
  * Handles the GOTO instruction f=07 j=017 a=00
  */
-public class GOTOFunctionHandler extends FunctionHandler {
+public class GOTOFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -106,4 +106,8 @@ Operation Note: Because User X0 need not be backed up on a fault interrupt detec
 this instruction, User X0 should not be used as the instruction operand.
          */
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.GOTO; }
 }
+

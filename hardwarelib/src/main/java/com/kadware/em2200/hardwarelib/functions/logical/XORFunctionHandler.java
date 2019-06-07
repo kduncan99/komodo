@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.functions.logical;
@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the XOR instruction f=041
  */
-public class XORFunctionHandler extends FunctionHandler {
+public class XORFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -26,4 +26,7 @@ public class XORFunctionHandler extends FunctionHandler {
         long foo = operand1 ^ operand2;//????
         ip.getExecOrUserARegister((int)iw.getA() + 1).setW(operand1 ^ operand2);
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.XOR; }
 }

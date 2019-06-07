@@ -13,7 +13,7 @@ import com.kadware.em2200.hardwarelib.functions.*;
 /**
  * Handles the MATL instruction extended mode f=071 j=06
  */
-public class MATLFunctionHandler extends FunctionHandler {
+public class MATLFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -31,4 +31,7 @@ public class MATLFunctionHandler extends FunctionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
+
+    @Override
+    public Instruction getInstruction() { return Instruction.MATL; }
 }
