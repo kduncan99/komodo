@@ -54,6 +54,30 @@ public abstract class InstructionHandler extends FunctionHandler {
         TW,     TZ,     UNLK,   UR,     WITHDRAWQB,     XOR,    ZEROP,
     };
 
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Helpful structs
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static class LoadBankIndirectInfo {
+        private final BankDescriptor _bdSource;
+        private BankDescriptor _bdTarget = null;
+        private final Instruction _instruction;
+        private final InstructionProcessor _instructionProcessor;
+        private boolean _treatAsVoid = false;
+
+        private LoadBankIndirectInfo(
+            final InstructionProcessor ip,
+            final BankDescriptor bdSource,
+            final Instruction instruction
+        ) {
+            _bdSource = bdSource;
+            _instruction = instruction;
+            _instructionProcessor = ip;
+        }
+    }
+
+
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Worker methods for the subclasses
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -70,10 +94,6 @@ public abstract class InstructionHandler extends FunctionHandler {
         final DesignatorRegister designatorRegister
     ) {
         switch ((int)instructionWord.getJ()) {
-            case InstructionWord.W:
-            case InstructionWord.XH2:
-                return false;
-
             case InstructionWord.H1:
             case InstructionWord.H2:
             case InstructionWord.S1:
@@ -90,20 +110,147 @@ public abstract class InstructionHandler extends FunctionHandler {
             case InstructionWord.Q4:    //  also T3
                 return (designatorRegister.getQuarterWordModeEnabled());
 
-            default:
+            default:    //  includes .W and .XH2
                 return false;
         }
     }
 
     /**
-     * Retrieves the standard quantum timer charge for an instruction.
-     * More complex instructions may override this, and special cases exist for indirect addressing and
-     * for iterative instructions.
-     * @return quantum charge for this instruction
+     * All the common functional stuff needed for LBE and LBU.
      */
-    public int getQuantumTimerCharge(
-    ) {
-        return 20;
+    protected void loadBank(
+        final InstructionProcessor ip,
+        final int baseRegisterIndex
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        long op = ip.getOperand(false, true, false, false);
+        int bankLevel = (int) (op >> 33);
+        int bankDescriptorIndex = (int) (op >> 18) & 077777;
+        int offset = (int) (op & 0777777);
+        Instruction instruction = getInstruction();
+        boolean lbe = instruction == Instruction.LBE;
+        boolean lbu = instruction == Instruction.LBU;
+
+        if ((bankLevel == 0) & ((bankDescriptorIndex > 0) && (bankDescriptorIndex < 32))) {
+            if (lbe) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                       bankLevel,
+                                                       bankDescriptorIndex);
+            } else if (lbu) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                       bankLevel,
+                                                       bankDescriptorIndex);
+            }
+        }
+
+        boolean voidBank = (bankLevel == 0) && (bankDescriptorIndex == 0);
+        BankDescriptor bdTarget = new BankDescriptor();
+        if (!voidBank) {
+            BankDescriptor bdSource = ip.findBankDescriptor(bankLevel, bankDescriptorIndex);
+            switch (bdSource.getBankType()) {
+                case BasicMode:
+                    if (lbu) {
+                        if ( ip.getDesignatorRegister().getProcessorPrivilege() < 2 ) {
+                            bdTarget = bdSource;
+                        } else {
+                            if ((bdSource.getGeneraAccessPermissions()._enter) || (bdSource.getSpecialAccessPermissions()._enter)) {
+                                bdTarget = bdSource;
+                            } else {
+                                voidBank = true;
+                            }
+                        }
+                    }
+                    break;
+
+                case Indirect:
+                    LoadBankIndirectInfo lbiInfo = new LoadBankIndirectInfo(ip, bdSource, instruction);
+                    loadBankIndirect(lbiInfo);
+                    bdTarget = lbiInfo._bdTarget;
+                    if (lbiInfo._treatAsVoid) {
+                        voidBank = true;
+                    }
+                    break;
+
+                case QueueRepository:
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                           bankLevel,
+                                                           bankDescriptorIndex);
+
+                default:
+                    bdTarget = bdSource;
+            }
+        }
+
+        //  LBU instruction deals with B2-B15 (B0,B1 filtered out).  So we need to update the ABT.
+        if (lbu) {
+            ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bankLevel, bankDescriptorIndex, offset);
+            ip.loadActiveBaseTableEntry(baseRegisterIndex - 1, abte);
+        }
+
+        BaseRegister baseRegister = voidBank ? new BaseRegister() : new BaseRegister(bdTarget, offset);
+        ip.setBaseRegister(baseRegisterIndex, baseRegister);
+
+        if ((!baseRegister._voidFlag) && (bdTarget.getGeneralFault())) {
+            throw new TerminalAddressingExceptionInterrupt(TerminalAddressingExceptionInterrupt.Reason.GBitSetInTargetBD,
+                                                           bankLevel,
+                                                           bankDescriptorIndex);
+        }
+    }
+
+    /**
+     * Handles the case where the source bank loaded by LBU or LBE is an indirect bank
+     * @param lbiInfo info struct
+     * @throws MachineInterrupt as appropriate
+     */
+    private void loadBankIndirect(
+        final LoadBankIndirectInfo lbiInfo
+    ) throws MachineInterrupt {
+        int targetLBDI = lbiInfo._bdSource.getTargetLBDI();
+        int targetLevel = targetLBDI >> 15;
+        int targetBankDescriptorIndex = targetLBDI & 077777;
+
+        if ((targetLevel == 0) && (targetBankDescriptorIndex < 32)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   targetLevel,
+                                                   targetBankDescriptorIndex);
+        }
+
+        if (lbiInfo._bdSource.getGeneralFault()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   targetLevel,
+                                                   targetBankDescriptorIndex);
+        }
+
+        try {
+            lbiInfo._bdTarget = lbiInfo._instructionProcessor.findBankDescriptor(targetLevel, targetBankDescriptorIndex);
+            switch (lbiInfo._bdTarget.getBankType()) {
+                case BasicMode:
+                    if (lbiInfo._instruction == Instruction.LBU) {
+                        if ( (lbiInfo._instructionProcessor.getDesignatorRegister()
+                            .getProcessorPrivilege() > 1)
+                            && (!lbiInfo._bdTarget.getGeneraAccessPermissions()._enter)
+                            && (!lbiInfo._bdTarget.getSpecialAccessPermissions()._enter) ) {
+                            lbiInfo._treatAsVoid = true;
+                        }
+                    }
+                    break;
+
+                case Indirect:
+                    //  Not sure if this is possible, but it is certainly not allowed
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                           targetLevel,
+                                                           targetBankDescriptorIndex);
+
+                case QueueRepository:
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                           targetLevel,
+                                                           targetBankDescriptorIndex);
+            }
+        } catch (AddressingExceptionInterrupt aex) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   aex.getBankLevel(),
+                                                   aex.getBankDescriptorIndex());
+        }
     }
 
     /**
@@ -233,11 +380,22 @@ public abstract class InstructionHandler extends FunctionHandler {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
+    //  Override-able methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Retrieve the Instruction enumeration for this instruction
      */
     public abstract Instruction getInstruction();
+
+    /**
+     * Retrieves the standard quantum timer charge for an instruction.
+     * More complex instructions may override this, and special cases exist for indirect addressing and
+     * for iterative instructions.
+     * @return quantum charge for this instruction
+     */
+    public int getQuantumTimerCharge(
+    ) {
+        return 20;
+    }
 }

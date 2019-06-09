@@ -76,6 +76,9 @@ public class BaseRegister {
      */
     public final boolean _voidFlag;
 
+    /**
+     * Debugging - make sure ll/ul are not out of bounds
+     */
     private void checkLimits() {
         if (_largeSizeFlag) {
             assert((_lowerLimitNormalized & 037700_077777) == 0);
@@ -123,7 +126,6 @@ public class BaseRegister {
         _storage = null;
         _upperLimitNormalized = 0;
         _voidFlag = true;
-        checkLimits();
     }
 
     /**
@@ -178,6 +180,39 @@ public class BaseRegister {
                                                           bankDescriptor.getSpecialAccessPermissions()._write);
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
         _voidFlag = false;
+        _storage = getStorage();
+        checkLimits();
+    }
+
+    /**
+     * Constructor for building a BaseRegister from a bank descriptor with subsetting.
+     * This occurs when the caller wishes to access a bank larger than the D-field allows, by accessing consecutive
+     * sections of said bank by basing those segments on consecutive base registers.
+     * In this case, we add the given offset to the base offset from the BD, and adjust the lower and upper
+     * limits accordingly.  Subsequent accesses proceed as desired by virtue of the fact that we've set
+     * the base address in the bank register, along with the limits, in this fashion.
+     * @param bankDescriptor source bank descriptor
+     * @param offset offset parameter for subsetting
+     */
+    public BaseRegister(
+        final BankDescriptor bankDescriptor,
+        final int offset
+    ) throws AddressingExceptionInterrupt {
+        _accessLock = bankDescriptor.getAccessLock();
+        AbsoluteAddress bdAddress = bankDescriptor.getBaseAddress();
+        _baseAddress = new AbsoluteAddress(bdAddress._upi, bdAddress._segment,bdAddress._offset + offset);
+        _generalAccessPermissions = new AccessPermissions(false,
+                                                          bankDescriptor.getGeneraAccessPermissions()._read,
+                                                          bankDescriptor.getGeneraAccessPermissions()._write);
+        _largeSizeFlag = bankDescriptor.getLargeBank();
+
+        int bdLowerNorm = bankDescriptor.getLowerLimitNormalized();
+        _lowerLimitNormalized = (bdLowerNorm > offset) ? bdLowerNorm - offset : 0;
+        _specialAccessPermissions = new AccessPermissions(false,
+                                                          bankDescriptor.getSpecialAccessPermissions()._read,
+                                                          bankDescriptor.getSpecialAccessPermissions()._write);
+        _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized() - offset;
+        _voidFlag = _upperLimitNormalized < 0;
         _storage = getStorage();
         checkLimits();
     }

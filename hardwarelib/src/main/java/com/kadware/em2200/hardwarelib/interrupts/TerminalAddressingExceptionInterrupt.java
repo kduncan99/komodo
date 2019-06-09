@@ -13,10 +13,6 @@ import com.kadware.em2200.baselib.Word36;
  */
 public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     public enum Reason {
         GBitSetInTargetBD(1),
         EnterAccessDenied(2),
@@ -40,25 +36,16 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
     };
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private final short _bankDescriptorIndex;   // 15 bits significant
     private final byte _bankLevel;              // 3 bits significant
     private final Reason _reason;
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Constructor
-     * <p>
-     * @param reason
-     * @param bankLevel
-     * @param bankDescriptorIndex
+     * @param reason reason for the exception, reported in ssf
+     * @param bankLevel level of the troublesome bank
+     * @param bankDescriptorIndex bdi of the troublesome bank
      */
     public TerminalAddressingExceptionInterrupt(
         final Reason reason,
@@ -71,46 +58,10 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
         _reason = reason;
     }
 
+    public short getBankDescriptorIndex() { return _bankDescriptorIndex; }
+    public byte getBankLevel() { return _bankLevel; }
+    public Reason getReason() { return _reason; }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public short getBankDescriptorIndex(
-    ) {
-        return _bankDescriptorIndex;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public byte getBankLevel(
-    ) {
-        return _bankLevel;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
-        return _reason;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public Word36 getInterruptStatusWord1(
     ) {
@@ -120,23 +71,9 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
         return result;
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
     public byte getShortStatusField(
     ) {
         return (byte)_reason.getCode();
     }
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

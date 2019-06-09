@@ -1,7 +1,7 @@
 -- InProgress
 IP: implement standard bank switching logic
 IP: address space management instructions (and unit tests)
-  LBU, LBE, TRA, TRARS, TVA
+  TRA, TRARS, TVA
 IP: extended mode procedure call instructions (and unit tests)
   GOTO, CALL, LOCL, RTN
 IP: basic mode procedure call instructions (and unit tests)
@@ -11,7 +11,7 @@ IP: basic mode procedure call instructions (and unit tests)
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
 
--- TODO implemeent
+-- TODO implement
 * baselib
 some new instructions
 

@@ -11,10 +11,6 @@ import com.kadware.em2200.baselib.Word36;
  */
 public class AddressingExceptionInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     public enum Reason {
         FatalAddressingException(0),
         GBitSetGate(1),
@@ -47,18 +43,10 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
     };
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private final short _bankDescriptorIndex;   // 15 bits significant
     private final byte _bankLevel;              // 3 bits significant
     private final Reason _reason;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Constructor
@@ -73,11 +61,6 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
         _bankDescriptorIndex = (short)(bankDescriptorIndex & 077777);
         _reason = reason;
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public short getBankDescriptorIndex() { return _bankDescriptorIndex; }
     public byte getBankLevel() { return _bankLevel; }

@@ -193,7 +193,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
+    //  TODO we need unit tests for LBE basic /extended
+
     //  TODO we need unit tests for LBED basic /extended
+
+    //  TODO we need unit tests for LBU basic /extended
 
     //  TODO we need unit tests for LBUD basic /extended
 
