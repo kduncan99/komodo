@@ -174,7 +174,7 @@ public class Word36Array {
         final int destinationOffset,
         final Word36Array source
     ) {
-        if (destinationOffset + source.getArraySize() >= getArraySize()) {
+        if (destinationOffset + source.getArraySize() > getArraySize()) {
             throw new InvalidArgumentRuntimeException(String.format("destOffset(%d) + sourceLen(%d) > array size(%d)",
                                                              destinationOffset,
                                                              source.getArraySize(),
@@ -199,7 +199,7 @@ public class Word36Array {
         final int sourceOffset,
         final int sourceLength
     ) {
-        if (destinationOffset + sourceLength >= getArraySize()) {
+        if ((destinationOffset + sourceLength > getArraySize() || (sourceOffset < 0))) {
             throw new InvalidArgumentRuntimeException(String.format("destOffset(%d) + sourceLen(%d) > array size(%d)",
                                                              destinationOffset,
                                                              sourceLength,
