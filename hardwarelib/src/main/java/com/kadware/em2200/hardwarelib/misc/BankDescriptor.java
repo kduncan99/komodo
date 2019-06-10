@@ -138,11 +138,11 @@ public class BankDescriptor extends Word36ArraySlice {
     /**
      * Special Getter
      * @return position of this bank relative to the first bank describing a large or very large bank
-     *          BD.DISP:Word 2 Bits 3-17
+     *          BD.DISP:Word 4 Bits 3-17
      */
     public int getDisplacement(
     ) {
-        return (int)(getValue(2) >> 18) & 077777;
+        return (int)(getValue(4) >> 18) & 077777;
     }
 
     /**

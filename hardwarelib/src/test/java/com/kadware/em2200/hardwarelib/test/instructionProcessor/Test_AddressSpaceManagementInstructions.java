@@ -4,14 +4,16 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
+import com.kadware.em2200.baselib.AccessInfo;
+import com.kadware.em2200.baselib.AccessPermissions;
 import com.kadware.em2200.baselib.GeneralRegisterSet;
+import com.kadware.em2200.baselib.Word36Array;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 
@@ -197,11 +199,383 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
     //  TODO we need unit tests for LBED basic /extended
 
+    @Test
+    public void loadBankName_basicBank_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0400010,0 . level 4, BDI 010",
+            "          $RES 63",
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA",
+            "          HALT      0   . not skipped, basic mode bank",
+            "          HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
+        //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
+        processors._instructionProcessor.setBaseRegister(20, br13);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
+        assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+    }
+
+    @Test
+    public void loadBankName_basicBank_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0400010,0 . level 4, BDI 010",
+            "          $RES 63",
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA,,B2",
+            "          HALT      0   . not skipped, basic mode bank",
+            "          HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
+        //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
+        processors._instructionProcessor.setBaseRegister(20, br2);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
+        assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+    }
+
+    @Test
+    public void loadBankName_extendedBank_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0400010,0 . level 4, BDI 010",
+            "          $RES 63",
+            "BDENTRY   .",
+            "          + 0330000,0 . extended mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA",
+            "          HALT      077 . skipped, not basic mode bank",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
+        //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
+        processors._instructionProcessor.setBaseRegister(20, br13);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
+        assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+    }
+
+    @Test
+    public void loadBankName_extendedBank_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0400010,0 . level 4, BDI 010",
+            "          $RES 63",
+            "BDENTRY   .",
+            "          + 0330000,0 . extended mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA,,B2",
+            "          HALT      077 . skipped, not basic mode bank",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
+        //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
+        processors._instructionProcessor.setBaseRegister(20, br2);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
+        assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+    }
+
+    @Test
+    public void loadBankName_badPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 2",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA",
+            "          HALT      0",
+            "          HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBankName_addrException_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0507777,0 . non-existent L,BDI",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA",
+            "          HALT      077",
+            "          HALT      076",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBankName_addrException_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0507777,0 . non-existent L,BDI",
+            "",
+            "$(1),START$*",
+            "          LBN       X5,DATA,,B2",
+            "          HALT      077",
+            "          HALT      076",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(3);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBankName_reserved_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0,0 . L,BDI in H1 is 0,0",
+            "          + 31,0 . L,BDI in H1 is 0,31",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X1,1",
+            "          LXM,U     X1,0",
+            "          LBN       X5,DATA,*X1",
+            "          HALT      077        . skipped",
+            "          LBN       X6,DATA,*X1",
+            "          HALT      077        . skipped",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_000001_000002, processors._instructionProcessor.getExecOrUserXRegister(1).getW());
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(31, processors._instructionProcessor.getExecOrUserXRegister(6).getH1());
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
+    }
+
+    @Test
+    public void loadBankName_reserved_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      + 0,0 . L,BDI in H1 is 0,0",
+            "          + 31,0 . L,BDI in H1 is 0,31",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X1,1",
+            "          LXM,U     X1,0",
+            "          LBN       X5,DATA,*X1,B2",
+            "          HALT      077        . skipped",
+            "          LBN       X6,DATA,*X1,B2",
+            "          HALT      077        . skipped",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(0_000001_000002, processors._instructionProcessor.getExecOrUserXRegister(1).getW());
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(31, processors._instructionProcessor.getExecOrUserXRegister(6).getH1());
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
+    }
+
     //  TODO we need unit tests for LBU basic /extended
 
     //  TODO we need unit tests for LBUD basic /extended
-
-    //  TODO need unit tests for LBN
 
     //  TODO we need unit tests for SBED basic /extended
 

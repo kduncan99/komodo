@@ -104,15 +104,7 @@ public abstract class MachineInterrupt extends Exception {
             _code = (short)code;
         }
 
-        /**
-         * Getter
-         * <p>
-         * @return
-         */
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
 
     public enum Synchrony {

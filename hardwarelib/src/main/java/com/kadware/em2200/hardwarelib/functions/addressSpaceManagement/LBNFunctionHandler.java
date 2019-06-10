@@ -56,6 +56,9 @@ public class LBNFunctionHandler extends InstructionHandler {
 
             bankName = origLevel << 15;
             bankName |= ((origBDI - bd.getDisplacement()) & 077777);
+            if (bd.getBankType() != BankDescriptor.BankType.BasicMode) {
+                skip = true;
+            }
         }
 
         IndexRegister xReg = ip.getExecOrUserXRegister((int) iw.getA());
