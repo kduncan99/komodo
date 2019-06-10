@@ -17,7 +17,6 @@ public class Word36ArraySlice extends Word36Array {
     /**
      * Constructors
      * offset and size are adjusted if and as necessary to avoid range errors
-     * <p>
      * @param base underlying Word36Array to which we present a view
      * @param offset offset from the start of the base array, which defines the start of this view of the array
      * @param size size of this view of the array
@@ -29,7 +28,7 @@ public class Word36ArraySlice extends Word36Array {
     ) {
         super(base._array);
 
-        if (offset > base.getArraySize()) {
+        if ((offset < 0) || (offset > base.getArraySize())) {
             throw new InvalidArgumentRuntimeException(String.format("offset is out of range of the base array:%d", offset));
         }
 
@@ -37,7 +36,7 @@ public class Word36ArraySlice extends Word36Array {
             throw new InvalidArgumentRuntimeException(String.format("size exceeds range of the base array after offset:%d", size));
         }
 
-        _offset = offset;
+        _offset = offset + base.getOffset();
         _size = size;
     }
 
@@ -58,9 +57,7 @@ public class Word36ArraySlice extends Word36Array {
 
     /**
      * Retrieves the size of the view of the aray
-     * <p>
      *     DO NOT REMOVE - IT IS AN OVERRIDE
-     * </p>
      * @return value
      */
     @Override
@@ -70,10 +67,13 @@ public class Word36ArraySlice extends Word36Array {
     }
 
     /**
+     * Indicates the offset of this array's view of the base array.
+     */
+    public int getOffset() { return _offset; }
+
+    /**
      * Retrieves the 36-bit value indicated by the index from this view of the base Array.
-     * <p>
      *     DO NOT REMOVE - IT IS AN OVERRIDE
-     * </p>
      * @param index index of interest
      * @return value
      */
@@ -107,9 +107,7 @@ public class Word36ArraySlice extends Word36Array {
 
     /**
      * Sets the value of a particular item in this view of the base array
-     * <p>
      *     DO NOT REMOVE - IT IS AN OVERRIDE
-     * </p>
      * @param index index of interest
      * @param value value
      */
@@ -126,9 +124,7 @@ public class Word36ArraySlice extends Word36Array {
 
     /**
      * Sets the value of a particular item in this view of the base array
-     * <p>
      *     DO NOT REMOVE - IT IS AN OVERRIDE
-     * </p>
      * @param index index of interest
      * @param value value
      */
@@ -141,5 +137,12 @@ public class Word36ArraySlice extends Word36Array {
             throw new InvalidArgumentRuntimeException(String.format("index is out of range:%d", index));
         }
         _array[index + _offset] = value.getW();
+    }
+
+    public void show() {
+        System.out.println(String.format("Word36ArraySlice offset=%d size=%d", _offset, _size));
+        for (int sx = 0; sx < _size; ++sx) {
+            System.out.println(String.format("  %4d: %012o", sx, getWord36(sx).getW()));
+        }
     }
 }

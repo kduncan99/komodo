@@ -83,31 +83,27 @@ public class Word36Array {
      * Retrieves the size of the array
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
-     * <p>
      *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
-     * </p>
      * @return value
      */
-    public int getArraySize(
-    ) {
-        return _array.length;
-    }
+    public int getArraySize() { return _array.length; }
 
     /**
      * Retrieves the 36-bit value indicated by the index from this Array.
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
-     * <p>
      *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
-     * </p>
      * @param index index of interest
      * @return value
      */
-    public long getValue(
-        final int index
-    ) {
-        return _array[index];
-    }
+    public long getValue(int index) { return _array[index]; }
+
+    /**
+     * Indicates the offset of this array's view of the base array.
+     * Because this is *not* a slice, the offset is zero.
+     * Slices should override this appropriately.
+     */
+    public int getOffset() { return 0; }
 
     /**
      * Retrieves a copy of the underlying values for this array
@@ -125,9 +121,7 @@ public class Word36Array {
      * Retrieves a Word36 object representing a particular value within the Array
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
-     * <p>
      *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
-     * </p>
      * @param index index of interest
      * @return value
      */
@@ -145,9 +139,7 @@ public class Word36Array {
      * Sets the value of a particular item in this array
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
-     * <p>
      *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
-     * </p>
      * @param index index of interest
      * @param value value
      */
@@ -162,9 +154,7 @@ public class Word36Array {
      * Sets the value of a particular item in this array
      * All methods in this class which need to do this, should invoke this method instead of accessing _array directly,
      * in case we are being overloaded by a subclass which redefines the geometry of the underlying array.
-     * <p>
      *     DO NOT REMOVE THIS - IT IS OVERRIDDEN BY Word36ArraySlice
-     * </p>
      * @param index index of interest
      * @param value value
      */
