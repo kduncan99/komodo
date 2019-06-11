@@ -341,7 +341,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
         assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
     }
 
@@ -390,7 +389,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
         assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
     }
 
@@ -578,8 +576,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
     //  TODO we need unit tests for LBUD basic /extended
 
-    //  TODO we need unit tests for SBED basic /extended
-
     @Test
     public void storeBaseRegisterExecDirect_basic(
     ) throws MachineInterrupt,
@@ -627,7 +623,99 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                                                new AccessInfo(0, bx),
                                                new AccessPermissions(false, true, true),
                                                new AccessPermissions(false, true, true));
+            processors._instructionProcessor.setBaseRegister(bx, br);
         }
+
+        BaseRegister br30 = new BaseRegister();
+        processors._instructionProcessor.setBaseRegister(30, br30);
+        BaseRegister br31 = new BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
+                                             false,
+                                             02000,
+                                             01777,
+                                             new AccessInfo(0, 0),
+                                             new AccessPermissions(false, false, false),
+                                             new AccessPermissions(false, false, false));
+        processors._instructionProcessor.setBaseRegister(31, br31);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        //  create BaseRegister objects for all the data that has been created via SBED
+        assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+        BaseRegister[] baseRegisters = new BaseRegister[32];
+        long[] data = getBank(processors._instructionProcessor, 13);
+        for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
+            long[] subData = new long[4];
+            subData[0] = data[dx];
+            subData[1] = data[dx + 1];
+            subData[2] = data[dx + 2];
+            subData[3] = data[dx + 3];
+            baseRegisters[bx] = new BaseRegister(subData);
+        }
+
+        for (int bx = 16; bx < 32; ++bx) {
+            //TODO  some trouble here with _enter not matching - it isn't supposed to
+            assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+        }
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+    }
+
+    @Test
+    public void storeBaseRegisterExecDirect_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B16,DATA,*X8,B2",
+            "          SBED      B17,DATA,*X8,B2",
+            "          SBED      B18,DATA,*X8,B2",
+            "          SBED      B19,DATA,*X8,B2",
+            "          SBED      B20,DATA,*X8,B2",
+            "          SBED      B21,DATA,*X8,B2",
+            "          SBED      B22,DATA,*X8,B2",
+            "          SBED      B23,DATA,*X8,B2",
+            "          SBED      B24,DATA,*X8,B2",
+            "          SBED      B25,DATA,*X8,B2",
+            "          SBED      B26,DATA,*X8,B2",
+            "          SBED      B27,DATA,*X8,B2",
+            "          SBED      B28,DATA,*X8,B2",
+            "          SBED      B29,DATA,*X8,B2",
+            "          SBED      B30,DATA,*X8,B2",
+            "          SBED      B31,DATA,*X8,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  set up some fake banks - 30 and 31 are void banks
+        for (int bx = 24; bx < 30; ++bx) {
+            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                                               false,
+                                               bx * 512,
+                                               bx * 512 + 511,
+                                               new AccessInfo(0, bx),
+                                               new AccessPermissions(false, true, true),
+                                               new AccessPermissions(false, true, true));
+            processors._instructionProcessor.setBaseRegister(bx, br);
+        }
+
         BaseRegister br30 = new BaseRegister();
         processors._instructionProcessor.setBaseRegister(30, br30);
         BaseRegister br31 = new BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
@@ -647,7 +735,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
         BaseRegister[] baseRegisters = new BaseRegister[32];
-        long[] data = getBank(processors._instructionProcessor, 13);
+        long[] data = getBank(processors._instructionProcessor, 2);
         for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
             long[] subData = new long[4];
             subData[0] = data[dx];
@@ -657,26 +745,16 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             baseRegisters[bx] = new BaseRegister(subData);
         }
 
+        for (int bx = 16; bx < 32; ++bx) {
+            //TODO  some trouble here with _enter not matching - it isn't supposed to
+            assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+        }
+
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
-
-        //  check BDT registers
-        for (int bx = 16, lx = 0; lx < 8; ++bx, ++lx) {
-            BaseRegister bReg = baseRegisters[bx];
-            assertFalse(bReg._voidFlag);
-            assertEquals(0, bReg._accessLock._ring);
-            assertEquals(0, bReg._accessLock._domain);
-            assertFalse(bReg._largeSizeFlag);
-            assertFalse(bReg._generalAccessPermissions._enter);
-            assertTrue(bReg._generalAccessPermissions._read);
-            assertTrue(bReg._generalAccessPermissions._write);
-            assertFalse(bReg._specialAccessPermissions._enter);
-            assertTrue(bReg._specialAccessPermissions._read);
-            assertTrue(bReg._specialAccessPermissions._write);
-            assertEquals(0, bReg._lowerLimitNormalized);
-            assertEquals(511, bReg._upperLimitNormalized);
-        }
     }
+
+    //  TODO SBED basic/extended with PP>0
 
     @Test
     public void storeBaseRegisterUser_basic(
@@ -788,5 +866,164 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(0_600005_000000L, data[1]);
     }
 
-    //  TODO we need unit tests for SBUD basic /extended
+    @Test
+    public void storeBaseRegisterUserDirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B0,DATA,*X8",
+            "          SBUD      B1,DATA,*X8",
+            "          SBUD      B2,DATA,*X8",
+            "          SBUD      B3,DATA,*X8",
+            "          SBUD      B4,DATA,*X8",
+            "          SBUD      B5,DATA,*X8",
+            "          SBUD      B6,DATA,*X8",
+            "          SBUD      B7,DATA,*X8",
+            "          SBUD      B8,DATA,*X8",
+            "          SBUD      B9,DATA,*X8",
+            "          SBUD      B10,DATA,*X8",
+            "          SBUD      B11,DATA,*X8",
+            "          SBUD      B12,DATA,*X8",
+            "          SBUD      B13,DATA,*X8",
+            "          SBUD      B14,DATA,*X8",
+            "          SBUD      B15,DATA,*X8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  set up some fake banks - leave 12 and 13 alone
+        for (int bx = 0; bx < 16; ++bx) {
+            if ((bx < 12) || (bx > 13)) {
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                                                   false,
+                                                   bx * 512,
+                                                   bx * 512 + 511,
+                                                   new AccessInfo(0, bx),
+                                                   new AccessPermissions(false, true, true),
+                                                   new AccessPermissions(false, true, true));
+                processors._instructionProcessor.setBaseRegister(bx, br);
+            }
+        }
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+        BaseRegister[] baseRegisters = new BaseRegister[16];
+        long[] data = getBank(processors._instructionProcessor, 13);
+        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
+            long[] subData = new long[4];
+            subData[0] = data[dx];
+            subData[1] = data[dx + 1];
+            subData[2] = data[dx + 2];
+            subData[3] = data[dx + 3];
+            baseRegisters[bx] = new BaseRegister(subData);
+        }
+
+        for (int bx = 0; bx < 16; ++bx) {
+            //TODO  some trouble here with _enter not matching - it isn't supposed to
+            assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+        }
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B0,DATA,*X8,B2",
+            "          SBUD      B1,DATA,*X8,B2",
+            "          SBUD      B2,DATA,*X8,B2",
+            "          SBUD      B3,DATA,*X8,B2",
+            "          SBUD      B4,DATA,*X8,B2",
+            "          SBUD      B5,DATA,*X8,B2",
+            "          SBUD      B6,DATA,*X8,B2",
+            "          SBUD      B7,DATA,*X8,B2",
+            "          SBUD      B8,DATA,*X8,B2",
+            "          SBUD      B9,DATA,*X8,B2",
+            "          SBUD      B10,DATA,*X8,B2",
+            "          SBUD      B11,DATA,*X8,B2",
+            "          SBUD      B12,DATA,*X8,B2",
+            "          SBUD      B13,DATA,*X8,B2",
+            "          SBUD      B14,DATA,*X8,B2",
+            "          SBUD      B15,DATA,*X8,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  set up some fake banks - leave 0 through 2 alone
+        for (int bx = 0; bx < 16; ++bx) {
+            if (bx > 2) {
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                                                   false,
+                                                   bx * 512,
+                                                   bx * 512 + 511,
+                                                   new AccessInfo(0, bx),
+                                                   new AccessPermissions(false, true, true),
+                                                   new AccessPermissions(false, true, true));
+                processors._instructionProcessor.setBaseRegister(bx, br);
+            }
+        }
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+        BaseRegister[] baseRegisters = new BaseRegister[16];
+        long[] data = getBank(processors._instructionProcessor, 2);
+        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
+            long[] subData = new long[4];
+            subData[0] = data[dx];
+            subData[1] = data[dx + 1];
+            subData[2] = data[dx + 2];
+            subData[3] = data[dx + 3];
+            baseRegisters[bx] = new BaseRegister(subData);
+        }
+
+        for (int bx = 0; bx < 16; ++bx) {
+            //TODO  some trouble here with _enter not matching - it isn't supposed to
+            assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+        }
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+    }
+
+    //  TODO SBUD basic/extended with PP>0
 }

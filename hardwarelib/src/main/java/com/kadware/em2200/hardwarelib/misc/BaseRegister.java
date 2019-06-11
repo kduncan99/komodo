@@ -337,6 +337,30 @@ public class BaseRegister {
         }
     }
 
+    @Override
+    public boolean equals(
+        final Object obj
+    ) {
+        if (obj instanceof BaseRegister) {
+            BaseRegister brobj = (BaseRegister) obj;
+            if (brobj._voidFlag && _voidFlag) {
+                return true;
+            }
+
+            if (brobj._accessLock.equals(_accessLock)
+                && (brobj._baseAddress.equals(_baseAddress))
+                && (brobj._generalAccessPermissions.equals(_generalAccessPermissions))
+                && (brobj._largeSizeFlag == _largeSizeFlag)
+                && (brobj._lowerLimitNormalized == _lowerLimitNormalized)
+                && (brobj._specialAccessPermissions.equals(_specialAccessPermissions))
+                && (brobj._upperLimitNormalized == _upperLimitNormalized)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Getter
      * @return upper limit with granularity depending upon the large size flag
@@ -390,5 +414,14 @@ public class BaseRegister {
         result[3] = ((long) (_baseAddress._upi) << 32) | _baseAddress._offset;
 
         return result;
+    }
+
+    @Override
+    public int hashCode() {
+        if (_voidFlag) {
+            return 0;
+        } else {
+            return _baseAddress.hashCode();
+        }
     }
 }
