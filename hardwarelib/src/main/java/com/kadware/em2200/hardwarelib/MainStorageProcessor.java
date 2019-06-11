@@ -4,14 +4,11 @@
 
 package com.kadware.em2200.hardwarelib;
 
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.exceptions.InvalidArgumentRuntimeException;
+import com.kadware.em2200.baselib.ArraySlice;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.BufferedWriter;
-import java.io.IOException;
 
 /**
  * Class which models a Main Storage Processor.
@@ -30,7 +27,7 @@ public abstract class MainStorageProcessor extends Processor {
      * @param name node name of the MSP
      * @param upi UPI for the MSP
      */
-    public MainStorageProcessor(
+    MainStorageProcessor(
         final String name,
         final short upi
     ) {
@@ -41,7 +38,7 @@ public abstract class MainStorageProcessor extends Processor {
      * Getter to retrieve the full storage for a segment
      * @return Word36Array representing the storage for the MSP
      */
-    public abstract Word36Array getStorage(final int segmentIndex) throws AddressingExceptionInterrupt;
+    public abstract ArraySlice getStorage(final int segmentIndex) throws AddressingExceptionInterrupt;
 
     /**
      * MSPs have no ancestors

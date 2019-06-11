@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.interrupts;
@@ -28,31 +28,12 @@ public class SignalInterrupt extends MachineInterrupt {
             _code = (short)code;
         }
 
-        public short getCode(
-        ) {
-            return _code;
-        }
+        public short getCode() { return _code; }
     };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     private final long _index;
     private final SignalType _signalType;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Constructor
-     * <p>
-     * @param signalType
-     * @param index
-     */
     public SignalInterrupt(
         final SignalType signalType,
         final long index
@@ -62,60 +43,13 @@ public class SignalInterrupt extends MachineInterrupt {
         _index = index;
     }
 
+    public long getIndex() { return _index; }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public SignalType getSignalType() { return _signalType; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getIndex(
-    ) {
-        return _index;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public SignalType getSignalType(
-    ) {
-        return _signalType;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
-    public Word36 getInterruptStatusWord0(
-    ) {
-        return new Word36(_index);
-    }
+    public Word36 getInterruptStatusWord0() { return new Word36(_index); }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
-    public byte getShortStatusField(
-    ) {
-        return (byte)_signalType.getCode();
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public byte getShortStatusField() { return (byte)_signalType.getCode(); }
 }

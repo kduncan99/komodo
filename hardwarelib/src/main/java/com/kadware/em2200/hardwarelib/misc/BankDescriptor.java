@@ -6,8 +6,7 @@ package com.kadware.em2200.hardwarelib.misc;
 
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.Word36ArraySlice;
+import com.kadware.em2200.baselib.ArraySlice;
 import com.kadware.em2200.baselib.exceptions.*;
 
 /**
@@ -15,7 +14,7 @@ import com.kadware.em2200.baselib.exceptions.*;
  * This structure is defined by the hardware PRM and exists in memory, although it may be presented from the outside
  * world for testing or setup purposes.
  */
-public class BankDescriptor extends Word36ArraySlice {
+public class BankDescriptor extends ArraySlice {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested enumerations
@@ -41,7 +40,7 @@ public class BankDescriptor extends Word36ArraySlice {
             _code = code;
         }
 
-        public static BankType getValue(
+        public static BankType get(
             final int code
         ) {
             switch (code) {
@@ -53,7 +52,7 @@ public class BankDescriptor extends Word36ArraySlice {
                 case 6:     return QueueRepository;
             }
 
-            throw new InvalidArgumentRuntimeException(String.format("Bad code passed to BankType.getValue:%d", code));
+            throw new InvalidArgumentRuntimeException(String.format("Bad code passed to BankType.get:%d", code));
         }
     }
 
@@ -67,7 +66,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public BankDescriptor(
     ) {
-        super(8);
+        super(new long[9]);
     }
 
     /**
@@ -77,7 +76,7 @@ public class BankDescriptor extends Word36ArraySlice {
      * @param offset offset within the base array where the bank descriptor source code exists
      */
     public BankDescriptor(
-        final Word36Array base,
+        final ArraySlice base,
         final int offset
     ) {
         super(base, offset, 8);
@@ -95,8 +94,8 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public AccessInfo getAccessLock(
     ) {
-        byte ring = (byte)((getValue(0) & 0_600000) >> 16);
-        short domain = (short)(getValue(0) & 0_177777);
+        byte ring = (byte)((get(0) & 0_600000) >> 16);
+        short domain = (short)(get(0) & 0_177777);
         return new AccessInfo(ring, domain);
     }
 
@@ -107,8 +106,8 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public BankType getBankType(
     ) {
-        int code = ((int)(getValue(0) >> 24)) & 017;
-        return BankType.getValue(code);
+        int code = ((int)(get(0) >> 24)) & 017;
+        return BankType.get(code);
     }
 
     /**
@@ -130,9 +129,9 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public AbsoluteAddress getBaseAddress(
     ) {
-        return new AbsoluteAddress((short) (getValue(3) >> 32),
-                                   (int) getValue(2) & 0777777,
-                                   (int) getValue(3) & 0xFFFF);
+        return new AbsoluteAddress((short) (get(3) >> 32),
+                                   (int) get(2) & 0777777,
+                                   (int) get(3) & 0xFFFF);
     }
 
     /**
@@ -142,7 +141,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public int getDisplacement(
     ) {
-        return (int)(getValue(4) >> 18) & 077777;
+        return (int)(get(4) >> 18) & 077777;
     }
 
     /**
@@ -152,7 +151,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public AccessPermissions getGeneraAccessPermissions(
     ) {
-        return new AccessPermissions((int)(getValue(0) >> 33));
+        return new AccessPermissions((int) (get(0) >> 33));
     }
 
     /**
@@ -163,7 +162,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public boolean getGeneralFault(
     ) {
-        return (getValue(0) & 020_000000L) != 0;
+        return (get(0) & 020_000000L) != 0;
     }
 
     /**
@@ -179,7 +178,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public boolean getLargeBank(
     ) {
-        return (getValue(0) & 04_000000L) != 0;
+        return (get(0) & 04_000000L) != 0;
     }
 
     /**
@@ -189,7 +188,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public int getLowerLimit(
     ) {
-        return (int)(getValue(1) >> 27);
+        return (int)(get(1) >> 27);
     }
 
     /**
@@ -208,7 +207,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public AccessPermissions getSpecialAccessPermissions(
     ) {
-        return new AccessPermissions((int)(getValue(0) >> 30) & 07);
+        return new AccessPermissions((int)(get(0) >> 30) & 07);
     }
 
     /**
@@ -219,7 +218,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public int getTargetLBDI(
     ) {
-        return (int)(getValue(0) >> 18);
+        return (int)(get(0) >> 18);
     }
 
     /**
@@ -229,7 +228,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public int getUpperLimit(
     ) {
-        return (int)(getValue(1) & 0777_777777L);
+        return (int)(get(1) & 0777_777777L);
     }
 
     /**
@@ -258,7 +257,7 @@ public class BankDescriptor extends Word36ArraySlice {
      */
     public boolean getUpperLimitSuppressionControl(
     ) {
-        return (getValue(0) & 02_000000L) != 0;
+        return (get(0) & 02_000000L) != 0;
     }
 
     /**
@@ -268,9 +267,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setBankType(
         final BankType value
     ) {
-        long result = getValue(0) & 0_776000_000000L;
+        long result = get(0) & 0_776000_000000L;
         result |= (long)(value._code) << 24;
-        setValue(0, result);
+        set(0, result);
     }
 
     /**
@@ -280,12 +279,12 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setBaseAddress(
         final AbsoluteAddress baseAddress
     ) {
-        long word2 = getValue(2) & 0_777777_000000L;
+        long word2 = get(2) & 0_777777_000000L;
         word2 |= baseAddress._segment;
         long word3 = (long)(baseAddress._upi & 017) << 32;
         word3 |= baseAddress._offset;
-        setValue(2, word2);
-        setValue(3, word3);
+        set(2, word2);
+        set(3, word3);
     }
 
     /**
@@ -295,9 +294,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setGeneralAccessPermissions(
         final AccessPermissions value
     ) {
-        long result = getValue(0) & 0_077777_777777L;
+        long result = get(0) & 0_077777_777777L;
         result |= ((long)value.get() << 33);
-        setValue(0, result);
+        set(0, result);
     }
 
     /**
@@ -307,11 +306,11 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setGeneralFault(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777757_777777L;
+        long result = get(0) & 0_777757_777777L;
         if (value) {
             result |= 020_000000;
         }
-        setValue(0, result);
+        set(0, result);
     }
 
     /**
@@ -321,11 +320,11 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setLargeBank(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777773_777777L;
+        long result = get(0) & 0_777773_777777L;
         if (value) {
             result |= 04_000000;
         }
-        setValue(0, result);
+        set(0, result);
     }
 
     /**
@@ -335,9 +334,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setLowerLimit(
         final int value
     ) {
-        long result = getValue(1) & 0_000777_777777L;
+        long result = get(1) & 0_000777_777777L;
         result |= (long)(value & 0777) << 27;
-        setValue(1, result);
+        set(1, result);
     }
 
     /**
@@ -347,9 +346,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setSpecialAccessPermissions(
         final AccessPermissions value
     ) {
-        long result = getValue(0) & 0_707777_777777L;
+        long result = get(0) & 0_707777_777777L;
         result |= ((long)value.get() << 30);
-        setValue(0, result);
+        set(0, result);
     }
 
     /**
@@ -359,9 +358,9 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setUpperLimit(
         final int value
     ) {
-        long result = getValue(1) & 0_777000_000000L;
+        long result = get(1) & 0_777000_000000L;
         result |= value & 0777_777777L;
-        setValue(1, result);
+        set(1, result);
     }
 
     /**
@@ -371,10 +370,10 @@ public class BankDescriptor extends Word36ArraySlice {
     public void setUpperLimitSuppressionControl(
         final boolean value
     ) {
-        long result = getValue(0) & 0_777775_777777L;
+        long result = get(0) & 0_777775_777777L;
         if (value) {
             result |= 02_000000;
         }
-        setValue(0, result);
+        set(0, result);
     }
 }

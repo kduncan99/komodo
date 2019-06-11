@@ -586,22 +586,22 @@ class BaseFunctions {
             //  The BDT banks are located in banks with BDI 0 to 7 for levels 0 through 7.
             for (int level = 0; level < 8; ++level) {
                 LoadableBank bdtBank = _bankModule._loadableBanks.get(level);
-                long bdtBankSize = bdtBank._content.getArraySize();
+                long bdtBankSize = bdtBank._content.getSize();
                 MSPRegionAttributes bdtAttributes = new MSPRegionAttributes(bdtBank._bankName,
                                                                             0,
                                                                             bdtBank._bankDescriptorIndex);
                 RegionTracker.SubRegion bdtSub = msp._regions.assign(bdtBankSize, bdtAttributes);
-                msp.getStorage(0).load((int) bdtSub._position, bdtBank._content);
+                msp.getStorage(0).load(bdtBank._content, (int) bdtSub._position);
                 System.out.println(String.format("Loaded BDT bank at MSP offset %d for %d words",
                                                  bdtSub._position,
                                                  bdtSub._extent));
 
                 int bankLower = bdtBank._startingAddress;
-                int bankUpper = bdtBank._startingAddress + bdtBank._content.getArraySize() - 1;
+                int bankUpper = bdtBank._startingAddress + bdtBank._content.getSize() - 1;
                 String attrString = String.format("BDT%d", level);
 
                 RegionTracker.SubRegion subRegion =
-                    msp._regions.assign(bdtBank._content.getArraySize(),
+                    msp._regions.assign(bdtBank._content.getSize(),
                                         new MSPRegionAttributes(attrString, 0, level));
                 AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
 
@@ -612,9 +612,9 @@ class BaseFunctions {
                                      bankUpper,
                                      bdtBank._accessInfo,
                                      bdtBank._generalPermissions,
-                                     bdtBank._specialPermissions,
-                                     bdtBank._content);
+                                     bdtBank._specialPermissions);
                 ip.setBaseRegister(16 + level, bReg);
+                bReg._storage.load(bdtBank._content, 0);
             }
 
             //  Now we can load the IH bank using the generic mechanism.
@@ -634,9 +634,9 @@ class BaseFunctions {
                                  stackSize - 1,
                                  new AccessInfo((byte) 0, (short) 0),
                                  new AccessPermissions(false, false, false),
-                                 new AccessPermissions(false, true, true),
-                                 new Word36ArraySlice(msp.getStorage(0), (int) stackSubRegion._position, stackSize));
+                                 new AccessPermissions(false, true, true));
             ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, bReg);
+            bReg._storage.load(msp.getStorage(0), (int) stackSubRegion._position, stackSize, 0);
             Word36 reg = new Word36();
             reg.setH1(8);
             reg.setH2(stackSize);
@@ -657,10 +657,10 @@ class BaseFunctions {
         final InstructionProcessor ip,
         final int baseRegisterIndex
     ) {
-        Word36Array array = ip.getBaseRegister(baseRegisterIndex)._storage;
-        long[] result = new long[array.getArraySize()];
-        for (int ax = 0; ax < array.getArraySize(); ++ax) {
-            result[ax] = array.getValue(ax);
+        ArraySlice array = ip.getBaseRegister(baseRegisterIndex)._storage;
+        long[] result = new long[array.getSize()];
+        for (int ax = 0; ax < array.getSize(); ++ax) {
+            result[ax] = array.get(ax);
         }
         return result;
     }
@@ -688,17 +688,17 @@ class BaseFunctions {
         //  Load the bank into memory
         try {
             int bankLower = bank._startingAddress;
-            int bankUpper = bank._startingAddress + bank._content.getArraySize() - 1;
+            int bankUpper = bank._startingAddress + bank._content.getSize() - 1;
             String attrString = String.format("BDT%d", bankLevel);
 
             RegionTracker.SubRegion subRegion =
-                msp._regions.assign(bank._content.getArraySize(),
+                msp._regions.assign(bank._content.getSize(),
                                     new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
             AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
-            msp.getStorage(0).load(absAddr._offset, bank._content);
+            msp.getStorage(0).load(bank._content, absAddr._offset);
 
             //  Create a bank descriptor for it in the appropriate bdt
-            Word36Array bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
+            ArraySlice bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
             BankDescriptor bd = new BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
             bd.setBankType(bank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode);
             bd.setBaseAddress(absAddr);
@@ -741,21 +741,25 @@ class BaseFunctions {
 
             if (loadableBank._initialBaseRegister != null) {
                 int brIndex = loadableBank._initialBaseRegister;
-                Word36ArraySlice storageSubset =
-                    new Word36ArraySlice(msp.getStorage(0),
-                                         bd.getBaseAddress()._offset,
-                                         bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
+                ArraySlice storageSubset =
+                    new ArraySlice(msp.getStorage(0),
+                                   bd.getBaseAddress()._offset,
+                                   bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
                 int bankLower = loadableBank._startingAddress;
-                int bankUpper = loadableBank._startingAddress + loadableBank._content.getArraySize() - 1;
+                int bankUpper = loadableBank._startingAddress + loadableBank._content.getSize() - 1;
                 BaseRegister bReg = new BaseRegister(bd.getBaseAddress(),
                                                      false,
                                                      bankLower,
                                                      bankUpper,
                                                      loadableBank._accessInfo,
                                                      loadableBank._generalPermissions,
-                                                     loadableBank._specialPermissions,
-                                                     storageSubset);
+                                                     loadableBank._specialPermissions);
                 ip.setBaseRegister(brIndex, bReg);
+                // storage is null because of limits
+                if (!bReg._voidFlag) {
+                    bReg._storage.load(storageSubset, 0);
+                }
+
                 if (brIndex == 0) {
                     //  based on B0 - put L,BDI in PAR
                     int lbdi = (loadableBank._bankLevel << 15) | loadableBank._bankDescriptorIndex;
@@ -914,12 +918,12 @@ class BaseFunctions {
                     System.out.println(String.format("    Base register refers to BDT level %d; BDT Content follows:",
                                                      bx - 16));
                     if (br._storage != null) {
-                        for (int sx = 0; sx < br._storage.getArraySize(); sx += 8) {
+                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
                             StringBuilder sb = new StringBuilder();
                             sb.append(String.format("      %08o:", sx));
                             for (int sy = 0; sy < 8; ++sy) {
-                                if ( sx + sy < br._storage.getArraySize() ) {
-                                    sb.append(String.format(" %012o", br._storage.getValue(sx + sy)));
+                                if ( sx + sy < br._storage.getSize() ) {
+                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
                                 }
                             }
                             System.out.println(sb.toString());
@@ -932,7 +936,7 @@ class BaseFunctions {
                 System.out.println(String.format("  Level %d Banks:", level));
                 BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
                 int firstBDI = (level == 0) ? 32 : 0;
-                for (int bdi = firstBDI; bdi < br._storage.getArraySize() >> 3; ++bdi) {
+                for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
                     BankDescriptor bd = new BankDescriptor(br._storage, 8 * bdi);
                     if (bd.getBaseAddress()._upi > 0) {
                         System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o Type:%s",
@@ -949,7 +953,7 @@ class BaseFunctions {
                             for (int iy = 0; iy < 8; ++iy) {
                                 if (ix + iy < len) {
                                     sb.append(String.format(" %012o",
-                                                            msp.getStorage(bd.getBaseAddress()._segment).getValue(ix + iy + bd.getBaseAddress()._offset)));
+                                                            msp.getStorage(bd.getBaseAddress()._segment).get(ix + iy + bd.getBaseAddress()._offset)));
                                 }
                             }
                             System.out.println(sb.toString());

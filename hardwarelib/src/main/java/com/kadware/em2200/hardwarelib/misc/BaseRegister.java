@@ -6,8 +6,7 @@ package com.kadware.em2200.hardwarelib.misc;
 
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.Word36ArraySlice;
+import com.kadware.em2200.baselib.ArraySlice;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
@@ -62,7 +61,7 @@ public class BaseRegister {
      * In actuality, it is a Word36AddrSubset which describes a subset of some MSP's storage.
      * This will be null if _voidFlag is set.
      */
-    public final Word36Array _storage;
+    public final ArraySlice _storage;
 
     /**
      * Relative address, upper limit - 24 bits significant.
@@ -79,6 +78,7 @@ public class BaseRegister {
     /**
      * Debugging - make sure ll/ul are not out of bounds
      */
+    //TODO remove later after it doesn't trip for a long time
     private void checkLimits() {
         if (_largeSizeFlag) {
             assert((_lowerLimitNormalized & 037700_077777) == 0);
@@ -90,11 +90,11 @@ public class BaseRegister {
     }
 
     /**
-     * Creates a Word36ArraySlice to represent the bank as defined by the other attributes of this object
+     * Creates a ArraySlice to represent the bank as defined by the other attributes of this object
      * @return as described, null if void or limits indicate no storage
      * @throws AddressingExceptionInterrupt if something is wrong with the values
      */
-    private Word36ArraySlice getStorage(
+    private ArraySlice getStorage(
     ) throws AddressingExceptionInterrupt{
         if ((_voidFlag) || (_lowerLimitNormalized > _upperLimitNormalized)) {
             return null;
@@ -103,8 +103,8 @@ public class BaseRegister {
         try {
             int bankSize = (_upperLimitNormalized - _lowerLimitNormalized + 1);
             MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
-            Word36Array mspStorage = msp.getStorage(_baseAddress._segment);
-            return new Word36ArraySlice(mspStorage, _baseAddress._offset, bankSize);
+            ArraySlice mspStorage = msp.getStorage(_baseAddress._segment);
+            return new ArraySlice(mspStorage, _baseAddress._offset, bankSize);
         } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
                                                    0,
@@ -137,7 +137,6 @@ public class BaseRegister {
      * @param accessLock ring and domain for this bank
      * @param generalAccessPermissions access permissions for lower ring/domain
      * @param specialAccessPermissions access permissions for equal or higher ring/domain
-     * @param storage word36 array slice representing the bank
      */
     public BaseRegister(
         final AbsoluteAddress baseAddress,
@@ -146,9 +145,8 @@ public class BaseRegister {
         final int upperLimitNormalized,
         final AccessInfo accessLock,
         final AccessPermissions generalAccessPermissions,
-        final AccessPermissions specialAccessPermissions,
-        final Word36Array storage
-    ) {
+        final AccessPermissions specialAccessPermissions
+    ) throws AddressingExceptionInterrupt {
         _baseAddress = baseAddress;
         _largeSizeFlag = largeSizeFlag;
         _lowerLimitNormalized = lowerLimitNormalized;
@@ -156,8 +154,8 @@ public class BaseRegister {
         _accessLock = accessLock;
         _generalAccessPermissions = generalAccessPermissions;
         _specialAccessPermissions = specialAccessPermissions;
-        _storage = storage;
-        _voidFlag = false;
+        _storage = getStorage();
+        _voidFlag = _lowerLimitNormalized >_upperLimitNormalized;
         checkLimits();
     }
 
@@ -179,7 +177,7 @@ public class BaseRegister {
                                                           bankDescriptor.getSpecialAccessPermissions()._read,
                                                           bankDescriptor.getSpecialAccessPermissions()._write);
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
-        _voidFlag = false;
+        _voidFlag = _lowerLimitNormalized > _upperLimitNormalized;
         _storage = getStorage();
         checkLimits();
     }
@@ -212,7 +210,7 @@ public class BaseRegister {
                                                           bankDescriptor.getSpecialAccessPermissions()._read,
                                                           bankDescriptor.getSpecialAccessPermissions()._write);
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized() - offset;
-        _voidFlag = _upperLimitNormalized < 0;
+        _voidFlag = (_upperLimitNormalized < 0) || (_lowerLimitNormalized > _upperLimitNormalized);
         _storage = getStorage();
         checkLimits();
     }
@@ -248,7 +246,6 @@ public class BaseRegister {
         _specialAccessPermissions = new AccessPermissions(false,
                                                           (values[0] & 0_020000_000000L) != 0,
                                                           (values[0] & 0_010000_000000L) != 0);
-        _voidFlag = (values[0] & 0_000200_000000L) != 0;
         _largeSizeFlag = (values[0] & 0_000004_000000L) != 0;
         _accessLock = new AccessInfo(values[0] & 0777777);
         _lowerLimitNormalized =(int)(((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9));
@@ -257,6 +254,7 @@ public class BaseRegister {
                                            (int) (values[2] & 0x1FFFFFF),
                                            (int) values[3]);
         _storage = getStorage();
+        _voidFlag = ((values[0] & 0_000200_000000L) != 0) || (_lowerLimitNormalized > _upperLimitNormalized);
         checkLimits();
     }
 

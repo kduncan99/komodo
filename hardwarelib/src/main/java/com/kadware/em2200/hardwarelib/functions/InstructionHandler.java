@@ -279,10 +279,10 @@ public abstract class InstructionHandler extends FunctionHandler {
         rcsXReg.setXM(framePointer);
 
         int offset = framePointer - rcsBReg._lowerLimitNormalized - 2;
-        long[] result = new long[0];
+        long[] result = new long[2];
         //  ignore the null-dereference warning in the next line
-        result[0] = rcsBReg._storage.getValue(offset++);
-        result[1] = rcsBReg._storage.getValue(offset);
+        result[0] = rcsBReg._storage.get(offset++);
+        result[1] = rcsBReg._storage.get(offset);
         return result;
     }
 
@@ -302,8 +302,8 @@ public abstract class InstructionHandler extends FunctionHandler {
         int offset = framePointer - rcsBReg._lowerLimitNormalized - 2;
         long[] result = new long[0];
         //  ignore the null-dereference warning in the next line
-        result[0] = rcsBReg._storage.getValue(offset++);
-        result[1] = rcsBReg._storage.getValue(offset);
+        result[0] = rcsBReg._storage.get(offset++);
+        result[1] = rcsBReg._storage.get(offset);
         return result;
     }
 
@@ -341,7 +341,7 @@ public abstract class InstructionHandler extends FunctionHandler {
      * @param bField value to be placed in the .B field of the stack frame.
      * @throws MachineInterrupt if anything goes awry
      */
-    public void rcsPush(
+    protected void rcsPush(
         final InstructionProcessor ip,
         final int bField
     ) throws MachineInterrupt {
@@ -374,8 +374,8 @@ public abstract class InstructionHandler extends FunctionHandler {
 
         int offset = framePointer - rcsBReg._lowerLimitNormalized;
         //  ignore the null-dereference warning in the next line
-        rcsBReg._storage.setValue(offset++, reentry);
-        rcsBReg._storage.setValue(offset, state);
+        rcsBReg._storage.set(offset++, reentry);
+        rcsBReg._storage.set(offset, state);
     }
 
 

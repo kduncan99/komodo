@@ -1004,7 +1004,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         int pcOffset = programCounter - bReg._lowerLimitNormalized;
-        _currentInstruction.setW(bReg._storage.getValue(pcOffset));
+        _currentInstruction.setW(bReg._storage.get(pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
     }
 
@@ -1082,7 +1082,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
                 //  then throw UnresolvedAddressException so the caller knows we're not done here.
                 int wx = relativeAddress - br._lowerLimitNormalized;
-                _currentInstruction.setXHIU(br._storage.getValue(wx));
+                _currentInstruction.setXHIU(br._storage.get(wx));
                 throw new UnresolvedAddressException();
             }
 
@@ -1203,19 +1203,19 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         // Populate the stack frame in storage.
-        Word36Array icsStorage = _baseRegisters[ICS_BASE_REGISTER]._storage;
-        if (stackFrameLimit > icsStorage.getArraySize()) {
+        ArraySlice icsStorage = _baseRegisters[ICS_BASE_REGISTER]._storage;
+        if (stackFrameLimit > icsStorage.getSize()) {
             stop(StopReason.ICSBaseRegisterInvalid, 0);
             return;
         }
 
         int sx = (int)stackOffset;
-        icsStorage.setWord36(sx, _programAddressRegister);
-        icsStorage.setWord36(sx + 1, _designatorRegister);
-        icsStorage.setWord36(sx + 2, _indicatorKeyRegister);
-        icsStorage.setWord36(sx + 3, _quantumTimer);
-        icsStorage.setWord36(sx + 4, interrupt.getInterruptStatusWord0());
-        icsStorage.setWord36(sx + 5, interrupt.getInterruptStatusWord1());
+        icsStorage.set(sx, _programAddressRegister.getW());
+        icsStorage.set(sx + 1, _designatorRegister.getW());
+        icsStorage.set(sx + 2, _indicatorKeyRegister.getW());
+        icsStorage.set(sx + 3, _quantumTimer.getW());
+        icsStorage.set(sx + 4, interrupt.getInterruptStatusWord0().getW());
+        icsStorage.set(sx + 5, interrupt.getInterruptStatusWord1().getW());
 
         //TODO other stuff which needs to be preserved - IP PRM 5.1.3
         //      e.g., results of stuff that we figure out prior to generating U in Basic Mode maybe?
@@ -1238,14 +1238,14 @@ public class InstructionProcessor extends Processor implements Worker {
         //  intOffset is the offset from the start of the BDT, to the vector we're interested in.
         //  PAR will be set to L,BDI,Address of the appropriate interrupt handler.
         //  Note that the interrupt handler code bank is NOT YET based on B0...
-        Word36Array intStorage = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
+        ArraySlice intStorage = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
         int intOffset = interrupt.getInterruptClass().getCode();
-        if (intOffset >= icsStorage.getArraySize()) {
+        if (intOffset >= icsStorage.getSize()) {
             stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);
             return;
         }
 
-        _programAddressRegister.setW(intStorage.getValue(intOffset));
+        _programAddressRegister.setW(intStorage.get(intOffset));
 
         // Set designator register per IP PRM 5.1.5
         //  We'll set/clear Basic Mode later once we've got the interrupt handler bank
@@ -1492,6 +1492,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
                 } catch (MachineInterrupt interrupt) {
                     raiseInterrupt(interrupt);
+                    somethingDone = true;
                 }
 
                 // End of the cycle - should we stop?
@@ -1589,9 +1590,9 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  bdStorage contains the BDT for the given bank_name level
         //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
-        Word36Array bdStorage = _baseRegisters[bdRegIndex]._storage;
+        ArraySlice bdStorage = _baseRegisters[bdRegIndex]._storage;
         int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bdTableOffset + 8 > bdStorage.getArraySize()) {
+        if (bdTableOffset + 8 > bdStorage.getSize()) {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
                                                    bankLevel,
                                                    bankDescriptorIndex);
@@ -1659,7 +1660,7 @@ public class InstructionProcessor extends Processor implements Worker {
         int offset = relAddress - bReg._lowerLimitNormalized;
         for (int ox = 0; ox < operands.length; ++ox) {
             checkBreakpoint(BreakpointComparison.Read, absAddresses[ox]);
-            operands[ox] = bReg._storage.getValue(offset++);
+            operands[ox] = bReg._storage.get(offset++);
         }
     }
 
@@ -1879,7 +1880,7 @@ public class InstructionProcessor extends Processor implements Worker {
         checkBreakpoint(BreakpointComparison.Read, absAddress);
 
         int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long value = baseRegister._storage.getValue(readOffset);
+        long value = baseRegister._storage.get(readOffset);
         if (allowPartial) {
             boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
             value = extractPartialWord(value, jField, qWordMode);
@@ -1917,7 +1918,7 @@ public class InstructionProcessor extends Processor implements Worker {
         checkBreakpoint(BreakpointComparison.Read, absAddress);
 
         int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long value = baseRegister._storage.getValue(readOffset);
+        long value = baseRegister._storage.get(readOffset);
         return extractPartialWord(value, jField, quarterWordMode);
     }
 
@@ -2022,7 +2023,7 @@ public class InstructionProcessor extends Processor implements Worker {
         checkBreakpoint(BreakpointComparison.Read, absAddress);
 
         int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long storageValue = baseRegister._storage.getValue(readOffset);
+        long storageValue = baseRegister._storage.get(readOffset);
         boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
         long sum = allowPartial ? extractPartialWord(storageValue, jField, qWordMode) : storageValue;
 
@@ -2053,7 +2054,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
-        baseRegister._storage.setValue(readOffset, storageResult);
+        baseRegister._storage.set(readOffset, storageResult);
         return result;
     }
 
@@ -2128,7 +2129,7 @@ public class InstructionProcessor extends Processor implements Worker {
             int offset = relAddress - bReg._lowerLimitNormalized;
             for (int ox = 0; ox < operands.length; ++ox) {
                 checkBreakpoint(BreakpointComparison.Write, absAddresses[ox]);
-                bReg._storage.setValue(offset++, operands[ox]);
+                bReg._storage.set(offset++, operands[ox]);
             }
 
             incrementIndexRegisterInF0();
@@ -2202,11 +2203,11 @@ public class InstructionProcessor extends Processor implements Worker {
         int offset = relAddress - bReg._lowerLimitNormalized;
         if (allowPartial) {
             boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-            long originalValue = bReg._storage.getValue(offset);
+            long originalValue = bReg._storage.get(offset);
             long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
-            bReg._storage.setValue(offset, newValue);
+            bReg._storage.set(offset, newValue);
         } else {
-            bReg._storage.setValue(offset, operand);
+            bReg._storage.set(offset, operand);
         }
     }
 
@@ -2239,9 +2240,9 @@ public class InstructionProcessor extends Processor implements Worker {
         checkBreakpoint(BreakpointComparison.Write, absAddress);
 
         int offset = relAddress - bReg._lowerLimitNormalized;
-        long originalValue = bReg._storage.getValue(offset);
+        long originalValue = bReg._storage.get(offset);
         long newValue = injectPartialWord(originalValue, operand, jField, quarterWordMode);
-        bReg._storage.setValue(offset, newValue);
+        bReg._storage.set(offset, newValue);
     }
 
     /**
@@ -2269,7 +2270,7 @@ public class InstructionProcessor extends Processor implements Worker {
         checkBreakpoint(BreakpointComparison.Read, absAddress);
 
         int offset = relAddress - bReg._lowerLimitNormalized;
-        long value = bReg._storage.getValue(offset);
+        long value = bReg._storage.get(offset);
         if (flag) {
             //  we want to set the lock, so it needs to be clear
             if ((value & 0_010000_000000) != 0) {
@@ -2287,7 +2288,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         checkBreakpoint(BreakpointComparison.Write, absAddress);
-        bReg._storage.setValue(offset, value);
+        bReg._storage.set(offset, value);
     }
 
 

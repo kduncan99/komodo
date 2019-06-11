@@ -7,15 +7,16 @@ package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 import com.kadware.em2200.baselib.AccessInfo;
 import com.kadware.em2200.baselib.AccessPermissions;
 import com.kadware.em2200.baselib.GeneralRegisterSet;
-import com.kadware.em2200.baselib.Word36Array;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -578,6 +579,104 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     //  TODO we need unit tests for LBUD basic /extended
 
     //  TODO we need unit tests for SBED basic /extended
+
+    @Test
+    public void storeBaseRegisterExecDirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B16,DATA,*X8",
+            "          SBED      B17,DATA,*X8",
+            "          SBED      B18,DATA,*X8",
+            "          SBED      B19,DATA,*X8",
+            "          SBED      B20,DATA,*X8",
+            "          SBED      B21,DATA,*X8",
+            "          SBED      B22,DATA,*X8",
+            "          SBED      B23,DATA,*X8",
+            "          SBED      B24,DATA,*X8",
+            "          SBED      B25,DATA,*X8",
+            "          SBED      B26,DATA,*X8",
+            "          SBED      B27,DATA,*X8",
+            "          SBED      B28,DATA,*X8",
+            "          SBED      B29,DATA,*X8",
+            "          SBED      B30,DATA,*X8",
+            "          SBED      B31,DATA,*X8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        //  set up some fake banks - 30 and 31 are void banks
+        for (int bx = 24; bx < 30; ++bx) {
+            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                                               false,
+                                               bx * 512,
+                                               bx * 512 + 511,
+                                               new AccessInfo(0, bx),
+                                               new AccessPermissions(false, true, true),
+                                               new AccessPermissions(false, true, true));
+        }
+        BaseRegister br30 = new BaseRegister();
+        processors._instructionProcessor.setBaseRegister(30, br30);
+        BaseRegister br31 = new BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
+                                             false,
+                                             02000,
+                                             01777,
+                                             new AccessInfo(0, 0),
+                                             new AccessPermissions(false, false, false),
+                                             new AccessPermissions(false, false, false));
+        processors._instructionProcessor.setBaseRegister(31, br31);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+        BaseRegister[] baseRegisters = new BaseRegister[32];
+        long[] data = getBank(processors._instructionProcessor, 13);
+        for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
+            long[] subData = new long[4];
+            subData[0] = data[dx];
+            subData[1] = data[dx + 1];
+            subData[2] = data[dx + 2];
+            subData[3] = data[dx + 3];
+            baseRegisters[bx] = new BaseRegister(subData);
+        }
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        //  check BDT registers
+        for (int bx = 16, lx = 0; lx < 8; ++bx, ++lx) {
+            BaseRegister bReg = baseRegisters[bx];
+            assertFalse(bReg._voidFlag);
+            assertEquals(0, bReg._accessLock._ring);
+            assertEquals(0, bReg._accessLock._domain);
+            assertFalse(bReg._largeSizeFlag);
+            assertFalse(bReg._generalAccessPermissions._enter);
+            assertTrue(bReg._generalAccessPermissions._read);
+            assertTrue(bReg._generalAccessPermissions._write);
+            assertFalse(bReg._specialAccessPermissions._enter);
+            assertTrue(bReg._specialAccessPermissions._read);
+            assertTrue(bReg._specialAccessPermissions._write);
+            assertEquals(0, bReg._lowerLimitNormalized);
+            assertEquals(511, bReg._upperLimitNormalized);
+        }
+    }
 
     @Test
     public void storeBaseRegisterUser_basic(

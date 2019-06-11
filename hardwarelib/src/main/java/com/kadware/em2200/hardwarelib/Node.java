@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
 
+import com.kadware.em2200.baselib.ArraySlice;
+import com.kadware.em2200.hardwarelib.exceptions.CannotConnectException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,12 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.hardwarelib.exceptions.CannotConnectException;
 
 /**
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
@@ -377,15 +375,15 @@ public abstract class Node {
      * @param logger destination for the output
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
-     * @param buffer Word36Array containing the buffer to be logged
+     * @param slice slice to be logged
      */
     public static void logBuffer(
         final org.apache.logging.log4j.Logger logger,
         final org.apache.logging.log4j.Level logLevel,
         final String caption,
-        final Word36Array buffer
+        final ArraySlice slice
     ) {
-        buffer.logBufferOctal(logger, logLevel, caption);
+        slice.logOctal(logger, logLevel, caption);
     }
 
     /**

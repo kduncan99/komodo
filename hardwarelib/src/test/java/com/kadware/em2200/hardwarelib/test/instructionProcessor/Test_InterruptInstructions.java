@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for InstructionProcessor class
  */
-public class InterruptInstructions extends BaseFunctions {
+public class Test_InterruptInstructions extends BaseFunctions {
 
     @Test
     public void erBasic(
@@ -43,6 +43,7 @@ public class InterruptInstructions extends BaseFunctions {
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        showDebugInfo(processors);//TODO
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01014, processors._instructionProcessor.getLatestStopDetail());

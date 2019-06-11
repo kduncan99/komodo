@@ -1,18 +1,16 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib;
 
+import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.baselib.types.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
-import com.kadware.em2200.baselib.types.*;
-import com.kadware.em2200.baselib.Word36Array;
 
 /**
  * Abstract base class for a device such as a disk or tape unit
@@ -30,6 +28,7 @@ import com.kadware.em2200.baselib.Word36Array;
  *      Actual system IO may involve invoking the host system's asynchronous IO facility.
  *          For Windows, this is accomplished via ReadFileEx() and WriteFileEx().
  */
+@SuppressWarnings("Duplicates")
 public abstract class Device extends Node {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -523,7 +522,7 @@ public abstract class Device extends Node {
         /**
          * Reference to a Word36Array buffer for word data transfers
          */
-        private final Word36Array _wordBuffer;
+        private final ArraySlice _wordBuffer;
 
         /**
          * Number of bytes or words to be transferred
@@ -629,7 +628,7 @@ public abstract class Device extends Node {
         public IOInfo(
             final Node source,
             final IOFunction function,
-            final Word36Array buffer,
+            final ArraySlice buffer,
             final BlockId blockId,
             final int transferCount
         ) {
@@ -730,7 +729,7 @@ public abstract class Device extends Node {
          * <p>
          * @return
          */
-        public Word36Array getWordBuffer(
+        public ArraySlice getWordBuffer(
         ) {
             return _wordBuffer;
         }

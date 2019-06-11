@@ -4,8 +4,8 @@
 
 package com.kadware.em2200.hardwarelib;
 
+import com.kadware.em2200.baselib.ArraySlice;
 import com.kadware.em2200.baselib.exceptions.*;
-import com.kadware.em2200.baselib.Word36Array;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
 public class StaticMainStorageProcessor extends MainStorageProcessor {
 
     private static final Logger LOGGER = LogManager.getLogger(StaticMainStorageProcessor.class);
-    private final Word36Array _storage; //  keep this private so we can control what goes into it
+    private final ArraySlice _storage;      //  keep this private so we can control what goes into it
 
     /**
      * constructor
@@ -38,7 +38,8 @@ public class StaticMainStorageProcessor extends MainStorageProcessor {
         if (sizeInWords <= 0) {
             throw new InvalidArgumentRuntimeException(String.format("Bad size for MSP:%d words", sizeInWords));
         }
-        _storage = new Word36Array(sizeInWords);
+
+        _storage = new ArraySlice(new long[sizeInWords]);
     }
 
     /**
@@ -46,7 +47,7 @@ public class StaticMainStorageProcessor extends MainStorageProcessor {
      * @return value
      */
     @Override
-    public Word36Array getStorage(
+    public ArraySlice getStorage(
         final int segmentIndex
     ) throws AddressingExceptionInterrupt {
         if (segmentIndex != 0) {
@@ -65,7 +66,7 @@ public class StaticMainStorageProcessor extends MainStorageProcessor {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Storage: %d words\n", _storage.getArraySize()));
+            writer.write(String.format("  Storage: %d words\n", _storage.getSize()));
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }

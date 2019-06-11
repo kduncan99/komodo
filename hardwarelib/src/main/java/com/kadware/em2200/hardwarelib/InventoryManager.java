@@ -27,9 +27,9 @@ public class InventoryManager {
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public final static int MAX_MAIN_STORAGE_PROCESSORS = 16;
-    public final static int MAX_INPUT_OUTPUT_PROCESSORS = 8;
-    public final static int MAX_INSTRUCTION_PROCESSORS = 8;
+    final static int MAX_MAIN_STORAGE_PROCESSORS = 16;
+    final static int MAX_INPUT_OUTPUT_PROCESSORS = 8;
+    final static int MAX_INSTRUCTION_PROCESSORS = 8;
 
     public final static short FIRST_MAIN_STORAGE_PROCESSOR_UPI = 0;
     public final static short FIRST_INPUT_OUTPUT_PROCESSOR_UPI = FIRST_MAIN_STORAGE_PROCESSOR_UPI + MAX_MAIN_STORAGE_PROCESSORS;
@@ -209,7 +209,7 @@ public class InventoryManager {
      * @return processor of interest
      * @throws UPINotAssignedException if no processor can be found
      */
-    public Processor getProcessor(
+    Processor getProcessor(
         final short upi
     ) throws UPINotAssignedException {
         Processor processor = _processors.get(upi);
@@ -269,7 +269,7 @@ public class InventoryManager {
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {
         Processor processor = getProcessor(upi);
-        if (processor instanceof InputOutputProcessor) {
+        if (processor instanceof InstructionProcessor) {
             return (InstructionProcessor)processor;
         } else {
             throw new UPIProcessorTypeException(upi, InstructionProcessor.class);
@@ -285,7 +285,7 @@ public class InventoryManager {
      * @throws UPIProcessorTypeException if the UPI is not for an MSP
      * @throws UPINotAssignedException if no processor exists for the given UPI
      */
-    public long getStorageValue(
+    long getStorageValue(
         final AbsoluteAddress absoluteAddress
     ) throws AddressingExceptionInterrupt,
              AddressLimitsException,
@@ -296,31 +296,7 @@ public class InventoryManager {
             throw new AddressLimitsException(absoluteAddress);
         }
 
-        return msp.getStorage(absoluteAddress._segment).getValue(absoluteAddress._offset);
-    }
-
-    /**
-     * Retrieves a particular word of storage for a given MSP, as described by an AbsoluteAddress object.
-     * Since storage is kept as values and not objects, we have to create an object here.
-     * @param absoluteAddress MSP UPI and address of the word within the MSP
-     * @return Word36 object containing the value of the word retrieved
-     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-     * @throws AddressLimitsException if the address is invalid
-     * @throws UPIProcessorTypeException if the UPI is not for an MSP
-     * @throws UPINotAssignedException if no processor exists for the given UPI
-     */
-    public Word36 getStorageWord(
-        final AbsoluteAddress absoluteAddress
-    ) throws AddressingExceptionInterrupt,
-             AddressLimitsException,
-             UPIProcessorTypeException,
-             UPINotAssignedException {
-        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
-        if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
-            throw new AddressLimitsException(absoluteAddress);
-        }
-
-        return msp.getStorage(absoluteAddress._segment).getWord36(absoluteAddress._offset);
+        return msp.getStorage(absoluteAddress._segment).get(absoluteAddress._offset);
     }
 
     /**
@@ -332,7 +308,7 @@ public class InventoryManager {
      * @throws UPIProcessorTypeException if the UPI is not for an MSP
      * @throws UPINotAssignedException if no processor exists for the given UPI
      */
-    public void setStorageValue(
+    void setStorageValue(
         final AbsoluteAddress absoluteAddress,
         final long value
     ) throws AddressingExceptionInterrupt,
@@ -344,7 +320,7 @@ public class InventoryManager {
             throw new AddressLimitsException(absoluteAddress);
         }
 
-        msp.getStorage(absoluteAddress._segment).setValue(absoluteAddress._offset, value);
+        msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value);
     }
 
     /**
@@ -368,6 +344,6 @@ public class InventoryManager {
             throw new AddressLimitsException(absoluteAddress);
         }
 
-        msp.getStorage(absoluteAddress._segment).setValue(absoluteAddress._offset, value.getW());
+        msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value.getW());
     }
 }
