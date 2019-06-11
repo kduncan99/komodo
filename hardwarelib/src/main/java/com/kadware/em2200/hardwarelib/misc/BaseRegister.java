@@ -253,8 +253,8 @@ public class BaseRegister {
         _baseAddress = new AbsoluteAddress((short) (values[3] >> 32),
                                            (int) (values[2] & 0x1FFFFFF),
                                            (int) values[3]);
-        _storage = getStorage();
         _voidFlag = ((values[0] & 0_000200_000000L) != 0) || (_lowerLimitNormalized > _upperLimitNormalized);
+        _storage = _voidFlag ? null : getStorage();
         checkLimits();
     }
 
