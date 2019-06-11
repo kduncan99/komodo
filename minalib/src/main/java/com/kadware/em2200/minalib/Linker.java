@@ -387,7 +387,7 @@ public class Linker {
             bankSize += lcps._module._storage.get(lcps._lcIndex)._storage.length;
         }
 
-        Word36Array wArray = new Word36Array(bankSize);
+        ArraySlice slice = new ArraySlice(new long[bankSize]);
 
         for (LCPoolSpecification lcps : bankDeclaration._poolSpecifications) {
             //  Does the pool need extended mode?
@@ -396,14 +396,14 @@ public class Linker {
                 needsExtended = true;
             }
 
-            loadPool(bankDeclaration, lcps, poolMap, wArray, dictionary);
+            loadPool(bankDeclaration, lcps, poolMap, slice, dictionary);
         }
 
         try {
             return new LoadableBank.Builder().setBankDescriptorIndex(bankDeclaration._bankDescriptorIndex)
                                              .setBankLevel(bankDeclaration._bankLevel)
                                              .setBankName(bankDeclaration._bankName)
-                                             .setContent(wArray)
+                                             .setContent(slice)
                                              .setIsExtendedMode(needsExtended)
                                              .setStartingAddress(bankDeclaration._startingAddress)
                                              .setInitialBaseRegister(bankDeclaration._initialBaseRegister)
@@ -498,15 +498,15 @@ public class Linker {
                                                  bank._bankDescriptorIndex,
                                                  bank._isExtendedMode ? "Extended" : "Basic",
                                                  bank._startingAddress,
-                                                 bank._content.getArraySize()));
+                                                 bank._content.getSize()));
                 if (options._emitGeneratedCode) {
                     int wordsPerLine = 8;
-                    for (int ix = 0; ix < bank._content.getArraySize(); ix += wordsPerLine) {
+                    for (int ix = 0; ix < bank._content.getSize(); ix += wordsPerLine) {
                         StringBuilder sb = new StringBuilder();
                         sb.append(String.format("      %08o:", ix + bank._startingAddress));
                         for (int iy = 0; iy < wordsPerLine; ++iy) {
-                            if (ix + iy < bank._content.getArraySize()) {
-                                sb.append(String.format(" %012o", bank._content.getValue(ix + iy)));
+                            if (ix + iy < bank._content.getSize()) {
+                                sb.append(String.format(" %012o", bank._content.get(ix + iy)));
                             }
                         }
                         System.out.println(sb.toString());
@@ -661,7 +661,7 @@ public class Linker {
         final BankDeclaration bankDeclaration,
         final LCPoolSpecification poolSpec,
         final LocationCounterPoolMap poolMap,
-        final Word36Array wArray,
+        final ArraySlice slice,
         final Dictionary dictionary
     ) {
         //  For each source word in the relocatable element's location counter pool,
@@ -710,7 +710,7 @@ public class Linker {
                     }
                 }
 
-                wArray.setValue(wax, discreteValue);
+                slice.set(wax, discreteValue);
             }
         }
     }

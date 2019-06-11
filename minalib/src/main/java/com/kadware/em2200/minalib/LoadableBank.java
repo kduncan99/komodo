@@ -61,7 +61,7 @@ public class LoadableBank {
     /**
      * content of this bank
      */
-    public final Word36Array _content;
+    public final ArraySlice _content;
 
     /**
      * Constructor
@@ -81,7 +81,7 @@ public class LoadableBank {
         final int bankLevel,
         final String bankName,
         final int startingAddress,
-        final Word36Array content,
+        final ArraySlice content,
         final Integer initialBaseRegister,
         final boolean isExtendedMode,
         final AccessInfo accessInfo,
@@ -110,7 +110,7 @@ public class LoadableBank {
         private Integer _initialBaseRegister = null;
         private boolean _isExtendedMode = false;
         private Integer _startingAddress = null;
-        private Word36Array _content = null;
+        private ArraySlice _content = null;
 
         Builder setAccessInfo(final AccessInfo value) { _accessInfo = value; return this; }
         Builder setGeneralPermissions(final AccessPermissions value) { _generalPermissions = value; return this; }
@@ -121,7 +121,7 @@ public class LoadableBank {
         Builder setInitialBaseRegister(final Integer value) { _initialBaseRegister = value; return this; }
         Builder setIsExtendedMode(final boolean value) { _isExtendedMode = value; return this; }
         Builder setStartingAddress(final Integer value) { _startingAddress = value; return this; }
-        Builder setContent(final Word36Array value) { _content = value; return this; }
+        Builder setContent(final ArraySlice value) { _content = value; return this; }
 
         LoadableBank build(
         ) throws InvalidParameterException {

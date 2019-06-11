@@ -200,6 +200,45 @@ public class ArraySlice {
     }
 
     /**
+     * Loads values from the source array to the end of the source array, or to the end of this subset of the base array,
+     * whichever comes first.
+     * @param source source array slice
+     */
+    public void load(
+        final ArraySlice source,
+        final int destinationIndex
+    ) throws InvalidArgumentRuntimeException {
+        if (destinationIndex + source._length > _length) {
+            throw new InvalidArgumentRuntimeException(
+                String.format("Invalid parameter source length:%d destination index:%d destination length:%d",
+                              source._length,
+                              destinationIndex,
+                              _length));
+        }
+
+        for (int sx = source._offset, dx = _offset + destinationIndex, x = 0; x < source._length; ++sx, ++dx, ++x) {
+            _array[dx] = source._array[sx];
+        }
+    }
+
+    /**
+     * Loads values from a subset of a source array into this slice at the indicated index into the slice
+     * @param source source array
+     * @param sourceIndex index into source array of first value to be loaded
+     * @param sourceLength number of values to be loaded
+     * @param destinationIndex index into destination slice of first value to be stored
+     * @throws InvalidArgumentRuntimeException if any parameter or combination of parameters doesn't make sense
+     */
+    public void load(
+        final ArraySlice source,
+        final int sourceIndex,
+        final int sourceLength,
+        final int destinationIndex
+    ) throws InvalidArgumentRuntimeException {
+        load(source._array, source._offset + sourceIndex, sourceLength, destinationIndex);
+    }
+
+    /**
      * Logs the contents of a particular buffer of 36-bit values in multi-format mode...
      * That is, four words per line in octal, then fieldata, then ASCII, with offset indicators on the left.
      * @param logger destination for the output

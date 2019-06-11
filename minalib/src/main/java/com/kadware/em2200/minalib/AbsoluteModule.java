@@ -79,12 +79,12 @@ public class AbsoluteModule {
                                              String.valueOf(bank._isExtendedMode)));
 
             int address = bank._startingAddress;
-            int arraySize = bank._content.getArraySize();
+            int arraySize = bank._content.getSize();
             for (int ax = 0; ax < arraySize; ax += 8) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(String.format("    %06o:", address));
                 for (int bx = 0; bx < 8; ++bx) {
-                    sb.append(String.format("%012o ", bank._content.getValue(ax + bx)));
+                    sb.append(String.format("%012o ", bank._content.get(ax + bx)));
                     if (ax + bx + 1 == arraySize) {
                         break;
                     }

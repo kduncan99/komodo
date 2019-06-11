@@ -63,7 +63,7 @@ public class Test_Linker {
         assertEquals(2, ibank._bankLevel);
         assertEquals(0, (int) ibank._initialBaseRegister);
         assertFalse(ibank._isExtendedMode);
-        assertEquals(0, ibank._content.getArraySize());
+        assertEquals(0, ibank._content.getSize());
         assertEquals(01000, ibank._startingAddress);
 
         LoadableBank dbank = abs._loadableBanks.get(05);
@@ -78,7 +78,7 @@ public class Test_Linker {
         assertEquals(4, dbank._bankLevel);
         assertEquals(2, (int) dbank._initialBaseRegister);
         assertFalse(dbank._isExtendedMode);
-        assertEquals(0, dbank._content.getArraySize());
+        assertEquals(0, dbank._content.getSize());
         assertEquals(02000, dbank._startingAddress);
     }
 
@@ -147,15 +147,15 @@ public class Test_Linker {
 
         LoadableBank ibank = abs._loadableBanks.get(04);
         assertTrue(ibank._isExtendedMode);
-        assertEquals(2, ibank._content.getArraySize());
-        assertEquals(0_100020_021000L, ibank._content.getValue(0));
-        assertEquals(0_100040_021021L, ibank._content.getValue(1));
+        assertEquals(2, ibank._content.getSize());
+        assertEquals(0_100020_021000L, ibank._content.get(0));
+        assertEquals(0_100040_021021L, ibank._content.get(1));
 
         LoadableBank dbank = abs._loadableBanks.get(05);
         assertFalse(dbank._isExtendedMode);
-        assertEquals(18, dbank._content.getArraySize());
-        assertEquals(0_000077_000077L, dbank._content.getValue(0));
-        assertEquals(0_777777_000000L, dbank._content.getValue(17));
+        assertEquals(18, dbank._content.getSize());
+        assertEquals(0_000077_000077L, dbank._content.get(0));
+        assertEquals(0_777777_000000L, dbank._content.get(17));
     }
 
     @Test
@@ -222,15 +222,15 @@ public class Test_Linker {
 
         LoadableBank ibank = abs._loadableBanks.get(04);
         assertFalse(ibank._isExtendedMode);
-        assertEquals(2, ibank._content.getArraySize());
-        assertEquals(0_100020_040000L, ibank._content.getValue(0));
-        assertEquals(0_100020_040021L, ibank._content.getValue(1));
+        assertEquals(2, ibank._content.getSize());
+        assertEquals(0_100020_040000L, ibank._content.get(0));
+        assertEquals(0_100020_040021L, ibank._content.get(1));
 
         LoadableBank dbank = abs._loadableBanks.get(05);
         assertFalse(dbank._isExtendedMode);
-        assertEquals(18, dbank._content.getArraySize());
-        assertEquals(0_000077_000077L, dbank._content.getValue(0));
-        assertEquals(0_777777_000000L, dbank._content.getValue(17));
+        assertEquals(18, dbank._content.getSize());
+        assertEquals(0_000077_000077L, dbank._content.get(0));
+        assertEquals(0_777777_000000L, dbank._content.get(17));
     }
 
     @Test
@@ -310,15 +310,15 @@ public class Test_Linker {
 
         LoadableBank ibank = abs._loadableBanks.get(04);
         assertFalse(ibank._isExtendedMode);
-        assertEquals(5, ibank._content.getArraySize());
-        assertEquals(0_742013_000000L, ibank._content.getValue(0));
-        assertEquals(0_742013_000000L, ibank._content.getValue(1));
-        assertEquals(0_745660_022001L, ibank._content.getValue(2));
-        assertEquals(0_745660_022000L, ibank._content.getValue(3));
-        assertEquals(0_777760_000000L, ibank._content.getValue(4));
+        assertEquals(5, ibank._content.getSize());
+        assertEquals(0_742013_000000L, ibank._content.get(0));
+        assertEquals(0_742013_000000L, ibank._content.get(1));
+        assertEquals(0_745660_022001L, ibank._content.get(2));
+        assertEquals(0_745660_022000L, ibank._content.get(3));
+        assertEquals(0_777760_000000L, ibank._content.get(4));
 
         LoadableBank dbank = abs._loadableBanks.get(05);
         assertFalse(dbank._isExtendedMode);
-        assertEquals(0, dbank._content.getArraySize());
+        assertEquals(0, dbank._content.getSize());
     }
 }

@@ -415,13 +415,16 @@ public class Assembler {
             }
 
             if (sValue._characterMode == CharacterMode.ASCII) {
-                Word36Array wordArray = Word36Array.stringToWord36ASCII(sValue._value);
+                ArraySlice slice = ArraySlice.stringToWord36ASCII(sValue._value);
                 context.generate(operandField._locale.getLineSpecifier(),
                                  context.getCurrentGenerationLCIndex(),
-                                 wordArray.getValues());
+                                 slice.getAll());
                 return true;
             } else if (sValue._characterMode == CharacterMode.Fieldata) {
-                Word36Array wordArray = Word36Array.stringToWord36Fieldata(sValue._value);
+                ArraySlice slice = ArraySlice.stringToWord36Fieldata(sValue._value);
+                context.generate(operandField._locale.getLineSpecifier(),
+                                 context.getCurrentGenerationLCIndex(),
+                                 slice.getAll());
             } else {
                 //TODO internal error
             }
