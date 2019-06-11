@@ -39,7 +39,7 @@ public class IOAccessControlWord {
      * Reference to the array of 36-bit values which holds the buffer.
      * This MUST be private - callers are allowed access to this array ONLY through getWord() and setWord()
      */
-    private final Word36Array _array;
+    private final ArraySlice _array;
 
     /**
      * Index of the word of _array which is to be returned when the access index is 0.
@@ -51,12 +51,12 @@ public class IOAccessControlWord {
     /**
      * Standard constructor
      * <p>
-     * @param array                 reference to a Word36Array (or a subclass thereof) containing the IO buffer
+     * @param array                 reference to an ArraySlice containing the IO buffer
      * @param bufferStart           index into the buffer, of the word to be retrieved for accessIndex of zero
      * @param addressModifier       indicates whether to traverse the buffer forward, backward, or not at all
      */
     public IOAccessControlWord(
-        final Word36Array array,
+        final ArraySlice array,
         final int bufferStart,
         final AddressModifier addressModifier
     ) {
@@ -109,7 +109,7 @@ public class IOAccessControlWord {
             effectiveIndex -= accessIndex;
         }
 
-        if ((effectiveIndex < 0) || (effectiveIndex >= _array.getArraySize())) {
+        if ((effectiveIndex < 0) || (effectiveIndex >= _array.getSize())) {
             throw new InvalidArgumentRuntimeException(String.format("accessIndex is out of range:%d", accessIndex));
         }
 
@@ -128,7 +128,7 @@ public class IOAccessControlWord {
     public long getValue(
         final int accessIndex
     ) {
-        return _array.getValue(getEffectiveIndex(accessIndex));
+        return _array.get(getEffectiveIndex(accessIndex));
     }
 
     /**
@@ -158,7 +158,7 @@ public class IOAccessControlWord {
         final org.apache.logging.log4j.Level logLevel,
         final String caption
     ) {
-        _array.logBufferOctal(logger, logLevel, caption);
+        _array.logOctal(logger, logLevel, caption);
     }
 
     /**
@@ -173,7 +173,7 @@ public class IOAccessControlWord {
         final int accessIndex,
         final long value
     ) {
-        _array.setValue(getEffectiveIndex(accessIndex), value);
+        _array.set(getEffectiveIndex(accessIndex), value);
     }
 
     /**
@@ -200,7 +200,7 @@ public class IOAccessControlWord {
     public String toString(
     ) {
         return String.format("BufferSize=0%o  BufferStart=0%o  Modifier=%s",
-                             _array.getArraySize(),
+                             _array.getSize(),
                              _bufferStart,
                              _addressModifier.toString());
     }

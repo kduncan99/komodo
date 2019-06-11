@@ -1,19 +1,15 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 20182019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.baselib.test;
 
+import com.kadware.em2200.baselib.*;
+import com.kadware.em2200.baselib.exceptions.*;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-
-import com.kadware.em2200.baselib.IOAccessControlWord;
-import com.kadware.em2200.baselib.Word36;
-import com.kadware.em2200.baselib.Word36Array;
-import com.kadware.em2200.baselib.Word36ArraySlice;
-import com.kadware.em2200.baselib.exceptions.*;
 
 /**
  * Unit tests for IOAccessControlWord
@@ -30,15 +26,15 @@ public class Test_IOAccessControlWord {
         0_444444_444444l,
     };
 
-    private static final Word36Array BUFFER = new Word36Array(BUFFER_DATA);
+    private static final ArraySlice BUFFER = new ArraySlice(BUFFER_DATA);
 
     @Test
     public void equals_false1(
     ) {
-        Word36Array array1 = new Word36Array(10);
-        Word36Array array2 = new Word36Array(10);
-        array1.setValue(3, 0_777777_777777l);
-        array2.setValue(3, 0_777777_777776l);
+        ArraySlice array1 = new ArraySlice(new long[10]);
+        ArraySlice array2 = new ArraySlice(new long[10]);
+        array1.set(3, 0_777777_777777l);
+        array2.set(3, 0_777777_777776l);
 
         IOAccessControlWord acw1 = new IOAccessControlWord(array1, 0, IOAccessControlWord.AddressModifier.Increment);
         IOAccessControlWord acw2 = new IOAccessControlWord(array2, 0, IOAccessControlWord.AddressModifier.Increment);
@@ -48,9 +44,9 @@ public class Test_IOAccessControlWord {
     @Test
     public void equals_false2(
     ) {
-        Word36Array array = new Word36Array(10);
-        array.setValue(3, 0_777777_777777l);
-        array.setValue(4, 0_777777_777776l);
+        ArraySlice array = new ArraySlice(new long[10]);
+        array.set(3, 0_777777_777777l);
+        array.set(4, 0_777777_777776l);
 
         IOAccessControlWord acw1 = new IOAccessControlWord(array, 0, IOAccessControlWord.AddressModifier.Increment);
         IOAccessControlWord acw2 = new IOAccessControlWord(array, 2, IOAccessControlWord.AddressModifier.Increment);
@@ -60,9 +56,9 @@ public class Test_IOAccessControlWord {
     @Test
     public void equals_false3(
     ) {
-        Word36Array array = new Word36Array(10);
-        array.setValue(3, 0_777777_777777l);
-        array.setValue(4, 0_777777_777776l);
+        ArraySlice array = new ArraySlice(new long[10]);
+        array.set(3, 0_777777_777777l);
+        array.set(4, 0_777777_777776l);
 
         IOAccessControlWord acw1 = new IOAccessControlWord(array, 0, IOAccessControlWord.AddressModifier.Increment);
         IOAccessControlWord acw2 = new IOAccessControlWord(array, 0, IOAccessControlWord.AddressModifier.Decrement);
@@ -72,9 +68,9 @@ public class Test_IOAccessControlWord {
     @Test
     public void equals_true(
     ) {
-        Word36Array array = new Word36Array(10);
-        array.setValue(3, 0_777777_777777l);
-        array.setValue(4, 0_777777_777776l);
+        ArraySlice array = new ArraySlice(new long[10]);
+        array.set(3, 0_777777_777777l);
+        array.set(4, 0_777777_777776l);
 
         IOAccessControlWord acw1 = new IOAccessControlWord(array, 0, IOAccessControlWord.AddressModifier.Increment);
         IOAccessControlWord acw2 = new IOAccessControlWord(array, 0, IOAccessControlWord.AddressModifier.Increment);
@@ -87,7 +83,7 @@ public class Test_IOAccessControlWord {
         //  We're going to access that sub-buffer in decreasing order for 5 accesses, which is one more than the size of the
         //  sub-buffer - the acw should give us zero for the last access.
         IOAccessControlWord acw = new IOAccessControlWord(BUFFER,
-                                                          BUFFER.getArraySize() - 1,
+                                                          BUFFER.getSize() - 1,
                                                           IOAccessControlWord.AddressModifier.Decrement);
 
         //  Ask for the first 4 words in decreasing order
@@ -119,7 +115,7 @@ public class Test_IOAccessControlWord {
         //  We're going to access that sub-buffer, with no increment or decrement, for 6 accesses.
         //  Start with a subset of the buffer which includes the second and third words of the main buffer.
         //  Then set up the ACW to begin at the second word of the subset (third word of the original buffer).
-        Word36ArraySlice subset = new Word36ArraySlice(BUFFER, 1, 2);
+        ArraySlice subset = new ArraySlice(BUFFER, 1, 2);
         IOAccessControlWord acw = new IOAccessControlWord(subset, 1, IOAccessControlWord.AddressModifier.NoChange);
 
         int wordIndex = 0;
@@ -176,19 +172,19 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_decrement(
     ) {
-        Word36Array buffer = new Word36Array(10);
-        Word36Array comp = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
+        ArraySlice comp = new ArraySlice(new long[10]);
 
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 9, IOAccessControlWord.AddressModifier.Decrement);
 
-        for (int bx = 0; bx < buffer.getArraySize(); ++bx) {
+        for (int bx = 0; bx < buffer.getSize(); ++bx) {
             Word36 value = new Word36();
             value.setQ1(bx);
             value.setQ2(bx);
             value.setQ3(bx);
             value.setQ4(bx);
             acw.setWord(bx, value);
-            comp.setWord36(9 - bx, value);
+            comp.set(9 - bx, value.getW());
         }
 
         assertTrue(comp.equals(buffer));
@@ -197,19 +193,19 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_increment(
     ) {
-        Word36Array buffer = new Word36Array(10);
-        Word36Array comp = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
+        ArraySlice comp = new ArraySlice(new long[10]);
 
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 0, IOAccessControlWord.AddressModifier.Increment);
 
-        for (int bx = 0; bx < buffer.getArraySize(); ++bx) {
+        for (int bx = 0; bx < buffer.getSize(); ++bx) {
             Word36 value = new Word36();
             value.setQ1(bx);
             value.setQ2(bx);
             value.setQ3(bx);
             value.setQ4(bx);
             acw.setWord(bx, value);
-            comp.setWord36(bx, value);
+            comp.set(bx, value.getW());
         }
 
         assertTrue(comp.equals(buffer));
@@ -218,19 +214,19 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_noChange(
     ) {
-        Word36Array buffer = new Word36Array(10);
-        Word36Array comp = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
+        ArraySlice comp = new ArraySlice(new long[10]);
 
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 0, IOAccessControlWord.AddressModifier.NoChange);
 
-        for (int bx = 0; bx < buffer.getArraySize(); ++bx) {
+        for (int bx = 0; bx < buffer.getSize(); ++bx) {
             Word36 value = new Word36();
             value.setQ1(bx);
             value.setQ2(bx);
             value.setQ3(bx);
             value.setQ4(bx);
             acw.setValue(bx, value.getW());
-            comp.setWord36(0, value);
+            comp.set(0, value.getW());
         }
 
         assertTrue(comp.equals(buffer));
@@ -239,7 +235,7 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_outOfRange_1(
     ) {
-        Word36Array buffer = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 9, IOAccessControlWord.AddressModifier.Decrement);
         _exception.expect(InvalidArgumentRuntimeException.class);
         acw.setValue(10, 0);
@@ -248,7 +244,7 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_outOfRange_2(
     ) {
-        Word36Array buffer = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 9, IOAccessControlWord.AddressModifier.Decrement);
         _exception.expect(InvalidArgumentRuntimeException.class);
         acw.setValue(-1, 0);
@@ -257,7 +253,7 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_outOfRange_3(
     ) {
-        Word36Array buffer = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 9, IOAccessControlWord.AddressModifier.NoChange);
         acw.setValue(10, 0);
     }
@@ -265,19 +261,19 @@ public class Test_IOAccessControlWord {
     @Test
     public void set_skipData(
     ) {
-        Word36Array buffer = new Word36Array(10);
-        Word36Array comp = new Word36Array(10);
+        ArraySlice buffer = new ArraySlice(new long[10]);
+        ArraySlice comp = new ArraySlice(new long[10]);
 
         IOAccessControlWord acw = new IOAccessControlWord(buffer, 0, IOAccessControlWord.AddressModifier.SkipData);
 
-        for (int bx = 0; bx < buffer.getArraySize(); ++bx) {
+        for (int bx = 0; bx < buffer.getSize(); ++bx) {
             Word36 value = new Word36();
             value.setQ1(bx);
             value.setQ2(bx);
             value.setQ3(bx);
             value.setQ4(bx);
             acw.setWord(bx, value);
-            comp.setWord36(bx, value);
+            comp.set(bx, value.getW());
         }
 
         assertTrue(comp.equals(buffer));
