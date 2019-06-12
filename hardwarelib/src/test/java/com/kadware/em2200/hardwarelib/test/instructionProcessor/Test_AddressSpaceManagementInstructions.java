@@ -441,8 +441,12 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //  TODO  LBED basic goodpath
-    /*
+    @Test
+    public void loadBaseRegisterExecDirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
         String[] source = {
             "          $BASIC",
             "",
@@ -454,19 +458,119 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          + 0               . base address 0",
             "",
             "BDENTRY2  . void bank with lower > upper",
-            "          + 0330000,0000014 . GAP/SAP rw set, void set, ring=0 domain=014",
-            "          + 01,0,0177       . lower/upper limits 0",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
             "          + 0               . base address 0",
             "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 01000, upper limit 01777",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
             "",
             "$(1),START$*",
             "          LBED      B27,BDENTRY1   . void bank",
             "          LBED      B28,BDENTRY2   . effectively void",
-            "          HALT      0              . should not get here",
+            "          LBED      B29,BDENTRY3   . not void",
+            "          HALT      0",
         };
-     */
 
-    //  TODO  LBED extended goodpath
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        assertTrue(br27._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
+
+        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        assertTrue(br28._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
+
+        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        assertFalse(br29._voidFlag);
+        assertFalse(br29._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
+        assertEquals(01, br29.getLowerLimit());
+        assertEquals(01777, br29.getUpperLimit());
+        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
+    }
+
+    @Test
+    public void loadBaseRegisterExecDirect_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 01000, upper limit 01777",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
+            "",
+            "$(1),START$*",
+            "          LBED      B27,BDENTRY1,,B2   . void bank",
+            "          LBED      B28,BDENTRY2,,B2   . effectively void",
+            "          LBED      B29,BDENTRY3,,B2   . not void",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        assertTrue(br27._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
+
+        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        assertTrue(br28._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
+
+        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        assertFalse(br29._voidFlag);
+        assertFalse(br29._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
+        assertEquals(01, br29.getLowerLimit());
+        assertEquals(01777, br29.getUpperLimit());
+        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
+    }
 
     @Test
     public void loadBaseRegisterExecDirect_BadPP_basic(
@@ -919,9 +1023,102 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
     }
 
-    //  TODO we need unit tests for LBU basic goodpath
+    @Test
+    public void loadBaseRegisterUser_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600006,0 . 16 words of data",
+            "BDENTRY2  + 0600007,0 . void",
+            "BDENTRY3  + 0,0       . void",
+            "",
+            "$(2)      . void bank data, will be BDI 07",
+            "$(3)      . useful bank data, will be BDI 06",
+            "          $res 16",
+            "",
+            "$(1),START$*",
+            "          LBU       B7,BDENTRY1",
+            "          LBU       B8,BDENTRY2",
+            "          LBU       B9,BDENTRY2",
+            "          HALT      0",
+        };
 
-    //  TODO we need unit tests for LBU extended goodpath
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        assertFalse(br7._voidFlag);
+        assertFalse(br7._largeSizeFlag);
+        assertEquals(020000, br7._lowerLimitNormalized);
+        assertEquals(020017, br7._upperLimitNormalized);
+        assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
+
+        BaseRegister br8 = processors._instructionProcessor.getBaseRegister(8);
+        assertTrue(br8._voidFlag);
+
+        BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+        assertTrue(br9._voidFlag);
+    }
+
+    @Test
+    public void loadBaseRegisterUser_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600006,0 . 16 words of data",
+            "BDENTRY3  + 0,0       . void",
+            "",
+            "$(2)      . useful bank data, will be BDI 06",
+            "          $res 16",
+            "",
+            "$(1),START$*",
+            "          LBU       B7,BDENTRY1,,B2",
+            "          LBU       B9,BDENTRY3,,B2",
+            "          HALT      0                . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        assertFalse(br7._voidFlag);
+        assertFalse(br7._largeSizeFlag);
+        assertEquals(01000, br7._lowerLimitNormalized);
+        assertEquals(01017, br7._upperLimitNormalized);
+        assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
+
+        BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+        assertTrue(br9._voidFlag);
+    }
 
     @Test
     public void loadBaseRegisterUser_BadPP_basic(
@@ -1233,9 +1430,136 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //  TODO we need unit tests for LBUD basic goodpath
+    @Test
+    public void loadBaseRegisterUserDirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 01000, upper limit 01777",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
+            "",
+            "$(1),START$*",
+            "          LBUD      B5,BDENTRY1   . void bank",
+            "          LBUD      B6,BDENTRY2   . effectively void",
+            "          LBUD      B7,BDENTRY3   . not void",
+            "          HALT      0",
+        };
 
-    //  TODO we need unit tests for LBUD extended goodpath
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+        assertTrue(br5._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
+
+        BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+        assertTrue(br6._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
+
+        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        assertFalse(br7._voidFlag);
+        assertFalse(br7._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
+        assertEquals(01, br7.getLowerLimit());
+        assertEquals(01777, br7.getUpperLimit());
+        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br7._baseAddress);
+    }
+
+    @Test
+    public void loadBaseRegisterUserDirect_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770004,0400100 . GAP/SAP erw set, large size ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 0100000, upper limit 0177700",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
+            "",
+            "$(1),START$*",
+            "          LBUD      B5,BDENTRY1,,B2   . void bank",
+            "          LBUD      B6,BDENTRY2,,B2   . effectively void",
+            "          LBUD      B7,BDENTRY3,,B2   . not void",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+        assertTrue(br5._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
+
+        BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+        assertTrue(br6._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
+
+        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        assertFalse(br7._voidFlag);
+        assertTrue(br7._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
+        assertEquals(01, br7.getLowerLimit());
+        assertEquals(01777, br7.getUpperLimit());
+        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br7._baseAddress);
+    }
 
     @Test
     public void loadBaseRegisterUserDirect_BadPP_basic(
