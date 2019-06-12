@@ -283,7 +283,68 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
     }
 
-    //  TODO LBE of non-existent Bank, basic and extended
+    @Test
+    public void loadBankExec_BadBank_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0601006,0 . does not exist",
+            "",
+            "$(1),START$*",
+            "          LBE       B27,BDENTRY1   . void bank",
+            "          HALT      0              . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBankExec_BadBank_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0601006,0 . does not exist",
+            "",
+            "$(1),START$*",
+            "          LBE       B27,BDENTRY1,,B2  . void bank",
+            "          HALT      0                 . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
 
     @Test
     public void loadBankExec_BadPP_basic(
@@ -407,16 +468,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $BASIC",
             "",
             "$(0)      $LIT",
-            //TODO this should be 4-word BReg, not BDENTRY
-            "BDENTRY   .",
-            "          + 0330100,0 . basic mode bank",
-            "          + 0001000,02000",
-            "          + 0",
-            "          + 0",
-            "          + 04,0 . displacement is 4",
-            "          + 0",
-            "          + 0",
-            "          + 0",
+            "BDENTRY   . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
             "",
             "$(1),START$*",
             "          LBED      B31,BDENTRY    . should cause trouble (bad PP)",
@@ -451,16 +507,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            //TODO this should be 4-word BReg, not BDENTRY
-            "BDENTRY   .",
-            "          + 0330100,0 . basic mode bank",
-            "          + 0001000,02000",
-            "          + 0",
-            "          + 0",
-            "          + 04,0 . displacement is 4",
-            "          + 0",
-            "          + 0",
-            "          + 0",
+            "BDENTRY   . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
             "",
             "$(1),START$*",
             "          LBED      B31,BDENTRY,,B2 . should cause trouble (bad PP)",
@@ -918,16 +969,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $BASIC",
             "",
             "$(0)      $LIT",
-            //TODO this should be 4-word BReg, not BDENTRY
-            "BDENTRY   .",
-            "          + 0330100,0 . basic mode bank",
-            "          + 0001000,02000",
-            "          + 0",
-            "          + 0",
-            "          + 04,0 . displacement is 4",
-            "          + 0",
-            "          + 0",
-            "          + 0",
+            "BDENTRY   . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
             "",
             "$(1),START$*",
             "          LBUD      B9,BDENTRY     . should cause trouble (bad PP)",
@@ -962,16 +1008,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $INFO 10 1",
             "",
             "$(0)      $LIT",
-            //TODO this should be 4-word BReg, not BDENTRY
-            "BDENTRY   .",
-            "          + 0330100,0 . basic mode bank",
-            "          + 0001000,02000",
-            "          + 0",
-            "          + 0",
-            "          + 04,0 . displacement is 4",
-            "          + 0",
-            "          + 0",
-            "          + 0",
+            "BDENTRY   . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
             "",
             "$(1),START$*",
             "          LBUD      B7,BDENTRY,,B2 . should cause trouble (bad PP)",
