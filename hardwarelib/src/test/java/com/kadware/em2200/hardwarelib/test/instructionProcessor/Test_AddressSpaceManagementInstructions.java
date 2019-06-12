@@ -197,7 +197,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankExec_basic(
+    public void loadBaseRegisterExec_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -208,15 +208,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "$(0)      $LIT",
             "BDENTRY1  + 0600006,0 . 16 words of data",
             "BDENTRY2  + 0600007,0 . void",
+            "BDENTRY3  + 0,0       . void",
             "",
             "$(2)      . void bank data, will be BDI 07",
             "$(3)      . useful bank data, will be BDI 06",
             "          $res 16",
             "",
             "$(1),START$*",
-            "          LBE       B27,BDENTRY1   . void bank",
-            "          LBE       B28,BDENTRY2   . non void",
-            "          HALT      0              . should not get here",
+            "          LBE       B27,BDENTRY1",
+            "          LBE       B28,BDENTRY2",
+            "          LBE       B29,BDENTRY2",
+            "          HALT      0",
         };
 
         AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
@@ -240,10 +242,13 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
+
+        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        assertTrue(br29._voidFlag);
     }
 
     @Test
-    public void loadBankExec_extended(
+    public void loadBaseRegisterExec_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -254,12 +259,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "",
             "$(0)      $LIT",
             "BDENTRY1  + 0600006,0 . 16 words of data",
+            "BDENTRY3  + 0,0       . void",
             "",
             "$(2)      . useful bank data, will be BDI 06",
             "          $res 16",
             "",
             "$(1),START$*",
-            "          LBE       B27,BDENTRY1,,B2 . void bank",
+            "          LBE       B27,BDENTRY1,,B2",
+            "          LBE       B29,BDENTRY3,,B2",
             "          HALT      0                . should not get here",
         };
 
@@ -281,10 +288,13 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(01000, br27._lowerLimitNormalized);
         assertEquals(01017, br27._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
+
+        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        assertTrue(br29._voidFlag);
     }
 
     @Test
-    public void loadBankExec_BadBank_basic(
+    public void loadBaseRegisterExec_BadBank_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -315,7 +325,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankExec_BadBank_extended(
+    public void loadBaseRegisterExec_BadBank_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -347,7 +357,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankExec_BadPP_basic(
+    public void loadBaseRegisterExec_BadPP_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -389,7 +399,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankExec_BadPP_extended(
+    public void loadBaseRegisterExec_BadPP_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -459,7 +469,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     //  TODO  LBED extended goodpath
 
     @Test
-    public void loadBankExecDirect_BadPP_basic(
+    public void loadBaseRegisterExecDirect_BadPP_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -497,7 +507,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankExecDirect_BadPP_extended(
+    public void loadBaseRegisterExecDirect_BadPP_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -536,7 +546,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_basicBank_basic(
+    public void loadBaseRegisterName_basicBank_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -583,7 +593,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_basicBank_extended(
+    public void loadBaseRegisterName_basicBank_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -631,7 +641,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_extendedBank_basic(
+    public void loadBaseRegisterName_extendedBank_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -678,7 +688,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_extendedBank_extended(
+    public void loadBaseRegisterName_extendedBank_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -726,7 +736,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_badPP_basic(
+    public void loadBaseRegisterName_badPP_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -762,7 +772,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_addrException_basic(
+    public void loadBaseRegisterName_addrException_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -794,7 +804,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_addrException_extended(
+    public void loadBaseRegisterName_addrException_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -827,7 +837,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_reserved_basic(
+    public void loadBaseRegisterName_reserved_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -868,7 +878,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankName_reserved_extended(
+    public void loadBaseRegisterName_reserved_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -914,7 +924,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     //  TODO we need unit tests for LBU extended goodpath
 
     @Test
-    public void loadBankUser_BadPP_basic(
+    public void loadBaseRegisterUser_BadPP_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -955,12 +965,280 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
+    @Test
+    public void loadBaseRegisterUser_BadBank_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0601006,0 . does not exist",
+            "",
+            "$(1),START$*",
+            "          LBE       B7,BDENTRY1    . void bank",
+            "          HALT      077            . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_BadBank_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0601006,0 . does not exist",
+            "",
+            "$(1),START$*",
+            "          LBU       B5,BDENTRY1,,B2   . void bank",
+            "          HALT      077               . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBank_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 01,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B7,BDENTRY1",
+            "          HALT      077 . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBank_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 31,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B5,BDENTRY1,,B2",
+            "          HALT      077 . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBR0_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600004,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B0,BDENTRY1",
+            "          HALT      077 . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBR0_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600004,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B0,BDENTRY1,,B2",
+            "          HALT      077 . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBR1_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600004,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B1,BDENTRY1",
+            "          HALT      077 . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBaseRegisterUser_InvalidBR1_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600004,0",
+            "",
+            "$(1),START$*",
+            "          LBU       B1,BDENTRY1,,B2",
+            "          HALT      077 . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
     //  TODO we need unit tests for LBUD basic goodpath
 
     //  TODO we need unit tests for LBUD extended goodpath
 
     @Test
-    public void loadBankUserDirect_BadPP_basic(
+    public void loadBaseRegisterUserDirect_BadPP_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -998,7 +1276,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     @Test
-    public void loadBankUserDirect_BadPP_extended(
+    public void loadBaseRegisterUserDirect_BadPP_extended(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,
@@ -1036,7 +1314,76 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //TODO LBUD B0 fails
+    @Test
+    public void loadBaseRegisterUserDirect_InvalidBR0_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  $RES 4",
+            "",
+            "$(1),START$*",
+            "          LBUD      B0,BDENTRY1",
+            "          HALT      077 . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBaseRegisterUserDirect_InvalidBR0_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  $RES 4",
+            "",
+            "$(1),START$*",
+            "          LBUD      B0,BDENTRY1,,B2",
+            "          HALT      077 . should not get here",
+            };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 
     @Test
     public void storeBaseRegisterExecDirect_basic(
