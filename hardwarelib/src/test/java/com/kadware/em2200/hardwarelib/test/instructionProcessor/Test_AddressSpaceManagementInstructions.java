@@ -460,10 +460,10 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          + 0               . base address 0",
             "",
             "$(1),START$*",
-            "          LBE       B27,BDENTRY1   . void bank",
-            "          LBE       B28,BDENTRY2   . effectively void",
+            "          LBED      B27,BDENTRY1   . void bank",
+            "          LBED      B28,BDENTRY2   . effectively void",
             "          HALT      0              . should not get here",
-            };
+        };
      */
 
     //  TODO  LBED extended goodpath
