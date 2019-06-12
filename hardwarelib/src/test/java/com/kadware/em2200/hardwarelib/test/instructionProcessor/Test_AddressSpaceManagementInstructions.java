@@ -196,7 +196,51 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //  TODO we need unit tests for LBE basic goodpath
+    @Test
+    public void loadBankExec_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600006,0 . 16 words of data",
+            "BDENTRY2  + 0600007,0 . void",
+            "",
+            "$(2)      . void bank data, will be BDI 07",
+            "$(3)      . useful bank data, will be BDI 06",
+            "          $res 16",
+            "",
+            "$(1),START$*",
+            "          LBE       B27,BDENTRY1   . void bank",
+            "          LBE       B28,BDENTRY2   . non void",
+            "          HALT      0              . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        assertFalse(br27._voidFlag);
+        assertFalse(br27._largeSizeFlag);
+        assertEquals(020000, br27._lowerLimitNormalized);
+        assertEquals(020017, br27._upperLimitNormalized);
+        assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
+
+        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        assertTrue(br28._voidFlag);
+    }
 
     //  TODO we need unit tests for LBE extended goodpath
 
@@ -286,6 +330,29 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     //  TODO  LBED basic goodpath
+    /*
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0330000,0000014 . GAP/SAP rw set, void set, ring=0 domain=014",
+            "          + 01,0,0177       . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "$(1),START$*",
+            "          LBE       B27,BDENTRY1   . void bank",
+            "          LBE       B28,BDENTRY2   . effectively void",
+            "          HALT      0              . should not get here",
+            };
+     */
 
     //  TODO  LBED extended goodpath
 

@@ -25,19 +25,9 @@ public class Test_BaseRegister {
 
     private static final Random _random = new Random(System.currentTimeMillis());
 
-    private AbsoluteAddress randomAbsoluteAddress() {
-        return new AbsoluteAddress((short) _random.nextInt(16),
-                                   _random.nextInt(0x1FFFFFF),
-                                   _random.nextInt(0x7FFFFFFF));
-    }
-
     private AccessInfo randomAccessInfo() {
         return new AccessInfo(_random.nextInt(0x100),
                               _random.nextLong());
-    }
-
-    private AccessPermissions randomAccessPermissions() {
-        return new AccessPermissions(_random.nextBoolean(), _random.nextBoolean(), _random.nextBoolean());
     }
 
     @Test
@@ -48,50 +38,6 @@ public class Test_BaseRegister {
     }
 
     //TODO need to test various constructors for banks with lower > upper limit, to ensure void flag is set
-
-    //TODO
-    /*
-    @Test
-    public void test_parameterizedConstructor(
-    ) throws AddressingExceptionInterrupt {
-        for (int x = 0; x < 10000; ++x) {
-            AbsoluteAddress baseAddress = randomAbsoluteAddress();
-
-            boolean largeSize = _random.nextBoolean();
-            int lowerLimitNorm = _random.nextInt(0777);
-            int upperLimitNorm = _random.nextInt(0777777);
-            if (largeSize) {
-                lowerLimitNorm <<= 15;
-                upperLimitNorm <<= 6;
-                upperLimitNorm |= 077;
-            } else {
-                lowerLimitNorm <<= 9;
-            }
-
-            AccessInfo accessLock = randomAccessInfo();
-            AccessPermissions gap = randomAccessPermissions();
-            AccessPermissions sap = randomAccessPermissions();
-            Word36Array storage = new Word36Array(01000);
-            BaseRegister br = new BaseRegister(baseAddress,
-                                               largeSize,
-                                               lowerLimitNorm,
-                                               upperLimitNorm,
-                                               accessLock,
-                                               gap,
-                                               sap,
-                                               storage);
-            assertFalse(br._voidFlag);
-            assertEquals(baseAddress, br._baseAddress);
-            assertEquals(accessLock, br._accessLock);
-            assertEquals(largeSize, br._largeSizeFlag);
-            assertEquals(upperLimitNorm, br._upperLimitNormalized);
-            assertEquals(lowerLimitNorm, br._lowerLimitNormalized);
-            assertEquals(gap, br._generalAccessPermissions);
-            assertEquals(sap, br._specialAccessPermissions);
-            assertEquals(storage, br._storage);
-        }
-    }
-     */
 
     @Test
     public void test_loadConstructor(
@@ -157,44 +103,4 @@ public class Test_BaseRegister {
         }
     }
 
-    //TODO
-    /*
-    @Test
-    public void test_getWords(
-    ) throws AddressingExceptionInterrupt {
-        //  assumes populating constructor tests are successful
-        for (int x = 0; x < 10000; ++x) {
-            AbsoluteAddress baseAddress = randomAbsoluteAddress();
-            boolean largeSize = _random.nextBoolean();
-            int lowerLimit = _random.nextInt(0777);
-            int upperLimit = _random.nextInt(0777777);
-            AccessInfo accessLock = randomAccessInfo();
-            AccessPermissions gap = randomAccessPermissions();
-            AccessPermissions sap = randomAccessPermissions();
-            Word36Array storage = new Word36Array(01000);
-            BaseRegister br = new BaseRegister(baseAddress,
-                                               largeSize,
-                                               lowerLimit << (largeSize ? 15 : 9),
-                                               upperLimit << (largeSize ? 6 : 0) | (largeSize ? 077 : 0),
-                                               accessLock,
-                                               gap,
-                                               sap,
-                                               storage);
-
-            long[] data = br.getBaseRegisterWords();
-
-            assertEquals((data[0] & 0_200000_000000L) != 0, br._generalAccessPermissions._read);
-            assertEquals((data[0] & 0_100000_000000L) != 0, br._generalAccessPermissions._write);
-            assertEquals((data[0] & 0_020000_000000L) != 0, br._specialAccessPermissions._read);
-            assertEquals((data[0] & 0_010000_000000L) != 0, br._specialAccessPermissions._write);
-            assertEquals((data[0] & 0_000200_000000L) != 0, br._voidFlag);
-            assertEquals((data[0] & 0_000004_000000L) != 0, br._largeSizeFlag);
-            assertEquals((data[1] & 0_777000_000000L) >> 27, br.getLowerLimit());
-            assertEquals(data[1] & 0_777777L, br.getUpperLimit());
-            assertEquals(data[2], br._baseAddress._segment);
-            assertEquals((data[3] & 0xF00000000L) >> 32, br._baseAddress._upi);
-            assertEquals(data[3] & 0xFFFFFFFFL, br._baseAddress._offset);
-        }
-    }
-     */
 }

@@ -260,6 +260,14 @@ public class BankDescriptor extends ArraySlice {
         return (get(0) & 02_000000L) != 0;
     }
 
+    public void setAccessLock(
+        final AccessInfo accessInfo
+    ) {
+        long result = get(0) & 0_777777_000000L;
+        result |= accessInfo.get() & 0777777;
+        set(0, result);
+    }
+
     /**
      * Special setter
      * @param value new bank type value
@@ -267,7 +275,7 @@ public class BankDescriptor extends ArraySlice {
     public void setBankType(
         final BankType value
     ) {
-        long result = get(0) & 0_776000_000000L;
+        long result = get(0) & 0_776077_777777L;
         result |= (long)(value._code) << 24;
         set(0, result);
     }

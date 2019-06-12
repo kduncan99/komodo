@@ -700,6 +700,7 @@ class BaseFunctions {
             //  Create a bank descriptor for it in the appropriate bdt
             ArraySlice bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
             BankDescriptor bd = new BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
+            bd.setAccessLock(bank._accessInfo);
             bd.setBankType(bank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode);
             bd.setBaseAddress(absAddr);
             bd.setGeneralAccessPermissions(bank._generalPermissions);

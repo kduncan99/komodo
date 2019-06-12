@@ -159,6 +159,8 @@ public abstract class InstructionHandler extends FunctionHandler {
                                 voidBank = true;
                             }
                         }
+                    } else {
+                        bdTarget = bdSource;
                     }
                     break;
 
