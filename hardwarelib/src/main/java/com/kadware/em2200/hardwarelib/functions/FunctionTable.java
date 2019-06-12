@@ -27,10 +27,9 @@ import com.kadware.em2200.hardwarelib.functions.unconditionalJump.*;
  */
 public abstract class FunctionTable {
 
-    //  Note: The following instructions are not implemented:
+    //  Note: The following instructions are not intended to be implemented:
     //      BAO
     //      CMPXCHG
-    //      UNLK
 
     /**
      * Basic Mode function handlers for f-field 005, indexed by a-field

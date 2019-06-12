@@ -28,7 +28,7 @@ public class AAIJFunctionHandler extends InstructionHandler {
         }
 
         ip.getDesignatorRegister().setDeferrableInterruptEnabled(true);
-        int counter = (int)ip.getJumpOperand();
+        int counter = (int)ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
 

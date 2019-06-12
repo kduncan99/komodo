@@ -27,7 +27,7 @@ public class DJZFunctionHandler extends InstructionHandler {
         _operand[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
         _operand[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
         if (OnesComplement.isZero72(_operand)) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
     }

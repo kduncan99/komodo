@@ -24,7 +24,7 @@ public class JFOFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         DesignatorRegister dreg = ip.getDesignatorRegister();
         if (dreg.getCharacteristicOverflow()) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
         dreg.setCharacteristicOverflow(false);

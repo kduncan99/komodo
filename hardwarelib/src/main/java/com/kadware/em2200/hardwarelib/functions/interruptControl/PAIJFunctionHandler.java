@@ -27,7 +27,7 @@ public class PAIJFunctionHandler extends InstructionHandler {
         }
 
         ip.getDesignatorRegister().setDeferrableInterruptEnabled(false);
-        int counter = (int)ip.getJumpOperand();
+        int counter = (int)ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
 

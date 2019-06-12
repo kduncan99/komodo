@@ -27,7 +27,7 @@ public class HLTJFunctionHandler extends InstructionHandler {
         }
 
         //  Always conditionalJump, but halt thereafter
-        int counter = (int)ip.getJumpOperand();
+        int counter = (int)ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
         ip.stop(InstructionProcessor.StopReason.HaltJumpExecuted, 0);
     }

@@ -24,7 +24,7 @@ public class JNDFFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         DesignatorRegister dreg = ip.getDesignatorRegister();
         if (!dreg.getDivideCheck()) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         } else {
             dreg.setDivideCheck(false);

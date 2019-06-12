@@ -33,7 +33,7 @@ public class JMGIFunctionHandler extends InstructionHandler {
         IndexRegister xreg = ip.getExecOrUserXRegister((int)iw.getA());
         long modValue = xreg.getSignedXM();
         if (OnesComplement.isPositive36(modValue) && !OnesComplement.isZero36(modValue)) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 

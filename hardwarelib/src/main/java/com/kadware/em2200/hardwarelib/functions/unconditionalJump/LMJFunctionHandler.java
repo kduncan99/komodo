@@ -25,7 +25,7 @@ public class LMJFunctionHandler extends InstructionHandler {
         //  Increment PAR.PC and store it in X(a)Modifier, then set PAR.PC to U
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         ip.getExecOrUserXRegister((int)iw.getA()).setH2(par.getProgramCounter() + 1);
-        ip.setProgramCounter(ip.getJumpOperand(), true);
+        ip.setProgramCounter(ip.getJumpOperand(true), true);
     }
 
     @Override

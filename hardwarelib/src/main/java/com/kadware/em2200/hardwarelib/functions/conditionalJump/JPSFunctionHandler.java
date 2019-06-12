@@ -26,7 +26,7 @@ public class JPSFunctionHandler extends InstructionHandler {
         GeneralRegister reg = ip.getExecOrUserARegister((int)iw.getA());
         long operand = reg.getW();
         if (OnesComplement.isPositive36(operand)) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 

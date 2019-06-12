@@ -1009,6 +1009,59 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Locates the index of the base register which represents the bank which contains the given relative address.
+     * Does appropriate limits checking.  Delegates to the appropriate basic or extended mode implementation.
+     * @param relativeAddress relative address to be considered
+     * @param updateDesignatorRegister if true and if we are in basic mode, we update the basic mode bank selection bit
+     *                                 in the designator register if necessary
+     * @return base register index
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private int findBaseRegisterIndex(
+        final int relativeAddress,
+        final boolean updateDesignatorRegister
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        if (_designatorRegister.getBasicModeEnabled()) {
+            //  Find the bank containing the current offset.
+            //  We don't need to check for storage limits, since this is done for us by findBasicModeBank() in terms of
+            //  returning a zero.
+            int brIndex = findBasicModeBank(relativeAddress, updateDesignatorRegister);
+            if (brIndex == 0) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
+
+            //  Are we doing indirect addressing?
+            if (_currentInstruction.getI() != 0) {
+                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
+                incrementIndexRegisterInF0();
+                BaseRegister br = _baseRegisters[brIndex];
+
+                //  Ensure we can read from the selected bank
+                if (!isReadAllowed(br)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+                br.checkAccessLimits(relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+                //  then throw UnresolvedAddressException so the caller knows we're not done here.
+                int wx = relativeAddress - br._lowerLimitNormalized;
+                _currentInstruction.setXHIU(br._storage.get(wx));
+                throw new UnresolvedAddressException();
+            }
+
+            //  We're at our final destination
+            return brIndex;
+        } else {
+            return getEffectiveBaseRegisterIndex();
+        }
+    }
+
+    /**
      * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
      * are to be selected for that address.
      * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
@@ -1041,56 +1094,6 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         return 0;
-    }
-
-    /**
-     * Locates the index of the base register which represents the bank which contains the given relative address.
-     * Does appropriate limits checking.  Delegates to the appropriate basic or extended mode implementation.
-     * @param relativeAddress relative address to be considered
-     * @return base register index
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private int findBaseRegisterIndex(
-        final int relativeAddress
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        if (_designatorRegister.getBasicModeEnabled()) {
-            //  Find the bank containing the current offset.
-            //  We don't need to check for storage limits, since this is done for us by findBasicModeBank() in terms of
-            //  returning a zero.
-            int brIndex = findBasicModeBank(relativeAddress, false);
-            if (brIndex == 0) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-            }
-
-            //  Are we doing indirect addressing?
-            if (_currentInstruction.getI() != 0) {
-                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
-                incrementIndexRegisterInF0();
-                BaseRegister br = _baseRegisters[brIndex];
-
-                //  Ensure we can read from the selected bank
-                if (!isReadAllowed(br)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-                }
-                br.checkAccessLimits(relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
-
-                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
-                //  then throw UnresolvedAddressException so the caller knows we're not done here.
-                int wx = relativeAddress - br._lowerLimitNormalized;
-                _currentInstruction.setXHIU(br._storage.get(wx));
-                throw new UnresolvedAddressException();
-            }
-
-            //  We're at our final destination
-            return brIndex;
-        } else {
-            return getEffectiveBaseRegisterIndex();
-        }
     }
 
     /**
@@ -1285,7 +1288,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         _baseRegisters[0] = new BaseRegister(bankDescriptor);
-        _designatorRegister.setBasicModeBaseRegisterSelection(ihBankType == BankDescriptor.BankType.BasicMode);
+        _designatorRegister.setBasicModeBaseRegisterSelection(ihBankType == BankDescriptor.BankType.BasicMode);//TODO is this right?
     }
 
     /**
@@ -1532,7 +1535,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
         baseRegister.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
         AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
@@ -1645,7 +1648,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Get base register and check storage and access limits
-        int brIndex = findBaseRegisterIndex(relAddress);
+        int brIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister bReg = _baseRegisters[brIndex];
         bReg.checkAccessLimits(relAddress, operands.length, true, false, _indicatorKeyRegister.getAccessInfo());
 
@@ -1791,11 +1794,14 @@ public class InstructionProcessor extends Processor implements Worker {
      * See getImmediateOperand() above.
      * This is similar, however the calculated U field is only ever 16 or 18 bits, and is never sign-extended.
      * Also, we do not rely upon j-field for anything, as that has no meaning for conditionalJump instructions.
+     * @param updateDesignatorRegister if true and if we are in basic mode, we update the basic mode bank selection bit
+     *                                 in the designator register if necessary
      * @return conditionalJump operand value
      * @throws MachineInterrupt if an interrupt needs to be raised
      * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
      */
     public int getJumpOperand(
+        final boolean updateDesignatorRegister
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForJump(0);
@@ -1805,7 +1811,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //  then throw UnresolvedAddressException which will eventually route us back through here again, but this
         //  time with new address info (in reladdress), and we keep doing this until we're not doing indirect addressing.
         if (_designatorRegister.getBasicModeEnabled() && (_currentInstruction.getI() != 0)) {
-            findBaseRegisterIndex(relAddress);
+            findBaseRegisterIndex(relAddress, updateDesignatorRegister);
         } else {
             incrementIndexRegisterInF0();
         }
@@ -1869,7 +1875,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Loading from storage.  Do so, then (maybe) honor partial word handling.
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
         baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
 
@@ -1907,7 +1913,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         incrementIndexRegisterInF0();
 
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
@@ -2012,7 +2018,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Storage operand.  Maybe do partial-word addressing
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         incrementIndexRegisterInF0();
 
         BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
@@ -2114,7 +2120,7 @@ public class InstructionProcessor extends Processor implements Worker {
             incrementIndexRegisterInF0();
         } else {
             //  Get base register and check storage and access limits
-            int brIndex = findBaseRegisterIndex(relAddress);
+            int brIndex = findBaseRegisterIndex(relAddress, false);
             BaseRegister bReg = _baseRegisters[brIndex];
             bReg.checkAccessLimits(relAddress, operands.length, false, true, _indicatorKeyRegister.getAccessInfo());
 
@@ -2190,7 +2196,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  This is going to be a storage thing...
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister bReg = _baseRegisters[baseRegisterIndex];
         bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
 
@@ -2229,7 +2235,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister bReg = _baseRegisters[baseRegisterIndex];
         bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
 
@@ -2261,7 +2267,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int relAddress = calculateRelativeAddressForGRSOrStorage(0);
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress);
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister bReg = _baseRegisters[baseRegisterIndex];
         bReg.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
 

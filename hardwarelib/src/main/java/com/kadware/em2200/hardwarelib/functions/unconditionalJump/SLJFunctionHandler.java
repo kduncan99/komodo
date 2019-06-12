@@ -26,7 +26,7 @@ public class SLJFunctionHandler extends InstructionHandler {
         ProgramAddressRegister par = ip.getProgramAddressRegister();
         int returnPC = par.getProgramCounter() + 1;
         ip.storePartialOperand(returnPC, InstructionWord.H2, true);
-        int newPC = ip.getJumpOperand();
+        int newPC = ip.getJumpOperand(true);
         ip.setProgramCounter(newPC + 1, true);
     }
 

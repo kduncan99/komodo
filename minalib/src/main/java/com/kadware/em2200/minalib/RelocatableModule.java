@@ -62,11 +62,11 @@ public class RelocatableModule {
         public Builder setName(final String value) { _name = value; return this; }
         public Builder setArithmeticFaultCompatibilityMode(final boolean value) { _requiresArithmeticFaultCompatibilityMode = value; return this; }
         public Builder setArithmeticFaultNonInterruptMode(final boolean value) { _requiresArithmeticFaultNonInterruptMode = value; return this; }
-        Builder setRequiresQuarterWordMode(final boolean value) { _requiresQuarterWordMode = value; return this; }
-        Builder setRequiresThirdWordMode(final boolean value) { _requiresThirdWordMode = value; return this; }
-        Builder setStorage(final Map<Integer, LocationCounterPool> storage) { _storage = storage; return this; }
+        public Builder setRequiresQuarterWordMode(final boolean value) { _requiresQuarterWordMode = value; return this; }
+        public Builder setRequiresThirdWordMode(final boolean value) { _requiresThirdWordMode = value; return this; }
+        public Builder setStorage(final Map<Integer, LocationCounterPool> storage) { _storage = storage; return this; }
 
-        RelocatableModule build(
+        public RelocatableModule build(
         ) throws InvalidParameterException {
             if (_name == null) {
                 throw new InvalidParameterException("No name specified");

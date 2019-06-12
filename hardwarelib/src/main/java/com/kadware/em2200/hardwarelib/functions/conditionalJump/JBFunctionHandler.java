@@ -22,7 +22,7 @@ public class JBFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         if ((ip.getExecOrUserARegister((int)iw.getA()).getW() & 0x01) == 0x01) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
     }

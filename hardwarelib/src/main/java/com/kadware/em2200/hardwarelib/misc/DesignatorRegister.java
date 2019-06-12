@@ -11,23 +11,23 @@ import com.kadware.em2200.baselib.Word36;
  */
 public class DesignatorRegister extends Word36 {
 
-    public static final long MASK_ActivityLevelQueueMonitorEnabled   = MASK_B0;
-    public static final long MASK_FaultHandlingInProgress            = MASK_B6;
-    public static final long MASK_Executive24BitIndexingEnabled      = MASK_B11;
-    public static final long MASK_QuantumTimerEnabled                = MASK_B12;
-    public static final long MASK_DeferrableInterruptEnabled         = MASK_B13;
-    public static final long MASK_ProcessorPrivilege                 = MASK_B14 | MASK_B15;
-    public static final long MASK_BasicModeEnabled                   = MASK_B16;
-    public static final long MASK_ExecRegisterSetSelected            = MASK_B17;
-    public static final long MASK_Carry                              = MASK_B18;
-    public static final long MASK_Overflow                           = MASK_B19;
-    public static final long MASK_CharacteristicUnderflow            = MASK_B21;
-    public static final long MASK_CharacteristicOverflow             = MASK_B22;
-    public static final long MASK_DivideCheck                        = MASK_B23;
-    public static final long MASK_OperationTrapEnabled               = MASK_B27;
-    public static final long MASK_ArithmeticExceptionEnabled         = MASK_B29;
-    public static final long MASK_BasicModeBaseRegisterSelection     = MASK_B31;
-    public static final long MASK_QuarterWordModeEnabled             = MASK_B32;
+    private static final long MASK_ActivityLevelQueueMonitorEnabled   = MASK_B0;
+    private static final long MASK_FaultHandlingInProgress            = MASK_B6;
+    private static final long MASK_Executive24BitIndexingEnabled      = MASK_B11;
+    private static final long MASK_QuantumTimerEnabled                = MASK_B12;
+    private static final long MASK_DeferrableInterruptEnabled         = MASK_B13;
+    private static final long MASK_ProcessorPrivilege                 = MASK_B14 | MASK_B15;
+    private static final long MASK_BasicModeEnabled                   = MASK_B16;
+    private static final long MASK_ExecRegisterSetSelected            = MASK_B17;
+    private static final long MASK_Carry                              = MASK_B18;
+    private static final long MASK_Overflow                           = MASK_B19;
+    private static final long MASK_CharacteristicUnderflow            = MASK_B21;
+    private static final long MASK_CharacteristicOverflow             = MASK_B22;
+    private static final long MASK_DivideCheck                        = MASK_B23;
+    private static final long MASK_OperationTrapEnabled               = MASK_B27;
+    private static final long MASK_ArithmeticExceptionEnabled         = MASK_B29;
+    private static final long MASK_BasicModeBaseRegisterSelection     = MASK_B31;
+    private static final long MASK_QuarterWordModeEnabled             = MASK_B32;
 
     /**
      * Standard Constructor

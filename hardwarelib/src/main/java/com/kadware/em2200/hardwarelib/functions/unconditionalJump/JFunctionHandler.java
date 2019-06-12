@@ -21,7 +21,7 @@ public class JFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        int counter = (int)ip.getJumpOperand();
+        int counter = (int)ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
 

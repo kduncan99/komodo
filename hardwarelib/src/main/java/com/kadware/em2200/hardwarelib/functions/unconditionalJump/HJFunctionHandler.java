@@ -22,7 +22,7 @@ public class HJFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         //  Always conditionalJump
-        int counter = (int)ip.getJumpOperand();
+        int counter = (int)ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
 

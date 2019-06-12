@@ -29,7 +29,7 @@ public class JGDFunctionHandler extends InstructionHandler {
         int regIndex = ((int)(iw.getJ() & 07) << 4) | (int)iw.getA();
         GeneralRegister reg = ip.getGeneralRegister(regIndex);
         if (reg.isPositive() && !reg.isZero()) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int) ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 

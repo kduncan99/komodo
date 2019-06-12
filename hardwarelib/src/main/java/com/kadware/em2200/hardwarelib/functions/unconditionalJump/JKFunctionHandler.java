@@ -22,8 +22,8 @@ public class JKFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
 
-        //  Get the conditionalJump operand, but don't conditionalJump.
-        ip.getJumpOperand();
+        //  Get the conditionalJump operand, but don't jump.
+        ip.getJumpOperand(false);
     }
 
     @Override

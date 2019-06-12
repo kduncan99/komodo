@@ -22,11 +22,10 @@ public class JCFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         if (ip.getDesignatorRegister().getCarry()) {
-            int counter = (int)ip.getJumpOperand();
+            int counter = (int)ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
     }
-
 
     @Override
     public Instruction getInstruction() { return Instruction.JC; }

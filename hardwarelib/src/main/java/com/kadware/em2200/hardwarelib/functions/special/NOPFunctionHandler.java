@@ -21,8 +21,7 @@ public class NOPFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  TODO does this work as expected?
-        ip.getJumpOperand();
+        ip.getJumpOperand(false);
     }
 
     @Override
