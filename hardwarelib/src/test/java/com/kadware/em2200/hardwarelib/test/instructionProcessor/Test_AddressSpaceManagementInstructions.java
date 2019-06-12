@@ -242,7 +242,48 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertTrue(br28._voidFlag);
     }
 
-    //  TODO we need unit tests for LBE extended goodpath
+    @Test
+    public void loadBankExec_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY1  + 0600006,0 . 16 words of data",
+            "",
+            "$(2)      . useful bank data, will be BDI 06",
+            "          $res 16",
+            "",
+            "$(1),START$*",
+            "          LBE       B27,BDENTRY1,,B2 . void bank",
+            "          HALT      0                . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        assertFalse(br27._voidFlag);
+        assertFalse(br27._largeSizeFlag);
+        assertEquals(01000, br27._lowerLimitNormalized);
+        assertEquals(01017, br27._upperLimitNormalized);
+        assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
+    }
+
+    //  TODO LBE of non-existent Bank, basic and extended
 
     @Test
     public void loadBankExec_BadPP_basic(
