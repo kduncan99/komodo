@@ -26,7 +26,7 @@ public class LBUDFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         DesignatorRegister dr = ip.getDesignatorRegister();
-        if (dr.getBasicModeEnabled() && (dr.getProcessorPrivilege() > 0)) {
+        if (dr.getProcessorPrivilege() > 0) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
 

@@ -196,9 +196,185 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //  TODO we need unit tests for LBE basic /extended
+    //  TODO we need unit tests for LBE basic goodpath
 
-    //  TODO we need unit tests for LBED basic /extended
+    //  TODO we need unit tests for LBE extended goodpath
+
+    @Test
+    public void loadBankExec_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBE       B31,BDENTRY    . should cause trouble (bad PP)",
+            "          HALT      077            . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBankExec_BadPP_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBE       B31,BDENTRY,,B2 . should cause trouble (bad PP)",
+            "          HALT      077             . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    //  TODO  LBED basic goodpath
+
+    //  TODO  LBED extended goodpath
+
+    @Test
+    public void loadBankExecDirect_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            //TODO this should be 4-word BReg, not BDENTRY
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBED      B31,BDENTRY    . should cause trouble (bad PP)",
+            "          HALT      077            . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBankExecDirect_BadPP_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            //TODO this should be 4-word BReg, not BDENTRY
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBED      B31,BDENTRY,,B2 . should cause trouble (bad PP)",
+            "          HALT      077             . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 
     @Test
     public void loadBankName_basicBank_basic(
@@ -244,7 +420,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
         assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
     }
 
@@ -293,7 +468,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        System.out.println(String.format("%012o", processors._instructionProcessor.getExecOrUserXRegister(5).getW()));//TODO
         assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
     }
 
@@ -422,6 +596,10 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
     @Test
@@ -572,9 +750,144 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
     }
 
-    //  TODO we need unit tests for LBU basic /extended
+    //  TODO we need unit tests for LBU basic goodpath
 
-    //  TODO we need unit tests for LBUD basic /extended
+    //  TODO we need unit tests for LBU extended goodpath
+
+    @Test
+    public void loadBankUser_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBU       B5,BDENTRY     . should cause trouble (bad PP)",
+            "          HALT      077            . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    //  TODO we need unit tests for LBUD basic goodpath
+
+    //  TODO we need unit tests for LBUD extended goodpath
+
+    @Test
+    public void loadBankUserDirect_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            //TODO this should be 4-word BReg, not BDENTRY
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBUD      B9,BDENTRY     . should cause trouble (bad PP)",
+            "          HALT      077            . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void loadBankUserDirect_BadPP_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            //TODO this should be 4-word BReg, not BDENTRY
+            "BDENTRY   .",
+            "          + 0330100,0 . basic mode bank",
+            "          + 0001000,02000",
+            "          + 0",
+            "          + 0",
+            "          + 04,0 . displacement is 4",
+            "          + 0",
+            "          + 0",
+            "          + 0",
+            "",
+            "$(1),START$*",
+            "          LBUD      B7,BDENTRY,,B2 . should cause trouble (bad PP)",
+            "          HALT      077            . should not get here",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    //TODO LBUD B0 fails
 
     @Test
     public void storeBaseRegisterExecDirect_basic(
@@ -657,7 +970,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         }
 
         for (int bx = 16; bx < 32; ++bx) {
-            //TODO  some trouble here with _enter not matching - it isn't supposed to
             assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
@@ -746,7 +1058,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         }
 
         for (int bx = 16; bx < 32; ++bx) {
-            //TODO  some trouble here with _enter not matching - it isn't supposed to
             assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
@@ -754,7 +1065,78 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
     }
 
-    //  TODO SBED basic/extended with PP>0
+    @Test
+    public void storeBaseRegisterExecDirect_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B16,DATA,*X8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void storeBaseRegisterExecDirect_BadPP_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B16,DATA,*X8,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 
     @Test
     public void storeBaseRegisterUser_basic(
@@ -937,7 +1319,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         }
 
         for (int bx = 0; bx < 16; ++bx) {
-            //TODO  some trouble here with _enter not matching - it isn't supposed to
             assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
@@ -1017,7 +1398,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         }
 
         for (int bx = 0; bx < 16; ++bx) {
-            //TODO  some trouble here with _enter not matching - it isn't supposed to
             assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
@@ -1025,5 +1405,74 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
     }
 
-    //  TODO SBUD basic/extended with PP>0
+    @Test
+    public void storeBaseRegisterUserDirect_BadPP_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B0,DATA,*X8",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_BadPP_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT",
+            "DATA      $RES 64",
+            "",
+            "$(1),START$*",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B8,DATA,*X8,B2",
+            "          HALT      0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 }

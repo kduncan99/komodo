@@ -347,15 +347,18 @@ public class BaseRegister {
                 return true;
             }
 
-            if (brobj._accessLock.equals(_accessLock)
-                && (brobj._baseAddress.equals(_baseAddress))
-                && (brobj._generalAccessPermissions.equals(_generalAccessPermissions))
-                && (brobj._largeSizeFlag == _largeSizeFlag)
-                && (brobj._lowerLimitNormalized == _lowerLimitNormalized)
-                && (brobj._specialAccessPermissions.equals(_specialAccessPermissions))
-                && (brobj._upperLimitNormalized == _upperLimitNormalized)) {
-                return true;
-            }
+            return (brobj._accessLock.equals(_accessLock)
+                    && (brobj._baseAddress.equals(_baseAddress))
+                    //  we must not compare ._enter flags, as they are undefined in the base register
+                    //  so we have to compare the individual read and write flags instead
+                    && (brobj._generalAccessPermissions._read == _generalAccessPermissions._read)
+                    && (brobj._generalAccessPermissions._write == _generalAccessPermissions._write)
+                    && (brobj._largeSizeFlag == _largeSizeFlag)
+                    && (brobj._lowerLimitNormalized == _lowerLimitNormalized)
+                    //  as above
+                    && (brobj._specialAccessPermissions._read == _specialAccessPermissions._read)
+                    && (brobj._specialAccessPermissions._write == _specialAccessPermissions._write)
+                    && (brobj._upperLimitNormalized == _upperLimitNormalized));
         }
 
         return false;
