@@ -2295,4 +2295,59 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
+
+    //TODO testRelativeAddress_basic
+    @Test
+    public void testRelativeAddress_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "$(0) . this will be 0600005 based on B14", // primary DBank for DB31=0
+            "DATA14    + 0",
+            "",
+            "$(1) . this will be 0600004 based on B12", // primary IBank for DB31=0,
+            "START$*",
+            "          TRA       X12,DATA12",
+            "          HALT      077",
+            "          TRA       X13,DATA13",
+            "          HALT      076",
+            "          TRA       X14,DATA14",
+            "          HALT      075",
+            "          TRA       X15,DATA15",// X15 undefined WTH?
+            "          HALT      074",
+            "          HALT      0",
+            "",
+            "DATA12    + 0",
+            "",
+            "$(2) . this will be 0600007 based on B15", // primary DBank for DB31=1
+            "DATA15    + 0",
+            "",
+            "$(3) . this will be 0600006 based on B13", // primary IBank for DB31=1
+            "DATA13    + 0",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    //TODO testRelativeAddressIndirect_basic
+    //  with and without read/write access
+
+    //TODO testRelativeAddress_extended
+
+    //TODO testRelativeAddress_basic
+
+    //TODO testRelativeAddressNoBank_extended
 }

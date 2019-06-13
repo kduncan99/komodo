@@ -287,6 +287,23 @@ public class BaseRegister {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
         }
 
+        checkAccessLimits(fetchFlag, readFlag, writeFlag, accessInfo);
+    }
+
+    /**
+     * As above, but doesn't check relative address
+     * @param fetchFlag true if this is related to an instruction fetch, else false
+     * @param readFlag true if this will result in a read
+     * @param writeFlag true if this will result in a write
+     * @param accessInfo access info of the client
+     * @throws ReferenceViolationInterrupt if the address is outside of limits
+     */
+    public void checkAccessLimits(
+        final boolean fetchFlag,
+        final boolean readFlag,
+        final boolean writeFlag,
+        final AccessInfo accessInfo
+    ) throws ReferenceViolationInterrupt {
         //  Choose GAP or SAP based on caller's accessInfo, but only if necessary
         if (readFlag || writeFlag) {
             boolean useSAP = ((accessInfo._ring < _accessLock._ring) || (accessInfo._domain == _accessLock._domain));
@@ -322,19 +339,7 @@ public class BaseRegister {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
-        //  Choose GAP or SAP based on caller's accessInfo, but only if necessary
-        if (readFlag || writeFlag) {
-            boolean useSAP = ((accessInfo._ring < _accessLock._ring) || (accessInfo._domain == _accessLock._domain));
-            AccessPermissions bankPermissions = useSAP ? _specialAccessPermissions : _generalAccessPermissions;
-
-            if (readFlag && !bankPermissions._read) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-            }
-
-            if (writeFlag && !bankPermissions._write) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
-            }
-        }
+        checkAccessLimits(false, readFlag, writeFlag, accessInfo);
     }
 
     @Override

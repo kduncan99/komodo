@@ -58,37 +58,6 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //TODO
-        /*
-When DB31 = 1, B13 and B15 are selected as the primary pair of
-Basic_Mode Base_Registers. When DB31 = 0, B12 and B14 are
-selected as the primary pair. The primary pair is selected over the
-secondary pair if the storage limits overlap (see 4.4.6). See 4.4.2.3
-for a discussion of detection of Reference_Violation and the toggling
-of DB31 for jump instructions.
-
-For Jump and transfer instructions, Reference_Violation detection on Jump_to_Addresses is done
-in one of two ways: 1) as part of the execution of the jump instruction, or 2) as part of the next
-instruction fetch.
-For Extended_Mode, the limits check is done against B0 for either method of detecting
-Reference_Violations (see 4.4.1).
-When the first method is used in Basic_Mode, if the Jump_to_Address does not fall within the
-limits of the primary pair, the IP proceeds with checking (see Relative_Address to
-Absolute_Address Translation in Basic_Mode, 4.4.6) the limits of the secondary pair. If the
-address is satisfied by the secondary pair, the Jump_to_Address replaces PAR.PC and the
-instruction completes; if the address is not within the limits of the secondary pair, a
-Reference_Violation interrupt is generated.
-When the second method is used in Basic_Mode, the checks are made as part of the next
-instruction fetch, as described in 4.4.1 and 4.4.6.3.
-For Basic_Mode conditional jumps, DB31 is toggled only for conditional jumps taken.
-
-Architecturally_Undefined:
- For either method in Basic_Mode, if the Jump_to_Address does not fall within the limits of
-the primary pair, it is undefined whether DB31 is toggled as part of the jump/transfer
-instruction or as part of the next instruction fetch.
- For all Reference_Violation interrupts caused by a Basic_Mode Jump, the state of DB31 and
-PAR.PC on the ICS are undefined.
-         */
         String[] source = {
             "          $BASIC",
             "$(0) . this will be 0600005 based on B14", // primary DBank for DB31=0
@@ -191,7 +160,6 @@ PAR.PC on the ICS are undefined.
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
-        showDebugInfo(processors);//TODO
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());

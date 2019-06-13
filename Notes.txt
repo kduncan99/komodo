@@ -1,7 +1,7 @@
 -- InProgress
 IP: implement standard bank switching logic
 IP: address space management instructions (and unit tests)
-  TRA, TRARS, TVA
+  TRARS, TVA
 IP: extended mode procedure call instructions (and unit tests)
   GOTO, CALL, LOCL, RTN
 IP: basic mode procedure call instructions (and unit tests)
@@ -12,7 +12,6 @@ SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
 BankDescriptor seems to take a very long time to create from storage... why?
 Test code loads successive 512 word banks at 1024 word offsets - is this right?
-Are we updating basic mode register selection at all in basic mode?
 
 -- TODO implement
 * baselib

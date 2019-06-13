@@ -812,7 +812,6 @@ public class InstructionProcessor extends Processor implements Worker {
      *                  this value increments from zero upward by one.
      * @return relative address for the current instruction
      */
-    //TODO may not need offset parameter
     private int calculateRelativeAddressForJump(
         final int offset
     ) {
@@ -847,7 +846,7 @@ public class InstructionProcessor extends Processor implements Worker {
             result = OnesComplement.add36Simple(result, offset);
         }
 
-        return (int)result;
+        return (int) result;
     }
 
     /**
@@ -1603,6 +1602,58 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  Create and return a BankDescriptor object
         return new BankDescriptor(bdStorage, bdTableOffset);
+    }
+
+    /**
+     * Calculates the raw relative address (the U) for the current instruction presuming basic mode (even if it isn't set),
+     * honors any indirect addressing, and returns the index of the basic mode bank (12-15) which corresponds to the
+     * final address, increment the X registers if/as appropriate, but not updating the designator register.
+     * Mainly for TRA instruction...
+     * @return relative address for the current instruction
+     */
+    public int getBasicModeBankRegisterIndex(
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        IndexRegister xReg = null;
+        int xx = (int) _currentInstruction.getX();
+        if (xx != 0) {
+            xReg = getExecOrUserXRegister(xx);
+        }
+        long addend1 = _currentInstruction.getU();
+        long addend2 = 0;
+        if (xReg != null) {
+            addend2 = xReg.getSignedXM();
+            xReg.incrementModifier18();
+        }
+
+        long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
+        if (relativeAddress == 0777777) {
+            relativeAddress = 0;
+        }
+
+        int brIndex = findBasicModeBank((int) relativeAddress, false);
+
+        //  Did we find a bank, and are we doing indirect addressing?
+        if ((brIndex > 0) && (_currentInstruction.getI() != 0)) {
+            //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
+            incrementIndexRegisterInF0();
+            BaseRegister br = _baseRegisters[brIndex];
+
+            //  Ensure we can read from the selected bank
+            if (!isReadAllowed(br)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+            }
+            br.checkAccessLimits((int) relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+            //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+            //  then throw UnresolvedAddressException so the caller knows we're not done here.
+            int wx = (int) relativeAddress - br._lowerLimitNormalized;
+            _currentInstruction.setXHIU(br._storage.get(wx));
+            throw new UnresolvedAddressException();
+        }
+
+        //  We're at our final destination
+        return brIndex;
     }
 
     /**
