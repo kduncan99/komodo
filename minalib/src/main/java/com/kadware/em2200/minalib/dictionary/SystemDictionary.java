@@ -18,8 +18,7 @@ public class SystemDictionary extends Dictionary {
 
     private static final Map<String, Value> _initialValues = new HashMap<>();
     static {
-        //  registers TODO move these to AXR$... maybe
-        for (int rx = 0; rx < 15; ++rx) {
+        for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("X%d", rx), new IntegerValue(false, rx, null));
             _initialValues.put(String.format("EX%d", rx), new IntegerValue(false, rx, null));
         }

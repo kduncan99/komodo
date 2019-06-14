@@ -112,6 +112,33 @@ public class BaseRegister {
         }
     }
 
+    //  public ---------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Initial value constructor for internal purposes
+     */
+    private BaseRegister(
+        final AccessInfo accessLock,
+        final AbsoluteAddress baseAddress,
+        final AccessPermissions generalAccessPermissions,
+        final boolean largeSizeFlag,
+        final int lowerLimitNormalized,
+        final AccessPermissions specialAccessPermissions,
+        final ArraySlice storage,
+        final int upperLimitNormalized,
+        final boolean voidFlag
+    ) {
+        _accessLock = accessLock;
+        _baseAddress = baseAddress;
+        _generalAccessPermissions = generalAccessPermissions;
+        _largeSizeFlag = largeSizeFlag;
+        _lowerLimitNormalized = lowerLimitNormalized;
+        _specialAccessPermissions = specialAccessPermissions;
+        _storage = storage;
+        _upperLimitNormalized = upperLimitNormalized;
+        _voidFlag = voidFlag;
+    }
+
     /**
      * Standard Constructor, used for Void bank
      */
@@ -271,27 +298,19 @@ public class BaseRegister {
      * Checks a relative address against this bank's limits.
      * @param relativeAddress relative address of interest
      * @param fetchFlag true if this is related to an instruction fetch, else false
-     * @param readFlag true if this will result in a read
-     * @param writeFlag true if this will result in a write
-     * @param accessInfo access info of the client
      * @throws ReferenceViolationInterrupt if the address is outside of limits
      */
     public void checkAccessLimits(
         final int relativeAddress,
-        final boolean fetchFlag,
-        final boolean readFlag,
-        final boolean writeFlag,
-        final AccessInfo accessInfo
+        final boolean fetchFlag
     ) throws ReferenceViolationInterrupt {
         if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress > _upperLimitNormalized)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
         }
-
-        checkAccessLimits(fetchFlag, readFlag, writeFlag, accessInfo);
     }
 
     /**
-     * As above, but doesn't check relative address
+     * Checks a particular key against this bank's limits.
      * @param fetchFlag true if this is related to an instruction fetch, else false
      * @param readFlag true if this will result in a read
      * @param writeFlag true if this will result in a write
@@ -320,7 +339,27 @@ public class BaseRegister {
     }
 
     /**
-     * As above, but checks a range of storage limits
+     * Checks a relative address and a particular key against this bank's limits.
+     * @param relativeAddress relative address of interest
+     * @param fetchFlag true if this is related to an instruction fetch, else false
+     * @param readFlag true if this will result in a read
+     * @param writeFlag true if this will result in a write
+     * @param accessInfo access info of the client
+     * @throws ReferenceViolationInterrupt if the address is outside of limits
+     */
+    public void checkAccessLimits(
+        final int relativeAddress,
+        final boolean fetchFlag,
+        final boolean readFlag,
+        final boolean writeFlag,
+        final AccessInfo accessInfo
+    ) throws ReferenceViolationInterrupt {
+        checkAccessLimits(relativeAddress, fetchFlag);
+        checkAccessLimits(fetchFlag, readFlag, writeFlag, accessInfo);
+    }
+
+    /**
+     * Checks a range of relative addresses and a particular key against this bank's limits.
      * @param relativeAddress relative address of interest
      * @param count number of consecutive words of the access
      * @param readFlag true if this will result in a read

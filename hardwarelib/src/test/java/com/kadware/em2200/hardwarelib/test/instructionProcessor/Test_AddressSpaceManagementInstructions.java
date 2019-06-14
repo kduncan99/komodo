@@ -4,14 +4,12 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.AccessInfo;
-import com.kadware.em2200.baselib.AccessPermissions;
-import com.kadware.em2200.baselib.GeneralRegisterSet;
+import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.em2200.minalib.*;
 import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -23,7 +21,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
-    //  No basic version of DABT
+    //  No basic mode version of DABT
 
     @Test
     public void decelerateActiveBaseTable_extended(
@@ -2296,7 +2294,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      processors._instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //TODO testRelativeAddress_basic
     @Test
     public void testRelativeAddress_basic(
     ) throws MachineInterrupt,
@@ -2305,31 +2302,33 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
              UPINotAssignedException {
         String[] source = {
             "          $BASIC",
-            "$(0) . this will be 0600005 based on B14", // primary DBank for DB31=0
+            "$(0) . this will be 0600005 based on B13",
             "DATA14    + 0",
             "",
-            "$(1) . this will be 0600004 based on B12", // primary IBank for DB31=0,
+            "$(1) . this will be 0600004 based on B12",
             "START$*",
             "          TRA       X12,DATA12",
-            "          HALT      077",
+            "          HALT      077 . should skip",
             "          TRA       X13,DATA13",
-            "          HALT      076",
+            "          HALT      076 . should skip",
             "          TRA       X14,DATA14",
-            "          HALT      075",
-            "          TRA       X15,DATA15",// X15 undefined WTH?
-            "          HALT      074",
-            "          HALT      0",
+            "          HALT      075 . should skip",
+            "          TRA       X15,DATA15",
+            "          HALT      074 . should skip",
+            "          TRA       X5,070000",    // doesn't exist
+            "          HALT      0 . this one should NOT be skipped",
+            "          HALT      073",
             "",
             "DATA12    + 0",
             "",
-            "$(2) . this will be 0600007 based on B15", // primary DBank for DB31=1
+            "$(2) . this will be 0600007 based on B15",
             "DATA15    + 0",
             "",
-            "$(3) . this will be 0600006 based on B13", // primary IBank for DB31=1
+            "$(3) . this will be 0600006 based on B14",
             "DATA13    + 0",
         };
 
-        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
 
@@ -2340,14 +2339,391 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(0400000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
+        assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
+        assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
+        assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
     }
 
-    //TODO testRelativeAddressIndirect_basic
-    //  with and without read/write access
+    @Test
+    public void testRelativeAddressIndirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "$(0) . this will be 0600005 based on B13",
+            "DATA14    NOP       *DATA15",
+            "",
+            "$(1) . this will be 0600004 based on B12",
+            "START$*",
+            "          TRA       X12,*DATA12",
+            "          HALT      077 . should skip",
+            "          HALT      0 . this one should NOT be skipped",
+            "",
+            "DATA12    NOP       *DATA14",
+            "",
+            "$(2) . this will be 0600007 based on B15",
+            "DATA15    NOP       DATA13",
+            "",
+            "$(3) . this will be 0600006 based on B14",
+            "DATA13    $res 32",
+        };
 
-    //TODO testRelativeAddress_extended
+        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
 
-    //TODO testRelativeAddress_basic
+        startAndWait(processors._instructionProcessor);
+        showDebugInfo(processors);
 
-    //TODO testRelativeAddressNoBank_extended
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
+    }
+
+    @Test
+    public void testRelativeAddress_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT . this will be bank 0600005 based on B2",
+            "DATA",
+            "",
+            "$(1) . this will be bank 0600004 based on B0",
+            "START$*",
+            "          . base data bank on B12 through B15",
+            "          LBU       B12,(0600005000000),,B2",
+            "          LBU       B13,(0600005000000),,B2",
+            "          LBU       B14,(0600005000000),,B2",
+            "          LBU       B15,(0600005000000),,B2",
+            "",
+            "          . do the tests",
+            "          TRA       X12,DATA,,B12",
+            "          HALT      077 . should skip",
+            "          TRA       X13,DATA,,B13",
+            "          HALT      076 . should skip",
+            "          TRA       X14,DATA,,B14",
+            "          HALT      075 . should skip",
+            "          TRA       X15,DATA,,B15",
+            "          HALT      074 . should skip",
+            "          TRA       X5,070000,,B12",       // doesn't exist
+            "          HALT      0 . this one should NOT be skipped",
+            "          HALT      073",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(0400000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
+        assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
+        assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
+        assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+    }
+
+    @Test
+    public void testRelativeAddressNonRWBanks_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "$(0) . this will be 0600005 based on B14",
+            "DATA14    + 0",
+            "",
+            "$(1) . this will be 0600004 based on B12",
+            "START$*",
+            "          TRA       X13,DATA13",
+            "          J         TARGET1 . should not skip",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          TRA       X14,DATA14",
+            "          J         TARGET2 . should not skip",
+            "          HALT      076 . should skip",
+            "",
+            "TARGET2",
+            "          TRA       X15,DATA15",
+            "          J         DONE",
+            "          HALT      075 . should skip",
+            "",
+            "DONE",
+            "          HALT      0",
+            "",
+            "$(2) . this will be 0600007 based on B15",
+            "DATA15    + 0",
+            "",
+            "$(3) . this will be 0600006 based on B13",
+            "DATA13    + 0",
+        };
+
+        //  Special construction of the absolute
+        Assembler.Option[] asmOptions = {};
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
+
+        Linker.LCPoolSpecification[] bank4PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 1),
+        };
+
+        Linker.LCPoolSpecification[] bank5PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 0),
+        };
+
+        Linker.LCPoolSpecification[] bank6PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 3),
+        };
+
+        Linker.LCPoolSpecification[] bank7PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 2),
+        };
+
+        AccessInfo lock = new AccessInfo((short)3, 100);
+        AccessPermissions iBankPerms = new AccessPermissions(true, true, false);
+        AccessPermissions noReadPerms = new AccessPermissions(false, false, true);
+        AccessPermissions noWritePerms = new AccessPermissions(false, true, false);
+        AccessPermissions noPerms = new AccessPermissions(false, false, false);
+
+        Linker.BankDeclaration[] bankDeclarations = {
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(4)
+                .setBankName("BDI4BR12")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(12)
+                .setGeneralAccessPermissions(iBankPerms)
+                .setSpecialAccessPermissions(iBankPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank4PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(5)
+                .setBankName("BDI5BR14")
+                .setStartingAddress(03000)
+                .setInitialBaseRegister(14)
+                .setGeneralAccessPermissions(noReadPerms)
+                .setSpecialAccessPermissions(noReadPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank5PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(6)
+                .setBankName("BDI6BR13")
+                .setStartingAddress(05000)
+                .setInitialBaseRegister(13)
+                .setGeneralAccessPermissions(noWritePerms)
+                .setSpecialAccessPermissions(noWritePerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank6PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(7)
+                .setBankName("BDI7BR15")
+                .setStartingAddress(07000)
+                .setInitialBaseRegister(15)
+                .setGeneralAccessPermissions(noPerms)
+                .setSpecialAccessPermissions(noPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank7PoolSpecs)
+                .build(),
+        };
+
+        Linker.Option[] linkerOptions = {};
+        Linker linker = new Linker();
+        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, linkerOptions);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+        showDebugInfo(processors);//TODO
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+        assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
+        assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
+        assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+    }
+
+    @Test
+    public void testRelativeAddressNonRWBanks_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT . this will be bank 0600005 based on B2",
+            "          + 0 . nothing data",
+            "",
+            "$(1) . this will be bank 0600004 based on B0",
+            "START$*",
+            "          TRA       X13,DATA13,,B13",
+            "          J         TARGET1 . should not skip",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          TRA       X14,DATA14,,B14",
+            "          J         TARGET2 . should not skip",
+            "          HALT      076 . should skip",
+            "",
+            "TARGET2",
+            "          TRA       X15,DATA15,,B15",
+            "          J         DONE",
+            "          HALT      075 . should skip",
+            "",
+            "DONE",
+            "          HALT      0",
+            "",
+            "$(2)",
+            "DATA13    0 . BDI 0600006 will be based on B13",
+            "",
+            "$(4)",
+            "DATA14    0 . BDI 0600007 will be based on B14",
+            "",
+            "$(6)",
+            "DATA15    0 . BDI 0600010 will be based on B15",
+        };
+
+        //  Special construction of the absolute
+        Assembler.Option[] asmOptions = {};
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
+
+        Linker.LCPoolSpecification[] bank4PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 1),
+        };
+
+        Linker.LCPoolSpecification[] bank5PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 0),
+        };
+
+        Linker.LCPoolSpecification[] bank6PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 2),
+        };
+
+        Linker.LCPoolSpecification[] bank7PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 4),
+        };
+
+        Linker.LCPoolSpecification[] bank8PoolSpecs = {
+            new Linker.LCPoolSpecification(relModule, 6),
+        };
+
+        AccessInfo lock = new AccessInfo((short)3, 100);
+        AccessPermissions iBankPerms = new AccessPermissions(true, true, false);
+        AccessPermissions noReadPerms = new AccessPermissions(false, false, true);
+        AccessPermissions noWritePerms = new AccessPermissions(false, true, false);
+        AccessPermissions noPerms = new AccessPermissions(false, false, false);
+
+        Linker.BankDeclaration[] bankDeclarations = {
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(4)
+                .setBankName("BDI4BR0")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(0)
+                .setGeneralAccessPermissions(iBankPerms)
+                .setSpecialAccessPermissions(iBankPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank4PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(5)
+                .setBankName("BDI5BR2")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(2)
+                .setGeneralAccessPermissions(noWritePerms)
+                .setSpecialAccessPermissions(noWritePerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank5PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(6)
+                .setBankName("BDI6BR13")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(13)
+                .setGeneralAccessPermissions(noReadPerms)
+                .setSpecialAccessPermissions(noReadPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank6PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(7)
+                .setBankName("BDI7BR14")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(14)
+                .setGeneralAccessPermissions(noWritePerms)
+                .setSpecialAccessPermissions(noWritePerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank7PoolSpecs)
+                .build(),
+            new Linker.BankDeclaration.Builder()
+                .setBankLevel(6)
+                .setBankDescriptorIndex(8)
+                .setBankName("BDI8BR15")
+                .setStartingAddress(01000)
+                .setInitialBaseRegister(15)
+                .setGeneralAccessPermissions(noPerms)
+                .setSpecialAccessPermissions(noPerms)
+                .setAccessInfo(lock)
+                .setPoolSpecifications(bank8PoolSpecs)
+                .build(),
+        };
+
+        Linker.Option[] linkerOptions = {};
+        Linker linker = new Linker();
+        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, linkerOptions);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+
+        startAndWait(processors._instructionProcessor);
+        showDebugInfo(processors);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+
+        assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
+        assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
+        assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+    }
 }

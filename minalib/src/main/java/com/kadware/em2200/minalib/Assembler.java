@@ -96,7 +96,7 @@ public class Assembler {
                 processProcedure(context, operation, (ProcedureValue) v, textLine);
                 return;
             } else if (v instanceof FormValue) {
-//                processFormValue(context, (FormValue) v);
+//TODO                processFormValue(context, (FormValue) v);
                 return;
             } else if (v instanceof DirectiveValue) {
                 processDirective(context, (DirectiveValue) v, textLine, lfc, operationField);
@@ -426,7 +426,7 @@ public class Assembler {
                                  context.getCurrentGenerationLCIndex(),
                                  slice.getAll());
             } else {
-                //TODO internal error
+                throw new InternalErrorRuntimeException("Bad character mode");
             }
 
             return true;

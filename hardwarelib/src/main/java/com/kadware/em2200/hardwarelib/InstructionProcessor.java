@@ -1619,41 +1619,70 @@ public class InstructionProcessor extends Processor implements Worker {
         if (xx != 0) {
             xReg = getExecOrUserXRegister(xx);
         }
-        long addend1 = _currentInstruction.getU();
+
+        long addend1;
         long addend2 = 0;
-        if (xReg != null) {
-            addend2 = xReg.getSignedXM();
-            xReg.incrementModifier18();
-        }
-
-        long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
-        if (relativeAddress == 0777777) {
-            relativeAddress = 0;
-        }
-
-        int brIndex = findBasicModeBank((int) relativeAddress, false);
-
-        //  Did we find a bank, and are we doing indirect addressing?
-        if ((brIndex > 0) && (_currentInstruction.getI() != 0)) {
-            //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
-            incrementIndexRegisterInF0();
-            BaseRegister br = _baseRegisters[brIndex];
-
-            //  Ensure we can read from the selected bank
-            if (!isReadAllowed(br)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+        if (_designatorRegister.getBasicModeEnabled()) {
+            addend1 = _currentInstruction.getU();
+            if (xReg != null) {
+                addend2 = xReg.getSignedXM();
             }
-            br.checkAccessLimits((int) relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
 
-            //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
-            //  then throw UnresolvedAddressException so the caller knows we're not done here.
-            int wx = (int) relativeAddress - br._lowerLimitNormalized;
-            _currentInstruction.setXHIU(br._storage.get(wx));
-            throw new UnresolvedAddressException();
+            long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
+            if (relativeAddress == 0777777) {
+                relativeAddress = 0;
+            }
+
+            int brIndex = findBasicModeBank((int) relativeAddress, false);
+
+            //  Did we find a bank, and are we doing indirect addressing?
+            if ((brIndex > 0) && (_currentInstruction.getI() != 0)) {
+                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
+                incrementIndexRegisterInF0();
+                BaseRegister br = _baseRegisters[brIndex];
+
+                //  Ensure we can read from the selected bank
+                if (!isReadAllowed(br)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+                br.checkAccessLimits((int) relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+                //  then throw UnresolvedAddressException so the caller knows we're not done here.
+                int wx = (int) relativeAddress - br._lowerLimitNormalized;
+                _currentInstruction.setXHIU(br._storage.get(wx));
+                throw new UnresolvedAddressException();
+            }
+
+            //  We're at our final destination
+            return brIndex;
+        } else {
+            //  We have an explicit base register - check limits
+            addend1 = _currentInstruction.getD();
+            if (xReg != null) {
+                if (_designatorRegister.getExecutive24BitIndexingEnabled()
+                    && (_designatorRegister.getProcessorPrivilege() < 2)) {
+                    //  Exec 24-bit indexing is requested
+                    addend2 = xReg.getSignedXM24();
+                } else {
+                    addend2 = xReg.getSignedXM();
+                }
+            }
+
+            long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
+            if (relativeAddress == 0777777) {
+                relativeAddress = 0;
+            }
+
+            int brIndex = (int) _currentInstruction.getB();
+            BaseRegister br = _baseRegisters[brIndex];
+            try {
+                br.checkAccessLimits((int) relativeAddress, false);
+            } catch (ReferenceViolationInterrupt ex) {
+                brIndex = 0;
+            }
+            return brIndex;
         }
-
-        //  We're at our final destination
-        return brIndex;
     }
 
     /**

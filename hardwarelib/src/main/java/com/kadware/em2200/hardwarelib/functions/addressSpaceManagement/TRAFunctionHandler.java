@@ -24,7 +24,7 @@ public class TRAFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         int brIndex = ip.getBasicModeBankRegisterIndex();
-        long result = ((brIndex == 0) ? 0 : 0400000_000000L) | ((brIndex & 03) << 33);
+        long result = ((brIndex == 0) ? 0 : 0400000_000000L) | ((long) (brIndex & 03) << 33);
         ip.getExecOrUserXRegister((int) iw.getA()).setW(result);
 
         if (brIndex != 0) {
@@ -34,7 +34,7 @@ public class TRAFunctionHandler extends InstructionHandler {
                                        true,
                                        true,
                                        ip.getIndicatorKeyRegister().getAccessInfo());
-                ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, true);
+                ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
             } catch (ReferenceViolationInterrupt ex) {
                 //  do nothing
             }

@@ -8,6 +8,7 @@ IP: basic mode procedure call instructions (and unit tests)
   LBJ, LIJ, LDJ
 
 -- TODO BUGS
+BaseFunctions - need to make data banks extended mode
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
 BankDescriptor seems to take a very long time to create from storage... why?
@@ -18,6 +19,7 @@ Test code loads successive 512 word banks at 1024 word offsets - is this right?
 some new instructions
 
 * hardwarelib
+Change extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
   what to do when we run off the end of the bank?
 need some conditional jump tests which would incur reference violation if they jumped
