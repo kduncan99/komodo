@@ -150,13 +150,13 @@ public class InstructionProcessor extends Processor implements Worker {
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is false
      */
-    private static final int[] BASE_REGISTER_CANDIDATES_FALSE = {12, 14, 13, 15};
+    public static final int[] BASE_REGISTER_CANDIDATES_FALSE = {12, 14, 13, 15};
 
     /**
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is true
      */
-    private static final int[] BASE_REGISTER_CANDIDATES_TRUE = {13, 15, 12, 14};
+    public static final int[] BASE_REGISTER_CANDIDATES_TRUE = {13, 15, 12, 14};
 
     /**
      * ActiveBaseTable entries - index 0 is for B1 .. index 14 is for B15.  There is no entry for B0.
