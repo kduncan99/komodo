@@ -2728,4 +2728,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     }
 
     //  TODO testRelativeAddressRange ... some day when we care more about it
+
+    //  TODO lots of testVirtualAddress tests
 }

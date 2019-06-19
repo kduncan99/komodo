@@ -169,11 +169,11 @@ public class InstructionProcessor extends Processor implements Worker {
     private static final Map<InstructionProcessor, HashSet<AbsoluteAddress>> _storageLocks = new HashMap<>();
 
     private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
-    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, -1);
+    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
     private final InstructionWord           _currentInstruction = new InstructionWord();
-    private InstructionHandler _currentInstructionHandler = null;  //  TODO do we need this?
+    private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
     private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it

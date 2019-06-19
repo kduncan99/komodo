@@ -15,7 +15,7 @@ public class AbsoluteAddress {
      * The UPI (Unique Processor Index) value identifying a particular MSP
      * Range: 0:0x0F
      */
-    public short _upi;
+    public final short _upi;
 
     /**
      * Indicates a particular segment - the offset is relative to the segment.
@@ -25,13 +25,13 @@ public class AbsoluteAddress {
      * is responsible for requesting and releasing segments in sizes most convenient for it.
      * Range: 0:0x7FFFFFF (25 bits)
      */
-    public int _segment;
+    public final int _segment;
 
     /**
      * A value corresponding to an offset from the start of that MSP's segment.
      * Range: 0:0x7FFFFFFF (35 bits)
      */
-    public int _offset;
+    public final int _offset;
 
     /**
      * Constructor
@@ -47,7 +47,7 @@ public class AbsoluteAddress {
     ) {
         assert((upi >= 0) && (upi < 16));
         assert((segment & 0xFE000000) == 0);
-        assert(_offset >= 0);
+        assert(offset >= 0);
         _upi = upi;
         _segment = segment;
         _offset = offset;
@@ -57,10 +57,10 @@ public class AbsoluteAddress {
      * Adds another offset to the offset in this object
      * @param offset offset to be added
      */
-    public void addOffset(
-        final long offset
+    public AbsoluteAddress addOffset(
+        final int offset
     ) {
-        _offset += offset;
+        return new AbsoluteAddress(_upi, _segment, _offset + offset);
     }
 
     /**
@@ -88,31 +88,6 @@ public class AbsoluteAddress {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Setter
-     */
-    public void set(
-        final short upi,
-        final int segment,
-        final int offset
-    ) {
-        _upi = upi;
-        _segment = segment;
-        _offset = offset;
-    }
-
-    /**
-     * Setter
-     * @param address source value
-     */
-    public void set(
-        final AbsoluteAddress address
-    ) {
-        _upi = address._upi;
-        _segment = address._segment;
-        _offset = address._offset;
     }
 
     @Override

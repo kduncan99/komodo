@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.em2200.hardwarelib.misc;
@@ -11,18 +11,15 @@ import com.kadware.em2200.baselib.Word36;
 */
 public class VirtualAddress extends Word36 {
 
-    //???? need unit tests for this
+    //TODO need unit tests for this
     /**
      * Standard constructor
      */
-    public VirtualAddress(
-    ) {
-    }
+    public VirtualAddress() {}
 
     /**
-     * Initial value constructor
-     * <p>
-     * @param value
+     * Basic mode initial value constructor
+     * @param value composite value / bank name / etc - 36 bit value
      */
     public VirtualAddress(
         final long value
@@ -30,10 +27,17 @@ public class VirtualAddress extends Word36 {
         super(value);
     }
 
+    /**
+     * Basic mode initial value constructor
+     * @param execFlag true for exec bank, else false
+     * @param levelFlag level portion of the bank name, true for 1, false for 0
+     * @param bdIndex bank descriptor index 0:07777
+     * @param offset offset 0:0777777
+     */
     public VirtualAddress(
         final boolean execFlag,
         final boolean levelFlag,
-        final short bdIndex,
+        final int bdIndex,
         final int offset
     ) {
         super(getValue(execFlag, levelFlag, bdIndex, offset));
@@ -41,56 +45,24 @@ public class VirtualAddress extends Word36 {
 
     /**
      * Extended mode initial value constructor
-     * <p>
-     * @param level
-     * @param bdIndex
-     * @param offset
+     * @param level level, 0:7
+     * @param bdIndex bank descriptor index 0:077777
+     * @param offset offset 0:0777777
      */
     public VirtualAddress(
-        final byte level,
-        final short bdIndex,
+        final int level,
+        final int bdIndex,
         final int offset
     ) {
         super(getValue(level, bdIndex, offset));
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getBankDescriptorIndex(
-    ) {
-        return getH1() & 077777;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getLevel(
-    ) {
-        return getW() >> 33;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getOffset(
-    ) {
-        return getH2();
-    }
+    public int getBankDescriptorIndex() { return (int) (getH1() & 077777); }
+    public int getLevel() { return (int) (getW() >> 33); }
+    public int getOffset() { return (int) getH2(); }
 
     /**
      * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)
-     * <p>
-     * @param execFlag
-     * @param levelFlag
-     * <p>
-     * @return
      */
     public static byte translateBasicToExtended(
         final boolean execFlag,
@@ -105,16 +77,14 @@ public class VirtualAddress extends Word36 {
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
-     * <p>
-     * @param level
-     * @param bdIndex
-     * @param offset
-     * <p>
-     * @return
+     * @param level level, 0:7
+     * @param bdIndex bank descriptor index 0:077777
+     * @param offset offset 0:0777777
+     * @return composite 36-bit value
      */
     public static long getValue(
-        final byte level,
-        final short bdIndex,
+        final int level,
+        final int bdIndex,
         final int offset
     ) {
         long value = (long)(level & 07) << 33;
@@ -125,56 +95,25 @@ public class VirtualAddress extends Word36 {
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
-     * <p>
-     * @param execFlag
-     * @param levelFlag
-     * @param bdIndex
-     * @param offset
-     * <p>
-     * @return
+     * @param execFlag basic mode exec flag
+     * @param levelFlag basic mode level flag
+     * @param bdIndex bank descriptor index 0:07777
+     * @param offset offset 0:0777777
+     * @return composite 36-bit value
      */
     public static long getValue(
         final boolean execFlag,
         final boolean levelFlag,
-        final short bdIndex,
+        final int bdIndex,
         final int offset
     ) {
         long value = (long)(translateBasicToExtended(execFlag, levelFlag) & 07) << 33;
-        value |= (long)(bdIndex & 077777) << 18;
+        value |= (long)(bdIndex & 07777) << 18;
         value |= (offset & 0777777);
         return value;
     }
 
-    /**
-     * Sets the BDI portion of this value
-     * <p>
-     * @param bdIndex
-     */
-    public void setBankDescriptorIndex(
-        final int bdIndex
-    ) {
-        setH1((getH1() & 0700000) | (bdIndex & 077777));
-    }
-
-    /**
-     * Sets the level portion of this value
-     * <p>
-     * @param level
-     */
-    public void setLevel(
-        final byte level
-    ) {
-        setH1((getH1() & 077777) | ((level & 07) << 15));
-    }
-
-    /**
-     * Sets the offset portion of this value
-     * <p>
-     * @param offset
-     */
-    public void setOffset(
-        final int offset
-    ) {
-        setH2(offset);
-    }
+    public void setBankDescriptorIndex(int bdIndex) { setH1((getH1() & 0700000) | (bdIndex & 077777)); }
+    public void setLevel(int level) { setH1((getH1() & 077777) | ((level & 07) << 15)); }
+    public void setOffset(int offset) { setH2(offset); }
 }
