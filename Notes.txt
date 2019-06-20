@@ -188,3 +188,18 @@ directives
 * Mina - wrapper around minalib
 
 * Exec - using Mina (or minalib, but hopefully mina)
+Subsystems:
+  Init
+  Console (can we farm this out to SCP?)
+  CoreScheduler
+  JobScheduler
+  IO
+  MFD
+  ProgFileSystem
+  Facilities
+  RSI
+  Spooler
+  Loader (load, swap, etc)
+  MemoryMgr
+  TIP
+  CSI
