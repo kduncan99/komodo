@@ -2726,4 +2726,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
         assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
     }
+
+    //  TODO testRelativeAddressRange ... some day when we care more about it
+
+    //  TODO lots of testVirtualAddress tests
 }

@@ -150,13 +150,13 @@ public class InstructionProcessor extends Processor implements Worker {
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is false
      */
-    private static final int[] BASE_REGISTER_CANDIDATES_FALSE = {12, 14, 13, 15};
+    public static final int[] BASE_REGISTER_CANDIDATES_FALSE = {12, 14, 13, 15};
 
     /**
      * Order of base register selection for Basic Mode address resolution
      * when the Basic Mode Base Register Selection Designator Register bit is true
      */
-    private static final int[] BASE_REGISTER_CANDIDATES_TRUE = {13, 15, 12, 14};
+    public static final int[] BASE_REGISTER_CANDIDATES_TRUE = {13, 15, 12, 14};
 
     /**
      * ActiveBaseTable entries - index 0 is for B1 .. index 14 is for B15.  There is no entry for B0.
@@ -169,11 +169,11 @@ public class InstructionProcessor extends Processor implements Worker {
     private static final Map<InstructionProcessor, HashSet<AbsoluteAddress>> _storageLocks = new HashMap<>();
 
     private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
-    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, -1);
+    private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
     private final InstructionWord           _currentInstruction = new InstructionWord();
-    private InstructionHandler _currentInstructionHandler = null;  //  TODO do we need this?
+    private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
     private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it

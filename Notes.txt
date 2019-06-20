@@ -1,7 +1,7 @@
 -- InProgress
 IP: implement standard bank switching logic
 IP: address space management instructions (and unit tests)
-  TRARS, TVA
+  TVA
 IP: extended mode procedure call instructions (and unit tests)
   GOTO, CALL, LOCL, RTN
 IP: basic mode procedure call instructions (and unit tests)
