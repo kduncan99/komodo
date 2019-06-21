@@ -145,6 +145,21 @@ public class BankDescriptor extends ArraySlice {
     }
 
     /**
+     * Determines which set of permissions are allowed based on comparison of the given key, to our lock.
+     */
+    public AccessPermissions getEffectiveAccesPermissions(
+        final AccessInfo key
+    ) {
+        AccessInfo lock = getAccessLock();
+        if ((key._ring > lock._ring)
+            || ((key._ring == lock._ring) && (key._domain == lock._domain))) {
+            return getSpecialAccessPermissions();
+        } else {
+            return getGeneraAccessPermissions();
+        }
+    }
+
+    /**
      * Special Getter
      * @return Execute, Read, and Write permissions for ring/domain at a lower level
      *          BD.GAP:Word 0 Bits 0-2

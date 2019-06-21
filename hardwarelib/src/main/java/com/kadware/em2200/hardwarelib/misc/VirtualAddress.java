@@ -62,20 +62,6 @@ public class VirtualAddress extends Word36 {
     public int getOffset() { return (int) getH2(); }
 
     /**
-     * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)
-     */
-    public static byte translateBasicToExtended(
-        final boolean execFlag,
-        final boolean levelFlag
-    ) {
-        if (execFlag) {
-            return levelFlag ? (byte)0 : (byte)2;
-        } else {
-            return levelFlag ? (byte)6 : (byte)4;
-        }
-    }
-
-    /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
      * @param level level, 0:7
      * @param bdIndex bank descriptor index 0:077777
@@ -107,7 +93,7 @@ public class VirtualAddress extends Word36 {
         final int bdIndex,
         final int offset
     ) {
-        long value = (long)(translateBasicToExtended(execFlag, levelFlag) & 07) << 33;
+        long value = (long)(translateBasicToExtendedLevel(execFlag, levelFlag) & 07) << 33;
         value |= (long)(bdIndex & 07777) << 18;
         value |= (offset & 0777777);
         return value;
@@ -116,4 +102,52 @@ public class VirtualAddress extends Word36 {
     public void setBankDescriptorIndex(int bdIndex) { setH1((getH1() & 0700000) | (bdIndex & 077777)); }
     public void setLevel(int level) { setH1((getH1() & 077777) | ((level & 07) << 15)); }
     public void setOffset(int offset) { setH2(offset); }
+
+    /**
+     * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)
+     */
+    public static int translateBasicToExtendedLevel(
+        final boolean execFlag,
+        final boolean levelFlag
+    ) {
+        if (execFlag) {
+            return levelFlag ? (byte)0 : (byte)2;
+        } else {
+            return levelFlag ? (byte)6 : (byte)4;
+        }
+    }
+
+    /**
+     * Translates this L,BDI,OFFSET bank name to E,LS,BDI,OFFSET format
+     */
+    public long translateToBasicMode() {
+        boolean execFlag = true;
+        boolean levelSpecFlag = true;
+        int bdi = 0;
+
+        if (getBankDescriptorIndex() <= 07777) {
+            bdi = getBankDescriptorIndex();
+            switch (getLevel()) {
+                case 0:
+                    break;
+
+                case 2:
+                    levelSpecFlag = false;
+                    break;
+
+                case 4:
+                    execFlag = false;
+                    levelSpecFlag = false;
+                    break;
+
+                case 6:
+                    execFlag = false;
+            }
+        }
+
+        return (execFlag ? 0_400000_000000L : 0)
+               | (levelSpecFlag ? 0_040000_000000L : 0)
+               | (bdi << 18)
+               | getOffset();
+    }
 }

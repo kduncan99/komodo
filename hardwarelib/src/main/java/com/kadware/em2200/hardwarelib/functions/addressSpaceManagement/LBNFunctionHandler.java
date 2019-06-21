@@ -47,7 +47,7 @@ public class LBNFunctionHandler extends InstructionHandler {
             bankName = (int) va.getH1();
             skip = true;
         } else {
-            BankDescriptor bd = ip.findBankDescriptor(origLevel, origBDI);
+            BankDescriptor bd = getBankDescriptor(ip, iw, origLevel, origBDI, false, false);
             if (bd.getBankType() == BankDescriptor.BankType.QueueRepository) {
                 throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
                                                        origLevel,
@@ -69,7 +69,6 @@ public class LBNFunctionHandler extends InstructionHandler {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
-
 
     @Override
     public Instruction getInstruction() { return Instruction.LBN; }

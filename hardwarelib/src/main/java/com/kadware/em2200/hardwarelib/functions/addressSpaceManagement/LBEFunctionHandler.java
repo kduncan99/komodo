@@ -28,7 +28,7 @@ public class LBEFunctionHandler extends InstructionHandler {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
 
-        loadBank(ip, (int) iw.getA() + 16);
+        loadBank(ip, iw, (int) iw.getA() + 16);
     }
 
     @Override

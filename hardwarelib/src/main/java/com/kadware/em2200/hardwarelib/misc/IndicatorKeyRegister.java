@@ -28,22 +28,22 @@ public class IndicatorKeyRegister extends Word36 {
         super(value);
     }
 
-    public long getShortStatusField() { return getS1(); }
-    public long getMidInstructionDescription() { return getS2() >> 3; }
-    public long getPendingInterruptInformation() { return getS2() & 07; }
-    public long getInterruptClassField() { return getS3(); }
-    public long getAccessKey() { return getH2(); }
+    public int getShortStatusField() { return (int) getS1(); }
+    public int getMidInstructionDescription() { return (int) (getS2() >> 3); }
+    public int getPendingInterruptInformation() { return (int) (getS2() & 07); }
+    public int getInterruptClassField() { return (int) getS3(); }
+    public int getAccessKey() { return (int) getH2(); }
     public AccessInfo getAccessInfo() { return new AccessInfo(getAccessKey()); }
     public boolean getInstructionInF0() { return (getMidInstructionDescription() & 04) != 0; }
     public boolean getExecuteRepeatedInstruction() { return (getMidInstructionDescription() & 02) != 0; }
     public boolean getBreakpointRegisterMatchCondition() { return (getPendingInterruptInformation() & 04) != 0; }
     public boolean getSoftwareBreak() { return (getPendingInterruptInformation() & 02) != 0; }
 
-    public void setShortStatusField(long value) { setS1(value); }
-    public void setMidInstructionDescription(long value) { _value = (_value & 0_770777_777777L) | ((value & 07) << 27); }
-    public void setPendingInterruptInformation(long value) { _value = (_value & 0_777077_777777L) | ((value & 07) << 24); }
-    public void setInterruptClassField(long value) { setS3(value); }
-    public void setAccessKey(long value) { setH2(value); }
+    public void setShortStatusField(int value) { setS1(value); }
+    public void setMidInstructionDescription(int value) { _value = (_value & 0_770777_777777L) | ((value & 07) << 27); }
+    public void setPendingInterruptInformation(int value) { _value = (_value & 0_777077_777777L) | ((value & 07) << 24); }
+    public void setInterruptClassField(int value) { setS3(value); }
+    public void setAccessKey(int value) { setH2(value); }
 
     public void setInstructionInF0(
         final boolean flag

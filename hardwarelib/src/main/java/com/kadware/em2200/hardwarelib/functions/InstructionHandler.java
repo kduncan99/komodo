@@ -77,6 +77,39 @@ public abstract class InstructionHandler extends FunctionHandler {
         }
     }
 
+    private static class LoadBankJumpInfo {
+        private final int _brIndex; //  Index of BR involved in this request 0:31
+        private final Instruction _instruction;
+        private final InstructionProcessor _instructionProcessor;
+        private final int _offset;
+        private final BankDescriptor _sourceBankDescriptor;
+        private final int _sourceBankDescriptorIndex;
+        private final int _sourceBankLevel;
+
+        private LoadBankJumpInfo(
+            final InstructionProcessor ip,
+            final Instruction instruction,
+            final int brIndex,
+            final int sourceBankLevel,
+            final int sourceBankDescriptorIndex,
+            final BankDescriptor sourceBankDescriptor,
+            final int offset
+        ) {
+            _instruction = instruction;
+            _instructionProcessor = ip;
+            _brIndex = brIndex;
+            _offset = offset;
+            _sourceBankDescriptor = sourceBankDescriptor;
+            _sourceBankDescriptorIndex = sourceBankDescriptorIndex;
+            _sourceBankLevel = sourceBankLevel;
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Internal worker methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Worker methods for the subclasses
@@ -116,10 +149,68 @@ public abstract class InstructionHandler extends FunctionHandler {
     }
 
     /**
+     * Retrieves a BankDescriptor object representing the BD entry in a particular BDT.
+     * @param ip reference to InstructionProcessor
+     * @param iw reference to the invoking instruction word (F0)
+     * @param bankLevel level of the bank of interest (0:7)
+     * @param bankDescriptorIndex BDI of the bank of interest (0:077777)
+     * @param throwFatal Set reason to FatalAddressingException if we throw an AddressingExceptionInterrupt for a bad
+     *                   specified leval/BDI, otherwise the reason will be InvalidSourceLevelBDI.
+     * @return BankDescriptor object for all possibilities other than level,bdi == 0,0 - null otherwise
+     */
+    protected BankDescriptor getBankDescriptor(
+        final InstructionProcessor ip,
+        final InstructionWord iw,
+        final int bankLevel,
+        final int bankDescriptorIndex,
+        final boolean followIndirectOrGate,
+        final boolean throwFatal
+    ) throws AddressingExceptionInterrupt {
+        if (bankLevel == 0) {
+            if (bankDescriptorIndex == 0) {
+                return null;
+            } else if (bankDescriptorIndex < 32) {
+                AddressingExceptionInterrupt.Reason reason =
+                    throwFatal ? AddressingExceptionInterrupt.Reason.FatalAddressingException
+                               : AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI;
+                throw new AddressingExceptionInterrupt(reason, bankLevel, bankDescriptorIndex);
+            }
+        }
+
+        int bdRegIndex = bankLevel + 16;
+        ArraySlice bdStorage = ip.getBaseRegister(bdRegIndex)._storage;
+        int bdTableOffset = 8 * bankDescriptorIndex;
+        if (bdTableOffset + 8 > bdStorage.getSize()) {
+            AddressingExceptionInterrupt.Reason reason =
+                throwFatal ? AddressingExceptionInterrupt.Reason.FatalAddressingException
+                           : AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI;
+            throw new AddressingExceptionInterrupt(reason, bankLevel, bankDescriptorIndex);
+        }
+
+        //  Create a BankDescriptor object, maybe follow gates and indirects...
+        BankDescriptor bd = new BankDescriptor(bdStorage, bdTableOffset);
+        if (followIndirectOrGate) {
+            BankDescriptor.BankType bankType = bd.getBankType();
+            if ((bankType == BankDescriptor.BankType.Gate) || (bankType == BankDescriptor.BankType.Indirect)) {
+                int targetLBDI = bd.getTargetLBDI();
+                return getBankDescriptor(ip,
+                                         iw,
+                                         targetLBDI >> 15,
+                                         targetLBDI & 077777,
+                                         false,
+                                         true);
+            }
+        }
+
+        return bd;
+    }
+
+    /**
      * All the common functional stuff needed for LBE and LBU.
      */
     protected void loadBank(
         final InstructionProcessor ip,
+        final InstructionWord iw,
         final int baseRegisterIndex
     ) throws MachineInterrupt,
              UnresolvedAddressException {
@@ -128,29 +219,20 @@ public abstract class InstructionHandler extends FunctionHandler {
         int bankDescriptorIndex = (int) (op >> 18) & 077777;
         int offset = (int) (op & 0777777);
         Instruction instruction = getInstruction();
-        boolean lbe = instruction == Instruction.LBE;
         boolean lbu = instruction == Instruction.LBU;
 
-        if ((bankLevel == 0) & ((bankDescriptorIndex > 0) && (bankDescriptorIndex < 32))) {
-            if (lbe) {
-                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                       bankLevel,
-                                                       bankDescriptorIndex);
-            } else if (lbu) {
-                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
-                                                       bankLevel,
-                                                       bankDescriptorIndex);
-            }
-        }
-
-        boolean voidBank = (bankLevel == 0) && (bankDescriptorIndex == 0);
+        BankDescriptor bdSource = getBankDescriptor(ip,
+                                                    iw,
+                                                    bankLevel,bankDescriptorIndex,
+                                                    true,
+                                                    false);
+        boolean voidBank = bdSource == null;
         BankDescriptor bdTarget = new BankDescriptor();
         if (!voidBank) {
-            BankDescriptor bdSource = ip.findBankDescriptor(bankLevel, bankDescriptorIndex);
             switch (bdSource.getBankType()) {
                 case BasicMode:
                     if (lbu) {
-                        if ( ip.getDesignatorRegister().getProcessorPrivilege() < 2 ) {
+                        if (ip.getDesignatorRegister().getProcessorPrivilege() < 2) {
                             bdTarget = bdSource;
                         } else {
                             if ((bdSource.getGeneraAccessPermissions()._enter) || (bdSource.getSpecialAccessPermissions()._enter)) {
@@ -161,15 +243,6 @@ public abstract class InstructionHandler extends FunctionHandler {
                         }
                     } else {
                         bdTarget = bdSource;
-                    }
-                    break;
-
-                case Indirect:
-                    LoadBankIndirectInfo lbiInfo = new LoadBankIndirectInfo(ip, bdSource, instruction);
-                    loadBankIndirect(lbiInfo);
-                    bdTarget = lbiInfo._bdTarget;
-                    if (lbiInfo._treatAsVoid) {
-                        voidBank = true;
                     }
                     break;
 
@@ -200,59 +273,279 @@ public abstract class InstructionHandler extends FunctionHandler {
     }
 
     /**
-     * Handles the case where the source bank loaded by LBU or LBE is an indirect bank
-     * @param lbiInfo info struct
-     * @throws MachineInterrupt as appropriate
+     * Common code for LBJ, LIJ, and LDJ...
+     * This is only called from basic mode, but *might* transition to extended mode.
+     * If we stay in basic mode, we load a bank for one of B12:B15; for extended mode, for B0.
      */
-    private void loadBankIndirect(
-        final LoadBankIndirectInfo lbiInfo
+    protected void loadBankJump(
+        final InstructionProcessor ip,
+        final InstructionWord iw
     ) throws MachineInterrupt {
-        int targetLBDI = lbiInfo._bdSource.getTargetLBDI();
-        int targetLevel = targetLBDI >> 15;
-        int targetBankDescriptorIndex = targetLBDI & 077777;
-
-        if ((targetLevel == 0) && (targetBankDescriptorIndex < 32)) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   targetLevel,
-                                                   targetBankDescriptorIndex);
+        int regIndex = (int) iw.getA();
+        if (regIndex == 0) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidLinkageRegister);
         }
 
-        if (lbiInfo._bdSource.getGeneralFault()) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   targetLevel,
-                                                   targetBankDescriptorIndex);
+        boolean ldj = getInstruction() == Instruction.LDJ;
+        boolean lij = getInstruction() == Instruction.LIJ;
+
+        //  Split out the various fields
+        IndexRegister linkageRegister = ip.getExecOrUserXRegister((int) iw.getA());
+        long lrValue = linkageRegister.getW();
+        boolean execFlag = (lrValue & 0_400000_000000L) != 0;
+        int brIndex = (int) ((lrValue & 0_300000_000000L) >> 33) + 12;// TODO Depends on whether LBJ, LIJ, or LDJ
+        boolean levelSpec = (lrValue & 0_040000_000000L) != 0;
+        int interfaceSpec = (int) ((lrValue & 0_030000_000000L) >> 30);
+        int sourceBankDescriptorIndex = (int) ((lrValue & 0_007777_000000L) >> 18);
+
+        //  Find the source BD (which is the bank to be based).
+        int sourceLevel = VirtualAddress.translateBasicToExtendedLevel(execFlag, levelSpec);
+        BaseRegister bdtBaseRegister = ip.getBaseRegister(sourceLevel + 16);
+        int bdtOffset = 8 * sourceBankDescriptorIndex;
+        bdtBaseRegister.checkAccessLimits(bdtOffset,
+                                          false,
+                                          true,
+                                          false,
+                                          ip.getIndicatorKeyRegister().getAccessInfo());
+
+        BankDescriptor bdSource = getBankDescriptor(ip,
+                                                    iw,
+                                                    sourceLevel,
+                                                    sourceBankDescriptorIndex,
+                                                    false,
+                                                    false);
+
+        AccessPermissions bdSourcePerms = bdSource.getEffectiveAccesPermissions(ip.getIndicatorKeyRegister().getAccessInfo());
+        BankDescriptor.BankType sourceBankType = bdSource.getBankType();
+        boolean basic = sourceBankType == BankDescriptor.BankType.BasicMode;
+        boolean extended = sourceBankType == BankDescriptor.BankType.ExtendedMode;
+        boolean noEnter = extended && !bdSourcePerms._enter;
+        boolean gate = sourceBankType == BankDescriptor.BankType.Gate;
+
+        LoadBankJumpInfo lbjInfo = new LoadBankJumpInfo(ip,
+                                                        getInstruction(),
+                                                        brIndex,
+                                                        sourceLevel,
+                                                        sourceBankDescriptorIndex,
+                                                        bdSource,
+                                                        (int) linkageRegister.getH2());
+
+        switch (interfaceSpec) {
+            case 0:
+                if (basic || (extended && noEnter)) {
+                    loadBankJumpCase1(lbjInfo);  //  Normal LBJ
+                } else if (extended || gate) {
+                    loadBankJumpCase2(lbjInfo);  //  LBJ/CALL
+                } else {
+                    //  Bad bank type
+                }
+                break;
+
+            case 1:
+                if (basic || (extended && noEnter)) {
+                    loadBankJumpCase1(lbjInfo);  //  Normal LBJ
+                } else if (extended || gate) {
+                    loadBankJumpCase3(lbjInfo);  //  LBJ/GOTO
+                } else {
+                    //  Bad bank type
+                }
+                break;
+
+            case 2:
+                //  get DB16 from RCS
+                //  If DB16 is set, case4() else case5()
+                break;
+
+            case 3:
+                //  Illegal ISpec
+                break;
         }
+    }
 
-        try {
-            lbiInfo._bdTarget = lbiInfo._instructionProcessor.findBankDescriptor(targetLevel, targetBankDescriptorIndex);
-            switch (lbiInfo._bdTarget.getBankType()) {
-                case BasicMode:
-                    if (lbiInfo._instruction == Instruction.LBU) {
-                        if ( (lbiInfo._instructionProcessor.getDesignatorRegister()
-                            .getProcessorPrivilege() > 1)
-                            && (!lbiInfo._bdTarget.getGeneraAccessPermissions()._enter)
-                            && (!lbiInfo._bdTarget.getSpecialAccessPermissions()._enter) ) {
-                            lbiInfo._treatAsVoid = true;
-                        }
-                    }
-                    break;
+    /**
+     * LxJ Case 1:Implements normal LxJ algorithm
+     * @param lbjInfo
+     * @throws MachineInterrupt
+     */
+    private void loadBankJumpCase1(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        InstructionProcessor ip = lbjInfo._instructionProcessor;
 
-                case Indirect:
-                    //  Not sure if this is possible, but it is certainly not allowed
-                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
-                                                           targetLevel,
-                                                           targetBankDescriptorIndex);
+        //  Step 1 get prior L,BDI
+        ActiveBaseTableEntry abte = ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1];
+        int priorBDI = abte.getBDI();
+        int priorLevel = abte.getLevel();
+        int priorSubset = abte.getSubsetOffset();
 
-                case QueueRepository:
-                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
-                                                           targetLevel,
-                                                           targetBankDescriptorIndex);
-            }
-        } catch (AddressingExceptionInterrupt aex) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   aex.getBankLevel(),
-                                                   aex.getBankDescriptorIndex());
-        }
+        //  Step 2 Translate X(a) basic mode Virtual Address to L,BDI, then determine final target bank...
+        //  Gate processing may occur.
+        //TODO
+
+        //  Step 3 Translate prior L,BDI to E,LS,BDI, write that and PAR.PC + 1 to X(a)
+        long basicVaddr = new VirtualAddress(lbjInfo._sourceBankLevel,
+                                             lbjInfo._sourceBankDescriptorIndex,
+                                             lbjInfo._offset).translateToBasicMode();
+        long newXValue = basicVaddr;
+        newXValue |= (long)(lbjInfo._brIndex & 03) << 33;
+        int newParPC = lbjInfo._instructionProcessor.getProgramAddressRegister().getProgramCounter() + 1;
+        newXValue = (newXValue & (0_777777_000000L)) | newParPC;
+
+        //  Step 4 DB16 and access key -> User X(0)
+        long x0Value = ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0;
+        x0Value |= ip.getIndicatorKeyRegister().getAccessKey();
+        ip.getGeneralRegister(0).setW(x0Value);
+
+        //  Step 5 If a gate was processed... fun stuff
+        //TODO
+
+        //  Step 6 ABT is updated, and PAR.PC is set to U(18:35), and ABT(n).Offset is set to 0
+        //TODO
+
+        //  Step 7 BankRegister is created for B(whatever)
+        //TODO
+
+        //  Step 8 DB31 is set appropriately
+        //TODO
+
+        //  Step 9 If target BD.G is set, or selection of base register error occurs,
+        //  throw terminal addressing exception
+        //TODO
+    }
+
+    /**
+     * LxJ Case 2:Implements LxJ/CALL
+     * @param lbjInfo
+     * @throws MachineInterrupt
+     */
+    private void loadBankJumpCase2(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow
+        //TODO
+
+        //  Step 2 Fetch prior L,BDI from ABT
+        //TODO
+
+        //  Step 3 Translate Xa basic mode Virtual Address to Source L,BDI including gate processing
+        //TODO
+
+        //  Step 4 Mixed mode transfer is to occur, B0 is to be loaded, while X(a) is to be marked void
+        //TODO
+
+        //  Step 5 Create RCS frame
+        //TODO
+
+        //  Step 6 DB16 and access key stored in user X0.
+        //TODO
+
+        //  Step 7 If a gate was processed, then do some fun stuff
+        //TODO
+
+        //  Step 8 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
+        //TODO
+
+        //  Step 9 Appropriate values are loaded into B0
+        //TODO
+
+        //  Step 10 If final based bank has g bit set, throw terminal addressing interrupt
+        //TODO
+    }
+
+    /**
+     * LxJ Case 3:Implements LxJ/GOTO
+     * @param lbjInfo
+     * @throws MachineInterrupt
+     */
+    private void loadBankJumpCase3(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 Translate Xa basic mode Virtual Address to Source L,BDI including gate processing
+        //TODO
+
+        //  Step 2 Mixed mode transfer is to occur, B0 is to be loaded, while X(a) is to be marked void
+        //TODO
+
+        //  Step 3 DB16 and access key stored in user X0.
+        //TODO
+
+        //  Step 4 If a gate was processed, then do some fun stuff
+        //TODO
+
+        //  Step 5 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
+        //TODO
+
+        //  Step 6 Appropriate values are loaded into B0
+        //TODO
+
+        //  Step 7 If final based bank has g bit set, throw terminal addressing interrupt
+        //TODO
+    }
+
+    /**
+     * LxJ Case 4:Implements LxJ/RETURN to basic mode
+     * @param lbjInfo
+     * @throws MachineInterrupt
+     */
+    private void loadBankJumpCase4(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow
+        //TODO
+
+        //  Step 2 determine final target bank
+        //TODO
+
+        //  Step 3 RTN to basic mode - load one of B12:B15 - which one is determined by RCS.B + 12
+        //TODO
+
+        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
+        //TODO
+
+        //  Step 5 ABT(n) set to RCS:L,BDI
+        //      PAR.PC set to RCS.offset
+        //      ABT(n).offset set to 0
+        //TODO
+
+        //  Step 6 BankRegister is created for B(n) that we are transferring to
+        //TODO
+
+        //  Step 7 DB31 is set
+        //TODO
+
+        //  Step 8 if BD.G or RCS.Trap, throw terminal addressing exception
+        //TODO
+    }
+
+    /**
+     * LxJ Case 5:Implements LxJ/RETURN to extended mode
+     * @param lbjInfo
+     * @throws MachineInterrupt
+     */
+    private void loadBankJumpCase5(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow
+        //TODO
+
+        //  Step 2 determine final target bank
+        //TODO
+
+        //  Step 3 return to extended mode, B0 will be loaded, and the BR for the bank we came from is set void
+        //TODO
+
+        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
+        //TODO
+
+        //  Step 5 PAR.L,BDI set to RCS.L,BDI
+        //      PAR.PC set to RCS.offset
+        //TODO
+
+        //  Step 6 BankRegister is created for B(0)
+        //TODO
+
+        //  Step 7 if BD.G or RCS.Trap, throw terminal addressing exception
+        //TODO
     }
 
     /**

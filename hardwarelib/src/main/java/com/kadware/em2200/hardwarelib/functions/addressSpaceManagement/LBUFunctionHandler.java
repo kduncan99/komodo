@@ -33,7 +33,7 @@ public class LBUFunctionHandler extends InstructionHandler {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
         }
 
-        loadBank(ip, brIndex);
+        loadBank(ip, iw, brIndex);
     }
 
     @Override

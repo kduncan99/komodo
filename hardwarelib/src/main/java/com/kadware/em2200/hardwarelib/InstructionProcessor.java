@@ -64,64 +64,64 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private static class BasicModeBankName extends Word36 {
+//    private static class BasicModeBankName extends Word36 {
+//
+//        private BasicModeBankName(
+//            boolean execFlag,
+//            int level,
+//            int bankDescriptorIndex
+//        ) {
+//            _value = ((execFlag ? 1L : 0) << 35) | ((level & 01) << 32) | ((bankDescriptorIndex & 07777) << 18);
+//        }
+//
+//        private boolean getExecFlag() { return (_value >> 35) != 0; }
+//        private int getLevel() { return (int)(_value >> 32) & 01; }
+//        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 07777; }
+//
+//        private ExtendedModeBankName translate() {
+//            if (getExecFlag()) {
+//                if (getLevel() == 1) {
+//                    return new ExtendedModeBankName(0, getBankDescriptorIndex());
+//                } else {
+//                    return new ExtendedModeBankName(2, getBankDescriptorIndex());
+//                }
+//            } else {
+//                if (getLevel() == 0) {
+//                    return new ExtendedModeBankName(4, getBankDescriptorIndex());
+//                } else {
+//                    return new ExtendedModeBankName(6, getBankDescriptorIndex());
+//                }
+//            }
+//        }
+//    }
 
-        private BasicModeBankName(
-            boolean execFlag,
-            int level,
-            int bankDescriptorIndex
-        ) {
-            _value = ((execFlag ? 1L : 0) << 35) | ((level & 01) << 32) | ((bankDescriptorIndex & 07777) << 18);
-        }
-
-        private boolean getExecFlag() { return (_value >> 35) != 0; }
-        private int getLevel() { return (int)(_value >> 32) & 01; }
-        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 07777; }
-
-        private ExtendedModeBankName translate() {
-            if (getExecFlag()) {
-                if (getLevel() == 1) {
-                    return new ExtendedModeBankName(0, getBankDescriptorIndex());
-                } else {
-                    return new ExtendedModeBankName(2, getBankDescriptorIndex());
-                }
-            } else {
-                if (getLevel() == 0) {
-                    return new ExtendedModeBankName(4, getBankDescriptorIndex());
-                } else {
-                    return new ExtendedModeBankName(6, getBankDescriptorIndex());
-                }
-            }
-        }
-    }
-
-    private static class ExtendedModeBankName extends Word36 {
-
-        ExtendedModeBankName(
-            int level,
-            int bankDescriptorIndex
-        ) {
-            _value = ((level & 07) << 33) | ((bankDescriptorIndex & 077777) << 18);
-        }
-
-        private int getLevel() { return (int)(_value >> 33); }
-        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 077777; }
-
-        private BasicModeBankName translate() {
-            int bdi = getBankDescriptorIndex();
-            if (bdi > 07777) {
-                return new BasicModeBankName(true, 1, 0);
-            } else {
-                switch (getLevel()) {
-                    case 0:     return new BasicModeBankName(true, 1, bdi);
-                    case 2:     return new BasicModeBankName(true, 0, bdi);
-                    case 4:     return new BasicModeBankName(false, 0, bdi);
-                    case 6:     return new BasicModeBankName(false, 1, bdi);
-                    default:    return new BasicModeBankName(true, 1, 0);
-                }
-            }
-        }
-    }
+//    private static class ExtendedModeBankName extends Word36 {
+//
+//        ExtendedModeBankName(
+//            int level,
+//            int bankDescriptorIndex
+//        ) {
+//            _value = ((level & 07) << 33) | ((bankDescriptorIndex & 077777) << 18);
+//        }
+//
+//        private int getLevel() { return (int)(_value >> 33); }
+//        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 077777; }
+//
+//        private BasicModeBankName translate() {
+//            int bdi = getBankDescriptorIndex();
+//            if (bdi > 07777) {
+//                return new BasicModeBankName(true, 1, 0);
+//            } else {
+//                switch (getLevel()) {
+//                    case 0:     return new BasicModeBankName(true, 1, bdi);
+//                    case 2:     return new BasicModeBankName(true, 0, bdi);
+//                    case 4:     return new BasicModeBankName(false, 0, bdi);
+//                    case 6:     return new BasicModeBankName(false, 1, bdi);
+//                    default:    return new BasicModeBankName(true, 1, 0);
+//                }
+//            }
+//        }
+//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -370,7 +370,7 @@ public class InstructionProcessor extends Processor implements Worker {
      *  +6      Interrupt Status Word 1
      *  +7 - ?  Reserved for software
      */
-
+    //TODO do we need this anymore?
     private void baseBank(
         final int baseRegisterIndex,
         final int levelBDI
@@ -808,12 +808,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Calculates the raw relative address (the U) for the current instruction.
      * Does NOT increment any x registers, even if their content contributes to the result.
-     * @param offset For multiple transfer instructions which need to calculate U for each transfer,
-     *                  this value increments from zero upward by one.
      * @return relative address for the current instruction
      */
     private int calculateRelativeAddressForJump(
-        final int offset
     ) {
         IndexRegister xReg = null;
         int xx = (int)_currentInstruction.getX();
@@ -841,12 +838,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
         }
 
-        long result = OnesComplement.add36Simple(addend1, addend2);
-        if (offset != 0) {
-            result = OnesComplement.add36Simple(result, offset);
-        }
-
-        return (int) result;
+        return (int) OnesComplement.add36Simple(addend1, addend2);
     }
 
     /**
@@ -1005,6 +997,41 @@ public class InstructionProcessor extends Processor implements Worker {
         int pcOffset = programCounter - bReg._lowerLimitNormalized;
         _currentInstruction.setW(bReg._storage.get(pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
+    }
+
+    /**
+     * Retrieves a BankDescriptor to describe the given named bank.  This is for interrupt handling.
+     * The bank name is in L,BDI format.
+     * @param bankLevel level of the bank, 0:7
+     * @param bankDescriptorIndex BDI of the bank 0:077777
+     * @return BankDescriptor object unless l,bdi is 0,0, in which case we return null
+     */
+    private BankDescriptor findBankDescriptor(
+        final int bankLevel,
+        final int bankDescriptorIndex
+    ) throws MachineInterrupt {
+        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
+        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
+        // where {n} is the bank descriptor index.
+        int bdRegIndex = bankLevel + 16;
+        if (_baseRegisters[bdRegIndex]._voidFlag) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  bdStorage contains the BDT for the given bank_name level
+        //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
+        ArraySlice bdStorage = _baseRegisters[bdRegIndex]._storage;
+        int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
+        if (bdTableOffset + 8 > bdStorage.getSize()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  Create and return a BankDescriptor object
+        return new BankDescriptor(bdStorage, bdTableOffset);
     }
 
     /**
@@ -1567,44 +1594,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Retrieves a BankDescriptor to describe the given named bank.
-     * The bank name is in L,BDI format.
-     * @param bankLevel level of the bank, 0 to 7
-     * @param bankDescriptorIndex BDI of the bank
-     * @return BankDescriptor object
-     */
-    public BankDescriptor findBankDescriptor(
-        final int bankLevel,
-        final int bankDescriptorIndex
-    ) throws MachineInterrupt {
-        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
-        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
-        // where {n} is the bank descriptor index.
-        assert((bankLevel >= 0) && (bankLevel <= 7));
-        assert((bankDescriptorIndex >= 0) && (bankDescriptorIndex <= 077777));
-
-        int bdRegIndex = bankLevel + 16;
-        if (_baseRegisters[bdRegIndex]._voidFlag) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
-        }
-
-        //  bdStorage contains the BDT for the given bank_name level
-        //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
-        ArraySlice bdStorage = _baseRegisters[bdRegIndex]._storage;
-        int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bdTableOffset + 8 > bdStorage.getSize()) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
-        }
-
-        //  Create and return a BankDescriptor object
-        return new BankDescriptor(bdStorage, bdTableOffset);
-    }
-
-    /**
      * Calculates the raw relative address (the U) for the current instruction presuming basic mode (even if it isn't set),
      * honors any indirect addressing, and returns the index of the basic mode bank (12-15) which corresponds to the
      * final address, increment the X registers if/as appropriate, but not updating the designator register.
@@ -1884,7 +1873,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final boolean updateDesignatorRegister
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForJump(0);
+        int relAddress = calculateRelativeAddressForJump();
 
         //  The following bit is how we deal with indirect addressing for basic mode.
         //  If we are doing that, it will update the U portion of the current instruction with new address information,
