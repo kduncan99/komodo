@@ -81,6 +81,7 @@ public abstract class InstructionHandler extends FunctionHandler {
         private final int _brIndex; //  Index of BR involved in this request 0:31
         private final Instruction _instruction;
         private final InstructionProcessor _instructionProcessor;
+        private final int _jumpAddress;
         private final int _offset;
         private final BankDescriptor _sourceBankDescriptor;
         private final int _sourceBankDescriptorIndex;
@@ -90,6 +91,7 @@ public abstract class InstructionHandler extends FunctionHandler {
             final InstructionProcessor ip,
             final Instruction instruction,
             final int brIndex,
+            final int jumpAddress,
             final int sourceBankLevel,
             final int sourceBankDescriptorIndex,
             final BankDescriptor sourceBankDescriptor,
@@ -98,6 +100,7 @@ public abstract class InstructionHandler extends FunctionHandler {
             _instruction = instruction;
             _instructionProcessor = ip;
             _brIndex = brIndex;
+            _jumpAddress = jumpAddress;
             _offset = offset;
             _sourceBankDescriptor = sourceBankDescriptor;
             _sourceBankDescriptorIndex = sourceBankDescriptorIndex;
@@ -109,6 +112,345 @@ public abstract class InstructionHandler extends FunctionHandler {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Internal worker methods
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Given a lock and key, we return whichever of the general or special permissions should be observed
+     */
+    private AccessPermissions getEffectiveAccessPermissions(
+        final AccessInfo key,
+        final AccessInfo lock,
+        final AccessPermissions generalPermissions,
+        final AccessPermissions specialPermissions
+    ) {
+        return ((key._domain > lock._domain) || (key.equals(lock))) ? specialPermissions : generalPermissions;
+    }
+
+    /**
+     * LxJ Case 1:Implements normal LxJ algorithm.
+     * Source bank is either Basic Mode, or Extended Mode with no Enter Access.  IS is 0 or 1.
+     * The basic-to-extended case is special, and designed to allow basic mode programs acces to
+     * extended mode data - the assumption is that the jump is *not* to the newly-based bank.
+     */
+    private void loadBankJumpCase1(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        InstructionProcessor ip = lbjInfo._instructionProcessor;
+
+        //  Step 1 Get prior L,BDI
+        ActiveBaseTableEntry abte = ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1];
+        int priorBDI = abte.getBDI();
+        int priorLevel = abte.getLevel();
+        int priorSubset = abte.getSubsetOffset();
+
+        //  Step 2 Determine final target bank - for this case, it is always the source bank
+        //  so there is nothing to be done.
+
+        //  Step 3 Translate prior L,BDI to E,LS,BDI, write that and PAR.PC + 1 to X(a)
+        VirtualAddress vaPrior = new VirtualAddress(priorLevel, priorBDI, priorSubset);
+        long newXValue = vaPrior.translateToBasicMode();
+        newXValue |= (long)(lbjInfo._brIndex & 03) << 33;
+        int newParPC = ip.getProgramAddressRegister().getProgramCounter() + 1;
+        newXValue = (newXValue & (0_777777_000000L)) | newParPC;
+
+        //  Step 4 DB16 and access key -> User X(0)
+        long x0Value = ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0;
+        x0Value |= ip.getIndicatorKeyRegister().getAccessKey();
+        ip.getGeneralRegister(0).setW(x0Value);
+
+        //  Step 5 If a gate was processed... but it wasn't.  Nothing to do.
+
+        //  Step 6 ABT is updated, and PAR.PC is set to U(18:35), and ABT(n).Offset is set to 0
+        ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1] = new ActiveBaseTableEntry(lbjInfo._sourceBankLevel,
+                                                                                        lbjInfo._sourceBankDescriptorIndex,
+                                                                                        0);
+        ip.setProgramCounter(lbjInfo._jumpAddress, false);
+
+        //  Step 7 BankRegister is created for B(whatever)
+        BaseRegister br = new BaseRegister(lbjInfo._sourceBankDescriptor);
+        if (br._voidFlag) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   lbjInfo._sourceBankLevel,
+                                                   lbjInfo._sourceBankDescriptorIndex);
+        }
+        ip.setBaseRegister(lbjInfo._brIndex, br);
+
+        //  Step 8 DB31 is set appropriately
+        try {
+            int basicBRIndex = ip.getBasicModeBankRegisterIndex();
+            boolean brFlag = (basicBRIndex == 15) || (basicBRIndex == 13);
+            ip.getDesignatorRegister().setBasicModeBaseRegisterSelection(brFlag);
+        } catch (UnresolvedAddressException ex) {
+            //  can't happen... we hope
+            //  Indirect addressing was already completely satisfied, and F0 updated.
+            assert(false);
+        }
+
+        //  Step 9 If target BD.G is set, or selection of base register error occurs,
+        //  throw terminal addressing exception
+        if (lbjInfo._sourceBankDescriptor.getGeneralFault()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   lbjInfo._sourceBankLevel,
+                                                   lbjInfo._sourceBankDescriptorIndex);
+        }
+    }
+
+    /**
+     * LxJ Case 2:Implements LxJ/CALL - Source bank is extended mode or gate bank
+     */
+    private void loadBankJumpCase2(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow - deferred until we actually grab a frame
+
+        //  Step 2 Fetch prior L,BDI from ABT
+        InstructionProcessor ip = lbjInfo._instructionProcessor;
+        ActiveBaseTableEntry abte = ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1];
+        int priorBDI = abte.getBDI();
+        int priorLevel = abte.getLevel();
+        int priorSubset = abte.getSubsetOffset();
+
+        //  Step 3 Determine final target bank.
+        int targetBankLevel = lbjInfo._sourceBankLevel;
+        int targetBankDescriptorIndex = lbjInfo._sourceBankDescriptorIndex;
+        BankDescriptor bdTarget = lbjInfo._sourceBankDescriptor;
+        boolean gate = false;
+        if (bdTarget.getBankType() == BankDescriptor.BankType.Gate) {
+            int targetLBDI = bdTarget.getTargetLBDI();
+            targetBankLevel = targetLBDI >> 15;
+            targetBankDescriptorIndex = targetLBDI & 077777;
+            //TODO gate processing
+            foo();
+        }
+
+        //  Step 4 Mixed mode transfer is to occur.  Set the base register we came from to void.
+        ip.setBaseRegister(lbjInfo._brIndex, new BaseRegister());
+        ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1] = new ActiveBaseTableEntry(0);
+
+        //  Step 5 Create an RCS frame
+        long[] frame = new long[2];
+        int rtnAddr = ip.getProgramAddressRegister().getProgramCounter() + 1;
+        frame[0] = ((long) priorLevel << 33) | ((long) priorBDI << 18) | (rtnAddr & 0777777);
+        frame[1] = (lbjInfo._brIndex << 24)
+            | (ip.getDesignatorRegister().getW() & 0_000077_000000L)
+            | (ip.getIndicatorKeyRegister().getAccessKey());
+        rcsPush(ip, frame);
+
+        //  Step 6 DB16 and access key stored in user X0.
+        long x0Value = ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0;
+        x0Value |= ip.getIndicatorKeyRegister().getAccessKey();
+        ip.getGeneralRegister(0).setW(x0Value);
+
+        //  Step 7 If a gate was processed, then do some fun stuff
+        if (gate) {
+            //TODO
+            /*
+            If a Gate was processed and Gate.DBI = 0, then the hard-held DB12–15 := Gate.DB12-15 and
+            DB17 := Gate.DB17 and/or if Gate.AKI = 0,
+                Indicator/Key_Register.Access_Key := Gate.Access_Key.DB16 := 1, indicating a transfer to
+            Extended_Mode.
+                If a Gate was processed and LP0I = 0, then if either DB17 = 0, User
+            R0 := Gate.Latent_Parameter_0 Value or DB17 = 1, Executive R0 := Gate Latent Parameter 0
+            Value; and/or if LP1I = 0, then if either DB17 = 0, User R1 := Gate.Latent_Parameter_1 Value or
+            DB17 = 1, Executive R1 := Gate.Latent_Parameter_1 Value. Note: writing a Latent Parameter
+            into Executive R0/R1 does not cause a GRS violation regardless of the level of processor
+            privilege in effect.
+             */
+        }
+
+        //  Step 8 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
+        //TODO
+        ip.setProgramCounter(lbjInfo._jumpAddress, false);
+
+        //  Step 9 Appropriate values are loaded into B0
+        BaseRegister br = new BaseRegister(bdTarget);
+        if (br._voidFlag) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   lbjInfo._sourceBankLevel,
+                                                   lbjInfo._sourceBankDescriptorIndex);
+        }
+        ip.setBaseRegister(0, br);
+
+        //  Step 10 If final based bank has g bit set, throw terminal addressing interrupt
+        if (bdTarget.getGeneralFault()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   targetBankLevel,
+                                                   targetBankDescriptorIndex);
+        }
+    }
+
+    /**
+     * LxJ Case 3:Implements LxJ/GOTO
+     */
+    private void loadBankJumpCase3(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 Translate Xa basic mode Virtual Address to Source L,BDI including gate processing
+        //TODO
+
+        //  Step 2 Mixed mode transfer is to occur, B0 is to be loaded, while X(a) is to be marked void
+        //TODO
+
+        //  Step 3 DB16 and access key stored in user X0.
+        //TODO
+
+        //  Step 4 If a gate was processed, then do some fun stuff
+        //TODO
+
+        //  Step 5 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
+        //TODO
+
+        //  Step 6 Appropriate values are loaded into B0
+        //TODO
+
+        //  Step 7 If final based bank has g bit set, throw terminal addressing interrupt
+        //TODO
+    }
+
+    /**
+     * LxJ Case 4:Implements LxJ/RETURN to basic mode
+     */
+    private void loadBankJumpCase4(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow
+        InstructionProcessor ip = lbjInfo._instructionProcessor;
+        int framePointer = rcsPopCheck(ip);
+
+        //  Step 2 determine final target bank
+        //TODO
+
+        //  Step 3 RTN to basic mode - load one of B12:B15 - which one is determined by RCS.B + 12
+        //TODO
+
+        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
+        //TODO
+
+        //  Step 5 ABT(n) set to RCS:L,BDI
+        //      PAR.PC set to RCS.offset
+        //      ABT(n).offset set to 0
+        //TODO
+
+        //  Step 6 BankRegister is created for B(n) that we are transferring to
+        //TODO
+
+        //  Step 7 DB31 is set appropriately
+        //TODO
+
+        //  Step 8 if BD.G or RCS.Trap, throw terminal addressing exception
+        //TODO
+    }
+
+    /**
+     * LxJ Case 5:Implements LxJ/RETURN to extended mode
+     */
+    private void loadBankJumpCase5(
+        final LoadBankJumpInfo lbjInfo
+    ) throws MachineInterrupt {
+        //  Step 1 check for RCS overflow
+        //TODO
+
+        //  Step 2 determine final target bank
+        //TODO
+
+        //  Step 3 return to extended mode, B0 will be loaded, and the BR for the bank we came from is set void
+        //TODO
+
+        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
+        //TODO
+
+        //  Step 5 PAR.L,BDI set to RCS.L,BDI
+        //      PAR.PC set to RCS.offset
+        //TODO
+
+        //  Step 6 BankRegister is created for B(0)
+        //TODO
+
+        //  Step 7 if BD.G or RCS.Trap, throw terminal addressing exception
+        //TODO
+    }
+
+    /**
+     * Buys a 2-word RCS stack frame and populates it appropriately.
+     * rcsPushCheck() must be invoked first.
+     * @param ip instruction processor of interest
+     * @param bField value to be placed in the .B field of the stack frame.
+     * @param framePointer where the frame will be stored (retrieved from rcsPushCheck())
+     */
+    private void rcsPush(
+        final InstructionProcessor ip,
+        final int bField,
+        final int framePointer
+    ) {
+        BaseRegister rcsBReg = ip.getBaseRegister(InstructionProcessor.RCS_BASE_REGISTER);
+        IndexRegister rcsXReg = ip.getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+        rcsXReg.setXM(framePointer);
+
+        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        long reentry = par.getH1() << 18;
+        reentry |= (par.getH2() + 1) & 0777777;
+
+        long state = (bField & 03) << 24;
+        state |= ip.getDesignatorRegister().getW() & 0_000077_000000;
+        state |= ip.getIndicatorKeyRegister().getAccessKey();
+
+        int offset = framePointer - rcsBReg._lowerLimitNormalized;
+        //  ignore the null-dereference warning in the next line
+        rcsBReg._storage.set(offset++, reentry);
+        rcsBReg._storage.set(offset, state);
+    }
+
+    /**
+     * Buys a 2-word RCS stack frame and populates it with the given data
+     * rcsPushCheck() must be invoked first.
+     * @param ip instruction processor of interest
+     * @param data data to be placed in the frame
+     * @param framePointer where the frame will be stored (retrieved from rcsPushCheck())
+     */
+    private void rcsPush(
+        final InstructionProcessor ip,
+        final long[] data,
+        final int framePointer
+    ) {
+        BaseRegister rcsBReg = ip.getBaseRegister(InstructionProcessor.RCS_BASE_REGISTER);
+        IndexRegister rcsXReg = ip.getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+        rcsXReg.setXM(framePointer);
+        int offset = framePointer - rcsBReg._lowerLimitNormalized;
+
+        //  ignore the null-dereference warning in the next line
+        rcsBReg._storage.set(offset++, data[0]);
+        rcsBReg._storage.set(offset, data[1]);
+    }
+
+    /**
+     * Checks whether we can buy a 2-word RCS stack frame
+     * @param ip instruction processor of interest
+     * @return framePointer pointer to the frame which will be the target of the push
+     * @throws RCSGenericStackUnderflowOverflowInterrupt if the RCStack has no more space
+     */
+    private int rcsPushCheck(
+        final InstructionProcessor ip
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        // Make sure the return control stack base register is valid
+        BaseRegister rcsBReg = ip.getBaseRegister(InstructionProcessor.RCS_BASE_REGISTER);
+        if (rcsBReg._voidFlag) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(
+                RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                InstructionProcessor.RCS_BASE_REGISTER,
+                0);
+        }
+
+        IndexRegister rcsXReg = ip.getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+
+        int framePointer = (int) rcsXReg.getXM() - 2;
+        if (framePointer < rcsBReg._lowerLimitNormalized) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(
+                RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                InstructionProcessor.RCS_BASE_REGISTER,
+                framePointer);
+        }
+
+        return framePointer;
+    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -151,30 +493,23 @@ public abstract class InstructionHandler extends FunctionHandler {
     /**
      * Retrieves a BankDescriptor object representing the BD entry in a particular BDT.
      * @param ip reference to InstructionProcessor
-     * @param iw reference to the invoking instruction word (F0)
      * @param bankLevel level of the bank of interest (0:7)
      * @param bankDescriptorIndex BDI of the bank of interest (0:077777)
      * @param throwFatal Set reason to FatalAddressingException if we throw an AddressingExceptionInterrupt for a bad
      *                   specified leval/BDI, otherwise the reason will be InvalidSourceLevelBDI.
-     * @return BankDescriptor object for all possibilities other than level,bdi == 0,0 - null otherwise
+     * @return BankDescriptor object representing the bank descriptor in memory
      */
     protected BankDescriptor getBankDescriptor(
         final InstructionProcessor ip,
-        final InstructionWord iw,
         final int bankLevel,
         final int bankDescriptorIndex,
-        final boolean followIndirectOrGate,
         final boolean throwFatal
     ) throws AddressingExceptionInterrupt {
-        if (bankLevel == 0) {
-            if (bankDescriptorIndex == 0) {
-                return null;
-            } else if (bankDescriptorIndex < 32) {
-                AddressingExceptionInterrupt.Reason reason =
-                    throwFatal ? AddressingExceptionInterrupt.Reason.FatalAddressingException
-                               : AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI;
-                throw new AddressingExceptionInterrupt(reason, bankLevel, bankDescriptorIndex);
-            }
+        if ((bankLevel == 0) && (bankDescriptorIndex < 32)) {
+            AddressingExceptionInterrupt.Reason reason =
+                throwFatal ? AddressingExceptionInterrupt.Reason.FatalAddressingException
+                           : AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI;
+            throw new AddressingExceptionInterrupt(reason, bankLevel, bankDescriptorIndex);
         }
 
         int bdRegIndex = bankLevel + 16;
@@ -187,22 +522,8 @@ public abstract class InstructionHandler extends FunctionHandler {
             throw new AddressingExceptionInterrupt(reason, bankLevel, bankDescriptorIndex);
         }
 
-        //  Create a BankDescriptor object, maybe follow gates and indirects...
-        BankDescriptor bd = new BankDescriptor(bdStorage, bdTableOffset);
-        if (followIndirectOrGate) {
-            BankDescriptor.BankType bankType = bd.getBankType();
-            if ((bankType == BankDescriptor.BankType.Gate) || (bankType == BankDescriptor.BankType.Indirect)) {
-                int targetLBDI = bd.getTargetLBDI();
-                return getBankDescriptor(ip,
-                                         iw,
-                                         targetLBDI >> 15,
-                                         targetLBDI & 077777,
-                                         false,
-                                         true);
-            }
-        }
-
-        return bd;
+        //  Create a BankDescriptor object
+        return new BankDescriptor(bdStorage, bdTableOffset);
     }
 
     /**
@@ -219,56 +540,71 @@ public abstract class InstructionHandler extends FunctionHandler {
         int bankDescriptorIndex = (int) (op >> 18) & 077777;
         int offset = (int) (op & 0777777);
         Instruction instruction = getInstruction();
-        boolean lbu = instruction == Instruction.LBU;
 
-        BankDescriptor bdSource = getBankDescriptor(ip,
-                                                    iw,
-                                                    bankLevel,bankDescriptorIndex,
-                                                    true,
-                                                    false);
-        boolean voidBank = bdSource == null;
-        BankDescriptor bdTarget = new BankDescriptor();
-        if (!voidBank) {
+        //  L,BDI of 0,0 produces a void bank
+        BaseRegister br = new BaseRegister();
+        boolean generalFault = false;
+        boolean voidFlag = false;
+        if ( (bankLevel == 0) && (bankDescriptorIndex == 0) ) {
+            ip.setBaseRegister(baseRegisterIndex, new BaseRegister());
+            voidFlag = true;
+        }
+
+        BaseRegister baseRegister = new BaseRegister();
+        if (!voidFlag) {
+            BankDescriptor bdSource = getBankDescriptor(ip, bankLevel, bankDescriptorIndex, false);
+            BankDescriptor bdTarget = bdSource;
             switch (bdSource.getBankType()) {
                 case BasicMode:
-                    if (lbu) {
+                    if (instruction == Instruction.LBU) {
                         if (ip.getDesignatorRegister().getProcessorPrivilege() < 2) {
-                            bdTarget = bdSource;
+                            break;
                         } else {
                             if ((bdSource.getGeneraAccessPermissions()._enter) || (bdSource.getSpecialAccessPermissions()._enter)) {
-                                bdTarget = bdSource;
+                                break;
                             } else {
-                                voidBank = true;
+                                voidFlag = true;
                             }
                         }
                     } else {
-                        bdTarget = bdSource;
+                        baseRegister = new BaseRegister(bdSource, offset);
                     }
                     break;
 
+                //TODO need cases for Gate and Indirect
+                foo();
+
                 case QueueRepository:
-                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
-                                                           bankLevel,
-                                                           bankDescriptorIndex);
+                    throw new AddressingExceptionInterrupt(
+                        AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                        bankLevel,
+                        bankDescriptorIndex);
 
                 default:
-                    bdTarget = bdSource;
+                    break;
+            }
+
+            if (!voidFlag) {
+                baseRegister = new BaseRegister(bdSource, offset);
             }
         }
 
         //  LBU instruction deals with B2-B15 (B0,B1 filtered out).  So we need to update the ABT.
-        if (lbu) {
-            ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bankLevel, bankDescriptorIndex, offset);
-            ip.loadActiveBaseTableEntry(baseRegisterIndex - 1, abte);
+        if (instruction == Instruction.LBU) {
+            if (voidFlag) {
+                ip.loadActiveBaseTableEntry(baseRegisterIndex - 1, new ActiveBaseTableEntry(0));
+            } else {
+                ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bankLevel, bankDescriptorIndex, offset);
+                ip.loadActiveBaseTableEntry(baseRegisterIndex - 1, abte);
+            }
         }
 
-        BaseRegister baseRegister = voidBank ? new BaseRegister() : new BaseRegister(bdTarget, offset);
         ip.setBaseRegister(baseRegisterIndex, baseRegister);
-
-        if ((!baseRegister._voidFlag) && (bdTarget.getGeneralFault())) {
-            throw new TerminalAddressingExceptionInterrupt(TerminalAddressingExceptionInterrupt.Reason.GBitSetInTargetBD,
-                                                           bankLevel,
-                                                           bankDescriptorIndex);
+        if ( (!baseRegister._voidFlag) && (generalFault) ) {
+            throw new TerminalAddressingExceptionInterrupt(
+                TerminalAddressingExceptionInterrupt.Reason.GBitSetInTargetBD,
+                bankLevel,
+                bankDescriptorIndex);
         }
     }
 
@@ -280,23 +616,39 @@ public abstract class InstructionHandler extends FunctionHandler {
     protected void loadBankJump(
         final InstructionProcessor ip,
         final InstructionWord iw
-    ) throws MachineInterrupt {
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
         int regIndex = (int) iw.getA();
         if (regIndex == 0) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidLinkageRegister);
         }
 
-        boolean ldj = getInstruction() == Instruction.LDJ;
-        boolean lij = getInstruction() == Instruction.LIJ;
+        int jumpAddress = ip.getJumpOperand(false);
+        Instruction instruction = getInstruction();
 
         //  Split out the various fields
         IndexRegister linkageRegister = ip.getExecOrUserXRegister((int) iw.getA());
         long lrValue = linkageRegister.getW();
         boolean execFlag = (lrValue & 0_400000_000000L) != 0;
-        int brIndex = (int) ((lrValue & 0_300000_000000L) >> 33) + 12;// TODO Depends on whether LBJ, LIJ, or LDJ
         boolean levelSpec = (lrValue & 0_040000_000000L) != 0;
         int interfaceSpec = (int) ((lrValue & 0_030000_000000L) >> 30);
         int sourceBankDescriptorIndex = (int) ((lrValue & 0_007777_000000L) >> 18);
+
+        int brIndex = 0;
+        switch (instruction) {
+            case LBJ:
+                brIndex = (int) ((lrValue & 0_300000_000000L) >> 33) + 12;
+                break;
+
+            case LDJ:
+                brIndex = ip.getDesignatorRegister().getBasicModeBaseRegisterSelection() ? 15 : 14;
+                break;
+
+            case LIJ:
+                brIndex = ip.getDesignatorRegister().getBasicModeBaseRegisterSelection() ? 13 : 12;
+                break;
+
+        }
 
         //  Find the source BD (which is the bank to be based).
         int sourceLevel = VirtualAddress.translateBasicToExtendedLevel(execFlag, levelSpec);
@@ -308,13 +660,7 @@ public abstract class InstructionHandler extends FunctionHandler {
                                           false,
                                           ip.getIndicatorKeyRegister().getAccessInfo());
 
-        BankDescriptor bdSource = getBankDescriptor(ip,
-                                                    iw,
-                                                    sourceLevel,
-                                                    sourceBankDescriptorIndex,
-                                                    false,
-                                                    false);
-
+        BankDescriptor bdSource = getBankDescriptor(ip, sourceLevel, sourceBankDescriptorIndex, false);
         AccessPermissions bdSourcePerms = bdSource.getEffectiveAccesPermissions(ip.getIndicatorKeyRegister().getAccessInfo());
         BankDescriptor.BankType sourceBankType = bdSource.getBankType();
         boolean basic = sourceBankType == BankDescriptor.BankType.BasicMode;
@@ -323,8 +669,9 @@ public abstract class InstructionHandler extends FunctionHandler {
         boolean gate = sourceBankType == BankDescriptor.BankType.Gate;
 
         LoadBankJumpInfo lbjInfo = new LoadBankJumpInfo(ip,
-                                                        getInstruction(),
+                                                        instruction,
                                                         brIndex,
+                                                        jumpAddress,
                                                         sourceLevel,
                                                         sourceBankDescriptorIndex,
                                                         bdSource,
@@ -360,192 +707,6 @@ public abstract class InstructionHandler extends FunctionHandler {
                 //  Illegal ISpec
                 break;
         }
-    }
-
-    /**
-     * LxJ Case 1:Implements normal LxJ algorithm
-     * @param lbjInfo
-     * @throws MachineInterrupt
-     */
-    private void loadBankJumpCase1(
-        final LoadBankJumpInfo lbjInfo
-    ) throws MachineInterrupt {
-        InstructionProcessor ip = lbjInfo._instructionProcessor;
-
-        //  Step 1 get prior L,BDI
-        ActiveBaseTableEntry abte = ip.getActiveBaseTableEntries()[lbjInfo._brIndex - 1];
-        int priorBDI = abte.getBDI();
-        int priorLevel = abte.getLevel();
-        int priorSubset = abte.getSubsetOffset();
-
-        //  Step 2 Translate X(a) basic mode Virtual Address to L,BDI, then determine final target bank...
-        //  Gate processing may occur.
-        //TODO
-
-        //  Step 3 Translate prior L,BDI to E,LS,BDI, write that and PAR.PC + 1 to X(a)
-        long basicVaddr = new VirtualAddress(lbjInfo._sourceBankLevel,
-                                             lbjInfo._sourceBankDescriptorIndex,
-                                             lbjInfo._offset).translateToBasicMode();
-        long newXValue = basicVaddr;
-        newXValue |= (long)(lbjInfo._brIndex & 03) << 33;
-        int newParPC = lbjInfo._instructionProcessor.getProgramAddressRegister().getProgramCounter() + 1;
-        newXValue = (newXValue & (0_777777_000000L)) | newParPC;
-
-        //  Step 4 DB16 and access key -> User X(0)
-        long x0Value = ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0;
-        x0Value |= ip.getIndicatorKeyRegister().getAccessKey();
-        ip.getGeneralRegister(0).setW(x0Value);
-
-        //  Step 5 If a gate was processed... fun stuff
-        //TODO
-
-        //  Step 6 ABT is updated, and PAR.PC is set to U(18:35), and ABT(n).Offset is set to 0
-        //TODO
-
-        //  Step 7 BankRegister is created for B(whatever)
-        //TODO
-
-        //  Step 8 DB31 is set appropriately
-        //TODO
-
-        //  Step 9 If target BD.G is set, or selection of base register error occurs,
-        //  throw terminal addressing exception
-        //TODO
-    }
-
-    /**
-     * LxJ Case 2:Implements LxJ/CALL
-     * @param lbjInfo
-     * @throws MachineInterrupt
-     */
-    private void loadBankJumpCase2(
-        final LoadBankJumpInfo lbjInfo
-    ) throws MachineInterrupt {
-        //  Step 1 check for RCS overflow
-        //TODO
-
-        //  Step 2 Fetch prior L,BDI from ABT
-        //TODO
-
-        //  Step 3 Translate Xa basic mode Virtual Address to Source L,BDI including gate processing
-        //TODO
-
-        //  Step 4 Mixed mode transfer is to occur, B0 is to be loaded, while X(a) is to be marked void
-        //TODO
-
-        //  Step 5 Create RCS frame
-        //TODO
-
-        //  Step 6 DB16 and access key stored in user X0.
-        //TODO
-
-        //  Step 7 If a gate was processed, then do some fun stuff
-        //TODO
-
-        //  Step 8 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
-        //TODO
-
-        //  Step 9 Appropriate values are loaded into B0
-        //TODO
-
-        //  Step 10 If final based bank has g bit set, throw terminal addressing interrupt
-        //TODO
-    }
-
-    /**
-     * LxJ Case 3:Implements LxJ/GOTO
-     * @param lbjInfo
-     * @throws MachineInterrupt
-     */
-    private void loadBankJumpCase3(
-        final LoadBankJumpInfo lbjInfo
-    ) throws MachineInterrupt {
-        //  Step 1 Translate Xa basic mode Virtual Address to Source L,BDI including gate processing
-        //TODO
-
-        //  Step 2 Mixed mode transfer is to occur, B0 is to be loaded, while X(a) is to be marked void
-        //TODO
-
-        //  Step 3 DB16 and access key stored in user X0.
-        //TODO
-
-        //  Step 4 If a gate was processed, then do some fun stuff
-        //TODO
-
-        //  Step 5 PAR.L,BDI is updated, PAR.PC is set to U(18:35)
-        //TODO
-
-        //  Step 6 Appropriate values are loaded into B0
-        //TODO
-
-        //  Step 7 If final based bank has g bit set, throw terminal addressing interrupt
-        //TODO
-    }
-
-    /**
-     * LxJ Case 4:Implements LxJ/RETURN to basic mode
-     * @param lbjInfo
-     * @throws MachineInterrupt
-     */
-    private void loadBankJumpCase4(
-        final LoadBankJumpInfo lbjInfo
-    ) throws MachineInterrupt {
-        //  Step 1 check for RCS overflow
-        //TODO
-
-        //  Step 2 determine final target bank
-        //TODO
-
-        //  Step 3 RTN to basic mode - load one of B12:B15 - which one is determined by RCS.B + 12
-        //TODO
-
-        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
-        //TODO
-
-        //  Step 5 ABT(n) set to RCS:L,BDI
-        //      PAR.PC set to RCS.offset
-        //      ABT(n).offset set to 0
-        //TODO
-
-        //  Step 6 BankRegister is created for B(n) that we are transferring to
-        //TODO
-
-        //  Step 7 DB31 is set
-        //TODO
-
-        //  Step 8 if BD.G or RCS.Trap, throw terminal addressing exception
-        //TODO
-    }
-
-    /**
-     * LxJ Case 5:Implements LxJ/RETURN to extended mode
-     * @param lbjInfo
-     * @throws MachineInterrupt
-     */
-    private void loadBankJumpCase5(
-        final LoadBankJumpInfo lbjInfo
-    ) throws MachineInterrupt {
-        //  Step 1 check for RCS overflow
-        //TODO
-
-        //  Step 2 determine final target bank
-        //TODO
-
-        //  Step 3 return to extended mode, B0 will be loaded, and the BR for the bank we came from is set void
-        //TODO
-
-        //  Step 4 IKR:AccessKey is set to the RCS Access Key, and DB12-17 are loaded from RCS.DB12-17
-        //TODO
-
-        //  Step 5 PAR.L,BDI set to RCS.L,BDI
-        //      PAR.PC set to RCS.offset
-        //TODO
-
-        //  Step 6 BankRegister is created for B(0)
-        //TODO
-
-        //  Step 7 if BD.G or RCS.Trap, throw terminal addressing exception
-        //TODO
     }
 
     /**
@@ -634,43 +795,28 @@ public abstract class InstructionHandler extends FunctionHandler {
      * Buys a 2-word RCS stack frame and populates it appropriately
      * @param ip instruction processor of interest
      * @param bField value to be placed in the .B field of the stack frame.
-     * @throws MachineInterrupt if anything goes awry
+     * @throws RCSGenericStackUnderflowOverflowInterrupt if the RCStack has no more space
      */
     protected void rcsPush(
         final InstructionProcessor ip,
         final int bField
-    ) throws MachineInterrupt {
-        // Make sure the return control stack base register is valid
-        BaseRegister rcsBReg = ip.getBaseRegister(InstructionProcessor.RCS_BASE_REGISTER);
-        if (rcsBReg._voidFlag) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                InstructionProcessor.RCS_BASE_REGISTER,
-                                                                0);
-        }
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        int framePointer = rcsPushCheck(ip);
+        rcsPush(ip, bField, framePointer);
+    }
 
-        IndexRegister rcsXReg = ip.getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
-
-        int framePointer = (int) rcsXReg.getXM() - 2;
-        if (framePointer < rcsBReg._lowerLimitNormalized) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                InstructionProcessor.RCS_BASE_REGISTER,
-                                                                framePointer);
-        }
-
-        rcsXReg.setXM(framePointer);
-
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
-        long reentry = par.getH1() << 18;
-        reentry |= (par.getH2() + 1) & 0777777;
-
-        long state = (bField & 03) << 24;
-        state |= ip.getDesignatorRegister().getW() & 0_000077_000000;
-        state |= ip.getIndicatorKeyRegister().getAccessKey();
-
-        int offset = framePointer - rcsBReg._lowerLimitNormalized;
-        //  ignore the null-dereference warning in the next line
-        rcsBReg._storage.set(offset++, reentry);
-        rcsBReg._storage.set(offset, state);
+    /**
+     * Buys a 2-word RCS stack frame and populates it from the given data
+     * @param ip instruction processor of interest
+     * @param data what we populate the frame with
+     * @throws RCSGenericStackUnderflowOverflowInterrupt if the RCStack has no more space
+     */
+    protected void rcsPush(
+        final InstructionProcessor ip,
+        final long data[]
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        int framePointer = rcsPushCheck(ip);
+        rcsPush(ip, data, framePointer);
     }
 
 

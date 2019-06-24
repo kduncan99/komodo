@@ -46,7 +46,7 @@ IP: storage-to-storage instructions (and unit tests)
   BIML
   BN
   BBN
-  BTP
+  BTSP
   BTU
 IP: string instructions (and unit tests)
   LS
