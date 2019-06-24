@@ -64,64 +64,427 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-//    private static class BasicModeBankName extends Word36 {
-//
-//        private BasicModeBankName(
-//            boolean execFlag,
-//            int level,
-//            int bankDescriptorIndex
-//        ) {
-//            _value = ((execFlag ? 1L : 0) << 35) | ((level & 01) << 32) | ((bankDescriptorIndex & 07777) << 18);
+    private static class BankManipulationInfo {
+        //TODO not necessary?
+//        private enum Category {
+//            Load,               //  LBU, LBE, LAE
+//            Transfer_BM_BM,     //  LxJ, LxJ/RTN to BM
+//            Transfer_BM_EM,     //  LxJ/GOTO, LxJ/CALL, LxJ/RTN to EM
+//            Transfer_EM_BM,     //  GOTO / CALL / RTN to BM
+//            Transfer_EM_EM,     //  GOTO / CALL / RTN to EM
+//            UserReturn,         //  any combination of EM/BM to EM/BM
+//            InterruptSequence,
 //        }
-//
-//        private boolean getExecFlag() { return (_value >> 35) != 0; }
-//        private int getLevel() { return (int)(_value >> 32) & 01; }
-//        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 07777; }
-//
-//        private ExtendedModeBankName translate() {
-//            if (getExecFlag()) {
-//                if (getLevel() == 1) {
-//                    return new ExtendedModeBankName(0, getBankDescriptorIndex());
-//                } else {
-//                    return new ExtendedModeBankName(2, getBankDescriptorIndex());
-//                }
-//            } else {
-//                if (getLevel() == 0) {
-//                    return new ExtendedModeBankName(4, getBankDescriptorIndex());
-//                } else {
-//                    return new ExtendedModeBankName(6, getBankDescriptorIndex());
-//                }
-//            }
-//        }
-//    }
 
-//    private static class ExtendedModeBankName extends Word36 {
-//
-//        ExtendedModeBankName(
-//            int level,
-//            int bankDescriptorIndex
-//        ) {
-//            _value = ((level & 07) << 33) | ((bankDescriptorIndex & 077777) << 18);
-//        }
-//
-//        private int getLevel() { return (int)(_value >> 33); }
-//        private int getBankDescriptorIndex() { return (int)(_value >> 18) & 077777; }
-//
-//        private BasicModeBankName translate() {
-//            int bdi = getBankDescriptorIndex();
-//            if (bdi > 07777) {
-//                return new BasicModeBankName(true, 1, 0);
+        //  Determined at construction
+        private boolean _callOperation = false;     //  true if CALL, LOCL, LxJ, LxJ/CALL, or interrupt
+        private final DesignatorRegister _designatorRegister;       //  DR in effect at the point of invocation
+        private final InstructionHandler.Instruction _instruction;  //  null if this is for interrupt handling
+        private final MachineInterrupt _interrupt;                  //  null if invoked by instruction handling
+        private boolean _loadInstruction = false;   //  true if this is LAE, LBE, or LBU
+        private boolean _lxjInstruction = false;    //  true if this is for an LxJ instruction
+        private int _lxjBankSelector;               //  BDR (offset by 12) for LxJ instructions
+        private int _lxjInterfaceSpec;              //  IS for LxJ instructions
+        private IndexRegister _lxjXRegister;        //  X(a) for LxJ instructions
+        private final long _operand;
+        private boolean _returnOperation = false;   //  true if RTN, LxJ/RTN
+
+        private int _nextStep = 1;
+
+        //  Determined at some point *after* construction
+//TODO necessary?        private Category _category;
+        private int _priorBankLevel;                    //  For CALL and LxJ/CALL
+        private int _priorBankDescriptorIndex;          //  as above
+
+        //  Following are for any returns (i.e., RTN or LxJ/RTN)
+        private int _rcsBasicModeBankIndex;             //      Added to 12, indicates the BR to which we return control
+        private int _rcsDB12_17;                        //      Designator register bits which should be reinstated upon return
+        private int _rcsAccessKey;                      //      Access Key which should be reinstated upon return
+        private boolean _rcsTrap;                       //      true if trap bit was set in the RCS
+
+        private int _sourceBankLevel;                   //  L portion of source bank L,BDI
+        private int _sourceBankDescriptorIndex;         //  BDI portion of source bank L,BDI
+        private int _sourceBankOffset;                  //  offset value accompanying source bank specification
+        private BankDescriptor _sourceBankDescriptor;   //  BD for source bank
+
+        private BankDescriptor _targetBankDescriptor;   //  BD for target bank (may also be RCS bank)
+
+        private BankManipulationInfo(
+            final InstructionProcessor instructionProcessor,
+            final InstructionHandler.Instruction instruction,
+            final long operand,
+            final MachineInterrupt interrupt
+        ) {
+            _designatorRegister = instructionProcessor.getDesignatorRegister();
+            _instruction = instruction;
+            _interrupt = interrupt;
+            _operand = operand;
+
+            if (_interrupt != null) {
+                _callOperation = true;
+            } else {
+                _loadInstruction = (_instruction == InstructionHandler.Instruction.LAE)
+                                   || (_instruction == InstructionHandler.Instruction.LBE)
+                                   || (_instruction == InstructionHandler.Instruction.LBU);
+                _lxjInstruction = (_instruction == InstructionHandler.Instruction.LBJ)
+                                  || (_instruction == InstructionHandler.Instruction.LDJ)
+                                  || (_instruction == InstructionHandler.Instruction.LIJ);
+
+                int aField = (int) instructionProcessor._currentInstruction.getA();
+
+                if (_lxjInstruction) {
+                    _lxjXRegister = instructionProcessor.getExecOrUserXRegister(aField);
+                    _lxjInterfaceSpec = (int) (_lxjXRegister.getW() >> 30) & 03;
+                    _lxjBankSelector = (int) (_lxjXRegister.getW() >> 33) & 03;
+                }
+
+                _callOperation = (instruction == InstructionHandler.Instruction.CALL)
+                                 || (instruction == InstructionHandler.Instruction.LOCL)
+                                 || (_lxjInstruction && (_lxjInterfaceSpec < 2));
+                //  Note that UR is not considered a return operation
+                _returnOperation = (instruction == InstructionHandler.Instruction.RTN)
+                                   || (_lxjInstruction && (_lxjInterfaceSpec == 2));
+            }
+        }
+
+        /**
+         * Determines the category for this operation.
+         * We cannot determine this until we have some information which isn't available until several steps
+         * into the bank manipulation algorithm, and (in the case of UR) we must do this *before* the
+         * designator register is updated (specifically, the basic mode enabled flag).
+         */
+    /*
+    TODO
+    Temporary note: LxJ with IS==0 is LxJ normal (BM target) or LxJ/CALL (EM.entrer == 0 or Gate)
+                        with IS==1 is LxJ normal (BM target) or LxJ/GOTO (EM.enter == 1 or Gate)
+                        with IS==2 RCS.DB.16==1 is LxJ/RTN to BM
+                                   RCS.DB.16==0 is LxJ/RTN to EM
+     */
+    //TODO not necessary?
+//        private void determineCategory() {
+//            if (_instruction == null) {
+//                _category = Category.InterruptSequence;
 //            } else {
-//                switch (getLevel()) {
-//                    case 0:     return new BasicModeBankName(true, 1, bdi);
-//                    case 2:     return new BasicModeBankName(true, 0, bdi);
-//                    case 4:     return new BasicModeBankName(false, 0, bdi);
-//                    case 6:     return new BasicModeBankName(false, 1, bdi);
-//                    default:    return new BasicModeBankName(true, 1, 0);
+//                switch (_instruction) {
+//                    case LBU:
+//                    case LBE:
+//                    case LAE:
+//                        _category = Category.Load;
+//                        break;
+//
+//                    case GOTO:
+//                    case CALL:
+//                    case RTN:
+//                        _category = (_targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)
+//                                    ? Category.Transfer_EM_BM
+//                                    : Category.Transfer_EM_EM;
+//                        break;
+//
+//                    case LBJ:
+//                    case LDJ:
+//                    case LIJ:
+//                        _category = (_targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)
+//                                    ? Category.Transfer_BM_BM
+//                                    : Category.Transfer_BM_EM;
+//                        break;
+//                    case UR:
+//                        if (_designatorRegister.getBasicModeEnabled()) {
+//                            _category = (_targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)
+//                                        ? Category.Transfer_BM_BM
+//                                        : Category.Transfer_BM_EM;
+//                        } else {
+//                            _category = (_targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)
+//                                        ? Category.Transfer_EM_BM
+//                                        : Category.Transfer_EM_EM;
+//                        }
+//                        break;
 //                }
 //            }
 //        }
-//    }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Temp location of bank manipulation code TODO move these to where they belong
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Sanity check for a couple of different categories of instructions
+     */
+    private void bankManipulationStep1(
+        final BankManipulationInfo bmInfo
+    ) throws AddressingExceptionInterrupt,
+             InvalidInstructionInterrupt {
+        if (bmInfo._instruction != null) {
+            if ((bmInfo._instruction == InstructionHandler.Instruction.LBU) && (_currentInstruction.getA() < 2)) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
+            }
+
+            if (bmInfo._lxjInterfaceSpec == 3) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidISValue,
+                                                       0,
+                                                       0);
+            }
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /**
+     * Retrieve prior L,BDI for any instruction which will result in requiring a return address/bank
+     */
+    private void bankManipulationStep2(
+        final BankManipulationInfo bmInfo
+    ) {
+        if (bmInfo._instruction != null) {
+            if (bmInfo._instruction == InstructionHandler.Instruction.CALL) {
+                bmInfo._priorBankLevel = (int) (_currentInstruction.getW() >> 33);
+                bmInfo._priorBankDescriptorIndex = (int) (_currentInstruction.getW() >> 18) & 077777;
+            } else if ((bmInfo._lxjInstruction) && (bmInfo._lxjInterfaceSpec < 2)) {
+                //  We're supposed to be here for normal LxJ and for LxJ/CALL, but we also catch LxJ/GOTO
+                //  (interfaceSpec == 1 and target BD is extended with enter access, or gate)
+                //  Because we must do this for IS == 1 and source BD is basic, and it is too early in
+                //  the algorithm to know the source BD bank type.
+                int abtx;
+                if (bmInfo._instruction == InstructionHandler.Instruction.LBJ) {
+                    abtx = bmInfo._lxjBankSelector + 12;
+                } else if (bmInfo._instruction == InstructionHandler.Instruction.LDJ) {
+                    abtx = getDesignatorRegister().getBasicModeBaseRegisterSelection() ? 15 : 14;
+                } else {
+                    abtx = getDesignatorRegister().getBasicModeBaseRegisterSelection() ? 13 : 12;
+                }
+
+                bmInfo._priorBankLevel = _activeBaseTableEntries[abtx].getLevel();
+                bmInfo._priorBankDescriptorIndex = _activeBaseTableEntries[abtx].getBDI();
+            }
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /**
+     * Determine source level, BDI, and offset.
+     *      For transfers, this is the address to which we jump.
+     *      For loads, L,BDI is the bank and offset is a subset.
+     * (mostly... there's actually no requirement for LxJ instructions (for example) to jump to the bank which they base).
+     * This is a little tricky as the algorithm seemingly requires us to know (in some cases) whether the
+     * target bank is extended or basic mode, and we've not yet begun to determine the target bank.
+     * In point of fact, the decision tree here does not actually require knowledge of the target bank type.
+     * @throws  RCSGenericStackUnderflowOverflowInterrupt if the RCS stack doesn't have a suitably-sized frame, or is void.
+     */
+    private void bankManipulationStep3(
+        final BankManipulationInfo bmInfo
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        if (bmInfo._interrupt != null) {
+            //  source L,BDI,Offset comes from the interrupt vector...
+            //  The bank described by B16 begins with 64 contiguous words, indexed by interrupt class (of which there are 64).
+            //  Each word is a Program Address Register word, containing the L,BDI,Offset of the interrupt handling routine
+            //  Make sure B16 is valid before dereferencing through it.
+            if (_baseRegisters[L0_BDT_BASE_REGISTER]._voidFlag) {
+                stop(StopReason.L0BaseRegisterInvalid, 0);
+                bmInfo._nextStep = 0;
+                return;
+            }
+
+            //  intOffset is the offset from the start of the level 0 BDT, to the vector we're interested in.
+            ArraySlice bdtLevel0 = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
+            int intOffset = bmInfo._interrupt.getInterruptClass().getCode();
+            if (intOffset >= bdtLevel0.getSize()) {
+                stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);
+                bmInfo._nextStep = 0;
+                return;
+            }
+
+            long lbdiOffset = bdtLevel0.get(intOffset);
+            bmInfo._sourceBankLevel = (int) lbdiOffset >> 33;
+            bmInfo._sourceBankDescriptorIndex = (int) (lbdiOffset >> 18) & 077777;
+            bmInfo._sourceBankOffset = (int) lbdiOffset & 0777777;
+        } else if (bmInfo._instruction == InstructionHandler.Instruction.UR) {
+            //  source L,BDI comes from operand L,BDI
+            //  offset comes from operand offset (PAR.PC)... what does this mean?
+            //  TODO is this the same as the default case below?
+        } else if (bmInfo._returnOperation) {
+            //  source L,BDI,Offset comes from RCS
+            //  This is where we pop an RCS frame and grab the relevant fields therefrom.
+            BaseRegister rcsBReg = getBaseRegister(InstructionProcessor.RCS_BASE_REGISTER);
+            if (rcsBReg._voidFlag) {
+                throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                                                                    InstructionProcessor.RCS_BASE_REGISTER,
+                                                                    0);
+            }
+
+            IndexRegister rcsXReg = getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+            int framePointer = (int) rcsXReg.getXM() + 2;
+            if (framePointer > rcsBReg._upperLimitNormalized) {
+                throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
+                                                                    InstructionProcessor.RCS_BASE_REGISTER,
+                                                                    framePointer);
+            }
+
+            long frame0 = rcsBReg._storage.get(framePointer);
+            long frame1 = rcsBReg._storage.get(framePointer + 1);
+            rcsXReg.setXM(framePointer);
+
+            bmInfo._sourceBankLevel = (int) (frame0 >> 33);
+            bmInfo._sourceBankDescriptorIndex = (int) (frame0 >> 18) & 077777;
+            bmInfo._sourceBankOffset = (int) frame0 & 0777777;
+            bmInfo._rcsTrap = (frame1 & 0_400000_000000L) != 0;
+            bmInfo._rcsBasicModeBankIndex = (int) (frame1 >> 24) & 03;
+            bmInfo._rcsDB12_17 = (int) (frame1 & 077_777777);
+            bmInfo._rcsAccessKey = (int) frame1 & 0777777;
+        } else if (bmInfo._lxjInstruction) {
+            //  source L,BDI comes from basic mode X(a) E,LS,BDI
+            //  offset comes from operand
+            long bmSpec = bmInfo._lxjXRegister.getW();
+            boolean execFlag = (bmSpec & 0_400000_000000L) != 0;
+            boolean levelSpec = (bmSpec & 0_040000_000000L) != 0;
+            bmInfo._sourceBankLevel = execFlag ? (levelSpec ? 0 : 2) : (levelSpec ? 6 : 4);
+            bmInfo._sourceBankDescriptorIndex = (int) ((bmSpec >> 18) & 077777);
+            bmInfo._sourceBankOffset = (int) bmInfo._operand & 0777777;
+        } else {
+            //  source L,BDI,Offset comes from operand
+            bmInfo._sourceBankLevel = (int) (bmInfo._operand >> 33) & 03;
+            bmInfo._sourceBankDescriptorIndex = (int) (bmInfo._operand >> 18) & 077777;
+            bmInfo._sourceBankOffset = (int) bmInfo._operand & 0777777;
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /**
+     * Ensure L,BDI is valid.  If L,BDI is in the range of 0,1:0,31 we throw an AddressingException.
+     * If we are handling an interrupt, we stop the processor instead of throwing, and discard further processing.
+     */
+    private void bankManipulationStep4(
+        final BankManipulationInfo bmInfo
+    ) throws AddressingExceptionInterrupt {
+        if ((bmInfo._sourceBankLevel == 0)
+            && ((bmInfo._sourceBankDescriptorIndex > 0) && (bmInfo._sourceBankDescriptorIndex < 32))) {
+            if (bmInfo._interrupt != null) {
+                stop(StopReason.InterruptHandlerInvalidLevelBDI,
+                     (bmInfo._sourceBankLevel << 15) | bmInfo._sourceBankDescriptorIndex);
+                bmInfo._nextStep = 0;
+                return;
+            } else {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                       bmInfo._sourceBankLevel,
+                                                       bmInfo._sourceBankDescriptorIndex);
+            }
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /**
+     * Void bank handling.  IF void:
+     *      For loads, we skip to step 10.
+     *      For interrupt handling we stop the processor
+     *      For transfers, we either throw an addressing exception or skip to step 10.
+     * @throws AddressingExceptionInterrupt if a void bank is specified where it is not allowed
+     */
+    private void bankManipulationStep5(
+        final BankManipulationInfo bmInfo
+    ) throws AddressingExceptionInterrupt {
+        if ((bmInfo._sourceBankLevel == 0) && (bmInfo._sourceBankDescriptorIndex == 0)) {
+            if (bmInfo._interrupt != null) {
+                stop(StopReason.InterruptHandlerInvalidLevelBDI, 0);
+                bmInfo._nextStep = 0;
+                return;
+            } else if (bmInfo._loadInstruction) {
+                bmInfo._nextStep = 10;
+                return;
+            } else if (bmInfo._returnOperation || (bmInfo._instruction == InstructionHandler.Instruction.UR)) {
+                if ((bmInfo._rcsDB12_17 & 0_000002_000000) == 0) {
+                    //  return to extended mode - addressing exception
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                           bmInfo._sourceBankLevel,
+                                                           bmInfo._sourceBankDescriptorIndex);
+                } else {
+                    //  return to basic mode - void bank
+                    bmInfo._nextStep = 10;
+                    return;
+                }
+            }
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /**
+     * At this point, source L,BDI is greater than 0,31.  Go get the corresponding bank descriptor
+     * @throws AddressingExceptionInterrupt
+     */
+    private void bankManipulationStep6(
+        final BankManipulationInfo bmInfo
+    ) throws AddressingExceptionInterrupt {
+        try {
+            bmInfo._sourceBankDescriptor = findBankDescriptor(bmInfo._sourceBankLevel, bmInfo._sourceBankDescriptorIndex);
+        } catch (AddressingExceptionInterrupt ex) {
+            if (bmInfo._interrupt != null) {
+                //  this is serious - cannot continue
+                stop(StopReason.InterruptHandlerInvalidLevelBDI,
+                     (bmInfo._sourceBankLevel << 15) | bmInfo._sourceBankDescriptorIndex);
+                bmInfo._nextStep = 0;
+            } else {
+                throw ex;
+            }
+        }
+
+        bmInfo._nextStep++;
+    }
+
+    /*
+    TODO
+    Temporary note: LxJ with IS==0 is LxJ normal (BM target) or LxJ/CALL (EM.entrer == 0 or Gate)
+                        with IS==1 is LxJ normal (BM target) or LxJ/GOTO (EM.enter == 1 or Gate)
+                        with IS==2 RCS.DB.16==1 is LxJ/RTN to BM
+                                   RCS.DB.16==0 is LxJ/RTN to EM
+     */
+    /**
+     * An algorithm for handling bank transitions for the following instructions:
+     *  CALL, GOTO, LAE, LBE, LBJ, LBU, LDJ, LIJ, RNT, TVA, and UR
+     * and for interrupt handling.
+     * @param instruction type of instruction or null if we are invoked for interrupt handling
+     * @param operand from U for instruction processing, zero fro interrupt handling
+     * @param interrupt reference to the interrupt being handled, null if invoked from instruction handling
+     * @throws AddressingExceptionInterrupt if IS==3 for any LxJ instruction
+     *                                      or source L,BDI is invalid
+     *                                      or a void bank is specified where it is not allowed
+     * @throws InvalidInstructionInterrupt for LBU with B0 or B1 specified as destination
+     * @throws RCSGenericStackUnderflowOverflowInterrupt for return operaions for which there is no existing stack frame
+     */
+    protected void bankManipulation(
+        final InstructionHandler.Instruction instruction,
+        final long operand,
+        final MachineInterrupt interrupt
+    ) throws AddressingExceptionInterrupt,
+             InvalidInstructionInterrupt,
+             RCSGenericStackUnderflowOverflowInterrupt {
+        BankManipulationInfo bmInfo = new BankManipulationInfo(this, instruction, operand, interrupt);
+
+        while (bmInfo._nextStep > 0) {
+            switch (bmInfo._nextStep) {
+                case 1:
+                    bankManipulationStep1(bmInfo);
+                    break;
+                case 2:
+                    bankManipulationStep2(bmInfo);
+                    break;
+                case 3:
+                    bankManipulationStep3(bmInfo);
+                    break;
+                case 4:
+                    bankManipulationStep4(bmInfo);
+                    break;
+                case 5:
+                    bankManipulationStep5(bmInfo);
+                    break;
+                case 6:
+                    bankManipulationStep6(bmInfo);
+                    break;
+            }
+        }
+    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -620,7 +983,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private BankDescriptor findBankDescriptor(
         final int bankLevel,
         final int bankDescriptorIndex
-    ) throws MachineInterrupt {
+    ) throws AddressingExceptionInterrupt {
         // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
         // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
         // where {n} is the bank descriptor index.
