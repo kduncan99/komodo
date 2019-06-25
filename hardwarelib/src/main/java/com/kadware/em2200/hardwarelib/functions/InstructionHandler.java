@@ -114,18 +114,6 @@ public abstract class InstructionHandler extends FunctionHandler {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Given a lock and key, we return whichever of the general or special permissions should be observed
-     */
-    private AccessPermissions getEffectiveAccessPermissions(
-        final AccessInfo key,
-        final AccessInfo lock,
-        final AccessPermissions generalPermissions,
-        final AccessPermissions specialPermissions
-    ) {
-        return ((key._domain > lock._domain) || (key.equals(lock))) ? specialPermissions : generalPermissions;
-    }
-
-    /**
      * LxJ Case 1:Implements normal LxJ algorithm.
      * Source bank is either Basic Mode, or Extended Mode with no Enter Access.  IS is 0 or 1.
      * The basic-to-extended case is special, and designed to allow basic mode programs acces to
