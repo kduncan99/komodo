@@ -236,7 +236,9 @@ public class InstructionProcessor extends Processor implements Worker {
         _baseRegisters[index] = baseRegister;
     }
 
-    public void setBroadcastInterruptEligibility(final boolean flag) { _broadcastInterruptEligibility = flag; }
+    public void setBroadcastInterruptEligibility(boolean flag) { _broadcastInterruptEligibility = flag; }
+    public void setCurrentInstruction(long value) { _currentInstruction.setW(value); }
+    public void setDesignatorRegister(long value) { _designatorRegister.setW(value); }
 
     public void setGeneralRegister(
         final int index,
@@ -248,8 +250,10 @@ public class InstructionProcessor extends Processor implements Worker {
         _generalRegisterSet.setRegister(index, value);
     }
 
-    public void setJumpHistoryFullInterruptEnabled(final boolean flag) { _jumpHistoryFullInterruptEnabled = flag; }
-    public void setProgramAddressRegister(final long value) { _programAddressRegister.setW(value); }
+    public void setIndicatorKeyRegister(long value) { _indicatorKeyRegister.setW(value); }
+    public void setJumpHistoryFullInterruptEnabled(boolean flag) { _jumpHistoryFullInterruptEnabled = flag; }
+    public void setProgramAddressRegister(long value) { _programAddressRegister.setW(value); }
+    public void setQuantumTimer(long value) { _quantumTimer.setW(value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -727,6 +731,13 @@ public class InstructionProcessor extends Processor implements Worker {
         //TODO If the Reset Indicator is set and this is a non-initial exigent interrupt, then error halt and set an
         //      SCF readable “register” to indicate that a Reset failure occurred.
 
+        //  Got a hardware interrupt during hardware interrupt handling - this is very bad
+        if ((interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck)
+            && _designatorRegister.getFaultHandlingInProgress()) {
+            stop(StopReason.InterruptHandlerHardwareFailure, 0);
+            return;
+        }
+
         // Update interrupt-specific portions of the IKR
         _indicatorKeyRegister.setShortStatusField(interrupt.getShortStatusField());
         _indicatorKeyRegister.setInterruptClassField(interrupt.getInterruptClass().getCode());
@@ -773,66 +784,7 @@ public class InstructionProcessor extends Processor implements Worker {
         // Create conditionalJump history table entry
         createJumpHistoryTableEntry(_programAddressRegister.getW());
 
-        // The bank described by B16 begins with 64 contiguous words, indexed by interrupt class (of which there are 64).
-        // Each word is a Program Address Register word, containing the L,BDI,Offset of the interrupt handling routine
-        // Make sure B16 is valid before dereferencing through it.
-        if (_baseRegisters[L0_BDT_BASE_REGISTER]._voidFlag) {
-            stop(StopReason.L0BaseRegisterInvalid, 0);
-            return;
-        }
-
-        //  intStorage points to level 0 BDT, the first 64 words of which comprise the interrupt vectors.
-        //  intOffset is the offset from the start of the BDT, to the vector we're interested in.
-        //  PAR will be set to L,BDI,Address of the appropriate interrupt handler.
-        //  Note that the interrupt handler code bank is NOT YET based on B0...
-        ArraySlice intStorage = _baseRegisters[L0_BDT_BASE_REGISTER]._storage;
-        int intOffset = interrupt.getInterruptClass().getCode();
-        if (intOffset >= icsStorage.getSize()) {
-            stop(StopReason.InterruptHandlerOffsetOutOfRange, 0);
-            return;
-        }
-
-        _programAddressRegister.setW(intStorage.get(intOffset));
-
-        // Set designator register per IP PRM 5.1.5
-        //  We'll set/clear Basic Mode later once we've got the interrupt handler bank
-        boolean fhip = _designatorRegister.getFaultHandlingInProgress();
-        _designatorRegister.clear();
-        _designatorRegister.setExecRegisterSetSelected(true);
-        _designatorRegister.setArithmeticExceptionEnabled(true);
-        _designatorRegister.setFaultHandlingInProgress(fhip);
-
-        if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck) {
-            if (fhip) {
-                stop(StopReason.InterruptHandlerHardwareFailure, 0);
-                return;
-            }
-            _designatorRegister.setFaultHandlingInProgress(true);
-        }
-
-        // Clear the IKR and F0
-        _indicatorKeyRegister.clear();
-        _currentInstruction.clear();
-
-        // Base the PAR-indicated interrupt handler bank on B0
-        //TODO WE should use standard bank-manipulation algorithm here - see hardware manual 4.6.4
-        byte ihBankLevel = (byte)_programAddressRegister.getLevel();
-        short ihBankDescriptorIndex = (short)_programAddressRegister.getBankDescriptorIndex();
-        if ((ihBankLevel == 0) && (ihBankDescriptorIndex < 32)) {
-            stop(StopReason.InterruptHandlerInvalidLevelBDI, 0);
-            return;
-        }
-
-        //  Retrieve a BankDescriptor object, ensure the bank type is acceptable, and base the bank.
-        BankDescriptor bankDescriptor = findBankDescriptor(ihBankLevel, ihBankDescriptorIndex);
-        BankDescriptor.BankType ihBankType = bankDescriptor.getBankType();
-        if ((ihBankType != BankDescriptor.BankType.ExtendedMode) && (ihBankType != BankDescriptor.BankType.BasicMode)) {
-            stop(StopReason.InterruptHandlerInvalidBankType, 0);
-            return;
-        }
-
-        _baseRegisters[0] = new BaseRegister(bankDescriptor);
-        _designatorRegister.setBasicModeBaseRegisterSelection(ihBankType == BankDescriptor.BankType.BasicMode);//TODO is this right?
+        BankManipulator.bankManipulation(this, interrupt);
     }
 
     /**

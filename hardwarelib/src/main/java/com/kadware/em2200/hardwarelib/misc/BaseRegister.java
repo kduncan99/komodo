@@ -76,20 +76,6 @@ public class BaseRegister {
     public final boolean _voidFlag;
 
     /**
-     * Debugging - make sure ll/ul are not out of bounds
-     */
-    //TODO remove later after it doesn't trip for a long time
-    private void checkLimits() {
-        if (_largeSizeFlag) {
-            assert((_lowerLimitNormalized & 037700_077777) == 0);
-            assert((_upperLimitNormalized & 037700_000077) == 077);
-        } else {
-            assert((_lowerLimitNormalized & 037777_000777) == 0);
-            assert((_upperLimitNormalized & 037777_000000) == 0);
-        }
-    }
-
-    /**
      * Creates a ArraySlice to represent the bank as defined by the other attributes of this object
      * @return as described, null if void or limits indicate no storage
      * @throws AddressingExceptionInterrupt if something is wrong with the values
@@ -115,7 +101,7 @@ public class BaseRegister {
     //  public ---------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Initial value constructor for internal purposes
+     * Initial value constructor for internal purposes TODO do we need this?
      */
     private BaseRegister(
         final AccessInfo accessLock,
@@ -183,7 +169,6 @@ public class BaseRegister {
         _specialAccessPermissions = specialAccessPermissions;
         _storage = getStorage();
         _voidFlag = _lowerLimitNormalized >_upperLimitNormalized;
-        checkLimits();
     }
 
     /**
@@ -206,7 +191,6 @@ public class BaseRegister {
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
         _voidFlag = _lowerLimitNormalized > _upperLimitNormalized;
         _storage = getStorage();
-        checkLimits();
     }
 
     /**
@@ -239,7 +223,6 @@ public class BaseRegister {
         _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized() - offset;
         _voidFlag = (_upperLimitNormalized < 0) || (_lowerLimitNormalized > _upperLimitNormalized);
         _storage = getStorage();
-        checkLimits();
     }
 
     /**
@@ -282,7 +265,6 @@ public class BaseRegister {
                                            (int) values[3]);
         _voidFlag = ((values[0] & 0_000200_000000L) != 0) || (_lowerLimitNormalized > _upperLimitNormalized);
         _storage = _voidFlag ? null : getStorage();
-        checkLimits();
     }
 
     /**

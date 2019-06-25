@@ -12,6 +12,9 @@ SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
 BankDescriptor seems to take a very long time to create from storage... why?
 Test code loads successive 512 word banks at 1024 word offsets - is this right?
+Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
+  or does it wrongly reflect the indirected-to location?
+  Applies to all jumps, as well as to LxJ
 
 -- TODO implement
 * baselib

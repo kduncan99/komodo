@@ -150,4 +150,25 @@ public class VirtualAddress extends Word36 {
                | (bdi << 18)
                | getOffset();
     }
+
+    /**
+     * Translates an extended mode bank name to the corresponding base mode name
+     */
+    public static long translateToBasicMode(
+        final int bankLevel,
+        final int bankDescriptorIndex,
+        final int offset
+    ) {
+        if ((bankDescriptorIndex >= 0) && (bankDescriptorIndex <= 07777)) {
+            long result = ((long) (bankDescriptorIndex & 07777) << 18) | offset & 0777777;
+            switch (bankLevel) {
+                case 0: return result | 0_440000_000000L;
+                case 2: return result | 0_400000_000000L;
+                case 4: return result;
+                case 6: return result | 0_040000_000000L;
+            }
+        }
+
+        return 0_440000_000000L | (offset & 0777777);
+    }
 }
