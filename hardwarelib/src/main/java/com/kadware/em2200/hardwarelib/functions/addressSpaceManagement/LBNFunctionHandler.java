@@ -47,7 +47,7 @@ public class LBNFunctionHandler extends InstructionHandler {
             bankName = (int) va.getH1();
             skip = true;
         } else {
-            BankDescriptor bd = getBankDescriptor(ip, iw, origLevel, origBDI, false, false);
+            BankDescriptor bd = getBankDescriptor(ip, origLevel, origBDI, false);
             if (bd.getBankType() == BankDescriptor.BankType.QueueRepository) {
                 throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
                                                        origLevel,

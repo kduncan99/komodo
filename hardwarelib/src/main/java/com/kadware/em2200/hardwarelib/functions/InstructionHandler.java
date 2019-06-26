@@ -207,7 +207,6 @@ public abstract class InstructionHandler extends FunctionHandler {
             targetBankLevel = targetLBDI >> 15;
             targetBankDescriptorIndex = targetLBDI & 077777;
             //TODO gate processing
-            foo();
         }
 
         //  Step 4 Mixed mode transfer is to occur.  Set the base register we came from to void.
@@ -560,7 +559,6 @@ public abstract class InstructionHandler extends FunctionHandler {
                     break;
 
                 //TODO need cases for Gate and Indirect
-                foo();
 
                 case QueueRepository:
                     throw new AddressingExceptionInterrupt(
