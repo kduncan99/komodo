@@ -116,7 +116,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final InstructionWord           _currentInstruction = new InstructionWord();
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
-    private final DesignatorRegister        _designatorRegister = new DesignatorRegister();
+    private DesignatorRegister              _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
     private final IndicatorKeyRegister      _indicatorKeyRegister = new IndicatorKeyRegister();
@@ -238,7 +238,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     public void setBroadcastInterruptEligibility(boolean flag) { _broadcastInterruptEligibility = flag; }
     public void setCurrentInstruction(long value) { _currentInstruction.setW(value); }
-    public void setDesignatorRegister(long value) { _designatorRegister.setW(value); }
+    public void setDesignatorRegister(DesignatorRegister dr) { _designatorRegister = dr; }
 
     public void setGeneralRegister(
         final int index,

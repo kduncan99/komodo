@@ -291,7 +291,7 @@ public class BankManipulator {
                 bmInfo._sourceBankOffset = (int) bmInfo._operands[0] & 0777777;
             } else {
                 //  source L,BDI,Offset comes from operand
-                bmInfo._sourceBankLevel = (int) (bmInfo._operands[0] >> 33) & 03;
+                bmInfo._sourceBankLevel = (int) (bmInfo._operands[0] >> 33) & 07;
                 bmInfo._sourceBankDescriptorIndex = (int) (bmInfo._operands[0] >> 18) & 077777;
                 bmInfo._sourceBankOffset = (int) bmInfo._operands[0] & 0777777;
             }
@@ -704,7 +704,8 @@ public class BankManipulator {
                 bmInfo._baseRegisterIndex = (int) bmInfo._currentInstruction.getA();
                 bmInfo._nextStep = 18;
             } else if ((bmInfo._instruction == InstructionHandler.Instruction.UR) || (bmInfo._interrupt != null)) {
-                bmInfo._baseRegisterIndex = 15;
+                bmInfo._baseRegisterIndex = 0;
+                bmInfo._nextStep = 16;
             } else {
                 //  This is a transfer operation...  Determine transfer mode
                 boolean sourceModeBasic = bmInfo._designatorRegister.getBasicModeEnabled();
@@ -1004,8 +1005,10 @@ public class BankManipulator {
                 DesignatorRegister newDR = new DesignatorRegister(0);
                 newDR.setExecRegisterSetSelected(true);
                 newDR.setArithmeticExceptionEnabled(true);
+                newDR.setBasicModeEnabled(bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode);
                 newDR.setBasicModeBaseRegisterSelection(bmInfo._designatorRegister.getBasicModeBaseRegisterSelection());
                 newDR.setFaultHandlingInProgress(hwCheck);
+                bmInfo._instructionProcessor.setDesignatorRegister(newDR);
 
                 bmInfo._indicatorKeyRegister.setW(0);
                 bmInfo._nextStep = 18;
@@ -1013,7 +1016,7 @@ public class BankManipulator {
                 //  Entire ASP is loaded from 7 consecutive operand words.
                 //  ISW0, ISW1, and SSF of Indicator/Key register are ignored, and some Designator Bits are set-to-zero.
                 bmInfo._instructionProcessor.setProgramAddressRegister(bmInfo._operands[0]);
-                bmInfo._instructionProcessor.setDesignatorRegister(bmInfo._operands[1]);
+                bmInfo._instructionProcessor.setDesignatorRegister(new DesignatorRegister(bmInfo._operands[1]));
                 IndicatorKeyRegister ikr = new IndicatorKeyRegister(bmInfo._operands[2]);
                 ikr.setShortStatusField(bmInfo._indicatorKeyRegister.getShortStatusField());
                 bmInfo._instructionProcessor.setIndicatorKeyRegister(ikr.getW());
@@ -1179,7 +1182,8 @@ public class BankManipulator {
 
                 //  Did we attempt a non-gated transfer to a basic mode bank with enter access denied,
                 //  with relative address not set to the lower limit of the target BD?
-                if ((bmInfo._gateBank == null)
+                if ((bmInfo._transferMode != null)
+                    && (bmInfo._gateBank == null)
                     && (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)) {
                     if ((!perms._enter)
                         && (bmInfo._targetBankOffset != bmInfo._targetBankDescriptor.getLowerLimitNormalized())) {
@@ -1191,7 +1195,8 @@ public class BankManipulator {
 
                 //  Did we do gated transfer, or non-gated with no enter access, to a basic mode bank,
                 //  while the new PAR.PC does not refer to that bank?
-                if ((bmInfo._gateBank != null) || (!perms._enter)) {
+                if ((bmInfo._transferMode != null)
+                    && ((bmInfo._gateBank != null) || !perms._enter)) {
                     if (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode) {
                         BaseRegister br = bmInfo._instructionProcessor.getBaseRegister(bmInfo._baseRegisterIndex);
                         int relAddr = bmInfo._instructionProcessor.getProgramAddressRegister().getProgramCounter();
@@ -1259,6 +1264,26 @@ public class BankManipulator {
     }
 
     /**
+     * This is the main processing loop for the state machine
+     */
+    private static void process(
+        final BankManipulationInfo bmInfo
+    ) throws AddressingExceptionInterrupt,
+             InvalidInstructionInterrupt,
+             RCSGenericStackUnderflowOverflowInterrupt {
+        while (bmInfo._nextStep != 0) {
+            int currentStep = bmInfo._nextStep;//TODO
+//            System.out.println("Step " + String.valueOf(currentStep));//TODO
+            _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
+            //TODO
+            if (bmInfo._nextStep == currentStep) {
+                System.out.println("Stuck at step " + String.valueOf(currentStep));
+                assert(false);
+            }
+        }
+    }
+
+    /**
      * An algorithm for handling bank transitions for the following instructions:
      *  CALL, GOTO, LBE, LBJ, LBU, LDJ, and LIJ
      * @param instructionProcessor IP of interest
@@ -1281,9 +1306,7 @@ public class BankManipulator {
              RCSGenericStackUnderflowOverflowInterrupt {
         long[] operands = { operand };
         BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, instruction, operands, null);
-        while (bmInfo._nextStep != 0) {
-            _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-        }
+        process(bmInfo);
     }
 
     /**
@@ -1305,9 +1328,7 @@ public class BankManipulator {
              InvalidInstructionInterrupt,
              RCSGenericStackUnderflowOverflowInterrupt {
         BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, instruction, null, null);
-        while (bmInfo._nextStep != 0) {
-            _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-        }
+        process(bmInfo);
     }
 
     //TODO - does LAE call here 15 times?  Maybe... in which case it does *not* give us 15 operands, only one at a time
@@ -1332,9 +1353,7 @@ public class BankManipulator {
              InvalidInstructionInterrupt,
              RCSGenericStackUnderflowOverflowInterrupt {
         BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, instruction, operands, null);
-        while (bmInfo._nextStep != 0) {
-            _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-        }
+        process(bmInfo);
     }
 
     /**
@@ -1355,8 +1374,6 @@ public class BankManipulator {
              InvalidInstructionInterrupt,
              RCSGenericStackUnderflowOverflowInterrupt {
         BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, null, null, interrupt);
-        while (bmInfo._nextStep != 0) {
-            _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-        }
+        process(bmInfo);
     }
 }

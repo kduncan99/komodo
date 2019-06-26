@@ -1173,7 +1173,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "BDENTRY1  + 0601006,0 . does not exist",
             "",
             "$(1),START$*",
-            "          LBE       B7,BDENTRY1    . void bank",
+            "          LBE       B7,BDENTRY1    . non-existing bank",
             "          HALT      077            . should not get here",
             };
 
@@ -1205,7 +1205,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "BDENTRY1  + 0601006,0 . does not exist",
             "",
             "$(1),START$*",
-            "          LBU       B5,BDENTRY1,,B2   . void bank",
+            "          LBU       B5,BDENTRY1,,B2   . non-existing bank",
             "          HALT      077               . should not get here",
             };
 
