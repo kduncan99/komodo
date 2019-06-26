@@ -21,6 +21,7 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
 some new instructions
 
 * hardwarelib
+Catch throwables, and turn them into hardware fault machine interrupts
 Change extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
   what to do when we run off the end of the bank?

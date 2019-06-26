@@ -1070,15 +1070,17 @@ public class BankManipulator {
                     newPar |= (long) bmInfo._targetBankLevel << 33 | (long) bmInfo._targetBankDescriptorIndex << 18;
                     bmInfo._instructionProcessor.setProgramAddressRegister(newPar);
                 }
-            } else if (bmInfo._targetBankDescriptor == null) {
-                ActiveBaseTableEntry abte = new ActiveBaseTableEntry(0, 0, 0);
-                bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
-            } else {
-                int offset = bmInfo._loadInstruction ? bmInfo._targetBankOffset : 0;
-                ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bmInfo._targetBankLevel,
-                                                                     bmInfo._targetBankDescriptorIndex,
-                                                                     offset);
-                bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
+            } else if (bmInfo._baseRegisterIndex < 16) {
+                if (bmInfo._targetBankDescriptor == null) {
+                    ActiveBaseTableEntry abte = new ActiveBaseTableEntry(0, 0, 0);
+                    bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
+                } else {
+                    int offset = bmInfo._loadInstruction ? bmInfo._targetBankOffset : 0;
+                    ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bmInfo._targetBankLevel,
+                                                                         bmInfo._targetBankDescriptorIndex,
+                                                                         offset);
+                    bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
+                }
             }
 
             bmInfo._nextStep++;

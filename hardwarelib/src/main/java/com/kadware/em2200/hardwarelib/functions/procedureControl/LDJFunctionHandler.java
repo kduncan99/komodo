@@ -9,6 +9,7 @@ import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.em2200.hardwarelib.misc.BankManipulator;
 
 /**
  * Handles the LDJ instruction f=07 j=012
@@ -21,7 +22,8 @@ public class LDJFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        loadBankJump(ip, iw);
+        long operand = ip.getJumpOperand(false);
+        BankManipulator.bankManipulation(ip, Instruction.LDJ, operand);
     }
 
     @Override
