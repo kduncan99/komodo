@@ -289,6 +289,7 @@ class BaseFunctions {
         Linker linker = new Linker();
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           0,
                            display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
@@ -375,6 +376,7 @@ class BaseFunctions {
         Linker linker = new Linker();
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           0,
                            display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
@@ -434,6 +436,7 @@ class BaseFunctions {
         Linker linker = new Linker();
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           32,
                            display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
@@ -499,6 +502,7 @@ class BaseFunctions {
         Linker linker = new Linker();
         return linker.link("TEST",
                            bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           32,
                            display ? _linkerDisplayAll : _linkerDisplayNone);
     }
 
@@ -563,7 +567,7 @@ class BaseFunctions {
             Linker.Option.OPTION_NO_ENTRY_POINT,
         };
         Linker linker = new Linker();
-        _bankModule = linker.link("BDT-IH", bankDeclarations, options);
+        _bankModule = linker.link("BDT-IH", bankDeclarations, 0, options);
         assert(_bankModule != null);
     }
 
@@ -765,6 +769,13 @@ class BaseFunctions {
                     //  based on B0 - put L,BDI in PAR
                     int lbdi = (loadableBank._bankLevel << 15) | loadableBank._bankDescriptorIndex;
                     ip.setProgramAddressRegister((long) lbdi << 18);
+                } else if (brIndex == 25) {
+                    //  this is a return control stack to be based on B25 - load the appropriate X register EX0
+                    try {
+                        long value = loadableBank._startingAddress + loadableBank._content.getSize();
+                        ip.setGeneralRegister(GeneralRegisterSet.EX0, value);
+                    } catch (MachineInterrupt ex) {
+                    }
                 } else {
                     //  based on something other than B0, set active base table
                     ActiveBaseTableEntry abte = new ActiveBaseTableEntry(loadableBank._bankLevel,

@@ -1,17 +1,12 @@
 -- InProgress
-IP: implement standard bank switching logic
-IP: address space management instructions unit tests
-IP: basic mode procedure call instructions (and unit tests)
-  LBJ, LIJ, LDJ
-IP: extended mode procedure call instructions (and unit tests)
-  GOTO, CALL, LOCL, RTN
+IP: need more address space management instructions unit tests
+IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ
+IP: extended mode procedure call unit tests for GOTO, CALL
 
 -- TODO BUGS
-BaseFunctions - need to make data banks extended mode
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
 BankDescriptor seems to take a very long time to create from storage... why?
-Test code loads successive 512 word banks at 1024 word offsets - is this right?
 Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
@@ -21,6 +16,19 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
 some new instructions
 
 * hardwarelib
+IP: activity control instructions (and unit tests)
+  LD
+  SD
+  LPD
+  SPD
+  LUD
+  SUD
+  LAE
+  UR
+  ACEL
+  DCEL
+  SKQT
+  KCHG
 Catch throwables, and turn them into hardware fault machine interrupts
 Change extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
@@ -65,19 +73,6 @@ IP: queuing instructions
   DEQW
   DEPOSITQB
   WITHDRAWQB
-IP: activity control instructions (and unit tests)
-  LD
-  SD
-  LPD
-  SPD
-  LUD
-  SUD
-  LAE
-  UR
-  ACEL
-  DCEL
-  SKQT
-  KCHG
 IP: dayclock control instructions (and unit tests)
   LRD
   SMD

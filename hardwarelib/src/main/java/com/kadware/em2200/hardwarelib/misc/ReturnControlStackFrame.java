@@ -26,7 +26,7 @@ class ReturnControlStackFrame {
     ReturnControlStackFrame(
         final long[] frame
     ) {
-        _reentryPointBankLevel = (int) (frame[0] >> 33) & 03;
+        _reentryPointBankLevel = (int) (frame[0] >> 33) & 07;
         _reentryPointBankDescriptorIndex = (int) (frame[0] >> 18) & 077777;
         _reentryPointOffset = (int) (frame[0] & 0777777);
         _trap = (frame[1] & 0_400000_000000L) != 0;
@@ -51,7 +51,7 @@ class ReturnControlStackFrame {
         _reentryPointBankDescriptorIndex = reentryPointBankDescriptorIndex;
         _reentryPointOffset = reentryPointOffset;
         _trap = trap;
-        _basicModeBaseRegister = basicModeBaseRegister & 03;
+        _basicModeBaseRegister = basicModeBaseRegister & 07;
         _designatorRegisterDB12To17 = new DesignatorRegister(designatorRegister.getW() & 0_000077_000000L);
         _accessKey = accessKey;
     }

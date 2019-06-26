@@ -43,7 +43,7 @@ public class Test_Linker {
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, options);
+        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertNull(abs._entryPointAddress);
@@ -140,10 +140,10 @@ public class Test_Linker {
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, options);
+        AbsoluteModule abs = linker.link("TEST_ASM", bds, 32, options);
 
         assertNotNull(abs);
-        assertEquals(2, abs._loadableBanks.size());
+        assertEquals(3, abs._loadableBanks.size());
 
         LoadableBank ibank = abs._loadableBanks.get(04);
         assertTrue(ibank._isExtendedMode);
@@ -156,6 +156,10 @@ public class Test_Linker {
         assertEquals(18, dbank._content.getSize());
         assertEquals(0_000077_000077L, dbank._content.get(0));
         assertEquals(0_777777_000000L, dbank._content.get(17));
+
+        LoadableBank rcsbank = abs._loadableBanks.get(07776);
+        assertTrue(rcsbank._isExtendedMode);
+        assertEquals(256, rcsbank._content.getSize());
     }
 
     @Test
@@ -215,7 +219,7 @@ public class Test_Linker {
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, options);
+        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertEquals(2, abs._loadableBanks.size());
@@ -303,7 +307,7 @@ public class Test_Linker {
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, options);
+        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertEquals(2, abs._loadableBanks.size());

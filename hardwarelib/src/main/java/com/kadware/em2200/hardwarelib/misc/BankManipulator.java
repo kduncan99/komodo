@@ -156,7 +156,7 @@ public class BankManipulator {
     }
 
     /**
-     * Retrieve prior L,BDI for any instruction which will result in requiring a return address/bank
+     * Retrieve prior L,BDI for any instruction which will result in acquiring a return address/bank
      */
     private static class BankManipulationStep2 implements BankManipulationStep {
 
@@ -259,11 +259,10 @@ public class BankManipulator {
 
                 IndexRegister rcsXReg =
                     bmInfo._instructionProcessor.getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
-                int framePointer = (int) rcsXReg.getXM() + 2;
-                if (framePointer > rcsBReg._upperLimitNormalized) {
+                if (rcsXReg.getXM() > rcsBReg._upperLimitNormalized) {
                     throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
                                                                         InstructionProcessor.RCS_BASE_REGISTER,
-                                                                        framePointer);
+                                                                        (int) rcsXReg.getXM());
                 }
 
                 if (rcsBReg._storage == null) {
@@ -272,10 +271,11 @@ public class BankManipulator {
                                                            0);
                 }
 
+                int framePointer = (int) rcsXReg.getXM();
                 int offset = framePointer - rcsBReg._lowerLimitNormalized;
                 long[] frame = { rcsBReg._storage.get(offset), rcsBReg._storage.get(offset + 1) };
                 bmInfo._rcsFrame = new ReturnControlStackFrame(frame);
-                rcsXReg.setXM(framePointer);
+                rcsXReg.setXM(framePointer + 2);
 
                 bmInfo._sourceBankLevel = bmInfo._rcsFrame._reentryPointBankLevel;
                 bmInfo._sourceBankDescriptorIndex = bmInfo._rcsFrame._reentryPointBankDescriptorIndex;
@@ -1026,6 +1026,18 @@ public class BankManipulator {
             } else if (bmInfo._returnOperation) {
                 bmInfo._indicatorKeyRegister.setAccessKey((int) bmInfo._rcsFrame._accessKey.get());
                 bmInfo._designatorRegister.setS4(bmInfo._rcsFrame._designatorRegisterDB12To17.getS4());
+                //  Special code for RTN instruction (per architecture document for emulated systems):
+                //  On return, we clear DB15, and if DB14 is set, we clear DB17.
+                //  What this means, is that returned-to PPrivilege 1 -> 0 and 3 -> 2,
+                //      and that we clear exec-register-set-selected if PPrivilege is returning to 2 or 3.
+                //  The latter makes sense - we don't want exec register selected for lower PPrivilege
+                //      (although the OS should ensure this), so I'm implementing that.
+                //  But the former... implies that on every RTN, the processor privilege *might* get elevated
+                //      by one step.  Why this is done is beyond me, but there it is.  In order to support
+                //      all four processor privileges properly, I'm going to NOT implement that.
+                if (bmInfo._designatorRegister.getProcessorPrivilege() > 1) {
+                    bmInfo._designatorRegister.setExecRegisterSetSelected(false);
+                }
             } else if ((bmInfo._instruction == InstructionHandler.Instruction.GOTO)
                 || (bmInfo._instruction == InstructionHandler.Instruction.CALL)) {
                 bmInfo._designatorRegister.setBasicModeEnabled(true);

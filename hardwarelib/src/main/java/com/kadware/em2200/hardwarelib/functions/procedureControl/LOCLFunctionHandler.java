@@ -26,7 +26,7 @@ public class LOCLFunctionHandler extends InstructionHandler {
         IndexRegister xReg = ip.getExecOrUserXRegister(0);
         xReg.setH1(ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0);
         xReg.setH2(ip.getIndicatorKeyRegister().getAccessInfo().get());
-        int counter = (int)ip.getJumpOperand(true);
+        int counter = ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
 

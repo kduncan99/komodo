@@ -8,7 +8,6 @@ import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.baselib.exceptions.NotFoundException;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -169,7 +168,6 @@ public class Linker {
         private Integer _entryPointAddress = null;                      //  virtual address relative to bank limits
         private LoadableBank _entryPointBank = null;                    //  bank containing the entry point
         private RelocatableModule _entryPointRelocatableModule = null;  //  Module containing the entry point
-        private LocationCounterPool _entryPointLCPool = null;           //  LC Pool containing the entry point
         private boolean _foundEntryPoint = false;
 
         /**
@@ -179,7 +177,6 @@ public class Linker {
          */
         private EntryPointInfo(
             final ModuleSet moduleSet,
-            final Dictionary dictionary,
             final BankDeclaration[] bankDeclarations,
             final LoadableBank[] loadableBanks,
             final LocationCounterPoolMap lcPoolMap
@@ -207,7 +204,6 @@ public class Linker {
                     //  We have the relocatable module and pool
                     UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
                     _entryPointRelocatableModule = module;
-                    _entryPointLCPool = module._storage.get(lcRef._locationCounterIndex);
                     _foundEntryPoint = true;
                     long lcBase = findLocationCounterAddress(lcPoolMap, module, lcRef._locationCounterIndex);
                     _entryPointAddress = (int) iv._value + (int) lcBase;
@@ -418,6 +414,38 @@ public class Linker {
     }
 
     /**
+     * Creates a bank to contain a return control stack
+     * @param size size of the stack
+     * @param accessInfo ring/domain for the stack
+     * @return LoadableBank representing the RCS
+     */
+    private LoadableBank createRCSBank(
+        int bankLevel,
+        int bankDescriptorIndex,
+        final int size,
+        final AccessInfo accessInfo
+    ) {
+        ArraySlice slice = new ArraySlice(new long[size]);
+
+        try {
+            return new LoadableBank.Builder().setBankDescriptorIndex(bankDescriptorIndex)
+                                             .setBankLevel(bankLevel)
+                                             .setBankName("RCSTACK")
+                                             .setContent(slice)
+                                             .setIsExtendedMode(true)
+                                             .setStartingAddress(0)
+                                             .setInitialBaseRegister(25)
+                                             .setAccessInfo(accessInfo)
+                                             .setGeneralPermissions(new AccessPermissions(false, true, true))
+                                             .setSpecialPermissions(new AccessPermissions(false, true, true))
+                                             .build();
+        } catch (InvalidParameterException ex) {
+            raise("Internal Error:" + ex.getMessage());
+            return null;
+        }
+    }
+
+    /**
      *  Determine mode settings.
      *  If specified in the optionSet, then that setting overrides everything else.
      *  If not in the optionSet, we look at the settings on the relocatable elements.
@@ -547,7 +575,7 @@ public class Linker {
                 //  We will *not* resolve label references, as the resolved values for them are
                 //  being built in this loop, and some of them likely are not yet located.
                 long discreteValue = iv._value;
-                List<UndefinedReference> newRefs = new LinkedList<UndefinedReference>();
+                List<UndefinedReference> newRefs = new LinkedList<>();
                 for (UndefinedReference ur : iv._undefinedReferences) {
                     if (ur instanceof UndefinedReferenceToLabel) {
                         newRefs.add(ur);
@@ -735,12 +763,14 @@ public class Linker {
      * Performs the linkage
      * @param moduleName name of the absolute module to be created
      * @param bankDeclarations array of BankDeclaration objects
+     * @param stackDepth RCS stack depth - zero for no stack
      * @param optionSet options controlling the linkage
      * @return newly created AbsoluteModule
      */
     public AbsoluteModule link(
         final String moduleName,
         final BankDeclaration[] bankDeclarations,
+        final int stackDepth,
         final Option[] optionSet
     ) {
         _errors = 0;
@@ -755,19 +785,27 @@ public class Linker {
 //TODO        dictionary.loadBDILabels(bankDeclarations);
 
         //  Create LoadableBank objects to contain the code from the relocable module(s)
-        LoadableBank[] loadableBanks = new LoadableBank[bankDeclarations.length];
+        List<LoadableBank> loadableBanks = new LinkedList<>();
         for (int bx = 0; bx < bankDeclarations.length; ++bx) {
-            loadableBanks[bx] = createLoadableBank(bankDeclarations[bx], poolMap, dictionary);
+            loadableBanks.add(createLoadableBank(bankDeclarations[bx], poolMap, dictionary));
         }
 
-        EntryPointInfo epInfo = new EntryPointInfo(moduleSet, dictionary, bankDeclarations, loadableBanks, poolMap);
+        if (stackDepth > 0) {
+            BankDeclaration lastBank = bankDeclarations[bankDeclarations.length - 1];
+            loadableBanks.add(createRCSBank(lastBank._bankLevel,
+                                            lastBank._bankDescriptorIndex + 1,
+                                            8 * stackDepth, bankDeclarations[0]._accessInfo));
+        }
+
+        LoadableBank[] lbArray = loadableBanks.toArray(new LoadableBank[0]);
+        EntryPointInfo epInfo = new EntryPointInfo(moduleSet, bankDeclarations, lbArray, poolMap);
         Modes modes = determineModes(options, moduleSet, epInfo._foundEntryPoint ? epInfo._entryPointRelocatableModule : null);
         AbsoluteModule module = null;
         if (_errors == 0) {
             //  Create the module
             try {
                 module = new AbsoluteModule.Builder().setName(moduleName)
-                                                     .setLoadableBanks(loadableBanks)
+                                                     .setLoadableBanks(lbArray)
                                                      .setEntryPointAddress(epInfo._foundEntryPoint ? epInfo._entryPointAddress : null)
                                                      .setEntryPointBank(epInfo._foundEntryPoint ? epInfo._entryPointBank : null)
                                                      .setQuarter(modes._quarterWordMode)
@@ -781,6 +819,7 @@ public class Linker {
                 raise(ex.getMessage());
             }
         }
+
         System.out.println(String.format("Linking Ends Errors=%d -------------------------------------------------------",
                                          _errors));
         return module;

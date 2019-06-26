@@ -2557,7 +2557,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Linker.Option[] linkerOptions = {};
         Linker linker = new Linker();
-        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, linkerOptions);
+        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, 0, linkerOptions);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
 
@@ -2709,7 +2709,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Linker.Option[] linkerOptions = {};
         Linker linker = new Linker();
-        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, linkerOptions);
+        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, 0, linkerOptions);
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
 
