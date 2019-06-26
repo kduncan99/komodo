@@ -13,6 +13,9 @@ import com.kadware.em2200.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 
+/**
+ * This bit of nastiness implements a state machine which implements the bank manipulation algorithm
+ */
 public class BankManipulator {
 
     private enum TransferMode {
@@ -240,8 +243,10 @@ public class BankManipulator {
                 bmInfo._sourceBankOffset = (int) lbdiOffset & 0777777;
             } else if (bmInfo._instruction == InstructionHandler.Instruction.UR) {
                 //  source L,BDI comes from operand L,BDI
-                //  offset comes from operand offset (PAR.PC)... what does this mean?
-                //  TODO is this the same as the default case below?
+                //  offset comes from operand.PAR.PC
+                bmInfo._sourceBankLevel = (int) (bmInfo._operands[0] >> 33) & 03;
+                bmInfo._sourceBankDescriptorIndex = (int) (bmInfo._operands[0] >> 18) & 077777;
+                bmInfo._sourceBankOffset = (int) (bmInfo._operands[0] & 0777777);
             } else if (bmInfo._returnOperation) {
                 //  source L,BDI,Offset comes from RCS
                 //  This is where we pop an RCS frame and grab the relevant fields therefrom.
@@ -1056,21 +1061,21 @@ public class BankManipulator {
             final BankManipulationInfo bmInfo
         ) {
             if (bmInfo._baseRegisterIndex == 0) {
-                //TODO in some cases, this is already done.  We assert here to see if there are any cases where it isn't.
-                //  If we hit the assert, we'll write it here - otherwise, we'll NOP here.
-                assert(bmInfo._instructionProcessor.getProgramAddressRegister().getLevel() == bmInfo._targetBankLevel);
-                assert(bmInfo._instructionProcessor.getProgramAddressRegister().getBankDescriptorIndex() == bmInfo._targetBankDescriptorIndex);
+                //  This is already done for interrupt handling and UR
+                if ((bmInfo._interrupt == null) && (bmInfo._instruction != InstructionHandler.Instruction.UR)) {
+                    long newPar = bmInfo._instructionProcessor.getProgramAddressRegister().getH2();
+                    newPar |= (long) bmInfo._targetBankLevel << 33 | (long) bmInfo._targetBankDescriptorIndex << 18;
+                    bmInfo._instructionProcessor.setProgramAddressRegister(newPar);
+                }
             } else if (bmInfo._targetBankDescriptor == null) {
-                //TODO - have we satisfied this with the above conditional?
-                // Else, if a void Bank is to be loaded due to an L,BDI of 0,0 or due to an attempted LBU load of a
-                // Basic_Mode Bank at PP > 1 without Enter access, ABT.L,BDI is written to 0,0 and the contents
-                // of ABT.Offset are Architecturally_Undefined.
+                ActiveBaseTableEntry abte = new ActiveBaseTableEntry(0, 0, 0);
+                bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
             } else {
-            /*TODO
-Else, the L,BDI portion of the ABT entry is written with the Target L,BDI. For loads,
-ABT.Offset is written with the 18-bit Offset determined in step 3. For transfers when the
-ABT is written, ABT.Offset := 0.
-             */
+                int offset = bmInfo._loadInstruction ? bmInfo._targetBankOffset : 0;
+                ActiveBaseTableEntry abte = new ActiveBaseTableEntry(bmInfo._targetBankLevel,
+                                                                     bmInfo._targetBankDescriptorIndex,
+                                                                     offset);
+                bmInfo._instructionProcessor.getActiveBaseTableEntries()[bmInfo._baseRegisterIndex - 1] = abte;
             }
 
             bmInfo._nextStep++;
@@ -1085,18 +1090,29 @@ ABT is written, ABT.Offset := 0.
         @Override
         public void handler(
             final BankManipulationInfo bmInfo
-        ) {
-            //TODO
-            /*
-Base_Register Loading: When the LAE instruction generates a Class 9 interrupt according to
-BD.Type errors, it does not complete this step of the algorithm.
-The Base_Register selected in step 10 is loaded with the BD information (or the B.V := 1) as
-determined in steps 3 through 9.
-For nonvoid load instructions, subsetting occurs if the 18-bit Offset ≠ 0 (as determined in step
-3); see 4.6.6.
-Architecturally_Undefined: For nonvoid transfer instructions, if B.S =1 then B.Lower_Limit
-and B.Upper_Limit is undefined.
-             */
+        ) throws AddressingExceptionInterrupt {
+            if (bmInfo._targetBankDescriptor == null) {
+                bmInfo._instructionProcessor.setBaseRegister(bmInfo._baseRegisterIndex, new BaseRegister());
+            } else if (bmInfo._loadInstruction && (bmInfo._targetBankOffset != 0)) {
+                try {
+                    BaseRegister br = new BaseRegister(bmInfo._targetBankDescriptor, bmInfo._targetBankOffset);
+                    bmInfo._instructionProcessor.setBaseRegister(bmInfo._baseRegisterIndex, br);
+                } catch (AddressingExceptionInterrupt ex) {
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                           ex.getBankLevel(),
+                                                           ex.getBankDescriptorIndex());
+                }
+            } else {
+                try {
+                    BaseRegister br = new BaseRegister(bmInfo._targetBankDescriptor);
+                    bmInfo._instructionProcessor.setBaseRegister(bmInfo._baseRegisterIndex, br);
+                } catch (AddressingExceptionInterrupt ex) {
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                           ex.getBankLevel(),
+                                                           ex.getBankDescriptorIndex());
+                }
+            }
+
             bmInfo._nextStep++;
         }
     }
@@ -1112,7 +1128,7 @@ and B.Upper_Limit is undefined.
             final BankManipulationInfo bmInfo
         ) {
             if ((bmInfo._transferMode == TransferMode.BasicToBasic) || (bmInfo._transferMode == TransferMode.ExtendedToBasic)) {
-                //TODO
+                bmInfo._instructionProcessor.findBasicModeBank(bmInfo._targetBankOffset, true);
             }
 
             bmInfo._nextStep++;
@@ -1127,19 +1143,80 @@ and B.Upper_Limit is undefined.
         @Override
         public void handler(
             final BankManipulationInfo bmInfo
-        ) {
-            //TODO
-            bmInfo._nextStep++;
+        ) throws AddressingExceptionInterrupt {
+            if (bmInfo._targetBankDescriptor != null) {
+                //  Check BD.G for LBU,LBE, and all transfers
+                if ((bmInfo._instruction == InstructionHandler.Instruction.LBE)
+                    || (bmInfo._instruction == InstructionHandler.Instruction.LBU)
+                    || (bmInfo._transferMode != null)) {
+                    if (bmInfo._targetBankDescriptor.getGeneralFault()) {
+                        throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                               bmInfo._targetBankLevel,
+                                                               bmInfo._targetBankDescriptorIndex);
+                    }
+                }
+
+                AccessPermissions perms =
+                    getEffectiveAccessPermissions(bmInfo._indicatorKeyRegister.getAccessInfo(),
+                                                  bmInfo._targetBankDescriptor.getAccessLock(),
+                                                  bmInfo._targetBankDescriptor.getGeneraAccessPermissions(),
+                                                  bmInfo._targetBankDescriptor.getSpecialAccessPermissions());
+
+                //  Non RTN transfer to extended mode bank with no enter access, not a return,
+                //  non-gated (of course - targets of gate banks should always have no enter access)
+                if ((bmInfo._transferMode != null)
+                    && (bmInfo._gateBank == null)
+                    && !bmInfo._returnOperation) {
+                    if ((bmInfo._transferMode == TransferMode.BasicToExtended)
+                        || (bmInfo._transferMode == TransferMode.ExtendedToExtended)) {
+                        if (!perms._enter) {
+                            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                   bmInfo._targetBankLevel,
+                                                                   bmInfo._targetBankDescriptorIndex);
+                        }
+                    }
+                }
+
+                //  Did we attempt a non-gated transfer to a basic mode bank with enter access denied,
+                //  with relative address not set to the lower limit of the target BD?
+                if ((bmInfo._gateBank == null)
+                    && (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)) {
+                    if ((!perms._enter)
+                        && (bmInfo._targetBankOffset != bmInfo._targetBankDescriptor.getLowerLimitNormalized())) {
+                        throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                               bmInfo._targetBankLevel,
+                                                               bmInfo._targetBankDescriptorIndex);
+                    }
+                }
+
+                //  Did we do gated transfer, or non-gated with no enter access, to a basic mode bank,
+                //  while the new PAR.PC does not refer to that bank?
+                if ((bmInfo._gateBank != null) || (!perms._enter)) {
+                    if (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode) {
+                        BaseRegister br = bmInfo._instructionProcessor.getBaseRegister(bmInfo._baseRegisterIndex);
+                        int relAddr = bmInfo._instructionProcessor.getProgramAddressRegister().getProgramCounter();
+                        try {
+                            br.checkAccessLimits(relAddr, false);
+                        } catch (ReferenceViolationInterrupt ex) {
+                            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                   bmInfo._targetBankLevel,
+                                                                   bmInfo._targetBankDescriptorIndex);
+                        }
+                    }
+                }
+
+                //  Check for RCS.Trap (only if there is an RCS frame)
+                if ((bmInfo._rcsFrame != null) && (bmInfo._rcsFrame._trap)) {
+                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                           bmInfo._targetBankLevel,
+                                                           bmInfo._targetBankDescriptorIndex);
+                }
+            }
+
+            //  All done.
+            bmInfo._nextStep = 0;
         }
     }
-
-    /*
-    TODO
-    Temporary note: LxJ with IS==0 is LxJ normal (BM target) or LxJ/CALL (EM.entrer == 0 or Gate)
-                        with IS==1 is LxJ normal (BM target) or LxJ/GOTO (EM.enter == 1 or Gate)
-                        with IS==2 RCS.DB.16==1 is LxJ/RTN to BM
-                                   RCS.DB.16==0 is LxJ/RTN to EM
-     */
 
     /**
      * bank manipulation handlers...
@@ -1233,6 +1310,7 @@ and B.Upper_Limit is undefined.
         }
     }
 
+    //TODO - does LAE call here 15 times?  Maybe... in which case it does *not* give us 15 operands, only one at a time
     /**
      * An algorithm for handling bank transitions for the UR and LAE instructions
      * @param instructionProcessor IP of interest

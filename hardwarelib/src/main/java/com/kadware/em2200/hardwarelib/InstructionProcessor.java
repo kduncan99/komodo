@@ -610,41 +610,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
-     * are to be selected for that address.
-     * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
-     * @param relativeAddress relative address for which we search for a containing bank
-     * @param updateDB31 set true to update DB31 if we cross primary/secondary bank pairs
-     * @return the bank register index for the bank which contains the given relative address if found,
-     *          else zero if the address is not within any based bank limits.
-     */
-    private int findBasicModeBank(
-        final int relativeAddress,
-        final boolean updateDB31
-    ) {
-        boolean db31Flag = _designatorRegister.getBasicModeBaseRegisterSelection();
-        int[] table = db31Flag ? BASE_REGISTER_CANDIDATES_TRUE : BASE_REGISTER_CANDIDATES_FALSE;
-
-        for (int tx = 0; tx < 4; ++tx) {
-            //  See IP PRM 4.4.5 - select the base register from the selection table.
-            //  If the bank is void, skip it.
-            //  If the program counter is outside of the bank limits, skip it.
-            //  Otherwise, we found the BDR we want to use.
-            BaseRegister bReg = _baseRegisters[table[tx]];
-            if (isWithinLimits(bReg, relativeAddress)) {
-                if (updateDB31 && (tx >= 2)) {
-                    //  address is found in a secondary bank, so we need to flip DB31
-                    _designatorRegister.setBasicModeBaseRegisterSelection(!db31Flag);
-                }
-
-                return table[tx];
-            }
-        }
-
-        return 0;
-    }
-
-    /**
      * Determines the base register to be used for an extended mode instruction,
      * using the designator bit to indicate whether to use exec or user banks,
      * and whether we are using the I bit to extend the B field.
@@ -1096,6 +1061,41 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  Create and return a BankDescriptor object
         return new BankDescriptor(bdStorage, bdTableOffset);
+    }
+
+    /**
+     * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
+     * are to be selected for that address.
+     * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
+     * @param relativeAddress relative address for which we search for a containing bank
+     * @param updateDB31 set true to update DB31 if we cross primary/secondary bank pairs
+     * @return the bank register index for the bank which contains the given relative address if found,
+     *          else zero if the address is not within any based bank limits.
+     */
+    public int findBasicModeBank(
+        final int relativeAddress,
+        final boolean updateDB31
+    ) {
+        boolean db31Flag = _designatorRegister.getBasicModeBaseRegisterSelection();
+        int[] table = db31Flag ? BASE_REGISTER_CANDIDATES_TRUE : BASE_REGISTER_CANDIDATES_FALSE;
+
+        for (int tx = 0; tx < 4; ++tx) {
+            //  See IP PRM 4.4.5 - select the base register from the selection table.
+            //  If the bank is void, skip it.
+            //  If the program counter is outside of the bank limits, skip it.
+            //  Otherwise, we found the BDR we want to use.
+            BaseRegister bReg = _baseRegisters[table[tx]];
+            if (isWithinLimits(bReg, relativeAddress)) {
+                if (updateDB31 && (tx >= 2)) {
+                    //  address is found in a secondary bank, so we need to flip DB31
+                    _designatorRegister.setBasicModeBaseRegisterSelection(!db31Flag);
+                }
+
+                return table[tx];
+            }
+        }
+
+        return 0;
     }
 
     /**
