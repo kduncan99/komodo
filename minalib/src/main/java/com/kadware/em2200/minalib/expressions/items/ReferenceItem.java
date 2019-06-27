@@ -68,7 +68,26 @@ public class ReferenceItem extends OperandItem {
             //  It must be a particular type of value, else we have an expression exception.
             Value v = context.getDictionary().getValue(_reference);
             switch (v.getType()) {
-                case Integer:
+                case Integer: {
+                    //  If this has a location counter index associated with it, we don't want to resolve it yet
+                    //  because we might need it for a linker special thing such as LBDICALL$.
+                    //  If this is the case, then we produce an undefined reference instead of resolving...
+                    IntegerValue iv = (IntegerValue) v;
+                    for (UndefinedReference ur : iv._undefinedReferences) {
+                        if (ur instanceof UndefinedReferenceToLocationCounter) {
+                            UndefinedReference[] refs = {
+                                new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                              false,
+                                                              _reference)
+                            };
+                            return new IntegerValue(false, 0, refs);
+                        }
+                    }
+
+                    //  Otherwise, resolve the label
+                    return resolveLabel(context, v);
+                }
+
                 case FloatingPoint:
                 case String:
                     return resolveLabel(context, v);

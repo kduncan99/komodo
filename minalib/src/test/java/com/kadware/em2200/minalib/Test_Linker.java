@@ -157,7 +157,7 @@ public class Test_Linker {
         assertEquals(0_000077_000077L, dbank._content.get(0));
         assertEquals(0_777777_000000L, dbank._content.get(17));
 
-        LoadableBank rcsbank = abs._loadableBanks.get(07776);
+        LoadableBank rcsbank = abs._loadableBanks.get(06);
         assertTrue(rcsbank._isExtendedMode);
         assertEquals(256, rcsbank._content.getSize());
     }

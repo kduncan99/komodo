@@ -190,7 +190,8 @@ public class Assembler {
             for (RelocatableWord36 word36 : lcPool._storage) {
                 if (word36 != null) {
                     for (UndefinedReference ur : word36._undefinedReferences) {
-                        if (ur instanceof UndefinedReferenceToLabel) {
+                        if ((ur instanceof UndefinedReferenceToLabel)
+                            || (ur instanceof  UndefinedReferenceSpecial)) {
                             references.add(ur);
                         }
                     }
@@ -972,7 +973,7 @@ public class Assembler {
                                 try {
                                     Value lookupValue = context.getDictionary().getValue(lRef._label);
                                     if (lookupValue.getType() != ValueType.Integer) {
-                                        String msg = String.format("Forward reference '%s' does not resolve to an integer",
+                                        String msg = String.format("Reference '%s' does not resolve to an integer",
                                                                    lRef._label);
                                         context.appendDiagnostic(new ValueDiagnostic(new Locale(gWord._lineSpecifier, 1),
                                                                                      msg));

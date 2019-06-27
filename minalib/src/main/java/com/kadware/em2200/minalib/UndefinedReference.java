@@ -11,7 +11,7 @@ import com.kadware.em2200.baselib.FieldDescriptor;
  */
 public abstract class UndefinedReference {
 
-    final FieldDescriptor _fieldDescriptor;
+    public final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
     UndefinedReference(

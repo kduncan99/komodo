@@ -16,7 +16,7 @@ public class Test_Proc {
         String[] source = {
             "          $BASIC",
             "FOO       $PROC",
-            "          LA,U      A0,5,,B9",
+            "          LA,U      A0,5",
             "          SA        A0,R5",
             "          $END",
             "",

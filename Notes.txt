@@ -1,4 +1,5 @@
 -- InProgress
+Implement LBDI$ in Linker and Assembler, and maybe other such things
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ
 IP: extended mode procedure call unit tests for GOTO, CALL

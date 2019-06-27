@@ -176,12 +176,9 @@ public class Linker {
          * and a discrete value indicating the lc pool offset.  With that, we can find the containing bank.
          */
         private EntryPointInfo(
-            final ModuleSet moduleSet,
-            final BankDeclaration[] bankDeclarations,
-            final LoadableBank[] loadableBanks,
-            final LocationCounterPoolMap lcPoolMap
+            final LoadableBank[] loadableBanks
         ) {
-            for (RelocatableModule module : moduleSet._set) {
+            for (RelocatableModule module : _moduleSet._set) {
                 if (module._externalLabels.containsKey("START$")) {
                     IntegerValue iv = module._externalLabels.get("START$");
                     UndefinedReference[] urs = iv._undefinedReferences;
@@ -205,10 +202,10 @@ public class Linker {
                     UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
                     _entryPointRelocatableModule = module;
                     _foundEntryPoint = true;
-                    long lcBase = findLocationCounterAddress(lcPoolMap, module, lcRef._locationCounterIndex);
+                    long lcBase = findLocationCounterAddress(module, lcRef._locationCounterIndex);
                     _entryPointAddress = (int) iv._value + (int) lcBase;
 
-                    for (BankDeclaration bd : bankDeclarations) {
+                    for (BankDeclaration bd : _bankDeclarations) {
                         if (_entryPointBank != null) {
                             break;
                         }
@@ -230,6 +227,26 @@ public class Linker {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Maintains an IntegerValue along with information regarding where this value was sourced from
+     */
+    private static class LinkerValue extends IntegerValue {
+
+        private final Integer _lcIndex;                         //  null if n/a
+        private final RelocatableModule _relocatableModule;
+
+        private LinkerValue(
+            final long value,
+            final UndefinedReference[] undefinedReferences,
+            final Integer lcIndex,
+            final RelocatableModule relocatableModule
+        ) {
+            super(false, value, undefinedReferences);
+            _lcIndex = lcIndex;
+            _relocatableModule = relocatableModule;
         }
     }
 
@@ -361,7 +378,12 @@ public class Linker {
     //  Class data
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    private BankDeclaration[] _bankDeclarations = null;
+    private Dictionary _dictionary = null;
     private int _errors = 0;
+    private LocationCounterPoolMap _locationCounterPoolMap = null;
+    private ModuleSet _moduleSet = null;
+    private Options _options = null;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -373,9 +395,7 @@ public class Linker {
      * and generates the storage for the various banks.
      */
     private LoadableBank createLoadableBank(
-        final BankDeclaration bankDeclaration,
-        final LocationCounterPoolMap poolMap,
-        final Dictionary dictionary
+        BankDeclaration bankDeclaration
     ) {
         boolean needsExtended = bankDeclaration._needsExtendedMode;
         int bankSize = 0;
@@ -392,7 +412,7 @@ public class Linker {
                 needsExtended = true;
             }
 
-            loadPool(bankDeclaration, lcps, poolMap, slice, dictionary);
+            loadPool(bankDeclaration, lcps, slice);
         }
 
         try {
@@ -415,6 +435,8 @@ public class Linker {
 
     /**
      * Creates a bank to contain a return control stack
+     * @param bankLevel level of the bank to be created
+     * @param bankDescriptorIndex of the bank to be created
      * @param size size of the stack
      * @param accessInfo ring/domain for the stack
      * @return LoadableBank representing the RCS
@@ -452,22 +474,18 @@ public class Linker {
      *  If those options do not exist or they conflict, then go find the pool which contains
      *  the starting address (if any), and use the settings from that pool.
      *  If there is no starting address, then it doesn't matter and we leave the modes unset.
-     * @param globalOptions options from the link() method call
-     * @param moduleSet set of rel modules
      * @param entryPointRelModule rel module containing the entry point - null if none
      * @return Modes object describing the final mode settings to be used for the absolute module
      */
-    private static Modes determineModes(
-        final Options globalOptions,
-        final ModuleSet moduleSet,
+    private Modes determineModes(
         final RelocatableModule entryPointRelModule
     ) {
         Modes result = new Modes();
-        Modes relModes = new Modes(moduleSet);
+        Modes relModes = new Modes(_moduleSet);
 
-        if (globalOptions._modes._quarterWordMode || globalOptions._modes._thirdWordMode) {
-            result._quarterWordMode = globalOptions._modes._quarterWordMode;
-            result._thirdWordMode = globalOptions._modes._thirdWordMode;
+        if (_options._modes._quarterWordMode || _options._modes._thirdWordMode) {
+            result._quarterWordMode = _options._modes._quarterWordMode;
+            result._thirdWordMode = _options._modes._thirdWordMode;
         } else {
             if (relModes._thirdWordMode && relModes._quarterWordMode) {
                 if (entryPointRelModule != null) {
@@ -480,9 +498,9 @@ public class Linker {
             }
         }
 
-        if (globalOptions._modes._afCompatibilityMode || globalOptions._modes._afNonInterruptMode) {
-            result._afCompatibilityMode = globalOptions._modes._afCompatibilityMode;
-            result._afNonInterruptMode = globalOptions._modes._afNonInterruptMode;
+        if (_options._modes._afCompatibilityMode || _options._modes._afNonInterruptMode) {
+            result._afCompatibilityMode = _options._modes._afCompatibilityMode;
+            result._afNonInterruptMode = _options._modes._afNonInterruptMode;
         } else {
             if (relModes._afNonInterruptMode && relModes._afCompatibilityMode) {
                 if (entryPointRelModule != null) {
@@ -502,12 +520,10 @@ public class Linker {
      * Displays summary information
      * @param module AbsoluteModule to be displayed
      */
-    private static void display(
-        final AbsoluteModule module,
-        final Options options,
-        final Dictionary dictionary
+    private void display(
+        final AbsoluteModule module
     ) {
-        if (options._emitSummary || options._emitDictionary || options._emitGeneratedCode) {
+        if (_options._emitSummary || _options._emitDictionary || _options._emitGeneratedCode) {
             System.out.println(String.format("Absolute Module %s %s%s%s%s",
                                              module._name,
                                              module._setQuarter ? "Qtr " : "",
@@ -527,7 +543,11 @@ public class Linker {
                                                  bank._isExtendedMode ? "Extended" : "Basic",
                                                  bank._startingAddress,
                                                  bank._content.getSize()));
-                if (options._emitGeneratedCode) {
+                System.out.println(String.format("      Lock:%s GAP:%s SAP%s",
+                                                 bank._accessInfo,
+                                                 bank._generalPermissions,
+                                                 bank._specialPermissions));
+                if (_options._emitGeneratedCode) {
                     int wordsPerLine = 8;
                     for (int ix = 0; ix < bank._content.getSize(); ix += wordsPerLine) {
                         StringBuilder sb = new StringBuilder();
@@ -542,11 +562,11 @@ public class Linker {
                 }
             }
 
-            if (options._emitDictionary) {
+            if (_options._emitDictionary) {
                 System.out.println("Dictionary:");
-                for (String label : dictionary.getLabels()) {
+                for (String label : _dictionary.getLabels()) {
                     try {
-                        IntegerValue iv = (IntegerValue) dictionary.getValue(label);
+                        IntegerValue iv = (IntegerValue) _dictionary.getValue(label);
                         System.out.println(String.format("  %12s: %s", label, iv.toString()));
                     } catch (NotFoundException e) {
                         //  can't happen.
@@ -558,16 +578,10 @@ public class Linker {
 
     /**
      * Extracts labels exported by the various relocatable modules and copies them to our local dictionary
-     * @param moduleSet set of relocatable modules
-     * @param poolMap map of LC pool specs to virtual addresses
-     * @param dictionary dictionary into which the external labels are copied
      */
     private void extractLabels(
-        final ModuleSet moduleSet,
-        final LocationCounterPoolMap poolMap,
-        final Dictionary dictionary
     ) {
-        for (RelocatableModule module : moduleSet._set) {
+        for (RelocatableModule module : _moduleSet._set) {
             for (Map.Entry<String, IntegerValue> externalLabelEntry : module._externalLabels.entrySet()) {
                 String label = externalLabelEntry.getKey();
                 IntegerValue iv = externalLabelEntry.getValue();
@@ -576,27 +590,54 @@ public class Linker {
                 //  being built in this loop, and some of them likely are not yet located.
                 long discreteValue = iv._value;
                 List<UndefinedReference> newRefs = new LinkedList<>();
+                Integer lcIndex = null;
                 for (UndefinedReference ur : iv._undefinedReferences) {
                     if (ur instanceof UndefinedReferenceToLabel) {
                         newRefs.add(ur);
                     } else if (ur instanceof UndefinedReferenceToLocationCounter) {
                         UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
-                        long address = findLocationCounterAddress(poolMap, module, lcRef._locationCounterIndex);
+                        long address = findLocationCounterAddress(module, lcRef._locationCounterIndex);
                         discreteValue = integrateValue(discreteValue,
                                                        ur._fieldDescriptor,
                                                        address,
                                                        module._name,
                                                        lcRef._locationCounterIndex);
+                        if (lcIndex == null) {
+                            lcIndex = lcRef._locationCounterIndex;
+                        }
                     } else {
                         raise(String.format("Unknown undefined reference type encountered in module %s", module._name));
                     }
                 }
 
-                dictionary.addValue(0,
-                                    label,
-                                    new IntegerValue(false, discreteValue, newRefs.toArray(new UndefinedReference[0])));
+                LinkerValue lv = new LinkerValue(discreteValue,
+                                                 newRefs.toArray(new UndefinedReference[0]),
+                                                 lcIndex,
+                                                 module);
+                _dictionary.addValue(0, label, lv);
             }
         }
+    }
+
+    /**
+     * Finds the L,BDI of the bank containing the given module/lcIndex:
+     *      (level << 15) | (bdi)
+     * Results are indeterminate if the lc is included in more than one bank
+     */
+    private int findBankDescriptorIndex(
+        final RelocatableModule relocatableModule,
+        final int locationCounterIndex
+    ) {
+        for (BankDeclaration bd : _bankDeclarations) {
+            for (LCPoolSpecification pSpec : bd._poolSpecifications) {
+                if ((pSpec._module == relocatableModule) && (pSpec._lcIndex == locationCounterIndex)) {
+                    return (bd._bankLevel << 15) |  bd._bankDescriptorIndex;
+                }
+            }
+        }
+
+        assert(false);//????
+        return 0;
     }
 
     /**
@@ -606,11 +647,10 @@ public class Linker {
      * @return virtual address where the given lc pool begins
      */
     private long findLocationCounterAddress(
-        final LocationCounterPoolMap lcMap,
         final RelocatableModule module,
         final int lcIndex
     ) {
-        for (Map.Entry<LCPoolSpecification, Integer> entry : lcMap._map.entrySet()) {
+        for (Map.Entry<LCPoolSpecification, Integer> entry : _locationCounterPoolMap._map.entrySet()) {
             LCPoolSpecification poolSpec = entry.getKey();
             if ((poolSpec._module == module) && (poolSpec._lcIndex == lcIndex)) {
                 return entry.getValue();
@@ -621,6 +661,57 @@ public class Linker {
                             module._name,
                             lcIndex));
         return 0;
+    }
+
+    /**
+     * Handles special identifiers such as LBDICALL$ and it's ilk
+     * @param initialValue value into which we are integrating
+     * @param spRef UndefinedReferenceSpecial which contains the type and target label
+     * @param sourcePoolSpec source pool which contains the reference
+     * @return integrated value
+     */
+    private long handleSpecialIdentifier(
+        final long initialValue,
+        final UndefinedReferenceSpecial spRef,
+        final LCPoolSpecification sourcePoolSpec
+    ) {
+        long newValue = 0;
+        try {
+            switch (spRef._type) {
+                case LBDI:
+                    //TODO does not take a subject label, so we need to go back and do more work between this and the assembler
+                    break;
+
+                case LBDICALL: {
+                    //  We don't do absolute numbers, only label references
+                    //  We're not doing bank-implied (at least not yet), but we do check to see if the
+                    //  BDI for the label matches the BDI which contains the reference to it.
+                    LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(spRef._subjectLabel);
+                    if ((sourcePoolSpec._module != linkerValue._relocatableModule)
+                        || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
+                        newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
+                    }
+                    break;
+                }
+
+                case LBDIREF: {
+                    //  We don't do absolute numbers, only label references
+                    LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(spRef._subjectLabel);
+                    newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
+                    break;
+                }
+            }
+        } catch (NotFoundException ex) {
+            raise(String.format("Undefined reference for %s$ subject:%s",
+                                spRef._type.toString(),
+                                spRef._subjectLabel));
+        }
+
+        return integrateValue(initialValue,
+                              spRef._fieldDescriptor,
+                              newValue,
+                              sourcePoolSpec._module._name,
+                              sourcePoolSpec._lcIndex);
     }
 
     /**
@@ -688,15 +779,13 @@ public class Linker {
     private void loadPool(
         final BankDeclaration bankDeclaration,
         final LCPoolSpecification poolSpec,
-        final LocationCounterPoolMap poolMap,
-        final ArraySlice slice,
-        final Dictionary dictionary
+        final ArraySlice slice
     ) {
         //  For each source word in the relocatable element's location counter pool,
         //  get the discrete integer value, update it if appropriate, and move it
         //  to the Word36Array which eventually becomes the storage for the bank.
         LocationCounterPool lcp = poolSpec._module._storage.get(poolSpec._lcIndex);
-        for (int rwx = 0, wax = poolMap._map.get(poolSpec) - bankDeclaration._startingAddress;
+        for (int rwx = 0, wax = _locationCounterPoolMap._map.get(poolSpec) - bankDeclaration._startingAddress;
              rwx < lcp._storage.length;
              ++rwx, ++wax) {
             RelocatableWord36 rw36 = lcp._storage[rwx];
@@ -714,24 +803,27 @@ public class Linker {
                         if (ur instanceof UndefinedReferenceToLabel) {
                             UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) ur;
                             try {
-                                IntegerValue iv = (IntegerValue) dictionary.getValue(lRef._label);
+                                IntegerValue iv = (IntegerValue) _dictionary.getValue(lRef._label);
                                 discreteValue = integrateValue(discreteValue,
                                                                ur._fieldDescriptor,
                                                                iv._value,
                                                                poolSpec._module._name,
                                                                poolSpec._lcIndex);
                             } catch (NotFoundException ex) {
-                                raise(String.format("Internal error:Undefined reference %s", lRef._label));
+                                raise(String.format("Undefined reference:%s", lRef._label));
                             }
                         } else if (ur instanceof UndefinedReferenceToLocationCounter) {
                             //  This is a reference from a relocatable element to one of its own location counters.
                             UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
-                            long addr = findLocationCounterAddress(poolMap, poolSpec._module, lcRef._locationCounterIndex);
+                            long addr = findLocationCounterAddress(poolSpec._module, lcRef._locationCounterIndex);
                             discreteValue = integrateValue(discreteValue,
                                                            ur._fieldDescriptor,
                                                            addr,
                                                            poolSpec._module._name,
                                                            poolSpec._lcIndex);
+                        } else if (ur instanceof UndefinedReferenceSpecial) {
+                            UndefinedReferenceSpecial spRef = (UndefinedReferenceSpecial) ur;
+                            discreteValue = handleSpecialIdentifier(discreteValue, spRef, poolSpec);
                         } else {
                             raise("Internal error:Undefined reference of unknown type");
                         }
@@ -773,21 +865,20 @@ public class Linker {
         final int stackDepth,
         final Option[] optionSet
     ) {
+        _bankDeclarations = bankDeclarations;
         _errors = 0;
 
         System.out.println(String.format("Linking module %s -----------------------------------", moduleName));
-        Options options = new Options(optionSet);
-        ModuleSet moduleSet = new ModuleSet(bankDeclarations);
-        LocationCounterPoolMap poolMap = new LocationCounterPoolMap(bankDeclarations);
-        Dictionary dictionary = new Dictionary();
-        extractLabels(moduleSet, poolMap, dictionary);
-
-//TODO        dictionary.loadBDILabels(bankDeclarations);
+        _options = new Options(optionSet);
+        _moduleSet = new ModuleSet(bankDeclarations);
+        _locationCounterPoolMap = new LocationCounterPoolMap(bankDeclarations);
+        _dictionary = new Dictionary();
+        extractLabels();
 
         //  Create LoadableBank objects to contain the code from the relocable module(s)
         List<LoadableBank> loadableBanks = new LinkedList<>();
-        for (int bx = 0; bx < bankDeclarations.length; ++bx) {
-            loadableBanks.add(createLoadableBank(bankDeclarations[bx], poolMap, dictionary));
+        for (BankDeclaration bd : _bankDeclarations) {
+            loadableBanks.add(createLoadableBank(bd));
         }
 
         if (stackDepth > 0) {
@@ -798,8 +889,8 @@ public class Linker {
         }
 
         LoadableBank[] lbArray = loadableBanks.toArray(new LoadableBank[0]);
-        EntryPointInfo epInfo = new EntryPointInfo(moduleSet, bankDeclarations, lbArray, poolMap);
-        Modes modes = determineModes(options, moduleSet, epInfo._foundEntryPoint ? epInfo._entryPointRelocatableModule : null);
+        EntryPointInfo epInfo = new EntryPointInfo(lbArray);
+        Modes modes = determineModes(epInfo._foundEntryPoint ? epInfo._entryPointRelocatableModule : null);
         AbsoluteModule module = null;
         if (_errors == 0) {
             //  Create the module
@@ -812,9 +903,9 @@ public class Linker {
                                                      .setThird(modes._thirdWordMode)
                                                      .setAFCMSet(modes._afCompatibilityMode)
                                                      .setAFCMClear(modes._afNonInterruptMode)
-                                                     .setAllowNoEntryPoint(options._noEntryPoint)
+                                                     .setAllowNoEntryPoint(_options._noEntryPoint)
                                                      .build();
-                display(module, options, dictionary);
+                display(module);
             } catch (InvalidParameterException ex) {
                 raise(ex.getMessage());
             }

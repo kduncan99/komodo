@@ -59,7 +59,7 @@ public class IntegerValue extends Value {
             if ((iobj._flagged == _flagged)
                 && (iobj._undefinedReferences.length == 0)
                 && (_undefinedReferences.length == 0)) {
-                return Long.compare( _value, iobj._value );
+                return Long.compare(_value, iobj._value);
             }
         }
 
@@ -108,7 +108,6 @@ public class IntegerValue extends Value {
 
     /**
      * Generate hash code
-     * @return
      */
     @Override
     public int hashCode() {
