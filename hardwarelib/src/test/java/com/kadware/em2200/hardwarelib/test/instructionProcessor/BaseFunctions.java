@@ -507,6 +507,71 @@ class BaseFunctions {
     }
 
     /**
+     * Assembles source code into a relocatable module, then links it, producing multiple banks where
+     * every LC number encountered is placed in a bank with a BDI which is set to LC number + 4.
+     * @param code arrays of text comprising the source code we assemble
+     * @param display true to display assembler/linker output
+     * @return linked absolute module
+     */
+    static AbsoluteModule buildCodeExtendedMultibank2(
+        final String[] code,
+        final boolean display
+    ) {
+        Assembler asm = new Assembler();
+        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        assert(relModule != null);
+
+        Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
+        for (Integer lcIndex : relModule._storage.keySet()) {
+            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
+            int bdi = lcIndex + 4;
+            if (!poolSpecMap.containsKey(bdi)) {
+                poolSpecMap.put(bdi, new LinkedList<Linker.LCPoolSpecification>());
+            }
+            poolSpecMap.get(bdi).add(poolSpec);
+        }
+
+        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
+        int dataBReg = 2;
+        for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
+            int bdi = entry.getKey();
+            List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
+            Linker.BankDeclaration.Builder builder = new Linker.BankDeclaration.Builder();
+            builder.setAccessInfo(new AccessInfo(3, 0));
+            builder.setBankName(String.format("BANK%06o", bdi));
+            builder.setBankDescriptorIndex(bdi);
+            builder.setBankLevel(6);
+            builder.setNeedsExtendedMode(true);
+            builder.setStartingAddress(01000);
+            builder.setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]));
+            if (bdi == 05) {
+                //  first code bank
+                builder.setInitialBaseRegister(0);
+                builder.setSpecialAccessPermissions(new AccessPermissions(true, true, false));
+                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
+            }
+            else if ((bdi & 01) == 0) {
+                //  all data banks
+                builder.setInitialBaseRegister(dataBReg++);
+                builder.setSpecialAccessPermissions(new AccessPermissions(false, true, true));
+                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
+            } else {
+                //  all other code banks
+                builder.setSpecialAccessPermissions(new AccessPermissions(true, true, true));
+                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
+            }
+
+            bankDeclarations.add(builder.build());
+        }
+
+        Linker linker = new Linker();
+        return linker.link("TEST",
+                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
+                           32,
+                           display ? _linkerDisplayAll : _linkerDisplayNone);
+    }
+
+    /**
      * Creates the banking environment absolute module
      */
     static private void createBankingModule(

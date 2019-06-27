@@ -23,7 +23,49 @@ import static org.junit.Assert.assertEquals;
 public class Test_ProcedureControlInstructions extends BaseFunctions {
 
     @Test
-    public void locl(
+    public void gotoNormal(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)      $LIT . will be based on B2",
+            "",
+            "$(2) . will be initially based on B3",
+            "          $RES 8",
+            "",
+            "$(4) . will be initially based on B4",
+            "          $RES 8",
+            "",
+            "$(1),START$* . will be initially based on B0",
+            "          GOTO      (LBDICALL$+TARGET3,TARGET3),,B2",
+            "          HALT      077 . should not get here",
+            "",
+            "$(3),TARGET3* . won't be initially based",
+            "          GOTO      (LBDICALL$+TARGET5,TARGET5),,B2",
+            "          HALT      076 . or here",
+            "",
+            "$(5),TARGET5* . also won't be initially based",
+            "          HALT      0   . should land here"
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank2(source, true);
+        assert (absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void loclNormal(
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException,

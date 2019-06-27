@@ -22,7 +22,7 @@ public class CALLFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        long operand = ip.getJumpOperand(false);
+        long operand = ip.getOperand(false, true, false, false);
         BankManipulator.bankManipulation(ip, Instruction.CALL, operand);
     }
 

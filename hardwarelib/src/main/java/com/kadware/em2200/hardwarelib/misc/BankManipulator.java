@@ -1040,8 +1040,10 @@ public class BankManipulator {
                 }
             } else if ((bmInfo._instruction == InstructionHandler.Instruction.GOTO)
                 || (bmInfo._instruction == InstructionHandler.Instruction.CALL)) {
-                bmInfo._designatorRegister.setBasicModeEnabled(true);
-            } else if (bmInfo._lxjInstruction) {
+                if (bmInfo._transferMode == TransferMode.ExtendedToBasic) {
+                    bmInfo._designatorRegister.setBasicModeEnabled(true);
+                }
+            } else if ((bmInfo._lxjInstruction) && (bmInfo._transferMode == TransferMode.BasicToExtended)) {
                 bmInfo._designatorRegister.setBasicModeEnabled(false);
             }
 
@@ -1174,12 +1176,12 @@ public class BankManipulator {
                 }
 
                 AccessPermissions perms =
-                    getEffectiveAccessPermissions(bmInfo._indicatorKeyRegister.getAccessInfo(),
+                    getEffectiveAccessPermissions(bmInfo._instructionProcessor.getIndicatorKeyRegister().getAccessInfo(),
                                                   bmInfo._targetBankDescriptor.getAccessLock(),
                                                   bmInfo._targetBankDescriptor.getGeneraAccessPermissions(),
                                                   bmInfo._targetBankDescriptor.getSpecialAccessPermissions());
 
-                //  Non RTN transfer to extended mode bank with no enter access, not a return,
+                //  Non RTN transfer to extended mode bank with no enter access,
                 //  non-gated (of course - targets of gate banks should always have no enter access)
                 if ((bmInfo._transferMode != null)
                     && (bmInfo._gateBank == null)
@@ -1274,7 +1276,7 @@ public class BankManipulator {
         final AccessPermissions generalPermissions,
         final AccessPermissions specialPermissions
     ) {
-        return ((key._domain > lock._domain) || (key.equals(lock))) ? specialPermissions : generalPermissions;
+        return ((key._ring < lock._ring) || (key.equals(lock))) ? specialPermissions : generalPermissions;
     }
 
     /**
