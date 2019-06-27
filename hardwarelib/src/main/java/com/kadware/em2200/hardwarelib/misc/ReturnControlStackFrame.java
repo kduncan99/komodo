@@ -58,19 +58,18 @@ class ReturnControlStackFrame {
 
     /**
      * Returns two-word representation of the RCS frame
-     * @return
      */
     long[] get() {
-        long long0 = (long) _reentryPointBankLevel << 33;
-        long0 |= (long) _reentryPointBankDescriptorIndex << 18;
-        long0 |= _reentryPointOffset;
+        long[] result = new long[2];
+        result[0] = ((long) _reentryPointBankLevel << 33)
+                    | ((long) _reentryPointBankDescriptorIndex << 18)
+                    | (result[0] |= _reentryPointOffset);
 
-        long long1 = _trap ? 0_400000_000000L : 0;
-        long1 |= _basicModeBaseRegister << 24;
-        long1 |= _designatorRegisterDB12To17.getW();
-        long1 |= _accessKey.get();
+        result[1] = (_trap ? 0_400000_000000L : 0)
+                    | (_basicModeBaseRegister << 24)
+                    | _designatorRegisterDB12To17.getW()
+                    | _accessKey.get();
 
-        long[] result = { long0, long1};
         return result;
     }
 }

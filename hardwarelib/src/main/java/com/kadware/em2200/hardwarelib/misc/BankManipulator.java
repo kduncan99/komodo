@@ -103,11 +103,13 @@ public class BankManipulator {
                     _lxjBankSelector = (int) (_lxjXRegister.getW() >> 33) & 03;
                 }
 
-                _callOperation = (instruction == InstructionHandler.Instruction.CALL)
+                _callOperation =
+                    (instruction == InstructionHandler.Instruction.CALL)
                     || (instruction == InstructionHandler.Instruction.LOCL)
                     || (_lxjInstruction && (_lxjInterfaceSpec < 2));
                 //  Note that UR is not considered a return operation
-                _returnOperation = (instruction == InstructionHandler.Instruction.RTN)
+                _returnOperation =
+                    (instruction == InstructionHandler.Instruction.RTN)
                     || (_lxjInstruction && (_lxjInterfaceSpec == 2));
             }
         }
@@ -166,9 +168,9 @@ public class BankManipulator {
         ) {
             if (bmInfo._instruction != null) {
                 if (bmInfo._instruction == InstructionHandler.Instruction.CALL) {
-                    bmInfo._priorBankLevel = (int) (bmInfo._currentInstruction.getW() >> 33);
-                    bmInfo._priorBankDescriptorIndex =
-                        (int) (bmInfo._currentInstruction.getW() >> 18) & 077777;
+                    bmInfo._priorBankLevel = bmInfo._instructionProcessor.getProgramAddressRegister().getLevel();
+                    bmInfo._priorBankDescriptorIndex
+                        = bmInfo._instructionProcessor.getProgramAddressRegister().getBankDescriptorIndex();
                 } else if ((bmInfo._lxjInstruction) && (bmInfo._lxjInterfaceSpec < 2)) {
                     //  We're supposed to be here for normal LxJ and for LxJ/CALL, but we also catch LxJ/GOTO
                     //  (interfaceSpec == 1 and target BD is extended with enter access, or gate)
