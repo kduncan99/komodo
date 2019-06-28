@@ -1,8 +1,8 @@
 -- InProgress
 Implement LBDI$ in Linker and Assembler, and maybe other such things
 IP: need more address space management instructions unit tests
-IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ
-IP: extended mode procedure call unit tests for GOTO, CALL
+IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
+IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -30,6 +30,10 @@ IP: activity control instructions (and unit tests)
   DCEL
   SKQT
   KCHG
+IP: special instructions (and unit tests)
+  EX
+  EXR
+  DCB
 Catch throwables, and turn them into hardware fault machine interrupts
 Change extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
@@ -37,6 +41,9 @@ For basic mode, no need really to test the bank limits on every fetch - set it o
 need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
 IP,IOP: UPI send/ack mechanism for IOs
+  See Interrupt classes 29, 30, 31.  29 is IPL, 30 is activating a 'cleared' IP into a running environment
+  And 31 is for... what?  I think we can use that for other processors to tell EXEC that there's something needs
+  attention, which I completely missed before.  For 5 years.  <sigh>.
 IP: operations control instructions (and unit tests)
   SEND
   ACK
@@ -87,10 +94,6 @@ IP: system instrumentation instructions
   LBRX
   CJHE
   SJH
-IP: special instructions (and unit tests)
-  EX
-  EXR
-  DCB
 IP: floating point binary instructions (and unit tests)
   FA
   FAN
