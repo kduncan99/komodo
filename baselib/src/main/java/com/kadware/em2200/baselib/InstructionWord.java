@@ -668,6 +668,7 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EXTENDED, 037, 004, 001, true,  true,  false, false, ASemantics.NONE,  "SDMN",  false),
         new InstructionInfo(Mode.EXTENDED, 037, 004, 002, true,  true,  false, false, ASemantics.NONE,  "SDMF",  false),
         new InstructionInfo(Mode.EXTENDED, 037, 004, 003, true,  true,  false, false, ASemantics.NONE,  "SDMS",  false),
+        new InstructionInfo(Mode.EXTENDED, 037, 004, 004, true,  true,  false, false, ASemantics.NONE,  "KCHG",  false),
         new InstructionInfo(Mode.EITHER,   037, 007, 000, true,  false, false, false, ASemantics.A,     "LMC",   false),
         new InstructionInfo(Mode.BASIC,    037, 010, 000, true,  false, false, false, ASemantics.NONE,  "BIM",   false),
         new InstructionInfo(Mode.BASIC,    037, 011, 000, true,  false, false, false, ASemantics.NONE,  "BIC",   false),

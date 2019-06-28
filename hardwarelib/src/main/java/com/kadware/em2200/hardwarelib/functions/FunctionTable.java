@@ -127,8 +127,8 @@ public abstract class FunctionTable {
         null,           //  000
         null,           //  001
         null,           //  002
-        null,           //  003
-        null,           //  004
+        new ACELFunctionHandler(),  //  003
+        new DCELFunctionHandler(),  //  004
         new SPIDFunctionHandler(),  //  005
         null,           //  006
         null,           //  007
@@ -521,6 +521,50 @@ public abstract class FunctionTable {
     };
 
     /**
+     * Extended Mode function handlers for f-field 037, j-field 004, indexed by a-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION037_004_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        new KCHGFunctionHandler(),  //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        null,           //  017
+    };
+
+    /**
+     * Extended Mode function handlers for f-field 037, indexed by j-field
+     */
+    private static final FunctionHandler[] EXTENDED_MODE_FUNCTION037_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION037_004_HANDLERS),  //  004
+        null,           //  005
+        null,           //  006
+        null,           //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        null,           //  017
+    };
+
+    /**
      * Extended Mode function handlers for f-field 050, indexed by a-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION050_HANDLERS = {
@@ -615,15 +659,15 @@ public abstract class FunctionTable {
         null,           //  000
         null,           //  001
         null,           //  002
-        null,           //  003
-        null,           //  004
+        new ACELFunctionHandler(),  //  003
+        new DCELFunctionHandler(),  //  004
         new SPIDFunctionHandler(),  //  005
         new DABTFunctionHandler(),  //  006
         null,           //  007
         null,           //  010
         null,           //  011
         null,           //  012
-        null,           //  013
+        new SKQTFunctionHandler(),  //  013
         new LDFunctionHandler(),    //  014
         new SDFunctionHandler(),    //  015
         null,           //  016
@@ -841,7 +885,7 @@ public abstract class FunctionTable {
         new DIFunctionHandler(),    //  034
         new DSFFunctionHandler(),   //  035
         new DFFunctionHandler(),    //  036
-        null,           //  037
+        new SubFunctionHandler(EXTENDED_MODE_FUNCTION037_HANDLERS), //  037
         new ORFunctionHandler(),    //  040
         new XORFunctionHandler(),   //  041
         new ANDFunctionHandler(),   //  042
@@ -850,7 +894,7 @@ public abstract class FunctionTable {
         new TOPFunctionHandler(),   //  045
         new LXIFunctionHandler(),   //  046
         new TLEMFunctionHandler(),  //  047
-        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION050_HANDLERS),  //  050
+        new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION050_HANDLERS),  //  050 sub-indexed by a-field, *NOT* j-field
         new LXSIFunctionHandler(),  //  051
         new TEFunctionHandler(),    //  052
         new TNEFunctionHandler(),   //  053

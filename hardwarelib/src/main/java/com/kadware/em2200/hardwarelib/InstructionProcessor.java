@@ -210,6 +210,7 @@ public class InstructionProcessor extends Processor implements Worker {
     public StopReason getLatestStopReason() { return _latestStopReason; }
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
+    public long getQuantumTimer() { return _quantumTimer.getW(); }
     public boolean getRunningFlag() { return _runningFlag; }
 
     public void loadActiveBaseTable(
