@@ -1,11 +1,25 @@
 -- InProgress
-IP: activity control instructions (and unit tests)
-  LAE
-  UR
-  ACEL
-  DCEL
-  SKQT
-  KCHG
+IP: dayclock control instructions (and unit tests)
+Dayclock is 54 bits in microseconds
+Need to implement master dayclock comparator
+Need to implement enabling dayclock interrupts
+  LRD
+    take given time in microsecs from A(a)/A(a+1), calculate and store offset from system time in microsecs
+    update comparator (if it was set) by the difference between the new offset and the previous offset
+  SMD (nop)
+  RMD (invalid instruction)
+  LMC
+    take given time in microsecs from A(a)/A(a+1), apply stored offset from above, and save
+  SDMN (nop)
+  SDMS (nop)
+  SDMF (nop)
+  RDC
+    read system time in microsecs, apply offset (from above)
+    if same as last reported time, increment by 1
+    save as last reported time
+    store the result in A(a)/A(a+1),
+  We don't actually *have* to allow the user to set the time (although they could specify zone and seasonal)...
+
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -16,23 +30,8 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
   Applies to all jumps, as well as to LxJ
 
 -- TODO implement
-* baselib
-some new instructions
-
 * hardwarelib
-IP: need more address space management instructions unit tests
-IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
-IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
-IP: special instructions (and unit tests)
-  EX
-  EXR
-  DCB
-Catch throwables, and turn them into hardware fault machine interrupts
-Change extended mode dbanks to start at lower-limit 0 - this *should* work...
-For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
-  what to do when we run off the end of the bank?
-need some conditional jump tests which would incur reference violation if they jumped
-    both jumping (ref violation) and not jumping (no ref violation)
+IP: BT instruction and unit tests
 IP,IOP: UPI send/ack mechanism for IOs
   See Interrupt classes 29, 30, 31.  29 is IPL, 30 is activating a 'cleared' IP into a running environment
   And 31 is for... what?  I think we can use that for other processors to tell EXEC that there's something needs
@@ -40,6 +39,17 @@ IP,IOP: UPI send/ack mechanism for IOs
 IP: operations control instructions (and unit tests)
   SEND
   ACK
+IP: need more address space management instructions unit tests
+IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
+IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
+IP: unit tests
+  LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
+Catch throwables, and turn them into hardware fault machine interrupts
+Change extended mode dbanks to start at lower-limit 0 - this *should* work...
+For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
+  what to do when we run off the end of the bank?
+need some conditional jump tests which would incur reference violation if they jumped
+    both jumping (ref violation) and not jumping (no ref violation)
 MSP: add support for banks dynamically allocated from native system
 IP: IPC instruction for dynamic bank allocation
 IP: interrupt processing, use standard bank switching logic
@@ -50,8 +60,11 @@ Rewrite disk (and maybe tape) devices using async IO
 All Device objects: add Builder class, make constructors private
 IP: UNLK instruction
 IP: SPID see new info
-IP: storage-to-storage instructions (and unit tests)
-  BT (note special version to indicate processor idle)
+IP: special instructions (and unit tests)
+  EX
+  EXR
+  DCB
+IP: storage-to-storage instructions (and unit tests) other than BT
   BIM
   BIC
   BIMT
@@ -74,15 +87,6 @@ IP: queuing instructions
   DEQW
   DEPOSITQB
   WITHDRAWQB
-IP: dayclock control instructions (and unit tests)
-  LRD
-  SMD
-  RMD
-  LMC
-  SDMN
-  SDMS
-  SDMF
-  RDC
 IP: system instrumentation instructions
   LBRX
   CJHE

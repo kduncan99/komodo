@@ -2,7 +2,7 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
+package com.kadware.em2200.hardwarelib.functions.activityControl;
 
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
@@ -14,9 +14,9 @@ import com.kadware.em2200.hardwarelib.misc.BankManipulator;
 import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 
 /**
- * Handles the LBU instruction f=075 j=00
+ * Handles the UR instruction f=073 j=015 a=016
  */
-public class LBUFunctionHandler extends InstructionHandler {
+public class URFunctionHandler extends InstructionHandler {
 
     @Override
     public void handle(
@@ -29,10 +29,11 @@ public class LBUFunctionHandler extends InstructionHandler {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
 
-        long operand = ip.getOperand(false, true, false, false);
-        BankManipulator.bankManipulation(ip, Instruction.LBU, operand);
+        long[] operands = new long[7];
+        ip.getConsecutiveOperands(false, operands);
+        BankManipulator.bankManipulation(ip, Instruction.UR, operands);
     }
 
     @Override
-    public Instruction getInstruction() { return Instruction.LBU; }
+    public Instruction getInstruction() { return Instruction.UR; }
 }

@@ -138,7 +138,7 @@ public abstract class FunctionTable {
         null,           //  013
         new LDFunctionHandler(),    //  014
         new SDFunctionHandler(),    //  015
-        null,           //  016
+        new URFunctionHandler(),    //  016
         new SGNLFunctionHandler(),  //  017
     };
 
@@ -666,11 +666,11 @@ public abstract class FunctionTable {
         null,           //  007
         null,           //  010
         null,           //  011
-        null,           //  012
+        new LAEFunctionHandler(),   //  012
         new SKQTFunctionHandler(),  //  013
         new LDFunctionHandler(),    //  014
         new SDFunctionHandler(),    //  015
-        null,           //  016
+        new URFunctionHandler(),    //  016
         new SGNLFunctionHandler(),  //  017
     };
 

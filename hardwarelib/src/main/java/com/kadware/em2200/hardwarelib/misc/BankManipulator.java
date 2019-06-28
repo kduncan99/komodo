@@ -697,7 +697,7 @@ public class BankManipulator {
             final BankManipulationInfo bmInfo
         ) {
             if (bmInfo._instruction == InstructionHandler.Instruction.LAE) {
-                //  Special case - we load 15 registers here B1:B15
+                //  baseRegisterIndex was set a long time ago...
                 bmInfo._nextStep = 18;
             } else if (bmInfo._instruction == InstructionHandler.Instruction.LBE) {
                 bmInfo._baseRegisterIndex = (int) bmInfo._currentInstruction.getA() + 16;
@@ -1349,9 +1349,8 @@ public class BankManipulator {
         process(bmInfo);
     }
 
-    //TODO - does LAE call here 15 times?  Maybe... in which case it does *not* give us 15 operands, only one at a time
     /**
-     * An algorithm for handling bank transitions for the UR and LAE instructions
+     * An algorithm for handling bank transitions for the UR instruction
      * @param instructionProcessor IP of interest
      * @param instruction type of instruction or null if we are invoked for interrupt handling
      * @param operands array of 7 operand values for UR, or 15 values for LAE
@@ -1371,6 +1370,34 @@ public class BankManipulator {
              InvalidInstructionInterrupt,
              RCSGenericStackUnderflowOverflowInterrupt {
         BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, instruction, operands, null);
+        process(bmInfo);
+    }
+
+    /**
+     * An algorithm for handling bank transitions for the LAE instruction
+     * @param instructionProcessor IP of interest
+     * @param instruction type of instruction or null if we are invoked for interrupt handling
+     * @param baseRegisterIndex indicates the register upon which the bank is to be based
+     * @param operand L,BDI,OFFSET for bank to be based
+     * @throws AddressingExceptionInterrupt if IS==3 for any LxJ instruction
+     *                                      or source L,BDI is invalid
+     *                                      or a void bank is specified where it is not allowed
+     *                                      or for an invalid bank type in various situations
+     *                                      or general fault set on destination bank
+     * @throws InvalidInstructionInterrupt for LBU with B0 or B1 specified as destination
+     * @throws RCSGenericStackUnderflowOverflowInterrupt for return operaions for which there is no existing stack frame
+     */
+    public static void bankManipulation(
+        final InstructionProcessor instructionProcessor,
+        final InstructionHandler.Instruction instruction,
+        final int baseRegisterIndex,
+        final long operand
+    ) throws AddressingExceptionInterrupt,
+             InvalidInstructionInterrupt,
+             RCSGenericStackUnderflowOverflowInterrupt {
+        long[] operands = { operand };
+        BankManipulationInfo bmInfo = new BankManipulationInfo(instructionProcessor, instruction, operands, null);
+        bmInfo._baseRegisterIndex = baseRegisterIndex;
         process(bmInfo);
     }
 
