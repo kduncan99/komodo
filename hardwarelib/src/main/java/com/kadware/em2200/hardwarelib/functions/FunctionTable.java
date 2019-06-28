@@ -7,6 +7,7 @@ package com.kadware.em2200.hardwarelib.functions;
 import com.kadware.em2200.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.functions.activityControl.*;
 import com.kadware.em2200.hardwarelib.functions.addressSpaceManagement.*;
+import com.kadware.em2200.hardwarelib.functions.dayclockControl.*;
 import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
 import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
 import com.kadware.em2200.hardwarelib.functions.generalStore.*;
@@ -74,6 +75,28 @@ public abstract class FunctionTable {
         new SPDFunctionHandler(),   //  015
         null,           //  016
         new LBJFunctionHandler(),   //  017
+    };
+
+    /**
+     * Basic Mode function handlers for f-field 037, indexed by j-field
+     */
+    private static final FunctionHandler[] BASIC_MODE_FUNCTION037_HANDLERS = {
+        null,           //  000
+        null,           //  001
+        null,           //  002
+        null,           //  003
+        null,           //  004
+        null,           //  005
+        null,           //  006
+        new LMCFunctionHandler(),   //  007
+        null,           //  010
+        null,           //  011
+        null,           //  012
+        null,           //  013
+        null,           //  014
+        null,           //  015
+        null,           //  016
+        null,           //  017
     };
 
     /**
@@ -293,7 +316,7 @@ public abstract class FunctionTable {
         new LBNFunctionHandler(),   //  014
         new CRFunctionHandler(),    //  015
         null,           //  016
-        null,           //  017
+        new RMDFunctionHandler(),   //  017
     };
 
     /**
@@ -375,7 +398,7 @@ public abstract class FunctionTable {
         new DIFunctionHandler(),    //  034
         new DSFFunctionHandler(),   //  035
         new DFFunctionHandler(),    //  036
-        null,           //  037
+        new SubFunctionHandler(BASIC_MODE_FUNCTION037_HANDLERS),    //  037
         new ORFunctionHandler(),    //  040
         new XORFunctionHandler(),   //  041
         new ANDFunctionHandler(),   //  042
@@ -524,10 +547,10 @@ public abstract class FunctionTable {
      * Extended Mode function handlers for f-field 037, j-field 004, indexed by a-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION037_004_HANDLERS = {
-        null,           //  000
-        null,           //  001
-        null,           //  002
-        null,           //  003
+        new SMDFunctionHandler(),   //  000
+        new SDMNFunctionHandler(),  //  001
+        new SDMFFunctionHandler(),  //  002
+        new SDMSFunctionHandler(),  //  003
         new KCHGFunctionHandler(),  //  004
         null,           //  005
         null,           //  006
@@ -546,14 +569,14 @@ public abstract class FunctionTable {
      * Extended Mode function handlers for f-field 037, indexed by j-field
      */
     private static final FunctionHandler[] EXTENDED_MODE_FUNCTION037_HANDLERS = {
-        null,           //  000
+        new LRDFunctionHandler(),   //  000
         null,           //  001
         null,           //  002
         null,           //  003
         new SubSubFunctionHandler(EXTENDED_MODE_FUNCTION037_004_HANDLERS),  //  004
         null,           //  005
         null,           //  006
-        null,           //  007
+        new LMCFunctionHandler(),   //  007
         null,           //  010
         null,           //  011
         null,           //  012
@@ -798,12 +821,12 @@ public abstract class FunctionTable {
         new LBUDFunctionHandler(),  //  007
         new TVAFunctionHandler(),   //  010
         null,           //  011
-        null,           //  012
+        new RDCFunctionHandler(),   //  012
         new LXLMFunctionHandler(),  //  013
         new LBNFunctionHandler(),   //  014
         new CRFunctionHandler(),    //  015
         null,           //  016
-        null,           //  017
+        new RMDFunctionHandler(),   //  017
     };
 
     /**

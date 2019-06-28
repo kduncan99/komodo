@@ -116,6 +116,8 @@ public class InstructionProcessor extends Processor implements Worker {
     private final InstructionWord           _currentInstruction = new InstructionWord();
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
+    private static long                     _dayclockComparator = 0;
+    private static long                     _dayclockOffset = 0;
     private DesignatorRegister              _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
@@ -193,6 +195,8 @@ public class InstructionProcessor extends Processor implements Worker {
     public boolean getBroadcastInterruptEligibility() { return _broadcastInterruptEligibility; }
     public InstructionWord getCurrentInstruction() { return _currentInstruction; }
     public RunMode getCurrentRunMode() { return _currentRunMode; }
+    public long getDayclockComparator() { return _dayclockComparator; }
+    public long getDayclockOffset() { return _dayclockOffset; }
     public DesignatorRegister getDesignatorRegister() { return _designatorRegister; }
     public boolean getDevelopmentMode() { return _developmentMode; }
 
@@ -239,6 +243,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     public void setBroadcastInterruptEligibility(boolean flag) { _broadcastInterruptEligibility = flag; }
     public void setCurrentInstruction(long value) { _currentInstruction.setW(value); }
+    public void setDayclockComparator(long value) { _dayclockComparator = value; }
     public void setDesignatorRegister(DesignatorRegister dr) { _designatorRegister = dr; }
 
     public void setGeneralRegister(
