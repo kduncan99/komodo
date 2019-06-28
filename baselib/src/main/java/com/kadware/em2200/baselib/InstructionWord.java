@@ -619,8 +619,15 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EITHER,   007, 011, 000, true,  false, true,  false, ASemantics.A,     "DIDE",  false),
         new InstructionInfo(Mode.BASIC,    007, 012, 000, true,  false, false, false, ASemantics.X,     "LDJ",   false),
         new InstructionInfo(Mode.BASIC,    007, 013, 000, true,  false, false, false, ASemantics.X,     "LIJ",   false),
+
+        //  LPD - first entry is for assembler, second is for disassembler
+        new InstructionInfo(Mode.BASIC,    007, 014, 000, true,  true,  false, false, ASemantics.NONE,  "LPD",   false),
         new InstructionInfo(Mode.BASIC,    007, 014, 000, true,  false, false, false, ASemantics.NONE,  "LPD",   false),
+
+        //  SPD - first entry is for assembler, second is for disassembler
+        new InstructionInfo(Mode.BASIC,    007, 015, 000, true,  true,  false, false, ASemantics.NONE,  "SPD",   false),
         new InstructionInfo(Mode.BASIC,    007, 015, 000, true,  false, false, false, ASemantics.NONE,  "SPD",   false),
+
         new InstructionInfo(Mode.EXTENDED, 007, 016, 000, true,  true,  false, false, ASemantics.NONE,  "LOCL",  true),
         new InstructionInfo(Mode.EXTENDED, 007, 016, 013, true,  true,  false, false, ASemantics.NONE,  "CALL",  false),
         new InstructionInfo(Mode.BASIC,    007, 017, 000, true,  false, false, false, ASemantics.X,     "LBJ",   false),

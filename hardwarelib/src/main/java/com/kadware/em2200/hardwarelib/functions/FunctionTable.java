@@ -5,6 +5,7 @@
 package com.kadware.em2200.hardwarelib.functions;
 
 import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.em2200.hardwarelib.functions.activityControl.*;
 import com.kadware.em2200.hardwarelib.functions.addressSpaceManagement.*;
 import com.kadware.em2200.hardwarelib.functions.fixedPointBinary.*;
 import com.kadware.em2200.hardwarelib.functions.generalLoad.*;
@@ -69,8 +70,8 @@ public abstract class FunctionTable {
         null,           //  011
         new LDJFunctionHandler(),   //  012
         new LIJFunctionHandler(),   //  013
-        null,           //  014
-        null,           //  015
+        new LPDFunctionHandler(),   //  014
+        new SPDFunctionHandler(),   //  015
         null,           //  016
         new LBJFunctionHandler(),   //  017
     };
@@ -135,8 +136,8 @@ public abstract class FunctionTable {
         null,           //  011
         null,           //  012
         null,           //  013
-        null,           //  014
-        null,           //  015
+        new LDFunctionHandler(),    //  014
+        new SDFunctionHandler(),    //  015
         null,           //  016
         new SGNLFunctionHandler(),  //  017
     };
@@ -623,8 +624,8 @@ public abstract class FunctionTable {
         null,           //  011
         null,           //  012
         null,           //  013
-        null,           //  014
-        null,           //  015
+        new LDFunctionHandler(),    //  014
+        new SDFunctionHandler(),    //  015
         null,           //  016
         new SGNLFunctionHandler(),  //  017
     };
@@ -637,8 +638,8 @@ public abstract class FunctionTable {
         new TSSFunctionHandler(),   //  001
         new TCSFunctionHandler(),   //  002
         new RTNFunctionHandler(),   //  003
-        null,           //  004
-        null,           //  005
+        new LUDFunctionHandler(),   //  004
+        new SUDFunctionHandler(),   //  005
         new IARFunctionHandler(),   //  006
         null,           //  007
         new IPCFunctionHandler(),   //  010

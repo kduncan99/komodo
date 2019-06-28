@@ -1,8 +1,11 @@
 -- InProgress
-Implement LBDI$ in Linker and Assembler, and maybe other such things
-IP: need more address space management instructions unit tests
-IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
-IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
+IP: activity control instructions (and unit tests)
+  LAE
+  UR
+  ACEL
+  DCEL
+  SKQT
+  KCHG
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -17,19 +20,9 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
 some new instructions
 
 * hardwarelib
-IP: activity control instructions (and unit tests)
-  LD
-  SD
-  LPD
-  SPD
-  LUD
-  SUD
-  LAE
-  UR
-  ACEL
-  DCEL
-  SKQT
-  KCHG
+IP: need more address space management instructions unit tests
+IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
+IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
 IP: special instructions (and unit tests)
   EX
   EXR
@@ -145,6 +138,7 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
+Implement LBDI$ in Linker and Assembler, and maybe other such things
 unit tests for string value generation
 unit tests for node references - need to check results
 support special form for JGD instruction

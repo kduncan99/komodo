@@ -33,7 +33,7 @@ public abstract class InstructionHandler extends FunctionHandler {
         JO,     JP,     JPS,    JZ,     KCHG,   LA,     LAE,    LAQW,
         LATP,   LBE,    LBED,   LBJ,    LBN,    LBRX,   LBU,    LBUD,
         LCC,    LCF,    LD,     LDJ,    LDSC,   LDSL,   LIJ,    LINC,
-        LMA,    LMC,    LMJ,    LNA,    LNMA,   LOCL,   KPD,    LPM,
+        LMA,    LMC,    LMJ,    LNA,    LNMA,   LOCL,   LPD,    LPM,
         LR,     LRD,    LRS,    LS,     LSA,    LSBL,   LSBO,   LSC,
         LSSC,   LSSL,   LUD,    LUF,    LX,     LXI,    LXLM,   LXM,
         LXSI,   MASG,   MASL,   MATG,   MATL,   MCDU,   MF,     MI,
