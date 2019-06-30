@@ -4,9 +4,11 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.OnesComplement;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;

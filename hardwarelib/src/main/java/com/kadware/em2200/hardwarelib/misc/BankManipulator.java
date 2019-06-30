@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.hardwarelib.misc;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.MainStorageProcessor;
@@ -12,6 +11,7 @@ import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
+import com.kadware.komodo.baselib.*;
 
 /**
  * This bit of nastiness implements a state machine which implements the bank manipulation algorithm

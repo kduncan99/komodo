@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.functions.unconditionalJump;
 
-import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.misc.ProgramAddressRegister;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;

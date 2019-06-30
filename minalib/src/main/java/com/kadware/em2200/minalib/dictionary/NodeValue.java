@@ -8,6 +8,8 @@ import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.Diagnostics;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
+
 import java.util.HashMap;
 import java.util.Map;
 

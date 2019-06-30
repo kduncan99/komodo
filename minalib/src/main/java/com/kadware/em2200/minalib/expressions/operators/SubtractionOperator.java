@@ -4,11 +4,11 @@
 
 package com.kadware.em2200.minalib.expressions.operators;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.Locale;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.komodo.baselib.FieldDescriptor;
 
 import java.util.*;
 

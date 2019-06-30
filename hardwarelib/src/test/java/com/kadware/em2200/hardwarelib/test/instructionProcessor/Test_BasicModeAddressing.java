@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;

@@ -4,19 +4,6 @@
 
 package com.kadware.em2200.hardwarelib.test;
 
-import java.util.Arrays;
-import java.util.Random;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
-import static org.junit.Assert.*;
-import org.junit.*;
-
-import com.kadware.em2200.baselib.*;
-import com.kadware.em2200.baselib.types.*;
-import com.kadware.em2200.hardwarelib.*;
-
 /**
  * Unit tests for ByteChannelModule class
  */

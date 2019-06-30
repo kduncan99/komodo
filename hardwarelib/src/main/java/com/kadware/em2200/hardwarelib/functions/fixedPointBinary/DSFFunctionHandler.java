@@ -5,13 +5,14 @@
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
 
 import com.kadware.em2200.baselib.exceptions.*;
-import com.kadware.em2200.baselib.InstructionWord;
-import com.kadware.em2200.baselib.OnesComplement;
+import com.kadware.komodo.baselib.InstructionWord;
+import com.kadware.komodo.baselib.OnesComplement;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.interrupts.ArithmeticExceptionInterrupt;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.functions.*;
+import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 
 /**
  * Handles the DSF instruction f=035

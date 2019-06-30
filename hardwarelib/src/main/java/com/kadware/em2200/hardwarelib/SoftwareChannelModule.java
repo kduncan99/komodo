@@ -13,9 +13,9 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.kadware.em2200.baselib.IOAccessControlWord;
-import com.kadware.em2200.baselib.Worker;
-import com.kadware.em2200.baselib.types.*;
+import com.kadware.komodo.baselib.IOAccessControlWord;
+import com.kadware.komodo.baselib.Worker;
+import com.kadware.komodo.baselib.types.*;
 
 /**
  * Base class which models a channel module node

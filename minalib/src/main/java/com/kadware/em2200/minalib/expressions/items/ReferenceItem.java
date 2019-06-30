@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib.expressions.items;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
@@ -12,6 +12,9 @@ import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.builtInFunctions.*;
 import com.kadware.em2200.minalib.expressions.Expression;
+import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
+
 import java.lang.reflect.*;
 
 /**

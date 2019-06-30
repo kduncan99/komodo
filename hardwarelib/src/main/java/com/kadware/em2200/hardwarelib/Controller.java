@@ -9,8 +9,6 @@ import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.kadware.em2200.baselib.types.Identifier;
-
 /**
  * Base class which models a Controller node
  */

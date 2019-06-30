@@ -13,6 +13,8 @@ import com.kadware.em2200.minalib.expressions.items.IExpressionItem;
 import com.kadware.em2200.minalib.expressions.items.OperandItem;
 import com.kadware.em2200.minalib.expressions.items.OperatorItem;
 import com.kadware.em2200.minalib.expressions.operators.Operator;
+import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;

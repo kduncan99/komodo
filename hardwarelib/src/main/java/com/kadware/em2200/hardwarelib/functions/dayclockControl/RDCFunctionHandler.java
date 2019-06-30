@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.functions.dayclockControl;
 
-import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.Dayclock;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;

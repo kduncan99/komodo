@@ -4,7 +4,6 @@
 
 package com.kadware.em2200.hardwarelib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.functions.*;
 import com.kadware.em2200.hardwarelib.misc.*;
@@ -15,6 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.kadware.komodo.baselib.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

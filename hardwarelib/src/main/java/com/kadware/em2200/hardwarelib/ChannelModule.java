@@ -9,7 +9,7 @@ import java.io.BufferedWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.kadware.em2200.baselib.Worker;
+import com.kadware.komodo.baselib.Worker;
 
 /**
  * Base class which models a channel module node

@@ -4,13 +4,18 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.baselib.exceptions.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.directives.*;
 import com.kadware.em2200.minalib.exceptions.*;
 import com.kadware.em2200.minalib.expressions.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.InstructionWord;
+import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;

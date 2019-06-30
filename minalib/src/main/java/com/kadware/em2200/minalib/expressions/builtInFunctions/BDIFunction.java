@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib.expressions.builtInFunctions;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;

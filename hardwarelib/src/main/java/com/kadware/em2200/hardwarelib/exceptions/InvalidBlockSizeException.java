@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.exceptions;
 
-import com.kadware.em2200.baselib.types.BlockSize;
+import com.kadware.komodo.baselib.types.BlockSize;
 
 /**
  * Exception thrown by a method when an invalid block size is detected

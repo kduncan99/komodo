@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.functions;
 
-import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.functions.activityControl.*;
 import com.kadware.em2200.hardwarelib.functions.addressSpaceManagement.*;
 import com.kadware.em2200.hardwarelib.functions.dayclockControl.*;

@@ -4,13 +4,13 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.em2200.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
+import com.kadware.komodo.baselib.*;
 
 import java.util.HashMap;
 import java.util.LinkedList;

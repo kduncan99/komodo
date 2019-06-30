@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.test;
 import static org.junit.Assert.*;
 import org.junit.*;
 
-import com.kadware.em2200.baselib.types.*;
+import com.kadware.komodo.baselib.types.*;
 import com.kadware.em2200.hardwarelib.Device;
 import com.kadware.em2200.hardwarelib.DiskDevice;
 import com.kadware.em2200.hardwarelib.Node;

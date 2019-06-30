@@ -4,10 +4,11 @@
 
 package com.kadware.em2200.hardwarelib.misc;
 
-import com.kadware.em2200.baselib.AccessInfo;
-import com.kadware.em2200.baselib.AccessPermissions;
-import com.kadware.em2200.baselib.ArraySlice;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 
 /**
  * An 8-word Word36Array which describes a bank.

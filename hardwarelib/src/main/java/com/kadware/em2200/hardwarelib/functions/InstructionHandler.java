@@ -4,10 +4,12 @@
 
 package com.kadware.em2200.hardwarelib.functions;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.IndexRegister;
+import com.kadware.komodo.baselib.InstructionWord;
 
 /**
  * Base class for all the instruction handlers

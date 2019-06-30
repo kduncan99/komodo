@@ -4,7 +4,8 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
+import com.kadware.komodo.baselib.Word36;
+
 import java.util.Arrays;
 import java.util.List;
 

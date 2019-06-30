@@ -4,15 +4,10 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
-import sun.util.resources.cldr.gl.CurrencyNames_gl;
+import com.kadware.komodo.baselib.FieldDescriptor;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;

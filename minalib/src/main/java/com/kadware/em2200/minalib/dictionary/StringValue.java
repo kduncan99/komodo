@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib.dictionary;
 
-import com.kadware.em2200.baselib.Word36;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.exceptions.*;

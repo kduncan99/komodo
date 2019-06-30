@@ -4,8 +4,8 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
-import com.kadware.em2200.baselib.exceptions.NotFoundException;
+import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
 

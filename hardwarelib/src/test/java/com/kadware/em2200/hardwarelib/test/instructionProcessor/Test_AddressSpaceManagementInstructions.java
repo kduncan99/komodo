@@ -4,12 +4,14 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.GeneralRegisterSet;
 import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

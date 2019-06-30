@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.functions.fixedPointBinary;
 
-import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.misc.DesignatorRegister;
 import com.kadware.em2200.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;

@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
-import com.kadware.em2200.baselib.types.*;
+import com.kadware.komodo.baselib.types.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 

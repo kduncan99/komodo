@@ -4,12 +4,13 @@
 
 package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
+
+import com.kadware.komodo.baselib.GeneralRegisterSet;
 import org.junit.*;
 
 /**

@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib;
 
-import com.kadware.em2200.baselib.ArraySlice;
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.em2200.hardwarelib.exceptions.CannotConnectException;
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -4,8 +4,8 @@
 
 package com.kadware.em2200.hardwarelib.functions.activityControl;
 
-import com.kadware.em2200.baselib.GeneralRegisterSet;
-import com.kadware.em2200.baselib.InstructionWord;
+import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;

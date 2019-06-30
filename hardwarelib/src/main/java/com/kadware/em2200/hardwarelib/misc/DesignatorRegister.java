@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.misc;
 
-import com.kadware.em2200.baselib.Word36;
+import com.kadware.komodo.baselib.Word36;
 
 /**
  * Describes a designator register

@@ -4,8 +4,8 @@
 
 package com.kadware.em2200.hardwarelib;
 
-import com.kadware.em2200.baselib.*;
-import com.kadware.em2200.baselib.types.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.types.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -9,6 +9,8 @@ import com.kadware.em2200.minalib.*;
 import com.kadware.em2200.minalib.diagnostics.*;
 import com.kadware.em2200.minalib.dictionary.*;
 import com.kadware.em2200.minalib.exceptions.*;
+import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
+
 import java.util.Stack;
 
 /**

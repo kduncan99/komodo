@@ -4,11 +4,12 @@
 
 package com.kadware.em2200.hardwarelib.functions.stackManipulation;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.komodo.baselib.IndexRegister;
+import com.kadware.komodo.baselib.InstructionWord;
 
 /**
  * Handles the SELL instruction (f=073 j=014 a=03) extended mode only

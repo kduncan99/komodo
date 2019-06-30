@@ -4,8 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.misc;
 
-import com.kadware.em2200.baselib.AccessInfo;
-import com.kadware.em2200.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.AccessInfo;
 
 /**
  * Represents an RCS stack frame

@@ -4,7 +4,8 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

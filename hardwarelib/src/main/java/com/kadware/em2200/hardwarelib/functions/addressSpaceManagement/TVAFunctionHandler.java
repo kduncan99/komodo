@@ -4,13 +4,17 @@
 
 package com.kadware.em2200.hardwarelib.functions.addressSpaceManagement;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.InstructionProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.em2200.hardwarelib.functions.InstructionHandler;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.GeneralRegister;
+import com.kadware.komodo.baselib.InstructionWord;
+
 import java.util.HashMap;
 import java.util.Map;
 

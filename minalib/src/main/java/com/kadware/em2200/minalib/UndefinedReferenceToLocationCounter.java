@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.FieldDescriptor;
 
 /**
  * Describes a LC offset for an undefined reference,

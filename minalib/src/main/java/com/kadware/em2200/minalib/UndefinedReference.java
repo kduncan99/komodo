@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.FieldDescriptor;
 
 /**
  * Base class for all undefined references

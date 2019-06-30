@@ -4,10 +4,11 @@
 
 package com.kadware.em2200.hardwarelib;
 
-import com.kadware.em2200.baselib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.em2200.hardwarelib.misc.*;
+import com.kadware.komodo.baselib.Word36;
+
 import java.util.HashMap;
 import java.util.Map;
 

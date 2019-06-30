@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.hardwarelib.exceptions;
 
-import com.kadware.em2200.baselib.types.TrackCount;
+import com.kadware.komodo.baselib.types.TrackCount;
 
 /**
  * Exception thrown by a method when an invalid track count is detected

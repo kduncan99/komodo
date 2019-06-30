@@ -5,6 +5,8 @@
 package com.kadware.em2200.minalib.dictionary;
 
 import com.kadware.em2200.baselib.exceptions.*;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
+
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Map;

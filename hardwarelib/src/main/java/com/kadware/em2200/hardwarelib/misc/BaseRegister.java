@@ -4,9 +4,9 @@
 
 package com.kadware.em2200.hardwarelib.misc;
 
-import com.kadware.em2200.baselib.AccessInfo;
-import com.kadware.em2200.baselib.AccessPermissions;
-import com.kadware.em2200.baselib.ArraySlice;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.em2200.hardwarelib.InventoryManager;
 import com.kadware.em2200.hardwarelib.MainStorageProcessor;
 import com.kadware.em2200.hardwarelib.exceptions.UPINotAssignedException;

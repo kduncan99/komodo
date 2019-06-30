@@ -4,7 +4,7 @@
 
 package com.kadware.em2200.minalib;
 
-import com.kadware.em2200.baselib.*;
+import com.kadware.komodo.baselib.FieldDescriptor;
 
 /**
  * Describes a label for an undefined reference.
