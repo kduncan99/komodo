@@ -13,6 +13,7 @@
         <module>minalib</module>
         <module>hardwarelib</module>
         <module>sandbox</module>
+        <module>kos</module>
     </modules>
 
 

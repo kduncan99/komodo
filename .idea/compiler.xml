@@ -8,8 +8,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="sandbox" />
         <module name="baselib" />
-        <module name="minalib" />
+        <module name="kos" />
         <module name="hardwarelib" />
+        <module name="minalib" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8" />
