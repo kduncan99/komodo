@@ -1,4 +1,6 @@
 -- InProgress
+Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
+  I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
 Need to implement master dayclock comparator logic
 Need to implement enabling dayclock interrupts, taking them, etc
 
@@ -20,6 +22,12 @@ IP,IOP: UPI send/ack mechanism for IOs
 IP: operations control instructions (and unit tests)
   SEND
   ACK
+IP: UNLK instruction
+IP: SPID see new info
+IP: special instructions (and unit tests)
+  EX
+  EXR
+  DCB
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
@@ -40,12 +48,6 @@ SystemControlProcessor: For starting/monitoring/stopping system, and for console
 IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
 Rewrite disk (and maybe tape) devices using async IO
 All Device objects: add Builder class, make constructors private
-IP: UNLK instruction
-IP: SPID see new info
-IP: special instructions (and unit tests)
-  EX
-  EXR
-  DCB
 IP: storage-to-storage instructions (and unit tests) other than BT
   BIM
   BIC
