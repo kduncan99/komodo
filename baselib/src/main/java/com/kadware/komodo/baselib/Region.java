@@ -199,7 +199,7 @@ public class Region {
     }
 
     /**
-     * Convenient method to test whether the region this object is tracking, is empty.
+     * Convenient method to minalib whether the region this object is tracking, is empty.
      * Caller could just as easily check getExtent()... but we are all enterprisey and stuff.
      * <p>
      * @return

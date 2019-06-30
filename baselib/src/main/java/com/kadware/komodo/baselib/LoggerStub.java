@@ -6,7 +6,7 @@ package com.kadware.komodo.baselib;
 
 /**
  * An empty stub class which implements the apache log4j 2 Logger, doing nothing.
- * For test cases, we might extend this so we can unit test our logging.
+ * For minalib cases, we might extend this so we can unit minalib our logging.
  * For working code, we might extend this somehow so that we can send stuff to various displays, or something like that.
  */
 

@@ -11,6 +11,10 @@ import com.kadware.em2200.minalib.*;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.Assembler;
+import com.kadware.komodo.minalib.Linker;
+import com.kadware.komodo.minalib.RelocatableModule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -10,6 +10,8 @@ import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.em2200.minalib.*;
 import java.util.Arrays;
 import static org.junit.Assert.*;
+
+import com.kadware.komodo.minalib.AbsoluteModule;
 import org.junit.*;
 
 /**
@@ -17,7 +19,7 @@ import org.junit.*;
  */
 public class Test_Algorithms extends BaseFunctions {
 
-    //TODO a recursive factorial, test with succeeding inputs from 0 to ... maybe 20
+    //TODO a recursive factorial, minalib with succeeding inputs from 0 to ... maybe 20
 
     /**
      * Sieve of Eratosthenes - Primes from 2 to 1000

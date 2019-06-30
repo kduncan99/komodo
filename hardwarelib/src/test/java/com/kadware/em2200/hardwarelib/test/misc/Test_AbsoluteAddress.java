@@ -13,7 +13,7 @@ import java.util.Set;
 import com.kadware.em2200.hardwarelib.misc.AbsoluteAddress;
 
 /**
- * Tests AbsoluteAddress class - not much to test here
+ * Tests AbsoluteAddress class - not much to minalib here
  */
 public class Test_AbsoluteAddress {
 

@@ -11,6 +11,7 @@ import com.kadware.em2200.hardwarelib.interrupts.*;
 import com.kadware.em2200.hardwarelib.misc.*;
 import com.kadware.em2200.minalib.*;
 import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.minalib.*;
 
 import java.util.HashMap;
 import java.util.LinkedList;

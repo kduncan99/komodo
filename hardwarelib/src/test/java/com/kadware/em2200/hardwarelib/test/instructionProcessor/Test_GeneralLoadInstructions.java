@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
@@ -246,7 +246,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 
     //TODO need some various register-to-register loads
 
-    //TODO need to test partial word x-fers (that they transfer the full word)
+    //TODO need to minalib partial word x-fers (that they transfer the full word)
 
     @Test
     public void loadRegisterSet_normal(
@@ -419,7 +419,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException {
         //  Testing load instructions which cannot be tested with immediate addressing
-        //  Also, test loading from multiple banks, including exec banks
+        //  Also, minalib loading from multiple banks, including exec banks
         String[] source = {
             "          $EXTEND",
             "",
@@ -505,7 +505,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         assertEquals(0777, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A15).getW());
     }
 
-    //TODO test generating various interrupts
+    //TODO minalib generating various interrupts
 
     //TODO storage limits testing for load operand, store value, double load operand, LRS
 }

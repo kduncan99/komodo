@@ -11,6 +11,7 @@ import com.kadware.em2200.minalib.*;
 import static org.junit.Assert.*;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import org.junit.*;
 
 /**
@@ -1203,7 +1204,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1243,7 +1244,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 5",
@@ -1321,7 +1322,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 5",
@@ -1400,7 +1401,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1450,7 +1451,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1500,7 +1501,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1549,7 +1550,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1598,7 +1599,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This test is per the hardware instruction guide
+        //  This minalib is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",

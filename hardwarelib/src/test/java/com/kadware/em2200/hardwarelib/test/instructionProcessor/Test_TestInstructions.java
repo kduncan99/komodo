@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 import org.junit.*;
 

@@ -212,7 +212,7 @@ public class Test_ByteChannelModule {
 //    @Test
 //    public void translateFromC(
 //    ) {
-//        //  This test is a little different - it requires testing the slop factor,
+//        //  This minalib is a little different - it requires testing the slop factor,
 //        //  which means we have to translate more than 1 block.
 //        //  Create two blocks at the smallest prepfactor, of random-ish values, then pack it into a byte array.
 //        Random rand = new Random(System.currentTimeMillis());
@@ -232,7 +232,7 @@ public class Test_ByteChannelModule {
 //        block0.pack(byteBuffer);
 //        block1.pack(byteBuffer, 128);
 //
-//        //  Now do the translation test
+//        //  Now do the translation minalib
 //        TestModule cm = new TestModule("CM1-01");
 //
 //        Word36Array resultBuffer = new Word36Array(wordArraySize);
@@ -266,7 +266,7 @@ public class Test_ByteChannelModule {
 //        byte[] byteBuffer = new byte[byteArraySize];
 //        wordArray.pack(byteBuffer);
 //
-//        //  Now do the translation test
+//        //  Now do the translation minalib
 //        TestModule cm = new TestModule("CM1-01");
 //
 //        Word36Array resultBuffer = new Word36Array(wordArraySize);

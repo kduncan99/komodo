@@ -19,7 +19,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Tests AbsoluteAddress class - not much to test here
+ * Tests AbsoluteAddress class - not much to minalib here
  */
 public class Test_BaseRegister {
 
@@ -37,7 +37,7 @@ public class Test_BaseRegister {
         assertTrue(br._voidFlag);
     }
 
-    //TODO need to test various constructors for banks with lower > upper limit, to ensure void flag is set
+    //TODO need to minalib various constructors for banks with lower > upper limit, to ensure void flag is set
 
     @Test
     public void test_loadConstructor(

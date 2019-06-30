@@ -7,7 +7,7 @@ package com.kadware.em2200.hardwarelib.test.instructionProcessor;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -321,5 +321,5 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         assertEquals(06, bankData[9]);
     }
 
-    //TODO Need SRS test for illegal reference condition(s)
+    //TODO Need SRS minalib for illegal reference condition(s)
 }

@@ -8,7 +8,7 @@ import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.em2200.hardwarelib.*;
 import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -175,7 +175,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $INFO 1 5",
             "",
             "$(1),START$* .",
-            "          LR,U      R5,01234    . Put the test value in R5",
+            "          LR,U      R5,01234    . Put the minalib value in R5",
             "          LXM,U     X1,4        . Set X modifier to 4 and increment to 2",
             "          LXI,U     X1,2",
             "          LA        A0,R1,*X1   . Use X-reg modifying R1 GRS to get to R5",
@@ -210,7 +210,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "INDIRECT* +R5                    . Only using the x,h,i, and u fields",
             "",
             "$(1),START$* .",
-            "          LR,U      R5,01234      . Put the test value in R5",
+            "          LR,U      R5,01234      . Put the minalib value in R5",
             "          LA        A0,*INDIRECT  . Indirection through INDIRECT",
             "                                  .   will transfer content from R5 to A0",
             "          HALT      0",

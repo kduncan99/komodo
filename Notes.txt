@@ -11,6 +11,7 @@ BankDescriptor seems to take a very long time to create from storage... why?
 Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
+Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib

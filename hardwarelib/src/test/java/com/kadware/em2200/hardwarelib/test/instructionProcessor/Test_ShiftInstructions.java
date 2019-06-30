@@ -9,7 +9,7 @@ import com.kadware.em2200.hardwarelib.exceptions.*;
 import com.kadware.em2200.hardwarelib.interrupts.*;
 import static org.junit.Assert.*;
 
-import com.kadware.em2200.minalib.AbsoluteModule;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import org.junit.*;
 

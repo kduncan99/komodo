@@ -11,6 +11,7 @@ import com.kadware.em2200.minalib.*;
 import static org.junit.Assert.*;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.minalib.AbsoluteModule;
 import org.junit.*;
 
 /**
