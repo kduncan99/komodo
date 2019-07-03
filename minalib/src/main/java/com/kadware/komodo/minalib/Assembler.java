@@ -545,7 +545,7 @@ public class Assembler {
 
         if (operandField == null) {
             context.appendDiagnostic(new ErrorDiagnostic(operationField._locale,
-                                                             "Instruction mnemonic requires an operand field"));
+                                                         "Instruction mnemonic requires an operand field"));
             return true;
         }
 
@@ -1094,21 +1094,6 @@ public class Assembler {
         return module;
     }
 
-    /**
-     * Getter
-     * @return Diagnostics object produced during assembly
-     */
-    Diagnostics getDiagnostics(
-    ) {
-        return _diagnostics;
-    }
-
-    /**
-     * Getter
-     * @return parsed code
-     */
-    TextLine[] getParsedCode(
-    ) {
-        return _parsedCode;
-    }
+    public Diagnostics getDiagnostics() { return _diagnostics; }
+    TextLine[] getParsedCode() { return _parsedCode; }
 }

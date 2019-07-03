@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +24,7 @@ public abstract class Processor extends Node {
      * Indicates the type of the processor
      */
     public static enum ProcessorType {
-        None(0),
+        SystemProcessor(0),
         InstructionProcessor(1),
         InputOutputProcessor(2),
         MainStorageProcessor(3);
@@ -61,18 +62,15 @@ public abstract class Processor extends Node {
             final int code
         ) {
             switch (code) {
+                case 0:     return SystemProcessor;
                 case 1:     return InstructionProcessor;
                 case 2:     return InputOutputProcessor;
                 case 3:     return MainStorageProcessor;
-                default:    return None;
             }
+
+            throw new InternalErrorRuntimeException("Invalid code for ProcessorType.getValue()");
         }
     };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -114,7 +112,7 @@ public abstract class Processor extends Node {
      * Getter
      * @return value
      */
-    public ProcessorType getProcessorType(
+    ProcessorType getProcessorType(
     ) {
         return _processorType;
     }
@@ -174,10 +172,4 @@ public abstract class Processor extends Node {
             LOGGER.catching(ex);
         }
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
 }

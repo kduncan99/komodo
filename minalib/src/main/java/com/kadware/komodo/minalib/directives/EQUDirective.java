@@ -14,9 +14,9 @@ public class EQUDirective extends Directive {
 
     @Override
     public void process(
-            final Context context,
-            final TextLine textLine,
-            final LabelFieldComponents labelFieldComponents
+        final Context context,
+        final TextLine textLine,
+        final LabelFieldComponents labelFieldComponents
     ) {
         if (extractFields(context, textLine, true, 3)) {
             if (labelFieldComponents._label == null) {

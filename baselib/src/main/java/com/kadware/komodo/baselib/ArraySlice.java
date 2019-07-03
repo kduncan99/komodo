@@ -5,6 +5,7 @@
 package com.kadware.komodo.baselib;
 
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
+import java.util.Arrays;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -77,6 +78,19 @@ public class ArraySlice {
         _array = baseSlice._array;
         _offset = offset + baseSlice._offset;
         _length = length;
+    }
+
+    /**
+     * Creates a new ArraySlice of the indicated size, containing a copy of the content of this object.
+     * If the requested size is larger, the additional content is zeros.
+     * If the requested size is smaller, the extra space from the original is discarded.
+     * @param newSize new size to be established
+     * @return newly-allocated ArraySlice object
+     */
+    public ArraySlice copyOf(
+        final int newSize
+    ) {
+        return new ArraySlice(Arrays.copyOf(_array, newSize));
     }
 
     @Override

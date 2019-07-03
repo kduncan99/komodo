@@ -29,7 +29,7 @@ public class AbsoluteAddress {
 
     /**
      * A value corresponding to an offset from the start of that MSP's segment.
-     * Range: 0:0x7FFFFFFF (35 bits)
+     * Range: 0:0_377777_777777 (35 bits)
      */
     public final int _offset;
 

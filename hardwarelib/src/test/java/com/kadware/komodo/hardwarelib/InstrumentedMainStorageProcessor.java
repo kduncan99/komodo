@@ -2,18 +2,17 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.instructionProcessor;
+package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.RegionTracker;
-import com.kadware.komodo.hardwarelib.StaticMainStorageProcessor;
 
 /**
  * Extended subclass of StaticMainStorageProcessor class, suitably instrumented for special testing
  */
-public class InstrumentedMainStorageProcessor extends StaticMainStorageProcessor {
+public class InstrumentedMainStorageProcessor extends MainStorageProcessor {
 
     //  Keep track of the areas of storage which we've allocated
-    final RegionTracker _regions;
+    public final RegionTracker _regions;
 
     public InstrumentedMainStorageProcessor(
         final String name,

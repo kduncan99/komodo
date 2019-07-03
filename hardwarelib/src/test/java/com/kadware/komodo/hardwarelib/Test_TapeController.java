@@ -43,9 +43,9 @@ public class Test_TapeController {
         assertFalse(c.canConnect(new WordDiskController("DSKCTL", (short)0)));
         assertFalse(c.canConnect(new TapeController("TAPCUB", (short)0)));
 //????        assertFalse(c.canConnect(new SoftwareWordChannelModule("CM1-1")));
-        assertFalse(c.canConnect(new StaticMainStorageProcessor("MSP0",
-                                                                InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
-                                                                InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
+        assertFalse(c.canConnect(new MainStorageProcessor("MSP0",
+                                                          InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
+                                                          InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
         assertFalse(c.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI)));
         assertFalse(c.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI)));
     }

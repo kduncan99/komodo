@@ -4,13 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions;
 
+import com.kadware.komodo.baselib.exceptions.*;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.expressions.items.*;
 import com.kadware.komodo.minalib.expressions.operators.Operator;
-import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
-
+import com.kadware.komodo.minalib.exceptions.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -20,7 +19,7 @@ import java.util.Stack;
  */
 public class Expression {
 
-    public final List<IExpressionItem> _items = new LinkedList<>();
+    final List<IExpressionItem> _items = new LinkedList<>();
 
     /**
      * constructor

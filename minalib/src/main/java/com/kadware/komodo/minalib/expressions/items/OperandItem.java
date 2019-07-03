@@ -14,7 +14,7 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
  */
 public abstract class OperandItem implements IExpressionItem {
 
-    final Locale _locale;
+    public final Locale _locale;
 
     /**
      * constructor

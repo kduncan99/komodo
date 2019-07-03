@@ -15,10 +15,8 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.items.IExpressionItem;
 import com.kadware.komodo.minalib.expressions.items.OperatorItem;
 import com.kadware.komodo.minalib.expressions.items.ValueItem;
-
 import java.util.LinkedList;
 import java.util.List;
-
 import com.kadware.komodo.minalib.expressions.operators.AdditionOperator;
 import com.kadware.komodo.minalib.expressions.operators.MultiplicationOperator;
 import org.junit.Test;

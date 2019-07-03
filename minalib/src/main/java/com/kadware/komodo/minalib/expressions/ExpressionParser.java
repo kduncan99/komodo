@@ -6,12 +6,10 @@ package com.kadware.komodo.minalib.expressions;
 
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
-import com.kadware.komodo.minalib.dictionary.IntegerValue;
-import com.kadware.komodo.minalib.dictionary.StringValue;
+import com.kadware.komodo.minalib.dictionary.*;
+import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.expressions.items.*;
 import com.kadware.komodo.minalib.expressions.operators.*;
-import com.kadware.komodo.minalib.diagnostics.ErrorDiagnostic;
-import com.kadware.komodo.minalib.diagnostics.QuoteDiagnostic;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import java.util.LinkedList;
 import java.util.List;

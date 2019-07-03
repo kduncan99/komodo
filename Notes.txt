@@ -1,8 +1,4 @@
 -- InProgress
-Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
-  I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
-Need to implement master dayclock comparator logic
-Need to implement enabling dayclock interrupts, taking them, etc
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -15,6 +11,10 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib
+Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
+  I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
+Need to implement master dayclock comparator logic
+Need to implement enabling dayclock interrupts, taking them, etc
 IP: BT instruction and unit tests
 IP,IOP: UPI send/ack mechanism for IOs
   See Interrupt classes 29, 30, 31.  29 is IPL, 30 is activating a 'cleared' IP into a running environment
@@ -157,8 +157,7 @@ functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 directives
-  $END directive on top-level code (do we require it?)
-  $EQUF
+  $END
   $USE (implicit base register)
   $INSERT (maybe)
   $BASE (maybe)
