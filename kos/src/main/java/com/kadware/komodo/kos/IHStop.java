@@ -15,8 +15,8 @@ public class IHStop {
         ".",
         "$(1)      $LIT",
         ".",
+        "IH$01*    IAR       0401 . hardware check",
         "IH$00* .",
-        "IH$01* .",
         "IH$02* .",
         "IH$03* .",
         "IH$04* .",
@@ -80,7 +80,5 @@ public class IHStop {
         "IH$76* .",
         "IH$77* .",
         "          IAR       0400 . Undefined interrupt",
-        ".",
-        "          $END",
     };
 }

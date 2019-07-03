@@ -98,9 +98,8 @@ public class Level0BDT {
         "          $RES 8*24",
         ".",
         ". The Bank Descriptors for banks 0,32 and upward, are located here.",
-        ". TODO - create a BANKDESCRIPTOR form",
-        ". TODO - loop from FIRSTBDI to LASTBDI and create bank descriptors for them",
+        //TODO
         "",
-        "          $END",
+        "LEVEL0BDT$SZ* $EQU $-LEVEL0BDT$",
     };
 }
