@@ -81,11 +81,6 @@ import org.apache.logging.log4j.LogManager;
 public class FileSystemTapeDevice extends TapeDevice {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -139,80 +134,16 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     /**
      * Standard constructor
-     * <p>
-     * @param name
-     * @param subsystemIdentifier
      */
-    public FileSystemTapeDevice(
-        final String name,
-        final short subsystemIdentifier
+    private FileSystemTapeDevice(
+        final String name
     ) {
-        super(DeviceModel.FileSystemTape, name, subsystemIdentifier);
+        super(DeviceModel.FileSystemTape, name);
         _endOfTapeFlag = false;
         _loadPointFlag = false;
         _writeFlag = false;
         _writeMarkFlag = false;
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getEndOfTapeFlag(
-    ) {
-        return _endOfTapeFlag;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getLoadPointFlag(
-    ) {
-        return _loadPointFlag;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public String getVolumeName(
-    ) {
-        return isMounted() ? _volumeName : "";
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getWriteFlag(
-    ) {
-        return _writeFlag;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public boolean getWriteMarkFlag(
-    ) {
-        return _writeMarkFlag;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

@@ -19,95 +19,39 @@ import org.apache.logging.log4j.LogManager;
 /**
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
  */
+@SuppressWarnings("Duplicates")
 public abstract class Node {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static enum Category {
-
-        None(0),
-        Processor(1),
-        ChannelModule(2),
-        Controller(3),
-        Device(4);
-
-        /**
-         * Unique code for this particular Category
-         */
-        private final int _code;
-
-        /**
-         * Constructor
-         * <p>
-         * @param code
-         */
-        Category(
-            final int code
-        ) {
-            _code = code;
-        }
-
-        /**
-         * Retrieves the unique code for this Category
-         * <p>
-         * @return
-         */
-        public int getCode(
-        ) {
-            return _code;
-        }
-
-        /**
-         * Converts a code to a Category
-         * <p>
-         * @param code
-         * <p>
-         * @return
-         */
-        public static Category getValue(
-            final int code
-        ) {
-            switch (code) {
-                case 1:     return Processor;
-                case 2:     return ChannelModule;
-                case 3:     return Controller;
-                default:    return Device;
-            }
-        }
-    }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     //  Hardcoded development/debug aids - maybe we could make these configurable later...
-    protected static final boolean LOG_CHANNEL_IOS = true;
-    protected static final boolean LOG_CHANNEL_IO_BUFFERS = true;
-    protected static final boolean LOG_DEVICE_IOS = true;
-    protected static final boolean LOG_DEVICE_IO_BUFFERS = true;
-    protected static final boolean LOG_IO_ERRORS = true;
+    static final boolean LOG_CHANNEL_IOS = true;
+    static final boolean LOG_CHANNEL_IO_BUFFERS = true;
+    static final boolean LOG_DEVICE_IOS = true;
+    static final boolean LOG_DEVICE_IO_BUFFERS = true;
+    static final boolean LOG_IO_ERRORS = true;
 
     /**
      * Category of this node
      */
-    private final Category _category;
+    final NodeCategory _category;
 
     /**
      * Unique name of this node
      */
-    private final String _name;
+    final String _name;
 
     /**
      * Set of nodes to which this node connects
      */
-    protected Set<Node> _ancestors = new HashSet<>();
+    final Set<Node> _ancestors = new HashSet<>();
 
     /**
      * Map of nodes which connect to this one, keyed by channel address
      */
-    protected Map<Integer, Node> _descendants = new HashMap<>();
+    Map<Integer, Node> _descendants = new HashMap<>();
 
     private static final Logger LOGGER = LogManager.getLogger(Node.class);
 
@@ -118,65 +62,13 @@ public abstract class Node {
 
     /**
      * Standard constructor
-     * <p>
-     * @param category
-     * @param name
      */
     protected Node(
-        final Category category,
+        final NodeCategory category,
         final String name
     ) {
         _category = category;
         _name = name;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Set<Node> getAncestors(
-    ) {
-        Set<Node> result = new HashSet<>();
-        result.addAll(_ancestors);
-        return result;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Category getCategory(
-    ) {
-        return _category;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Map<Integer, Node> getDescendants(
-    ) {
-        Map<Integer, Node> result = new HashMap<>();
-        result.putAll(_descendants);
-        return result;
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public String getName(
-    ) {
-        return _name;
     }
 
 
@@ -186,14 +78,8 @@ public abstract class Node {
 
     /**
      * Indicates whether this Node can connect as a descendant to the candidate ancestor Node.
-     * <p>
-     * @param candidate
-     * <p>
-     * @return
      */
-    public abstract boolean canConnect(
-        final Node candidate
-    );
+    public abstract boolean canConnect(Node candidate);
 
     /**
      * Invoked when the config is built, and before we allow anyone into it.
@@ -202,13 +88,9 @@ public abstract class Node {
 
     /**
      * Invoked when this object is the source of an IO which has been cancelled or completed
-     * <p>
      * @param source indicates which Node was responsible for signalling us (it might be us)
      */
-    //???? in light of workerSignal()... do we need this one?  Or what?
-    public abstract void signal(
-        final Node source
-    );
+    public abstract void signal(Node source);
 
     /**
      * Invoked just before tearing down the configuration.
@@ -223,26 +105,22 @@ public abstract class Node {
     /**
      * Dumps debug information about this object to the given BufferedWriter
      * Subclasses may override this, but they should call back here before emitting any subclass-specific information
-     * <p>
-     * @param writer
      */
     public void dump(
         final BufferedWriter writer
     ) {
         try {
-            writer.write(String.format("Node %s  Category:%s",
-                                       getName(),
-                                       getCategory().toString()));
+            writer.write(String.format("Node %s  Category:%s", _name, _category.toString()));
 
             writer.write("  Ancestors:");
             for (Node node : _ancestors) {
-                writer.write(node.getName());
+                writer.write(node._name);
                 writer.write(" ");
             }
 
             writer.write("  Descendants:");
             for (Map.Entry<Integer, Node> entry : _descendants.entrySet()) {
-                writer.write(String.format("[%d]:%s ", entry.getKey(), entry.getValue().getName()));
+                writer.write(String.format("[%d]:%s ", entry.getKey(), entry.getValue()._name));
             }
 
             writer.newLine();
@@ -259,11 +137,6 @@ public abstract class Node {
     /**
      * Connects two nodes as ancestor/descendant, choosing a unique address.
      * Only one such connection may exist between any two nodes, and only between certain categories.
-     * <p>
-     * @param ancestor
-     * @param descendant
-     * <p>
-     * @throws CannotConnectException
      */
     public static void connect(
         final Node ancestor,
@@ -279,12 +152,6 @@ public abstract class Node {
 
     /**
      * Connects two nodes in an ancestor/descendant relationship
-     * <p>
-     * @param ancestor
-     * @param nodeAddress
-     * @param descendant
-     * <p>
-     * @throws CannotConnectException
      */
     public static void connect(
         final Node ancestor,
@@ -293,22 +160,22 @@ public abstract class Node {
     ) throws CannotConnectException {
         if (!descendant.canConnect(ancestor)) {
             throw new CannotConnectException(String.format("Node %s cannot be an ancestor for Node %s",
-                                                           ancestor.getName(),
-                                                           descendant.getName()));
+                                                           ancestor._name,
+                                                           descendant._name));
         }
 
         //  Is a descendant already connected at the indicated ancestor address?
         if (ancestor._descendants.containsKey(nodeAddress)) {
             throw new CannotConnectException(String.format("Node %s already has a connection at node address %d",
-                                                           ancestor.getName(),
+                                                           ancestor._name,
                                                            nodeAddress));
         }
 
         //  Is this pair already connected?
         if (descendant._ancestors.contains(ancestor)) {
             throw new CannotConnectException(String.format("Node %s is already an ancestor for Node %s",
-                                                           ancestor.getName(),
-                                                           descendant.getName()));
+                                                           ancestor._name,
+                                                           descendant._name));
         }
 
         //  Create the two-way link
@@ -318,12 +185,8 @@ public abstract class Node {
 
     /**
      * Deserializes a boolean from the current position in the buffer (see serializeBoolean())
-     * <p>
-     * @param buffer
-     * <p>
-     * @return
      */
-    public static boolean deserializeBoolean(
+    static boolean deserializeBoolean(
         final ByteBuffer buffer
     ) {
         return buffer.get() != 0x00;
@@ -331,12 +194,8 @@ public abstract class Node {
 
     /**
      * Deserializes a string from the current position in the buffer (see serializeString())
-     * <p>
-     * @param buffer
-     * <p>
-     * @return
      */
-    public static String deserializeString(
+    static String deserializeString(
         final ByteBuffer buffer
     ) {
         int size = buffer.getInt();
@@ -349,11 +208,8 @@ public abstract class Node {
 
     /**
      * Disconnects the given nodes
-     * <p>
-     * @param ancestor
-     * @param descendant
      */
-    public static void disconnect(
+    static void disconnect(
         final Node ancestor,
         final Node descendant
     ) {
@@ -371,13 +227,12 @@ public abstract class Node {
      * Leverages the log method of the buffer itself, which the caller could do just as easily,
      * but we implement this method anyway for consistency with the method below, which does the same thing
      * but for byte buffers.
-     * <p>
      * @param logger destination for the output
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      * @param slice slice to be logged
      */
-    public static void logBuffer(
+    static void logBuffer(
         final org.apache.logging.log4j.Logger logger,
         final org.apache.logging.log4j.Level logLevel,
         final String caption,
@@ -388,13 +243,12 @@ public abstract class Node {
 
     /**
      * Logs the contents of a particular buffer of bytes.
-     * <p>
      * @param logger destination for the output
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      * @param buffer buffer to be logged
      */
-    public static void logBuffer(
+    static void logBuffer(
         final org.apache.logging.log4j.Logger logger,
         final org.apache.logging.log4j.Level logLevel,
         final String caption,
@@ -424,11 +278,8 @@ public abstract class Node {
 
     /**
      * Adds a boolean value to the given ByteBuffer encoded as a single byte of value 0x00 or 0x01 for false and true
-     * <p>
-     * @param buffer
-     * @param value
      */
-    public static void serializeBoolean(
+    static void serializeBoolean(
         final ByteBuffer buffer,
         final boolean value
     ) {
@@ -438,11 +289,8 @@ public abstract class Node {
     /**
      * Serializes a string to the given ByteBuffer, represented as an integer indicating the length of the string
      * in character, and then the individual characters which comprise the string.
-     * <p>
-     * @param buffer
-     * @param value
      */
-    public static void serializeString(
+    static void serializeString(
         final ByteBuffer buffer,
         final String value
     ) {
