@@ -401,7 +401,7 @@ public abstract class TapeDevice extends Device {
 
             switch (ioInfo.getFunction()) {
                 case None:
-                    ioInfo.setStatus(IOStatus.Successful);
+                    ioInfo.setStatus(DeviceStatus.Successful);
                     if (ioInfo.getSource() != null) {
                         ioInfo.getSource().signal(this);
                     }
@@ -456,7 +456,7 @@ public abstract class TapeDevice extends Device {
                     break;
 
                 default:
-                    ioInfo.setStatus(IOStatus.InvalidFunction);
+                    ioInfo.setStatus(DeviceStatus.InvalidFunction);
             }
 
             ioEnd(ioInfo);

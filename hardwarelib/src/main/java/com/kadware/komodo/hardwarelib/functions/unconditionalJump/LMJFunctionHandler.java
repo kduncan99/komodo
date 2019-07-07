@@ -6,7 +6,7 @@ package com.kadware.komodo.hardwarelib.functions.unconditionalJump;
 
 import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.misc.ProgramAddressRegister;
+import com.kadware.komodo.hardwarelib.ProgramAddressRegister;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;

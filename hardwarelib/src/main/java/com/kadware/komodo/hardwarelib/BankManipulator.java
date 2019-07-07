@@ -2,11 +2,8 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
-import com.kadware.komodo.hardwarelib.MainStorageProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;

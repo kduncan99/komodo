@@ -9,7 +9,7 @@ import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 
 /**

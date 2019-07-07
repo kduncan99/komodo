@@ -14,12 +14,12 @@ import org.apache.logging.log4j.LogManager;
  * Devices are child Nodes of ChannelModules, and are the lowest units in the IO chain.
  * All IO to Devices is done asynchronously (as far as we are concerned at this level).
  * The ChannelModule sends a DeviceIOInfo object to the Device.
- * If the IO cannot be scheduled, the IOStatus field of the DeviceIOInfo is updated immediately, and the IO is rejected.
- * For IOs which are asynchronous at the system level, the IO is performed, IOStatus is updated,
+ * If the IO cannot be scheduled, the DeviceStatus field of the DeviceIOInfo is updated immediately, and the IO is rejected.
+ * For IOs which are asynchronous at the system level, the IO is performed, DeviceStatus is updated,
  *   a signal is sent to the sender, and the IO is considered complete.
- * For IOs which are synchronous at the system level, the IO is scheduled, IOStatus is updated, and the IO is accepted.
+ * For IOs which are synchronous at the system level, the IO is scheduled, DeviceStatus is updated, and the IO is accepted.
  * When the IO completes at the system level, a signal is sent to the sender.
- * Senders must preserve DeviceIOInfo objects in memory until the Device marks the IOStatus field with some
+ * Senders must preserve DeviceIOInfo objects in memory until the Device marks the DeviceStatus field with some
  *   value indicating that the IO is complete, rejected, or has failed.
  * Actual system IO may involve invoking the host system's asynchronous IO facility.
  */
@@ -32,21 +32,21 @@ public abstract class Device extends Node {
 
     private static final Logger LOGGER = LogManager.getLogger(Device.class);
 
-    private final DeviceModel _deviceModel;
+    final DeviceModel _deviceModel;
     private final DeviceType _deviceType;
 
     /**
      * Indicates the device can do reads and writes.
      * If not ready, the device *may* respond to non-read/write IOs.
      */
-    private boolean _readyFlag;
+    protected boolean _readyFlag;
 
     /**
      * Indicates that something regarding the physical characteristics of this device has changed.
      * Setting a device ready should ALWAYS set this flag.
-     * All reads and writes will be rejected with IOStatus.UnitAttention until an IOFunction.GetInfo is issued.
+     * All reads and writes will be rejected with DeviceStatus.UnitAttention until an IOFunction.GetInfo is issued.
      */
-    private boolean _unitAttentionFlag;
+    protected boolean _unitAttentionFlag;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -151,13 +151,13 @@ public abstract class Device extends Node {
         final IOInfo ioInfo
     ) {
         if (LOG_IO_ERRORS) {
-            if ((ioInfo._status != IOStatus.Successful) && (ioInfo._status != IOStatus.NoInput)) {
+            if ((ioInfo._status != DeviceStatus.Successful) && (ioInfo._status != DeviceStatus.NoInput)) {
                 LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
             }
         }
 
         if (LOG_DEVICE_IO_BUFFERS) {
-            if (ioInfo._function.isReadFunction() && (ioInfo._status == IOStatus.Successful)) {
+            if (ioInfo._function.isReadFunction() && (ioInfo._status == DeviceStatus.Successful)) {
                 writeBuffersToLog(ioInfo);
             }
         }

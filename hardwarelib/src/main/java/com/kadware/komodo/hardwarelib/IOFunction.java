@@ -8,21 +8,23 @@ package com.kadware.komodo.hardwarelib;
  * Identifies a particular IO operation
  */
 @SuppressWarnings("Duplicates")
-public enum IOFunction {                               // Printer .Punch.. .Reader. ..Disk.. ..Tape.. Terminal
+public enum IOFunction
+                                //          Card     Card
+{                               // Printer .Punch.. .Reader. ..Disk.. ..Tape..
     None(0),              //
     Close(1),             //            X
-    GetInfo(2),           //    X       X        X        X        X        X
+    GetInfo(2),           //    X       X        X        X        X
     MoveBlock(3),         //                                       X
     MoveBlockBackward(4), //                                       X
     MoveFile(5),          //                                       X
     MoveFileBackward(6),  //                                       X
-    Read(7),              //                     X        X        X        X
+    Read(7),              //                     X        X        X
     ReadBackward(8),      //                                       X
     Reset(9),             //    X       X        X        X        X
     Rewind(10),           //                                       X
     RewindInterlock(11),  //                                       X
     Unload(12),           //                                       X
-    Write(13),            //    X       X                 X        X        X
+    Write(13),            //    X       X                 X        X
     WriteEndOfFile(14);   //                                       X
 
     private final int _code;
@@ -75,9 +77,6 @@ public enum IOFunction {                               // Printer .Punch.. .Read
     public boolean isReadFunction() {
         return (this == IOFunction.Read) || (this == IOFunction.ReadBackward);
     }
-
-    ;
-
     public boolean isWriteFunction() {
         return (this == IOFunction.Write) || (this == IOFunction.WriteEndOfFile);
     }

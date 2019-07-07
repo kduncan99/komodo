@@ -13,7 +13,7 @@ import com.kadware.komodo.hardwarelib.functions.FunctionHandler;
 import com.kadware.komodo.hardwarelib.functions.FunctionTable;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.hardwarelib.misc.*;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
@@ -168,7 +168,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final String name,
         final short upi
     ) {
-        super(Processor.ProcessorType.InstructionProcessor, name, upi);
+        super(ProcessorType.InstructionProcessor, name, upi);
 
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 
@@ -904,7 +904,7 @@ public class InstructionProcessor extends Processor implements Worker {
     @Override
     public void run(
     ) {
-        LOGGER.info(String.format("InstructionProcessor worker %s Starting", getName()));
+        LOGGER.info(String.format("InstructionProcessor worker %s Starting", _name));
         synchronized(_storageLocks) {
             _storageLocks.put(this, new HashSet<AbsoluteAddress>());
         }
@@ -988,7 +988,7 @@ public class InstructionProcessor extends Processor implements Worker {
             _storageLocks.remove(this);
         }
 
-        LOGGER.info(String.format("InstructionProcessor worker %s Terminating", getName()));
+        LOGGER.info(String.format("InstructionProcessor worker %s Terminating", _name));
     }
 
 
@@ -1922,7 +1922,7 @@ public class InstructionProcessor extends Processor implements Worker {
     @Override
     public String getWorkerName(
     ) {
-        return getName();
+        return _name;
     }
 
     /**
@@ -1938,17 +1938,6 @@ public class InstructionProcessor extends Processor implements Worker {
             } catch (InterruptedException ex) {
             }
         }
-    }
-
-    /**
-     * Invoked when any other node decides to signal us
-     * @param source node from which the signal came
-     */
-    @Override
-    public void signal(
-        final Node source
-    ) {
-        //TODO IPL interrupts
     }
 
     /**
@@ -1988,11 +1977,11 @@ public class InstructionProcessor extends Processor implements Worker {
                 _latestStopDetail = detail;
                 _runningFlag = false;
                 System.out.println(String.format("%s Stopping:%s Detail:%o",
-                                                 getName(),
+                                                 _name,
                                                  stopReason.toString(),
                                                  _latestStopDetail));//TODO remove later
                 LOGGER.error(String.format("%s Stopping:%s Detail:%o",
-                                           getName(),
+                                           _name,
                                            stopReason.toString(),
                                            _latestStopDetail));
                 this.notify();
@@ -2087,7 +2076,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final BaseRegister baseRegister,
         final int relativeAddress
     ) {
-        short upi = baseRegister._baseAddress._upi;
+        int upi = baseRegister._baseAddress._upi;
         int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);

@@ -40,7 +40,7 @@ public class MainStorageProcessor extends Processor {
      */
     MainStorageProcessor(
         final String name,
-        final short upi,
+        final int upi,
         final int fixedStorageSize
     ) {
         super(ProcessorType.MainStorageProcessor, name, upi);
@@ -179,17 +179,6 @@ public class MainStorageProcessor extends Processor {
                 return originalSlice.copyOf(storageSize);
             }
         }
-    }
-
-    /**
-     * Invoked when this object is the target of a UPI notification
-     * @param source the Node which is signalling us
-     */
-    @Override
-    public void signal(
-        final Node source
-    ) {
-        //  Nothing to do - at least for now
     }
 
     /**

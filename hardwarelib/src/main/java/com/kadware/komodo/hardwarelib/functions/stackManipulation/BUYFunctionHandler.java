@@ -10,7 +10,7 @@ import com.kadware.komodo.baselib.IndexRegister;
 import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.RCSGenericStackUnderflowOverflowInterrupt;
-import com.kadware.komodo.hardwarelib.misc.BaseRegister;
+import com.kadware.komodo.hardwarelib.BaseRegister;
 
 /**
  * Handles the BUY instruction (f=073 j=014 a=02) extended mode only

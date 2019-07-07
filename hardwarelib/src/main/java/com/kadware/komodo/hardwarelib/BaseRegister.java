@@ -2,13 +2,11 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.hardwarelib.InventoryManager;
-import com.kadware.komodo.hardwarelib.MainStorageProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;

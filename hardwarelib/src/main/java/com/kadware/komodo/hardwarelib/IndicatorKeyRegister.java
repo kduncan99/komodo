@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.Word36;

@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.functions.addressSpaceManagement;
 
-import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
@@ -13,7 +13,6 @@ import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.IndexRegister;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.hardwarelib.misc.*;
 
 /**
  * Handles the TRARS instruction f=072 j=00

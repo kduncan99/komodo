@@ -10,7 +10,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 
 /**
  * Handles the SDMN instruction f=037 j=004 a=001

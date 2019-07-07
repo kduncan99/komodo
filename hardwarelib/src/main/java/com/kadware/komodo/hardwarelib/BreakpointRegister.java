@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
 
 /**
  * Describes a base register - there are 32 of these, each describing a based bank.

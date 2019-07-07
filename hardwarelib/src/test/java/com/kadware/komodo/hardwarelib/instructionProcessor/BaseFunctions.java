@@ -8,7 +8,6 @@ import com.kadware.komodo.baselib.*;
 import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.hardwarelib.misc.*;
 import com.kadware.komodo.minalib.*;
 import java.util.HashMap;
 import java.util.LinkedList;

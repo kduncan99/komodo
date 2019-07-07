@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -20,32 +19,27 @@ import com.kadware.komodo.baselib.types.*;
 @SuppressWarnings("Duplicates")
 public abstract class DiskDevice extends Device {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private static final Logger LOGGER = LogManager.getLogger(DiskDevice.class);
 
     /**
      * Number of blocks on the mounted pack
      */
-    BlockCount _blockCount;
+    BlockCount _blockCount = null;
 
     /**
      * block size (in bytes) of the mounted pack
      */
-    BlockSize _blockSize;
+    BlockSize _blockSize = null;
 
     /**
      * indicates whether a pack is mounted on the device
      */
-    boolean _isMounted;
+    boolean _isMounted = false;
 
     /**
      * indicates whether the device is write-protected
      */
-    boolean _isWriteProtected;
-
+    boolean _isWriteProtected = false;
 
     public DiskDevice(
         final DeviceModel deviceModel,
@@ -97,7 +91,7 @@ public abstract class DiskDevice extends Device {
 
             switch (ioInfo._function) {
                 case None:
-                    ioInfo.setStatus(IOStatus.Successful);
+                    ioInfo.setStatus(DeviceStatus.Successful);
                     if (ioInfo._source != null) {
                         ioInfo._source.signal(this);
                     }
@@ -124,7 +118,7 @@ public abstract class DiskDevice extends Device {
                     break;
 
                 default:
-                    ioInfo.setStatus(IOStatus.InvalidFunction);
+                    ioInfo.setStatus(DeviceStatus.InvalidFunction);
             }
 
             ioEnd(ioInfo);

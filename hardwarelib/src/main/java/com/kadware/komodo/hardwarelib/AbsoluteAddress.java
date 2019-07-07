@@ -2,7 +2,9 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
+
+import com.kadware.komodo.baselib.ArraySlice;
 
 /**
 * Represents an absolute address - this is a composite value which identifies a particular
@@ -15,7 +17,7 @@ public class AbsoluteAddress {
      * The UPI (Unique Processor Index) value identifying a particular MSP
      * Range: 0:0x0F
      */
-    public final short _upi;
+    public final int _upi;
 
     /**
      * Indicates a particular segment - the offset is relative to the segment.
@@ -34,14 +36,13 @@ public class AbsoluteAddress {
     public final int _offset;
 
     /**
-     * Constructor
-     * <p>
+     * Constructor from components
      * @param upi UPI of an MSP
      * @param segment segment of a particular MSP
      * @param offset offset from the beginning of the indicated segment
      */
     public AbsoluteAddress(
-        final short upi,
+        final int upi,
         final int segment,
         final int offset
     ) {
@@ -51,6 +52,20 @@ public class AbsoluteAddress {
         _upi = upi;
         _segment = segment;
         _offset = offset;
+    }
+
+    /**
+     * Constructor given an absolute address layout in memory
+     * @param baseArray ArraySlice containing the 2-word absolute address
+     * @param offset offset from the start of baseArray where the absolute address is located
+     */
+    public AbsoluteAddress(
+        final ArraySlice baseArray,
+        final int offset
+    ) {
+        _segment = (int) (baseArray.get(offset) & 0x1FFFFFF);
+        _upi = (int) (baseArray.get(offset + 1) >> 32);
+        _offset = (int) (baseArray.get(offset + 1));
     }
 
     /**

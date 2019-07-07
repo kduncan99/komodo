@@ -9,7 +9,7 @@ import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.BankManipulator;
+import com.kadware.komodo.hardwarelib.BankManipulator;
 
 /**
  * Handles the GOTO instruction f=07 j=017 a=00

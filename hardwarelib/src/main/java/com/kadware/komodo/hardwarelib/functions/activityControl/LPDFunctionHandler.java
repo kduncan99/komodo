@@ -9,7 +9,7 @@ import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 
 /**
  * Handles the LPD instruction f=07 j=014 a=not-used

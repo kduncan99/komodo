@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.misc;
+package com.kadware.komodo.hardwarelib;
 
 /**
  * Nothing really different from the VirtualAddress class, but this is a specific hard-held register in the IP.

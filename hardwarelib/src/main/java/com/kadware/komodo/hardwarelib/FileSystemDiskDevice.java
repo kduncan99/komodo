@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib;
@@ -7,7 +7,6 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -46,7 +45,7 @@ import com.kadware.komodo.baselib.types.*;
  * packaged into the logical blocks, and even the conversion table above, has no relevance
  * to the code here-in.
  */
-
+@SuppressWarnings("Duplicates")
 public class FileSystemDiskDevice extends DiskDevice {
 
     //TODO This needs to use true async IO
@@ -64,27 +63,23 @@ public class FileSystemDiskDevice extends DiskDevice {
      * This class contains information about the pack version and geometry.
      * It is maintained in the fist 'physical' block of the pack, which offsets all the logical blocks by 1.
      */
-    protected static class ScratchPad {
+    static class ScratchPad {
 
-        public static final String EXPECTED_IDENTIFIER = "**FSDD**";
-        public static final short EXPECTED_MAJOR_VERSION = 1;
-        public static final short EXPECTED_MINOR_VERSION = 1;
+        static final String EXPECTED_IDENTIFIER = "**FSDD**";
+        static final short EXPECTED_MAJOR_VERSION = 1;
+        static final short EXPECTED_MINOR_VERSION = 1;
 
-        public String _identifier;
-        public short _majorVersion;
-        public short _minorVersion;
-        public PrepFactor _prepFactor;
-        public BlockSize _blockSize;
-        public BlockCount _blockCount;
+        String _identifier;
+        short _majorVersion;
+        short _minorVersion;
+        PrepFactor _prepFactor;
+        BlockSize _blockSize;
+        BlockCount _blockCount;
 
         /**
          * Constructor where the caller is establishing values
-         * <p>
-         * @param prepFactor
-         * @param blockSize
-         * @param blockCount
          */
-        public ScratchPad(
+        ScratchPad(
             final PrepFactor prepFactor,
             final BlockSize blockSize,
             final BlockCount blockCount
@@ -100,7 +95,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         /**
          * Constructor to be used for subsequent deserializing
          */
-        public ScratchPad(
+        ScratchPad(
         ) {
             _prepFactor = new PrepFactor();
             _blockSize = new BlockSize();
@@ -109,10 +104,8 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         /**
          * Deserializes a scratch pad object from the given Serializer
-         * <p>
-         * @param buffer
          */
-        public void deserialize(
+        void deserialize(
             final ByteBuffer buffer
         ) {
             _identifier = deserializeString(buffer);
@@ -125,10 +118,8 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         /**
          * Serializes this object into the given Serializer
-         * <p>
-         * @param buffer
          */
-        public void serialize(
+        void serialize(
             final ByteBuffer buffer
         ) {
             serializeString(buffer, _identifier);
@@ -141,91 +132,53 @@ public class FileSystemDiskDevice extends DiskDevice {
     };
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
-
     private RandomAccessFile _file;
     private String _packName;
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Standard constructor
-     * <p>
-     * @param name
-     * @param subsystemIdentifier
      */
-    public FileSystemDiskDevice(
-        final String name,
-        final short subsystemIdentifier
+    FileSystemDiskDevice(
+        final String name
     ) {
-        super(DeviceModel.FileSystemDisk, name, subsystemIdentifier);
+        super(DeviceModel.FileSystemDisk, name);
         _file = null;
         _packName = null;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Retrieves the pack name of the currently mounted media
-     * <p>
      * @return pack name if mounted, else an empty string
      */
-    public String getPackName(
-    ) {
-        return isMounted() ? _packName : "";
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Abstract methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    String getPackName() { return _isMounted ? _packName : ""; }
 
     /**
      * Single method for converting a logical block ID to a physical byte offset.
      * Caller must verify blockId is within the blockCount range.
-     * <p>
-     * @param blockId
-     * <p>
-     * @return
      */
     protected long calculateByteOffset(
         final BlockId blockId
     ) {
-        return (blockId.getValue() + 1) * getBlockSize().getValue();
+        return _blockSize == null ? 0 : (blockId.getValue() + 1) * _blockSize.getValue();
     }
 
     /**
      * Checks to see whether this node is a valid descendant of the candidate node
-     * @param candidateAncestor
-     * @return
      */
     @Override
     public boolean canConnect(
         final Node candidateAncestor
     ) {
-        //  We can connect only to ByteDisk controllers
-        return candidateAncestor instanceof ByteDiskController;
+        //  We can connect only to Byte channel modules
+        //TODO
+        //    return candidateAncestor instanceof ByteDiskController;
+        return false;
     }
 
     /**
      * For debugging purposes
-     * <p>
-     * @param writer
      */
     @Override
     public void dump(
@@ -241,25 +194,15 @@ public class FileSystemDiskDevice extends DiskDevice {
 
     /**
      * We are a byte interface device
-     * <p>
-     * @return
      */
     @Override
-    public boolean hasByteInterface(
-    ) {
-        return true;
-    }
+    public boolean hasByteInterface() { return true; }
 
     /**
      * We are NOT a word interface device
-     * <p>
-     * @return
      */
     @Override
-    public boolean hasWordInterface(
-    ) {
-        return false;
-    }
+    public boolean hasWordInterface() { return false; }
 
     /**
      * Nothing to be done here
@@ -270,8 +213,6 @@ public class FileSystemDiskDevice extends DiskDevice {
     /**
      * Produces a byte stream describing this disk device.
      * This is an immediate IO, no waiting.
-     * <p>
-     * @param ioInfo
      */
     @Override
     protected void ioGetInfo(
@@ -279,212 +220,195 @@ public class FileSystemDiskDevice extends DiskDevice {
     ) {
         try {
             //  Create a DiskDeviceInfo object and then serialize it to the IOInfo's buffer
-            DiskDeviceInfo devInfo = new DiskDeviceInfo(getDeviceType(),
-                                                        getDeviceModel(),
-                                                        isReady(),
-                                                        getSubsystemIdentifier(),
-                                                        getUnitAttentionFlag(),
-                                                        getBlockCount(),
-                                                        getBlockSize(),
-                                                        isMounted(),
-                                                        isWriteProtected());
+            DiskDeviceInfo devInfo = new DiskDeviceInfo.Builder().setBlockCount(_blockCount)
+                                                                 .setBlockSize(_blockSize)
+                                                                 .setDeviceModel(_deviceModel)
+                                                                 .build();
 
-            ByteBuffer bb = ByteBuffer.wrap(ioInfo.getByteBuffer());
+            ByteBuffer bb = ByteBuffer.wrap(ioInfo._byteBuffer);
             devInfo.serialize(bb);
-            if (ioInfo.getTransferCount() < bb.position()) {
-                ioInfo.setStatus(IOStatus.InvalidBlockSize);
+            if (ioInfo._transferCount < bb.position()) {
+                ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
             } else {
                 //  Clear UA flag - user is asking for the info pending for him.
                 setUnitAttention(false);
 
                 //  Complete the IOInfo object
                 ioInfo.setTransferredCount(bb.position());
-                ioInfo.setStatus(IOStatus.Successful);
+                ioInfo.setStatus(DeviceStatus.Successful);
             }
         } catch (java.nio.BufferOverflowException ex) {
-            ioInfo.setStatus(IOStatus.BufferTooSmall);
+            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
         }
     }
 
     /**
      * Reads logical records from the underlying data store.
-     * <p>
-     * @param ioInfo
      */
     @Override
     protected void ioRead(
         final IOInfo ioInfo
     ) {
-        if (!isReady()) {
-            ioInfo.setStatus(IOStatus.NotReady);
+        if (!_readyFlag) {
+            ioInfo.setStatus(DeviceStatus.NotReady);
             return;
         }
 
-        if (getUnitAttentionFlag()) {
-            ioInfo.setStatus(IOStatus.UnitAttention);
+        if (_unitAttentionFlag) {
+            ioInfo.setStatus(DeviceStatus.UnitAttention);
             return;
         }
 
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo.setStatus(IOStatus.NotPrepped);
+            ioInfo.setStatus(DeviceStatus.NotPrepped);
             return;
         }
 
-        if (ioInfo.getByteBuffer().length < ioInfo.getTransferCount()) {
-            ioInfo.setStatus(IOStatus.BufferTooSmall);
+        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
+            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
             return;
         }
 
-        long reqByteCount = ioInfo.getTransferCount();
-        if ((reqByteCount == 0) || ((reqByteCount % getBlockSize().getValue()) != 0)) {
-            ioInfo.setStatus(IOStatus.InvalidBlockSize);
+        long reqByteCount = ioInfo._transferCount;
+        if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
             return;
         }
 
-        BlockId reqBlockId = ioInfo.getBlockId();
-        BlockCount reqBlockCount = new BlockCount(reqByteCount / getBlockSize().getValue());
+        BlockId reqBlockId = ioInfo._blockId;
+        BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
-        if (reqBlockId.getValue() >= getBlockCount().getValue()) {
-            ioInfo.setStatus(IOStatus.InvalidBlockId);
+        if (reqBlockId.getValue() >= _blockCount.getValue()) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockId);
             return;
         }
 
-        if ((reqBlockId.getValue() + reqBlockCount.getValue() > getBlockCount().getValue())
-                || (reqByteCount > 0x7FFFFFFF)) {
-            ioInfo.setStatus(IOStatus.InvalidBlockCount);
+        if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockCount);
             return;
         }
 
-        ioInfo.setStatus(IOStatus.InProgress);
+        ioInfo.setStatus(DeviceStatus.InProgress);
         long byteOffset = calculateByteOffset(reqBlockId);
 
         try {
             _file.seek(byteOffset);
-            _file.read(ioInfo.getByteBuffer(), 0, (int)ioInfo.getTransferCount());
-            ioInfo.setStatus(IOStatus.Successful);
+            _file.read(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+            ioInfo.setStatus(DeviceStatus.Successful);
         } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", getName(), ex.getMessage()));
-            ioInfo.setStatus(IOStatus.SystemException);
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo.setStatus(DeviceStatus.SystemException);
         }
     }
 
     /**
      * Resets the device - not much to be done
-     * <p>
-     * @param ioInfo
      */
     @Override
     protected void ioReset(
         final IOInfo ioInfo
     ) {
-        if (!isReady()) {
-            ioInfo.setStatus(IOStatus.NotReady);
+        if (!_readyFlag) {
+            ioInfo.setStatus(DeviceStatus.NotReady);
         } else {
-            ioInfo.setStatus(IOStatus.Successful);
+            ioInfo.setStatus(DeviceStatus.Successful);
         }
     }
 
     /**
      * Unmounts the currently-mounted media, leaving the device not-ready.
-     * <p>
-     * @param ioInfo
      */
     @Override
     protected void ioUnload(
         final IOInfo ioInfo
     ) {
-        if (!isReady()) {
-            ioInfo.setStatus(IOStatus.NotReady);
+        if (!_readyFlag) {
+            ioInfo.setStatus(DeviceStatus.NotReady);
         } else {
             unmount();
-            ioInfo.setStatus(IOStatus.Successful);
+            ioInfo.setStatus(DeviceStatus.Successful);
         }
     }
 
     /**
      * Writes a data block to the media
-     * <p>
-     * @param ioInfo
      */
     @Override
     protected void ioWrite(
         final IOInfo ioInfo
     ) {
-        if (!isReady()) {
-            ioInfo.setStatus(IOStatus.NotReady);
+        if (!_readyFlag) {
+            ioInfo.setStatus(DeviceStatus.NotReady);
             return;
         }
 
-        if (getUnitAttentionFlag()) {
-            ioInfo.setStatus(IOStatus.UnitAttention);
+        if (_unitAttentionFlag) {
+            ioInfo.setStatus(DeviceStatus.UnitAttention);
             return;
         }
 
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo.setStatus(IOStatus.NotPrepped);
+            ioInfo.setStatus(DeviceStatus.NotPrepped);
             return;
         }
 
-        if (isWriteProtected()) {
-            ioInfo.setStatus(IOStatus.WriteProtected);
+        if (_isWriteProtected) {
+            ioInfo.setStatus(DeviceStatus.WriteProtected);
             return;
         }
 
-        if (ioInfo.getByteBuffer().length < ioInfo.getTransferCount()) {
-            ioInfo.setStatus(IOStatus.BufferTooSmall);
+        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
+            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
             return;
         }
 
-        long reqByteCount = ioInfo.getTransferCount();
-        if ((reqByteCount == 0) || ((reqByteCount % getBlockSize().getValue()) != 0)) {
-            ioInfo.setStatus(IOStatus.InvalidBlockSize);
+        long reqByteCount = ioInfo._transferCount;
+        if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
             return;
         }
 
-        BlockId reqBlockId = ioInfo.getBlockId();
-        BlockCount reqBlockCount = new BlockCount(reqByteCount / getBlockSize().getValue());
+        BlockId reqBlockId = ioInfo._blockId;
+        BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
-        if (reqBlockId.getValue() >= getBlockCount().getValue()) {
-            ioInfo.setStatus(IOStatus.InvalidBlockId);
+        if (reqBlockId.getValue() >= _blockCount.getValue()) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockId);
             return;
         }
 
-        if ((reqBlockId.getValue() + reqBlockCount.getValue() > getBlockCount().getValue())
-                || (reqByteCount > 0x7FFFFFFF)) {
-            ioInfo.setStatus(IOStatus.InvalidBlockCount);
+        if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
+            ioInfo.setStatus(DeviceStatus.InvalidBlockCount);
             return;
         }
 
-        ioInfo.setStatus(IOStatus.InProgress);
+        ioInfo.setStatus(DeviceStatus.InProgress);
         long byteOffset = calculateByteOffset(reqBlockId);
 
         try {
             _file.seek(byteOffset);
-            _file.write(ioInfo.getByteBuffer(), 0, (int)ioInfo.getTransferCount());
-            ioInfo.setStatus(IOStatus.Successful);
+            _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+            ioInfo.setStatus(DeviceStatus.Successful);
         } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", getName(), ex.getMessage()));
-            ioInfo.setStatus(IOStatus.SystemException);
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo.setStatus(DeviceStatus.SystemException);
         }
     }
 
     /**
      * Mounts the media for this device.
      * For a FileSystemDiskDevice, this entails opening a filesystem file.
-     * <p>
      * @param mediaName full path and file name for the pack to be mounted
-     * <p>
      * @return true if successful, else false
      */
-    public boolean mount(
+    boolean mount(
         final String mediaName
     ) {
-        if (isMounted()) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Already mounted", getName(), mediaName));
+        if (_isMounted) {
+            LOGGER.error(String.format("Device %s Cannot mount %s:Already mounted", _name, mediaName));
             return false;
         }
 
@@ -505,7 +429,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             int bytes = _file.read(buffer);
             if (bytes < bufferSize) {
                 LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read %d bytes of scratch pad",
-                                           getName(),
+                                           _name,
                                            mediaName,
                                            bufferSize));
                 _file.close();
@@ -517,7 +441,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             scratchPad.deserialize(ByteBuffer.wrap(buffer));
             if (!scratchPad._identifier.equals(ScratchPad.EXPECTED_IDENTIFIER)) {
                 LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad identifier expected:'%s' got:'%s'",
-                                           getName(),
+                                           _name,
                                            mediaName,
                                            ScratchPad.EXPECTED_IDENTIFIER,
                                            scratchPad._identifier));
@@ -528,7 +452,7 @@ public class FileSystemDiskDevice extends DiskDevice {
 
             if (scratchPad._majorVersion != ScratchPad.EXPECTED_MAJOR_VERSION) {
                 LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad MajorVersion expected:%d got:%d",
-                                           getName(),
+                                           _name,
                                            mediaName,
                                            ScratchPad.EXPECTED_MAJOR_VERSION,
                                            scratchPad._majorVersion));
@@ -539,18 +463,18 @@ public class FileSystemDiskDevice extends DiskDevice {
 
             if (scratchPad._minorVersion != ScratchPad.EXPECTED_MINOR_VERSION) {
                 LOGGER.info(String.format("Device %s:ScratchPad MinorVersion expected:%d got:%d",
-                                           getName(),
+                                           _name,
                                            ScratchPad.EXPECTED_MINOR_VERSION,
                                            scratchPad._minorVersion));
             }
 
             _packName = mediaName;
-            setBlockSize(scratchPad._blockSize);
-            setBlockCount(scratchPad._blockCount);
-            setIsMounted(true);
-            LOGGER.info(String.format("Device %s Mount %s successful", getName(), mediaName));
+            _blockSize = scratchPad._blockSize;
+            _blockCount = scratchPad._blockCount;
+            _isMounted = true;
+            LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
         } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", getName(), mediaName, ex.getMessage()));
+            LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
             _file = null;
             return false;
         }
@@ -560,16 +484,12 @@ public class FileSystemDiskDevice extends DiskDevice {
 
     /**
      * Overrides the call to set the ready flag, preventing setting true if we're not mounted.
-     * <p>
-     * @param readyFlag
-     * <p>
-     * @return
      */
     @Override
     public boolean setReady(
         final boolean readyFlag
     ) {
-        if (readyFlag && !isMounted()) {
+        if (readyFlag && !_isMounted) {
             return false;
         }
 
@@ -578,15 +498,10 @@ public class FileSystemDiskDevice extends DiskDevice {
 
     /**
      * Invoked when this object is the source of an IO which has been cancelled or completed
-     * <p>
      * @param source the Node which is signalling us
      */
     @Override
-    public void signal(
-        final Node source
-    ) {
-        //  nothing to do
-    }
+    public void signal(Node source) { /* nothing to do */ }
 
     /**
      * Invoked just before tearing down the configuration.
@@ -596,13 +511,12 @@ public class FileSystemDiskDevice extends DiskDevice {
 
     /**
      * Unmounts the currently-mounted media
-     * <p>
      * @return true if successful, else false
      */
-    public boolean unmount(
+    boolean unmount(
     ) {
-        if (!isMounted()) {
-            LOGGER.error(String.format("Device %s Cannot unmount pack - no pack mounted", getName()));
+        if (!_isMounted) {
+            LOGGER.error(String.format("Device %s Cannot unmount pack - no pack mounted", _name));
             return false;
         }
 
@@ -619,38 +533,25 @@ public class FileSystemDiskDevice extends DiskDevice {
         _file = null;
         _packName = null;
 
-        setBlockCount(null);
-        setBlockSize(null);
-        setIsMounted(false);
-        setIsWriteProtected(true);
+        _blockCount = null;
+        _blockSize = null;
+        _isMounted = false;
+        _isWriteProtected = true;
 
         return true;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Creates a host system file which can be mounted on this type of device as a pack
-     * <p>
      * @param fileName - includes any path information, and the required suffix (usually .pack)
-     * @param blockSize
-     * @param blockCount
-     * <p>
-     * @throws FileNotFoundException
-     * @throws InternalError
-     * @throws InvalidBlockSizeException
-     * @throws InvalidTrackCountException
-     * @throws IOException
+     * @param blockSize - block size, in bytes
+     * @param blockCount - number of blocks
      */
-    public static void createPack(
+    static void createPack(
         final String fileName,
         final BlockSize blockSize,
         final BlockCount blockCount
-    ) throws FileNotFoundException,
-             InternalError,
+    ) throws InternalError,
              InvalidBlockSizeException,
              InvalidTrackCountException,
              IOException {

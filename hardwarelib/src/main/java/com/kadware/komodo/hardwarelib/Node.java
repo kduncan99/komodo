@@ -87,12 +87,6 @@ public abstract class Node {
     public abstract void initialize();
 
     /**
-     * Invoked when this object is the source of an IO which has been cancelled or completed
-     * @param source indicates which Node was responsible for signalling us (it might be us)
-     */
-    public abstract void signal(Node source);
-
-    /**
      * Invoked just before tearing down the configuration.
      */
     public abstract void terminate();

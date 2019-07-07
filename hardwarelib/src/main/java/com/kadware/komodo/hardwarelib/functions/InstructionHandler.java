@@ -4,10 +4,9 @@
 
 package com.kadware.komodo.hardwarelib.functions;
 
-import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.baselib.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.hardwarelib.misc.*;
 
 /**
  * Base class for all the instruction handlers

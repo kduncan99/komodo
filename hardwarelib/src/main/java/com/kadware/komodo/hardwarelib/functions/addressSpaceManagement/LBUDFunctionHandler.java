@@ -10,9 +10,9 @@ import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.ActiveBaseTableEntry;
-import com.kadware.komodo.hardwarelib.misc.BaseRegister;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.ActiveBaseTableEntry;
+import com.kadware.komodo.hardwarelib.BaseRegister;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 
 /**
  * Handles the LBUD instruction f=075 j=07

@@ -10,7 +10,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.BaseRegister;
+import com.kadware.komodo.hardwarelib.BaseRegister;
 
 /**
  * Handles the SBUD instruction f=075 j=06

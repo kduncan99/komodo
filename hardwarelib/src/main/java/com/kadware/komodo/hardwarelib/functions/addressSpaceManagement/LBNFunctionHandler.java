@@ -12,9 +12,9 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.BankDescriptor;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
-import com.kadware.komodo.hardwarelib.misc.VirtualAddress;
+import com.kadware.komodo.hardwarelib.BankDescriptor;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.VirtualAddress;
 
 /**
  * Handles the LBN instruction f=075 j=014

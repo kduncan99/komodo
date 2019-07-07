@@ -7,7 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.hardwarelib.misc.AbsoluteAddress;
+
 import java.util.HashMap;
 import java.util.Map;
 

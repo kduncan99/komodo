@@ -131,7 +131,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(3);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 3;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -153,7 +153,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(3);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 3;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -175,7 +175,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(2);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 2;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -197,7 +197,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(2);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 2;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -239,7 +239,7 @@ public class Test_ByteChannelModule {
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
 //        program._prepFactor = prepFactor;
 //        program._wordCount = wordArraySize;
-//        program._accessControlWord = new IOAccessControlWord(resultBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(resultBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
 //        tracker._conversionBuffer = new TestModule.ConversionBuffer(byteBuffer, true);
@@ -271,7 +271,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array resultBuffer = new Word36Array(wordArraySize);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(resultBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(resultBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = wordArraySize;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -292,7 +292,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(1);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 1;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -313,7 +313,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(1);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 1;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -336,7 +336,7 @@ public class Test_ByteChannelModule {
 //
 //        Word36Array wordBuffer = new Word36Array(2);
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 2;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -365,7 +365,7 @@ public class Test_ByteChannelModule {
 //        Word36Array wordBuffer = new Word36Array(sourceLongs);
 //
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 3;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -401,7 +401,7 @@ public class Test_ByteChannelModule {
 //        Word36Array wordBuffer = new Word36Array(sourceLongs);
 //
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 3;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -436,7 +436,7 @@ public class Test_ByteChannelModule {
 //        Word36Array wordBuffer = new Word36Array(sourceLongs);
 //
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 3;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -468,7 +468,7 @@ public class Test_ByteChannelModule {
 //        Word36Array wordBuffer = new Word36Array(sourceLongs);
 //
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 2;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -521,7 +521,7 @@ public class Test_ByteChannelModule {
 //
 //        //  Create the channel program and tracker we need for testing
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 1792;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);
@@ -553,7 +553,7 @@ public class Test_ByteChannelModule {
 //
 //        //  Create the channel program and tracker we need for testing
 //        TestModule.ChannelProgram program = new TestModule.ChannelProgram(null);
-//        program._accessControlWord = new IOAccessControlWord(wordBuffer, 0, IOAccessControlWord.AddressModifier.Increment);
+//        program._accessControlWord = new Test_AccessControlWord(wordBuffer, 0, Test_AccessControlWord.AddressModifier.Increment);
 //        program._wordCount = 1792;
 //
 //        TestModule.TestTracker tracker = new TestModule.TestTracker(program);

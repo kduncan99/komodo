@@ -9,7 +9,7 @@ import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.hardwarelib.misc.DesignatorRegister;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 
 /**
  * Handles the LUD instruction f=073 j=017 a=04

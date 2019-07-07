@@ -17,76 +17,19 @@ import org.apache.logging.log4j.Logger;
 public abstract class Processor extends Node {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Indicates the type of the processor
-     */
-    public static enum ProcessorType {
-        SystemProcessor(0),
-        InstructionProcessor(1),
-        InputOutputProcessor(2),
-        MainStorageProcessor(3);
-
-        /**
-         * Unique code for this particular ProcessorType
-         */
-        private final int _code;
-
-        /**
-         * Constructor
-         * @param code code associated with the type
-         */
-        ProcessorType(
-            final int code
-        ) {
-            _code = code;
-        }
-
-        /**
-         * Retrieves the unique code assigned to this ProcessorType
-         * @return value
-         */
-        public int getCode(
-        ) {
-            return _code;
-        }
-
-        /**
-         * Converts a code to a ProcessorType
-         * @param code code of interest
-         * @return the value
-         */
-        public static ProcessorType getValue(
-            final int code
-        ) {
-            switch (code) {
-                case 0:     return SystemProcessor;
-                case 1:     return InstructionProcessor;
-                case 2:     return InputOutputProcessor;
-                case 3:     return MainStorageProcessor;
-            }
-
-            throw new InternalErrorRuntimeException("Invalid code for ProcessorType.getValue()");
-        }
-    };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final Logger LOGGER = LogManager.getLogger(Processor.class);
 
-    private final ProcessorType _processorType;
+    public final ProcessorType _processorType;
 
     /**
      * Uniquely identifies each processor in the configuration, in a manner transparent to the configurating entity.
      * Our own requirement is that the UPI must be greater than zero, and less than or equal to 15.
      * This is due to absolute address resolution for MSPs.
      */
-    private final short _upi;
+    public final int _upi;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -96,34 +39,11 @@ public abstract class Processor extends Node {
     public Processor(
         final ProcessorType processorType,
         final String name,
-        final short upi
+        final int upi
     ) {
-        super(Node.Category.Processor, name);
+        super(NodeCategory.Processor, name);
         _processorType = processorType;
         _upi = upi;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * @return value
-     */
-    ProcessorType getProcessorType(
-    ) {
-        return _processorType;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    public short getUPI(
-    ) {
-        return _upi;
     }
 
 
@@ -136,15 +56,6 @@ public abstract class Processor extends Node {
      */
     @Override
     public abstract void initialize();
-
-    /**
-     * Invoked when this object is the source of an IO which has been cancelled or completed
-     * @param source the Node which is signalling us
-     */
-    @Override
-    public abstract void signal(
-        final Node source
-    );
 
     /**
      * Invoked just before tearing down the configuration.
