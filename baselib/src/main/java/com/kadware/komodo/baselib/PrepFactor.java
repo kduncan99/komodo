@@ -1,37 +1,20 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib.types;
+package com.kadware.komodo.baselib;
 
 /**
  * Wraps an integer in a thin wrapper to help enhance type checking of things which are really just ints or longs
  */
 public class PrepFactor extends Size {
 
-    /**
-     * Default constructor
-     */
-    public PrepFactor(
-    ) {
-    }
-
-    /**
-     * Constructor
-     * <p>
-     * @param value
-     */
-    public PrepFactor(
-        final int value
-    ) {
-        super(value);
-    }
+    public PrepFactor() { }
+    public PrepFactor(int value) { super(value); }
 
     /**
      * Determines how many 36-bit blocks, of the size indicated by the value of this object,
      * will be required to make up one track (which is comprised of 1792 36-bit words).
-     * <p>
-     * @return
      */
     public int getBlocksPerTrack(
     ) {
@@ -42,8 +25,6 @@ public class PrepFactor extends Size {
      * Indicates the required size of a byte buffer to contain a 36-bit block sized according to the
      * value of this object, presuming said 36-bit words are packed 2 words -> 9 bytes.
      * This presumes the byte buffer size is required to be a power of two; the resulting value will contain some unused bytes.
-     * <p>
-     * @return
      */
     public int getContainingByteBlockSize(
     ) {
@@ -63,8 +44,6 @@ public class PrepFactor extends Size {
     /**
      * In consideration of the commentary for getContaingByteBlockSize(), this method indicates how many unused
      * bytes there are at the end of the containing byte buffer.
-     * <p>
-     * @return
      */
     public int getContainerByteBlockSlop(
     ) {
@@ -83,10 +62,6 @@ public class PrepFactor extends Size {
 
     /**
      * Converts a disk pack byte block size to a prep factor
-     * <p>
-     * @param blockSize
-     * <p>
-     * @return
      */
     public static PrepFactor getPrepFactorFromBlockSize(
         final BlockSize blockSize
@@ -106,8 +81,6 @@ public class PrepFactor extends Size {
 
     /**
      * Indicates whether the value of this object is a valid prep factor
-     * <p>
-     * @return
      */
     public boolean isValid(
     ) {

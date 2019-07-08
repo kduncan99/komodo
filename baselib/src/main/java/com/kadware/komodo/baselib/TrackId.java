@@ -2,7 +2,7 @@
  * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib.types;
+package com.kadware.komodo.baselib;
 
 /**
  * This object is for wrapping track IDs - a track being 1792 36-bit words.

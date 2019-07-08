@@ -1,14 +1,11 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.baselib;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import com.kadware.komodo.baselib.types.Counter;
-import com.kadware.komodo.baselib.types.Identifier;
 
 /**
  * Maintains a collection of Region classes, the sum of which describe a contiguous set of something.
@@ -21,15 +18,14 @@ public class RegionContainer {
     /**
      * Default constructor
      */
-    public RegionContainer() {}
+    RegionContainer() {}
 
     /**
      * Standard constructor with initial discrete parameters from which we construct a single Region
-     * <p>
-     * @param initialFirstUnit
-     * @param initialExtent
+     * @param initialFirstUnit first identifier of the space represented by all the regions in the container
+     * @param initialExtent length of the space
      */
-    public RegionContainer(
+    RegionContainer(
         final Identifier initialFirstUnit,
         final Counter initialExtent
     ) {
@@ -37,25 +33,21 @@ public class RegionContainer {
     }
 
     /**
-     * Standard constructor with initial discrete parameter values from which we construct a single Region.
-     * Be careful with parameter ordering.
-     * <p>
-     * @param initialFirstUnit
-     * @param initialExtent
+     * Standard constructor with initial discrete parameters from which we construct a single Region
+     * @param initialFirstUnit first identifier of the space represented by all the regions in the container
+     * @param initialExtent length of the space
      */
-    public RegionContainer(
-        final long initialFirstUnit,
-        final long initialExtent
+    RegionContainer(
+        final int initialFirstUnit,
+        final int initialExtent
     ) {
         _regions.add(new Region(initialFirstUnit, initialExtent));
     }
 
     /**
      * Standard constructor using a Region for our initial value
-     * <p>
-     * @param initialRegion
      */
-    public RegionContainer(
+    RegionContainer(
         final Region initialRegion
     ) {
         //  Do a copy here, so the caller can't mess us up by modifying the initialRegion object
@@ -65,10 +57,8 @@ public class RegionContainer {
     /**
      * Retrieves a reference to the _regions container.
      * Should only be used for unit testing
-     * <p>
-     * @return
      */
-    public List<Region> getRegions(
+    List<Region> getRegions(
     ) {
         return _regions;
     }
@@ -76,11 +66,7 @@ public class RegionContainer {
     /**
      * Adds a Region to our list of regions.  Does not join contiguous regions, but it does
      * refuse to add a region which intersects with any existing regions.
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
-     * @return
+     * @return true if successful
      */
     public boolean append(
         final Identifier firstUnit,
@@ -98,10 +84,6 @@ public class RegionContainer {
 
     /**
      * Convenient wrapper for above method
-     * <p>
-     * @param region
-     * <p>
-     * @return
      */
     public boolean append(
         final Region region
@@ -114,13 +96,9 @@ public class RegionContainer {
      * from those regions.  In one case, said carving will produce two small regions out of one,
      * both of which need to remain in our list -- for this reason, carve() is implemented only
      * on this container, not on the Region class.
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
      * @return true if we found any intersections, and thus took any actions
      */
-    public boolean carve(
+    boolean carve(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -185,12 +163,8 @@ public class RegionContainer {
 
     /**
      * As above, but using a Region object as a parameter
-     * <p>
-     * @param region
-     * <p>
-     * @return
      */
-    public boolean carve(
+    boolean carve(
         final Region region
     ) {
         return carve(region.getFirstUnit(), region.getExtent());
@@ -198,7 +172,7 @@ public class RegionContainer {
 
     //  As above, but for carving out multiple regions defined by the provided container,
     //  from *this* container.
-    public boolean carve(
+    boolean carve(
         final RegionContainer regions
     ) {
         boolean result = false;
@@ -215,13 +189,8 @@ public class RegionContainer {
      * Produces a RegionContainer containing Region objects which represent the various intersectons of the given region
      * (defined by the firstUnit and extent parameters) and the regions in this container.
      * It is entirely possible that the resulting container might contain regions which are contiguous.
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
-     * @return
      */
-    public RegionContainer intersection(
+    RegionContainer intersection(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -230,7 +199,7 @@ public class RegionContainer {
         for (Region region : _regions) {
             Region intersection = region.intersection(firstUnit, extent);
             if (intersection.getExtent().getValue() > 0) {
-                result.append(intersection);
+                result.append(intersection.getFirstUnit(), intersection.getExtent());
             }
         }
 
@@ -239,12 +208,8 @@ public class RegionContainer {
 
     /**
      * As above, but using a Region as a parameter instead of discrete values
-     * <p>
-     * @param region
-     * <p>
-     * @return
      */
-    public RegionContainer intersection(
+    RegionContainer intersection(
         final Region region
     ) {
         return intersection(region.getFirstUnit(), region.getExtent());
@@ -252,13 +217,8 @@ public class RegionContainer {
 
     /**
      * Indicates whether the given region defined by firstUnit and extent intersects any region in this container.
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
-     * @return
      */
-    public boolean intersects(
+    boolean intersects(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -273,12 +233,8 @@ public class RegionContainer {
 
     /**
      * As above, but using a Region parameter instead of discrete values
-     * <p>
-     * @param region
-     * <p>
-     * @return
      */
-    public boolean intersects(
+    boolean intersects(
         final Region region
     ) {
         return intersects(region.getFirstUnit(), region.getExtent());
@@ -286,8 +242,6 @@ public class RegionContainer {
 
     /**
      * If this container has no regions, or all regions it has are empty, then the container is considered empty.
-     * <p>
-     * @return
      */
     public boolean isEmpty() {
         for (Region region : _regions) {

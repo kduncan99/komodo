@@ -1,11 +1,8 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.baselib;
-
-import com.kadware.komodo.baselib.types.Counter;
-import com.kadware.komodo.baselib.types.Identifier;
 
 /**
  * A class which allows one to track regions of consecutive somethings (such as disk track IDs).
@@ -25,18 +22,17 @@ public class Region {
     /**
      * Standard constructor
      */
-    public Region() {
+    Region() {
         _firstUnit = new Identifier(0);
         _extent = new Counter(0);
     }
 
     /**
      * Initial value constructor
-     * <p>
-     * @param firstUnit
-     * @param extent
+     * @param firstUnit index or other identifier of the first unit of the contiguous units represented by this region
+     * @param extent number of contiguous units represented by this region
      */
-    public Region(
+    Region(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -46,70 +42,30 @@ public class Region {
 
     /**
      * Helpful initial value constructor - but be careful with the order of parameters
-     * <p>
-     * @param firstUnitValue
-     * @param extentValue
+     * @param firstUnit index or other identifier of the first unit of the contiguous units represented by this region
+     * @param extent number of contiguous units represented by this region
      */
-    public Region(
-        final long firstUnitValue,
-        final long extentValue
+    Region(
+        final long firstUnit,
+        final long extent
     ) {
-        _firstUnit = new Identifier(firstUnitValue);
-        _extent = new Counter(extentValue);
+        _firstUnit = new Identifier(firstUnit);
+        _extent = new Counter(extent);
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Counter getExtent(
-    ) {
-        return _extent;
-    }
+    Counter getExtent() { return _extent; }
+    Identifier getFirstUnit() { return _firstUnit; }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Identifier getFirstUnit(
-    ) {
-        return _firstUnit;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param extent
-     */
-    public void setExtent(
-        final Counter extent
-    ) {
-        _extent = extent;
-    }
-
-    /**
-     * Setter
-     * <p>
-     * @param firstUnit
-     */
-    public void setFirstUnit(
-        final Identifier firstUnit
-    ) {
-        _firstUnit = firstUnit;
-    }
+    void setExtent(Counter extent) { _extent = extent; }
+    void setFirstUnit(Identifier firstUnit) { _firstUnit = firstUnit; }
 
     /**
      * Creates a single Region object representing the intersection of this object's space
      * with the specified space.
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
-     * @return
+     * @param firstUnit index or other identifier of the first unit of the contiguous units represented by the specified space
+     * @param extent number of contiguous units represented by the specified space
      */
-    public Region intersection(
+    Region intersection(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -149,12 +105,8 @@ public class Region {
 
     /**
      * Convenient wrapper around the method above
-     * <p>
-     * @param compRegion
-     * <p>
-     * @return
      */
-    public Region intersection(
+    Region intersection(
         final Region compRegion
     ) {
         return intersection(compRegion.getFirstUnit(), compRegion.getExtent());
@@ -162,13 +114,10 @@ public class Region {
 
     /**
      * Tests to see if the region we are tracking intersects at all with the given region
-     * <p>
-     * @param firstUnit
-     * @param extent
-     * <p>
-     * @return
+     * @param firstUnit index or other identifier of the first unit of the contiguous units represented by the specified space
+     * @param extent number of contiguous units represented by the specified space
      */
-    public boolean intersects(
+    boolean intersects(
         final Identifier firstUnit,
         final Counter extent
     ) {
@@ -187,12 +136,8 @@ public class Region {
 
     /**
      * Convenient wrapper around the above method
-     * <p>
-     * @param compRegion
-     * <p>
-     * @return
      */
-    public boolean intersects(
+    boolean intersects(
         final Region compRegion
     ) {
         return intersects(compRegion._firstUnit, compRegion._extent);
@@ -201,11 +146,6 @@ public class Region {
     /**
      * Convenient method to minalib whether the region this object is tracking, is empty.
      * Caller could just as easily check getExtent()... but we are all enterprisey and stuff.
-     * <p>
-     * @return
      */
-    public boolean isEmpty(
-    ) {
-        return (_extent.getValue() == 0);
-    }
+    boolean isEmpty() { return (_extent.getValue() == 0); }
 }

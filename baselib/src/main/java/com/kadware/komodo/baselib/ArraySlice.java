@@ -14,9 +14,10 @@ import org.apache.logging.log4j.Logger;
  */
 public class ArraySlice {
 
-    private final long[] _array;
-    private final int _length;
-    private final int _offset;
+    private final long[] _array;    //  base array of which this slice is a (possibly complete) subset
+    private final int _length;      //  length of this array (must be <= length of base array)
+    private final int _offset;      //  offset into the base array, at which this slice begins
+                                    //      _length + _offset must not exceed the range of the base array
 
     /**
      * Constructor to produce a slice of a full array
@@ -78,6 +79,15 @@ public class ArraySlice {
         _array = baseSlice._array;
         _offset = offset + baseSlice._offset;
         _length = length;
+    }
+
+    /**
+     * Clears the slice to zero
+     */
+    public void clear() {
+        for (int ax = _offset; ax < _offset + _length; ++ax) {
+            _array[ax] = 0;
+        }
     }
 
     /**

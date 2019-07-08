@@ -9,11 +9,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.kadware.komodo.baselib.Region;
-import com.kadware.komodo.baselib.RegionContainer;
-import com.kadware.komodo.baselib.types.Counter;
-import com.kadware.komodo.baselib.types.Identifier;
-
 /**
  * Unit tests for RegionContainer class
  */
