@@ -14,10 +14,10 @@ import com.kadware.komodo.baselib.ArraySlice;
 public class AbsoluteAddress {
 
     /**
-     * The UPI (Unique Processor Index) value identifying a particular MSP
+     * The UPI (Unique Processor Index) index identifying a particular MSP
      * Range: 0:0x0F
      */
-    public final int _upi;
+    public final int _upiIndex;
 
     /**
      * Indicates a particular segment - the offset is relative to the segment.
@@ -37,19 +37,19 @@ public class AbsoluteAddress {
 
     /**
      * Constructor from components
-     * @param upi UPI of an MSP
+     * @param upiIndex UPI of an MSP
      * @param segment segment of a particular MSP
      * @param offset offset from the beginning of the indicated segment
      */
     public AbsoluteAddress(
-        final int upi,
+        final int upiIndex,
         final int segment,
         final int offset
     ) {
-        assert((upi >= 0) && (upi < 16));
+        assert((upiIndex >= 0) && (upiIndex < 16));
         assert((segment & 0xFE000000) == 0);
         assert(offset >= 0);
-        _upi = upi;
+        _upiIndex = upiIndex;
         _segment = segment;
         _offset = offset;
     }
@@ -64,7 +64,7 @@ public class AbsoluteAddress {
         final int offset
     ) {
         _segment = (int) (baseArray.get(offset) & 0x1FFFFFF);
-        _upi = (int) (baseArray.get(offset + 1) >> 32);
+        _upiIndex = (int) (baseArray.get(offset + 1) >> 32);
         _offset = (int) (baseArray.get(offset + 1));
     }
 
@@ -75,7 +75,7 @@ public class AbsoluteAddress {
     public AbsoluteAddress addOffset(
         final int offset
     ) {
-        return new AbsoluteAddress(_upi, _segment, _offset + offset);
+        return new AbsoluteAddress(_upiIndex, _segment, _offset + offset);
     }
 
     /**
@@ -85,7 +85,7 @@ public class AbsoluteAddress {
     @Override
     public int hashCode(
     ) {
-        return (new Integer(_upi)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer((int)_offset)).hashCode();
+        return (new Integer(_upiIndex)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer((int)_offset)).hashCode();
     }
 
     /**
@@ -99,7 +99,7 @@ public class AbsoluteAddress {
     ) {
         if (obj instanceof AbsoluteAddress) {
             AbsoluteAddress comp = (AbsoluteAddress) obj;
-            return (_upi == comp._upi) && (_segment == comp._segment) && (_offset == comp._offset);
+            return (_upiIndex == comp._upiIndex) && (_segment == comp._segment) && (_offset == comp._offset);
         } else {
             return false;
         }
@@ -108,6 +108,6 @@ public class AbsoluteAddress {
     @Override
     public String toString(
     ) {
-        return String.format("0%o:0%o:%012o", _upi, _segment, _offset);
+        return String.format("0%o:0%o:%012o", _upiIndex, _segment, _offset);
     }
 }

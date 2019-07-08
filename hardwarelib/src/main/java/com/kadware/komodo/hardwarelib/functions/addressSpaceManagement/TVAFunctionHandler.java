@@ -485,7 +485,7 @@ public class TVAFunctionHandler extends InstructionHandler {
                 long value1 = 0;
                 if (scratchPad._realAddress != null) {  //  implies _invalidRealAddress is false and _addressTranslationRequested is true
                     value0 |= scratchPad._realAddress._segment & 0_001777_777777L;
-                    value1 = (((long) scratchPad._realAddress._upi) << 32) | scratchPad._realAddress._offset;
+                    value1 = (((long) scratchPad._realAddress._upiIndex) << 32) | scratchPad._realAddress._offset;
                 }
 
                 scratchPad._xReg0.setW(value0);

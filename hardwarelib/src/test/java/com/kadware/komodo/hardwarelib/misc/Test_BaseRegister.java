@@ -82,7 +82,7 @@ public class Test_BaseRegister {
                 data[0] |= accessLock.get() & 0777777;
                 data[1] = ((long) lowerLimit << 27) | upperLimit;
                 data[2] = baseAddress._segment;
-                data[3] = ((long) baseAddress._upi) << 32 | baseAddress._offset;
+                data[3] = ((long) baseAddress._upiIndex) << 32 | baseAddress._offset;
 
                 BaseRegister br = new BaseRegister(data);
                 assertEquals(gap, br._generalAccessPermissions);

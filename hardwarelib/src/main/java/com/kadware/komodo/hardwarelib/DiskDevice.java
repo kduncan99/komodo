@@ -7,11 +7,11 @@ package com.kadware.komodo.hardwarelib;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import com.kadware.komodo.baselib.BlockCount;
+import com.kadware.komodo.baselib.BlockSize;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
-import com.kadware.komodo.baselib.types.*;
 
 /**
  * Abstract class descibing the common attributes of a DiskDevice

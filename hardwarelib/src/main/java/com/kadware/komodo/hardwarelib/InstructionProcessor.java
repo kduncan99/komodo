@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Base class which models an Instruction Procesor node
  */
+@SuppressWarnings("Duplicates")
 public class InstructionProcessor extends Processor implements Worker {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -116,14 +117,15 @@ public class InstructionProcessor extends Processor implements Worker {
 
     private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
     private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
-    private final BreakpointRegister _breakpointRegister = new BreakpointRegister();
+    private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
+    private boolean                         _cleared = true;    //TODO this might be a synonym for _stopped - reevaluate later
     private final InstructionWord           _currentInstruction = new InstructionWord();
-    private InstructionHandler _currentInstructionHandler = null;  //  TODO do we need this?
+    private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
     private static long                     _dayclockComparator = 0;
     private static long                     _dayclockOffset = 0;
-    private DesignatorRegister _designatorRegister = new DesignatorRegister();
+    private DesignatorRegister              _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
     private final IndicatorKeyRegister      _indicatorKeyRegister = new IndicatorKeyRegister();
@@ -132,7 +134,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final Word36[]                  _jumpHistoryTable = new Word36[JUMP_HISTORY_TABLE_SIZE];
     private int                             _jumpHistoryTableNext = 0;
     private boolean                         _jumpHistoryThresholdReached = false;
-    private MachineInterrupt _lastInterrupt = null;    //  must always be != _pendingInterrupt
+    private MachineInterrupt                _lastInterrupt = null;    //  must always be != _pendingInterrupt
     private long                            _latestStopDetail = 0;
     private StopReason                      _latestStopReason = StopReason.Initial;
     private boolean                         _midInstructionInterruptPoint = false;
@@ -141,8 +143,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private final Word36                    _quantumTimer = new Word36();
-    private boolean                         _runningFlag = false;
-
+    private boolean                         _stopped = false;
 
     /**
      * Set this to cause the worker thread to shut down
@@ -162,13 +163,13 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Constructor
      * @param name node name
-     * @param upi unique identifier for this processor
+     * @param upiIndex unique identifier for this processor
      */
     public InstructionProcessor(
         final String name,
-        final short upi
+        final int upiIndex
     ) {
-        super(ProcessorType.InstructionProcessor, name, upi);
+        super(ProcessorType.InstructionProcessor, name, upiIndex);
 
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 
@@ -220,7 +221,8 @@ public class InstructionProcessor extends Processor implements Worker {
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
     public long getQuantumTimer() { return _quantumTimer.getW(); }
-    public boolean getRunningFlag() { return _runningFlag; }
+    public boolean isCleared() { return _cleared; }
+    public boolean isStopped() { return _stopped; }
 
     public void loadActiveBaseTable(
         final ActiveBaseTableEntry[] source
@@ -910,8 +912,8 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         while (!_workerTerminate) {
-            // If the virtual processor is not running, then the thread does nothing other than sleep slowly
-            if (!_runningFlag) {
+            // If the virtual processor is not running, then the thread does nothing other than sleep slowly.
+            if (_cleared || _stopped) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
@@ -1016,7 +1018,7 @@ public class InstructionProcessor extends Processor implements Worker {
         long value;
         checkBreakpoint(BreakpointComparison.Read, absAddress);
         try {
-            value = _inventoryManager.getStorageValue(absAddress);
+            value = getStorageValue(absAddress);
         } catch (AddressLimitsException
             | UPINotAssignedException
             | UPIProcessorTypeException ex) {
@@ -1027,7 +1029,7 @@ public class InstructionProcessor extends Processor implements Worker {
             checkBreakpoint(BreakpointComparison.Write, absAddress);
             long newValue = this.getExecOrUserARegister((int) _currentInstruction.getA() + 1).getW();
             try {
-                _inventoryManager.setStorageValue(absAddress, newValue);
+                setStorageValue(absAddress, newValue);
                 return true;
             } catch (AddressLimitsException
                 | UPINotAssignedException
@@ -1900,6 +1902,26 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Clears the IP
+     */
+    @Override
+    public void clear() {
+        if (!_stopped) {
+            stop(StopReason.Cleared, 0);
+            while (!_stopped) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
+
+        //TODO whatever it takes to clear things up
+        _cleared = true;
+        super.clear();
+    }
+
+    /**
      * For debugging
      * @param writer where we write the dump
      */
@@ -1951,12 +1973,19 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Starts the processor.
      * Since the worker thread is always running, this merely wakes it up so that it can resume instruction processing.
+     * Intended to be used only when the processor is cleared.
      */
-    public void start(
+    public boolean start(
     ) {
         synchronized(this) {
-            _runningFlag = true;
+            if (!_cleared) {
+                return false;
+            }
+
+            _cleared = false;
+            _stopped = false;
             this.notify();
+            return true;
         }
     }
 
@@ -1972,10 +2001,10 @@ public class InstructionProcessor extends Processor implements Worker {
         final long detail
     ) {
         synchronized(this) {
-            if (_runningFlag) {
+            if (!_stopped) {
                 _latestStopReason = stopReason;
                 _latestStopDetail = detail;
-                _runningFlag = false;
+                _stopped = true;
                 System.out.println(String.format("%s Stopping:%s Detail:%o",
                                                  _name,
                                                  stopReason.toString(),
@@ -2007,6 +2036,32 @@ public class InstructionProcessor extends Processor implements Worker {
             }
         }
     }
+
+    /**
+     * Handles an external UPI interrupt
+     * @param source processor initiating the interrupt
+     * @param broadcast true if this is a broadcast
+     */
+    @Override
+    protected void upiHandleInterrupt(
+        final Processor source,
+        final boolean broadcast
+    ) {
+        if (source._processorType == ProcessorType.SystemProcessor) {
+            //  SystemProcessor has something for us - either an IPL or a dayclock interrupt
+            //TODO
+        } else if (source._processorType == ProcessorType.InputOutputProcessor) {
+            //  An IOP completed or aborted an IO that was scheduled by us, or by some other IP
+            //TODO
+        } else {
+            //  Something unacceptable occurred.
+            LOGGER.error(String.format("%s received a %s interrupt from %s",
+                                       _name,
+                                       broadcast ? "broadcast" : "directed",
+                                       source._name));
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Static methods
@@ -2076,7 +2131,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final BaseRegister baseRegister,
         final int relativeAddress
     ) {
-        int upi = baseRegister._baseAddress._upi;
+        int upi = baseRegister._baseAddress._upiIndex;
         int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
         int offset = baseRegister._baseAddress._offset + actualOffset;
         return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);

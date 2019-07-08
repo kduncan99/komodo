@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib.exceptions;
@@ -11,9 +11,9 @@ package com.kadware.komodo.hardwarelib.exceptions;
 public class UPIProcessorTypeException extends Exception {
 
     public UPIProcessorTypeException(
-        final short upi,
+        final int upiIndex,
         final Class clazz
     ) {
-        super(String.format("Processor with UPI %d is not an instance of %s", upi, clazz.getName()));
+        super(String.format("Processor with UPI %d is not an instance of %s", upiIndex, clazz.getName()));
     }
 }

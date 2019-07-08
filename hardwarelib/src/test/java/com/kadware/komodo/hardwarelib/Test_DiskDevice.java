@@ -6,12 +6,9 @@ package com.kadware.komodo.hardwarelib;
 
 import static org.junit.Assert.*;
 
-import com.kadware.komodo.hardwarelib.Device;
-import com.kadware.komodo.hardwarelib.DiskDevice;
-import com.kadware.komodo.hardwarelib.Node;
+import com.kadware.komodo.baselib.BlockCount;
+import com.kadware.komodo.baselib.BlockSize;
 import org.junit.*;
-
-import com.kadware.komodo.baselib.types.*;
 
 import java.nio.ByteBuffer;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib.exceptions;
@@ -10,8 +10,8 @@ package com.kadware.komodo.hardwarelib.exceptions;
 public class UPINotAssignedException extends Exception {
 
     public UPINotAssignedException(
-        final short upi
+        final int upiIndex
     ) {
-        super(String.format("No Processor is associated with UPI %d", upi));
+        super(String.format("No Processor is associated with UPI %d", upiIndex));
     }
 }

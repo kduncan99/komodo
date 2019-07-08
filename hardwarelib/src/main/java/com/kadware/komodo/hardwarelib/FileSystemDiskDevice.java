@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.*;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
 import java.io.BufferedWriter;
@@ -13,8 +14,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
-import com.kadware.komodo.baselib.types.*;
 
 /**
  * Class describing and implementing a DiskDevice which uses the native host filesystem for storage

@@ -7,11 +7,10 @@ package com.kadware.komodo.hardwarelib;
 @SuppressWarnings("Duplicates")
 public enum NodeCategory {
 
-    None(0),
     Processor(1),
     ChannelModule(2),
-    Controller(3),
-    Device(4);
+    Device(3),
+    InvalidCategory(077);
 
     private final int _code;
 
@@ -24,8 +23,8 @@ public enum NodeCategory {
         switch (code) {
             case 1:     return Processor;
             case 2:     return ChannelModule;
-            case 3:     return Controller;
-            default:    return Device;
+            case 3:     return Device;
+            default:    return InvalidCategory;
         }
     }
 }

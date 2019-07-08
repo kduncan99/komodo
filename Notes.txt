@@ -1,29 +1,38 @@
 -- InProgress
+IP,IOP: UPI send/ack mechanism for IOs - how do we send a broadcast interrupt?
 Reworking the entire IO stack
+IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
+Rewrite disk (and maybe tape) devices using async IO
+IP: SYSC instruction for dynamic bank allocation
+IP: SYSC instruction for console communication
+All Node objects: add Builder class, make constructors private (really?  is this necessary?)
+
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
+  Consider abandoning breakpoints...
 BankDescriptor seems to take a very long time to create from storage... why?
 Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
 Check BDI$ function in minalib - do we need it, is it right?
 
+
 -- TODO implement
 * hardwarelib
 Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
   I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
-Need to implement master dayclock comparator logic
-Need to implement enabling dayclock interrupts, taking them, etc
-IP: BT instruction and unit tests
-IP,IOP: UPI send/ack mechanism for IOs
-  See Interrupt classes 29, 30, 31.  29 is IPL, 30 is activating a 'cleared' IP into a running environment
-  And 31 is for... what?  I think we can use that for other processors to tell EXEC that there's something needs
-  attention, which I completely missed before.  For 5 years.  <sigh>.
+  So, what this means is that all the dayclock stuff, including the comparator, is stand-alone, and issues a UPI
+  to the BIE IP at the appropriate times.  This allows the interrupt to be processed by one activity, not one
+  per IP
+    Need to implement master dayclock comparator logic
+    Need to implement enabling dayclock interrupts, taking them, etc
+SystemControlProcessor: For starting/monitoring/stopping system, and for console communication
 IP: operations control instructions (and unit tests)
   SEND
   ACK
+IP: BT instruction and unit tests
 IP: UNLK instruction
 IP: SPID see new info
 IP: special instructions (and unit tests)
@@ -42,14 +51,6 @@ For basic mode, no need really to test the bank limits on every fetch - set it o
   what to do when we run off the end of the bank?
 need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
-MSP: add support for banks dynamically allocated from native system
-IP: IPC instruction for dynamic bank allocation
-IP: interrupt processing, use standard bank switching logic
-IP: IPC instruction for console communication
-SystemControlProcessor: For starting/monitoring/stopping system, and for console communication
-IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
-Rewrite disk (and maybe tape) devices using async IO
-All Device objects: add Builder class, make constructors private
 IP: storage-to-storage instructions (and unit tests) other than BT
   BIM
   BIC

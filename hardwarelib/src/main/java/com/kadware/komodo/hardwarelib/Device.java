@@ -39,14 +39,14 @@ public abstract class Device extends Node {
      * Indicates the device can do reads and writes.
      * If not ready, the device *may* respond to non-read/write IOs.
      */
-    protected boolean _readyFlag;
+    boolean _readyFlag;
 
     /**
      * Indicates that something regarding the physical characteristics of this device has changed.
      * Setting a device ready should ALWAYS set this flag.
      * All reads and writes will be rejected with DeviceStatus.UnitAttention until an IOFunction.GetInfo is issued.
      */
-    protected boolean _unitAttentionFlag;
+    boolean _unitAttentionFlag;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -78,9 +78,17 @@ public abstract class Device extends Node {
     public abstract boolean canConnect(final Node candidate);
 
     /**
-     * IO Router - what happens here is depending upon the subclass
+     * Invoked when a new session is started by the system processor.
+     * Any classes which have work to do to enter the cleared state should override this.
      */
-    public abstract void handleIo(IOInfo ioInfo);
+    @Override
+    public void clear() {}
+
+    //TODO
+//    /**
+//     * IO Router - what happens here is depending upon the subclass
+//     */
+//    public abstract void handleIo(IOInfo ioInfo);
 
     /**
      * Does this device have a byte interface?
@@ -99,24 +107,18 @@ public abstract class Device extends Node {
     public abstract void initialize();
 
     /**
-     * Invoked when this object is the source of an IO which has been cancelled or completed
-     * @param source the Node which is signalling us
-     */
-    @Override
-    public abstract void signal(Node source);
-
-    /**
      * Invoked just before tearing down the configuration.
      */
     @Override
     public abstract void terminate();
 
-    /**
-     * Writes IO buffers to the log.
-     * What actually happens is dependant upon the particulars of the various subclasses, so this is abstract
-     * @param ioInfo describes the IO buffer(s)
-     */
-    protected abstract void writeBuffersToLog(IOInfo ioInfo);
+    //TODO
+//    /**
+//     * Writes IO buffers to the log.
+//     * What actually happens is dependant upon the particulars of the various subclasses, so this is abstract
+//     * @param ioInfo describes the IO buffer(s)
+//     */
+//    protected abstract void writeBuffersToLog(IOInfo ioInfo);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -147,38 +149,40 @@ public abstract class Device extends Node {
     /**
      * Subclasses must call here at the end of handling an IO
      */
-    void ioEnd(
-        final IOInfo ioInfo
-    ) {
-        if (LOG_IO_ERRORS) {
-            if ((ioInfo._status != DeviceStatus.Successful) && (ioInfo._status != DeviceStatus.NoInput)) {
-                LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
-            }
-        }
-
-        if (LOG_DEVICE_IO_BUFFERS) {
-            if (ioInfo._function.isReadFunction() && (ioInfo._status == DeviceStatus.Successful)) {
-                writeBuffersToLog(ioInfo);
-            }
-        }
-    }
+    //TODO
+//    void ioEnd(
+//        final IOInfo ioInfo
+//    ) {
+//        if (LOG_IO_ERRORS) {
+//            if ((ioInfo._status != DeviceStatus.Successful) && (ioInfo._status != DeviceStatus.NoInput)) {
+//                LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
+//            }
+//        }
+//
+//        if (LOG_DEVICE_IO_BUFFERS) {
+//            if (ioInfo._function.isReadFunction() && (ioInfo._status == DeviceStatus.Successful)) {
+//                writeBuffersToLog(ioInfo);
+//            }
+//        }
+//    }
 
     /**
      * Subclasses must call this at the beginning of handling an IO.
      */
-    void ioStart(
-        final IOInfo ioInfo
-    ) {
-        if (LOG_DEVICE_IOS) {
-            LOGGER.debug(String.format("IoStart:%s", ioInfo.toString()));
-        }
-
-        if (LOG_DEVICE_IO_BUFFERS) {
-            if (ioInfo._function.isWriteFunction()) {
-                writeBuffersToLog(ioInfo);
-            }
-        }
-    }
+    //TODO
+//    void ioStart(
+//        final IOInfo ioInfo
+//    ) {
+//        if (LOG_DEVICE_IOS) {
+//            LOGGER.debug(String.format("IoStart:%s", ioInfo.toString()));
+//        }
+//
+//        if (LOG_DEVICE_IO_BUFFERS) {
+//            if (ioInfo._function.isWriteFunction()) {
+//                writeBuffersToLog(ioInfo);
+//            }
+//        }
+//    }
 
     /**
      * Sets the device ready or not-ready, depending upon the given state parameter.

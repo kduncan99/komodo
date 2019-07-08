@@ -315,7 +315,7 @@ public class BankDescriptor extends ArraySlice {
     ) {
         long word2 = get(2) & 0_777777_000000L;
         word2 |= baseAddress._segment;
-        long word3 = (long)(baseAddress._upi & 017) << 32;
+        long word3 = (long)(baseAddress._upiIndex & 017) << 32;
         word3 |= baseAddress._offset;
         set(2, word2);
         set(3, word3);

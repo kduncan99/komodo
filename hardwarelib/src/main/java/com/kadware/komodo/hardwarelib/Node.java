@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 
 /**
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
+ * Although there is nothing explicitly preventing it, the configuration should most definitely not be altered
+ * while a session is active.  Add/remove/update components *only* while the OS is stopped.
  */
 @SuppressWarnings("Duplicates")
 public abstract class Node {
@@ -80,6 +82,12 @@ public abstract class Node {
      * Indicates whether this Node can connect as a descendant to the candidate ancestor Node.
      */
     public abstract boolean canConnect(Node candidate);
+
+    /**
+     * Invoked when a new session is started by the system processor.
+     * Any nodes which have work to do to enter the cleared state, should do it here.
+     */
+    public abstract void clear();
 
     /**
      * Invoked when the config is built, and before we allow anyone into it.

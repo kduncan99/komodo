@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.exceptions;
+package com.kadware.komodo.hardwarelib;
 
 /**
- * Exception thrown when InventoryManager is given a processor with a UPI which is already assigned to another processor
+ * Exception thrown when the system configuration is invalid, and some attempt is made to invoke one function or another
+ * which cannot proceed in said configuration.
  */
-public class UPIConflictException extends Exception {
+public class InvalidSystemConfigurationException extends Exception {
 
-    public UPIConflictException(
-        final int upiIndex
+    public InvalidSystemConfigurationException(
     ) {
-        super(String.format("UPI conflict %d", upiIndex));
+        super(String.format("Invalid System Configuration"));
     }
 }

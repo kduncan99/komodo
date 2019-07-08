@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib.interrupts;
-
-import com.kadware.komodo.baselib.Word36;
 
 /**
  * Represents a particular machine interrupt class
@@ -12,50 +10,18 @@ import com.kadware.komodo.baselib.Word36;
  */
 public class UPINormalInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    private final short _upi;
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public final int _upi;
 
     /**
      * Constructor
+     * @param synchrony Synchrony.Broadcast or Synchrony.Asynchronous
+     * @param upi source of the interrupt
      */
     public UPINormalInterrupt(
         final Synchrony synchrony,
-        final short upi
+        final int upi
     ) {
         super(InterruptClass.UPINormal, ConditionCategory.NonFault, synchrony, Deferrability.Deferrable, InterruptPoint.MidExecution);
         _upi = upi;
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    @Override
-    public Word36 getInterruptStatusWord1(
-    ) {
-        return new Word36(_upi);
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

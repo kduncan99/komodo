@@ -47,6 +47,14 @@ public class InputOutputProcessor extends Processor {
     public boolean canConnect(Node ancestor) { return false; }
 
     /**
+     * Nothing to do here - all clearing happens in our subordinate channel modules
+     */
+    @Override
+    public void clear() {
+        super.clear();
+    }
+
+    /**
      * For debugging purposes
      */
     @Override
@@ -60,12 +68,20 @@ public class InputOutputProcessor extends Processor {
 
     /**
      * Starts an IO as defined by the channel program at the given absolute address
-     * @param address location of the IO packet
+     * @return true if the IO was scheduled, false if something immediately wrong was discovered
      */
-    public void startIO(
-        final AbsoluteAddress address
+    public boolean startIO(
+        final ChannelProgram channelProgram
     ) {
+        ChannelModule channelModule = (ChannelModule) _descendants.get(channelProgram.getChannelModuleIndex());
+        if (channelModule == null) {
+            channelProgram.setChannelStatus(ChannelStatus.UnconfiguredChannelModule);
+            return false;
+        }
 
+        channelProgram.setChannelStatus(ChannelStatus.InProgress);
+        channelModule.scheduleChannelProgram(channelProgram);
+        return true;
     }
 
     /**
@@ -73,4 +89,27 @@ public class InputOutputProcessor extends Processor {
      */
     @Override
     public void terminate() {}
+
+    /**
+     * Handle UPI interrupt.  We should get these only from clients which are requesting IOs.
+     * @param source processor initiating the interrupt
+     * @param broadcast true if this is a broadcast
+     */
+    @Override
+    public void upiHandleInterrupt(
+        final Processor source,
+        final boolean broadcast
+    ) {
+        if ((source._processorType == ProcessorType.InstructionProcessor)
+            || (source._processorType == ProcessorType.SystemProcessor)) {
+            //  Someone wants to do an IO.
+            //TODO
+        } else {
+            //  This shouldn't happen.
+            LOGGER.error(String.format("%s received a %s interrupt from %s",
+                                       _name,
+                                       broadcast ? "broadcast" : "directed",
+                                       source._name));
+        }
+    }
 }

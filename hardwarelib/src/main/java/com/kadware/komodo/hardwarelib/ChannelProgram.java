@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.types.BlockId;
+import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.baselib.Word36;
 
 /**

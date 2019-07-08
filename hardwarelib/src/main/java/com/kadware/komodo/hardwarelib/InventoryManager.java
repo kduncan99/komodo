@@ -7,42 +7,58 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.komodo.baselib.Word36;
-
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Creation and discardation of hardware things (i.e., anything extending Node) must occur via this manager.
+ * Creation and discarding of hardware things (i.e., anything extending Node) must occur via this manager.
  * This is a singleton.
  */
 @SuppressWarnings("Duplicates")
 public class InventoryManager {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    public static class Counters {
+        public final int _inputOutputProcessors;
+        public final int _instructionProcessors;
+        public final int _mainStorageProcessors;
+        public final int _systemProcessors;
 
+        public Counters(
+            final int inputOutputProcessors,
+            final int instructionProcessors,
+            final int mainStorageProcessors,
+            final int systemProcessors
+        ) {
+            _inputOutputProcessors = inputOutputProcessors;
+            _instructionProcessors = instructionProcessors;
+            _mainStorageProcessors = mainStorageProcessors;
+            _systemProcessors = systemProcessors;
+        }
+    }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  The following are only useful for the create* routines.
+    //  It is highly recommended that these be used for creation of processors, however that is not enforced.
+    //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
+    private final static int MAX_INPUT_OUTPUT_PROCESSORS = 2;
+    private final static int MAX_INSTRUCTION_PROCESSORS = 8;
+    private final static int MAX_MAIN_STORAGE_PROCESSORS = 2;
+    private final static int MAX_SYSTEM_PROCESSORS = 1;
 
-    final static int MAX_MAIN_STORAGE_PROCESSORS = 16;
-    final static int MAX_INPUT_OUTPUT_PROCESSORS = 8;
-    final static int MAX_INSTRUCTION_PROCESSORS = 8;
+    private final static int FIRST_SYSTEM_PROCESSOR_UPI_INDEX = 0;
+    private final static int FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX = FIRST_SYSTEM_PROCESSOR_UPI_INDEX + MAX_SYSTEM_PROCESSORS;
+    private final static int FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX + MAX_MAIN_STORAGE_PROCESSORS;
+    private final static int FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX + MAX_INPUT_OUTPUT_PROCESSORS;
 
-    public final static short FIRST_MAIN_STORAGE_PROCESSOR_UPI = 0;
-    public final static short FIRST_INPUT_OUTPUT_PROCESSOR_UPI = FIRST_MAIN_STORAGE_PROCESSOR_UPI + MAX_MAIN_STORAGE_PROCESSORS;
-    public final static short FIRST_INSTRUCTION_PROCESSOR_UPI = FIRST_INPUT_OUTPUT_PROCESSOR_UPI + MAX_INPUT_OUTPUT_PROCESSORS;
+    private final static int MAIN_STORAGE_PROCESSOR_SIZE = 1024 * 1024;  //  One MWord should be enough static storage
 
-    public final static int MAIN_STORAGE_PROCESSOR_SIZE = 4 * 1024 * 1024;  //  4 MWords
-
-    private final Map<Short, Processor> _processors = new HashMap<>();
+    private final Map<Integer, Processor> _processors = new HashMap<>();
 
     private static InventoryManager _instance = null;
 
-    //???? Need some more general node things here
-    //???? Need to decide if we do connect/disconnect here (I think we need to disconnect at least, on Node remove)
+    //TODO Need some more general node things here
+    //      Need to decide if we do connect/disconnect here (I think we need to disconnect at least, on Node remove)
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -81,17 +97,17 @@ public class InventoryManager {
         final InstructionProcessor ip
     ) throws NodeNameConflictException,
              UPIConflictException {
-        if (_processors.get(ip.getUPI()) != null) {
-            throw new UPIConflictException(ip.getUPI());
+        if (_processors.get(ip._upiIndex) != null) {
+            throw new UPIConflictException(ip._upiIndex);
         }
 
         for (Processor processor : _processors.values()) {
-            if (ip.getName().equalsIgnoreCase(processor.getName())) {
-                throw new NodeNameConflictException(ip.getName());
+            if (ip._name.equalsIgnoreCase(processor._name)) {
+                throw new NodeNameConflictException(ip._name);
             }
         }
 
-        _processors.put(ip.getUPI(), ip);
+        _processors.put(ip._upiIndex, ip);
         ip.initialize();
     }
 
@@ -107,41 +123,40 @@ public class InventoryManager {
         final MainStorageProcessor msp
     ) throws NodeNameConflictException,
              UPIConflictException {
-        if (_processors.get(msp.getUPI()) != null) {
-            throw new UPIConflictException(msp.getUPI());
+        if (_processors.get(msp._upiIndex) != null) {
+            throw new UPIConflictException(msp._upiIndex);
         }
 
         for (Processor processor : _processors.values()) {
-            if (msp.getName().equalsIgnoreCase(processor.getName())) {
-                throw new NodeNameConflictException(msp.getName());
+            if (msp._name.equalsIgnoreCase(processor._name)) {
+                throw new NodeNameConflictException(msp._name);
             }
         }
 
-        _processors.put(msp.getUPI(), msp);
+        _processors.put(msp._upiIndex, msp);
         msp.initialize();
     }
 
-    //TODO take a parameter to indicate what type of MSP
     /**
      * Creates a new MainStorageProcessor with a unique name and UPI.
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */
-//    public MainStorageProcessor createMainStorageProcessor(
-//    ) throws MaxNodesException {
-//        short upi = FIRST_MAIN_STORAGE_PROCESSOR_UPI;
-//        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upi) {
-//            if (_processors.get(upi) == null) {
-//                String name = String.format("MSP%d", px);
-//                MainStorageProcessor msp = new MainStorageProcessor(name, upi, MAIN_STORAGE_PROCESSOR_SIZE);
-//                _processors.put(upi, msp);
-//                msp.initialize();
-//                return msp;
-//            }
-//        }
-//
-//        throw new MaxNodesException(MainStorageProcessor.class);
-//    }
+    public MainStorageProcessor createMainStorageProcessor(
+    ) throws MaxNodesException {
+        int upiIndex = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX;
+        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upiIndex) {
+            if (_processors.get(upiIndex) == null) {
+                String name = String.format("MSP%d", px);
+                MainStorageProcessor msp = new MainStorageProcessor(name, upiIndex, MAIN_STORAGE_PROCESSOR_SIZE);
+                _processors.put(upiIndex, msp);
+                msp.initialize();
+                return msp;
+            }
+        }
+
+        throw new MaxNodesException(MainStorageProcessor.class);
+    }
 
     /**
      * Creates a new InputOutputProcessor with a unique name and UPI.
@@ -150,12 +165,12 @@ public class InventoryManager {
      */
     public InputOutputProcessor createInputOutputProcessor(
     ) throws MaxNodesException {
-        short upi = FIRST_INPUT_OUTPUT_PROCESSOR_UPI;
-        for (int px = 0; px < MAX_INPUT_OUTPUT_PROCESSORS; ++px, ++upi) {
-            if (_processors.get(upi) == null) {
+        int upiIndex = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX;
+        for (int px = 0; px < MAX_INPUT_OUTPUT_PROCESSORS; ++px, ++upiIndex) {
+            if (_processors.get(upiIndex) == null) {
                 String name = String.format("IOP%d", px);
-                InputOutputProcessor iop = new InputOutputProcessor(name, upi);
-                _processors.put(upi, iop);
+                InputOutputProcessor iop = new InputOutputProcessor(name, upiIndex);
+                _processors.put(upiIndex, iop);
                 iop.initialize();
                 return iop;
             }
@@ -171,12 +186,12 @@ public class InventoryManager {
      */
     public InstructionProcessor createInstructionProcessor(
     ) throws MaxNodesException {
-        short upi = FIRST_INSTRUCTION_PROCESSOR_UPI;
-        for (int px = 0; px < MAX_INSTRUCTION_PROCESSORS; ++px, ++upi) {
-            if (_processors.get(upi) == null) {
+        int upiIndex = FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX;
+        for (int px = 0; px < MAX_INSTRUCTION_PROCESSORS; ++px, ++upiIndex) {
+            if (_processors.get(upiIndex) == null) {
                 String name = String.format("IP%d", px);
-                InstructionProcessor ip = new InstructionProcessor(name, upi);
-                _processors.put(upi, ip);
+                InstructionProcessor ip = new InstructionProcessor(name, upiIndex);
+                _processors.put(upiIndex, ip);
                 ip.initialize();
                 return ip;
             }
@@ -186,164 +201,223 @@ public class InventoryManager {
     }
 
     /**
+     * Creates a new SystemProcessor with a unique name and UPI.
+     * @return new processor object
+     * @throws MaxNodesException if too many processors of this type have been created
+     */
+    public SystemProcessor createSystemProcessor(
+    ) throws MaxNodesException {
+        int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
+        for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
+            if (_processors.get(upiIndex) == null) {
+                String name = String.format("IP%d", px);
+                SystemProcessor sp = new SystemProcessor(name, upiIndex);
+                _processors.put(upiIndex, sp);
+                sp.initialize();
+                return sp;
+            }
+        }
+
+        throw new MaxNodesException(SystemProcessor.class);
+    }
+
+    /**
      * Deletes a particular processor from our inventory
-     * @param upi UPI of the processor to be deleted
+     * @param upiIndex UPI of the processor to be deleted
      * @throws UPINotAssignedException if no processor can be found
      */
-    //???? Need to change this to deleteNode, or something
+    //TODO???? Need to change this to deleteNode, or something
     public void deleteProcessor(
-        final short upi
+        final int upiIndex
     ) throws UPINotAssignedException {
-        Processor processor = _processors.get(upi);
+        Processor processor = _processors.get(upiIndex);
         if (processor == null) {
-            throw new UPINotAssignedException(upi);
+            throw new UPINotAssignedException(upiIndex);
         }
 
         processor.terminate();
-        _processors.remove(upi);
+        _processors.remove(upiIndex);
     }
 
     /**
-     * Retrieves a particular processor given its UPI
-     * @param upi UPI of processor of interest
-     * @return processor of interest
-     * @throws UPINotAssignedException if no processor can be found
+     * Tally number of each type of processor in the current configuration
+     * @return Counters object
      */
-    Processor getProcessor(
-        final short upi
-    ) throws UPINotAssignedException {
-        Processor processor = _processors.get(upi);
-        if (processor == null) {
-            throw new UPINotAssignedException(upi);
-        }
-        return processor;
-    }
+    public Counters getCounters(
+    ) {
+        int iops = 0;
+        int ips = 0;
+        int msps = 0;
+        int sps = 0;
 
-    /**
-     * Retrieves a specific MainStorageProcessor
-     * @param upi UPI of processor of interest
-     * @return processor of interest
-     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
-     * @throws UPINotAssignedException if no processor can be found
-     */
-    public MainStorageProcessor getMainStorageProcessor(
-        final short upi
-    ) throws UPIProcessorTypeException,
-             UPINotAssignedException {
-        Processor processor = getProcessor(upi);
-        if (processor instanceof MainStorageProcessor) {
-            return (MainStorageProcessor)processor;
-        } else {
-            throw new UPIProcessorTypeException(upi, MainStorageProcessor.class);
+        for (Processor processor : _processors.values()) {
+            switch (processor._processorType) {
+                case InputOutputProcessor:
+                    iops++;
+                    break;
+                case InstructionProcessor:
+                    ips++;
+                    break;
+                case MainStorageProcessor:
+                    msps++;
+                    break;
+                case SystemProcessor:
+                    sps++;
+                    break;
+            }
         }
+
+        return new Counters(iops, ips, msps, sps);
     }
 
     /**
      * Retrieves a specific InputOutputProcessor
-     * @param upi UPI of processor of interest
+     * @param upiIndex UPI of processor of interest
      * @return processor of interest
      * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
      * @throws UPINotAssignedException if no processor can be found
      */
     public InputOutputProcessor getInputOutputProcessor(
-        final short upi
+        final int upiIndex
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {
-        Processor processor = getProcessor(upi);
+        Processor processor = getProcessor(upiIndex);
         if (processor instanceof InputOutputProcessor) {
-            return (InputOutputProcessor)processor;
+            return (InputOutputProcessor) processor;
         } else {
-            throw new UPIProcessorTypeException(upi, InputOutputProcessor.class);
+            throw new UPIProcessorTypeException(upiIndex, InputOutputProcessor.class);
         }
+    }
+
+    /**
+     * Retrieves a list of all currently-configured Input-Output Processors
+     */
+    List<InputOutputProcessor> getInputOutputProcessors() {
+        List<InputOutputProcessor> result = new LinkedList<>();
+        for (Processor processor : _processors.values()) {
+            if (processor._processorType == ProcessorType.InputOutputProcessor) {
+                result.add((InputOutputProcessor) processor);
+            }
+        }
+        return result;
     }
 
     /**
      * Retrieves a specific InstructionProcessor
-     * @param upi UPI of processor of interest
+     * @param upiIndex UPI of processor of interest
      * @return processor of interest
      * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
      * @throws UPINotAssignedException if no processor can be found
      */
-    public InstructionProcessor getInstructionProcessor(
-        final short upi
+    InstructionProcessor getInstructionProcessor(
+        final int upiIndex
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {
-        Processor processor = getProcessor(upi);
+        Processor processor = getProcessor(upiIndex);
         if (processor instanceof InstructionProcessor) {
-            return (InstructionProcessor)processor;
+            return (InstructionProcessor) processor;
         } else {
-            throw new UPIProcessorTypeException(upi, InstructionProcessor.class);
+            throw new UPIProcessorTypeException(upiIndex, InstructionProcessor.class);
         }
     }
 
     /**
-     * Retrieves the value of a particular word of storage for a given MSP, as described by an AbsoluteAddress object
-     * @param absoluteAddress MSP UPI and address of the word within the MSP
-     * @return long integer value of the word retrieved
-     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-     * @throws AddressLimitsException if the address is invalid
-     * @throws UPIProcessorTypeException if the UPI is not for an MSP
-     * @throws UPINotAssignedException if no processor exists for the given UPI
+     * Retrieves a list of all currently-configured Instruction Processors
      */
-    long getStorageValue(
-        final AbsoluteAddress absoluteAddress
-    ) throws AddressingExceptionInterrupt,
-             AddressLimitsException,
-             UPIProcessorTypeException,
-             UPINotAssignedException {
-        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
-        if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
-            throw new AddressLimitsException(absoluteAddress);
+    List<InstructionProcessor> getInstructionProcessors() {
+        List<InstructionProcessor> result = new LinkedList<>();
+        for (Processor processor : _processors.values()) {
+            if (processor._processorType == ProcessorType.InstructionProcessor) {
+                result.add((InstructionProcessor) processor);
+            }
         }
-
-        return msp.getStorage(absoluteAddress._segment).get(absoluteAddress._offset);
+        return result;
     }
 
     /**
-     * Sets a value in main storage
-     * @param absoluteAddress MSP UPI and address of the word within the MSP
-     * @param value value to be stored
-     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-     * @throws AddressLimitsException if the address is invalid
-     * @throws UPIProcessorTypeException if the UPI is not for an MSP
-     * @throws UPINotAssignedException if no processor exists for the given UPI
+     * Retrieves a specific MainStorageProcessor
+     * @param upiIndex UPI of processor of interest
+     * @return processor of interest
+     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
+     * @throws UPINotAssignedException if no processor can be found
      */
-    void setStorageValue(
-        final AbsoluteAddress absoluteAddress,
-        final long value
-    ) throws AddressingExceptionInterrupt,
-             AddressLimitsException,
-             UPIProcessorTypeException,
+    MainStorageProcessor getMainStorageProcessor(
+        final int upiIndex
+    ) throws UPIProcessorTypeException,
              UPINotAssignedException {
-        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
-        if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
-            throw new AddressLimitsException(absoluteAddress);
+        Processor processor = getProcessor(upiIndex);
+        if (processor instanceof MainStorageProcessor) {
+            return (MainStorageProcessor) processor;
+        } else {
+            throw new UPIProcessorTypeException(upiIndex, MainStorageProcessor.class);
         }
-
-        msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value);
     }
 
     /**
-     * Sets a value in main storage
-     * @param absoluteAddress MSP UPI and address of the word within the MSP
-     * @param value value to be stored
-     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-     * @throws AddressLimitsException if the address is invalid
-     * @throws UPIProcessorTypeException if the UPI is not for an MSP
-     * @throws UPINotAssignedException if no processor exists for the given UPI
+     * Retrieves a list of all currently-configured Main Storage Processors
      */
-    public void setStorageValue(
-        final AbsoluteAddress absoluteAddress,
-        final Word36 value
-    ) throws AddressingExceptionInterrupt,
-             AddressLimitsException,
-             UPIProcessorTypeException,
-             UPINotAssignedException {
-        MainStorageProcessor msp = getMainStorageProcessor(absoluteAddress._upi);
-        if ((absoluteAddress._offset < 0) || (absoluteAddress._offset >= MAIN_STORAGE_PROCESSOR_SIZE)) {
-            throw new AddressLimitsException(absoluteAddress);
+    List<MainStorageProcessor> getMainStorageProcessors() {
+        List<MainStorageProcessor> result = new LinkedList<>();
+        for (Processor processor : _processors.values()) {
+            if (processor._processorType == ProcessorType.MainStorageProcessor) {
+                result.add((MainStorageProcessor) processor);
+            }
         }
+        return result;
+    }
 
-        msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value.getW());
+    /**
+     * Retrieves a particular processor given its UPI
+     * @param upiIndex UPI of processor of interest
+     * @return processor of interest
+     * @throws UPINotAssignedException if no processor can be found
+     */
+    Processor getProcessor(
+        final int upiIndex
+    ) throws UPINotAssignedException {
+        Processor processor = _processors.get(upiIndex);
+        if (processor == null) {
+            throw new UPINotAssignedException(upiIndex);
+        }
+        return processor;
+    }
+
+    /**
+     * Retrieves a list of all currently-configured Processors
+     */
+    List<Processor> getProcessors() {
+        return new LinkedList<>(_processors.values());
+    }
+
+    /**
+     * Retrieves a specific SystemProcessor
+     * @param upiIndex UPI of processor of interest
+     * @return processor of interest
+     * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
+     * @throws UPINotAssignedException if no processor can be found
+     */
+    public SystemProcessor getSystemProcessor(
+        final int upiIndex
+    ) throws UPIProcessorTypeException,
+             UPINotAssignedException {
+        Processor processor = getProcessor(upiIndex);
+        if (processor instanceof SystemProcessor) {
+            return (SystemProcessor) processor;
+        } else {
+            throw new UPIProcessorTypeException(upiIndex, InstructionProcessor.class);
+        }
+    }
+
+    /**
+     * Retrieves a list of all currently-configured System Processors
+     */
+    List<SystemProcessor> getSystemProcessors() {
+        List<SystemProcessor> result = new LinkedList<>();
+        for (Processor processor : _processors.values()) {
+            if (processor._processorType == ProcessorType.SystemProcessor) {
+                result.add((SystemProcessor) processor);
+            }
+        }
+        return result;
     }
 }

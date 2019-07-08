@@ -21,6 +21,6 @@ public class AddressLimitsException extends Exception {
     ) {
         super(String.format("Absolute address offset %o is out of range for MSP with UPI %d",
                             address._offset,
-                            address._upi));
+                            address._upiIndex));
     }
 }

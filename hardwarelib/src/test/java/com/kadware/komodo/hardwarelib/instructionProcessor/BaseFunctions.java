@@ -984,7 +984,7 @@ class BaseFunctions {
                 System.out.println(String.format("    BR%d base:%s(UPI:%d Offset:%08o) lower:%d upper:%d",
                                                  bx,
                                                  br._voidFlag ? "(VOID)" : "",
-                                                 br._baseAddress._upi,
+                                                 br._baseAddress._upiIndex,
                                                  br._baseAddress._offset,
                                                  br._lowerLimitNormalized,
                                                  br._upperLimitNormalized));
@@ -1012,10 +1012,10 @@ class BaseFunctions {
                 int firstBDI = (level == 0) ? 32 : 0;
                 for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
                     BankDescriptor bd = new BankDescriptor(br._storage, 8 * bdi);
-                    if (bd.getBaseAddress()._upi > 0) {
+                    if (bd.getBaseAddress()._upiIndex > 0) {
                         System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o Type:%s",
                                                          bdi,
-                                                         bd.getBaseAddress()._upi,
+                                                         bd.getBaseAddress()._upiIndex,
                                                          bd.getBaseAddress()._offset,
                                                          bd.getLowerLimitNormalized(),
                                                          bd.getUpperLimitNormalized(),

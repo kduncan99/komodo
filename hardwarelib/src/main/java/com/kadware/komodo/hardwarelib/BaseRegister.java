@@ -86,7 +86,7 @@ public class BaseRegister {
 
         try {
             int bankSize = (_upperLimitNormalized - _lowerLimitNormalized + 1);
-            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upi);
+            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upiIndex);
             ArraySlice mspStorage = msp.getStorage(_baseAddress._segment);
             return new ArraySlice(mspStorage, _baseAddress._offset, bankSize);
         } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
@@ -207,7 +207,7 @@ public class BaseRegister {
     ) throws AddressingExceptionInterrupt {
         _accessLock = bankDescriptor.getAccessLock();
         AbsoluteAddress bdAddress = bankDescriptor.getBaseAddress();
-        _baseAddress = new AbsoluteAddress(bdAddress._upi, bdAddress._segment,bdAddress._offset + offset);
+        _baseAddress = new AbsoluteAddress(bdAddress._upiIndex, bdAddress._segment, bdAddress._offset + offset);
         _generalAccessPermissions = new AccessPermissions(false,
                                                           bankDescriptor.getGeneraAccessPermissions()._read,
                                                           bankDescriptor.getGeneraAccessPermissions()._write);
@@ -438,7 +438,7 @@ public class BaseRegister {
         result[1] |= (long)_upperLimitNormalized >> (_largeSizeFlag ? 6 : 0);
 
         result[2] = _baseAddress._segment;
-        result[3] = ((long) (_baseAddress._upi) << 32) | _baseAddress._offset;
+        result[3] = ((long) (_baseAddress._upiIndex) << 32) | _baseAddress._offset;
 
         return result;
     }

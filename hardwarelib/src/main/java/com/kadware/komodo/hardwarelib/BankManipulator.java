@@ -625,7 +625,7 @@ public class BankManipulator {
             //  Create Gate class and load it from the offset.
             try {
                 AbsoluteAddress gateBankAddress = bmInfo._sourceBankDescriptor.getBaseAddress();
-                MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(gateBankAddress._upi);
+                MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(gateBankAddress._upiIndex);
                 ArraySlice mspStorage = msp.getStorage(gateBankAddress._segment);
                 bmInfo._gateBank = new Gate(new ArraySlice(mspStorage, gateBankAddress._offset, 8).getAll());
             } catch (UPINotAssignedException | UPIProcessorTypeException ex) {

@@ -8,9 +8,10 @@ import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Class which models a Main Storage Processor.
@@ -31,6 +32,7 @@ public class MainStorageProcessor extends Processor {
 
     private final ArraySlice _fixedStorage;
     private final Map<Integer, ArraySlice> _dynamicStorage = new HashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger(MainStorageProcessor.class);
 
     /**
      * constructor
@@ -48,6 +50,17 @@ public class MainStorageProcessor extends Processor {
             throw new InvalidArgumentRuntimeException(String.format("Bad size for MSP:%d words", fixedStorageSize));
         }
         _fixedStorage = new ArraySlice(new long[fixedStorageSize]);
+    }
+
+    /**
+     * Clears the processor
+     */
+    @Override
+    public void clear(
+    ) {
+        _dynamicStorage.clear();
+        _fixedStorage.clear();
+        super.clear();
     }
 
     /**
@@ -187,5 +200,21 @@ public class MainStorageProcessor extends Processor {
     @Override
     public void terminate() {
         //  Nothing to do
+    }
+
+    /**
+     * Handle UPI interrupt.  We should never get one.
+     * @param source processor initiating the interrupt
+     * @param broadcast true if this is a broadcast
+     */
+    @Override
+    public void upiHandleInterrupt(
+        final Processor source,
+        final boolean broadcast
+    ) {
+        LOGGER.error(String.format("%s received a %s interrupt from %s",
+                                   _name,
+                                   broadcast ? "broadcast" : "directed",
+                                   source._name));
     }
 }
