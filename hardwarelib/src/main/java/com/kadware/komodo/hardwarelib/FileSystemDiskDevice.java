@@ -11,7 +11,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -171,10 +170,14 @@ public class FileSystemDiskDevice extends DiskDevice {
         final Node candidateAncestor
     ) {
         //  We can connect only to Byte channel modules
-        //TODO
-        //    return candidateAncestor instanceof ByteDiskController;
-        return false;
+        return candidateAncestor instanceof ByteChannelModule;
     }
+
+    /**
+     * Nothing to clear
+     */
+    @Override
+    public void clear() {}
 
     /**
      * For debugging purposes
@@ -215,30 +218,31 @@ public class FileSystemDiskDevice extends DiskDevice {
      */
     @Override
     protected void ioGetInfo(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
-        try {
-            //  Create a DiskDeviceInfo object and then serialize it to the IOInfo's buffer
-            DiskDeviceInfo devInfo = new DiskDeviceInfo.Builder().setBlockCount(_blockCount)
-                                                                 .setBlockSize(_blockSize)
-                                                                 .setDeviceModel(_deviceModel)
-                                                                 .build();
-
-            ByteBuffer bb = ByteBuffer.wrap(ioInfo._byteBuffer);
-            devInfo.serialize(bb);
-            if (ioInfo._transferCount < bb.position()) {
-                ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
-            } else {
-                //  Clear UA flag - user is asking for the info pending for him.
-                setUnitAttention(false);
-
-                //  Complete the IOInfo object
-                ioInfo.setTransferredCount(bb.position());
-                ioInfo.setStatus(DeviceStatus.Successful);
-            }
-        } catch (java.nio.BufferOverflowException ex) {
-            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
-        }
+        //TODO
+//        try {
+//            //  Create a DiskDeviceInfo object and then serialize it to the IOInfo's buffer
+//            DiskDeviceInfo devInfo = new DiskDeviceInfo.Builder().setBlockCount(_blockCount)
+//                                                                 .setBlockSize(_blockSize)
+//                                                                 .setDeviceModel(_deviceModel)
+//                                                                 .build();
+//
+//            ByteBuffer bb = ByteBuffer.wrap(ioInfo._byteBuffer);
+//            devInfo.serialize(bb);
+//            if (ioInfo._transferCount < bb.position()) {
+//                ioInfo._status = DeviceStatus.InvalidBlockSize);
+//            } else {
+//                //  Clear UA flag - user is asking for the info pending for him.
+//                setUnitAttention(false);
+//
+//                //  Complete the IOInfo object
+//                ioInfo.setTransferredCount(bb.position());
+//                ioInfo._status = DeviceStatus.Successful);
+//            }
+//        } catch (java.nio.BufferOverflowException ex) {
+//            ioInfo._status = DeviceStatus.BufferTooSmall);
+//        }
     }
 
     /**
@@ -246,33 +250,33 @@ public class FileSystemDiskDevice extends DiskDevice {
      */
     @Override
     protected void ioRead(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
         if (!_readyFlag) {
-            ioInfo.setStatus(DeviceStatus.NotReady);
+            ioInfo._status = DeviceStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo.setStatus(DeviceStatus.UnitAttention);
+            ioInfo._status = DeviceStatus.UnitAttention;
             return;
         }
 
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo.setStatus(DeviceStatus.NotPrepped);
+            ioInfo._status = DeviceStatus.NotPrepped;
             return;
         }
 
         if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
+            ioInfo._status = DeviceStatus.BufferTooSmall;
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
+            ioInfo._status = DeviceStatus.InvalidBlockSize;
             return;
         }
 
@@ -280,25 +284,25 @@ public class FileSystemDiskDevice extends DiskDevice {
         BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
         if (reqBlockId.getValue() >= _blockCount.getValue()) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockId);
+            ioInfo._status = DeviceStatus.InvalidBlockId;
             return;
         }
 
         if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockCount);
+            ioInfo._status = DeviceStatus.InvalidBlockCount;
             return;
         }
 
-        ioInfo.setStatus(DeviceStatus.InProgress);
+        ioInfo._status = DeviceStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
 
         try {
             _file.seek(byteOffset);
             _file.read(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-            ioInfo.setStatus(DeviceStatus.Successful);
+            ioInfo._status = DeviceStatus.Successful;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo.setStatus(DeviceStatus.SystemException);
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -307,12 +311,12 @@ public class FileSystemDiskDevice extends DiskDevice {
      */
     @Override
     protected void ioReset(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
         if (!_readyFlag) {
-            ioInfo.setStatus(DeviceStatus.NotReady);
+            ioInfo._status = DeviceStatus.NotReady;
         } else {
-            ioInfo.setStatus(DeviceStatus.Successful);
+            ioInfo._status = DeviceStatus.Successful;
         }
     }
 
@@ -321,13 +325,13 @@ public class FileSystemDiskDevice extends DiskDevice {
      */
     @Override
     protected void ioUnload(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
         if (!_readyFlag) {
-            ioInfo.setStatus(DeviceStatus.NotReady);
+            ioInfo._status = DeviceStatus.NotReady;
         } else {
             unmount();
-            ioInfo.setStatus(DeviceStatus.Successful);
+            ioInfo._status = DeviceStatus.Successful;
         }
     }
 
@@ -336,38 +340,38 @@ public class FileSystemDiskDevice extends DiskDevice {
      */
     @Override
     protected void ioWrite(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
         if (!_readyFlag) {
-            ioInfo.setStatus(DeviceStatus.NotReady);
+            ioInfo._status = DeviceStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo.setStatus(DeviceStatus.UnitAttention);
+            ioInfo._status = DeviceStatus.UnitAttention;
             return;
         }
 
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo.setStatus(DeviceStatus.NotPrepped);
+            ioInfo._status = DeviceStatus.NotPrepped;
             return;
         }
 
         if (_isWriteProtected) {
-            ioInfo.setStatus(DeviceStatus.WriteProtected);
+            ioInfo._status = DeviceStatus.WriteProtected;
             return;
         }
 
         if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo.setStatus(DeviceStatus.BufferTooSmall);
+            ioInfo._status = DeviceStatus.BufferTooSmall;
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockSize);
+            ioInfo._status = DeviceStatus.InvalidBlockSize;
             return;
         }
 
@@ -375,25 +379,25 @@ public class FileSystemDiskDevice extends DiskDevice {
         BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
         if (reqBlockId.getValue() >= _blockCount.getValue()) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockId);
+            ioInfo._status = DeviceStatus.InvalidBlockId;
             return;
         }
 
         if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
-            ioInfo.setStatus(DeviceStatus.InvalidBlockCount);
+            ioInfo._status = DeviceStatus.InvalidBlockCount;
             return;
         }
 
-        ioInfo.setStatus(DeviceStatus.InProgress);
+        ioInfo._status = DeviceStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
 
         try {
             _file.seek(byteOffset);
             _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-            ioInfo.setStatus(DeviceStatus.Successful);
+            ioInfo._status = DeviceStatus.Successful;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo.setStatus(DeviceStatus.SystemException);
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -494,13 +498,6 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         return super.setReady(readyFlag);
     }
-
-    /**
-     * Invoked when this object is the source of an IO which has been cancelled or completed
-     * @param source the Node which is signalling us
-     */
-    @Override
-    public void signal(Node source) { /* nothing to do */ }
 
     /**
      * Invoked just before tearing down the configuration.

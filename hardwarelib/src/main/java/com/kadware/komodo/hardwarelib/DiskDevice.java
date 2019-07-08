@@ -41,13 +41,12 @@ public abstract class DiskDevice extends Device {
      */
     boolean _isWriteProtected = false;
 
-    public DiskDevice(
+    DiskDevice(
         final DeviceModel deviceModel,
         final String name
     ) {
         super(DeviceType.Disk, deviceModel, name);
     }
-
 
     @Override
     public abstract boolean hasByteInterface();
@@ -58,11 +57,11 @@ public abstract class DiskDevice extends Device {
     @Override
     public abstract void initialize();
 
-    protected abstract void ioGetInfo(IOInfo ioInfo);
-    protected abstract void ioRead(IOInfo ioInfo);
-    protected abstract void ioReset(IOInfo ioInfo);
-    protected abstract void ioUnload(IOInfo ioInfo);
-    protected abstract void ioWrite(IOInfo ioInfo);
+    abstract void ioGetInfo(DeviceIOInfo ioInfo);
+    abstract void ioRead(DeviceIOInfo ioInfo);
+    abstract void ioReset(DeviceIOInfo ioInfo);
+    abstract void ioUnload(DeviceIOInfo ioInfo);
+    abstract void ioWrite(DeviceIOInfo ioInfo);
 
     @Override
     public void dump(
@@ -80,22 +79,21 @@ public abstract class DiskDevice extends Device {
     }
 
     /**
-     * Calls the appropriate local or virtual function based on the information in the IOInfo object
+     * Calls the appropriate local or virtual function based on the information in the IOInfo object.
+     * @return true if we scheduled the IO, false if we completed it immediately
      */
     @Override
-    public void handleIo(
-        final IOInfo ioInfo
+    public boolean handleIo(
+        final DeviceIOInfo ioInfo
     ) {
         synchronized(this) {
             ioStart(ioInfo);
 
-            switch (ioInfo._function) {
+            switch (ioInfo._ioFunction) {
                 case None:
-                    ioInfo.setStatus(DeviceStatus.Successful);
-                    if (ioInfo._source != null) {
-                        ioInfo._source.signal(this);
-                    }
-                    break;
+                    ioInfo._status = DeviceStatus.Successful;
+                    ioEnd(ioInfo);
+                    return false;
 
                 case GetInfo:
                     ioGetInfo(ioInfo);
@@ -118,14 +116,12 @@ public abstract class DiskDevice extends Device {
                     break;
 
                 default:
-                    ioInfo.setStatus(DeviceStatus.InvalidFunction);
+                    ioInfo._status = DeviceStatus.InvalidFunction;
+                    ioEnd(ioInfo);
+                    return false;
             }
 
-            ioEnd(ioInfo);
-        }
-
-        if (ioInfo._source != null) {
-            ioInfo._source.signal(this);
+            return true;
         }
     }
 
@@ -184,7 +180,7 @@ public abstract class DiskDevice extends Device {
      */
     @Override
     protected void writeBuffersToLog(
-        final IOInfo ioInfo
+        final DeviceIOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);

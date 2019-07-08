@@ -84,11 +84,11 @@ public abstract class Device extends Node {
     @Override
     public void clear() {}
 
-    //TODO
-//    /**
-//     * IO Router - what happens here is depending upon the subclass
-//     */
-//    public abstract void handleIo(IOInfo ioInfo);
+    /**
+     * IO Router - what happens here is depending upon the subclass
+     * If we return false, it means we've completed the IO - there will be no scheduling or notification of completion
+     */
+    public abstract boolean handleIo(DeviceIOInfo ioInfo);
 
     /**
      * Does this device have a byte interface?
@@ -112,13 +112,12 @@ public abstract class Device extends Node {
     @Override
     public abstract void terminate();
 
-    //TODO
-//    /**
-//     * Writes IO buffers to the log.
-//     * What actually happens is dependant upon the particulars of the various subclasses, so this is abstract
-//     * @param ioInfo describes the IO buffer(s)
-//     */
-//    protected abstract void writeBuffersToLog(IOInfo ioInfo);
+    /**
+     * Writes IO buffers to the log.
+     * What actually happens is dependant upon the particulars of the various subclasses, so this is abstract
+     * @param ioInfo describes the IO buffer(s)
+     */
+    protected abstract void writeBuffersToLog(DeviceIOInfo ioInfo);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -149,40 +148,38 @@ public abstract class Device extends Node {
     /**
      * Subclasses must call here at the end of handling an IO
      */
-    //TODO
-//    void ioEnd(
-//        final IOInfo ioInfo
-//    ) {
-//        if (LOG_IO_ERRORS) {
-//            if ((ioInfo._status != DeviceStatus.Successful) && (ioInfo._status != DeviceStatus.NoInput)) {
-//                LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
-//            }
-//        }
-//
-//        if (LOG_DEVICE_IO_BUFFERS) {
-//            if (ioInfo._function.isReadFunction() && (ioInfo._status == DeviceStatus.Successful)) {
-//                writeBuffersToLog(ioInfo);
-//            }
-//        }
-//    }
+    void ioEnd(
+        final DeviceIOInfo ioInfo
+    ) {
+        if (LOG_IO_ERRORS) {
+            if ((ioInfo._status != DeviceStatus.Successful) && (ioInfo._status != DeviceStatus.NoInput)) {
+                LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
+            }
+        }
+
+        if (LOG_DEVICE_IO_BUFFERS) {
+            if (ioInfo._ioFunction.isReadFunction() && (ioInfo._status == DeviceStatus.Successful)) {
+                writeBuffersToLog(ioInfo);
+            }
+        }
+    }
 
     /**
      * Subclasses must call this at the beginning of handling an IO.
      */
-    //TODO
-//    void ioStart(
-//        final IOInfo ioInfo
-//    ) {
-//        if (LOG_DEVICE_IOS) {
-//            LOGGER.debug(String.format("IoStart:%s", ioInfo.toString()));
-//        }
-//
-//        if (LOG_DEVICE_IO_BUFFERS) {
-//            if (ioInfo._function.isWriteFunction()) {
-//                writeBuffersToLog(ioInfo);
-//            }
-//        }
-//    }
+    void ioStart(
+        final DeviceIOInfo ioInfo
+    ) {
+        if (LOG_DEVICE_IOS) {
+            LOGGER.debug(String.format("IoStart:%s", ioInfo.toString()));
+        }
+
+        if (LOG_DEVICE_IO_BUFFERS) {
+            if (ioInfo._ioFunction.isWriteFunction()) {
+                writeBuffersToLog(ioInfo);
+            }
+        }
+    }
 
     /**
      * Sets the device ready or not-ready, depending upon the given state parameter.

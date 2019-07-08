@@ -2,7 +2,7 @@
  * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib;
+package com.kadware.komodo.hardwarelib.exceptions;
 
 /**
  * Exception thrown when the system configuration is invalid, and some attempt is made to invoke one function or another

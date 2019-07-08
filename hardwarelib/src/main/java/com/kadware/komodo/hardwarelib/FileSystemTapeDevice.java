@@ -77,13 +77,14 @@ import org.apache.logging.log4j.LogManager;
  * Every file begins with a scratch pad which identifies the file as a virtual tape volume
  * and indicates the file size limit (if one exists) for the particular volume.
  */
-
+@SuppressWarnings("Duplicates")
 public class FileSystemTapeDevice extends TapeDevice {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    //TODO move this elsewhere
     private static class OutOfDataException extends Exception {
     }
 

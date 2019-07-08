@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
 /**
  * Base class which models a channel module node
  *
@@ -24,6 +23,32 @@ import org.apache.logging.log4j.Logger;
  */
 @SuppressWarnings("Duplicates")
 public abstract class ChannelModule extends Node implements Worker {
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Nested classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * For tracking in-flight IOs - this base class should be extended by the ChannleModule subclass.
+     */
+    protected abstract class Tracker {
+        public final Processor _source;
+        public final InputOutputProcessor _ioProcessor;
+        public final ChannelProgram _channelProgram;
+        public boolean _started = false;
+        public boolean _completed = false;
+
+        protected Tracker(
+            final Processor source,
+            final InputOutputProcessor ioProcessor,
+            final ChannelProgram channelProgram
+        ) {
+            _source = source;
+            _ioProcessor = ioProcessor;
+            _channelProgram = channelProgram;
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
@@ -42,18 +67,17 @@ public abstract class ChannelModule extends Node implements Worker {
     /**
      * Thread for the active (or now-terminated) worker for this object
      */
-    final Thread _workerThread;
+    protected final Thread _workerThread;
 
     /**
      * Set this flag so the worker thread can self-terminate
      */
-    boolean _workerTerminate;
+    protected boolean _workerTerminate;
 
     /**
-     * Channel program lists
+     * List of in-flight IOs
      */
-    protected final List<ChannelProgram> _unstarted = new LinkedList<>();
-    protected final List<ChannelProgram> _inProgress = new LinkedList<>();
+    protected final List<Tracker> _trackers = new LinkedList<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -74,6 +98,15 @@ public abstract class ChannelModule extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Abstract methods
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * To be implemented by the subclass - we call this object and queue it up
+     */
+    protected abstract Tracker createTracker(
+        final Processor source,
+        final InputOutputProcessor ioProcessor,
+        final ChannelProgram channelProgram
+    );
 
     /**
      * To be implemented by the subclass - this is the worker thread entry point.
@@ -104,8 +137,7 @@ public abstract class ChannelModule extends Node implements Worker {
      */
     @Override
     public void clear() {
-        _inProgress.clear();
-        _unstarted.clear();
+        _trackers.clear();
     }
 
     /**
@@ -140,18 +172,40 @@ public abstract class ChannelModule extends Node implements Worker {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
             }
         }
     }
 
     /**
-     * Put a channel program on our list of unstarted IOs
+     * Put a channel program on our list of unstarted IOs and wake up the channel module thread.
+     * If we find an obvious problem, we kill the IO here instead of scheduling it.
      */
-    public final void scheduleChannelProgram(
+    final boolean scheduleChannelProgram(
+        final Processor source,
+        final InputOutputProcessor ioProcessor,
         final ChannelProgram channelProgram
     ) {
-        synchronized (_unstarted) {
-            _unstarted.add(channelProgram);
+        if (!_descendants.containsKey(channelProgram.getDeviceAddress())) {
+            channelProgram.setChannelStatus(ChannelStatus.UnconfiguredDevice);
+            return false;
+        }
+
+        channelProgram.setChannelStatus(ChannelStatus.InProgress);
+        synchronized (_workerThread) {
+            _trackers.add(createTracker(source, ioProcessor, channelProgram));
+            _workerThread.notify();
+        }
+
+        return true;
+    }
+
+    /**
+     * For the descendent device to signal the channel module when an IO has completed
+     */
+    final void signal() {
+        synchronized(_workerThread) {
+            _workerThread.notify();
         }
     }
 
@@ -170,6 +224,7 @@ public abstract class ChannelModule extends Node implements Worker {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
             }
         }
     }

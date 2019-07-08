@@ -71,6 +71,7 @@ public class InputOutputProcessor extends Processor {
      * @return true if the IO was scheduled, false if something immediately wrong was discovered
      */
     public boolean startIO(
+        final Processor source,
         final ChannelProgram channelProgram
     ) {
         ChannelModule channelModule = (ChannelModule) _descendants.get(channelProgram.getChannelModuleIndex());
@@ -79,9 +80,7 @@ public class InputOutputProcessor extends Processor {
             return false;
         }
 
-        channelProgram.setChannelStatus(ChannelStatus.InProgress);
-        channelModule.scheduleChannelProgram(channelProgram);
-        return true;
+        return channelModule.scheduleChannelProgram(source, this, channelProgram);
     }
 
     /**
