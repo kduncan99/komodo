@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
  * Designed for connected devices which do IO on long integers, of which the lower 36 bits are significant.
  */
 @SuppressWarnings("Duplicates")
-public abstract class WordChannelModule extends ChannelModule {
+public class WordChannelModule extends ChannelModule {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -145,7 +145,6 @@ public abstract class WordChannelModule extends ChannelModule {
     ) {
         ChannelProgram cp = tracker._channelProgram;
         if (tracker._workingBuffer == null) {
-            //  no transfer IO - if any ACWs exist, they are ignored
             tracker._ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(this)
                                                                    .setIOFunction(cp.getFunction())
                                                                    .build();

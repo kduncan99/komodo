@@ -5,8 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
+import com.kadware.komodo.hardwarelib.exceptions.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -47,11 +46,6 @@ import org.apache.logging.log4j.LogManager;
 public class FileSystemDiskDevice extends DiskDevice {
 
     //TODO This needs to use true async IO
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -220,29 +214,16 @@ public class FileSystemDiskDevice extends DiskDevice {
     protected void ioGetInfo(
         final DeviceIOInfo ioInfo
     ) {
-        //TODO
-//        try {
-//            //  Create a DiskDeviceInfo object and then serialize it to the IOInfo's buffer
-//            DiskDeviceInfo devInfo = new DiskDeviceInfo.Builder().setBlockCount(_blockCount)
-//                                                                 .setBlockSize(_blockSize)
-//                                                                 .setDeviceModel(_deviceModel)
-//                                                                 .build();
-//
-//            ByteBuffer bb = ByteBuffer.wrap(ioInfo._byteBuffer);
-//            devInfo.serialize(bb);
-//            if (ioInfo._transferCount < bb.position()) {
-//                ioInfo._status = DeviceStatus.InvalidBlockSize);
-//            } else {
-//                //  Clear UA flag - user is asking for the info pending for him.
-//                setUnitAttention(false);
-//
-//                //  Complete the IOInfo object
-//                ioInfo.setTransferredCount(bb.position());
-//                ioInfo._status = DeviceStatus.Successful);
-//            }
-//        } catch (java.nio.BufferOverflowException ex) {
-//            ioInfo._status = DeviceStatus.BufferTooSmall);
-//        }
+        if (ioInfo._byteBuffer.length < 28 * 9 / 2) {
+            ioInfo._status = DeviceStatus.BufferTooSmall;
+        } else {
+            ArraySlice as = getInfo();
+            as.pack(ioInfo._byteBuffer);
+            ioInfo._status = DeviceStatus.Successful;
+            _unitAttentionFlag = false;
+        }
+
+        ioInfo._source.signal();
     }
 
     /**
@@ -254,11 +235,13 @@ public class FileSystemDiskDevice extends DiskDevice {
     ) {
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._source.signal();
             return;
         }
 
         if (_unitAttentionFlag) {
             ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._source.signal();
             return;
         }
 
@@ -266,17 +249,20 @@ public class FileSystemDiskDevice extends DiskDevice {
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
             ioInfo._status = DeviceStatus.NotPrepped;
+            ioInfo._source.signal();
             return;
         }
 
         if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
             ioInfo._status = DeviceStatus.BufferTooSmall;
+            ioInfo._source.signal();
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
+            ioInfo._source.signal();
             return;
         }
 
@@ -285,11 +271,13 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         if (reqBlockId.getValue() >= _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
+            ioInfo._source.signal();
             return;
         }
 
         if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
+            ioInfo._source.signal();
             return;
         }
 
@@ -304,6 +292,8 @@ public class FileSystemDiskDevice extends DiskDevice {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             ioInfo._status = DeviceStatus.SystemException;
         }
+
+        ioInfo._source.signal();
     }
 
     /**
@@ -318,6 +308,8 @@ public class FileSystemDiskDevice extends DiskDevice {
         } else {
             ioInfo._status = DeviceStatus.Successful;
         }
+
+        ioInfo._source.signal();
     }
 
     /**
@@ -333,6 +325,8 @@ public class FileSystemDiskDevice extends DiskDevice {
             unmount();
             ioInfo._status = DeviceStatus.Successful;
         }
+
+        ioInfo._source.signal();
     }
 
     /**
@@ -344,11 +338,13 @@ public class FileSystemDiskDevice extends DiskDevice {
     ) {
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._source.signal();
             return;
         }
 
         if (_unitAttentionFlag) {
             ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._source.signal();
             return;
         }
 
@@ -356,22 +352,26 @@ public class FileSystemDiskDevice extends DiskDevice {
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
             ioInfo._status = DeviceStatus.NotPrepped;
+            ioInfo._source.signal();
             return;
         }
 
         if (_isWriteProtected) {
             ioInfo._status = DeviceStatus.WriteProtected;
+            ioInfo._source.signal();
             return;
         }
 
         if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
             ioInfo._status = DeviceStatus.BufferTooSmall;
+            ioInfo._source.signal();
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
+            ioInfo._source.signal();
             return;
         }
 
@@ -380,11 +380,13 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         if (reqBlockId.getValue() >= _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
+            ioInfo._source.signal();
             return;
         }
 
         if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
+            ioInfo._source.signal();
             return;
         }
 
@@ -399,6 +401,8 @@ public class FileSystemDiskDevice extends DiskDevice {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             ioInfo._status = DeviceStatus.SystemException;
         }
+
+        ioInfo._source.signal();
     }
 
     /**

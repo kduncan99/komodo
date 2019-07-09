@@ -1,24 +1,17 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.hardwarelib.exceptions.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Random;
-
-import com.kadware.komodo.baselib.BlockCount;
-import com.kadware.komodo.baselib.BlockId;
-import com.kadware.komodo.baselib.BlockSize;
-import com.kadware.komodo.baselib.PrepFactor;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
@@ -31,283 +24,300 @@ public class Test_FileSystemDiskDevice {
     @Rule
     public ExpectedException _exception = ExpectedException.none();
 
-//    public static class TestDevice extends FileSystemDiskDevice {
-//
-//        public static class ScratchPad extends FileSystemDiskDevice.ScratchPad {
-//
-//            public ScratchPad() {}
-//
-//            public ScratchPad(
-//                final PrepFactor prepFactor,
-//                final BlockSize blockSize,
-//                final BlockCount blockCount
-//            ) {
-//                super(prepFactor, blockSize, blockCount);
-//            }
-//        }
-//
-//        public Node _signalSource = null;
-//
-//        public TestDevice(
-//            final String name,
-//            final short subsystemId
-//        ) {
-//            super(name, subsystemId);
-//        }
-//
-//        @Override
-//        public long calculateByteOffset(
-//            final BlockId blockId
-//        ) {
-//            return super.calculateByteOffset(blockId);
-//        }
-//
-//        @Override
-//        public void signal(
-//            final Node source
-//        ) {
-//            _signalSource = source;
-//        }
-//    }
-//
-//    public static int nextFileIndex = 1;
-//
-//    /**
-//     * Prepends the system-wide temporary path to the given base name if found
-//     * @return cooked path/file name
-//     */
-//    private static String getTestFileName(
-//    ) {
-//        String pathName = System.getProperty("java.io.tmpdir");
-//        return String.format("%sTEST%04d.pack", pathName == null ? "" : pathName, nextFileIndex++);
-//    }
-//
-//    /**
-//     * For some reason, the delete occasionally fails with the file assigned to another process.
-//     * I don't know why, so we do this just in case.
-//     */
-//    private static void deleteTestFile(
-//        final String fileName
-//    ) {
-//        boolean done = false;
-//        while (!done) {
-//            try {
-//                Files.delete(FileSystems.getDefault().getPath(fileName));
-//                done = true;
-//            } catch (Exception ex) {
-//                System.out.println("Retrying delete...");
-//                try {
-//                    Thread.sleep(1000);
-//                } catch (InterruptedException ex2) {
-//                    //????
-//                }
-//            }
-//        }
-//    }
-//
-//    @Test
-//    public void create(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)10);
-//        assertEquals("DISK0", d.getName());
-//        assertEquals(10, d.getSubsystemIdentifier());
-//        assertEquals(Node.Category.Device, d.getCategory());
-//        Assert.assertEquals(Device.DeviceModel.FileSystemDisk, d.getDeviceModel());
-//        assertEquals(Device.DeviceType.Disk, d.getDeviceType());
-//    }
-//
-//    @Test
-//    public void calculateByteOffset(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.setBlockSize(new BlockSize(256));
-//        assertEquals(3 * 256, d.calculateByteOffset(new BlockId(2)));
-//    }
-//
-//    @Test
-//    public void calculateByteOffset_reallyBig(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.setBlockSize(new BlockSize(256));
-//        assertEquals(0x80000001l * 256, d.calculateByteOffset(new BlockId(0x80000000l)));
-//    }
-//
-//    @Test
-//    public void canConnect_success(
-//    ) {
-//        ByteDiskController c = new ByteDiskController("DSKCUA", (short)0);
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertTrue(d.canConnect(c));
-//    }
-//
-//    @Test
-//    public void canConnect_failure(
-//    ) throws IllegalAccessException,
-//             InstantiationException,
-//             NoSuchMethodException {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertFalse(d.canConnect(new FileSystemDiskDevice("DISK1", (short)0)));
-//        assertFalse(d.canConnect(new FileSystemTapeDevice("TAPE0", (short)0)));
-//        assertFalse(d.canConnect(new WordDiskController("DSKCUB", (short)0)));
-//        assertFalse(d.canConnect(new TapeController("TAPCUA", (short)0)));
-////????        assertFalse(d.canConnect(new SoftwareByteChannelModule("CM1-0")));
-////????        assertFalse(d.canConnect(new SoftwareWordChannelModule("CM1-1")));
-//        assertFalse(d.canConnect(new MainStorageProcessor("MSP0",
-//                                                          InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI,
-//                                                          InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
-//        assertFalse(d.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI)));
-//        assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI)));
-//    }
-//
-//    @Test
-//    public void createPack(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize[] blockSizes = {
-//            new BlockSize(128),
-//            new BlockSize(256),
-//            new BlockSize(512),
-//            new BlockSize(1024),
-//            new BlockSize(2048),
-//            new BlockSize(4096),
-//            new BlockSize(8192)
-//        };
-//
-//        for (BlockSize blockSize : blockSizes) {
-//            BlockCount blockCount = new BlockCount(10000 * (8192 / blockSize.getValue()));
-//            FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//            //  Make sure we can read the ScratchPad
-//            RandomAccessFile check = new RandomAccessFile(fileName, "r");
-//            byte[] buffer = new byte[blockSize.getValue()];
-//            check.seek(0);
-//            assertEquals(blockSize.getValue(), check.read(buffer));
-//            check.close();
-//
-//            //  Verify the ScratchPad
-//            TestDevice.ScratchPad sp = new TestDevice.ScratchPad();
-//            sp.deserialize(ByteBuffer.wrap(buffer));
-//            assertEquals(blockCount, sp._blockCount);
-//            assertEquals(blockSize, sp._blockSize);
-//        }
-//
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void createPack_badPath(
-//    ) throws Exception {
-//        _exception.expect(FileNotFoundException.class);
-//        FileSystemDiskDevice.createPack("/blah/blah/blah/TEST.pack",
-//                                        new BlockSize(8192),
-//                                        new BlockCount(10000));
-//    }
-//
-//    @Test
-//    public void createPack_invalidBlockSize(
-//    ) throws Exception {
-//        _exception.expect(InvalidBlockSizeException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(22),
-//                                        new BlockCount(1000));
-//    }
-//
-//    @Test
-//    public void createPack_invalidTrackCount_1(
-//    ) throws Exception {
-//        _exception.expect(InvalidTrackCountException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(8192),
-//                                        new BlockCount(9999));
-//    }
-//
-//    @Test
-//    public void createPack_invalidTrackCount_2(
-//    ) throws Exception {
-//        _exception.expect(InvalidTrackCountException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(8192),
-//                                        new BlockCount(100000));
-//    }
-//
-//    @Test
-//    public void getPackName(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        String s = d.getPackName();
-//        assertEquals(fileName, d.getPackName());
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void getPackName_notMounted(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertEquals("", d.getPackName());
-//    }
-//
-//    @Test
-//    public void hasByteInterface(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertTrue(d.hasByteInterface());
-//    }
-//
-//    @Test
-//    public void hasWordInterface(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertFalse(d.hasWordInterface());
-//    }
-//
-//    @Test
-//    public void ioGetInfo_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockCount blockCount = new BlockCount(10000);
-//        BlockSize blockSize = new BlockSize(8192);
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        short subSystemId = 10;
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", subSystemId);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] buffer = new byte[blockSize.getValue()];
-//        Device.IOInfo ioInfo = new Device.IOInfo(d, Device.IOFunction.GetInfo, buffer, blockSize.getValue());
-//        d.handleIo(ioInfo);
-//        assertEquals(Device.IOStatus.Successful, ioInfo.getStatus());
-//
-//        DiskDevice.DiskDeviceInfo ddInfo = new DiskDevice.DiskDeviceInfo();
-//        ddInfo.deserialize(ByteBuffer.wrap(buffer));
-//        assertEquals(DiskDevice.DeviceModel.FileSystemDisk, ddInfo.getDeviceModel());
-//        assertEquals(DiskDevice.DeviceType.Disk, ddInfo.getDeviceType());
-//        assertEquals(subSystemId, ddInfo.getSubsystemIdentifier());
-//        assertTrue(ddInfo.isReady());
-//        assertTrue(ddInfo.isMounted());
-//        assertFalse(ddInfo.isWriteProtected());
-//        assertTrue(ddInfo.getUnitAttention());
-//        assertEquals(blockCount, ddInfo.getBlockCount());
-//        assertEquals(blockSize, ddInfo.getBlockSize());
-//
-//        //  make sure UA is cleared
-//        assertFalse(d.getUnitAttentionFlag());
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
+    public static class TestChannelModule extends ChannelModule {
+        private TestChannelModule() {
+            super(ChannelModuleType.Byte, "TESTCM");
+        }
+
+        protected Tracker createTracker(
+            Processor p,
+            InputOutputProcessor iop,
+            ChannelProgram cp
+        ) {
+            return null;
+        }
+
+        public void run() {
+            while (!_workerTerminate) {
+                synchronized (_workerThread) {
+                    try {
+                        _workerThread.wait(1000);
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }
+        }
+    }
+
+    public static class TestDevice extends FileSystemDiskDevice {
+
+        static class ScratchPad extends FileSystemDiskDevice.ScratchPad {
+
+            ScratchPad() {}
+
+            ScratchPad(
+                final PrepFactor prepFactor,
+                final BlockSize blockSize,
+                final BlockCount blockCount
+            ) {
+                super(prepFactor, blockSize, blockCount);
+            }
+        }
+
+        TestDevice(
+            final String name
+        ) {
+            super(name);
+        }
+
+        @Override
+        public long calculateByteOffset(
+            final BlockId blockId
+        ) {
+            return super.calculateByteOffset(blockId);
+        }
+    }
+
+    private static int nextFileIndex = 1;
+
+    /**
+     * Prepends the system-wide temporary path to the given base name if found
+     * @return cooked path/file name
+     */
+    private static String getTestFileName(
+    ) {
+        String pathName = System.getProperty("java.io.tmpdir");
+        return String.format("%sTEST%04d.pack", pathName == null ? "" : pathName, nextFileIndex++);
+    }
+
+    /**
+     * For some reason, the delete occasionally fails with the file assigned to another process.
+     * I don't know why, so we do this just in case.
+     */
+    private static void deleteTestFile(
+        final String fileName
+    ) {
+        boolean done = false;
+        while (!done) {
+            try {
+                Files.delete(FileSystems.getDefault().getPath(fileName));
+                done = true;
+            } catch (Exception ex) {
+                System.out.println("Retrying delete...");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex2) {
+                }
+            }
+        }
+    }
+
+    @Test
+    public void create(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertEquals("DISK0", d._name);
+        assertEquals(NodeCategory.Device, d._category);
+        Assert.assertEquals(DeviceModel.FileSystemDisk, d._deviceModel);
+        assertEquals(DeviceType.Disk, d._deviceType);
+    }
+
+    @Test
+    public void calculateByteOffset(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST");
+        d._blockSize = new BlockSize(256);
+        assertEquals(3 * 256, d.calculateByteOffset(new BlockId(2)));
+    }
+
+    @Test
+    public void calculateByteOffset_reallyBig(
+    ) {
+        TestDevice d = new TestDevice("TEST");
+        d._blockSize = new BlockSize(256);
+        assertEquals(0x80000001L * 256, d.calculateByteOffset(new BlockId(0x80000000L)));
+    }
+
+    @Test
+    public void canConnect_success(
+    ) {
+        ByteChannelModule cm = new ByteChannelModule("CM0");
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertTrue(d.canConnect(cm));
+    }
+
+    @Test
+    public void canConnect_failure(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertFalse(d.canConnect(new FileSystemDiskDevice("DISK1")));
+        assertFalse(d.canConnect(new FileSystemTapeDevice("TAPE0")));
+        assertFalse(d.canConnect(new WordChannelModule("CM1-1")));
+        assertFalse(d.canConnect(new MainStorageProcessor("MSP0",
+                                                          InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX,
+                                                          InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
+        assertFalse(d.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX)));
+        assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
+    }
+
+    @Test
+    public void createPack(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize[] blockSizes = {
+            new BlockSize(128),
+            new BlockSize(256),
+            new BlockSize(512),
+            new BlockSize(1024),
+            new BlockSize(2048),
+            new BlockSize(4096),
+            new BlockSize(8192)
+        };
+
+        for (BlockSize blockSize : blockSizes) {
+            BlockCount blockCount = new BlockCount(10000 * (8192 / blockSize.getValue()));
+            FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+            //  Make sure we can read the ScratchPad
+            RandomAccessFile check = new RandomAccessFile(fileName, "r");
+            byte[] buffer = new byte[blockSize.getValue()];
+            check.seek(0);
+            assertEquals(blockSize.getValue(), check.read(buffer));
+            check.close();
+
+            //  Verify the ScratchPad
+            TestDevice.ScratchPad sp = new TestDevice.ScratchPad();
+            sp.deserialize(ByteBuffer.wrap(buffer));
+            assertEquals(blockCount, sp._blockCount);
+            assertEquals(blockSize, sp._blockSize);
+        }
+
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void createPack_badPath(
+    ) throws Exception {
+        _exception.expect(FileNotFoundException.class);
+        FileSystemDiskDevice.createPack("/blah/blah/blah/TEST.pack",
+                                        new BlockSize(8192),
+                                        new BlockCount(10000));
+    }
+
+    @Test
+    public void createPack_invalidBlockSize(
+    ) throws Exception {
+        _exception.expect(InvalidBlockSizeException.class);
+        FileSystemDiskDevice.createPack(getTestFileName(),
+                                        new BlockSize(22),
+                                        new BlockCount(1000));
+    }
+
+    @Test
+    public void createPack_invalidTrackCount_1(
+    ) throws Exception {
+        _exception.expect(InvalidTrackCountException.class);
+        FileSystemDiskDevice.createPack(getTestFileName(),
+                                        new BlockSize(8192),
+                                        new BlockCount(9999));
+    }
+
+    @Test
+    public void createPack_invalidTrackCount_2(
+    ) throws Exception {
+        _exception.expect(InvalidTrackCountException.class);
+        FileSystemDiskDevice.createPack(getTestFileName(),
+                                        new BlockSize(8192),
+                                        new BlockCount(100000));
+    }
+
+    @Test
+    public void getPackName(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        assertEquals(fileName, d.getPackName());
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void getPackName_notMounted(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertEquals("", d.getPackName());
+    }
+
+    @Test
+    public void hasByteInterface(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertTrue(d.hasByteInterface());
+    }
+
+    @Test
+    public void hasWordInterface(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertFalse(d.hasWordInterface());
+    }
+
+    @Test
+    public void ioGetInfo_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockCount blockCount = new BlockCount(10000);
+        BlockSize blockSize = new BlockSize(8192);
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        d.mount(fileName);
+        d.setReady(true);
+
+        byte[] buffer = new byte[blockSize.getValue()];
+        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                    .setIOFunction(IOFunction.GetInfo)
+                                                                    .setTransferCount(buffer.length)
+                                                                    .setBuffer(buffer)
+                                                                    .build();
+        d.handleIo(ioInfo);
+        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        ArraySlice as = new ArraySlice(new long[1024]);
+        as.unpack(buffer);
+
+        int flags = (int) Word36.getS1(as.get(0));
+        boolean resultIsReady = (flags & 01) != 0;
+        boolean resultIsMounted = (flags & 02) != 0;
+        boolean resultIsWriteProtected = (flags & 04) != 0;
+        DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
+        DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
+        PrepFactor resultPrepFactor = new PrepFactor((int) Word36.getH2(as.get(0)));
+        long resultBlockCount = as.get(1);
+
+        assertTrue(resultIsReady);
+        assertTrue(resultIsMounted);
+        assertFalse(resultIsWriteProtected);
+        assertEquals(DeviceModel.FileSystemDisk, resultModel);
+        assertEquals(DeviceType.Disk, resultType);
+        assertEquals(blockCount.getValue(), resultBlockCount);
+        assertEquals(PrepFactor.getPrepFactorFromBlockSize(blockSize), resultPrepFactor);
+        assertFalse(d._unitAttentionFlag);
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    //TODO
 //    @Test
 //    public void ioGetInfo_failed_bufferTooSmall(
 //    ) throws Exception {
@@ -332,7 +342,8 @@ public class Test_FileSystemDiskDevice {
 //        d.unmount();
 //        deleteTestFile(fileName);
 //    }
-//
+
+    //TODO
 //    @Test
 //    public void ioGetInfo_failed_invalidBlockSize(
 //    ) throws Exception {
@@ -357,253 +368,300 @@ public class Test_FileSystemDiskDevice {
 //        d.unmount();
 //        deleteTestFile(fileName);
 //    }
-//
-//    @Test
-//    public void ioRead_fail_notReady(
-//    ) throws Exception {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//
-//        BlockSize blockSize = new BlockSize(128);
-//        BlockId blockId = new BlockId(5);
-//        byte[] readBuffer = new byte[(int)blockSize.getValue()];
-//
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null, Device.IOFunction.Read, readBuffer, blockId, blockSize.getValue());
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.NotReady, ioInfoRead.getStatus());
-//    }
-//
-//    @Test
-//    public void ioRead_fail_bufferTooSmall(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] infoBuffer = new byte[128];
-//        Device.IOInfo ioInfoGetInfo = new Device.IOInfo(null,
-//                                                        Device.IOFunction.GetInfo,
-//                                                        infoBuffer,
-//                                                        128);
-//        d.handleIo(ioInfoGetInfo);
-//
-//        byte[] readBuffer = new byte[10];
-//        BlockId blockId = new BlockId(5);
-//
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null,
-//                                                     Device.IOFunction.Read,
-//                                                     readBuffer,
-//                                                     blockId,
-//                                                     blockSize.getValue());
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.BufferTooSmall, ioInfoRead.getStatus());
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioRead_fail_invalidBlockSize(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] infoBuffer = new byte[128];
-//        Device.IOInfo ioInfoGetInfo = new Device.IOInfo(null, Device.IOFunction.GetInfo, infoBuffer, 128);
-//        d.handleIo(ioInfoGetInfo);
-//
-//        byte[] readBuffer = new byte[(int)blockSize.getValue()];
-//        BlockId blockId = new BlockId(5);
-//
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null,
-//                                                     Device.IOFunction.Read,
-//                                                     readBuffer,
-//                                                     blockId,
-//                                                     blockSize.getValue() - 1);
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.InvalidBlockSize, ioInfoRead.getStatus());
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioRead_fail_invalidBlockId(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] infoBuffer = new byte[128];
-//        Device.IOInfo ioInfoGetInfo = new Device.IOInfo(null, Device.IOFunction.GetInfo, infoBuffer, 128);
-//        d.handleIo(ioInfoGetInfo);
-//
-//        byte[] readBuffer = new byte[(int)blockSize.getValue()];
-//        //long blockId = 5;
-//
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null,
-//                                                     Device.IOFunction.Read,
-//                                                     readBuffer,
-//                                                     new BlockId(blockCount.getValue()),
-//                                                     blockSize.getValue());
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.InvalidBlockId, ioInfoRead.getStatus());
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioRead_fail_invalidBlockCount(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] infoBuffer = new byte[128];
-//        Device.IOInfo ioInfoGetInfo = new Device.IOInfo(null, Device.IOFunction.GetInfo, infoBuffer, 128);
-//        d.handleIo(ioInfoGetInfo);
-//
-//        byte[] readBuffer = new byte[(int)(2 * blockSize.getValue())];
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null,
-//                                                     Device.IOFunction.Read,
-//                                                     readBuffer,
-//                                                     new BlockId(blockCount.getValue() - 1),
-//                                                     2 * blockSize.getValue());
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.InvalidBlockCount, ioInfoRead.getStatus());
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioRead_fail_unitAttention(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] readBuffer = new byte[(int)blockSize.getValue()];
-//        BlockId blockId = new BlockId(5);
-//
-//        Device.IOInfo ioInfoRead = new Device.IOInfo(null,
-//                                                     Device.IOFunction.Read,
-//                                                     readBuffer,
-//                                                     blockId,
-//                                                     blockSize.getValue());
-//        d.handleIo(ioInfoRead);
-//        assertEquals(Device.IOStatus.UnitAttention, ioInfoRead.getStatus());
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioReset_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockCount blockCount = new BlockCount(10000);
-//        BlockSize blockSize = new BlockSize(8192);
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        short subSystemId = 10;
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST", subSystemId);
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        byte[] buffer = new byte[(int)blockSize.getValue()];
-//        Device.IOInfo ioInfo = new Device.IOInfo(d, Device.IOFunction.Reset, buffer, blockSize.getValue());
-//        d.handleIo(ioInfo);
-//        assertEquals(Device.IOStatus.Successful, ioInfo.getStatus());
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void ioReset_failed_notReady(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        Device.IOInfo ioInfo = new Device.IOInfo(d, Device.IOFunction.Reset);
-//        d.handleIo(ioInfo);
-//        assertEquals(Device.IOStatus.NotReady, ioInfo.getStatus());
-//    }
-//
-//    @Test
-//    public void ioStart_failed_badFunction(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//
-//        Device.IOInfo ioInfo1 = new Device.IOInfo(d, Device.IOFunction.Rewind);
-//        d.handleIo(ioInfo1);
-//        assertEquals(Device.IOStatus.InvalidFunction, ioInfo1.getStatus());
-//
-//        Device.IOInfo ioInfo2 = new Device.IOInfo(d, Device.IOFunction.Close);
-//        d.handleIo(ioInfo2);
-//        assertEquals(Device.IOStatus.InvalidFunction, ioInfo2.getStatus());
-//
-//        Device.IOInfo ioInfo3 = new Device.IOInfo(d, Device.IOFunction.MoveBlockBackward);
-//        d.handleIo(ioInfo3);
-//        assertEquals(Device.IOStatus.InvalidFunction, ioInfo3.getStatus());
-//    }
-//
-//    @Test
-//    public void ioStart_none(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        Device.IOInfo ioInfo = new Device.IOInfo(d, Device.IOFunction.None);
-//        d.handleIo(ioInfo);
-//        assertEquals(Device.IOStatus.Successful, ioInfo.getStatus());
-//    }
-//
-//    @Test
-//    public void ioStart_checkNoSignal(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        Device.IOInfo ioInfo3 = new Device.IOInfo(null, Device.IOFunction.None);
-//        d.handleIo(ioInfo3);
-//        assertEquals(null, d._signalSource);
-//    }
-//
-//    @Test
-//    public void ioStart_checkSignal(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        Device.IOInfo ioInfo3 = new Device.IOInfo(d, Device.IOFunction.None);
-//        d.handleIo(ioInfo3);
-//        assertEquals(d, d._signalSource);
-//    }
-//
+
+    @Test
+    public void ioRead_fail_notReady(
+    ) throws Exception {
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+
+        long blockId = 5;
+        int blockSize = 128;
+        byte[] readBuffer = new byte[blockSize];
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockId)
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(blockSize)
+                                                                        .build();
+
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
+    }
+
+    @Test
+    public void ioRead_fail_bufferTooSmall(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        //  Clear unit attention
+        byte[] buffer = new byte[128];
+        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(IOFunction.GetInfo)
+                                                                           .setBuffer(buffer)
+                                                                           .setTransferCount(buffer.length)
+                                                                           .build();
+        d.handleIo(ioInfoGetInfo);
+
+        byte[] readBuffer = new byte[10];
+        long blockId = 5;
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockId)
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(blockSize.getValue())
+                                                                        .build();
+
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.BufferTooSmall, ioInfoRead._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioRead_fail_invalidBlockSize(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        //  Clear unit attention
+        byte[] buffer = new byte[128];
+        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(IOFunction.GetInfo)
+                                                                           .setBuffer(buffer)
+                                                                           .setTransferCount(buffer.length)
+                                                                           .build();
+        d.handleIo(ioInfoGetInfo);
+
+        byte[] readBuffer = new byte[(int)blockSize.getValue()];
+        BlockId blockId = new BlockId(5);
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockId.getValue())
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(blockSize.getValue() - 1)
+                                                                        .build();
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioRead_fail_invalidBlockId(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        //  Clear unit attention
+        byte[] buffer = new byte[128];
+        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(IOFunction.GetInfo)
+                                                                           .setBuffer(buffer)
+                                                                           .setTransferCount(buffer.length)
+                                                                           .build();
+        d.handleIo(ioInfoGetInfo);
+
+        byte[] readBuffer = new byte[(int)blockSize.getValue()];
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockCount.getValue())
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(blockSize.getValue())
+                                                                        .build();
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioRead_fail_invalidBlockCount(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        //  Clear unit attention
+        byte[] buffer = new byte[128];
+        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(IOFunction.GetInfo)
+                                                                           .setBuffer(buffer)
+                                                                           .setTransferCount(buffer.length)
+                                                                           .build();
+        d.handleIo(ioInfoGetInfo);
+
+        byte[] readBuffer = new byte[(int)(2 * blockSize.getValue())];
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockCount.getValue() - 1)
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(2 * blockSize.getValue())
+                                                                        .build();
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioRead_fail_unitAttention(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        byte[] readBuffer = new byte[(int)blockSize.getValue()];
+        long blockId = 5;
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockId)
+                                                                        .setBuffer(readBuffer)
+                                                                        .setTransferCount(blockSize.getValue())
+                                                                        .build();
+        d.handleIo(ioInfoRead);
+        assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioReset_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockCount blockCount = new BlockCount(10000);
+        BlockSize blockSize = new BlockSize(8192);
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+
+        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                                   .setIOFunction(IOFunction.Reset)
+                                                                   .build();
+        d.handleIo(ioInfo);
+        assertEquals(DeviceStatus.Successful, ioInfo._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioReset_failed_notReady(
+    ) {
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                                   .setIOFunction(IOFunction.Reset)
+                                                                   .build();
+        d.handleIo(ioInfo);
+        assertEquals(DeviceStatus.NotReady, ioInfo._status);
+    }
+
+    @Test
+    public void ioStart_failed_badFunction(
+    ) {
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+
+        DeviceIOInfo[] ioInfos = {
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.Close)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.MoveBlock)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.MoveBlockBackward)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.MoveFile)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.MoveFileBackward)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.Rewind)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.RewindInterlock)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.ReadBackward)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.WriteEndOfFile)
+                                                 .build(),
+        };
+
+        for (DeviceIOInfo ioInfo : ioInfos) {
+            d.handleIo(ioInfo);
+            assertEquals(DeviceStatus.InvalidFunction, ioInfo._status);
+        }
+    }
+
+    @Test
+    public void ioStart_none(
+    ) {
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                                   .setIOFunction(IOFunction.None)
+                                                                   .build();
+        d.handleIo(ioInfo);
+        assertEquals(DeviceStatus.Successful, ioInfo._status);
+    }
+
 //    @Test
 //    public void ioUnload_successful(
 //    ) throws IOException {

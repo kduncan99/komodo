@@ -1,18 +1,14 @@
 -- InProgress
-IP,IOP: UPI send/ack mechanism for IOs - how do we send a broadcast interrupt?
+IP,IOP: UPI send/ack mechanism for IOs
 Reworking the entire IO stack
-IOP: rework IOP, CHMOD, and downstream - lose CU's maybe
 Rewrite disk (and maybe tape) devices using async IO
-IP: SYSC instruction for dynamic bank allocation
-IP: SYSC instruction for console communication
-All Node objects: add Builder class, make constructors private (really?  is this necessary?)
+Redo all the node and subclasses tests, many of which are commented out
 
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
   Consider abandoning breakpoints...
-BankDescriptor seems to take a very long time to create from storage... why?
 Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
@@ -21,15 +17,10 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib
-Redo all the node tests, many of which are commented out
-Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
-  I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
-  So, what this means is that all the dayclock stuff, including the comparator, is stand-alone, and issues a UPI
-  to the BIE IP at the appropriate times.  This allows the interrupt to be processed by one activity, not one
-  per IP
-    Need to implement master dayclock comparator logic
-    Need to implement enabling dayclock interrupts, taking them, etc
-SystemControlProcessor: For starting/monitoring/stopping system, and for console communication
+IP: SYSC instruction for dynamic bank allocation
+IP: SYSC instruction for console communication
+SystemProcessor: For starting/monitoring/stopping system, and for console communication
+  Move dayclock architecture to SystemProcessor
 IP: operations control instructions (and unit tests)
   SEND
   ACK

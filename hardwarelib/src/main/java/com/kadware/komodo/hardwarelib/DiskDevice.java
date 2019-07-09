@@ -7,8 +7,10 @@ package com.kadware.komodo.hardwarelib;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.BlockCount;
 import com.kadware.komodo.baselib.BlockSize;
+import com.kadware.komodo.baselib.PrepFactor;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -41,12 +43,22 @@ public abstract class DiskDevice extends Device {
      */
     boolean _isWriteProtected = false;
 
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Constructor
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     DiskDevice(
         final DeviceModel deviceModel,
         final String name
     ) {
         super(DeviceType.Disk, deviceModel, name);
     }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Abstract methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     @Override
     public abstract boolean hasByteInterface();
@@ -63,6 +75,14 @@ public abstract class DiskDevice extends Device {
     abstract void ioUnload(DeviceIOInfo ioInfo);
     abstract void ioWrite(DeviceIOInfo ioInfo);
 
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Instance methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * For debugging
+     */
     @Override
     public void dump(
         final BufferedWriter writer
@@ -76,6 +96,43 @@ public abstract class DiskDevice extends Device {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
+    }
+
+    /**
+     * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
+     * The format of the info block is:
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +0  |  FLAGS   |  MODEL   |   TYPE   |          PREP_FACTOR           |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +1  |                           BLOCK_COUNT                           |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +2  |                                                                 |
+     *  ..  |                             zeroes                              |
+     * +27  |                                                                 |
+     *      +----------+----------+----------+----------+----------+----------+
+     *
+     * FLAGS:
+     *      Bit 5:  device_ready
+     *      Bit 4:  mounted
+     *      Bit 3:  write_protected
+     * MODEL:       integer code for the DeviceModel
+     * TYPE:        integer code for the DeviceType
+     * PREP_FACTOR: indicates the block size in words, of a disk block
+     * PACK_ID:     mounted pack id fieldata LJSF
+     * BLOCK_COUNT: number of blocks on the media
+     */
+    protected ArraySlice getInfo() {
+        long[] buffer = new long[28];
+
+        long flags = (_isWriteProtected ? 4 : 0)  | (_isMounted ? 2 : 0) | (_readyFlag ? 1 : 0);
+        long model = _deviceModel.getCode();
+        long type = _deviceType.getCode();
+        int prepfactor = PrepFactor.getPrepFactorFromBlockSize(_blockSize).getValue();
+
+        buffer[0] = (flags << 30) | (model << 24) | (type << 18) | prepfactor;
+        buffer[1] = _blockCount.getValue();
+
+        return new ArraySlice(buffer);
     }
 
     /**

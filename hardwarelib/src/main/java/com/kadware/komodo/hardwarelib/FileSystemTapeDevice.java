@@ -1,11 +1,9 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -135,7 +133,7 @@ public class FileSystemTapeDevice extends TapeDevice {
     /**
      * Standard constructor
      */
-    private FileSystemTapeDevice(
+    FileSystemTapeDevice(
         final String name
     ) {
         super(DeviceModel.FileSystemTape, name);
@@ -197,6 +195,7 @@ public class FileSystemTapeDevice extends TapeDevice {
     protected void ioGetInfo(
         final DeviceIOInfo ioInfo
     ) {
+        //TODO
 //        //  Create a TapeDeviceInfo object and then serialize it to the IOInfo's buffer
 //        TapeDeviceInfo devInfo = new TapeDeviceInfo(getDeviceType(),
 //                                                    getDeviceModel(),
@@ -836,9 +835,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     /**
      * Writes a control word to the underlying file
-     * <p>
      * @param controlWord control word to be written
-     * <p>
      * @throws IOException if we cannot write to the file
      */
     public void writeControlWord(

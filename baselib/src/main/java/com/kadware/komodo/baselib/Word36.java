@@ -160,7 +160,7 @@ public class Word36 {
     /**
      * Using the Fieldata character as an index into this table, one gets the corresponding ASCII character
      */
-    public static final char ASCII_FROM_FIELDATA[] =
+    public static final char[] ASCII_FROM_FIELDATA =
     {
         '@',	'[',	']',	'#',	'^',	' ',	'A',	'B',
         'C',	'D',	'E',	'F',	'G',	'H',	'I',	'J',
@@ -175,7 +175,7 @@ public class Word36 {
     /**
      * Using the integer value corresponding to an ASCII character, one gets the corresponding Fieldata character
      */
-    public static final short FIELDATA_FROM_ASCII[] =
+    public static final short[] FIELDATA_FROM_ASCII =
     {
         077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
         077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077, 077,
@@ -217,7 +217,6 @@ public class Word36 {
 
     /**
      * Creates a new object given the ones-complement parameter value
-     * <p>
      * @param value ones-complement value to be stored in this object
      */
     public Word36(
@@ -231,13 +230,6 @@ public class Word36 {
     //  Non-Static methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Test for equality
-     * <p>
-     * @param obj
-     * <p>
-     * @return
-     */
     @Override
     public boolean equals(
         final Object obj
@@ -245,398 +237,54 @@ public class Word36 {
         return (obj != null) && (obj instanceof Word36) && (_value == ((Word36)obj)._value);
     }
 
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getH1(
-    ) {
-        return getH1(_value);
-    }
+    public long getH1() { return getH1(_value); }
+    public long getH2() { return getH2(_value); }
+    public long getQ1() { return getQ1(_value); }
+    public long getQ2() { return getQ2(_value); }
+    public long getQ3() { return getQ3(_value); }
+    public long getQ4() { return getQ4(_value); }
+    public long getS1() { return getS1(_value); }
+    public long getS2() { return getS2(_value); }
+    public long getS3() { return getS3(_value); }
+    public long getS4() { return getS4(_value); }
+    public long getS5() { return getS5(_value); }
+    public long getS6() { return getS6(_value); }
+    public long getT1() { return getT1(_value); }
+    public long getT2() { return getT2(_value); }
+    public long getT3() { return getT3(_value); }
 
     /**
      * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getH2(
-    ) {
-        return getH2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getQ1(
-    ) {
-        return getQ1(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getQ2(
-    ) {
-        return getQ2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getQ3(
-    ) {
-        return getQ3(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getQ4(
-    ) {
-        return getQ4(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS1(
-    ) {
-        return getS1(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS2(
-    ) {
-        return getS2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS3(
-    ) {
-        return getS3(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS4(
-    ) {
-        return getS4(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS5(
-    ) {
-        return getS5(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getS6(
-    ) {
-        return getS6(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getT1(
-    ) {
-        return getT1(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getT2(
-    ) {
-        return getT2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getT3(
-    ) {
-        return getT3(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
      * @param index - 0 to 11 indicating which twelfth we want (0 == TW1, 11 == TW12)
-     * <p>
-     * @return
      */
-    public long getTwelfth(
-        final int index
-    ) {
-        return getTwelfth(_value, index);
-    }
+    public long getTwelfth(int index) { return getTwelfth(_value, index); }
 
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getXH1(
-    ) {
-        return getXH1(_value);
-    }
+    public long getXH1() { return getXH1(_value); }
+    public long getXH2() { return getXH2(_value); }
+    public long getXT1() { return getXT1(_value); }
+    public long getXT2() { return getXT2(_value); }
+    public long getXT3() { return getXT3(_value); }
+    public long getW() { return _value; }
 
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getXH2(
-    ) {
-        return getXH2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getXT1(
-    ) {
-        return getXT1(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getXT2(
-    ) {
-        return getXT2(_value);
-    }
-
-    /**
-     * Partial-word getter
-     * <p>
-     * @return
-     */
-    public long getXT3(
-    ) {
-        return getXT3(_value);
-    }
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public long getW(
-    ) {
-        return _value;
-    }
+    public void setH1(long partialValue) { _value = setH1(_value, partialValue); }
+    public void setH2(long partialValue) { _value = setH2(_value, partialValue); }
+    public void setQ1(long partialValue) { _value = setQ1(_value, partialValue); }
+    public void setQ2(long partialValue) { _value = setQ2(_value, partialValue); }
+    public void setQ3(long partialValue) { _value = setQ3(_value, partialValue); }
+    public void setQ4(long partialValue) { _value = setQ4(_value, partialValue); }
+    public void setS1(long partialValue) { _value = setS1(_value, partialValue); }
+    public void setS2(long partialValue) { _value = setS2(_value, partialValue); }
+    public void setS3(long partialValue) { _value = setS3(_value, partialValue); }
+    public void setS4(long partialValue) { _value = setS4(_value, partialValue); }
+    public void setS5(long partialValue) { _value = setS5(_value, partialValue); }
+    public void setS6(long partialValue) { _value = setS6(_value, partialValue); }
+    public void setT1(long partialValue) { _value = setT1(_value, partialValue); }
+    public void setT2(long partialValue) { _value = setT2(_value, partialValue); }
+    public void setT3(long partialValue) { _value = setT3(_value, partialValue); }
 
     /**
      * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setH1(
-        final long partialValue
-    ) {
-        _value = setH1(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setH2(
-        final long partialValue
-    ) {
-        _value = setH2(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setQ1(
-        final long partialValue
-    ) {
-        _value = setQ1(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setQ2(
-        final long partialValue
-    ) {
-        _value = setQ2(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setQ3(
-        final long partialValue
-    ) {
-        _value = setQ3(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setQ4(
-        final long partialValue
-    ) {
-        _value = setQ4(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS1(
-        final long partialValue
-    ) {
-        _value = setS1(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS2(
-        final long partialValue
-    ) {
-        _value = setS2(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS3(
-        final long partialValue
-    ) {
-        _value = setS3(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS4(
-        final long partialValue
-    ) {
-        _value = setS4(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS5(
-        final long partialValue
-    ) {
-        _value = setS5(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setS6(
-        final long partialValue
-    ) {
-        _value = setS6(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setT1(
-        final long partialValue
-    ) {
-        _value = setT1(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setT2(
-        final long partialValue
-    ) {
-        _value = setT2(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
-     */
-    public void setT3(
-        final long partialValue
-    ) {
-        _value = setT3(_value, partialValue);
-    }
-
-    /**
-     * Partial-word setter
-     * <p>
-     * @param partialValue
+     * @param partialValue value to be stored
      * @param index 0==TW1, 11=TW12, etc
      */
     public void setTwelfth(
@@ -646,58 +294,32 @@ public class Word36 {
         _value = setTwelfth(_value, partialValue, index);
     }
 
-    /**
-     * Setter
-     * <p>
-     * @param value
-     */
-    public void setW(
-        final long value
-    ) {
-        _value = value & MASK;
-    }
+    public void setW(long value) { _value = value & MASK; }
 
 
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
 
     /**
      * Determines if the value of this object is negative (sign bit is set)
-     * <p>
-     * @return
      */
-    public boolean isNegative(
-    ) {
-        return OnesComplement.isNegative36(_value);
-    }
+    public boolean isNegative() { return OnesComplement.isNegative36(_value); }
 
     /**
      * Determines if the value of this object is positive (sign bit is clear)
-     * <p>
-     * @return
      */
-    public boolean isPositive(
-    ) {
-        return OnesComplement.isPositive36(_value);
-    }
+    public boolean isPositive() { return OnesComplement.isPositive36(_value); }
 
     /**
      * Determines if the value of this object is zero (positive or negative)
-     * <p>
-     * @return
      */
-    public boolean isZero(
-    ) {
-        return OnesComplement.isZero36(_value);
-    }
+    public boolean isZero() { return OnesComplement.isZero36(_value); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     /**
      * Adds a 36-bit values to our own value, and produces that result along with carry and overflow flags
-     * <p>
      * @param addend 36-bit ones-complement addend
-     * <p>
      * @return carry/overflow flags object
      */
     public Flags add(
@@ -782,10 +404,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getH1(
         final long value
@@ -795,10 +415,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getH2(
         final long value
@@ -808,10 +426,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getQ1(
         final long value
@@ -821,10 +437,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getQ2(
         final long value
@@ -834,10 +448,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getQ3(
         final long value
@@ -847,10 +459,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getQ4(
         final long value
@@ -860,10 +470,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS1(
         final long value
@@ -873,10 +481,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS2(
         final long value
@@ -886,10 +492,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS3(
         final long value
@@ -899,10 +503,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS4(
         final long value
@@ -912,10 +514,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS5(
         final long value
@@ -925,10 +525,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getS6(
         final long value
@@ -938,10 +536,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getT1(
         final long value
@@ -951,10 +547,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getT2(
         final long value
@@ -964,10 +558,8 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getT3(
         final long value
@@ -977,11 +569,9 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-unextended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
      * @param twelfthIndex indicates which twelfth to get (0 through 11, 0 containing the most-significat / negative bit)
-     * <p>
-     * @return
+     * @return result
      */
     public static long getTwelfth(
         final long value,
@@ -998,81 +588,71 @@ public class Word36 {
 
     /**
      * Extracts a partial word (sign-extended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getXH1(
         final long value
     ) {
         long result = getH1(value);
         if ((result & 0400000) != 0)
-            result |= 0777777_000000l;
+            result |= 0777777_000000L;
         return result;
     }
 
     /**
      * Extracts a partial word (sign-extended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getXH2(
         final long value
     ) {
         long result = getH2(value);
         if ((result & 0400000) != 0)
-            result |= 0777777_000000l;
+            result |= 0777777_000000L;
         return result;
     }
 
     /**
      * Extracts a partial word (sign-extended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getXT1(
         final long value
     ) {
         long result = getT1(value);
         if ((result & 04000) != 0)
-            result |= 07777_7777_0000l;
+            result |= 07777_7777_0000L;
         return result;
     }
 
     /**
      * Extracts a partial word (sign-extended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getXT2(
         final long value
     ) {
         long result = getT2(value);
         if ((result & 04000) != 0)
-            result |= 07777_7777_0000l;
+            result |= 07777_7777_0000L;
         return result;
     }
 
     /**
      * Extracts a partial word (sign-extended) from the given parameter
-     * <p>
      * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * <p>
-     * @return
+     * @return result
      */
     public static long getXT3(
         final long value
     ) {
         long result = getT3(value);
         if ((result & 04000) != 0)
-            result |= 07777_7777_0000l;
+            result |= 07777_7777_0000L;
         return result;
     }
 
@@ -1081,237 +661,205 @@ public class Word36 {
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setH1(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777777l) | ((partialValue & 0_777777l) << 18);
+        return (existingValue & 0_777777L) | ((partialValue & 0_777777L) << 18);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setH2(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777777_000000l) | (partialValue & 0_777777l);
+        return (existingValue & 0_777777_000000L) | (partialValue & 0_777777L);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setQ1(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_000_777_777_777l) | ((partialValue & 0_777l) << 27);
+        return (existingValue & 0_000_777_777_777L) | ((partialValue & 0_777L) << 27);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setQ2(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777_000_777_777l) | ((partialValue & 0_777l) << 18);
+        return (existingValue & 0_777_000_777_777L) | ((partialValue & 0_777L) << 18);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setQ3(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777_777_000_777l) | ((partialValue & 0_777l) << 9);
+        return (existingValue & 0_777_777_000_777L) | ((partialValue & 0_777L) << 9);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setQ4(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777_777_777_000l) | (partialValue & 0_777l);
+        return (existingValue & 0_777_777_777_000L) | (partialValue & 0_777L);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS1(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_007777_777777l) | ((partialValue & 0_77l) << 30);
+        return (existingValue & 0_007777_777777L) | ((partialValue & 0_77L) << 30);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS2(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_770077_777777l) | ((partialValue & 0_77l) << 24);
+        return (existingValue & 0_770077_777777L) | ((partialValue & 0_77L) << 24);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS3(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777700_777777l) | ((partialValue & 0_77l) << 18);
+        return (existingValue & 0_777700_777777L) | ((partialValue & 0_77L) << 18);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS4(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777777_007777l) | ((partialValue & 0_77l) << 12);
+        return (existingValue & 0_777777_007777L) | ((partialValue & 0_77L) << 12);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS5(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777777_770077l) | ((partialValue & 0_77l) << 6);
+        return (existingValue & 0_777777_770077L) | ((partialValue & 0_77L) << 6);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setS6(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_777777_777700l) | (partialValue & 0_77l);
+        return (existingValue & 0_777777_777700L) | (partialValue & 0_77L);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setT1(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_0000_7777_7777l) | ((partialValue & 0_7777l) << 24);
+        return (existingValue & 0_0000_7777_7777L) | ((partialValue & 0_7777L) << 24);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setT2(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_7777_0000_7777l) | ((partialValue & 0_7777l) << 12);
+        return (existingValue & 0_7777_0000_7777L) | ((partialValue & 0_7777L) << 12);
     }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
-     * <p>
      * @return resulting value
      */
     public static long setT3(
         final long existingValue,
         final long partialValue
     ) {
-        return (existingValue & 0_7777_7777_0000l) | (partialValue & 0_7777l);
+        return (existingValue & 0_7777_7777_0000L) | (partialValue & 0_7777L);
     }
 
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
-     * <p>
      * @param existingValue target of the injection
      * @param partialValue the value to be replaced into a p ortion of the existing value
      * @param twelfthIndex indicates which twelfth (0 = left-most, 11 = right-most) is to be affected
-     * <p>
      * @return resulting value
      */
     public static long setTwelfth(
@@ -1324,7 +872,7 @@ public class Word36 {
         }
 
         int shift = (11 - (twelfthIndex % 12)) * 3;
-        long maskOut = ~(07l << shift);
+        long maskOut = ~(07L << shift);
         long result = (existingValue & maskOut) | ((partialValue & 07) << shift);
         return (existingValue & maskOut) | ((partialValue & 07) << shift);
     }
@@ -1334,10 +882,8 @@ public class Word36 {
 
     /**
      * Bit getter
-     * <p>
      * @param value the value to be interrogated
      * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
-     * <p>
      * @return true if the bit is set, false if clear
      */
     public static boolean getBit(
@@ -1348,17 +894,15 @@ public class Word36 {
             throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
         }
 
-        long mask = 01_000000_000000l >> bit;
+        long mask = 01_000000_000000L >> bit;
         return (value & mask) > 0;
     }
 
     /**
      * Bit setter
-     * <p>
      * @param value the value to be modified
      * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
      * @param flag true to set the bit, false to clear it
-     * <p>
      * @return the modified value
      */
     public static long setBit(
@@ -1370,8 +914,8 @@ public class Word36 {
             throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
         }
 
-        long mask = 01_000000_000000l >> bit;
-        long notMask = ~mask & 0_777777_777777l;
+        long mask = 01_000000_000000L >> bit;
+        long notMask = ~mask & 0_777777_777777L;
         long result = value & notMask;
         if (flag) {
             result |= mask;
@@ -1385,10 +929,8 @@ public class Word36 {
     /**
      * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
      * Actual implementation may not involve iterative shifting.
-     * <p>
      * @param value value to be shifted
      * @param count number of bits to be shifted
-     * <p>
      * @return resulting value
      */
     public static long leftShiftCircular(
@@ -1402,10 +944,8 @@ public class Word36 {
 
     /**
      * Shifts the given 36-bit value left by a number of bits
-     * <p>
      * @param value value to be shifted
      * @param count number of bits to be shifted
-     * <p>
      * @return resulting value
      */
     public static long leftShiftLogical(
@@ -1417,10 +957,8 @@ public class Word36 {
 
     /**
      * Logical AND operation (in this context, logical means bitwise)
-     * <p>
      * @param operand1 left hand operand
      * @param operand2 right hand operand
-     * <p>
      * @return bitwise AND of the two operands
      */
     public static long logicalAnd(
@@ -1432,9 +970,7 @@ public class Word36 {
 
     /**
      * Logical NOT operation (in this context, logical means bitwise)
-     * <p>
      * @param operand value to be affected
-     * <p>
      * @return bitwise NOT of the given value
      */
     public static long logicalNot(
@@ -1445,10 +981,8 @@ public class Word36 {
 
     /**
      * Logical OR operation (in this context, logical means bitwise)
-     * <p>
      * @param operand1 left hand operand
      * @param operand2 right hand operand
-     * <p>
      * @return bitwise OR of the two operands
      */
     public static long logicalOr(
@@ -1460,10 +994,8 @@ public class Word36 {
 
     /**
      * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
-     * <p>
      * @param value 36-bit value to be shifted
      * @param count number of bits to be shifted
-     * <p>
      * @return resulting value
      */
     public static long rightShiftAlgebraic(
@@ -1484,10 +1016,8 @@ public class Word36 {
     /**
      * Shifts the given 36-bit value right, with bit[36] rotating to bit[1] at each iteration.
      * Actual implementation may not involve iterative shifting.
-     * <p>
      * @param value value to be shifted
      * @param count number of bits to be shifted
-     * <p>
      * @return resulting value
      */
     public static long rightShiftCircular(
@@ -1502,10 +1032,8 @@ public class Word36 {
 
     /**
      * Shifts the given 36-bit value right by a number of bits
-     * <p>
      * @param value value to be shifted
      * @param count number of bits to be shifted
-     * <p>
      * @return resulting value
      */
     public static long rightShiftLogical(
@@ -1520,10 +1048,6 @@ public class Word36 {
 
     /**
      * Presuming the given value is a signed 12-bit value, we turn it into a 36-bit signed value
-     * <p>
-     * @param value
-     * <p>
-     * @return
      */
     public static long getSignExtended12(
         final long value
@@ -1531,16 +1055,12 @@ public class Word36 {
         if ((value & 04000) == 0) {
             return value;
         } else {
-            return value | 0_777777_770000l;
+            return value | 0_777777_770000L;
         }
     }
 
     /**
      * Presuming the given value is a signed 18-bit value, we turn it into a 36-bit signed value
-     * <p>
-     * @param value
-     * <p>
-     * @return
      */
     public static long getSignExtended18(
         final long value
@@ -1548,24 +1068,20 @@ public class Word36 {
         if ((value & 0_400000) == 0) {
             return value;
         } else {
-            return value | 0_777777_000000l;
+            return value | 0_777777_000000L;
         }
     }
 
     /**
      * Presuming the given value is a signed 24-bit value, we turn it into a 36-bit signed value
-     * <p>
-     * @param value
-     * <p>
-     * @return
      */
     public static long getSignExtended24(
         final long value
     ) {
-        if ((value & 0_000040_000000) == 0) {
+        if ((value & 0_000040_000000L) == 0) {
             return value;
         } else {
-            return value | 0_777700_000000l;
+            return value | 0_777700_000000L;
         }
     }
 
@@ -1575,11 +1091,8 @@ public class Word36 {
     /**
      * Given an integer which represents an ASCII character, we return the corresponding char if it is displayable,
      * or else the alternate character.
-     * <p>
      * @param value value to be converted
      * @param alternate character to be returned if the value presentes an undisplayable character
-     * <p>
-     * @return
      */
     private static char getASCIIForDisplay(
         final int value,
@@ -1594,9 +1107,7 @@ public class Word36 {
 
     /**
      * Interprets the given 36-bit value as a sequence of 4 ASCII characters, and produces those characters as a result
-     * <p>
      * @param value 36-bit value
-     * <p>
      * @return displayable result
      */
     public static String toASCII(
@@ -1614,9 +1125,7 @@ public class Word36 {
 
     /**
      * Interprets the given 36-bit value as a sequence of 6 Fieldata characters, and produces those characters as a result
-     * <p>
      * @param value 36-bit value
-     * <p>
      * @return displayable result
      */
     public static String toFieldata(
@@ -1636,9 +1145,7 @@ public class Word36 {
 
     /**
      * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
-     * <p>
      * @param value 36-bit value
-     * <p>
      * @return displayable result
      */
     public static String toOctal(

@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
  * Designed for connected devices which do IO on long integers, of which the lower 36 bits are significant.
  */
 @SuppressWarnings("Duplicates")
-public abstract class ByteChannelModule extends ChannelModule {
+public class ByteChannelModule extends ChannelModule {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes

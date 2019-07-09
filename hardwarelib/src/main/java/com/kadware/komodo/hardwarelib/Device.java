@@ -33,7 +33,7 @@ public abstract class Device extends Node {
     private static final Logger LOGGER = LogManager.getLogger(Device.class);
 
     final DeviceModel _deviceModel;
-    private final DeviceType _deviceType;
+    final DeviceType _deviceType;
 
     /**
      * Indicates the device can do reads and writes.
