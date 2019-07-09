@@ -16,7 +16,7 @@ public class Test_Processor {
 
         public TestProcessor(
             final String name,
-            final short upi
+            final int upi
         ) {
             super(ProcessorType.InstructionProcessor, name, upi);
         }
@@ -32,8 +32,9 @@ public class Test_Processor {
         public void initialize(){}
 
         @Override
-        public void signal(
-            final Node source
+        public void upiHandleInterrupt(
+            final Processor source,
+            final boolean broadcast
         ){
         }
 
@@ -44,9 +45,9 @@ public class Test_Processor {
     @Test
     public void create(
     ) {
-        TestProcessor p = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
-        assertEquals(Node.Category.Processor, p.getCategory());
-        assertEquals("IP0", p.getName());
-        assertEquals(Processor.ProcessorType.InstructionProcessor, p.getProcessorType());
+        TestProcessor p = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
+        assertEquals(NodeCategory.Processor, p._category);
+        assertEquals("IP0", p._name);
+        assertEquals(ProcessorType.InstructionProcessor, p._processorType);
     }
 }

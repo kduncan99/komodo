@@ -46,8 +46,8 @@ public class Test_StackInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -84,8 +84,8 @@ public class Test_StackInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -120,8 +120,8 @@ public class Test_StackInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -158,8 +158,8 @@ public class Test_StackInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -194,8 +194,8 @@ public class Test_StackInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -230,8 +230,8 @@ public class Test_StackInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
@@ -267,8 +267,8 @@ public class Test_StackInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(01013, processors._instructionProcessor.getLatestStopDetail());
         assertEquals(01, processors._instructionProcessor.getLastInterrupt().getShortStatusField());

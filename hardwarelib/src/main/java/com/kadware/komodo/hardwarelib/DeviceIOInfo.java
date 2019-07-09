@@ -80,8 +80,8 @@ public class DeviceIOInfo {
         private ChannelModule _source = null;
         private IOFunction _ioFunction = null;
 
-        private NonTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
-        private NonTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
+        NonTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
+        NonTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
 
         public DeviceIOInfo build() {
             if (_source == null) {
@@ -102,11 +102,11 @@ public class DeviceIOInfo {
         Integer _transferCount = null;
         BlockId _blockId = null;
 
-        private ByteTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
-        private ByteTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
-        private ByteTransferBuilder setBuffer(byte[] value) { _buffer = value; return this; }
-        private ByteTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
-        private ByteTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
+        ByteTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
+        ByteTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
+        ByteTransferBuilder setBuffer(byte[] value) { _buffer = value; return this; }
+        ByteTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
+        ByteTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
 
         public DeviceIOInfo build() {
             if (_source == null) {
@@ -131,11 +131,11 @@ public class DeviceIOInfo {
         Integer _transferCount = null;
         BlockId _blockId = null;
 
-        private WordTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
-        private WordTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
-        private WordTransferBuilder setBuffer(ArraySlice value) { _buffer = value; return this; }
-        private WordTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
-        private WordTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
+        WordTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
+        WordTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
+        WordTransferBuilder setBuffer(ArraySlice value) { _buffer = value; return this; }
+        WordTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
+        WordTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
 
         public DeviceIOInfo build() {
             if (_source == null) {

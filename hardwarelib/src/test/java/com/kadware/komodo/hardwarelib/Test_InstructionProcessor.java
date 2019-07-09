@@ -15,7 +15,7 @@ public class Test_InstructionProcessor {
     @Test
     public void canConnect(
     ) {
-        InstructionProcessor ip = new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InstructionProcessor ip = new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
         assertFalse(ip.canConnect(ip));
     }
 }

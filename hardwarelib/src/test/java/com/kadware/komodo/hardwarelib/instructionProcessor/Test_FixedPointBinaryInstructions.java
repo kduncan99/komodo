@@ -46,8 +46,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -81,8 +81,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -117,8 +117,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -153,8 +153,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -189,8 +189,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -225,8 +225,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -261,8 +261,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -293,8 +293,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -326,8 +326,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -359,8 +359,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -391,8 +391,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -427,8 +427,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setOperationTrapEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01022, processors._instructionProcessor.getLatestStopDetail());
@@ -458,8 +458,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -494,8 +494,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -531,8 +531,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -568,8 +568,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -607,8 +607,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -643,8 +643,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
@@ -679,8 +679,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -717,8 +717,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
@@ -752,8 +752,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -787,8 +787,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
@@ -823,8 +823,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -859,8 +859,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
@@ -895,8 +895,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -933,8 +933,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
@@ -970,8 +970,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(0L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
@@ -1007,8 +1007,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
     }
@@ -1042,8 +1042,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1082,8 +1082,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1122,8 +1122,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1159,8 +1159,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1193,8 +1193,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01022, processors._instructionProcessor.getLatestStopDetail());
@@ -1231,8 +1231,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1269,8 +1269,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1311,8 +1311,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1347,8 +1347,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1390,8 +1390,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1432,8 +1432,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1482,8 +1482,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1531,8 +1531,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1580,8 +1580,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1629,8 +1629,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setDivideCheck(false);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());

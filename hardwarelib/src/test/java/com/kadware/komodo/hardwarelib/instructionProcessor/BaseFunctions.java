@@ -669,7 +669,7 @@ class BaseFunctions {
                 RegionTracker.SubRegion subRegion =
                     msp._regions.assign(bdtBank._content.getSize(),
                                         new MSPRegionAttributes(attrString, 0, level));
-                AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
+                AbsoluteAddress absAddr = new AbsoluteAddress(msp._upiIndex, 0, (int) subRegion._position);
 
                 BaseRegister bReg =
                     new BaseRegister(absAddr,
@@ -694,7 +694,7 @@ class BaseFunctions {
                 msp._regions.assign(stackSize,
                                     new MSPRegionAttributes("ICS", 0, 0));
             BaseRegister bReg =
-                new BaseRegister(new AbsoluteAddress(msp.getUPI(), 0, (int) stackSubRegion._position),
+                new BaseRegister(new AbsoluteAddress(msp._upiIndex, 0, (int) stackSubRegion._position),
                                  false,
                                  0,
                                  stackSize - 1,
@@ -760,7 +760,7 @@ class BaseFunctions {
             RegionTracker.SubRegion subRegion =
                 msp._regions.assign(bank._content.getSize(),
                                     new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
-            AbsoluteAddress absAddr = new AbsoluteAddress(msp.getUPI(), 0, (int) subRegion._position);
+            AbsoluteAddress absAddr = new AbsoluteAddress(msp._upiIndex, 0, (int) subRegion._position);
             msp.getStorage(0).load(bank._content, absAddr._offset);
 
             //  Create a bank descriptor for it in the appropriate bdt
@@ -864,7 +864,8 @@ class BaseFunctions {
     ) throws MachineInterrupt,
              NodeNameConflictException,
              UPIConflictException {
-        InstrumentedInstructionProcessor ip = new InstrumentedInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI);
+        InstrumentedInstructionProcessor ip = new InstrumentedInstructionProcessor("IP0",
+                                                                                   InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
         InventoryManager.getInstance().addInstructionProcessor(ip);
         InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
         InventoryManager.getInstance().addMainStorageProcessor(msp);
@@ -1050,9 +1051,9 @@ class BaseFunctions {
         final InstructionProcessor ip
     ) {
         ip.start();
-        while (ip.getRunningFlag()) {
+        while (!ip.isStopped()) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(10);
             } catch (InterruptedException ex) {
                 //  do nothing
             }

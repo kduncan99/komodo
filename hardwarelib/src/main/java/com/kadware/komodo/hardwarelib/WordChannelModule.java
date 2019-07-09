@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import java.io.BufferedWriter;
 import java.util.Iterator;
 import org.apache.logging.log4j.LogManager;
@@ -22,12 +23,18 @@ public abstract class WordChannelModule extends ChannelModule {
 
     protected class WordTracker extends Tracker {
 
+        private ArraySlice _workingBuffer = null;
+
         WordTracker(
             final Processor source,
             final InputOutputProcessor ioProcessor,
             final ChannelProgram channelProgram
         ) {
             super(source, ioProcessor, channelProgram);
+            int bufferSize = channelProgram.getCumulativeTransferWords();
+            if (bufferSize > 0) {
+                _workingBuffer = new ArraySlice(new long[bufferSize]);
+            }
         }
     }
 
@@ -77,17 +84,6 @@ public abstract class WordChannelModule extends ChannelModule {
     }
 
     /**
-     * For debugging purposes
-     */
-    @Override
-    public void dump(
-        final BufferedWriter writer
-    ) {
-        super.dump(writer);
-        //TODO anything else here?
-    }
-
-    /**
      * Worker interface implementation
      * @return our node name
      */
@@ -118,16 +114,22 @@ public abstract class WordChannelModule extends ChannelModule {
                         iter.remove();
                         sleepFlag = false;
                     } else {
-                        //TODO
+                        //  tracker is started and not completed.  Is the device IO complete?
+                        if (tracker._ioInfo._status != DeviceStatus.InProgress) {
+                            //TODO
+                            sleepFlag = false;
+                        }
                     }
                 }
             }
 
             if (sleepFlag) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    LOGGER.catching(ex);
+                synchronized (_workerThread) {
+                    try {
+                        _workerThread.wait(100);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
+                    }
                 }
             }
         }
@@ -141,7 +143,24 @@ public abstract class WordChannelModule extends ChannelModule {
     private void startIO(
         final WordTracker tracker
     ) {
-        //TODO
+        ChannelProgram cp = tracker._channelProgram;
+        if (tracker._workingBuffer == null) {
+            //  no transfer IO - if any ACWs exist, they are ignored
+            tracker._ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(this)
+                                                                   .setIOFunction(cp.getFunction())
+                                                                   .build();
+            Device device = (Device) _descendants.get(cp.getDeviceAddress());
+            device.ioStart(tracker._ioInfo);
+        } else {
+//            long blockId = cp.getBlockAddress() == null ? 0 : cp.getBlockAddress().getValue();
+//            tracker._ioInfo = new DeviceIOInfo.WordTransferBuilder().setSource(this)
+//                                                                    .setIOFunction(cp.getFunction())
+//                                                                    .setTransferCount(cp.getWordsRequested())
+//                                                                    .setBuffer()
+//                                                                    .setBlockId(blockId)
+//                                                                    .build();
+        }
+
         tracker._started = true;
     }
 }

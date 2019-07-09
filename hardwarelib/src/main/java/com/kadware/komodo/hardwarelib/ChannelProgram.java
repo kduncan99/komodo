@@ -20,7 +20,7 @@ import com.kadware.komodo.baselib.Word36;
  *      +----------+----------+----------+----------+----------+----------+
  * +02: | CHAN_STS | DEV_STS  |RES_BYTES |           RES_WORDS            |
  *      +----------+----------+----------+----------+----------+----------+
- * +03: |        WORDS_REQUESTED         |       WORDS_TRANSFERRED        |
+ * +03: |                                |       WORDS_TRANSFERRED        |
  *      +----------+----------+----------+----------+----------+----------+
  * +04: |                {n} 3-word Access Control Words                  |
  *      |                           (see +0 S6)                           |
@@ -39,9 +39,6 @@ import com.kadware.komodo.baselib.Word36;
  *      RES_BYTES:              Number of bytes not written to or read from the target to
  *                                  represent a full word
  *      RES_WORD:               Difference between IO size indicated and words actually transferred
- *      WORDS_REQUESTED:        Number of words the caller wished to read/write
- *                                  This should correspond to the sum of all the buffer sizes representd
- *                                  in the ACW list
  *      WORDS_TRANSFERRED:      Number of complete or partial words actually transferred
  *
  * ACW format: see AccessControlWord object
@@ -63,7 +60,6 @@ public class ChannelProgram extends ArraySlice {
     public IOFunction getFunction() { return IOFunction.getValue((int) Word36.getS4(get(0))); }
     public int getAccessControlWordCount() { return (int) Word36.getS6(get(0)); }
     public BlockId getBlockAddress() { return new BlockId(get(1)); }
-    public int getWordsRequested() { return (int) Word36.getH1(get(3)); }
 
     public AccessControlWord getAccessControlWord(
         final int index
@@ -76,4 +72,13 @@ public class ChannelProgram extends ArraySlice {
     public void setResidueBytes(int value) { Word36.setS3(get(2), value); }
     public void setResidueWords(int value) { Word36.setH2(get(2), value); }
     public void setWordsTransferred(int value) { Word36.setH2(get(3), value); }
+
+    public int getCumulativeTransferWords() {
+        int result = 0;
+        for (int acwx = 0; acwx < getAccessControlWordCount(); ++acwx) {
+            result += getAccessControlWord(acwx).getBufferSize();
+        }
+
+        return result;
+    }
 }

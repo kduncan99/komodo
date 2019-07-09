@@ -15,7 +15,7 @@ public class InstrumentedInstructionProcessor extends InstructionProcessor {
 
     public InstrumentedInstructionProcessor(
         final String name,
-        final short upi
+        final int upi
     ) {
         super(name, upi);
     }

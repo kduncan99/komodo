@@ -21,6 +21,7 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib
+Redo all the node tests, many of which are commented out
 Our dayclock architecture may not be quite right.  Do we need Dayclock to issue interrupts?  How would that work?
   I mean, we need all the IPs to be interrupted with some periodicity... but... the dayclock is monolithic.
   So, what this means is that all the dayclock stuff, including the comparator, is stand-alone, and issues a UPI

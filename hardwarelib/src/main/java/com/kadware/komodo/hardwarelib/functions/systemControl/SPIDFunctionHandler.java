@@ -35,7 +35,7 @@ public class SPIDFunctionHandler extends InstructionHandler {
         //      MSBit is 1
         //      T1/T2 contains feature bits (which we don't do)
         //      T3 contains UPI number (but only for pp < 2)
-        operands[0] = (1l << 35) | ((procPriv < 2) ? ip.getUPI() : 0l);
+        operands[0] = (1l << 35) | ((procPriv < 2) ? ip._upiIndex : 0l);
 
         //  Operand 1:
         //      MSBit is 0

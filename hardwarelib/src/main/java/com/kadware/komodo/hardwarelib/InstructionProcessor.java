@@ -914,9 +914,12 @@ public class InstructionProcessor extends Processor implements Worker {
         while (!_workerTerminate) {
             // If the virtual processor is not running, then the thread does nothing other than sleep slowly.
             if (_cleared || _stopped) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
+                synchronized (_workerThread) {
+                    try {
+                        _workerThread.wait(100);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
+                    }
                 }
             } else {
                 //  Deal with pending interrupts, or conditions which will create a new pending interrupt.
@@ -978,9 +981,12 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 if (!somethingDone) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
+                    synchronized (_workerThread) {
+                        try {
+                            _workerThread.wait(100);
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
                     }
                 }
             }
@@ -1909,9 +1915,12 @@ public class InstructionProcessor extends Processor implements Worker {
         if (!_stopped) {
             stop(StopReason.Cleared, 0);
             while (!_stopped) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
+                synchronized (_workerThread) {
+                    try {
+                        _workerThread.wait(100);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
+                    }
                 }
             }
         }

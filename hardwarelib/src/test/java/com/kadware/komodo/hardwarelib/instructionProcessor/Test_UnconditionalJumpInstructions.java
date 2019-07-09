@@ -45,8 +45,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
@@ -161,8 +161,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -201,8 +201,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -239,8 +239,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -283,8 +283,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -321,8 +321,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
@@ -358,8 +358,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
@@ -395,8 +395,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -430,8 +430,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
@@ -462,8 +462,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, processors._instructionProcessor.getLatestStopReason());
         assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
@@ -495,8 +495,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, processors._instructionProcessor.getLatestStopReason());
         assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
@@ -522,8 +522,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -554,8 +554,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -591,8 +591,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -626,8 +626,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -663,8 +663,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -693,8 +693,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
@@ -724,8 +724,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
@@ -754,8 +754,8 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());

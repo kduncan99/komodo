@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.Worker;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +36,7 @@ public abstract class ChannelModule extends Node implements Worker {
         public final Processor _source;
         public final InputOutputProcessor _ioProcessor;
         public final ChannelProgram _channelProgram;
+        public DeviceIOInfo _ioInfo = null;
         public boolean _started = false;
         public boolean _completed = false;
 
@@ -47,6 +49,22 @@ public abstract class ChannelModule extends Node implements Worker {
             _ioProcessor = ioProcessor;
             _channelProgram = channelProgram;
         }
+
+        public void dump(
+            final BufferedWriter writer
+        ) {
+            try {
+                writer.write(String.format("    Src:%s IOP:%s Started:%s Completed:%s Dev:%d Func:%s\n",
+                                           _source._name,
+                                           _ioProcessor._name,
+                                           String.valueOf(_started),
+                                           String.valueOf(_completed),
+                                           _channelProgram.getDeviceAddress(),
+                                           _channelProgram.getFunction().toString()));
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+            }
+        }
     }
 
 
@@ -57,12 +75,6 @@ public abstract class ChannelModule extends Node implements Worker {
     private static final Logger LOGGER = LogManager.getLogger(ChannelModule.class);
 
     public final ChannelModuleType _channelModuleType;
-
-    /**
-     * From Configurator, via DeviceManager (at startup)
-     */
-    //TODO the heck is this for?
-    protected boolean _skipDataFlag;
 
     /**
      * Thread for the active (or now-terminated) worker for this object
@@ -147,8 +159,15 @@ public abstract class ChannelModule extends Node implements Worker {
     public void dump(
         final BufferedWriter writer
     ) {
-        super.dump(writer);
-        //TODO anything else here?
+        try {
+            super.dump(writer);
+            writer.write("  Trackers:\n");
+            for (Tracker tracker : _trackers) {
+                tracker.dump(writer);
+            }
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+        }
     }
 
     /**

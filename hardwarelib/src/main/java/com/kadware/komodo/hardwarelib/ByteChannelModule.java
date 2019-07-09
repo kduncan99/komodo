@@ -77,17 +77,6 @@ public abstract class ByteChannelModule extends ChannelModule {
     }
 
     /**
-     * For debugging purposes
-     */
-    @Override
-    public void dump(
-        final BufferedWriter writer
-    ) {
-        super.dump(writer);
-        //TODO anything else here?
-    }
-
-    /**
      * Worker interface implementation
      * @return our node name
      */
@@ -141,7 +130,24 @@ public abstract class ByteChannelModule extends ChannelModule {
     private void startIO(
         final ByteTracker tracker
     ) {
-        //TODO
+        ChannelProgram cp = tracker._channelProgram;
+//        if (cp.getWordsRequested() == 0) {
+//            //  no transfer IO - if any ACWs exist, they are ignored
+//            tracker._ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(this)
+//                                                                   .setIOFunction(cp.getFunction())
+//                                                                   .build();
+//            Device device = (Device) _descendants.get(cp.getDeviceAddress());
+//            device.ioStart(tracker._ioInfo);
+//        } else {
+//            long blockId = cp.getBlockAddress() == null ? 0 : cp.getBlockAddress().getValue();
+//            tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
+//                                                                    .setIOFunction(cp.getFunction())
+//                                                                    .setTransferCount(cp.getWordsRequested())
+//                                                                    .setBuffer()
+//                                                                    .setBlockId(blockId)
+//                                                                    .build();
+//        }
+
         tracker._started = true;
     }
 }

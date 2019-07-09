@@ -82,8 +82,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -120,8 +120,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
@@ -158,8 +158,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
@@ -196,8 +196,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(2);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -239,8 +239,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -288,8 +288,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -328,8 +328,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -360,8 +360,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -398,8 +398,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -441,8 +441,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -494,8 +494,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -560,8 +560,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -610,8 +610,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -649,8 +649,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -699,8 +699,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.setBaseRegister(20, br13);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -747,8 +747,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.setBaseRegister(20, br2);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -794,8 +794,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.setBaseRegister(20, br13);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -842,8 +842,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.setBaseRegister(20, br2);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -875,8 +875,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -911,8 +911,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -944,8 +944,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(3);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -981,8 +981,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1023,8 +1023,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1066,8 +1066,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1115,8 +1115,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1162,8 +1162,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1197,8 +1197,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -1229,8 +1229,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -1260,8 +1260,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -1292,8 +1292,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
@@ -1323,8 +1323,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1359,8 +1359,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1394,8 +1394,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1430,8 +1430,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1483,8 +1483,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1549,8 +1549,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -1599,8 +1599,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1638,8 +1638,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1673,8 +1673,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1709,8 +1709,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1760,7 +1760,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         //  set up some fake banks - 30 and 31 are void banks
         for (int bx = 24; bx < 30; ++bx) {
-            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
                                                false,
                                                bx * 512,
                                                bx * 512 + 511,
@@ -1804,8 +1804,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
     }
 
     @Test
@@ -1849,7 +1849,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         //  set up some fake banks - 30 and 31 are void banks
         for (int bx = 24; bx < 30; ++bx) {
-            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
                                                false,
                                                bx * 512,
                                                bx * 512 + 511,
@@ -1892,8 +1892,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
     }
 
     @Test
@@ -1921,8 +1921,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1958,8 +1958,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -1995,8 +1995,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2031,8 +2031,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -2068,8 +2068,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2120,7 +2120,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - leave 12 and 13 alone
         for (int bx = 0; bx < 16; ++bx) {
             if ((bx < 12) || (bx > 13)) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
                                                    false,
                                                    bx * 512,
                                                    bx * 512 + 511,
@@ -2153,8 +2153,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
     }
 
     @Test
@@ -2199,7 +2199,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - leave 0 through 2 alone
         for (int bx = 0; bx < 16; ++bx) {
             if (bx > 2) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor.getUPI(), 0, bx * 1024),
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
                                                    false,
                                                    bx * 512,
                                                    bx * 512 + 511,
@@ -2232,8 +2232,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
         }
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
     }
 
     @Test
@@ -2261,8 +2261,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -2296,8 +2296,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
@@ -2347,8 +2347,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2393,8 +2393,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         startAndWait(processors._instructionProcessor);
         showDebugInfo(processors);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2444,8 +2444,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         startAndWait(processors._instructionProcessor);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2577,8 +2577,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         startAndWait(processors._instructionProcessor);
         showDebugInfo(processors);//TODO
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -2729,8 +2729,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         startAndWait(processors._instructionProcessor);
         showDebugInfo(processors);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor.getUPI());
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor.getUPI());
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
