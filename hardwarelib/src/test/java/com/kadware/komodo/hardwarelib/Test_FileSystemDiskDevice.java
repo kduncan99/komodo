@@ -985,233 +985,233 @@ public class Test_FileSystemDiskDevice {
 //        d.unmount();
 //        deleteTestFile(fileName);
 //    }
-//
-//    @Test
-//    public void mount_successful(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertTrue(d.mount(fileName));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_successful_scratchPadWrongMinorVersion(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp._minorVersion = -1;
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertTrue(d.mount(fileName));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_failed_alreadyMounted(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        assertFalse(d.mount("BLAH.pack"));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_failed_noFile(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.mount("/blah/blah/blah/FOO.pack"));
-//    }
-//
-//    @Test
-//    public void mount_failed_noScratchPad(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        Files.deleteIfExists(FileSystems.getDefault().getPath(fileName));
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        file.close();
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.mount(fileName));
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_failed_incompleteScratchPad(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        Files.deleteIfExists(FileSystems.getDefault().getPath(fileName));
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = { 0, 0, 0, 0 };
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.mount(fileName));
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_failed_scratchPadWrongIdentifier(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp._identifier = "BadDog";
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.mount(fileName));
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void mount_failed_scratchPadWrongMajorVersion(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp._majorVersion = -1;
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.mount(fileName));
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void setReady_false_successful_alreadyFalse(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        FileSystemDiskDevice.createPack(fileName, new BlockSize(8192), new BlockCount(10000));
-//
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        assertTrue(d.setReady(false));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void setReady_false_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        FileSystemDiskDevice.createPack(fileName, new BlockSize(8192), new BlockCount(10000));
-//
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//        assertTrue(d.setReady(false));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void setReady_false_successful_noPack(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertTrue(d.setReady(false));
-//    }
-//
-//    @Test
-//    public void setReady_true_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        FileSystemDiskDevice.createPack(fileName,
-//                                        new BlockSize(8192),
-//                                        new BlockCount(10000));
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        d.mount(fileName);
-//        assertTrue(d.setReady(true));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void setReady_true_successful_alreadyTrue(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        FileSystemDiskDevice.createPack(fileName,
-//                                        new BlockSize(8192),
-//                                        new BlockCount(10000));
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        d.mount(fileName);
-//        d.setReady(true);
-//        assertTrue(d.setReady(true));
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void setReady_true_failed_noPack(
-//    ) {
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0", (short)0);
-//        assertFalse(d.setReady(true));
-//    }
-//
-//    //???? setWriteProtected
-//
-//    @Test
-//    public void unmount_successful(
-//    ) throws IOException {
-//        String fileName = getTestFileName();
-//        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-//        byte[] buffer = new byte[128];
-//        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
-//                                                             new BlockSize(8192),
-//                                                             new BlockCount(10000));
-//        sp.serialize(ByteBuffer.wrap(buffer));
-//        file.write(buffer);
-//        file.close();
-//
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        d.mount(fileName);
-//        assertTrue(d.unmount());
-//        deleteTestFile(fileName);
-//    }
-//
-//    @Test
-//    public void unmount_failed(
-//    ) {
-//        TestDevice d = new TestDevice("TEST", (short)0);
-//        assertFalse(d.unmount());
-//    }
+
+    @Test
+    public void mount_successful(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        assertTrue(d.mount(fileName));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_successful_scratchPadWrongMinorVersion(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp._minorVersion = -1;
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        assertTrue(d.mount(fileName));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_failed_alreadyMounted(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        assertFalse(d.mount("BLAH.pack"));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_failed_noFile(
+    ) {
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.mount("/blah/blah/blah/FOO.pack"));
+    }
+
+    @Test
+    public void mount_failed_noScratchPad(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        Files.deleteIfExists(FileSystems.getDefault().getPath(fileName));
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        file.close();
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.mount(fileName));
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_failed_incompleteScratchPad(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        Files.deleteIfExists(FileSystems.getDefault().getPath(fileName));
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = { 0, 0, 0, 0 };
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.mount(fileName));
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_failed_scratchPadWrongIdentifier(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp._identifier = "BadDog";
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.mount(fileName));
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void mount_failed_scratchPadWrongMajorVersion(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp._majorVersion = -1;
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.mount(fileName));
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void setReady_false_successful_alreadyFalse(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemDiskDevice.createPack(fileName, new BlockSize(8192), new BlockCount(10000));
+
+        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST");
+        d.mount(fileName);
+        assertTrue(d.setReady(false));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void setReady_false_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemDiskDevice.createPack(fileName, new BlockSize(8192), new BlockCount(10000));
+
+        FileSystemDiskDevice d = new FileSystemDiskDevice("TEST");
+        d.mount(fileName);
+        d.setReady(true);
+        assertTrue(d.setReady(false));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void setReady_false_successful_noPack(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertTrue(d.setReady(false));
+    }
+
+    @Test
+    public void setReady_true_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemDiskDevice.createPack(fileName,
+                                        new BlockSize(8192),
+                                        new BlockCount(10000));
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        d.mount(fileName);
+        assertTrue(d.setReady(true));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void setReady_true_successful_alreadyTrue(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemDiskDevice.createPack(fileName,
+                                        new BlockSize(8192),
+                                        new BlockCount(10000));
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        d.mount(fileName);
+        d.setReady(true);
+        assertTrue(d.setReady(true));
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void setReady_true_failed_noPack(
+    ) {
+        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        assertFalse(d.setReady(true));
+    }
+
+//  TODO setWriteProtected
+
+    @Test
+    public void unmount_successful(
+    ) throws IOException {
+        String fileName = getTestFileName();
+        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        byte[] buffer = new byte[128];
+        TestDevice.ScratchPad sp = new TestDevice.ScratchPad(new PrepFactor(1792),
+                                                             new BlockSize(8192),
+                                                             new BlockCount(10000));
+        sp.serialize(ByteBuffer.wrap(buffer));
+        file.write(buffer);
+        file.close();
+
+        TestDevice d = new TestDevice("TEST");
+        d.mount(fileName);
+        assertTrue(d.unmount());
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void unmount_failed(
+    ) {
+        TestDevice d = new TestDevice("TEST");
+        assertFalse(d.unmount());
+    }
 }
