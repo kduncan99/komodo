@@ -260,7 +260,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
 
         long reqByteCount = ioInfo._transferCount;
-        if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
+        if ((reqByteCount % _blockSize.getValue()) != 0) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
@@ -369,7 +369,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
 
         long reqByteCount = ioInfo._transferCount;
-        if ((reqByteCount == 0) || ((reqByteCount % _blockSize.getValue()) != 0)) {
+        if ((reqByteCount % _blockSize.getValue()) != 0) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
