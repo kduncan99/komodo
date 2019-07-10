@@ -10,6 +10,14 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.channels.CompletionHandler;
+import java.nio.file.OpenOption;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -43,9 +51,7 @@ import org.apache.logging.log4j.LogManager;
  * to the code here-in.
  */
 @SuppressWarnings("Duplicates")
-public class FileSystemDiskDevice extends DiskDevice {
-
-    //TODO This needs to use true async IO
+public class FileSystemDiskDevice extends DiskDevice implements CompletionHandler<Integer, DeviceIOInfo> {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -125,9 +131,12 @@ public class FileSystemDiskDevice extends DiskDevice {
 
 
     private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
-    private RandomAccessFile _file;
-    private String _packName;
+    private AsynchronousFileChannel _channel;
 
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Constructor
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Standard constructor
@@ -136,25 +145,32 @@ public class FileSystemDiskDevice extends DiskDevice {
         final String name
     ) {
         super(DeviceModel.FileSystemDisk, name);
-        _file = null;
-        _packName = null;
+        _channel = null;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  CompletionHandler implementation
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public void completed(Integer value, DeviceIOInfo attachment) {
+        attachment._status = DeviceStatus.Successful;
+        attachment._source.signal();
     }
 
     /**
-     * Retrieves the pack name of the currently mounted media
-     * @return pack name if mounted, else an empty string
+     * Async io failed
      */
-    String getPackName() { return _isMounted ? _packName : ""; }
-
-    /**
-     * Single method for converting a logical block ID to a physical byte offset.
-     * Caller must verify blockId is within the blockCount range.
-     */
-    protected long calculateByteOffset(
-        final BlockId blockId
-    ) {
-        return _blockSize == null ? 0 : (blockId.getValue() + 1) * _blockSize.getValue();
+    public void failed(Throwable t, DeviceIOInfo attachment) {
+        attachment._status = DeviceStatus.SystemException;
+        attachment._source.signal();
+        LOGGER.error(String.format("Device %s IO failed:%s", _name, t.getMessage()));
     }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Node, Device implementations
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Checks to see whether this node is a valid descendant of the candidate node
@@ -165,27 +181,6 @@ public class FileSystemDiskDevice extends DiskDevice {
     ) {
         //  We can connect only to Byte channel modules
         return candidateAncestor instanceof ByteChannelModule;
-    }
-
-    /**
-     * Nothing to clear
-     */
-    @Override
-    public void clear() {}
-
-    /**
-     * For debugging purposes
-     */
-    @Override
-    public void dump(
-        final BufferedWriter writer
-    ) {
-        super.dump(writer);
-        try {
-            writer.write(String.format("  Pack Name:       %s\n", getPackName()));
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-        }
     }
 
     /**
@@ -207,6 +202,31 @@ public class FileSystemDiskDevice extends DiskDevice {
     public void initialize() {}
 
     /**
+     * Overrides the call to set the ready flag, preventing setting true if we're not mounted.
+     */
+    @Override
+    public boolean setReady(
+        final boolean readyFlag
+    ) {
+        if (readyFlag && !_isMounted) {
+            return false;
+        }
+
+        return super.setReady(readyFlag);
+    }
+
+    /**
+     * Invoked just before tearing down the configuration.
+     */
+    @Override
+    public void terminate() {}
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  DiskDevice implementation
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
      * Produces a byte stream describing this disk device.
      * This is an immediate IO, no waiting.
      */
@@ -214,15 +234,12 @@ public class FileSystemDiskDevice extends DiskDevice {
     protected void ioGetInfo(
         final DeviceIOInfo ioInfo
     ) {
-        if (ioInfo._byteBuffer.length < 28 * 9 / 2) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
-        } else {
-            ArraySlice as = getInfo();
-            as.pack(ioInfo._byteBuffer);
-            ioInfo._status = DeviceStatus.Successful;
-            _unitAttentionFlag = false;
-        }
-
+        ArraySlice as = getInfo();
+        byte[] temp = new byte[128];
+        as.pack(temp);
+        ioInfo._byteBuffer = ByteBuffer.wrap(temp);
+        ioInfo._status = DeviceStatus.Successful;
+        _unitAttentionFlag = false;
         ioInfo._source.signal();
     }
 
@@ -253,12 +270,6 @@ public class FileSystemDiskDevice extends DiskDevice {
             return;
         }
 
-        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
-            ioInfo._source.signal();
-            return;
-        }
-
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount % _blockSize.getValue()) != 0) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
@@ -284,16 +295,8 @@ public class FileSystemDiskDevice extends DiskDevice {
         ioInfo._status = DeviceStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
 
-        try {
-            _file.seek(byteOffset);
-            _file.read(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-            ioInfo._status = DeviceStatus.Successful;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-
-        ioInfo._source.signal();
+        ioInfo._byteBuffer = ByteBuffer.allocate(ioInfo._transferCount);
+        _channel.read(ioInfo._byteBuffer, byteOffset, ioInfo, this);
     }
 
     /**
@@ -362,7 +365,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             return;
         }
 
-        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
+        if (ioInfo._byteBuffer.array().length < ioInfo._transferCount) {
             ioInfo._status = DeviceStatus.BufferTooSmall;
             ioInfo._source.signal();
             return;
@@ -392,17 +395,22 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         ioInfo._status = DeviceStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
+        _channel.write(ioInfo._byteBuffer, byteOffset, ioInfo, this);
+    }
 
-        try {
-            _file.seek(byteOffset);
-            _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-            ioInfo._status = DeviceStatus.Successful;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
 
-        ioInfo._source.signal();
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Non-public methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Single method for converting a logical block ID to a physical byte offset.
+     * Caller must verify blockId is within the blockCount range.
+     */
+    protected long calculateByteOffset(
+        final BlockId blockId
+    ) {
+        return _blockSize == null ? 0 : (blockId.getValue() + 1) * _blockSize.getValue();
     }
 
     /**
@@ -420,7 +428,8 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
 
         try {
-            _file = new RandomAccessFile(mediaName, "rw");
+            Path path = FileSystems.getDefault().getPath(mediaName);
+            _channel = AsynchronousFileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             //  Read scratch pad to determine pack geometry.
             //  We don't know the block size at this point, which is something of a problem for us.
@@ -430,30 +439,24 @@ public class FileSystemDiskDevice extends DiskDevice {
             //  What we *do* know, is the smallest valid blocksize for this device, and we are pretty sure... hopeful...
             //  crossing fingers (and not just here) that the serialized ScratchPad is no bigger than that smallest block size.
             //  So... knowing smallest block size, we use that for the size of our IO.  It should work...
-            int bufferSize = 128;
-            byte[] buffer = new byte[bufferSize];
-            _file.seek(0);
-            int bytes = _file.read(buffer);
-            if (bytes < bufferSize) {
-                LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read %d bytes of scratch pad",
+            ScratchPad scratchPad = readScratchPad();
+            if (scratchPad == null) {
+                LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read some or all of scratch pad",
                                            _name,
-                                           mediaName,
-                                           bufferSize));
-                _file.close();
-                _file = null;
+                                           mediaName));
+                _channel.close();
+                _channel = null;
                 return false;
             }
 
-            ScratchPad scratchPad = new ScratchPad();
-            scratchPad.deserialize(ByteBuffer.wrap(buffer));
             if (!scratchPad._identifier.equals(ScratchPad.EXPECTED_IDENTIFIER)) {
                 LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad identifier expected:'%s' got:'%s'",
                                            _name,
                                            mediaName,
                                            ScratchPad.EXPECTED_IDENTIFIER,
                                            scratchPad._identifier));
-                _file.close();
-                _file = null;
+                _channel.close();
+                _channel = null;
                 return false;
             }
 
@@ -463,51 +466,74 @@ public class FileSystemDiskDevice extends DiskDevice {
                                            mediaName,
                                            ScratchPad.EXPECTED_MAJOR_VERSION,
                                            scratchPad._majorVersion));
-                _file.close();
-                _file = null;
+                _channel.close();
+                _channel = null;
                 return false;
             }
 
             if (scratchPad._minorVersion != ScratchPad.EXPECTED_MINOR_VERSION) {
                 LOGGER.info(String.format("Device %s:ScratchPad MinorVersion expected:%d got:%d",
-                                           _name,
-                                           ScratchPad.EXPECTED_MINOR_VERSION,
-                                           scratchPad._minorVersion));
+                                          _name,
+                                          ScratchPad.EXPECTED_MINOR_VERSION,
+                                          scratchPad._minorVersion));
             }
 
-            _packName = mediaName;
             _blockSize = scratchPad._blockSize;
             _blockCount = scratchPad._blockCount;
             _isMounted = true;
             LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
-            _file = null;
+            _channel = null;
             return false;
         }
 
         return true;
     }
 
-    /**
-     * Overrides the call to set the ready flag, preventing setting true if we're not mounted.
-     */
-    @Override
-    public boolean setReady(
-        final boolean readyFlag
+    private ScratchPad readScratchPad(
     ) {
-        if (readyFlag && !_isMounted) {
-            return false;
-        }
+        int bufferSize = 128;
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        Future<Integer> f = _channel.read(buffer, 0);
+        try {
+            if (f.get() < bufferSize) {
+                return null;
+            }
 
-        return super.setReady(readyFlag);
+            if (f.isCancelled()) {
+                return null;
+            } else {
+                buffer.rewind();
+                ScratchPad scratchPad = new ScratchPad();
+                scratchPad.deserialize(buffer);
+                return scratchPad;
+            }
+        } catch (ExecutionException | InterruptedException ex) {
+            System.out.println(ex);
+            return null;
+        }
     }
 
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Public methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     /**
-     * Invoked just before tearing down the configuration.
+     * Nothing to clear
      */
     @Override
-    public void terminate() {}
+    public void clear() {}
+
+    /**
+     * For debugging purposes
+     */
+    @Override
+    public void dump(
+        final BufferedWriter writer
+    ) {
+        super.dump(writer);
+    }
 
     /**
      * Unmounts the currently-mounted media
@@ -525,14 +551,13 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         // Release the host system file
         try {
-            _file.close();
+            _channel.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
             return false;
         }
-        _file = null;
-        _packName = null;
 
+        _channel = null;
         _blockCount = null;
         _blockSize = null;
         _isMounted = false;

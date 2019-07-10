@@ -345,7 +345,7 @@ public abstract class TapeDevice extends Device {
         final DeviceIOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
-            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);
+            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer.array());
         } else if (ioInfo._wordBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._wordBuffer);
         }

@@ -7,10 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.BlockCount;
-import com.kadware.komodo.baselib.BlockSize;
-import com.kadware.komodo.baselib.PrepFactor;
+import com.kadware.komodo.baselib.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -118,8 +115,8 @@ public abstract class DiskDevice extends Device {
      * MODEL:       integer code for the DeviceModel
      * TYPE:        integer code for the DeviceType
      * PREP_FACTOR: indicates the block size in words, of a disk block
-     * PACK_ID:     mounted pack id fieldata LJSF
      * BLOCK_COUNT: number of blocks on the media
+     * PACK_NAME:   name of the mounted pack, ASCII LJSF
      */
     protected ArraySlice getInfo() {
         long[] buffer = new long[28];
@@ -131,7 +128,6 @@ public abstract class DiskDevice extends Device {
 
         buffer[0] = (flags << 30) | (model << 24) | (type << 18) | prepfactor;
         buffer[1] = _blockCount.getValue();
-
         return new ArraySlice(buffer);
     }
 
@@ -241,7 +237,7 @@ public abstract class DiskDevice extends Device {
         final DeviceIOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
-            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);
+            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer.array());
         } else if (ioInfo._wordBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._wordBuffer);
         }

@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
+import java.nio.ByteBuffer;
 
 /**
  * Represents an IO passed from a ChannelModule object to one of its descendant Device objects
@@ -27,7 +28,7 @@ public class DeviceIOInfo {
     /**
      * Reference to a byte buffer for byte data transfers
      */
-    final byte[] _byteBuffer;
+    ByteBuffer _byteBuffer;
 
     /**
      * Reference to a word buffer for word data transfers
@@ -62,7 +63,7 @@ public class DeviceIOInfo {
     private DeviceIOInfo(
         ChannelModule source,
         IOFunction function,
-        byte[] byteBuffer,
+        ByteBuffer byteBuffer,
         ArraySlice wordBuffer,
         int transferCount,
         BlockId blockId
@@ -98,13 +99,13 @@ public class DeviceIOInfo {
 
         private ChannelModule _source = null;
         private IOFunction _ioFunction = null;
-        private byte[] _buffer = null;
+        private ByteBuffer _buffer = null;
         Integer _transferCount = null;
         BlockId _blockId = null;
 
         ByteTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
         ByteTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
-        ByteTransferBuilder setBuffer(byte[] value) { _buffer = value; return this; }
+        ByteTransferBuilder setBuffer(ByteBuffer value) { _buffer = value; return this; }
         ByteTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
         ByteTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
 
@@ -113,7 +114,7 @@ public class DeviceIOInfo {
                 throw new InvalidArgumentRuntimeException("No source parameter");
             } else if (_ioFunction == null) {
                 throw new InvalidArgumentRuntimeException("No ioFunction parameter");
-            } else if (_buffer == null) {
+            } else if (_ioFunction.isWriteFunction() && (_buffer == null)) {
                 throw new InvalidArgumentRuntimeException("No buffer parameter");
             } else if (_transferCount == null) {
                 throw new InvalidArgumentRuntimeException("No transferCount parameter");

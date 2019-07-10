@@ -466,12 +466,6 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
-            ioInfo._source.signal();
-            return;
-        }
-
         ioInfo._status = DeviceStatus.InProgress;
 
         try {
@@ -484,7 +478,8 @@ public class FileSystemTapeDevice extends TapeDevice {
                 ioInfo._status = DeviceStatus.FileMark;
             } else {
                 //  We have a valid block to read.  Read it.
-                int bytes = _file.read(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+                ioInfo._byteBuffer = ByteBuffer.allocate(ioInfo._transferCount);
+                int bytes = _file.read(ioInfo._byteBuffer.array(), 0, ioInfo._transferCount);
                 if (bytes != ioInfo._transferCount) {
                     ioInfo._status = DeviceStatus.LostPosition;
                 } else {
@@ -610,7 +605,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
+        if (ioInfo._byteBuffer.array().length < ioInfo._transferCount) {
             ioInfo._status = DeviceStatus.BufferTooSmall;
             return;
         }
@@ -623,7 +618,7 @@ public class FileSystemTapeDevice extends TapeDevice {
         ioInfo._status = DeviceStatus.InProgress;
 
         try {
-            _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+            _file.write(ioInfo._byteBuffer.array(), 0, ioInfo._transferCount);
 
             _writeFlag = true;
             _writeMarkFlag = false;
