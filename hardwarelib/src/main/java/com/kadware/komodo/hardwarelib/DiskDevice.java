@@ -143,6 +143,7 @@ public abstract class DiskDevice extends Device {
     public boolean handleIo(
         final DeviceIOInfo ioInfo
     ) {
+        ioInfo._status = DeviceStatus.InProgress;
         synchronized(this) {
             ioStart(ioInfo);
 
