@@ -54,6 +54,46 @@ import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 @SuppressWarnings("Duplicates")
 public class ChannelProgram extends ArraySlice {
 
+    /**
+     * Constructor for builder
+     */
+    private ChannelProgram(
+        final int iopUpiIndex,
+        final int channelModuleIndex,
+        final int deviceAddress,
+        final IOFunction ioFunction,
+        final ByteTranslationFormat byteFormat,
+        final BlockId blockId,
+        final AccessControlWord[] accessControlWords
+    ) {
+        super(new long[4 + (accessControlWords != null ? 3 * accessControlWords.length : 0)]);
+        setIopUpiIndex(iopUpiIndex);
+        setChannelModuleIndex(channelModuleIndex);
+        setDeviceAddress(deviceAddress);
+        setIOFunction(ioFunction);
+
+        if (byteFormat != null) {
+            setByteTranslationFormat(byteFormat);
+        }
+
+        if (blockId != null) {
+            setBlockId(blockId);
+        }
+
+        if (accessControlWords != null) {
+            set(0, Word36.setS6(get(0), accessControlWords.length));
+            int dx = _offset;
+            for (AccessControlWord acw : accessControlWords) {
+                _array[dx++] = acw._array[acw._offset];
+                _array[dx++] = acw._array[acw._offset + 1];
+                _array[dx++] = acw._array[acw._offset + 2];
+            }
+        }
+    }
+
+    /**
+     * Constructor from storage
+     */
     public ChannelProgram (
         final ArraySlice baseSlice,
         final int offset,
@@ -106,7 +146,7 @@ public class ChannelProgram extends ArraySlice {
     public IOFunction getFunction() { return IOFunction.getValue((int) Word36.getS4(get(0))); }
     public ByteTranslationFormat getByteTranslationFormat() { return ByteTranslationFormat.getValue((int) Word36.getS5(get(0))); }
     public int getAccessControlWordCount() { return (int) Word36.getS6(get(0)); }
-    public BlockId getBlockAddress() { return new BlockId(get(1)); }
+    public BlockId getBlockId() { return new BlockId(get(1)); }
     public int getChannelStatus() { return (int) Word36.getS1(get(2)); }
     public int getDeviceStatus() { return (int) Word36.getS2(get(2)); }
     public int getResidualBytes() { return (int) Word36.getS3(get(2)); }
@@ -119,10 +159,16 @@ public class ChannelProgram extends ArraySlice {
     }
 
     //  Setters
-    public void setChannelStatus(ChannelStatus value) { Word36.setS1(get(2), value.getCode()); }
-    public void setDeviceStatus(DeviceStatus value) { Word36.setS2(get(2), value.getCode()); }
-    public void setResidualBytes(int value) { Word36.setS3(get(2), value); }
-    public void setWordsTransferred(int value) { Word36.setH2(get(3), value); }
+    public void setIopUpiIndex(int value) { set(0, Word36.setS1(get(0), value)); }
+    public void setChannelModuleIndex(int value) { set(0, Word36.setS2(get(0), value)); }
+    public void setDeviceAddress(int value) { set(0, Word36.setS3(get(0), value)); }
+    public void setIOFunction(IOFunction func) { set(0, Word36.setS4(get(0), func.getCode())); }
+    public void setByteTranslationFormat(ByteTranslationFormat fmt) { set(0, Word36.setS5(get(0), fmt.getCode())); }
+    public void setBlockId(BlockId addr) { set(1, addr.getValue()); }
+    public void setChannelStatus(ChannelStatus stat) { set(2, Word36.setS1(get(2), stat.getCode())); }
+    public void setDeviceStatus(DeviceStatus stat) { set(2, Word36.setS2(get(2), stat.getCode())); }
+    public void setResidualBytes(int value) { set(2, Word36.setS3(get(2), value)); }
+    public void setWordsTransferred(int value) { set(3, Word36.setH2(get(3), value)); }
 
     public int getCumulativeTransferWords() {
         int result = 0;
@@ -131,5 +177,44 @@ public class ChannelProgram extends ArraySlice {
         }
 
         return result;
+    }
+
+    public static class Builder {
+
+        private Integer _iopUpiIndex = null;
+        private Integer _channelModuleIndex = null;
+        private Integer _deviceAddress = null;
+        private IOFunction _ioFunction = null;
+        private ByteTranslationFormat _byteFormat = null;
+        private BlockId _blockId = null;
+        private AccessControlWord[] _acws = null;
+
+        public Builder setIopUpiIndex(int value) { _iopUpiIndex = value; return this; }
+        public Builder setChannelModuleIndex(int value) { _channelModuleIndex = value; return this; }
+        public Builder setDeviceAddress(int value) { _deviceAddress = value; return this; }
+        public Builder setIOFunction(IOFunction func) { _ioFunction = func; return this; }
+        public Builder setByteTranslationFormat(ByteTranslationFormat fmt) { _byteFormat = fmt; return this; }
+        public Builder setBlockId(BlockId id) { _blockId = id; return this; }
+        public Builder setAccessControlWords(AccessControlWord[] acws) { _acws = acws; return this; }
+
+        public ChannelProgram build() {
+            assert(_iopUpiIndex != null);
+            assert(_channelModuleIndex != null);
+            assert(_deviceAddress != null);
+            assert(_ioFunction != null);
+
+            if (_ioFunction.isReadFunction() || _ioFunction.isWriteFunction()) {
+                assert(_acws != null);
+            }
+
+            return new ChannelProgram(_iopUpiIndex,
+                                      _channelModuleIndex,
+                                      _deviceAddress,
+                                      _ioFunction,
+                                      _byteFormat,
+                                      _blockId,
+                                      _acws);
+
+        }
     }
 }

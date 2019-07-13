@@ -242,7 +242,7 @@ public class ByteChannelModule extends ChannelModule {
         if (cp.getFunction().isWriteFunction()) {
             tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
                                                                     .setIOFunction(cp.getFunction())
-                                                                    .setBlockId(cp.getBlockAddress().getValue())
+                                                                    .setBlockId(cp.getBlockId().getValue())
                                                                     .setTransferCount(tracker._byteBuffer.array().length)
                                                                     .setBuffer(tracker._byteBuffer)
                                                                     .build();
