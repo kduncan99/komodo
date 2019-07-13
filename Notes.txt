@@ -1,7 +1,7 @@
 -- InProgress
 IP,IOP: UPI send/ack mechanism for IOs
 Reworking the entire IO stack
-Rewrite disk (and maybe tape) devices using async IO
+Rewrite disk and tape devices using async IO
 Redo all the node and subclasses tests, many of which are commented out
 
 
@@ -21,6 +21,7 @@ IP: SYSC instruction for dynamic bank allocation
 IP: SYSC instruction for console communication
 SystemProcessor: For starting/monitoring/stopping system, and for console communication
   Move dayclock architecture to SystemProcessor
+Need to reimplement/implement serialize/deserialize for all the node classes/subclasses
 IP: operations control instructions (and unit tests)
   SEND
   ACK

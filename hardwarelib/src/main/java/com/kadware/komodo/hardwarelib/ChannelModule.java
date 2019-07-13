@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Worker;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,6 +40,12 @@ public abstract class ChannelModule extends Node implements Worker {
         public DeviceIOInfo _ioInfo = null;
         public boolean _started = false;
         public boolean _completed = false;
+
+        //  For writes, this is the cumulative buffer containing all the data from all the ACWs
+        //  after data direction has been applied.
+        //  For reads, this is the buffer resulting from the IO, which must then be distributed among
+        //  the various ACWs while observing data direction.
+        public ArraySlice _contiguousBuffer;    //  For read/write,
 
         protected Tracker(
             final Processor source,
