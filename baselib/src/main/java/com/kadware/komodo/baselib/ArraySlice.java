@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
  */
 public class ArraySlice {
 
-    private final long[] _array;    //  base array of which this slice is a (possibly complete) subset
-    private final int _length;      //  length of this array (must be <= length of base array)
-    private final int _offset;      //  offset into the base array, at which this slice begins
+    public final long[] _array;     //  base array of which this slice is a (possibly complete) subset
+    public final int _length;       //  length of this array (must be <= length of base array)
+    public final int _offset;       //  offset into the base array, at which this slice begins
                                     //      _length + _offset must not exceed the range of the base array
 
     /**
@@ -448,6 +448,143 @@ public class ArraySlice {
     }
 
     /**
+     * Places quarter words, sans MSBit, into the destination byte array beginning at the given offset.
+     * @param destination array where we store bytes
+     * @param destinationOffset offset within the array at which we begin storing bytes
+     * @return number of bytes written
+     */
+    public int packQuarterWords(
+        byte[] destination,
+        final int destinationOffset
+    ) {
+        int sx = _offset;
+        int dx = destinationOffset;
+        int qwx = 0;
+        int count = 0;
+        boolean stop = false;
+        while ((sx < _length) && (dx < destination.length) && (!stop)) {
+            switch (qwx++) {
+                case 0:
+                    if ((Word36.getQ1(_array[sx]) & 0400) != 0) {
+                        stop = true;
+                    } else {
+                        destination[dx++] = (byte) (Word36.getQ1(_array[sx]) & 0xFF);
+                        ++count;
+                    }
+                    break;
+
+                case 1:
+                    if ((Word36.getQ2(_array[sx]) & 0400) != 0) {
+                        stop = true;
+                    } else {
+                        destination[dx++] = (byte) (Word36.getQ2(_array[sx]) & 0xFF);
+                        ++count;
+                    }
+                    break;
+
+                case 2:
+                    if ((Word36.getQ3(_array[sx]) & 0400) != 0) {
+                        stop = true;
+                    } else {
+                        destination[dx++] = (byte) (Word36.getQ3(_array[sx]) & 0xFF);
+                        ++count;
+                    }
+                    break;
+
+                case 3:
+                    if ((Word36.getQ4(_array[sx]) & 0400) != 0) {
+                        stop = true;
+                    } else {
+                        destination[dx++] = (byte) (Word36.getQ4(_array[sx]) & 0xFF);
+                        ++count;
+                        ++sx;
+                        qwx = 0;
+                    }
+                    break;
+
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Places quarter words, sans MSBit, into the destination byte array
+     * @param destination array where we store bytes
+     * @return number of bytes written
+     */
+    public int packQuarterWords(
+        byte[] destination
+    ) {
+        return packQuarterWords(destination, 0);
+    }
+
+    /**
+     * Places sixth words into the destination byte array beginning at the given offset.
+     * @param destination array where we store bytes
+     * @param destinationOffset offset within the array at which we begin storing bytes
+     * @return number of bytes written
+     */
+    public int packSixthWords(
+        byte[] destination,
+        final int destinationOffset
+    ) {
+        int sx = _offset;
+        int dx = destinationOffset;
+        int count = 0;
+        int swx = 0;
+        while ((sx < _length) && (dx < destination.length)) {
+            switch (swx++) {
+                case 0:
+                    destination[dx++] = (byte) (Word36.getS1(_array[sx]) & 0x3F);
+                    ++count;
+                    break;
+
+                case 1:
+                    destination[dx++] = (byte) (Word36.getS2(_array[sx]) & 0x3F);
+                    ++count;
+                    break;
+
+                case 2:
+                    destination[dx++] = (byte) (Word36.getS3(_array[sx]) & 0x3F);
+                    ++count;
+                    break;
+
+                case 3:
+                    destination[dx++] = (byte) (Word36.getS4(_array[sx]) & 0x3F);
+                    ++count;
+                    break;
+
+                case 4:
+                    destination[dx++] = (byte) (Word36.getS5(_array[sx]) & 0x3F);
+                    ++count;
+                    break;
+
+                case 6:
+                    destination[dx++] = (byte) (Word36.getS6(_array[sx]) & 0x3F);
+                    ++count;
+                    ++sx;
+                    swx = 0;
+                    break;
+
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Places sixth words into the destination byte array
+     * @param destination array where we store bytes
+     * @return number of bytes written
+     */
+    public int packSixthWords(
+        byte[] destination
+    ) {
+        return packSixthWords(destination, 0);
+    }
+
+    /**
      * Sets a value into the array at the given index, which is offset further by this subset's offset
      * @param index index into the subset at which the value should be stored
      * @param value value to be stored
@@ -687,5 +824,120 @@ public class ArraySlice {
         final byte[] source
     ) {
         return unpack(source, 0, source.length);
+    }
+
+    /**
+     * Unpacks quarter-words into our underlying array.
+     * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
+     * @return number of quarter words processed
+     */
+    public int unpackQuarterWords(
+        final byte[] source,
+        final int offset,
+        final int length
+    ) {
+        int slimit = offset + length;
+        int qw = 0;
+        int sx = offset;
+        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length); ++sx) {
+            switch (qw) {
+                case 0:
+                    _array[dx] = ((long) source[sx]) << 27;
+                    ++qw;
+                    break;
+
+                case 1:
+                    _array[dx] = Word36.setQ2(_array[dx], source[sx]);
+                    ++qw;
+                    break;
+
+                case 2:
+                    _array[dx] = Word36.setQ3(_array[dx], source[sx]);
+                    ++qw;
+                    break;
+
+                case 3:
+                    _array[dx] = Word36.setQ4(_array[dx], source[sx]);
+                    ++dx;
+                    ++dcount;
+                    qw = 0;
+            }
+        }
+
+        return sx;
+    }
+
+    /**
+     * Unpacks quarter-words into our underlying array.
+     * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
+     * @return number of sixth words processed
+     */
+    public int unpackQuarterWords(
+        final byte[] source
+    ) {
+        return unpackQuarterWords(source, 0, source.length);
+    }
+
+    /**
+     * Unpacks sixth-words into our underlying array.
+     * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
+     * @return number of sixth words processed
+     */
+    public int unpackSixthWords(
+        final byte[] source,
+        final int offset,
+        final int length
+    ) {
+        int slimit = offset + length;
+        int sw = 0;
+        int sx = offset;
+        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length); ++sx) {
+            long bval = (long) (source[sx] & 077);
+            switch (sw) {
+                case 0:
+                    _array[dx] = (bval << 30);
+                    ++sw;
+                    break;
+
+                case 1:
+                    _array[dx] = Word36.setS2(_array[dx], bval);
+                    ++sw;
+                    break;
+
+                case 2:
+                    _array[dx] = Word36.setS3(_array[dx], bval);
+                    ++sw;
+                    break;
+
+                case 3:
+                    _array[dx] = Word36.setS4(_array[dx], bval);
+                    ++sw;
+                    break;
+
+                case 4:
+                    _array[dx] = Word36.setS5(_array[dx], bval);
+                    ++sw;
+                    break;
+
+                case 5:
+                    _array[dx] = Word36.setS6(_array[dx], bval);
+                    ++dx;
+                    ++dcount;
+                    sw = 0;
+            }
+        }
+
+        return sx;
+    }
+
+    /**
+     * Unpacks sixth-words into our underlying array.
+     * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
+     * @return number of sixth words processed
+     */
+    public int unpackSixthWords(
+        final byte[] source
+    ) {
+        return unpackSixthWords(source, 0, source.length);
     }
 }

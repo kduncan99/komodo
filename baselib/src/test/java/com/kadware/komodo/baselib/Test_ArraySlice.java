@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.LoggerStub;
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import java.util.LinkedList;
 import java.util.List;
@@ -248,9 +246,67 @@ public class Test_ArraySlice {
         assertEquals("060710111213 141516172021", array.toOctal(true));
     }
 
-    //  minalib pack and unpack
+    //  type A pack and unpack -----------------------------------------------------------------------------------------------------
 
-    //  pack and unpack ------------------------------------------------------------------------------------------------------------
+    @Test
+    public void translateFromA(
+    ) {
+        byte[] byteBuffer = {
+            (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)' ',
+            (byte)'W', (byte)'o', (byte)'r', (byte)'l', (byte)'d', (byte)'!'
+        };
+
+        ArraySlice as = new ArraySlice(new long[3]);
+        as.unpackQuarterWords(byteBuffer);
+        assertEquals("Hello World!", as.toASCII(false));
+    }
+
+    @Test
+    public void translateFromA_partialWord(
+    ) {
+        byte[] byteBuffer = {
+            (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)' ',
+            (byte)'D', (byte)'o', (byte)'r', (byte)'k'
+        };
+
+        ArraySlice as = new ArraySlice(new long[3]);
+        as.unpackQuarterWords(byteBuffer);
+        assertEquals("Hello Dork..", as.toASCII(false));
+    }
+
+    //  TODO more type A
+
+    //  type B pack and unpack -----------------------------------------------------------------------------------------------------
+
+    @Test
+    public void translateFromB(
+    ) {
+        byte[] byteBuffer = {
+            (byte)015, (byte)012, (byte)021, (byte)021, (byte)024, (byte)05,
+            (byte)034, (byte)024, (byte)027, (byte)021, (byte)011, (byte)055
+        };
+
+        ArraySlice as = new ArraySlice(new long[2]);
+        as.unpackSixthWords(byteBuffer);
+        assertEquals("HELLO WORLD!", as.toFieldata(false));
+    }
+
+    @Test
+    public void translateFromB_partialWord(
+    ) {
+        byte[] byteBuffer = {
+            (byte)015, (byte)012, (byte)021, (byte)021, (byte)024, (byte)05,
+            (byte)011, (byte)024, (byte)027, (byte)020
+        };
+
+        ArraySlice as = new ArraySlice(new long[2]);
+        as.unpackSixthWords(byteBuffer);
+        assertEquals("HELLO DORK@@", as.toFieldata(false));
+    }
+
+    //  TODO more type B
+
+    //  type C pack and unpack -----------------------------------------------------------------------------------------------------
 
     @Test
     public void pack_Normal() {
