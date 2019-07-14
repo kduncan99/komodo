@@ -147,8 +147,8 @@ public class ChannelProgram extends ArraySlice {
     public ByteTranslationFormat getByteTranslationFormat() { return ByteTranslationFormat.getValue((int) Word36.getS5(get(0))); }
     public int getAccessControlWordCount() { return (int) Word36.getS6(get(0)); }
     public BlockId getBlockId() { return new BlockId(get(1)); }
-    public int getChannelStatus() { return (int) Word36.getS1(get(2)); }
-    public int getDeviceStatus() { return (int) Word36.getS2(get(2)); }
+    public ChannelStatus getChannelStatus() { return ChannelStatus.getValue((int) Word36.getS1(get(2))); }
+    public DeviceStatus getDeviceStatus() { return DeviceStatus.getValue((int) Word36.getS2(get(2))); }
     public int getResidualBytes() { return (int) Word36.getS3(get(2)); }
     public int getWordsTransferred() { return (int) Word36.getH2(get(3)); }
 

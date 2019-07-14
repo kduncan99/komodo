@@ -3,7 +3,9 @@ IP,IOP: UPI send/ack mechanism for IOs
 Reworking the entire IO stack
 Rewrite disk and tape devices using async IO
 Redo all the node and subclasses tests, many of which are commented out
-
+BUG: Read backward doesn't work right - it should fill from the back, not the front
+CHANGE: IOP should create the contiguous word buffer before passing on to channel module,
+          it can just wrap the existing buffer if there is exactly one ACW
 
 -- TODO BUGS
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)

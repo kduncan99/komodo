@@ -40,7 +40,8 @@ public class Test_FileSystemDiskDevice {
         protected Tracker createTracker(
             Processor p,
             InputOutputProcessor iop,
-            ChannelProgram cp
+            ChannelProgram cp,
+            ArraySlice buffer
         ) {
             return null;
         }

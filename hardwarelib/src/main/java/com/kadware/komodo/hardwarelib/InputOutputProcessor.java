@@ -4,6 +4,9 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.hardwarelib.exceptions.*;
+import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -67,6 +70,46 @@ public class InputOutputProcessor extends Processor {
     public void initialize() {}
 
     /**
+     * ChanneProgram calls here to notify us that it is finished with a channel program.
+     * If it is a successful read, and if we created an interim word buffer, we need to populate
+     * the ACW buffers from the interim buffer.
+     * In any case, notify an IP via broadcast UPI interrupt that we are done.
+     * @param channelProgram the channel program of interest
+     * @param source the Processor which initiated the channel program (an IP or an SP)
+     */
+    public void finalizeIo(
+        final ChannelProgram channelProgram,
+        final Processor source
+    ) {
+        if (channelProgram.getFunction().isReadFunction()) {
+            int acwCount = channelProgram.getAccessControlWordCount();
+            if ((acwCount == 1)
+                && (channelProgram.getAccessControlWord(0).getAddressModifier() == AccessControlWord.AddressModifier.Increment)) {
+                //  composite buffer points to storage - nothing to do here
+            } else if (acwCount == 0) {
+                //  No buffers - again, nothing to do here
+            } else {
+                //  The composite buffer is interim - distribute the results from the read accordingly
+                int wordToCopy = channelProgram.getWordsTransferred();
+                for (int acwx = 0; acwx < channelProgram.getAccessControlWordCount(); ++acwx) {
+                    AccessControlWord acw = channelProgram.getAccessControlWord(acwx);
+
+                }
+            }
+        }
+
+        switch (source._processorType) {
+            case InstructionProcessor:
+                //TODO
+                break;
+
+            case SystemProcessor:
+                //TODO
+                break;
+        }
+    }
+
+    /**
      * Starts an IO as defined by the channel program at the given absolute address
      * @return true if the IO was scheduled, false if something immediately wrong was discovered
      */
@@ -80,7 +123,60 @@ public class InputOutputProcessor extends Processor {
             return false;
         }
 
-        return channelModule.scheduleChannelProgram(source, this, channelProgram);
+        //  If there is exactly one ACW and it is incrementing, construct an absolute address to
+        //  describe the buffer and stuff it in the channel program.
+        //  If more than one, build a consilidated buffer the size of the various individual ACW buffers,
+        //  and if this is a write function, populate the buffer from the component ACW buffers.
+        try {
+            ArraySlice wordBuffer = null;
+            int acwCount = channelProgram.getAccessControlWordCount();
+            if ((acwCount == 1)
+                && (channelProgram.getAccessControlWord(0).getAddressModifier() == AccessControlWord.AddressModifier.Increment)) {
+                AccessControlWord acw = channelProgram.getAccessControlWord(0);
+                if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Increment) {
+                    AbsoluteAddress bufferAddress = acw.getBufferAddress();
+                    int bufferSize = acw.getBufferSize();
+                    MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(bufferAddress._upiIndex);
+                    ArraySlice mspStorage = msp.getStorage(bufferAddress._segment);
+                    wordBuffer = new ArraySlice(mspStorage._array,
+                                                mspStorage._offset + bufferAddress._offset + acw._offset,
+                                                bufferSize);
+                }
+            } else if (acwCount > 0) {
+                int bufferWords = channelProgram.getCumulativeTransferWords();
+                wordBuffer = new ArraySlice(new long[bufferWords]);
+
+                if (channelProgram.getFunction().isWriteFunction()) {
+                    for (int acwx = 0; acwx < acwCount; ++acwx) {
+                        AccessControlWord acw = channelProgram.getAccessControlWord(acwx);
+                        int inc = 0;
+                        if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Increment) {
+                            inc = 1;
+                        } else if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Decrement) {
+                            inc = 2;
+                        }
+
+                        AbsoluteAddress bufferAddress = acw.getBufferAddress();
+                        int bufferSize = acw.getBufferSize();
+                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(bufferAddress._upiIndex);
+                        ArraySlice mspStorage = msp.getStorage(bufferAddress._segment);
+
+                        for (int sc = 0, sx = mspStorage._offset + bufferAddress._offset + acw._offset, dx = 0;
+                             sc < bufferSize;
+                             ++sc, ++dx, sx += inc) {
+                            wordBuffer._array[dx] = mspStorage._array[sx];
+                        }
+                    }
+                }
+            }
+
+            return channelModule.scheduleChannelProgram(source, this, channelProgram, wordBuffer);
+        } catch (AddressingExceptionInterrupt
+            | UPINotAssignedException
+            | UPIProcessorTypeException ex) {
+            channelProgram.setChannelStatus(ChannelStatus.InvalidAddress);
+            return false;
+        }
     }
 
     /**

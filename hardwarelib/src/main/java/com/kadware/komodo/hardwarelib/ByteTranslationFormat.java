@@ -11,7 +11,7 @@ package com.kadware.komodo.hardwarelib;
 public enum ByteTranslationFormat {
     QuarterWordPerByte(0),                  //  Format A
     SixthWordByte(1),                       //  Format B
-    QuarterWordPerPacked(2),                //  Format C
+    QuarterWordPacked(2),                //  Format C
     QuarterWordPerByteNoTermination(3);     //  Format D
 
     private final int _code;
@@ -26,7 +26,7 @@ public enum ByteTranslationFormat {
         switch (code) {
             case 0:     return QuarterWordPerByte;
             case 1:     return SixthWordByte;
-            case 2:     return QuarterWordPerPacked;
+            case 2:     return QuarterWordPacked;
             case 3:     return QuarterWordPerByteNoTermination;
             default:    return null;
         }

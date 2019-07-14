@@ -28,9 +28,10 @@ public class WordChannelModule extends ChannelModule {
         WordTracker(
             final Processor source,
             final InputOutputProcessor ioProcessor,
-            final ChannelProgram channelProgram
+            final ChannelProgram channelProgram,
+            final ArraySlice compositeBuffer
         ) {
-            super(source, ioProcessor, channelProgram);
+            super(source, ioProcessor, channelProgram, compositeBuffer);
             int bufferSize = channelProgram.getCumulativeTransferWords();
             if (bufferSize > 0) {
                 _workingBuffer = new ArraySlice(new long[bufferSize]);
@@ -78,9 +79,10 @@ public class WordChannelModule extends ChannelModule {
     public Tracker createTracker(
         final Processor source,
         final InputOutputProcessor ioProcessor,
-        final ChannelProgram channelProgram
+        final ChannelProgram channelProgram,
+        final ArraySlice compositeBuffer
     ) {
-        return new WordTracker(source, ioProcessor, channelProgram);
+        return new WordTracker(source, ioProcessor, channelProgram, compositeBuffer);
     }
 
     /**

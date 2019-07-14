@@ -45,16 +45,18 @@ public abstract class ChannelModule extends Node implements Worker {
         //  after data direction has been applied.
         //  For reads, this is the buffer resulting from the IO, which must then be distributed among
         //  the various ACWs while observing data direction.
-        public ArraySlice _contiguousBuffer;    //  For read/write,
+        public final ArraySlice _compositeBuffer;
 
         protected Tracker(
             final Processor source,
             final InputOutputProcessor ioProcessor,
-            final ChannelProgram channelProgram
+            final ChannelProgram channelProgram,
+            final ArraySlice compositeBuffer
         ) {
             _source = source;
             _ioProcessor = ioProcessor;
             _channelProgram = channelProgram;
+            _compositeBuffer = compositeBuffer;
         }
 
         public void dump(
@@ -124,7 +126,8 @@ public abstract class ChannelModule extends Node implements Worker {
     protected abstract Tracker createTracker(
         final Processor source,
         final InputOutputProcessor ioProcessor,
-        final ChannelProgram channelProgram
+        final ChannelProgram channelProgram,
+        final ArraySlice compositeBuffer
     );
 
     /**
@@ -206,11 +209,17 @@ public abstract class ChannelModule extends Node implements Worker {
     /**
      * Put a channel program on our list of unstarted IOs and wake up the channel module thread.
      * If we find an obvious problem, we kill the IO here instead of scheduling it.
+     * @param source Entity which initiated the IO - should be an IP or an SP
+     * @param ioProcessor The IOP involved in the IO
+     * @param channelProgram describes the IO
+     * @param compositeBuffer If this is a read/write IO, it is read into/written from this buffer.
+     *                          This is null for non-read/write IOs.
      */
     final boolean scheduleChannelProgram(
         final Processor source,
         final InputOutputProcessor ioProcessor,
-        final ChannelProgram channelProgram
+        final ChannelProgram channelProgram,
+        final ArraySlice compositeBuffer
     ) {
         if (!_descendants.containsKey(channelProgram.getDeviceAddress())) {
             channelProgram.setChannelStatus(ChannelStatus.UnconfiguredDevice);
@@ -219,7 +228,7 @@ public abstract class ChannelModule extends Node implements Worker {
 
         channelProgram.setChannelStatus(ChannelStatus.InProgress);
         synchronized (_workerThread) {
-            _trackers.add(createTracker(source, ioProcessor, channelProgram));
+            _trackers.add(createTracker(source, ioProcessor, channelProgram, compositeBuffer));
             _workerThread.notify();
         }
 

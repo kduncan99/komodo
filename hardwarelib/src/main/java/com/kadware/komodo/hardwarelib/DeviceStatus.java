@@ -40,7 +40,7 @@ public enum DeviceStatus
 
     public int getCode() { return _code; }
 
-    public DeviceStatus getValue(
+    public static DeviceStatus getValue(
         final int code
     ) {
         switch (code) {

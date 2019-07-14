@@ -56,6 +56,11 @@ public class AccessControlWord extends ArraySlice {
         }
     }
 
+    /**
+     * Represents an ACW in storage
+     * @param baseArray storage ArraySlice
+     * @param offset offset from start of baseArray, where this ACW is located
+     */
     public AccessControlWord(
         final ArraySlice baseArray,
         final int offset

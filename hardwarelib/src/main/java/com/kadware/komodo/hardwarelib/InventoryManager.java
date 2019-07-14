@@ -86,6 +86,32 @@ public class InventoryManager {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
+     * Adds an existing InputOutputProcessor to our inventory.
+     * The existing IOP should not yet have been initialized.
+     * Only for unit tests.
+     * @param iop object to be added
+     * @throws NodeNameConflictException if there is a conflict in node names
+     * @throws UPIConflictException if there is a conflict in UPI
+     */
+    public void addInputOutputProcessor(
+        final InputOutputProcessor iop
+    ) throws NodeNameConflictException,
+             UPIConflictException {
+        if (_processors.get(iop._upiIndex) != null) {
+            throw new UPIConflictException(iop._upiIndex);
+        }
+
+        for (Processor processor : _processors.values()) {
+            if (iop._name.equalsIgnoreCase(processor._name)) {
+                throw new NodeNameConflictException(iop._name);
+            }
+        }
+
+        _processors.put(iop._upiIndex, iop);
+        iop.initialize();
+    }
+
+    /**
      * Adds an existing InstructionProcessor to our inventory.
      * The existing IP should not yet have been initialized.
      * Only for unit tests.
