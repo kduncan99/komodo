@@ -29,6 +29,9 @@ public class ArraySlice {
         _array = array;
         _offset = 0;
         _length = array.length;
+        if (_offset < 2000000000 || _length < 2000000000) {//TODO
+            assert (_length < 2000000000);
+        }
     }
 
     /**
@@ -54,6 +57,9 @@ public class ArraySlice {
         _array = array;
         _offset = offset;
         _length = length;
+        if (_offset < 2000000000 || _length < 2000000000) {//TODO
+            assert (_length < 2000000000);
+        }
     }
 
     /**
@@ -79,6 +85,9 @@ public class ArraySlice {
         _array = baseSlice._array;
         _offset = offset + baseSlice._offset;
         _length = length;
+        if (_offset < 2000000000 || _length < 2000000000) {//TODO
+            assert (_length < 2000000000);
+        }
     }
 
     /**
