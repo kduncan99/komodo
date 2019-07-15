@@ -116,7 +116,7 @@ public class ByteChannelModule extends ChannelModule {
                 break;
 
             case QuarterWordPacked:
-                int units = words * 2;
+                int units = words / 2;
                 int halfUnits = words % 2;
                 bytes = units * 9 + halfUnits * 5;
         }
@@ -188,6 +188,7 @@ public class ByteChannelModule extends ChannelModule {
                             tracker._channelProgram.setDeviceStatus(tracker._ioInfo._status);
                             tracker._channelProgram.setChannelStatus(ChannelStatus.DeviceError);
                         }
+                        tracker._completed = true;
                         sleepFlag = false;
                     }
                 }
@@ -234,10 +235,13 @@ public class ByteChannelModule extends ChannelModule {
             }
 
             case QuarterWordPacked:              //  Format C two words -> 9 frames
+                System.out.println("packByteBuffer..........................................................");//TODO
+                tracker._compositeBuffer.dump();//TODO
                 if (tracker._compositeBuffer._length % 2 == 0) {
                     //  even number of words to be translated - nice and neat.
                     byte[] byteData = new byte[tracker._compositeBuffer._length * 9 / 2];
                     tracker._compositeBuffer.pack(byteData);
+                    tracker._byteBuffer = ByteBuffer.wrap(byteData);
                 } else {
                     //  odd number of words.  messy, but doable.
                     byte[] byteData = new byte[(tracker._compositeBuffer._length * 9 / 2) + 1];
@@ -319,10 +323,12 @@ public class ByteChannelModule extends ChannelModule {
 
             case QuarterWordPacked:              //  Format C
             {
-                int bytesRead = tracker._byteBuffer.position();
+                int bytesRead = tracker._ioInfo._transferCount;
                 int wordsRead = tracker._compositeBuffer.unpack(tracker._byteBuffer.array(),
                                                                  0,
                                                                  bytesRead);
+                System.out.println("unpackByteBuffer..........................................................");//TODO
+                tracker._compositeBuffer.dump();//TODO
                 if ((wordsRead & 01) != 0) {
                     //  Odd number of words read - we might need to do abnormal frame count stuff.
                     //  We only provide that if the number of words in the ACW buffers exceeds the number transferred.

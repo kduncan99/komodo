@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.BlockId;
+import com.kadware.komodo.baselib.PrepFactor;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +56,7 @@ public class Test_ByteChannelModule {
 
         private final static int BLOCK_COUNT = 256;
         private final static int BLOCK_SIZE = 128;
+        private final static int PREP_FACTOR = 28;
         private final Map<Long, Byte[]> _dataStore = new HashMap<>();
         TestDiskDevice() { super(DeviceType.None, DeviceModel.None, "DISK0"); }
 
@@ -69,6 +71,7 @@ public class Test_ByteChannelModule {
             switch (ioInfo._ioFunction) {
                 case Read:
                 {
+                    System.out.println("READ-----------------------------------------");//TODO
                     int bytesLeft = ioInfo._transferCount;
 
                     Long blockId = ioInfo._blockId.getValue();
@@ -90,9 +93,10 @@ public class Test_ByteChannelModule {
 
                         int dx = 0;
                         while ((bytesLeft > 0) && (dx < BLOCK_SIZE)) {
-                            ioInfo._byteBuffer.put(dataBlock[dx++]);
+                            ioInfo._byteBuffer.array()[dx] = (dataBlock[dx]);
                             ++ioInfo._transferredCount;
                             --bytesLeft;
+                            ++dx;
                         }
                     }
 
@@ -102,6 +106,7 @@ public class Test_ByteChannelModule {
 
                 case Write:
                 {
+                    System.out.println("WRITE-----------------------------------------");//TODO
                     int bytesLeft = ioInfo._transferCount;
 
                     Long blockId = ioInfo._blockId.getValue();
@@ -298,14 +303,14 @@ public class Test_ByteChannelModule {
 
         //  Populate MSP storage
         Random r = new Random(System.currentTimeMillis());
-        long[] dataSample = new long[TestDiskDevice.BLOCK_SIZE];
+        long[] dataSample = new long[TestDiskDevice.PREP_FACTOR];
         for (int dx = 0; dx < dataSample.length; ++dx) {
-            dataSample[dx] = r.nextLong();
+            dataSample[dx] = r.nextLong() & 0_777777_777777L;
         }
 
         int dataSegmentIndex = msp.createSegment(1024);
         ArraySlice dataStorage = msp.getStorage(dataSegmentIndex);
-        for (int dx = 0; dx < TestDiskDevice.BLOCK_SIZE; ++dx) {
+        for (int dx = 0; dx < TestDiskDevice.PREP_FACTOR; ++dx) {
             dataStorage._array[dx] = dataSample[dx];
         }
 
@@ -319,6 +324,7 @@ public class Test_ByteChannelModule {
                                                             .setIOFunction(IOFunction.Write)
                                                             .setBlockId(new BlockId(blockId))
                                                             .setAccessControlWords(acws)
+                                                            .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
             boolean started = cm.scheduleChannelProgram(ip, iop, cp, new ArraySlice(dataSample));
             assertTrue(started);
@@ -337,13 +343,14 @@ public class Test_ByteChannelModule {
             assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
 
             //  Read data sample
-            long[] dataResult = new long[TestDiskDevice.BLOCK_SIZE];
+            long[] dataResult = new long[TestDiskDevice.PREP_FACTOR];
             cp = new ChannelProgram.Builder().setIopUpiIndex(iop._upiIndex)
                                              .setChannelModuleIndex(cmIndex)
                                              .setDeviceAddress(devIndex)
                                              .setIOFunction(IOFunction.Read)
                                              .setBlockId(new BlockId(blockId))
                                              .setAccessControlWords(acws)
+                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                              .build();
             started = cm.scheduleChannelProgram(ip, iop, cp, new ArraySlice(dataResult));
             assertTrue(started);
