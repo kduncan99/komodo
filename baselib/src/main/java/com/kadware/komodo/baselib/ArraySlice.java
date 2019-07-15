@@ -103,6 +103,30 @@ public class ArraySlice {
         return new ArraySlice(Arrays.copyOf(_array, newSize));
     }
 
+    /**
+     * For debugging
+     */
+    public void dump() {
+        int ax = _offset;
+        while (ax % 8 > 0) { --ax; }
+        int alimit = _length + _offset;
+        while (alimit % 8 > 0) { ++alimit; }
+
+        System.out.println("ArraySlice content:");
+        while (ax < alimit) {
+            StringBuilder sb = new StringBuilder();
+            for (int ay = 0; ay < 8; ++ay) {
+                if ((ax + ay < _offset) || (ax + ay >= _length + _offset)) {
+                    sb.append("............  ");
+                } else {
+                    sb.append(String.format("%012o  ", _array[ax + ay]));
+                }
+            }
+            System.out.println(sb.toString());
+            ax += 8;
+        }
+    }
+
     @Override
     public boolean equals(
         final Object obj
@@ -743,35 +767,35 @@ public class ArraySlice {
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
             switch (partial) {
                 case 0:
-                    set(dx, (get(dx) & 0_001777_777777L) | ((long)source[sx++] << 28));
+                    set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx++] & 0xFF)  << 28));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 1:
-                    set(dx, (get(dx) & 0_776003_777777L) | ((long)source[sx++] << 20));
+                    set(dx, (get(dx) & 0_776003_777777L) | (((long) source[sx++] & 0xFF) << 20));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 2:
-                    set(dx, (get(dx) & 0_777774_007777L) | ((long)source[sx++] << 12));
+                    set(dx, (get(dx) & 0_777774_007777L) | (((long) source[sx++] & 0xFF) << 12));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 3:
-                    set(dx, (get(dx) & 0_777777_770017L) | ((long)source[sx++] << 4));
+                    set(dx, (get(dx) & 0_777777_770017L) | (((long) source[sx++] & 0xFF) << 4));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 4:
-                    set(dx, (get(dx) & 0_777777_777760L) | ((long)source[sx] >> 4));
+                    set(dx, (get(dx) & 0_777777_777760L) | (((long)source[sx] & 0xF0) >> 4));
                     ++dx;
                     --wordsLeft;
                     if (wordsLeft > 0) {
-                        set(dx, (get(dx) & 0_037777_777777L) | (((long)source[sx] & 017) << 32));
+                        set(dx, (get(dx) & 0_037777_777777L) | (((long)source[sx] & 0x0F) << 32));
                         ++count;
                     }
                     ++sx;
@@ -779,25 +803,25 @@ public class ArraySlice {
                     break;
 
                 case 5:
-                    set(dx, (get(dx) & 0_740077_777777L) | ((long)source[sx++] << 24));
+                    set(dx, (get(dx) & 0_740077_777777L) | (((long)source[sx++] & 0xFF) << 24));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 6:
-                    set(dx, (get(dx) & 0_777700_177777L) | ((long)source[sx++] << 16));
+                    set(dx, (get(dx) & 0_777700_177777L) | (((long)source[sx++] & 0xFF) << 16));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 7:
-                    set(dx, (get(dx) & 0_777777_600377L) | ((long)source[sx++] << 8));
+                    set(dx, (get(dx) & 0_777777_600377L) | (((long)source[sx++] & 0xFF) << 8));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 8:
-                    set(dx, (get(dx) & 0_777777_777400L) | (long)source[sx++]);
+                    set(dx, (get(dx) & 0_777777_777400L) | ((long)source[sx++] & 0xFF));
                     ++count;
                     --bytesLeft;
                     ++dx;
