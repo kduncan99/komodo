@@ -39,8 +39,7 @@ IIIIIIIIHHHHHHHHGGGGGGGGFFFFFFFFE(7-4)
 
 * If the ninth bit in any Format A is set, the data transfer is terminated (write only).
 The letters indicate the order in which bits are transferred - each letter being a frame.
-
- */
+*/
 
 @SuppressWarnings("Duplicates")
 public class ByteChannelModule extends ChannelModule {
@@ -181,7 +180,7 @@ public class ByteChannelModule extends ChannelModule {
             }
 
             case QuarterWordPacked:              //  Format C two words -> 9 frames
-                tracker._compositeBuffer.dump();//TODO temporary
+//                tracker._compositeBuffer.dump();//TODO temporary
                 if (tracker._compositeBuffer._length % 2 == 0) {
                     //  even number of words to be translated - nice and neat.
                     byte[] byteData = new byte[tracker._compositeBuffer._length * 9 / 2];
@@ -326,7 +325,7 @@ public class ByteChannelModule extends ChannelModule {
                 int wordsRead = tracker._compositeBuffer.unpack(tracker._byteBuffer.array(),
                                                                  0,
                                                                  bytesRead);
-                tracker._compositeBuffer.dump();//TODO temporary
+//                tracker._compositeBuffer.dump();//TODO temporary
                 if ((wordsRead & 01) != 0) {
                     //  Odd number of words read - we might need to do abnormal frame count stuff.
                     //  We only provide that if the number of words in the ACW buffers exceeds the number transferred.
