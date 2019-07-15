@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.BlockId;
-import com.kadware.komodo.baselib.PrepFactor;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class Test_ByteChannelModule {
         private final static int BLOCK_COUNT = 256;
         private final static int BLOCK_SIZE = 128;
         private final static int PREP_FACTOR = 28;
-        private final Map<Long, Byte[]> _dataStore = new HashMap<>();
+        private final Map<Long, byte[]> _dataStore = new HashMap<>();
         TestDiskDevice() { super(DeviceType.None, DeviceModel.None, "DISK0"); }
 
         @Override
@@ -71,33 +70,37 @@ public class Test_ByteChannelModule {
             switch (ioInfo._ioFunction) {
                 case Read:
                 {
-                    System.out.println("READ-----------------------------------------");//TODO
                     int bytesLeft = ioInfo._transferCount;
+                    int byteBufferLength = ioInfo._byteBuffer.array().length;
 
                     Long blockId = ioInfo._blockId.getValue();
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = DeviceStatus.InvalidBlockId;
                     }
 
-                    while (bytesLeft > 0) {
+                    System.out.println(String.format("READ blkid=%d tc=%d bbl=%d -----------------------------------------",
+                                                     blockId, bytesLeft, byteBufferLength));//TODO
+                    int dx = 0;
+                    while ((bytesLeft > 0) && (dx < byteBufferLength)) {
                         if (blockId >= BLOCK_COUNT) {
                             ioInfo._status = DeviceStatus.InvalidTransferSize;
                             return false;
                         }
 
-                        Byte[] dataBlock = _dataStore.get(blockId);
+                        byte[] dataBlock = _dataStore.get(blockId);
                         if (dataBlock == null) {
-                            dataBlock = new Byte[BLOCK_SIZE];
+                            dataBlock = new byte[BLOCK_SIZE];
                             _dataStore.put(blockId, dataBlock);
                         }
 
-                        int dx = 0;
-                        while ((bytesLeft > 0) && (dx < BLOCK_SIZE)) {
-                            ioInfo._byteBuffer.array()[dx] = (dataBlock[dx]);
+                        int sx = 0;
+                        while ((bytesLeft > 0) && (sx < BLOCK_SIZE) && (dx < byteBufferLength)) {
+                            ioInfo._byteBuffer.array()[dx++] = dataBlock[sx++];
                             ++ioInfo._transferredCount;
                             --bytesLeft;
-                            ++dx;
                         }
+
+                        ++blockId;
                     }
 
                     ioInfo._status = DeviceStatus.Successful;
@@ -106,32 +109,37 @@ public class Test_ByteChannelModule {
 
                 case Write:
                 {
-                    System.out.println("WRITE-----------------------------------------");//TODO
                     int bytesLeft = ioInfo._transferCount;
+                    int byteBufferLength = ioInfo._byteBuffer.array().length;
 
                     Long blockId = ioInfo._blockId.getValue();
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = DeviceStatus.InvalidBlockId;
                     }
 
-                    ioInfo._byteBuffer.position(0);
+                    System.out.println(String.format("WRITE blkid=%d tc=%d bbl=%d -----------------------------------------",
+                                                     blockId, bytesLeft, byteBufferLength));//TODO
+                    int sx = 0;
+                    byte[] sourceData = ioInfo._byteBuffer.array();
                     while (bytesLeft > 0) {
                         if (blockId >= BLOCK_COUNT) {
                             ioInfo._status = DeviceStatus.InvalidTransferSize;
                             return false;
                         }
 
-                        Byte[] dataBlock = _dataStore.get(blockId);
+                        byte[] dataBlock = _dataStore.get(blockId);
                         if (dataBlock == null) {
-                            dataBlock = new Byte[BLOCK_SIZE];
+                            dataBlock = new byte[BLOCK_SIZE];
                             _dataStore.put(blockId, dataBlock);
                         }
 
                         for (int dx = 0;
                              (bytesLeft > 0) && (dx < BLOCK_SIZE);
-                             ++ioInfo._transferredCount, --bytesLeft, ++dx) {
-                            dataBlock[dx] = ioInfo._byteBuffer.array()[dx];
+                             ++ioInfo._transferredCount, --bytesLeft) {
+                            dataBlock[dx++] = ioInfo._byteBuffer.array()[sx++];
                         }
+
+                        ++blockId;
                     }
 
                     ioInfo._status = DeviceStatus.Successful;
@@ -162,6 +170,41 @@ public class Test_ByteChannelModule {
 
         @Override
         public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+    }
+
+    private ByteChannelModule _cm = null;
+    private int _cmIndex = 0;
+    private Device _device = null;
+    private int _deviceIndex = 0;
+    private InstructionProcessor _ip = null;
+    private InputOutputProcessor _iop = null;
+    private MainStorageProcessor _msp = null;
+
+    private void setup(
+    ) throws CannotConnectException,
+             MaxNodesException {
+        //  Create stub nodes and one real channel module
+        _ip = InventoryManager.getInstance().createInstructionProcessor();
+        _iop = InventoryManager.getInstance().createInputOutputProcessor();
+        _msp = InventoryManager.getInstance().createMainStorageProcessor();
+        _cm = new ByteChannelModule("CM0-0");
+        _device = new TestDiskDevice();
+
+        int cmIndex = 0;
+        int devIndex = 0;
+        Node.connect(_iop, cmIndex, _cm);
+        Node.connect(_cm, devIndex, _device);
+        _cm.initialize();
+        _device.initialize();
+    }
+
+    private void teardown(
+    ) throws UPINotAssignedException {
+        _cm.terminate();
+        _device.terminate();
+        InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
     }
 
     @Test
@@ -282,24 +325,12 @@ public class Test_ByteChannelModule {
     }
 
     @Test
-    public void io_formatC_oneACW(
+    public void io_formatC_oneBlock(
         ) throws AddressingExceptionInterrupt,
                  CannotConnectException,
                  MaxNodesException,
                  UPINotAssignedException {
-        //  Create stub nodes and one real channel module
-        InstructionProcessor ip = InventoryManager.getInstance().createInstructionProcessor();
-        InputOutputProcessor iop = InventoryManager.getInstance().createInputOutputProcessor();
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-        ByteChannelModule cm = new ByteChannelModule("CM0-0");
-        TestDiskDevice d = new TestDiskDevice();
-
-        int cmIndex = 0;
-        int devIndex = 0;
-        Node.connect(iop, cmIndex, cm);
-        Node.connect(cm, devIndex, d);
-        cm.initialize();
-        d.initialize();
+        setup();
 
         //  Populate MSP storage
         Random r = new Random(System.currentTimeMillis());
@@ -308,8 +339,8 @@ public class Test_ByteChannelModule {
             dataSample[dx] = r.nextLong() & 0_777777_777777L;
         }
 
-        int dataSegmentIndex = msp.createSegment(1024);
-        ArraySlice dataStorage = msp.getStorage(dataSegmentIndex);
+        int dataSegmentIndex = _msp.createSegment(1024);
+        ArraySlice dataStorage = _msp.getStorage(dataSegmentIndex);
         for (int dx = 0; dx < TestDiskDevice.PREP_FACTOR; ++dx) {
             dataStorage._array[dx] = dataSample[dx];
         }
@@ -318,15 +349,15 @@ public class Test_ByteChannelModule {
         AccessControlWord[] acws = {};
         for (int blockId = 0; blockId < TestDiskDevice.BLOCK_COUNT; ++blockId) {
             //  Write data sample
-            ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(iop._upiIndex)
-                                                            .setChannelModuleIndex(cmIndex)
-                                                            .setDeviceAddress(devIndex)
+            ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                            .setChannelModuleIndex(_cmIndex)
+                                                            .setDeviceAddress(_deviceIndex)
                                                             .setIOFunction(IOFunction.Write)
                                                             .setBlockId(new BlockId(blockId))
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
-            boolean started = cm.scheduleChannelProgram(ip, iop, cp, new ArraySlice(dataSample));
+            boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataSample));
             assertTrue(started);
             if (started) {
                 while (cp.getChannelStatus() == ChannelStatus.InProgress) {
@@ -344,15 +375,15 @@ public class Test_ByteChannelModule {
 
             //  Read data sample
             long[] dataResult = new long[TestDiskDevice.PREP_FACTOR];
-            cp = new ChannelProgram.Builder().setIopUpiIndex(iop._upiIndex)
-                                             .setChannelModuleIndex(cmIndex)
-                                             .setDeviceAddress(devIndex)
+            cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                             .setChannelModuleIndex(_cmIndex)
+                                             .setDeviceAddress(_deviceIndex)
                                              .setIOFunction(IOFunction.Read)
                                              .setBlockId(new BlockId(blockId))
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                              .build();
-            started = cm.scheduleChannelProgram(ip, iop, cp, new ArraySlice(dataResult));
+            started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             assertTrue(started);
             if (started) {
                 while (cp.getChannelStatus() == ChannelStatus.InProgress) {
@@ -371,16 +402,97 @@ public class Test_ByteChannelModule {
             assertArrayEquals(dataSample, dataResult);
         }
 
-        cm.terminate();
-        InventoryManager.getInstance().deleteProcessor(ip._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(iop._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(msp._upiIndex);
+        teardown();
+    }
 
-        //  Unmount and delete disk pack
-        //TODO
+    @Test
+    public void io_formatC_multipleBlocks(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException {
+        setup();
 
-        //  Compare buffers
-        //TODO
+        int maxBlocks = 16;
+
+        //  Populate MSP storage
+        Random r = new Random(System.currentTimeMillis());
+        long[] dataSample = new long[maxBlocks * TestDiskDevice.PREP_FACTOR];
+        for (int dx = 0; dx < dataSample.length; ++dx) {
+            dataSample[dx] = r.nextLong() & 0_777777_777777L;
+        }
+
+        int dataSegmentIndex = _msp.createSegment(1024);
+        ArraySlice dataStorage = _msp.getStorage(dataSegmentIndex);
+        for (int dx = 0; dx < TestDiskDevice.PREP_FACTOR; ++dx) {
+            dataStorage._array[dx] = dataSample[dx];
+        }
+
+        //  blank acws so builder won't complain
+        AccessControlWord[] acws = {};
+        int blockId = 0;
+        while (blockId < TestDiskDevice.BLOCK_COUNT) {
+            int blockCount = r.nextInt() % maxBlocks;
+            if (blockCount < 0) { blockCount = -blockCount; }
+            if (blockCount == 0) { blockCount = 1; }
+            if (blockId + blockCount >= TestDiskDevice.BLOCK_COUNT) { blockCount = 1; }
+
+            //  Write data sample
+            ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                            .setChannelModuleIndex(_cmIndex)
+                                                            .setDeviceAddress(_deviceIndex)
+                                                            .setIOFunction(IOFunction.Write)
+                                                            .setBlockId(new BlockId(blockId))
+                                                            .setAccessControlWords(acws)
+                                                            .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
+                                                            .build();
+            ArraySlice asBuffer = new ArraySlice(dataSample, 0, blockCount * TestDiskDevice.PREP_FACTOR);
+            boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, asBuffer);
+            assertTrue(started);
+            if (started) {
+                while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }
+
+            if (cp.getChannelStatus() != ChannelStatus.Successful) {
+                System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+            }
+            assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+
+            //  Read data sample
+            long[] dataResult = new long[blockCount * TestDiskDevice.PREP_FACTOR];
+            cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                             .setChannelModuleIndex(_cmIndex)
+                                             .setDeviceAddress(_deviceIndex)
+                                             .setIOFunction(IOFunction.Read)
+                                             .setBlockId(new BlockId(blockId))
+                                             .setAccessControlWords(acws)
+                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
+                                             .build();
+            started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
+            assertTrue(started);
+            if (started) {
+                while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }
+
+            if (cp.getChannelStatus() != ChannelStatus.Successful) {
+                System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+            }
+            assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+            assertArrayEquals(asBuffer.getAll(), dataResult);
+            blockId += blockCount;
+        }
+
+        teardown();
     }
 
     @Test
