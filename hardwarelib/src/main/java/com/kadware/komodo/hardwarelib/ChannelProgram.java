@@ -203,7 +203,8 @@ public class ChannelProgram extends ArraySlice {
             assert(_deviceAddress != null);
             assert(_ioFunction != null);
 
-            if (_ioFunction.isReadFunction() || _ioFunction.isWriteFunction()) {
+            if (_ioFunction.isReadFunction()
+                || (_ioFunction.isWriteFunction() && (_ioFunction != IOFunction.WriteEndOfFile))) {
                 assert(_acws != null);
             }
 

@@ -872,32 +872,34 @@ public class ArraySlice {
         int slimit = offset + length;
         int qw = 0;
         int sx = offset;
+        int bcount = 0;
         for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length); ++sx) {
             switch (qw) {
                 case 0:
-                    _array[dx] = ((long) source[sx]) << 27;
+                    _array[dx] = (((long) source[sx]) & 0377) << 27;
                     ++qw;
                     break;
 
                 case 1:
-                    _array[dx] = Word36.setQ2(_array[dx], source[sx]);
+                    _array[dx] = Word36.setQ2(_array[dx], source[sx] & 0377);
                     ++qw;
                     break;
 
                 case 2:
-                    _array[dx] = Word36.setQ3(_array[dx], source[sx]);
+                    _array[dx] = Word36.setQ3(_array[dx], source[sx] & 0377);
                     ++qw;
                     break;
 
                 case 3:
-                    _array[dx] = Word36.setQ4(_array[dx], source[sx]);
+                    _array[dx] = Word36.setQ4(_array[dx], source[sx] & 0377);
                     ++dx;
                     ++dcount;
                     qw = 0;
             }
+            ++bcount;
         }
 
-        return sx;
+        return bcount;
     }
 
     /**

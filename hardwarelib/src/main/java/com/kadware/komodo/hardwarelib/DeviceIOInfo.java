@@ -7,7 +7,6 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
-import java.nio.ByteBuffer;
 
 /**
  * Represents an IO passed from a ChannelModule object to one of its descendant Device objects
@@ -26,9 +25,10 @@ public class DeviceIOInfo {
     final IOFunction _ioFunction;
 
     /**
-     * Reference to a byte buffer for byte data transfers
+     * Reference to a byte buffer for byte data transfers.
+     * Required for writes, should be null for reads.
      */
-    ByteBuffer _byteBuffer;
+    byte[] _byteBuffer;
 
     /**
      * Reference to a word buffer for word data transfers
@@ -46,24 +46,24 @@ public class DeviceIOInfo {
     final BlockId _blockId;
 
     /**
-     * Sense bytes returned from a physical IO (if we ever implement such)
-     */
-    byte[] _senseBytes = null;
-
-    /**
      * Result of the operation
      */
     DeviceStatus _status = DeviceStatus.InvalidStatus;
 
     /**
-     * Number of bytes or words successfully transferred
+     * Number of bytes or words successfully transferred - cannot be larger than _transferCount
      */
     int _transferredCount = 0;
+
+    /**
+     * Something for the device to use if it needs to do so
+     */
+    Object _deviceObject = null;
 
     private DeviceIOInfo(
         ChannelModule source,
         IOFunction function,
-        ByteBuffer byteBuffer,
+        byte[] byteBuffer,
         ArraySlice wordBuffer,
         int transferCount,
         BlockId blockId
@@ -99,13 +99,13 @@ public class DeviceIOInfo {
 
         private ChannelModule _source = null;
         private IOFunction _ioFunction = null;
-        private ByteBuffer _buffer = null;
+        private byte[] _buffer = null;
         Integer _transferCount = null;
         BlockId _blockId = null;
 
         ByteTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
         ByteTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
-        ByteTransferBuilder setBuffer(ByteBuffer value) { _buffer = value; return this; }
+        ByteTransferBuilder setBuffer(byte[] value) { _buffer = value; return this; }
         ByteTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
         ByteTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
 
@@ -114,8 +114,11 @@ public class DeviceIOInfo {
                 throw new InvalidArgumentRuntimeException("No source parameter");
             } else if (_ioFunction == null) {
                 throw new InvalidArgumentRuntimeException("No ioFunction parameter");
-            } else if (_ioFunction.isWriteFunction() && (_buffer == null)) {
+            } else if (_ioFunction.isWriteFunction() && _ioFunction.requiresBuffer() && (_buffer == null)) {
                 throw new InvalidArgumentRuntimeException("No buffer parameter");
+            } else if ((_ioFunction.isReadFunction() || (!_ioFunction.requiresBuffer()))
+                       && (_buffer != null)) {
+                throw new InvalidArgumentRuntimeException("Buffer wrongly provided");
             } else if (_transferCount == null) {
                 throw new InvalidArgumentRuntimeException("No transferCount parameter");
             }

@@ -74,15 +74,19 @@ public enum IOFunction
         }
     }
 
-    public boolean isReadFunction()
-    {
+    public boolean requiresBuffer() {
+        return (this == IOFunction.Read)
+               || (this == IOFunction.ReadBackward)
+               || (this == IOFunction.Write);
+    }
+
+    public boolean isReadFunction() {
         return (this == IOFunction.GetInfo)
                || (this == IOFunction.Read)
                || (this == IOFunction.ReadBackward);
     }
 
-    public boolean isWriteFunction()
-    {
+    public boolean isWriteFunction() {
         return (this == IOFunction.Write)
                || (this == IOFunction.WriteEndOfFile);
     }

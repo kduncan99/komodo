@@ -237,7 +237,7 @@ public abstract class DiskDevice extends Device {
         final DeviceIOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
-            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer.array());
+            logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);
         } else if (ioInfo._wordBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._wordBuffer);
         }

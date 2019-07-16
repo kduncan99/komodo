@@ -12,7 +12,7 @@ public enum ChannelStatus {
     UnconfiguredChannelModule(3),       //  returned by IOP
     UnconfiguredDevice(4),
     InvalidAddress(5),
-    InsufficientBuffers(6),
+    InsufficientBuffers(6),             //  successful read, but some data was truncated
     InProgress(040),
     InvalidStatus(077);
 

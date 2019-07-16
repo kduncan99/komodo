@@ -12,7 +12,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
-import java.nio.file.OpenOption;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -129,7 +128,6 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         }
     };
 
-
     private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
     private AsynchronousFileChannel _channel;
 
@@ -154,6 +152,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     public void completed(Integer value, DeviceIOInfo attachment) {
+        attachment._transferredCount = value;
         attachment._status = DeviceStatus.Successful;
         attachment._source.signal();
     }
@@ -235,9 +234,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         final DeviceIOInfo ioInfo
     ) {
         ArraySlice as = getInfo();
-        byte[] temp = new byte[128];
-        as.pack(temp);
-        ioInfo._byteBuffer = ByteBuffer.wrap(temp);
+        ioInfo._byteBuffer = new byte[128];
+        as.pack(ioInfo._byteBuffer);
         ioInfo._status = DeviceStatus.Successful;
         _unitAttentionFlag = false;
         ioInfo._source.signal();
@@ -293,10 +291,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         }
 
         ioInfo._status = DeviceStatus.InProgress;
+        ioInfo._byteBuffer = new byte[ioInfo._transferCount];
         long byteOffset = calculateByteOffset(reqBlockId);
-
-        ioInfo._byteBuffer = ByteBuffer.allocate(ioInfo._transferCount);
-        _channel.read(ioInfo._byteBuffer, byteOffset, ioInfo, this);
+        _channel.read(ByteBuffer.wrap(ioInfo._byteBuffer), byteOffset, ioInfo, this);
     }
 
     /**
@@ -365,7 +362,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             return;
         }
 
-        if (ioInfo._byteBuffer.array().length < ioInfo._transferCount) {
+        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
             ioInfo._status = DeviceStatus.BufferTooSmall;
             ioInfo._source.signal();
             return;
@@ -395,7 +392,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
 
         ioInfo._status = DeviceStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
-        _channel.write(ioInfo._byteBuffer, byteOffset, ioInfo, this);
+        _channel.write(ByteBuffer.wrap(ioInfo._byteBuffer), byteOffset, ioInfo, this);
     }
 
 
