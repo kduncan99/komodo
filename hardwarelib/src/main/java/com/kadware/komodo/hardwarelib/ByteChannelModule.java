@@ -294,6 +294,7 @@ public class ByteChannelModule extends ChannelModule {
     private boolean unpackByteBuffer(
         final ByteTracker tracker
     ) {
+        //TODO NEED TO SUPPORT BACKWARD STUFF
         ChannelProgram cp = tracker._channelProgram;
         switch (cp.getByteTranslationFormat()) {
             case QuarterWordPerByte:                //  Format A

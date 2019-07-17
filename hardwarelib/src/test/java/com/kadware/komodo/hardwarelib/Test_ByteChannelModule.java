@@ -741,6 +741,16 @@ public class Test_ByteChannelModule {
     }
 
     @Test
+    public void io_formatA_backward() {
+        //TODO
+    }
+
+    @Test
+    public void io_formatA_backwardPartial() {
+        //TODO
+    }
+
+    @Test
     public void io_formatB(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
