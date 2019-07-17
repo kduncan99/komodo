@@ -756,8 +756,10 @@ public class ArraySlice {
     public int unpack(
         final byte[] source,
         final int sourceOffset,
-        final int sourceCount
+        final int sourceCount,
+        final boolean backward
     ) {
+        //TODO need backward logic
         if (sourceOffset >= source.length) {
             return 0;
         }
@@ -768,33 +770,34 @@ public class ArraySlice {
         }
 
         int count = 0;
-        int sx = sourceOffset;
+        int sx = backward ? sourceOffset + sourceCount : sourceOffset;
         int dx = 0;
         int wordsLeft = getSize();
         int partial = 0;
 
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
+            if (backward) --sx;
             switch (partial) {
                 case 0:
-                    set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx++] & 0xFF)  << 28));
+                    set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx] & 0xFF)  << 28));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 1:
-                    set(dx, (get(dx) & 0_776003_777777L) | (((long) source[sx++] & 0xFF) << 20));
+                    set(dx, (get(dx) & 0_776003_777777L) | (((long) source[sx] & 0xFF) << 20));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 2:
-                    set(dx, (get(dx) & 0_777774_007777L) | (((long) source[sx++] & 0xFF) << 12));
+                    set(dx, (get(dx) & 0_777774_007777L) | (((long) source[sx] & 0xFF) << 12));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 3:
-                    set(dx, (get(dx) & 0_777777_770017L) | (((long) source[sx++] & 0xFF) << 4));
+                    set(dx, (get(dx) & 0_777777_770017L) | (((long) source[sx] & 0xFF) << 4));
                     ++count;
                     --bytesLeft;
                     break;
@@ -807,30 +810,29 @@ public class ArraySlice {
                         set(dx, (get(dx) & 0_037777_777777L) | (((long)source[sx] & 0x0F) << 32));
                         ++count;
                     }
-                    ++sx;
                     --bytesLeft;
                     break;
 
                 case 5:
-                    set(dx, (get(dx) & 0_740077_777777L) | (((long)source[sx++] & 0xFF) << 24));
+                    set(dx, (get(dx) & 0_740077_777777L) | (((long)source[sx] & 0xFF) << 24));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 6:
-                    set(dx, (get(dx) & 0_777700_177777L) | (((long)source[sx++] & 0xFF) << 16));
+                    set(dx, (get(dx) & 0_777700_177777L) | (((long)source[sx] & 0xFF) << 16));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 7:
-                    set(dx, (get(dx) & 0_777777_600377L) | (((long)source[sx++] & 0xFF) << 8));
+                    set(dx, (get(dx) & 0_777777_600377L) | (((long)source[sx] & 0xFF) << 8));
                     ++count;
                     --bytesLeft;
                     break;
 
                 case 8:
-                    set(dx, (get(dx) & 0_777777_777400L) | ((long)source[sx++] & 0xFF));
+                    set(dx, (get(dx) & 0_777777_777400L) | ((long)source[sx] & 0xFF));
                     ++count;
                     --bytesLeft;
                     ++dx;
@@ -838,6 +840,7 @@ public class ArraySlice {
                     break;
             }
 
+            if (!backward) ++sx;
             ++partial;
             if (partial == 9) {
                 partial = 0;
@@ -854,9 +857,10 @@ public class ArraySlice {
      * @return number of bytes unpacked - will be less than sourceCount if we run out of space in this object
      */
     public int unpack(
-        final byte[] source
+        final byte[] source,
+        final boolean backward
     ) {
-        return unpack(source, 0, source.length);
+        return unpack(source, 0, source.length, backward);
     }
 
     /**
@@ -867,13 +871,20 @@ public class ArraySlice {
     public int unpackQuarterWords(
         final byte[] source,
         final int offset,
-        final int length
+        final int length,
+        final boolean backward
     ) {
         int slimit = offset + length;
         int qw = 0;
-        int sx = offset;
         int bcount = 0;
-        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length); ++sx) {
+        int sx = backward ? offset + length : offset;
+        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length);) {
+            if ((backward && (sx == 0))
+                || (!backward && (sx < slimit))) {
+                break;
+            }
+
+            if (backward) --sx;
             switch (qw) {
                 case 0:
                     _array[dx] = (((long) source[sx]) & 0377) << 27;
@@ -897,6 +908,7 @@ public class ArraySlice {
                     qw = 0;
             }
             ++bcount;
+            if (!backward) ++sx;
         }
 
         return bcount;
@@ -908,9 +920,10 @@ public class ArraySlice {
      * @return number of sixth words processed
      */
     public int unpackQuarterWords(
-        final byte[] source
+        final byte[] source,
+        final boolean backward
     ) {
-        return unpackQuarterWords(source, 0, source.length);
+        return unpackQuarterWords(source, 0, source.length, backward);
     }
 
     /**
@@ -921,12 +934,19 @@ public class ArraySlice {
     public int unpackSixthWords(
         final byte[] source,
         final int offset,
-        final int length
+        final int length,
+        final boolean backward
     ) {
         int slimit = offset + length;
         int sw = 0;
-        int sx = offset;
-        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length); ++sx) {
+        int sx = backward ? offset + length : offset;
+        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length);) {
+            if ((backward && (sx == 0))
+                || (!backward && (sx < slimit))) {
+                break;
+            }
+
+            if (backward) --sx;
             long bval = (long) (source[sx] & 077);
             switch (sw) {
                 case 0:
@@ -960,6 +980,7 @@ public class ArraySlice {
                     ++dcount;
                     sw = 0;
             }
+            if (!backward) ++sx;
         }
 
         return sx;
@@ -971,8 +992,9 @@ public class ArraySlice {
      * @return number of sixth words processed
      */
     public int unpackSixthWords(
-        final byte[] source
+        final byte[] source,
+        final boolean backward
     ) {
-        return unpackSixthWords(source, 0, source.length);
+        return unpackSixthWords(source, 0, source.length, backward);
     }
 }
