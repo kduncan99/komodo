@@ -593,16 +593,13 @@ public class Test_ByteChannelModule {
              MaxNodesException {
         setup(DeviceType.Tape);
 
-        //  Populate MSP storage
-        Random r = new Random(System.currentTimeMillis());
-
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
         long[][] sourceBuffers = new long[blockSizes.length][];
         ArraySlice[] mspStorages = new ArraySlice[blockSizes.length];
         for (int bsx = 0; bsx < blockSizes.length; ++bsx) {
             sourceBuffers[bsx] = new long[blockSizes[bsx]];
             for (int dx = 0; dx < sourceBuffers[bsx].length; ++dx) {
-                sourceBuffers[bsx][dx] = r.nextLong() & 0_377377_377377L;
+                sourceBuffers[bsx][dx] = _random.nextLong() & 0_377377_377377L;
             }
 
             int dataSegmentIndex = _msp.createSegment(blockSizes[bsx]);
@@ -743,8 +740,143 @@ public class Test_ByteChannelModule {
         //TODO - for tape
     }
 
-    public void io_formatB() {
-        //TODO - for tape
+    @Test
+    public void io_formatB(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException {
+        setup(DeviceType.Tape);
+
+        int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
+        long[][] sourceBuffers = new long[blockSizes.length][];
+        ArraySlice[] mspStorages = new ArraySlice[blockSizes.length];
+        for (int bsx = 0; bsx < blockSizes.length; ++bsx) {
+            sourceBuffers[bsx] = new long[blockSizes[bsx]];
+            for (int dx = 0; dx < sourceBuffers[bsx].length; ++dx) {
+                sourceBuffers[bsx][dx] = _random.nextLong() & 0_777777_777777L;
+            }
+
+            int dataSegmentIndex = _msp.createSegment(blockSizes[bsx]);
+            mspStorages[bsx] = _msp.getStorage(dataSegmentIndex);
+            for (int dx = 0; dx < TestDiskDevice.PREP_FACTOR; ++dx) {
+                mspStorages[bsx]._array[dx] = sourceBuffers[bsx][dx];
+            }
+        }
+
+        //  Write data samples
+        for (int bsx = 0; bsx < blockSizes.length; ++bsx) {
+            ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                .setChannelModuleIndex(_cmIndex)
+                .setDeviceAddress(_deviceIndex)
+                .setIOFunction(IOFunction.Write)
+                .setAccessControlWords(new AccessControlWord[0])
+                .setByteTranslationFormat(ByteTranslationFormat.SixthWordByte)
+                .build();
+            boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(sourceBuffers[bsx]));
+            if (started) {
+                while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+            }
+
+            if (cp.getChannelStatus() != ChannelStatus.Successful) {
+                System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+            }
+            assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+            assertEquals(blockSizes[bsx], cp.getWordsTransferred());
+            assertEquals(0, cp.getResidualBytes());
+        }
+
+        //  Write two file marks and rewind
+        ChannelProgram eofcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+            .setChannelModuleIndex(_cmIndex)
+            .setDeviceAddress(_deviceIndex)
+            .setIOFunction(IOFunction.WriteEndOfFile)
+            .build();
+        boolean started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
+        if (started) {
+            while (eofcp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        }
+        if (eofcp.getChannelStatus() != ChannelStatus.Successful) {
+            System.out.println(String.format("ChStat:%s DevStat:%s", eofcp.getChannelStatus(), eofcp.getDeviceStatus()));
+        }
+        assertEquals(ChannelStatus.Successful, eofcp.getChannelStatus());
+
+        started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
+        if (started) {
+            while (eofcp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        }
+        if (eofcp.getChannelStatus() != ChannelStatus.Successful) {
+            System.out.println(String.format("ChStat:%s DevStat:%s", eofcp.getChannelStatus(), eofcp.getDeviceStatus()));
+        }
+        assertEquals(ChannelStatus.Successful, eofcp.getChannelStatus());
+
+        ChannelProgram rewcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+            .setChannelModuleIndex(_cmIndex)
+            .setDeviceAddress(_deviceIndex)
+            .setIOFunction(IOFunction.Rewind)
+            .build();
+        started = _cm.scheduleChannelProgram(_ip, _iop, rewcp, null);
+        if (started) {
+            while (rewcp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        }
+        if (rewcp.getChannelStatus() != ChannelStatus.Successful) {
+            System.out.println(String.format("ChStat:%s DevStat:%s", rewcp.getChannelStatus(), rewcp.getDeviceStatus()));
+        }
+        assertEquals(ChannelStatus.Successful, rewcp.getChannelStatus());
+
+        //  Read data samples
+        for (int bsx = 0; bsx < blockSizes.length; ++bsx) {
+            long[] dataResult = new long[8000];
+            ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                .setChannelModuleIndex(_cmIndex)
+                .setDeviceAddress(_deviceIndex)
+                .setIOFunction(IOFunction.Read)
+                .setAccessControlWords(new AccessControlWord[0])
+                .setByteTranslationFormat(ByteTranslationFormat.SixthWordByte)
+                .build();
+            started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
+            if (started) {
+                while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+            }
+
+            if (cp.getChannelStatus() != ChannelStatus.Successful) {
+                System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+            }
+
+            assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+            assertEquals(blockSizes[bsx], cp.getWordsTransferred());
+            assertEquals(0, cp.getResidualBytes());
+            assertArrayEquals(sourceBuffers[bsx], Arrays.copyOf(dataResult, sourceBuffers[bsx].length));
+        }
     }
 
     @Test
