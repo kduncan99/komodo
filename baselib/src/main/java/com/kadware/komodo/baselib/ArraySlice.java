@@ -874,13 +874,12 @@ public class ArraySlice {
         final int length,
         final boolean backward
     ) {
-        int slimit = offset + length;
         int qw = 0;
         int bcount = 0;
         int sx = backward ? offset + length : offset;
-        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length);) {
+        for (int dcount = 0, dx = _offset; dcount < _length;) {
             if ((backward && (sx == 0))
-                || (!backward && (sx < slimit))) {
+                || (!backward && (sx >= offset + length))) {
                 break;
             }
 
@@ -937,12 +936,11 @@ public class ArraySlice {
         final int length,
         final boolean backward
     ) {
-        int slimit = offset + length;
         int sw = 0;
         int sx = backward ? offset + length : offset;
-        for (int dcount = 0, dx = _offset; (sx < slimit) && (dcount < _length);) {
+        for (int dcount = 0, dx = _offset; dcount < _length;) {
             if ((backward && (sx == 0))
-                || (!backward && (sx < slimit))) {
+                || (!backward && (sx >= offset + length))) {
                 break;
             }
 
