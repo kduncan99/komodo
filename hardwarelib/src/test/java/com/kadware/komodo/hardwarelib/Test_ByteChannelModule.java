@@ -224,17 +224,17 @@ public class Test_ByteChannelModule {
                         break;
                     }
 
-                    byte[] dest = ioInfo._byteBuffer;
-                    Block block = _stream.get(_position++);
+                    Block block = _stream.get(--_position);
                     if (block instanceof FileMarkBlock) {
                         ioInfo._status = DeviceStatus.FileMark;
                         break;
                     }
 
                     DataBlock dataBlock = (DataBlock) block;
+                    ioInfo._byteBuffer = new byte[dataBlock._data.length];
                     for (int dx = 0, sx = dataBlock._data.length;
-                         (dx < dest.length) && (sx > 0); ++dx) {
-                        dest[dx] = dataBlock._data[--sx];
+                         (dx < dataBlock._data.length) && (sx > 0); ++dx) {
+                        ioInfo._byteBuffer[dx] = dataBlock._data[--sx];
                         ++ioInfo._transferredCount;
                     }
                     ioInfo._status = DeviceStatus.Successful;
@@ -573,9 +573,6 @@ public class Test_ByteChannelModule {
              MaxNodesException,
              UPINotAssignedException {
         setup(DeviceType.Disk);
-        _cm.initialize();
-        Node.connect(_iop, _cmIndex, _cm);
-        Node.connect(_cm, _deviceIndex, _device);
 
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(0)
@@ -584,9 +581,6 @@ public class Test_ByteChannelModule {
                                                         .build();
         boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);
 
-        _cm.terminate();
-        InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
         assertFalse(scheduled);
         assertEquals(ChannelStatus.UnconfiguredDevice, cp.getChannelStatus());
         teardown();
@@ -750,8 +744,77 @@ public class Test_ByteChannelModule {
     }
 
     @Test
-    public void io_formatA_backward() {
-        //TODO
+    public void io_formatA_backward(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException {
+        setup(DeviceType.Tape);
+
+        int blockSize = 1800;
+        long[] sourceBuffer = new long[blockSize];
+        for (int dx = 0; dx < blockSize; ++dx) {
+            sourceBuffer[dx] = _random.nextLong() & 0_377377_377377L;
+        }
+
+        int dataSegmentIndex = _msp.createSegment(blockSize);
+        ArraySlice mspStorage = _msp.getStorage(dataSegmentIndex);
+
+        //  Write data block
+        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                        .setChannelModuleIndex(_cmIndex)
+                                                        .setDeviceAddress(_deviceIndex)
+                                                        .setIOFunction(IOFunction.Write)
+                                                        .setAccessControlWords(new AccessControlWord[0])
+                                                        .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
+                                                        .build();
+        boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(sourceBuffer));
+        if (started) {
+            while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        }
+
+        if (cp.getChannelStatus() != ChannelStatus.Successful) {
+            System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+        }
+        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(blockSize, cp.getWordsTransferred());
+        assertEquals(0, cp.getResidualBytes());
+
+        long[] dataResult = new long[8000];
+        cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                         .setChannelModuleIndex(_cmIndex)
+                                         .setDeviceAddress(_deviceIndex)
+                                         .setIOFunction(IOFunction.ReadBackward)
+                                         .setAccessControlWords(new AccessControlWord[0])
+                                         .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
+                                         .build();
+        started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
+        if (started) {
+            while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+        }
+
+        if (cp.getChannelStatus() != ChannelStatus.Successful) {
+            System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
+        }
+
+        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(blockSize, cp.getWordsTransferred());
+        assertEquals(0, cp.getResidualBytes());
+        assertArrayEquals(sourceBuffer, Arrays.copyOf(dataResult, sourceBuffer.length));
+
+        teardown();
     }
 
     @Test
@@ -1191,6 +1254,4 @@ public class Test_ByteChannelModule {
     public void io_formatD_stopBit() {
         //TODO - for tape
     }
-
-    //  TODO read backward test needed for all formats
 }
