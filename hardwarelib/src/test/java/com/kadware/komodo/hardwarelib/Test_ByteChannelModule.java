@@ -204,22 +204,6 @@ public class Test_ByteChannelModule {
                         break;
                     }
 
-//                    DataBlock dataBlock = (DataBlock) block;
-//                    //TODO
-//                    System.out.println("READ--------------------");
-//                    byte[] b = dataBlock._data;
-//                    for (int bx = 0; bx < b.length; bx += 32) {
-//                        StringBuilder sb = new StringBuilder();
-//                        for (int by = 0; by < 32; ++by) {
-//                            if (bx + by >= b.length) {
-//                                break;
-//                            } else {
-//                                sb.append(String.format("%02X ", (int) b[bx + by] & 0xFF));
-//                            }
-//                        }
-//                        System.out.println(sb.toString());
-//                    }
-//                    //TODO
                     ioInfo._byteBuffer = ((DataBlock) block)._data;
                     ioInfo._transferredCount = ioInfo._byteBuffer.length;
                     ioInfo._status = DeviceStatus.Successful;
@@ -296,21 +280,6 @@ public class Test_ByteChannelModule {
                     }
 
                     byte[] sourceArray = ioInfo._byteBuffer;
-//                    //TODO
-//                    System.out.println("WRITE--------------------");
-//                    byte[] b = sourceArray;
-//                    for (int bx = 0; bx < b.length; bx += 32) {
-//                        StringBuilder sb = new StringBuilder();
-//                        for (int by = 0; by < 32; ++by) {
-//                            if (bx + by >= b.length) {
-//                                break;
-//                            } else {
-//                                sb.append(String.format("%02X ", (int) b[bx + by] & 0xFF));
-//                            }
-//                        }
-//                        System.out.println(sb.toString());
-//                    }
-//                    //TODO
                     _stream.add(_position++, new DataBlock(Arrays.copyOf(sourceArray, sourceArray.length)));
                     ioInfo._status = DeviceStatus.Successful;
                     ioInfo._transferredCount = sourceArray.length;
@@ -377,16 +346,15 @@ public class Test_ByteChannelModule {
             switch (ioInfo._ioFunction) {
                 case Read:
                 {
-                    int bytesLeft = ioInfo._transferCount;
-                    int byteBufferLength = ioInfo._byteBuffer.length;
-
                     Long blockId = ioInfo._blockId.getValue();
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = DeviceStatus.InvalidBlockId;
                     }
 
+                    ioInfo._byteBuffer = new byte[ioInfo._transferCount];
                     int dx = 0;
-                    while ((bytesLeft > 0) && (dx < byteBufferLength)) {
+                    int bytesLeft = ioInfo._transferCount;
+                    while (bytesLeft > 0) {
                         if (blockId >= BLOCK_COUNT) {
                             ioInfo._status = DeviceStatus.InvalidTransferSize;
                             return false;
@@ -399,7 +367,7 @@ public class Test_ByteChannelModule {
                         }
 
                         int sx = 0;
-                        while ((bytesLeft > 0) && (sx < BLOCK_SIZE) && (dx < byteBufferLength)) {
+                        while ((bytesLeft > 0) && (sx < BLOCK_SIZE)) {
                             ioInfo._byteBuffer[dx++] = dataBlock[sx++];
                             ++ioInfo._transferredCount;
                             --bytesLeft;
@@ -863,7 +831,6 @@ public class Test_ByteChannelModule {
                 System.out.println(String.format("ChStat:%s DevStat:%s", cp.getChannelStatus(), cp.getDeviceStatus()));
             }
             assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
-
             assertArrayEquals(dataSample, dataResult);
         }
 
@@ -886,10 +853,9 @@ public class Test_ByteChannelModule {
         int maxBlocks = 16;
 
         //  Populate MSP storage
-        Random r = new Random(System.currentTimeMillis());
         long[] dataSample = new long[maxBlocks * TestDiskDevice.PREP_FACTOR];
         for (int dx = 0; dx < dataSample.length; ++dx) {
-            dataSample[dx] = r.nextLong() & 0_777777_777777L;
+            dataSample[dx] = _random.nextLong() & 0_777777_777777L;
         }
 
         int dataSegmentIndex = _msp.createSegment(1024);
@@ -902,7 +868,7 @@ public class Test_ByteChannelModule {
         AccessControlWord[] acws = {};
         int blockId = 0;
         while (blockId < TestDiskDevice.BLOCK_COUNT) {
-            int blockCount = r.nextInt() % maxBlocks;
+            int blockCount = _random.nextInt() % maxBlocks;
             if (blockCount < 0) { blockCount = -blockCount; }
             if (blockCount == 0) { blockCount = 1; }
             if (blockId + blockCount >= TestDiskDevice.BLOCK_COUNT) { blockCount = 1; }
@@ -976,10 +942,9 @@ public class Test_ByteChannelModule {
         int maxBlockSize = 8 * TestDiskDevice.PREP_FACTOR;
 
         //  Populate MSP storage
-        Random r = new Random(System.currentTimeMillis());
         long[] dataSample = new long[maxBlockSize];
         for (int dx = 0; dx < dataSample.length; ++dx) {
-            dataSample[dx] = r.nextLong() & 0_777777_777777L;
+            dataSample[dx] = _random.nextLong() & 0_777777_777777L;
         }
 
         int dataSegmentIndex = _msp.createSegment(1024);
@@ -993,15 +958,13 @@ public class Test_ByteChannelModule {
 
         int maxWords = TestDiskDevice.PREP_FACTOR * TestDiskDevice.BLOCK_COUNT;
         for (int count = 0; count < 32; ++count) {
-            int blockId = -1;
-            int blockSize = -1;
-            while ((blockId < 0)
-                   || (blockSize < 0)
-                   || ((blockSize % TestDiskDevice.PREP_FACTOR) == 0)
-                   || (((blockId * TestDiskDevice.PREP_FACTOR) + blockSize) >= maxWords)) {
-                blockId = r.nextInt() % TestDiskDevice.BLOCK_COUNT;
-                blockSize = r.nextInt() % maxBlockSize;
-            }
+            int blockId;
+            int blockSize;
+            do {
+                blockId = Math.abs(_random.nextInt()) % TestDiskDevice.BLOCK_COUNT;
+                blockSize = Math.abs(_random.nextInt()) % maxBlockSize;
+            } while (((blockSize % TestDiskDevice.PREP_FACTOR) == 0)
+                || (((blockId * TestDiskDevice.PREP_FACTOR) + blockSize) >= maxWords));
 
             //  Write data sample
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -1013,9 +976,9 @@ public class Test_ByteChannelModule {
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
 
-            int offset = r.nextInt() % maxWords;
-            while ((offset < 0) || ((long)offset + (long)blockSize > maxBlockSize)) {
-                offset = r.nextInt() % maxWords;
+            int offset = Math.abs(_random.nextInt()) % maxWords;
+            while ((long)offset + (long)blockSize > maxBlockSize) {
+                offset = Math.abs(_random.nextInt()) % maxWords;
             }
             ArraySlice asBuffer = new ArraySlice(dataSample, offset, blockSize);
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, asBuffer);

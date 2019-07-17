@@ -25,18 +25,22 @@ public class DeviceIOInfo {
     final IOFunction _ioFunction;
 
     /**
-     * Reference to a byte buffer for byte data transfers.
-     * Required for writes, should be null for reads.
+     * Reference to a byte buffer for byte data transfers for byte devices
+     * Required for writes, should be null for reads - the device should create this.
+     * Must be at least as large as indicated by _transferCount.
      */
     byte[] _byteBuffer;
 
     /**
-     * Reference to a word buffer for word data transfers
+     * Reference to a word buffer for word data transfers for word devices
+     * Required for writes, should be null for reads - the device should create this.
+     * Must be at least as large as indicated by _transferCount.
      */
     final ArraySlice _wordBuffer;
 
     /**
-     * Number of bytes or words to be transferred
+     * Number of bytes to be transferred for byte devices
+     * Number of words to be transferred for word devices
      */
     final int _transferCount;
 
@@ -54,11 +58,6 @@ public class DeviceIOInfo {
      * Number of bytes or words successfully transferred - cannot be larger than _transferCount
      */
     int _transferredCount = 0;
-
-    /**
-     * Something for the device to use if it needs to do so
-     */
-    Object _deviceObject = null;
 
     private DeviceIOInfo(
         ChannelModule source,
@@ -146,8 +145,11 @@ public class DeviceIOInfo {
                 throw new InvalidArgumentRuntimeException("No source parameter");
             } else if (_ioFunction == null) {
                 throw new InvalidArgumentRuntimeException("No ioFunction parameter");
-            } else if (_buffer == null) {
+            } else if (_ioFunction.isWriteFunction() && _ioFunction.requiresBuffer() && (_buffer == null)) {
                 throw new InvalidArgumentRuntimeException("No buffer parameter");
+            } else if ((_ioFunction.isReadFunction() || (!_ioFunction.requiresBuffer()))
+                && (_buffer != null)) {
+                throw new InvalidArgumentRuntimeException("Buffer wrongly provided");
             } else if (_transferCount == null) {
                 throw new InvalidArgumentRuntimeException("No transferCount parameter");
             }
