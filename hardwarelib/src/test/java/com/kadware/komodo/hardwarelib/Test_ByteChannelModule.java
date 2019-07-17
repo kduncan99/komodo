@@ -485,6 +485,8 @@ public class Test_ByteChannelModule {
     ) throws UPINotAssignedException {
         _cm.terminate();
         _device.terminate();
+        _cm = null;
+        _device = null;
         InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
@@ -503,23 +505,30 @@ public class Test_ByteChannelModule {
     }
 
     @Test
-    public void canConnect_success() {
-        ByteChannelModule cm = new ByteChannelModule("CM1-0");
-        InputOutputProcessor iop = new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX);
-        assertTrue(cm.canConnect(iop));
+    public void canConnect_success(
+    ) throws CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException{
+        setup(DeviceType.Disk);
+        assertTrue(_cm.canConnect(_iop));
+        teardown();
     }
 
     @Test
-    public void canConnect_failure() {
+    public void canConnect_failure(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException{
+        setup(DeviceType.Disk);
         ByteChannelModule cm = new ByteChannelModule("CM1-0");
         assertFalse(cm.canConnect(new FileSystemDiskDevice("DISK0")));
         assertFalse(cm.canConnect(new FileSystemTapeDevice("TAPE0")));
         assertFalse(cm.canConnect(new ByteChannelModule("CM1-0")));
         assertFalse(cm.canConnect(new WordChannelModule("CM1-1")));
-        assertFalse(cm.canConnect(new MainStorageProcessor("MSP0",
-                                                           InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX,
-                                                           InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
+        assertFalse(cm.canConnect(_msp));
         assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
+        teardown();
     }
 
     @Test
@@ -561,36 +570,34 @@ public class Test_ByteChannelModule {
     @Test
     public void unconfiguredDevice(
     ) throws CannotConnectException,
+             MaxNodesException,
              UPINotAssignedException {
-        InstructionProcessor ip = new TestInstructionProcessor();
-        InputOutputProcessor iop = new TestInputOutputProcessor();
-        ByteChannelModule cm = new ByteChannelModule("CM0-0");
-        cm.initialize();
-        int cmIndex = 0;
-        TestDiskDevice d = new TestDiskDevice();
-        int devIndex = 0;
-        Node.connect(iop, cmIndex, cm);
-        Node.connect(cm, devIndex, d);
+        setup(DeviceType.Disk);
+        _cm.initialize();
+        Node.connect(_iop, _cmIndex, _cm);
+        Node.connect(_cm, _deviceIndex, _device);
 
-        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(iop._upiIndex)
+        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(0)
                                                         .setDeviceAddress(5)
                                                         .setIOFunction(IOFunction.Reset)
                                                         .build();
-        boolean scheduled = cm.scheduleChannelProgram(ip, iop, cp, null);
+        boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);
 
-        cm.terminate();
-        InventoryManager.getInstance().deleteProcessor(ip._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(iop._upiIndex);
+        _cm.terminate();
+        InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
         assertFalse(scheduled);
         assertEquals(ChannelStatus.UnconfiguredDevice, cp.getChannelStatus());
+        teardown();
     }
 
     @Test
     public void io_formatA(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException {
+             MaxNodesException,
+             UPINotAssignedException{
         setup(DeviceType.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -723,6 +730,8 @@ public class Test_ByteChannelModule {
             assertEquals(0, cp.getResidualBytes());
             assertArrayEquals(sourceBuffers[bsx], Arrays.copyOf(dataResult, sourceBuffers[bsx].length));
         }
+
+        teardown();
     }
 
     @Test
@@ -754,7 +763,8 @@ public class Test_ByteChannelModule {
     public void io_formatB(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException {
+             MaxNodesException,
+             UPINotAssignedException{
         setup(DeviceType.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -887,6 +897,8 @@ public class Test_ByteChannelModule {
             assertEquals(0, cp.getResidualBytes());
             assertArrayEquals(sourceBuffers[bsx], Arrays.copyOf(dataResult, sourceBuffers[bsx].length));
         }
+
+        teardown();
     }
 
     @Test

@@ -305,7 +305,7 @@ public class Test_FileSystemDiskDevice {
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.Successful, ioInfo._status);
         ArraySlice as = new ArraySlice(new long[28]);
-        as.unpack(ioInfo._byteBuffer);
+        as.unpack(ioInfo._byteBuffer, false);
 
         int flags = (int) Word36.getS1(as.get(0));
         boolean resultIsReady = (flags & 01) != 0;

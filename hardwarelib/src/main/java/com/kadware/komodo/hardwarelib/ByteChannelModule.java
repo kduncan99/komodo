@@ -302,7 +302,8 @@ public class ByteChannelModule extends ChannelModule {
             {
                 int frames = tracker._compositeBuffer.unpackQuarterWords(tracker._ioInfo._byteBuffer,
                                                                          0,
-                                                                         tracker._ioInfo._transferredCount);
+                                                                         tracker._ioInfo._transferredCount,
+                                                                         cp.getFunction() == IOFunction.ReadBackward);
                 int fullWords = frames / 4;
                 int residualBytes = frames % 4;
                 cp.setResidualBytes(residualBytes);
@@ -314,7 +315,8 @@ public class ByteChannelModule extends ChannelModule {
             {
                 int frames = tracker._compositeBuffer.unpackSixthWords(tracker._ioInfo._byteBuffer,
                                                                        0,
-                                                                       tracker._ioInfo._transferredCount);
+                                                                       tracker._ioInfo._transferredCount,
+                                                                       cp.getFunction() == IOFunction.ReadBackward);
                 int fullWords = frames / 6;
                 int residualBytes = frames % 6;
                 cp.setResidualBytes(residualBytes);
@@ -327,7 +329,8 @@ public class ByteChannelModule extends ChannelModule {
                 int bytesRead = tracker._ioInfo._transferCount;
                 int wordsRequired = bytesRead * 2 / 9;
                 wordsRequired += (bytesRead * 2) % 9 == 0 ? 0 : 1;
-                int wordsRead = tracker._compositeBuffer.unpack(tracker._ioInfo._byteBuffer);
+                int wordsRead = tracker._compositeBuffer.unpack(tracker._ioInfo._byteBuffer,
+                                                                cp.getFunction() == IOFunction.ReadBackward);
                 if ((wordsRead & 01) != 0) {
                     //  Odd number of words read - we might need to do abnormal frame count stuff.
                     //  We only provide that if the number of words in the ACW buffers exceeds the number transferred.

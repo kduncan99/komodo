@@ -257,7 +257,7 @@ public class Test_ArraySlice {
         };
 
         ArraySlice as = new ArraySlice(new long[3]);
-        as.unpackQuarterWords(byteBuffer);
+        as.unpackQuarterWords(byteBuffer, false);
         assertEquals("Hello World!", as.toASCII(false));
     }
 
@@ -270,11 +270,11 @@ public class Test_ArraySlice {
         };
 
         ArraySlice as = new ArraySlice(new long[3]);
-        as.unpackQuarterWords(byteBuffer);
+        as.unpackQuarterWords(byteBuffer, false);
         assertEquals("Hello Dork..", as.toASCII(false));
     }
 
-    //  TODO more type A
+    //  TODO more type A, and backward
 
     //  type B pack and unpack -----------------------------------------------------------------------------------------------------
 
@@ -287,7 +287,7 @@ public class Test_ArraySlice {
         };
 
         ArraySlice as = new ArraySlice(new long[2]);
-        as.unpackSixthWords(byteBuffer);
+        as.unpackSixthWords(byteBuffer, false);
         assertEquals("HELLO WORLD!", as.toFieldata(false));
     }
 
@@ -300,11 +300,11 @@ public class Test_ArraySlice {
         };
 
         ArraySlice as = new ArraySlice(new long[2]);
-        as.unpackSixthWords(byteBuffer);
+        as.unpackSixthWords(byteBuffer, false);
         assertEquals("HELLO DORK@@", as.toFieldata(false));
     }
 
-    //  TODO more type B
+    //  TODO more type B, and backward
 
     //  type C pack and unpack -----------------------------------------------------------------------------------------------------
 
@@ -438,7 +438,7 @@ public class Test_ArraySlice {
         };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(18, array.unpack(source, 3, 18));
+        assertEquals(18, array.unpack(source, 3, 18, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -464,7 +464,7 @@ public class Test_ArraySlice {
         };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(13, array.unpack(source, 3, 18));
+        assertEquals(13, array.unpack(source, 3, 18, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -486,7 +486,7 @@ public class Test_ArraySlice {
             };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(1, array.unpack(source, 0, 5));
+        assertEquals(1, array.unpack(source, 0, 5, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -508,7 +508,7 @@ public class Test_ArraySlice {
             };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(5, array.unpack(source, 0, 5));
+        assertEquals(5, array.unpack(source, 0, 5, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -525,7 +525,7 @@ public class Test_ArraySlice {
         long[] comp = { 0_221777_777777L, 0_777777_777777L, 0_777777_777777L, 0_777777_777777L, };
         long[] raw = { 0_777777_777777L, 0_777777_777777L, 0_777777_777777L, 0_777777_777777L, };
         ArraySlice array = new ArraySlice(raw);
-        assertEquals(1, array.unpack(source, 0, 5));
+        assertEquals(1, array.unpack(source, 0, 5, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -548,7 +548,7 @@ public class Test_ArraySlice {
 
         long[] raw = { 0_777777_777777L, 0_777777_777777L, 0_777777_777777L, 0_777777_777777L, };
         ArraySlice array = new ArraySlice(raw);
-        assertEquals(7, array.unpack(source, 0, 7));
+        assertEquals(7, array.unpack(source, 0, 7, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -570,7 +570,7 @@ public class Test_ArraySlice {
         long[] comp = { 0, 0, 0, 0 };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(0, array.unpack(source, 0, 0));
+        assertEquals(0, array.unpack(source, 0, 0, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
@@ -592,7 +592,7 @@ public class Test_ArraySlice {
         long[] comp = { 0, 0, 0, 0 };
 
         ArraySlice array = new ArraySlice(new long[comp.length]);
-        assertEquals(0, array.unpack(source, source.length, 1));
+        assertEquals(0, array.unpack(source, source.length, 1, false));
 
         long[] result = new long[array.getSize()];
         for (int rx = 0; rx < result.length; ++rx) {
