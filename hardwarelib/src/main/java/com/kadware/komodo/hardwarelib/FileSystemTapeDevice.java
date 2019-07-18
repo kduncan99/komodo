@@ -9,6 +9,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+
+import com.kadware.komodo.baselib.ArraySlice;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -74,6 +76,10 @@ import org.apache.logging.log4j.LogManager;
  *
  * Every file begins with a scratch pad which identifies the file as a virtual tape volume
  * and indicates the file size limit (if one exists) for the particular volume.
+ *
+ * Currently IO is synchronous, which will hold up the channel module.
+ * For this reason, it is recommended that tape devices be on a channel module apart
+ * from anything else, or at least from all disk devices.
  */
 @SuppressWarnings("Duplicates")
 public class FileSystemTapeDevice extends TapeDevice {
@@ -82,7 +88,6 @@ public class FileSystemTapeDevice extends TapeDevice {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO move this elsewhere
     private static class OutOfDataException extends Exception {}
 
 
@@ -195,30 +200,12 @@ public class FileSystemTapeDevice extends TapeDevice {
     protected void ioGetInfo(
         final DeviceIOInfo ioInfo
     ) {
-        //TODO
-//        //  Create a TapeDeviceInfo object and then serialize it to the IOInfo's buffer
-//        TapeDeviceInfo devInfo = new TapeDeviceInfo(getDeviceType(),
-//                                                    getDeviceModel(),
-//                                                    _readyFlag,
-//                                                    getSubsystemIdentifier(),
-//                                                    _unitAttentionFlag,
-//                                                    isMounted(),
-//                                                    isWriteProtected(),
-//                                                    getEndOfTapeFlag(),
-//                                                    getLoadPointFlag());
-//
-//        ByteBuffer byteBuffer = ByteBuffer.wrap(ioInfo._byteBuffer);
-//        devInfo.serialize(byteBuffer);
-//        if (ioInfo._transferCount < byteBuffer.position()) {
-//            ioInfo._status = DeviceStatus.InvalidBlockSize);
-//        } else {
-//            //  Clear UA flag - user is asking for the info pending for him.
-//            setUnitAttention(false);
-//
-//            //  Complete the IOInfo object
-//            ioInfo._transferredCount = (byteBuffer.position());
-//            ioInfo._status = DeviceStatus.Successful);
-//        }
+        ArraySlice as = getInfo();
+        ioInfo._byteBuffer = new byte[128];
+        as.pack(ioInfo._byteBuffer);
+        ioInfo._status = DeviceStatus.Successful;
+        _unitAttentionFlag = false;
+        ioInfo._source.signal();
     }
 
     /**
@@ -743,7 +730,7 @@ public class FileSystemTapeDevice extends TapeDevice {
      * @throws IOException if we cannot read from the file
      * @throws OutOfDataException if we are apparently at the end of the file and cannot read a control word
      */
-    int readControlWord(
+    private int readControlWord(
     ) throws IOException,
              OutOfDataException {
         //  Read 4 bytes - if there aren't 4 bytes left, set lost position flag.
@@ -765,7 +752,7 @@ public class FileSystemTapeDevice extends TapeDevice {
      * @throws IOException if we cannot read from the file
      * @throws OutOfDataException if we are apparently at the end of the file and cannot read a control word
      */
-    int readPreceedingControlWord(
+    private int readPreceedingControlWord(
     ) throws IOException,
              OutOfDataException {
         _file.seek(_file.getFilePointer() - 4);
@@ -796,13 +783,12 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     /**
      * Unmounts the currently-mounted media
-     * @return true if successful, else false
      */
-    boolean unmount(
+    private void unmount(
     ) {
         if (!isMounted()) {
             LOGGER.error(String.format("Device %s Cannot unmount pack - no pack mounted", _name));
-            return false;
+            return;
         }
 
         //  Clear ready flag to prevent any more IOs from coming in.
@@ -813,7 +799,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             _file.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            return false;
+            return;
         }
 
         _file = null;
@@ -824,8 +810,6 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         setIsMounted(false);
         setIsWriteProtected(true);
-
-        return true;
     }
 
     /**

@@ -4,9 +4,9 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -15,137 +15,6 @@ import org.apache.logging.log4j.LogManager;
  * Abstract class descibing the common attributes of a tape device
  */
 public abstract class TapeDevice extends Device {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-//    public static class TapeDeviceInfo extends DeviceInfo {
-//
-//        private boolean _endOfTape;
-//        private boolean _isMounted;
-//        private boolean _isWriteProtected;
-//        private boolean _loadPoint;
-//
-//        /**
-//         * Standard constructor - to be used prior to deserialization
-//         */
-//        public TapeDeviceInfo(
-//        ) {
-//            _endOfTape = false;
-//            _isMounted = false;
-//            _isWriteProtected = false;
-//            _loadPoint = false;
-//        }
-//
-//        /**
-//         * Initial value constructor
-//         * <p>
-//         * @param model
-//         * @param type
-//         * @param isReady
-//         * @param subsystemIdentifier
-//         * @param unitAttention
-//         * @param isMounted
-//         * @param isWriteProtected
-//         * @param endOfTape
-//         * @param loadPoint
-//         */
-//        public TapeDeviceInfo(
-//            final DeviceType type,
-//            final DeviceModel model,
-//            final boolean isReady,
-//            final short subsystemIdentifier,
-//            final boolean unitAttention,
-//            final boolean isMounted,
-//            final boolean isWriteProtected,
-//            final boolean endOfTape,
-//            final boolean loadPoint
-//        ) {
-//            super(type, model, isReady, subsystemIdentifier, unitAttention);
-//            _isMounted = isMounted;
-//            _isWriteProtected = isWriteProtected;
-//            _endOfTape = endOfTape;
-//            _loadPoint = loadPoint;
-//        }
-//
-//        /**
-//         * Getter
-//         * <p.
-//         * @return
-//         */
-//        public boolean getEndOfTape(
-//        ) {
-//            return _endOfTape;
-//        }
-//
-//        /**
-//         * Getter
-//         * <p>
-//         * @return
-//         */
-//        public boolean isLoadPoint(
-//        ) {
-//            return _loadPoint;
-//        }
-//
-//        /**
-//         * Getter
-//         * <p>
-//         * @return
-//         */
-//        public boolean isMounted(
-//        ) {
-//            return _isMounted;
-//        }
-//
-//        /**
-//         * Getter
-//         * <p>
-//         * @return
-//         */
-//        public boolean isWriteProtected(
-//        ) {
-//            return _isWriteProtected;
-//        }
-//
-//        /**
-//         * Deserializes the pertinent information for this disk device, to a byte stream.
-//         * We might be overridden by a subclass, which calls here first, then deserializes its own information.
-//         * <p>
-//         * @param buffer source for deserialization
-//         */
-//        @Override
-//        public void deserialize(
-//            final ByteBuffer buffer
-//        ) {
-//            super.deserialize(buffer);
-//
-//            _endOfTape = deserializeBoolean(buffer);
-//            _isMounted = deserializeBoolean(buffer);
-//            _isWriteProtected = deserializeBoolean(buffer);
-//            _loadPoint = deserializeBoolean(buffer);
-//        }
-//
-//        /**
-//         * Serializes information for this disk device to a byte stream.
-//         * We might be overridden by a subclass, which calls here first, then serializes its own information.
-//         * <p>
-//         * @param buffer target of serialization
-//         */
-//        @Override
-//        public void serialize(
-//            final ByteBuffer buffer
-//        ) {
-//            super.serialize(buffer);
-//
-//            serializeBoolean(buffer, _endOfTape);
-//            serializeBoolean(buffer, _isMounted);
-//            serializeBoolean(buffer, _isWriteProtected);
-//            serializeBoolean(buffer, _loadPoint);
-//        }
-//    }
-
 
     private static final Logger LOGGER = LogManager.getLogger(TapeDevice.class);
 
@@ -220,6 +89,37 @@ public abstract class TapeDevice extends Device {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
+    }
+
+    /**
+     * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
+     * The format of the info block is:
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +0  |  FLAGS   |  MODEL   |   TYPE   |            reserved            |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +1  |                            reserved                             |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +2  |                                                                 |
+     *  ..  |                             zeroes                              |
+     * +27  |                                                                 |
+     *      +----------+----------+----------+----------+----------+----------+
+     *
+     * FLAGS:
+     *      Bit 5:  device_ready
+     *      Bit 4:  mounted
+     *      Bit 3:  write_protected
+     * MODEL:           integer code for the DeviceModel
+     * TYPE:            integer code for the DeviceType
+     */
+    protected ArraySlice getInfo() {
+        long[] buffer = new long[28];
+
+        long flags = (_isWriteProtected ? 4 : 0)  | (_isMounted ? 2 : 0) | (_readyFlag ? 1 : 0);
+        long model = _deviceModel.getCode();
+        long type = _deviceType.getCode();
+
+        buffer[0] = (flags << 30) | (model << 24) | (type << 18);
+        return new ArraySlice(buffer);
     }
 
     /**

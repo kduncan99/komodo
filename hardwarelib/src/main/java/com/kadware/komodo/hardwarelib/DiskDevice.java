@@ -116,7 +116,6 @@ public abstract class DiskDevice extends Device {
      * TYPE:        integer code for the DeviceType
      * PREP_FACTOR: indicates the block size in words, of a disk block
      * BLOCK_COUNT: number of blocks on the media
-     * PACK_NAME:   name of the mounted pack, ASCII LJSF
      */
     protected ArraySlice getInfo() {
         long[] buffer = new long[28];
