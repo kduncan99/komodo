@@ -784,11 +784,11 @@ public class FileSystemTapeDevice extends TapeDevice {
     /**
      * Unmounts the currently-mounted media
      */
-    private void unmount(
+    boolean unmount(
     ) {
         if (!isMounted()) {
             LOGGER.error(String.format("Device %s Cannot unmount pack - no pack mounted", _name));
-            return;
+            return false;
         }
 
         //  Clear ready flag to prevent any more IOs from coming in.
@@ -799,7 +799,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             _file.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            return;
+            return false;
         }
 
         _file = null;
@@ -810,6 +810,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         setIsMounted(false);
         setIsWriteProtected(true);
+        return true;
     }
 
     /**
