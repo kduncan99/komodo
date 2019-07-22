@@ -29,13 +29,21 @@ public abstract class TapeDevice extends Device {
     private boolean _isWriteProtected;
 
 
-    TapeDevice(
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  constructor
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    protected TapeDevice(
         final DeviceModel deviceModel,
         final String name
     ) {
         super(DeviceType.Tape, deviceModel, name);
     }
 
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Accessors
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     boolean isMounted() { return _isMounted; }
     boolean isWriteProtected() { return _isWriteProtected; }
@@ -91,6 +99,8 @@ public abstract class TapeDevice extends Device {
         }
     }
 
+    //TODO  Add IO counts and other state information (I think this means moving said states from FSTD to here)
+    //  Also, we need blocks and files extended counts
     /**
      * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
      * The format of the info block is:
@@ -130,9 +140,10 @@ public abstract class TapeDevice extends Device {
     public boolean handleIo(
         final DeviceIOInfo ioInfo
     ) {
+        ioInfo._transferredCount = 0;
+        ioInfo._status = DeviceStatus.InProgress;
         synchronized(this) {
             ioStart(ioInfo);
-
             switch (ioInfo._ioFunction) {
                 case None:
                     ioInfo._status = DeviceStatus.Successful;

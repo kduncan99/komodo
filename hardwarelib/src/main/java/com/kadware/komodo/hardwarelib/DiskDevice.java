@@ -95,6 +95,7 @@ public abstract class DiskDevice extends Device {
         }
     }
 
+    //TODO need to reflect IO counts
     /**
      * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
      * The format of the info block is:
@@ -138,10 +139,10 @@ public abstract class DiskDevice extends Device {
     public boolean handleIo(
         final DeviceIOInfo ioInfo
     ) {
+        ioInfo._transferredCount = 0;
         ioInfo._status = DeviceStatus.InProgress;
         synchronized(this) {
             ioStart(ioInfo);
-
             switch (ioInfo._ioFunction) {
                 case None:
                     ioInfo._status = DeviceStatus.Successful;

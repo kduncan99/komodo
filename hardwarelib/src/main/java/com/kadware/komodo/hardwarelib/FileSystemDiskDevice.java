@@ -233,6 +233,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     protected void ioGetInfo(
         final DeviceIOInfo ioInfo
     ) {
+        ++_miscCount;
+
         ArraySlice as = getInfo();
         ioInfo._byteBuffer = new byte[128];
         as.pack(ioInfo._byteBuffer);
@@ -248,6 +250,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     protected void ioRead(
         final DeviceIOInfo ioInfo
     ) {
+        ++_readCount;
+
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
             ioInfo._source.signal();
@@ -303,6 +307,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     protected void ioReset(
         final DeviceIOInfo ioInfo
     ) {
+        ++_miscCount;
+
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
         } else {
@@ -319,6 +325,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     protected void ioUnload(
         final DeviceIOInfo ioInfo
     ) {
+        ++_miscCount;
+
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
         } else {
@@ -336,6 +344,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     protected void ioWrite(
         final DeviceIOInfo ioInfo
     ) {
+        ++_writeCount;
+
         if (!_readyFlag) {
             ioInfo._status = DeviceStatus.NotReady;
             ioInfo._source.signal();

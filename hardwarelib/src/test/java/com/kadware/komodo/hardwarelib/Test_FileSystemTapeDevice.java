@@ -97,27 +97,7 @@ public class Test_FileSystemTapeDevice {
 
     public static class TestDevice extends FileSystemTapeDevice {
 
-//        static class ScratchPad extends FileSystemDiskDevice.ScratchPad {
-//
-//            ScratchPad() {}
-//
-//            ScratchPad(
-//                final PrepFactor prepFactor,
-//                final BlockSize blockSize,
-//                final BlockCount blockCount
-//            ) {
-//                super(prepFactor, blockSize, blockCount);
-//            }
-//        }
-
         TestDevice() { super("TEST"); }
-
-//        @Override
-//        public long calculateByteOffset(
-//            final BlockId blockId
-//        ) {
-//            return super.calculateByteOffset(blockId);
-//        }
     }
 
     private static int nextFileIndex = 1;
@@ -129,7 +109,7 @@ public class Test_FileSystemTapeDevice {
     private static String getTestFileName(
     ) {
         String pathName = System.getProperty("java.io.tmpdir");
-        return String.format("%sTEST%04d.reel", pathName == null ? "" : pathName, nextFileIndex++);
+        return String.format("%sTEST%04d.vol", pathName == null ? "" : pathName, nextFileIndex++);
     }
 
     /**
@@ -165,22 +145,6 @@ public class Test_FileSystemTapeDevice {
         assertEquals(DeviceType.Tape, d._deviceType);
     }
 
-//    @Test
-//    public void calculateByteOffset(
-//    ) {
-//        FileSystemDiskDevice d = new TestDevice();
-//        d._blockSize = new BlockSize(256);
-//        assertEquals(3 * 256, d.calculateByteOffset(new BlockId(2)));
-//    }
-
-//    @Test
-//    public void calculateByteOffset_reallyBig(
-//    ) {
-//        TestDevice d = new TestDevice();
-//        d._blockSize = new BlockSize(256);
-//        assertEquals(0x80000001L * 256, d.calculateByteOffset(new BlockId(0x80000000L)));
-//    }
-
     @Test
     public void canConnect_success(
     ) {
@@ -203,300 +167,135 @@ public class Test_FileSystemTapeDevice {
         assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
     }
 
-//    @Test
-//    public void createPack(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize[] blockSizes = {
-//            new BlockSize(128),
-//            new BlockSize(256),
-//            new BlockSize(512),
-//            new BlockSize(1024),
-//            new BlockSize(2048),
-//            new BlockSize(4096),
-//            new BlockSize(8192)
-//        };
-//
-//        for (BlockSize blockSize : blockSizes) {
-//            BlockCount blockCount = new BlockCount(10000 * (8192 / blockSize.getValue()));
-//            FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//            //  Make sure we can read the ScratchPad
-//            RandomAccessFile check = new RandomAccessFile(fileName, "r");
-//            byte[] buffer = new byte[blockSize.getValue()];
-//            check.seek(0);
-//            assertEquals(blockSize.getValue(), check.read(buffer));
-//            check.close();
-//
-//            //  Verify the ScratchPad
-//            TestDevice.ScratchPad sp = new TestDevice.ScratchPad();
-//            sp.deserialize(ByteBuffer.wrap(buffer));
-//            assertEquals(blockCount, sp._blockCount);
-//            assertEquals(blockSize, sp._blockSize);
-//        }
-//
-//        deleteTestFile(fileName);
-//    }
+    @Test
+    public void createVolume(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemTapeDevice.createVolume(fileName);
+        deleteTestFile(fileName);
+    }
 
-//    @Testpack
-//    public void createPack_badPath(
-//    ) throws Exception {
-//        _exception.expect(FileNotFoundException.class);
-//        FileSystemDiskDevice.createPack("/blah/blah/blah/TEST.reel",
-//                                        new BlockSize(8192),
-//                                        new BlockCount(10000));
-//    }
-
-//    @Test
-//    public void createPack_invalidBlockSize(
-//    ) throws Exception {
-//        _exception.expect(InvalidBlockSizeException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(22),
-//                                        new BlockCount(1000));
-//    }
-
-//    @Test
-//    public void createPack_invalidTrackCount_1(
-//    ) throws Exception {
-//        _exception.expect(InvalidTrackCountException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(8192),
-//                                        new BlockCount(9999));
-//    }
-
-//    @Test
-//    public void createPack_invalidTrackCount_2(
-//    ) throws Exception {
-//        _exception.expect(InvalidTrackCountException.class);
-//        FileSystemDiskDevice.createPack(getTestFileName(),
-//                                        new BlockSize(8192),
-//                                        new BlockCount(100000));
-//    }
+    @Test
+    public void createVolume_badPath(
+    ) throws Exception {
+        _exception.expect(FileNotFoundException.class);
+        FileSystemTapeDevice.createVolume("/blah/blah/blah/TEST.vol");
+    }
 
     @Test
     public void hasByteInterface(
     ) {
-        FileSystemDiskDevice d = new FileSystemDiskDevice("TAPE0");
+        TestDevice d = new TestDevice();
         assertTrue(d.hasByteInterface());
     }
 
     @Test
     public void hasWordInterface(
     ) {
-        FileSystemDiskDevice d = new FileSystemDiskDevice("TAPE0");
+        TestDevice d = new TestDevice();
         assertFalse(d.hasWordInterface());
     }
 
-//    @Test
-//    public void ioGetInfo_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockCount blockCount = new BlockCount(10000);
-//        BlockSize blockSize = new BlockSize(8192);
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        FileSystemDiskDevice d = new FileSystemDiskDevice("TAPE0");
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                    .setIOFunction(IOFunction.GetInfo)
-//                                                                    .setTransferCount(128)
-//                                                                    .build();
-//        cm.submitAndWait(d, ioInfo);
-//        assertEquals(DeviceStatus.Successful, ioInfo._status);
-//        ArraySlice as = new ArraySlice(new long[28]);
-//        as.unpack(ioInfo._byteBuffer, false);
-//
-//        int flags = (int) Word36.getS1(as.get(0));
-//        boolean resultIsReady = (flags & 01) != 0;
-//        boolean resultIsMounted = (flags & 02) != 0;
-//        boolean resultIsWriteProtected = (flags & 04) != 0;
-//        DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
-//        DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
-//        PrepFactor resultPrepFactor = new PrepFactor((int) Word36.getH2(as.get(0)));
-//        long resultBlockCount = as.get(1);
-//
-//        assertTrue(resultIsReady);
-//        assertTrue(resultIsMounted);
-//        assertFalse(resultIsWriteProtected);
-//        assertEquals(DeviceModel.FileSystemDisk, resultModel);
-//        assertEquals(DeviceType.Disk, resultType);
-//        assertEquals(blockCount.getValue(), resultBlockCount);
-//        assertEquals(PrepFactor.getPrepFactorFromBlockSize(blockSize), resultPrepFactor);
-//
-//        assertFalse(d._unitAttentionFlag);
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+    @Test
+    public void ioGetInfo_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemTapeDevice.createVolume(fileName);
 
-//    @Test
-//    public void ioRead_fail_notReady(
-//    ) {
-//        TestChannelModule cm = new TestChannelModule();
-//        TestDevice d = new TestDevice();
-//
-//        long blockId = 5;
-//        int blockSize = 128;
-//        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.Read)
-//                                                                        .setBlockId(blockId)
-//                                                                        .setTransferCount(blockSize)
-//                                                                        .build();
-//
-//        cm.submitAndWait(d, ioInfoRead);
-//        assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
-//    }
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice();
+        d.mount(fileName);
+        assertTrue(d.setReady(true));
 
-//    @Test
-//    public void ioRead_fail_invalidBlockSize(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        TestDevice d = new TestDevice();
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        //  Clear unit attention
-//        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                           .setIOFunction(IOFunction.GetInfo)
-//                                                                           .setTransferCount(128)
-//                                                                           .build();
-//        cm.submitAndWait(d, ioInfoGetInfo);
-//        BlockId blockId = new BlockId(5);
-//        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.Read)
-//                                                                        .setBlockId(blockId.getValue())
-//                                                                        .setTransferCount(blockSize.getValue() - 1)
-//                                                                        .build();
-//        cm.submitAndWait(d, ioInfoRead);
-//        assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                    .setIOFunction(IOFunction.GetInfo)
+                                                                    .setTransferCount(128)
+                                                                    .build();
+        cm.submitAndWait(d, ioInfo);
+        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        ArraySlice as = new ArraySlice(new long[28]);
+        as.unpack(ioInfo._byteBuffer, false);
 
-//    @Test
-//    public void ioRead_fail_invalidBlockId(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        TestDevice d = new TestDevice();
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        //  Clear unit attention
-//        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                           .setIOFunction(IOFunction.GetInfo)
-//                                                                           .setTransferCount(128)
-//                                                                           .build();
-//        cm.submitAndWait(d, ioInfoGetInfo);
-//
-//        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.Read)
-//                                                                        .setBlockId(blockCount.getValue())
-//                                                                        .setTransferCount(blockSize.getValue())
-//                                                                        .build();
-//        cm.submitAndWait(d, ioInfoRead);
-//        assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+        int flags = (int) Word36.getS1(as.get(0));
+        boolean resultIsReady = (flags & 01) != 0;
+        boolean resultIsMounted = (flags & 02) != 0;
+        boolean resultIsWriteProtected = (flags & 04) != 0;
+        DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
+        DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
 
-//    @Test
-//    public void ioRead_fail_invalidBlockCount(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        TestDevice d = new TestDevice();
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        //  Clear unit attention
-//        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                           .setIOFunction(IOFunction.GetInfo)
-//                                                                           .setTransferCount(128)
-//                                                                           .build();
-//        cm.submitAndWait(d, ioInfoGetInfo);
-//
-//        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.Read)
-//                                                                        .setBlockId(blockCount.getValue() - 1)
-//                                                                        .setTransferCount(2 * blockSize.getValue())
-//                                                                        .build();
-//        cm.submitAndWait(d, ioInfoRead);
-//        assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+        assertTrue(resultIsReady);
+        assertTrue(resultIsMounted);
+        assertFalse(resultIsWriteProtected);
+        assertEquals(DeviceModel.FileSystemTape, resultModel);
+        assertEquals(DeviceType.Tape, resultType);
+        assertFalse(d._unitAttentionFlag);
 
-//    @Test
-//    public void ioRead_fail_unitAttention(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockSize blockSize = new BlockSize(128);
-//        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        TestDevice d = new TestDevice();
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        long blockId = 5;
-//        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.Read)
-//                                                                        .setBlockId(blockId)
-//                                                                        .setTransferCount(blockSize.getValue())
-//                                                                        .build();
-//        cm.submitAndWait(d, ioInfoRead);
-//        assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+        d.unmount();
+        deleteTestFile(fileName);
+    }
 
-//    @Test
-//    public void ioReset_successful(
-//    ) throws Exception {
-//        String fileName = getTestFileName();
-//        BlockCount blockCount = new BlockCount(10000);
-//        BlockSize blockSize = new BlockSize(8192);
-//        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//        TestChannelModule cm = new TestChannelModule();
-//        FileSystemDiskDevice d = new TestDevice();
-//        d.mount(fileName);
-//        d.setReady(true);
-//
-//        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-//                                                                   .setIOFunction(IOFunction.Reset)
-//                                                                   .build();
-//        cm.submitAndWait(d, ioInfo);
-//        assertEquals(DeviceStatus.Successful, ioInfo._status);
-//
-//        d.unmount();
-//        deleteTestFile(fileName);
-//    }
+    @Test
+    public void ioRead_fail_notReady(
+    ) {
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice();
+
+        long blockId = 5;
+        int blockSize = 128;
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setBlockId(blockId)
+                                                                        .setTransferCount(blockSize)
+                                                                        .build();
+
+        cm.submitAndWait(d, ioInfoRead);
+        assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
+    }
+
+    @Test
+    public void ioRead_fail_unitAttention(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        FileSystemTapeDevice.createVolume(fileName);
+
+        TestChannelModule cm = new TestChannelModule();
+        TestDevice d = new TestDevice();
+        assertTrue(d.mount(fileName));
+        assertTrue(d.setReady(true));
+
+        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                        .setIOFunction(IOFunction.Read)
+                                                                        .setTransferCount(1024)
+                                                                        .build();
+        cm.submitAndWait(d, ioInfoRead);
+        assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
+
+    @Test
+    public void ioReset_successful(
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockCount blockCount = new BlockCount(10000);
+        BlockSize blockSize = new BlockSize(8192);
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
+        TestChannelModule cm = new TestChannelModule();
+        FileSystemTapeDevice d = new TestDevice();
+        d.mount(fileName);
+        d.setReady(true);
+
+        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                                   .setIOFunction(IOFunction.Reset)
+                                                                   .build();
+        cm.submitAndWait(d, ioInfo);
+        assertEquals(DeviceStatus.Successful, ioInfo._status);
+
+        d.unmount();
+        deleteTestFile(fileName);
+    }
 
     @Test
     public void ioReset_failed_notReady(
@@ -971,7 +770,7 @@ public class Test_FileSystemTapeDevice {
 //
 //        TestDevice d = new TestDevice();
 //        d.mount(fileName);
-//        assertFalse(d.mount("BLAH.reel"));
+//        assertFalse(d.mount("BLAH.vol"));
 //        d.unmount();
 //        deleteTestFile(fileName);
 //    }
@@ -980,7 +779,7 @@ public class Test_FileSystemTapeDevice {
     public void mount_failed_noFile(
     ) {
         TestDevice d = new TestDevice();
-        assertFalse(d.mount("/blah/blah/blah/FOO.reel"));
+        assertFalse(d.mount("/blah/blah/blah/FOO.vol"));
     }
 
 //    @Test

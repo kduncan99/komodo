@@ -4,13 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-
-import com.kadware.komodo.baselib.ArraySlice;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -90,14 +88,80 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     private static class OutOfDataException extends Exception {}
 
+    /**
+     * This class contains information about the pack version and geometry.
+     * It is maintained in the first SCRATCH_PAD_BUFFER_SIZE bytes of the file.
+     * The conceptual load point is the next byte thereafter.
+     */
+    static class ScratchPad {
+
+        static final String EXPECTED_IDENTIFIER = "**FSTD**";
+        static final short EXPECTED_MAJOR_VERSION = 1;
+        static final short EXPECTED_MINOR_VERSION = 1;
+
+        String _identifier;
+        short _majorVersion;
+        short _minorVersion;
+        int _fileSizeLimit;     //  when the file size reaches or exceeds this value in bytes, IOs fail
+
+        /**
+         * Constructor where the caller is establishing values
+         */
+        ScratchPad(
+            final int fileSizeLimit
+        ) {
+            assert(fileSizeLimit >= MIN_FILE_SIZE);
+            assert(fileSizeLimit <= MAX_FILE_SIZE);
+
+            _identifier = EXPECTED_IDENTIFIER;
+            _majorVersion = EXPECTED_MAJOR_VERSION;
+            _minorVersion = EXPECTED_MINOR_VERSION;
+            _fileSizeLimit = fileSizeLimit;
+        }
+
+        /**
+         * Constructor to be used for subsequent deserializing
+         */
+        ScratchPad(
+        ) {
+        }
+
+        /**
+         * Deserializes a scratch pad object from the given Serializer
+         */
+        void deserialize(
+            final ByteBuffer buffer
+        ) {
+            _identifier = deserializeString(buffer);
+            _majorVersion = buffer.getShort();
+            _minorVersion = buffer.getShort();
+            _fileSizeLimit = buffer.getInt();
+        }
+
+        /**
+         * Serializes this object into the given Serializer
+         */
+        void serialize(
+            final ByteBuffer buffer
+        ) {
+            serializeString(buffer, _identifier);
+            buffer.putShort(_majorVersion);
+            buffer.putShort(_minorVersion);
+            buffer.putInt(_fileSizeLimit);
+        }
+    };
+
+    private static final int SCRATCH_PAD_BUFFER_SIZE = 32;  //  arbitrary, and larger than necessary by design
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final int FILE_MARK_CONTROL_WORD = 0xffffffff;
-    private static final int MAX_BLOCK_SIZE = 128 * 1024;
-    private static final int MAX_FILE_SIZE = 240 * 1024 * 1024;
+    private static final int MAX_BLOCK_SIZE = 128 * 1024;           //  128KBytes
+    private static final int MAX_FILE_SIZE = 175 * 1024 * 1024;     //  175MBytes
+    private static final int MIN_FILE_SIZE = 40 * 1024 * 1024;      //  40MBytes
     private static final Logger LOGGER = LogManager.getLogger(FileSystemTapeDevice.class);
 
     /**
@@ -116,6 +180,11 @@ public class FileSystemTapeDevice extends TapeDevice {
     private boolean _loadPointFlag;
 
     /**
+     * Indicates that we don't actually know where we are
+     */
+    private boolean _lostPositionFlag;
+
+    /**
      * Currently-mounted volume name (if any)
      */
     private String _volumeName;
@@ -129,6 +198,11 @@ public class FileSystemTapeDevice extends TapeDevice {
      * Last operation was a write mark
      */
     private boolean _writeMarkFlag;
+
+    /**
+     * Size of smallest block we can read or write
+     */
+    private int _noiseConstant;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -144,584 +218,15 @@ public class FileSystemTapeDevice extends TapeDevice {
         super(DeviceModel.FileSystemTape, name);
         _endOfTapeFlag = false;
         _loadPointFlag = false;
+        _lostPositionFlag = false;
         _writeFlag = false;
         _writeMarkFlag = false;
     }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
+    //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Checks to see whether this node is a valid descendant of the candidate node
-     */
-    @Override
-    public boolean canConnect(
-        final Node candidateAncestor
-    ) {
-        //  We can connect only to ByteDisk controllers
-        return candidateAncestor instanceof ByteChannelModule;
-    }
-
-    /**
-     * For debugging purposes
-     */
-    @Override
-    public void dump(
-        final BufferedWriter writer
-    ) {
-        super.dump(writer);
-        try {
-            writer.write(String.format("  Volume Name:     %s\n", _volumeName));
-            //???? many other things to write
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-        }
-    }
-
-    @Override
-    public int getMaxBlockSize() { return MAX_BLOCK_SIZE; }
-
-    @Override
-    public boolean hasByteInterface() { return true; }
-
-    @Override
-    public boolean hasWordInterface() { return false; }
-
-    @Override
-    public void initialize() {}
-
-    /**
-     * Produces a byte stream describing this disk device.
-     * This is an immediate IO, no waiting.
-     */
-    @Override
-    protected void ioGetInfo(
-        final DeviceIOInfo ioInfo
-    ) {
-        ArraySlice as = getInfo();
-        ioInfo._byteBuffer = new byte[128];
-        as.pack(ioInfo._byteBuffer);
-        ioInfo._status = DeviceStatus.Successful;
-        _unitAttentionFlag = false;
-        ioInfo._source.signal();
-    }
-
-    /**
-     * Handles the MoveBlock command
-     */
-    @Override
-    protected void ioMoveBlock(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _writeFlag = false;
-            _writeMarkFlag = false;
-
-            int controlWord = readControlWord();
-            if (controlWord == FILE_MARK_CONTROL_WORD) {
-                ioInfo._status = DeviceStatus.FileMark;
-            } else {
-                //  We have a valid block, but we don't want to read it, just skip it, and the terminating control word.
-                _file.seek(_file.getFilePointer() + controlWord + 4);
-                readControlWord();
-                ioInfo._transferredCount = (0);
-
-                //  Are we past the end of tape?
-                if (_file.getFilePointer() > MAX_FILE_SIZE) {
-                    ioInfo._status = DeviceStatus.EndOfTape;
-                } else {
-                    ioInfo._status = DeviceStatus.Successful;
-                }
-            }
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-        } catch (OutOfDataException ex) {
-            LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-            _loadPointFlag = false;
-        }
-    }
-
-    /**
-     * Handles the move block backward command
-     */
-    @Override
-    protected void ioMoveBlockBackward(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        if (_loadPointFlag) {
-            ioInfo._status = DeviceStatus.EndOfTape;
-            ioInfo._transferredCount = (0);
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _writeFlag = false;
-            _writeMarkFlag = false;
-
-            int controlWord = readPreceedingControlWord();
-            if (controlWord == FILE_MARK_CONTROL_WORD) {
-                if (_file.getFilePointer() == 0) {
-                    ioInfo._status = DeviceStatus.EndOfTape;
-                    _loadPointFlag = true;
-                } else {
-                    ioInfo._status = DeviceStatus.FileMark;
-                }
-            } else {
-                _file.seek(_file.getFilePointer() - controlWord);
-                readPreceedingControlWord();
-                if (_file.getFilePointer() == 0) {
-                    ioInfo._status = DeviceStatus.EndOfTape;
-                    _loadPointFlag = true;
-                } else {
-                    ioInfo._status = DeviceStatus.Successful;
-                }
-            }
-
-            ioInfo._transferredCount = (0);
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-        } catch (OutOfDataException ex) {
-            LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Handles the MoveFile command
-     */
-    @Override
-    protected void ioMoveFile(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _writeFlag = false;
-            _writeMarkFlag = false;
-            _loadPointFlag = false;
-
-            //  Loop until we get a file mark, or lose position, or something
-            int controlWord = readControlWord();
-            while (controlWord != FILE_MARK_CONTROL_WORD) {
-                //  Skip this block, and the following control word, then read the next control word.
-                _file.seek(controlWord);
-                readControlWord();
-                controlWord = readControlWord();
-            }
-
-            ioInfo._transferredCount = (0);
-
-            //  Are we past the end of tape?
-            if (_file.getFilePointer() > MAX_FILE_SIZE) {
-                ioInfo._status = DeviceStatus.EndOfTape;
-            } else {
-                ioInfo._status = DeviceStatus.Successful;
-            }
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-        } catch (OutOfDataException ex) {
-            LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Handles MoveFileBackward command
-     */
-    @Override
-    protected void ioMoveFileBackward(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        if (_loadPointFlag) {
-            ioInfo._status = DeviceStatus.EndOfTape;
-            ioInfo._transferredCount = (0);
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _writeFlag = false;
-            _writeMarkFlag = false;
-
-            //  Loop until we get a file mark, or lose position, or something
-            int controlWord = readPreceedingControlWord();
-            while (controlWord != FILE_MARK_CONTROL_WORD) {
-                //  Skip this block, and the following control word, then read the next control word.
-                _file.seek(_file.getFilePointer() - controlWord);
-                readPreceedingControlWord();
-                controlWord = readPreceedingControlWord();
-            }
-
-            ioInfo._transferredCount = (0);
-
-            if (_file.getFilePointer() == 0) {
-                ioInfo._status = DeviceStatus.EndOfTape;
-                _loadPointFlag = true;
-            } else {
-                ioInfo._status = DeviceStatus.FileMark;
-            }
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-        } catch (OutOfDataException ex) {
-            LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Reads logical records from the underlying data store.
-     */
-    @Override
-    protected void ioRead(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _writeFlag = false;
-            _writeMarkFlag = false;
-
-            //  Loop until we get a valid block, or lose position, or something
-            int controlWord = readControlWord();
-            if (controlWord == FILE_MARK_CONTROL_WORD) {
-                ioInfo._status = DeviceStatus.FileMark;
-            } else {
-                //  We have a valid block to read.  Read it.
-                ioInfo._byteBuffer = new byte[ioInfo._transferCount];
-                int bytes = _file.read(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-                if (bytes != ioInfo._transferCount) {
-                    ioInfo._status = DeviceStatus.LostPosition;
-                } else {
-                    //  Skip the terminating control word, and we're done.
-                    readControlWord();
-                    ioInfo._transferredCount = (bytes);
-
-                    //  Are we past the end of tape?
-                    if (_file.getFilePointer() > MAX_FILE_SIZE) {
-                        ioInfo._status = DeviceStatus.EndOfTape;
-                    } else {
-                        ioInfo._status = DeviceStatus.Successful;
-                    }
-                }
-            }
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-        } catch (OutOfDataException ex) {
-            LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Handles (or rather, doesn't handle) the ReadBackward command
-     */
-    @Override
-    protected void ioReadBackward(
-        final DeviceIOInfo ioInfo
-    ) {
-        ioInfo._status = DeviceStatus.InvalidFunction;
-    }
-
-    /**
-     * Resets the device - unmount any volume
-     */
-    @Override
-    protected void ioReset(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-        } else {
-            unmount();
-            ioInfo._transferredCount = (0);
-            ioInfo._status = DeviceStatus.Successful;
-        }
-    }
-
-    /**
-     * Handles the Rewind command
-     */
-    @Override
-    protected void ioRewind(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        try {
-            _file.seek(0);
-            _endOfTapeFlag = false;
-            _writeFlag = false;
-            _writeMarkFlag = false;
-            _loadPointFlag = true;
-
-            ioInfo._transferredCount = (0);
-            ioInfo._status = DeviceStatus.Successful;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Unmounts the currently-mounted media, leaving the device not-ready.
-     */
-    @Override
-    protected void ioUnload(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-        } else {
-            unmount();
-            ioInfo._status = DeviceStatus.Successful;
-        }
-
-        ioInfo._transferredCount = (0);
-    }
-
-    /**
-     * Writes a data block to the media
-     */
-    @Override
-    protected void ioWrite(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            return;
-        }
-
-        if (isWriteProtected()) {
-            ioInfo._status = DeviceStatus.WriteProtected;
-            return;
-        }
-
-        if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
-            return;
-        }
-
-        if (ioInfo._transferCount > getMaxBlockSize()) {
-            ioInfo._status = DeviceStatus.InvalidBlockSize;
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
-
-            _writeFlag = true;
-            _writeMarkFlag = false;
-            ioInfo._transferredCount = (ioInfo._transferCount);
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-
-            if (_endOfTapeFlag) {
-                ioInfo._status = DeviceStatus.EndOfTape;
-            } else {
-                ioInfo._status = DeviceStatus.Successful;
-            }
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Handles the WriteEndOfFile command
-     */
-    @Override
-    protected void ioWriteEndOfFile(
-        final DeviceIOInfo ioInfo
-    ) {
-        if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
-            ioInfo._source.signal();
-            return;
-        }
-
-        if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
-            ioInfo._source.signal();
-            return;
-        }
-
-        if (isWriteProtected()) {
-            ioInfo._status = DeviceStatus.WriteProtected;
-            ioInfo._source.signal();
-            return;
-        }
-
-        ioInfo._status = DeviceStatus.InProgress;
-
-        try {
-            ByteBuffer bb = ByteBuffer.wrap(new byte[4]);
-            bb.putInt(FILE_MARK_CONTROL_WORD);
-            _file.write(bb.array());
-
-            _writeFlag = true;
-            _writeMarkFlag = true;
-            ioInfo._transferredCount = (0);
-
-            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
-            _loadPointFlag = _file.getFilePointer() == 0;
-
-            if (_endOfTapeFlag) {
-                ioInfo._status = DeviceStatus.EndOfTape;
-            } else {
-                ioInfo._status = DeviceStatus.Successful;
-            }
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-        }
-    }
-
-    /**
-     * Mounts the media for this device.
-     * For a FileSystemTapeDevice, this entails opening a filesystem file.
-     * @param mediaName full path and file name for the volume to be mounted
-     * @return true if successful, else false
-     */
-    public boolean mount(
-        final String mediaName
-    ) {
-        if (isMounted()) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Already mounted", _name, mediaName));
-            return false;
-        }
-
-        try {
-            //  Open the file
-            _file = new RandomAccessFile(mediaName, "rw");
-
-            //  Read and verify the scratch pad area
-            int bufferSize = 128;
-            byte[] buffer = new byte[bufferSize];
-            _file.seek(0);
-            int bytes = _file.read(buffer);
-            if (bytes < bufferSize) {
-                LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read %d bytes of scratch pad",
-                                           _name,
-                                           mediaName,
-                                           bufferSize));
-                _file.close();
-                _file = null;
-                return false;
-            }
-
-            //  Things are good - set up our local state and we're done.
-            _volumeName = mediaName;
-            setIsMounted(true);
-            _loadPointFlag = true;
-            _writeFlag = false;
-            _writeMarkFlag = false;
-            LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * Reads a 32-bit signed integer from the mounted file.
@@ -759,6 +264,670 @@ public class FileSystemTapeDevice extends TapeDevice {
         int result = readControlWord();
         _file.seek(_file.getFilePointer() - 4);
         return result;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Non-private methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Checks to see whether this node is a valid descendant of the candidate node
+     */
+    @Override
+    public boolean canConnect(
+        final Node candidateAncestor
+    ) {
+        //  We can connect only to ByteDisk controllers
+        return candidateAncestor instanceof ByteChannelModule;
+    }
+
+    /**
+     * For debugging purposes
+     */
+    @Override
+    public void dump(
+        final BufferedWriter writer
+    ) {
+        super.dump(writer);
+        try {
+            writer.write(String.format("  Volume Name:     %s\n", _volumeName));
+            writer.write(String.format("  End of Tape:     %s\n", String.valueOf(_endOfTapeFlag)));
+            writer.write(String.format("  Load Point:      %s\n", String.valueOf(_loadPointFlag)));
+            writer.write(String.format("  Lost Position:   %s\n", String.valueOf(_lostPositionFlag)));
+            writer.write(String.format("  Write Flag:      %s\n", String.valueOf(_writeFlag)));
+            writer.write(String.format("  Write Mark Flag: %s\n", String.valueOf(_writeMarkFlag)));
+            writer.write(String.format("  Noise factor:    %d\n", _noiseConstant));
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+        }
+    }
+
+    @Override
+    public int getMaxBlockSize() { return MAX_BLOCK_SIZE; }
+
+    @Override
+    public boolean hasByteInterface() { return true; }
+
+    @Override
+    public boolean hasWordInterface() { return false; }
+
+    @Override
+    public void initialize() {}
+
+    /**
+     * Produces a byte stream describing this disk device.
+     * This is an immediate IO, no waiting.
+     */
+    @Override
+    protected void ioGetInfo(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        ArraySlice as = getInfo();
+        ioInfo._byteBuffer = new byte[128];
+        as.pack(ioInfo._byteBuffer);
+        ioInfo._status = DeviceStatus.Successful;
+        _unitAttentionFlag = false;
+        ioInfo._source.signal();
+    }
+
+    /**
+     * Handles the MoveBlock command
+     */
+    @Override
+    protected void ioMoveBlock(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        try {
+            _writeFlag = false;
+            _writeMarkFlag = false;
+
+            int controlWord = readControlWord();
+            if (controlWord == FILE_MARK_CONTROL_WORD) {
+                ioInfo._status = DeviceStatus.FileMark;
+            } else {
+                //  We have a valid block, but we don't want to read it, just skip it, and the terminating control word.
+                _file.seek(_file.getFilePointer() + controlWord + 4);
+                readControlWord();
+                ioInfo._transferredCount = 0;
+
+                //  Are we past the end of tape?
+                if (_file.getFilePointer() > MAX_FILE_SIZE) {
+                    ioInfo._status = DeviceStatus.EndOfTape;
+                } else {
+                    ioInfo._status = DeviceStatus.Successful;
+                }
+            }
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+        } catch (OutOfDataException ex) {
+            _lostPositionFlag = true;
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            ioInfo._status = DeviceStatus.LostPosition;
+            _loadPointFlag = false;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+            _loadPointFlag = false;
+        }
+    }
+
+    /**
+     * Handles the move block backward command
+     */
+    @Override
+    protected void ioMoveBlockBackward(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        if (_loadPointFlag) {
+            ioInfo._status = DeviceStatus.EndOfTape;
+            return;
+        }
+
+        try {
+            _writeFlag = false;
+            _writeMarkFlag = false;
+
+            int controlWord = readPreceedingControlWord();
+            if (controlWord == FILE_MARK_CONTROL_WORD) {
+                if (_file.getFilePointer() == 0) {
+                    ioInfo._status = DeviceStatus.EndOfTape;
+                    _loadPointFlag = true;
+                } else {
+                    ioInfo._status = DeviceStatus.FileMark;
+                }
+            } else {
+                _file.seek(_file.getFilePointer() - controlWord);
+                readPreceedingControlWord();
+                if (_file.getFilePointer() == 0) {
+                    ioInfo._status = DeviceStatus.EndOfTape;
+                    _loadPointFlag = true;
+                } else {
+                    ioInfo._status = DeviceStatus.Successful;
+                }
+            }
+
+            ioInfo._transferredCount = (0);
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+        } catch (OutOfDataException ex) {
+            _lostPositionFlag = true;
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            ioInfo._status = DeviceStatus.LostPosition;
+            _loadPointFlag = false;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Handles the MoveFile command
+     */
+    @Override
+    protected void ioMoveFile(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        try {
+            _writeFlag = false;
+            _writeMarkFlag = false;
+            _loadPointFlag = false;
+
+            //  Loop until we get a file mark, or lose position, or something
+            int controlWord = readControlWord();
+            while (controlWord != FILE_MARK_CONTROL_WORD) {
+                //  Skip this block, and the following control word, then read the next control word.
+                _file.seek(controlWord);
+                readControlWord();
+                controlWord = readControlWord();
+            }
+
+            ioInfo._transferredCount = (0);
+
+            //  Are we past the end of tape?
+            if (_file.getFilePointer() > MAX_FILE_SIZE) {
+                ioInfo._status = DeviceStatus.EndOfTape;
+            } else {
+                ioInfo._status = DeviceStatus.Successful;
+            }
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+        } catch (OutOfDataException ex) {
+            _lostPositionFlag = true;
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            ioInfo._status = DeviceStatus.LostPosition;
+            _loadPointFlag = false;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Handles MoveFileBackward command
+     */
+    @Override
+    protected void ioMoveFileBackward(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        if (_loadPointFlag) {
+            ioInfo._status = DeviceStatus.EndOfTape;
+            return;
+        }
+
+        try {
+            _writeFlag = false;
+            _writeMarkFlag = false;
+
+            //  Loop until we get a file mark, or lose position, or something
+            int controlWord = readPreceedingControlWord();
+            while (controlWord != FILE_MARK_CONTROL_WORD) {
+                //  Skip this block, and the following control word, then read the next control word.
+                _file.seek(_file.getFilePointer() - controlWord);
+                readPreceedingControlWord();
+                controlWord = readPreceedingControlWord();
+            }
+
+            ioInfo._transferredCount = (0);
+
+            if (_file.getFilePointer() == 0) {
+                ioInfo._status = DeviceStatus.EndOfTape;
+                _loadPointFlag = true;
+            } else {
+                ioInfo._status = DeviceStatus.FileMark;
+            }
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+        } catch (OutOfDataException ex) {
+            _lostPositionFlag = true;
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            ioInfo._status = DeviceStatus.LostPosition;
+            _loadPointFlag = false;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Reads logical records from the underlying data store.
+     */
+    @Override
+    protected void ioRead(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_readCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        try {
+            _writeFlag = false;
+            _writeMarkFlag = false;
+
+            //  Loop until we get a valid block, or lose position, or something
+            boolean done = false;
+            while (!done) {
+                int controlWord = readControlWord();
+                if (controlWord == FILE_MARK_CONTROL_WORD) {
+                    ioInfo._status = DeviceStatus.FileMark;
+                } else if (controlWord < _noiseConstant) {
+                    //  Ignore a block which is too small - that is, skip the block and the terminating control word.
+                    _file.seek(_file.getFilePointer() + controlWord);
+                    readControlWord();
+                } else {
+                    //  We have a valid block to read.  Read it.
+                    ioInfo._byteBuffer = new byte[ioInfo._transferCount];
+                    int bytes = _file.read(ioInfo._byteBuffer, 0, controlWord);
+                    if (bytes != controlWord) {
+                        _lostPositionFlag = true;
+                        ioInfo._status = DeviceStatus.LostPosition;
+                    } else {
+                        //  Skip the terminating control word, and we're done.
+                        readControlWord();
+                        ioInfo._transferredCount = (bytes);
+
+                        //  Are we past the end of tape?
+                        if (_file.getFilePointer() > MAX_FILE_SIZE) {
+                            ioInfo._status = DeviceStatus.EndOfTape;
+                        } else {
+                            ioInfo._status = DeviceStatus.Successful;
+                        }
+                    }
+                    done = true;
+                }
+            }
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+        } catch (OutOfDataException ex) {
+            _lostPositionFlag = true;
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            ioInfo._status = DeviceStatus.LostPosition;
+            _loadPointFlag = false;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Handles (or rather, doesn't handle) the ReadBackward command
+     */
+    @Override
+    protected void ioReadBackward(
+        final DeviceIOInfo ioInfo
+    ) {
+        //TODO implement this
+        ++_readCount;
+        ioInfo._status = DeviceStatus.InvalidFunction;
+    }
+
+    /**
+     * Resets the device - unmount any volume
+     */
+    @Override
+    protected void ioReset(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+        } else {
+            unmount();
+            ioInfo._status = DeviceStatus.Successful;
+        }
+    }
+
+    /**
+     * Handles the Rewind command
+     */
+    @Override
+    protected void ioRewind(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        try {
+            _file.seek(SCRATCH_PAD_BUFFER_SIZE);
+            _endOfTapeFlag = false;
+            _writeFlag = false;
+            _writeMarkFlag = false;
+            _loadPointFlag = true;
+            ioInfo._status = DeviceStatus.Successful;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Unmounts the currently-mounted media, leaving the device not-ready.
+     */
+    @Override
+    protected void ioUnload(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_miscCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+        } else {
+            unmount();
+            ioInfo._status = DeviceStatus.Successful;
+        }
+    }
+
+    /**
+     * Writes a data block to the media
+     */
+    @Override
+    protected void ioWrite(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_writeCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        if (isWriteProtected()) {
+            ioInfo._status = DeviceStatus.WriteProtected;
+            return;
+        }
+
+        if ((ioInfo._byteBuffer.length < ioInfo._transferCount)
+            || (ioInfo._byteBuffer.length < _noiseConstant)) {
+            ioInfo._status = DeviceStatus.BufferTooSmall;
+            return;
+        }
+
+        if (ioInfo._transferCount > getMaxBlockSize()) {
+            ioInfo._status = DeviceStatus.InvalidBlockSize;
+            return;
+        }
+
+        try {
+            _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+
+            _writeFlag = true;
+            _writeMarkFlag = false;
+            ioInfo._transferredCount = (ioInfo._transferCount);
+
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+
+            if (_endOfTapeFlag) {
+                ioInfo._status = DeviceStatus.EndOfTape;
+            } else {
+                ioInfo._status = DeviceStatus.Successful;
+            }
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Handles the WriteEndOfFile command
+     */
+    @Override
+    protected void ioWriteEndOfFile(
+        final DeviceIOInfo ioInfo
+    ) {
+        ++_writeCount;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._source.signal();
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._source.signal();
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        if (isWriteProtected()) {
+            ioInfo._status = DeviceStatus.WriteProtected;
+            ioInfo._source.signal();
+            return;
+        }
+
+        try {
+            ByteBuffer bb = ByteBuffer.wrap(new byte[4]);
+            bb.putInt(FILE_MARK_CONTROL_WORD);
+            _file.write(bb.array());
+
+            _writeFlag = true;
+            _writeMarkFlag = true;
+            ioInfo._transferredCount = (0);
+
+            _endOfTapeFlag = _file.getFilePointer() >= MAX_FILE_SIZE;
+            _loadPointFlag = _file.getFilePointer() == SCRATCH_PAD_BUFFER_SIZE;
+
+            if (_endOfTapeFlag) {
+                ioInfo._status = DeviceStatus.EndOfTape;
+            } else {
+                ioInfo._status = DeviceStatus.Successful;
+            }
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            ioInfo._status = DeviceStatus.SystemException;
+        }
+    }
+
+    /**
+     * Mounts the media for this device.
+     * For a FileSystemTapeDevice, this entails opening a filesystem file.
+     * @param mediaName full path and file name for the volume to be mounted
+     * @return true if successful, else false
+     */
+    public boolean mount(
+        final String mediaName
+    ) {
+        if (isMounted()) {
+            LOGGER.error(String.format("Device %s Cannot mount %s:Already mounted", _name, mediaName));
+            return false;
+        }
+
+        try {
+            //  Open the file
+            _file = new RandomAccessFile(mediaName, "rw");
+
+            //  Read and verify the scratch pad area
+            byte[] buffer = new byte[SCRATCH_PAD_BUFFER_SIZE];
+            _file.seek(0);
+            int bytes = _file.read(buffer);
+            if (bytes != SCRATCH_PAD_BUFFER_SIZE) {
+                LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read %d bytes of scratch pad",
+                                           _name,
+                                           mediaName,
+                                           SCRATCH_PAD_BUFFER_SIZE));
+                _file.close();
+                _file = null;
+                return false;
+            }
+
+            ScratchPad scratchPad = new ScratchPad();
+            scratchPad.deserialize(ByteBuffer.wrap(buffer));
+
+            if (!scratchPad._identifier.equals(ScratchPad.EXPECTED_IDENTIFIER)) {
+                LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad identifier expected:'%s' got:'%s'",
+                                           _name,
+                                           mediaName,
+                                           ScratchPad.EXPECTED_IDENTIFIER,
+                                           scratchPad._identifier));
+                _file.close();
+                _file = null;
+                return false;
+            }
+
+            if (scratchPad._majorVersion != ScratchPad.EXPECTED_MAJOR_VERSION) {
+                LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad MajorVersion expected:%d got:%d",
+                                           _name,
+                                           mediaName,
+                                           ScratchPad.EXPECTED_MAJOR_VERSION,
+                                           scratchPad._majorVersion));
+                _file.close();
+                _file = null;
+                return false;
+            }
+
+            if (scratchPad._minorVersion != ScratchPad.EXPECTED_MINOR_VERSION) {
+                LOGGER.info(String.format("Device %s:ScratchPad MinorVersion expected:%d got:%d",
+                                          _name,
+                                          ScratchPad.EXPECTED_MINOR_VERSION,
+                                          scratchPad._minorVersion));
+            }
+
+            //  Things are good - set up our local state and we're done.
+            _volumeName = mediaName;
+            setIsMounted(true);
+            _loadPointFlag = true;
+            _lostPositionFlag = false;
+            _writeFlag = false;
+            _writeMarkFlag = false;
+            LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -804,6 +973,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         _file = null;
         _loadPointFlag = false;
+        _lostPositionFlag = false;
         _volumeName = null;
         _writeFlag = false;
         _writeMarkFlag = false;
@@ -811,22 +981,6 @@ public class FileSystemTapeDevice extends TapeDevice {
         setIsMounted(false);
         setIsWriteProtected(true);
         return true;
-    }
-
-    /**
-     * Writes a control word to the underlying file
-     * @param controlWord control word to be written
-     * @throws IOException if we cannot write to the file
-     */
-    public void writeControlWord(
-        final int controlWord
-    ) throws IOException {
-        //  Encode the value into an array of 4 bytes
-        ByteBuffer bb = ByteBuffer.wrap(new byte[4]);
-        bb.putInt(controlWord);
-
-        //  Write it to the file
-        _file.write(bb.array());
     }
 
 
@@ -837,17 +991,22 @@ public class FileSystemTapeDevice extends TapeDevice {
     /**
      * Creates a host system file which can be mounted on this type of device as a volume
      * @param fileName (including full path name)
+     * @param maxFileSize max file size in bytes, for this volume
      */
     public static void createVolume(
-        final String fileName
-    ) throws FileNotFoundException,
-             InternalError,
+        final String fileName,
+        final int maxFileSize
+    ) throws InternalError,
              IOException {
         //  Create system file to contain the pack image
         RandomAccessFile file = new RandomAccessFile(fileName, "rw");
 
-        //  Write two file marks, just because we can.
+        //  Write scratch pad
         ByteBuffer bb = ByteBuffer.wrap(new byte[8]);
+        ScratchPad sp = new ScratchPad(maxFileSize);
+        sp.serialize(bb);
+
+        //  Write two file marks, just because we can.
         bb.putInt(FILE_MARK_CONTROL_WORD);
         bb.putInt(FILE_MARK_CONTROL_WORD);
 
@@ -855,5 +1014,16 @@ public class FileSystemTapeDevice extends TapeDevice {
         file.seek(0);
         file.write(bb.array());
         file.close();
+    }
+
+    /**
+     * Creates a host system file which can be mounted on this type of device as a volume
+     * @param fileName (including full path name)
+     */
+    public static void createVolume(
+        final String fileName
+    ) throws InternalError,
+             IOException {
+        createVolume(fileName, MAX_FILE_SIZE);
     }
 }

@@ -49,6 +49,14 @@ public abstract class Device extends Node {
      */
     boolean _unitAttentionFlag;
 
+    /**
+     * IO counters for this device - they are to be kept updated by the various device terminal subclasses.
+     * TODO:Should a RESET function clear these?
+     */
+    long _miscCount = 0;        //  anything non-read/write
+    long _readCount = 0;
+    long _writeCount = 0;
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
