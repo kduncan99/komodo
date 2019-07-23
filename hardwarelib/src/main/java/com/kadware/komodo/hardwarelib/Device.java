@@ -6,6 +6,10 @@ package com.kadware.komodo.hardwarelib;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.PrepFactor;
+import com.kadware.komodo.baselib.Word36;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -155,6 +159,46 @@ public abstract class Device extends Node {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
+    }
+
+    /**
+     * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
+     * Subclasses should call here first to get an ArraySlice with the basic info, add more info, and return the whole thing.
+     * The format of the basic info block is:
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +0  |  FLAGS   |  MODEL   |   TYPE   |             zeroes             |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +1  |                          MISC_IO_COUNT                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +2  |                          READ_IO_COUNT                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +3  |                          WRITE_IO_COUNT                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +4  |                          READ_IO_BYTES                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +5  |                          WRITE_IO_BYTES                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +6  |                                                                 |
+     *  ..  |                      device-specific data                       |
+     * +27  |                                                                 |
+     *      +----------+----------+----------+----------+----------+----------+
+     *
+     * FLAGS:
+     *      Bit 0:  device_ready
+     * MODEL:       integer code for the DeviceModel
+     * TYPE:        integer code for the DeviceType
+     */
+    protected ArraySlice getInfo() {
+        long[] buffer = new long[28];
+        buffer[0] = Word36.setS1(buffer[0], _readyFlag ? 040 : 0);
+        buffer[0] = Word36.setS2(buffer[0], _deviceModel.getCode());
+        buffer[0] = Word36.setS3(buffer[0], _deviceType.getCode());
+        buffer[1] = _miscCount;
+        buffer[2] = _readCount;
+        buffer[3] = _writeCount;
+        buffer[4] = _readBytes;
+        buffer[5] = _writeBytes;
+        return new ArraySlice(buffer);
     }
 
     /**

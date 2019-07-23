@@ -217,15 +217,15 @@ public class Test_FileSystemTapeDevice {
         as.unpack(ioInfo._byteBuffer, false);
 
         int flags = (int) Word36.getS1(as.get(0));
-        boolean resultIsReady = (flags & 01) != 0;
-        boolean resultIsMounted = (flags & 02) != 0;
-        boolean resultIsWriteProtected = (flags & 04) != 0;
+        boolean resultIsReady = (flags & 040) != 0;
+        boolean resultIsMounted = (flags & 004) != 0;
+        boolean resultIsWriteProtected = (flags & 002) != 0;
         DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
         DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
 
         assertTrue(resultIsReady);
         assertTrue(resultIsMounted);
-        assertFalse(resultIsWriteProtected);
+        assertTrue(resultIsWriteProtected);
         assertEquals(DeviceModel.FileSystemTape, resultModel);
         assertEquals(DeviceType.Tape, resultType);
         assertFalse(d._unitAttentionFlag);
@@ -278,9 +278,7 @@ public class Test_FileSystemTapeDevice {
     public void ioReset_successful(
     ) throws Exception {
         String fileName = getTestFileName();
-        BlockCount blockCount = new BlockCount(10000);
-        BlockSize blockSize = new BlockSize(8192);
-        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+        FileSystemTapeDevice.createVolume(fileName);
 
         TestChannelModule cm = new TestChannelModule();
         FileSystemTapeDevice d = new TestDevice();

@@ -94,40 +94,50 @@ public abstract class DiskDevice extends Device {
         }
     }
 
-    //TODO need to reflect IO counts
     /**
      * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
      * The format of the info block is:
      *      +----------+----------+----------+----------+----------+----------+
-     *  +0  |  FLAGS   |  MODEL   |   TYPE   |          PREP_FACTOR           |
+     *  +0  |  FLAGS   |  MODEL   |   TYPE   |             zeroes             |
      *      +----------+----------+----------+----------+----------+----------+
-     *  +1  |                           BLOCK_COUNT                           |
+     *  +1  |                          MISC_IO_COUNT                          |
      *      +----------+----------+----------+----------+----------+----------+
-     *  +2  |                                                                 |
+     *  +2  |                          READ_IO_COUNT                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +3  |                          WRITE_IO_COUNT                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +4  |                          READ_IO_BYTES                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +5  |                          WRITE_IO_BYTES                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +6  |             zeroes             |          PREP_FACTOR           |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +7  |                           BLOCK_COUNT                           |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +8  |                                                                 |
      *  ..  |                             zeroes                              |
      * +27  |                                                                 |
      *      +----------+----------+----------+----------+----------+----------+
      *
      * FLAGS:
-     *      Bit 5:  device_ready
-     *      Bit 4:  mounted
-     *      Bit 3:  write_protected
+     *      Bit 0:  device_ready
+     *      Bit 3:  mounted
+     *      Bit 4:  write_protected
      * MODEL:       integer code for the DeviceModel
      * TYPE:        integer code for the DeviceType
      * PREP_FACTOR: indicates the block size in words, of a disk block
      * BLOCK_COUNT: number of blocks on the media
      */
     protected ArraySlice getInfo() {
-        long[] buffer = new long[28];
+        ArraySlice as = super.getInfo();
+        long[] buffer = as._array;
 
-        long flags = (_isWriteProtected ? 4 : 0)  | (_isMounted ? 2 : 0) | (_readyFlag ? 1 : 0);
-        long model = _deviceModel.getCode();
-        long type = _deviceType.getCode();
-        int prepfactor = PrepFactor.getPrepFactorFromBlockSize(_blockSize).getValue();
+        long flags = (long)((_isMounted ? 04 : 0) | (_isWriteProtected ? 02 : 0)) << 30;
+        buffer[0] |= flags;
 
-        buffer[0] = (flags << 30) | (model << 24) | (type << 18) | prepfactor;
-        buffer[1] = _blockCount.getValue();
-        return new ArraySlice(buffer);
+        buffer[6] = PrepFactor.getPrepFactorFromBlockSize(_blockSize).getValue();
+        buffer[7] = _blockCount.getValue();
+        return as;
     }
 
     /**

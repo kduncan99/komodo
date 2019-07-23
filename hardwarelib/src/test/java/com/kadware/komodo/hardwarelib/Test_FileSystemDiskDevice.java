@@ -314,13 +314,13 @@ public class Test_FileSystemDiskDevice {
         as.unpack(ioInfo._byteBuffer, false);
 
         int flags = (int) Word36.getS1(as.get(0));
-        boolean resultIsReady = (flags & 01) != 0;
-        boolean resultIsMounted = (flags & 02) != 0;
-        boolean resultIsWriteProtected = (flags & 04) != 0;
+        boolean resultIsReady = (flags & 040) != 0;
+        boolean resultIsMounted = (flags & 004) != 0;
+        boolean resultIsWriteProtected = (flags & 002) != 0;
         DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
         DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
-        PrepFactor resultPrepFactor = new PrepFactor((int) Word36.getH2(as.get(0)));
-        long resultBlockCount = as.get(1);
+        PrepFactor resultPrepFactor = new PrepFactor((int) Word36.getH2(as.get(6)));
+        long resultBlockCount = as.get(7);
 
         assertTrue(resultIsReady);
         assertTrue(resultIsMounted);

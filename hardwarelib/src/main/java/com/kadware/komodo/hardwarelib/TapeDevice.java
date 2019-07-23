@@ -21,12 +21,48 @@ public abstract class TapeDevice extends Device {
     /**
      * indicates whether a pack is mounted on the device
      */
-    private boolean _isMounted;
+    protected boolean _isMounted = false;
 
     /**
      * indicates whether the device is write-protected
      */
-    private boolean _isWriteProtected;
+    protected boolean _isWriteProtected = true;
+
+    /**
+     * Indicates we have reached or exceeded max file size
+     */
+    protected boolean _endOfTapeFlag = false;
+
+    /**
+     * Indicates the volume is positioned at load point
+     */
+    protected boolean _loadPointFlag = false;
+
+    /**
+     * Indicates that we don't actually know where we are
+     */
+    protected boolean _lostPositionFlag = false;
+
+    /**
+     * Last operation was a write
+     */
+    protected boolean _writeFlag = false;
+
+    /**
+     * Last operation was a write mark
+     */
+    protected boolean _writeMarkFlag = false;
+
+    /**
+     * Size of smallest block we can read or write
+     */
+    protected int _noiseConstant = 63;
+
+    /**
+     * Number of blocks / files since last file mark, load, or rewind
+     */
+    protected int _blocksExtended = 0;
+    protected int _filesExtended = 0;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -74,6 +110,7 @@ public abstract class TapeDevice extends Device {
     abstract void ioReadBackward(final DeviceIOInfo ioInfo);
     abstract void ioReset(final DeviceIOInfo ioInfo);
     abstract void ioRewind(final DeviceIOInfo ioInfo);
+    abstract void ioSetMode(final DeviceIOInfo ioInfo);
     abstract void ioUnload(final DeviceIOInfo ioInfo);
     abstract void ioWrite(final DeviceIOInfo ioInfo);
     abstract void ioWriteEndOfFile(final DeviceIOInfo ioInfo);
@@ -94,42 +131,73 @@ public abstract class TapeDevice extends Device {
         try {
             writer.write(String.format("  Mounted:         %s\n", String.valueOf(_isMounted)));
             writer.write(String.format("  Write Protected: %s\n", String.valueOf(_isWriteProtected)));
+            writer.write(String.format("  End of Tape:     %s\n", String.valueOf(_endOfTapeFlag)));
+            writer.write(String.format("  Load Point:      %s\n", String.valueOf(_loadPointFlag)));
+            writer.write(String.format("  Lost Position:   %s\n", String.valueOf(_lostPositionFlag)));
+            writer.write(String.format("  Write Flag:      %s\n", String.valueOf(_writeFlag)));
+            writer.write(String.format("  Write Mark Flag: %s\n", String.valueOf(_writeMarkFlag)));
+            writer.write(String.format("  Noise factor:    %d\n", _noiseConstant));
+            writer.write(String.format("  Blocks Extended: %d\n", _blocksExtended));
+            writer.write(String.format("  Files Extended:  %d\n", _filesExtended));
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
     }
 
-    //TODO  Add IO counts and other state information (I think this means moving said states from FSTD to here)
-    //  Also, we need blocks and files extended counts
     /**
      * Produces an array slice which represents, in 36-bit mode, the device info data which is presented to the requestor.
      * The format of the info block is:
      *      +----------+----------+----------+----------+----------+----------+
-     *  +0  |  FLAGS   |  MODEL   |   TYPE   |            reserved            |
+     *  +0  |  FLAGS   |  MODEL   |   TYPE   |          |  NOISE   |  FLAGS2  |
      *      +----------+----------+----------+----------+----------+----------+
-     *  +1  |                            reserved                             |
+     *  +1  |                          MISC_IO_COUNT                          |
      *      +----------+----------+----------+----------+----------+----------+
-     *  +2  |                                                                 |
+     *  +2  |                          READ_IO_COUNT                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +3  |                          WRITE_IO_COUNT                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +4  |                          READ_IO_BYTES                          |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +5  |                          WRITE_IO_BYTES                         |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +6  |        BLOCKS_EXTENDED              FILES_EXTENDED              |
+     *      +----------+----------+----------+----------+----------+----------+
+     *  +7  |                                                                 |
      *  ..  |                             zeroes                              |
      * +27  |                                                                 |
      *      +----------+----------+----------+----------+----------+----------+
      *
      * FLAGS:
-     *      Bit 5:  device_ready
-     *      Bit 4:  mounted
-     *      Bit 3:  write_protected
-     * MODEL:           integer code for the DeviceModel
-     * TYPE:            integer code for the DeviceType
+     *      Bit 0:  device_ready
+     *      Bit 3:  mounted
+     *      Bit 4:  write_protected
+     * MODEL:       integer code for the DeviceModel
+     * TYPE:        integer code for the DeviceType
+     * NOISE:       current noise constant
+     * FLAGS2:
+     *      Bit 30: load point
+     *      Bit 31: end of tape
+     *      Bit 32: lost position
+     *      Bit 33: write flag
+     * BLOCKS_EXTENDED: number of blocks read since load, rewind, or most recent file mark
+     * FILES_EXTENDED:  number of files read since load or rewind
      */
     protected ArraySlice getInfo() {
-        long[] buffer = new long[28];
+        ArraySlice as = super.getInfo();
+        long[] buffer = as._array;
 
-        long flags = (_isWriteProtected ? 4 : 0)  | (_isMounted ? 2 : 0) | (_readyFlag ? 1 : 0);
-        long model = _deviceModel.getCode();
-        long type = _deviceType.getCode();
+        long flags = (long)((_isMounted ? 04 : 0) | (_isWriteProtected ? 02 : 0)) << 30;
+        buffer[0] |= flags;
+        buffer[0] |= (_noiseConstant << 6);
 
-        buffer[0] = (flags << 30) | (model << 24) | (type << 18);
-        return new ArraySlice(buffer);
+        int flags2 = (_loadPointFlag ? 040 : 0)
+                     | (_endOfTapeFlag ? 020 : 0)
+                     | (_lostPositionFlag ? 010 : 0)
+                     | (_writeFlag || _writeMarkFlag ? 04 : 0);
+        buffer[0] |= flags2;
+        buffer[6] = ((long) (_blocksExtended & 0777777)) << 18 | (_filesExtended & 0777777);
+
+        return as;
     }
 
     /**
@@ -184,6 +252,10 @@ public abstract class TapeDevice extends Device {
 
                 case Rewind:
                     ioRewind(ioInfo);
+                    break;
+
+                case SetMode:
+                    ioSetMode(ioInfo);
                     break;
 
                 case Unload:
