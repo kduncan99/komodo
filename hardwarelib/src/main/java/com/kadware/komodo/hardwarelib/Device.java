@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Date;//TODO
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -54,7 +53,9 @@ public abstract class Device extends Node {
      * TODO:Should a RESET function clear these?
      */
     long _miscCount = 0;        //  anything non-read/write
+    long _readBytes = 0;        //  total bytes transferred from storage
     long _readCount = 0;
+    long _writeBytes = 0;       //  total bytes transferred to storage
     long _writeCount = 0;
 
 
@@ -142,13 +143,15 @@ public abstract class Device extends Node {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Type:%s  Model:%s\n",
-                                       String.valueOf(_deviceType.toString()),
-                                       String.valueOf(_deviceModel.toString())));
-
-            writer.write(String.format("  Ready:%s  UnitAttn:%s\n",
-                                       String.valueOf(_readyFlag),
-                                       String.valueOf(_unitAttentionFlag)));
+            writer.write(String.format("  Type:            %s\n", _deviceType.toString()));
+            writer.write(String.format("  Model:           %s\n", _deviceModel.toString()));
+            writer.write(String.format("  Ready:           %s\n", String.valueOf(_readyFlag)));
+            writer.write(String.format("  Unit Attention:  %s\n", String.valueOf(_unitAttentionFlag)));
+            writer.write(String.format("  Misc IO Count:   %d", _miscCount));
+            writer.write(String.format("  Read IO Count:   %d", _readCount));
+            writer.write(String.format("  Read Bytes:      %d", _readBytes));
+            writer.write(String.format("  Write IO Count:  %d", _writeCount));
+            writer.write(String.format("  Write Bytes:     %d", _writeBytes));
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }

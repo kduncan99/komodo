@@ -4,10 +4,9 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.*;
 import java.io.BufferedWriter;
 import java.io.IOException;
-
-import com.kadware.komodo.baselib.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -145,6 +144,7 @@ public abstract class DiskDevice extends Device {
             ioStart(ioInfo);
             switch (ioInfo._ioFunction) {
                 case None:
+                    ++_miscCount;
                     ioInfo._status = DeviceStatus.Successful;
                     ioEnd(ioInfo);
                     return false;

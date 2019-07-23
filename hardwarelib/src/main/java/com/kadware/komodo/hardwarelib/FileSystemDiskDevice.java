@@ -130,6 +130,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
 
     private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
     private AsynchronousFileChannel _channel;
+    private String _fileName;       //  only valid if mounted
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -155,6 +156,11 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         attachment._transferredCount = value;
         attachment._status = DeviceStatus.Successful;
         attachment._source.signal();
+        if (attachment._ioFunction.isReadFunction()) {
+            _readBytes += value;
+        } else {
+            _writeBytes += value;
+        }
     }
 
     /**
@@ -488,6 +494,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             _blockSize = scratchPad._blockSize;
             _blockCount = scratchPad._blockCount;
             _isMounted = true;
+            _fileName = mediaName;
             LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
@@ -540,6 +547,11 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         final BufferedWriter writer
     ) {
         super.dump(writer);
+        try {
+            writer.write(String.format("  File Name:       %s\n", String.valueOf(_fileName)));
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+        }
     }
 
     /**
@@ -569,6 +581,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         _blockSize = null;
         _isMounted = false;
         _isWriteProtected = true;
+        _fileName = null;
 
         return true;
     }

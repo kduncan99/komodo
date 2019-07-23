@@ -329,28 +329,46 @@ public class Test_FileSystemDiskDevice {
         assertEquals(DeviceType.Disk, resultType);
         assertEquals(blockCount.getValue(), resultBlockCount);
         assertEquals(PrepFactor.getPrepFactorFromBlockSize(blockSize), resultPrepFactor);
-
         assertFalse(d._unitAttentionFlag);
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
 
     @Test
     public void ioRead_fail_notReady(
-    ) {
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
         TestChannelModule cm = new TestChannelModule();
         TestDevice d = new TestDevice();
+        d.mount(fileName);
+        d.setReady(false);
 
         long blockId = 5;
-        int blockSize = 128;
         DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
                                                                         .setIOFunction(IOFunction.Read)
                                                                         .setBlockId(blockId)
-                                                                        .setTransferCount(blockSize)
+                                                                        .setTransferCount(blockSize.getValue())
                                                                         .build();
 
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
+        assertEquals(0, d._miscCount);
+        assertEquals(1, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
+        d.unmount();
+        deleteTestFile(fileName);
     }
 
     @Test
@@ -381,6 +399,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        assertEquals(1, d._miscCount);
+        assertEquals(1, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -413,7 +436,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(1, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -446,7 +473,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(1, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -473,7 +504,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
-
+        assertEquals(0, d._miscCount);
+        assertEquals(1, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -496,21 +531,40 @@ public class Test_FileSystemDiskDevice {
                                                                    .build();
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.Successful, ioInfo._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
 
     @Test
     public void ioReset_failed_notReady(
-    ) {
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockCount blockCount = new BlockCount(10000);
+        BlockSize blockSize = new BlockSize(8192);
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
         TestChannelModule cm = new TestChannelModule();
         FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
+        d.mount(fileName);
+        d.setReady(false);
+
         DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
                                                                    .setIOFunction(IOFunction.Reset)
                                                                    .build();
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.NotReady, ioInfo._status);
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
+        d.unmount();
+        deleteTestFile(fileName);
     }
 
     @Test
@@ -542,6 +596,9 @@ public class Test_FileSystemDiskDevice {
                                                  .setIOFunction(IOFunction.RewindInterlock)
                                                  .build(),
             new DeviceIOInfo.NonTransferBuilder().setSource(cm)
+                                                 .setIOFunction(IOFunction.SetMode)
+                                                 .build(),
+            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
                                                  .setIOFunction(IOFunction.ReadBackward)
                                                  .build(),
             new DeviceIOInfo.NonTransferBuilder().setSource(cm)
@@ -553,6 +610,12 @@ public class Test_FileSystemDiskDevice {
             cm.submitAndWait(d, ioInfo);
             assertEquals(DeviceStatus.InvalidFunction, ioInfo._status);
         }
+
+        assertEquals(0, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
     }
 
     @Test
@@ -565,6 +628,11 @@ public class Test_FileSystemDiskDevice {
                                                                    .build();
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
     }
 
     @Test
@@ -589,6 +657,11 @@ public class Test_FileSystemDiskDevice {
                                                                    .build();
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -615,7 +688,11 @@ public class Test_FileSystemDiskDevice {
                                                                    .build();
         cm.submitAndWait(d, ioInfo);
         assertEquals(DeviceStatus.NotReady, ioInfo._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(0, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -635,8 +712,6 @@ public class Test_FileSystemDiskDevice {
             new BlockSize(8192)
         };
 
-        //  There is some delay per iteration - it is over a second delay during unmount().
-        //  I think this is normal and acceptable.  I think.
         for (BlockSize blockSize : blockSizes) {
             PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
             BlockCount blockCount = new BlockCount(10000 * prepFactor.getBlocksPerTrack());
@@ -652,7 +727,7 @@ public class Test_FileSystemDiskDevice {
                                                                         .setTransferCount(128)
                                                                         .build();
             cm.submitAndWait(d, ioInfo);
-
+            long expBytes = 0;
             for (int x = 0; x < 16; ++x) {
                 long blockIdVal = r.nextInt() % blockCount.getValue();
                 if (blockIdVal < 0) {
@@ -666,6 +741,7 @@ public class Test_FileSystemDiskDevice {
                 }
 
                 int bufferSize = ioBlockCount * blockSize.getValue();
+                expBytes += bufferSize;
                 byte[] writeBuffer = new byte[bufferSize];
                 r.nextBytes(writeBuffer);
 
@@ -690,6 +766,11 @@ public class Test_FileSystemDiskDevice {
                 assertArrayEquals(writeBuffer, ioInfoRead._byteBuffer);
             }
 
+            assertEquals(1, d._miscCount);
+            assertEquals(16, d._readCount);
+            assertEquals(16, d._writeCount);
+            assertEquals(expBytes, d._readBytes);
+            assertEquals(expBytes, d._writeBytes);
             d.unmount();
             deleteTestFile(fileName);
         }
@@ -697,9 +778,18 @@ public class Test_FileSystemDiskDevice {
 
     @Test
     public void ioWrite_fail_notReady(
-    ) {
+    ) throws Exception {
+        String fileName = getTestFileName();
+        BlockSize blockSize = new BlockSize(128);
+        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        BlockCount blockCount = new BlockCount(10000 * (prepFactor.getBlocksPerTrack()));
+        FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
+
         TestChannelModule cm = new TestChannelModule();
         TestDevice d = new TestDevice();
+        d.mount(fileName);
+        d.setReady(false);
+
         int bufferSize = 128;
         long blockId = 5;
         byte[] writeBuffer = new byte[bufferSize];
@@ -711,6 +801,13 @@ public class Test_FileSystemDiskDevice {
                                                                          .build();
         cm.submitAndWait(d, ioInfoWrite);
         assertEquals(DeviceStatus.NotReady, ioInfoWrite._status);
+        assertEquals(0, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
+        d.unmount();
+        deleteTestFile(fileName);
     }
 
     @Test
@@ -743,7 +840,11 @@ public class Test_FileSystemDiskDevice {
                                                                          .build();
         cm.submitAndWait(d, ioInfoWrite);
         assertEquals(DeviceStatus.BufferTooSmall, ioInfoWrite._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -780,6 +881,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -814,7 +920,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -849,7 +959,11 @@ public class Test_FileSystemDiskDevice {
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
         assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -878,7 +992,11 @@ public class Test_FileSystemDiskDevice {
                                                                          .build();
         cm.submitAndWait(d, ioInfoWrite);
         assertEquals(DeviceStatus.UnitAttention, ioInfoWrite._status);
-
+        assertEquals(0, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -915,7 +1033,11 @@ public class Test_FileSystemDiskDevice {
                                                                          .build();
         cm.submitAndWait(d, ioInfoWrite);
         assertEquals(DeviceStatus.WriteProtected, ioInfoWrite._status);
-
+        assertEquals(1, d._miscCount);
+        assertEquals(0, d._readCount);
+        assertEquals(1, d._writeCount);
+        assertEquals(0, d._readBytes);
+        assertEquals(0, d._writeBytes);
         d.unmount();
         deleteTestFile(fileName);
     }

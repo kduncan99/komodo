@@ -23,9 +23,10 @@ public enum IOFunction
     Reset(9),             //    X       X        X        X        X
     Rewind(10),           //                                       X
     RewindInterlock(11),  //                                       X
-    Unload(12),           //                                       X
-    Write(13),            //    X       X                 X        X
-    WriteEndOfFile(14);   //                                       X
+    SetMode(12),          //                                       X
+    Unload(13),           //                                       X
+    Write(14),            //    X       X                 X        X
+    WriteEndOfFile(15);   //                                       X
 
     private final int _code;
 

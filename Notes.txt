@@ -2,6 +2,7 @@
 IP,IOP: UPI send/ack mechanism for IOs
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
+Need ioSetMode for tape devices
 
 
 -- TODO BUGS
