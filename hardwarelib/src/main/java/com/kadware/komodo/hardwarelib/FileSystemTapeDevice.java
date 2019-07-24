@@ -9,6 +9,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -86,7 +88,15 @@ public class FileSystemTapeDevice extends TapeDevice {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    //  Thrown when we try to read data, and there isn't any.
+    //  This can happen if we run out of data in the forward direction,
+    //  or if we move beyond the load-point position in the backward direction.
     private static class OutOfDataException extends Exception {}
+
+    //  Thrown when we are asked to read a control word and the result isn't valid.
+    //  This would be any control word which is negative and *not* a file mark,
+    //  or any control word which is greater than the maximum block size (if that is possible)
+    private static class BadControlWordException extends Exception {}
 
     /**
      * This class contains information about the pack version and geometry.
@@ -157,7 +167,7 @@ public class FileSystemTapeDevice extends TapeDevice {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final int FILE_MARK_CONTROL_WORD = 0xffffffff;
-    static final int MAX_BLOCK_SIZE = 128 * 1024;           //  128KBytes
+    private static final int MAX_BLOCK_SIZE = 128 * 1024;           //  128KBytes
     static final int MAX_FILE_SIZE = 175 * 1024 * 1024;     //  175MBytes
     static final int MIN_FILE_SIZE = 40 * 1024 * 1024;      //  40MBytes
     private static final Logger LOGGER = LogManager.getLogger(FileSystemTapeDevice.class);
@@ -211,11 +221,13 @@ public class FileSystemTapeDevice extends TapeDevice {
      * Reads a 32-bit signed integer from the mounted file.
      * Does not update any state information.
      * @return control word
+     * @throws BadControlWordException if we read an invalid control word
      * @throws IOException if we cannot read from the file
      * @throws OutOfDataException if we are apparently at the end of the file and cannot read a control word
      */
     private int readControlWord(
-    ) throws IOException,
+    ) throws BadControlWordException,
+             IOException,
              OutOfDataException {
         //  Read 4 bytes - if there aren't 4 bytes left, set lost position flag.
         //  If something worse happens, we propogate the exception to the caller,
@@ -229,27 +241,50 @@ public class FileSystemTapeDevice extends TapeDevice {
         _position += 4;
 
         // Convert the bytes to the 32-bit control word value
-        return ByteBuffer.wrap(buffer).getInt();
+        int cw = ByteBuffer.wrap(buffer).getInt();
+        if ((cw < 0) && (cw != FILE_MARK_CONTROL_WORD)) {
+            throw new BadControlWordException();
+        } else if (cw > MAX_BLOCK_SIZE) {
+            throw new BadControlWordException();
+        }
+
+        return cw;
     }
 
     /**
      * Reads the previous control word, leaving the file pointer at the position of the control word.
-     * Effectively reads backwards one control word.
+     * Effectively reads backwards one control word, leaving tape position *at* the control word.
      * @return control word
+     * @throws BadControlWordException if we read an invalid control word
      * @throws IOException if we cannot read from the file
      * @throws OutOfDataException if we are at the end of the file and cannot read a control word,
      * or we are at (or ahead of) load point, and there is no previous control word.
      */
     private int readPreceedingControlWord(
-    ) throws IOException,
+    ) throws BadControlWordException,
+             IOException,
              OutOfDataException {
-        if (_position <= SCRATCH_PAD_BUFFER_SIZE) {
+        if (_position < SCRATCH_PAD_BUFFER_SIZE + 4) {
             throw new OutOfDataException();
         }
+
+        _file.seek(_position - 4);
+        byte[] buffer = new byte[4];
+        int bytes = _file.read(buffer);
+        if (bytes != 4) {
+            throw new OutOfDataException();
+        }
+
         _position -= 4;
-        int result = readControlWord();
-        _position -= 4;
-        return result;
+        // Convert the bytes to the 32-bit control word value
+        int cw = ByteBuffer.wrap(buffer).getInt();
+        if ((cw < 0) && (cw != FILE_MARK_CONTROL_WORD)) {
+            throw new BadControlWordException();
+        } else if (cw > MAX_BLOCK_SIZE) {
+            throw new BadControlWordException();
+        }
+
+        return cw;
     }
 
 
@@ -351,6 +386,8 @@ public class FileSystemTapeDevice extends TapeDevice {
             if (controlWord == FILE_MARK_CONTROL_WORD) {
                 ioInfo._status = DeviceStatus.FileMark;     //  over-rides EOT status
                 _endOfTapeFlag = _position > _endOfTapeWarning;
+                _blocksExtended = 0;
+                ++_filesExtended;
             } else {
                 //  We have a valid block, but we don't want to read it, just skip the block and the terminating control word.
                 _position += controlWord;
@@ -358,19 +395,20 @@ public class FileSystemTapeDevice extends TapeDevice {
                 ioInfo._transferredCount = 0;
                 ++_blocksExtended;
                 _endOfTapeFlag = _position > _endOfTapeWarning;
-                _loadPointFlag = false;
                 ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
             }
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (OutOfDataException ex) {
             LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
-            _loadPointFlag = false;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -421,15 +459,18 @@ public class FileSystemTapeDevice extends TapeDevice {
             _endOfTapeFlag = _position > _endOfTapeWarning;
             _loadPointFlag = _position <= SCRATCH_PAD_BUFFER_SIZE;
             ioInfo._transferredCount = (0);
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (OutOfDataException ex) {
             LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -473,15 +514,18 @@ public class FileSystemTapeDevice extends TapeDevice {
             _blocksExtended = 0;
             ++_filesExtended;
             ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (OutOfDataException ex) {
             LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -516,38 +560,42 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         try {
             //  Loop until we get a file mark, or lose position, or something
-            int controlWord = readPreceedingControlWord();
-            while (controlWord != FILE_MARK_CONTROL_WORD) {
-                _position -= controlWord + 4;
+            boolean done = false;
+            while (!done) {
                 if (_position < SCRATCH_PAD_BUFFER_SIZE) {
                     throw new OutOfDataException();
                 } else if (_position == SCRATCH_PAD_BUFFER_SIZE) {
                     _loadPointFlag = true;
-                    _blocksExtended = 0;
-                    break;
+                    ioInfo._status = DeviceStatus.EndOfTape;
+                    done = true;
+                } else {
+                    int controlWord = readPreceedingControlWord();
+                    if (controlWord == FILE_MARK_CONTROL_WORD) {
+                        _blocksExtended = 0;
+                        ++_filesExtended;
+                        ioInfo._status = DeviceStatus.Successful;
+                        done = true;
+                    } else {
+                        _position -= controlWord + 4;
+                        if (_position < SCRATCH_PAD_BUFFER_SIZE) {
+                            throw new OutOfDataException();
+                        }
+                        ++_blocksExtended;
+                    }
                 }
-
-                ++_blocksExtended;
-                controlWord = readPreceedingControlWord();
             }
-
-            _endOfTapeFlag = _position > _endOfTapeWarning;
-            if (controlWord == FILE_MARK_CONTROL_WORD) {
-                _blocksExtended = 0;
-                ++_filesExtended;
-                ioInfo._status = DeviceStatus.FileMark;
-            } else {
-                ioInfo._status = DeviceStatus.EndOfTape;
-            }
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (OutOfDataException ex) {
             LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
-            _loadPointFlag = false;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -591,15 +639,17 @@ public class FileSystemTapeDevice extends TapeDevice {
                     _position += controlWord + 4;
                 } else {
                     //  We have a valid block to read.
-                    ioInfo._byteBuffer = new byte[ioInfo._transferCount];
+                    ioInfo._byteBuffer = new byte[controlWord];
                     _file.seek(_position);
                     int bytes = _file.read(ioInfo._byteBuffer, 0, controlWord);
+                    _readBytes += bytes;
                     _position += controlWord + 4;
                     ioInfo._transferredCount = bytes;
                     _endOfTapeFlag = _position > _endOfTapeWarning;
 
                     if (bytes != controlWord) {
                         //  We didn't read as many bytes as the control word indicated were available
+                        ioInfo._byteBuffer = Arrays.copyOf(ioInfo._byteBuffer, ioInfo._transferCount);
                         _lostPositionFlag = true;
                         ioInfo._status = DeviceStatus.LostPosition;
                     } else {
@@ -609,14 +659,18 @@ public class FileSystemTapeDevice extends TapeDevice {
                     done = true;
                 }
             }
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (OutOfDataException ex) {
             LOGGER.error(String.format("Device %s Out of data on read", _name));
-            ioInfo._status = DeviceStatus.LostPosition;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
             _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
         }
     }
 
@@ -627,9 +681,85 @@ public class FileSystemTapeDevice extends TapeDevice {
     protected void ioReadBackward(
         final DeviceIOInfo ioInfo
     ) {
-        //TODO implement this
         ++_readCount;
-        ioInfo._status = DeviceStatus.InvalidFunction;
+
+        if (!_readyFlag) {
+            ioInfo._status = DeviceStatus.NotReady;
+            return;
+        }
+
+        if (_unitAttentionFlag) {
+            ioInfo._status = DeviceStatus.UnitAttention;
+            return;
+        }
+
+        if (_lostPositionFlag) {
+            ioInfo._status = DeviceStatus.LostPosition;
+            return;
+        }
+
+        try {
+            //  Loop until we get a valid block, or lose position, or something
+            boolean done = false;
+            while (!done) {
+                if (_position < SCRATCH_PAD_BUFFER_SIZE) {
+                    throw new OutOfDataException();
+                } else if (_position == SCRATCH_PAD_BUFFER_SIZE) {
+                    _loadPointFlag = true;
+                    ioInfo._status = DeviceStatus.EndOfTape;
+                    done = true;
+                } else {
+                    int controlWord = readPreceedingControlWord();
+                    if (controlWord == FILE_MARK_CONTROL_WORD) {
+                        ioInfo._status = DeviceStatus.FileMark;
+                        _blocksExtended = 0;
+                        ++_filesExtended;
+                        done = true;
+                    } else if (controlWord < _noiseConstant) {
+                        //  Ignore a block which is too small - that is, skip the block and the terminating control word.
+                        _position -= controlWord + 4;
+                    } else {
+                        //  We have a valid block to read.
+                        //  One slight trick - we are reading backwards, so the buffer we send back to the
+                        //  initiator needs to start with the last byte in the block, and proceed accordingly.
+                        //  Thus, if the transfer count is less than the block size, the front of the block
+                        //  will be truncated (instead of the back).
+                        ioInfo._byteBuffer = new byte[controlWord];
+                        if (_position - controlWord - 4 < SCRATCH_PAD_BUFFER_SIZE) {
+                            throw new OutOfDataException();
+                        }
+
+                        _position -= controlWord;
+                        _file.seek(_position);
+                        int bytes = _file.read(ioInfo._byteBuffer, 0, controlWord);
+                        _readBytes += bytes;
+                        for (int sx = 0, dx = controlWord - 1; sx < dx; ++sx, --dx) {
+                            byte b = ioInfo._byteBuffer[sx];
+                            ioInfo._byteBuffer[sx] = ioInfo._byteBuffer[dx];
+                            ioInfo._byteBuffer[dx] = b;
+                        }
+
+                        _position -= controlWord + 4;
+                        _loadPointFlag = _position == SCRATCH_PAD_BUFFER_SIZE;
+                        ioInfo._transferredCount = bytes;
+                        ioInfo._status = DeviceStatus.Successful;
+                        done = true;
+                    }
+                }
+            }
+        } catch (BadControlWordException ex) {
+            LOGGER.error(String.format("Device %s Bad control word on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
+        } catch (OutOfDataException ex) {
+            LOGGER.error(String.format("Device %s Out of data on read", _name));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.LostPosition;
+        } catch (IOException ex) {
+            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
+            _lostPositionFlag = true;
+            ioInfo._status = DeviceStatus.SystemException;
+        }
     }
 
     /**
@@ -668,18 +798,18 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        try {
-            _file.seek(SCRATCH_PAD_BUFFER_SIZE);
-            _endOfTapeFlag = false;
-            _writeFlag = false;
-            _writeMarkFlag = false;
-            _loadPointFlag = true;
-            _blocksExtended = 0;
+        if (_loadPointFlag) {
             ioInfo._status = DeviceStatus.EndOfTape;
-        } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
+            return;
         }
+
+        _position = SCRATCH_PAD_BUFFER_SIZE;
+        _endOfTapeFlag = false;
+        _writeFlag = false;
+        _writeMarkFlag = false;
+        _loadPointFlag = true;
+        _blocksExtended = 0;
+        ioInfo._status = DeviceStatus.Successful;
     }
 
     /**
@@ -771,6 +901,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
             //  write data block
             _file.write(ioInfo._byteBuffer, 0, ioInfo._transferCount);
+            _writeBytes += ioInfo._transferCount;
 
             //  write terminating control word
             _file.write(bb.array());
