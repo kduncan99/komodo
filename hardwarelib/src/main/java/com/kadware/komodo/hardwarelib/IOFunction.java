@@ -11,7 +11,7 @@ package com.kadware.komodo.hardwarelib;
 public enum IOFunction
                                 //          Card     Card
 {                               // Printer .Punch.. .Reader. ..Disk.. ..Tape..
-    None(0),              //
+    None(0),              //    X       X        X        X        X
     Close(1),             //            X
     GetInfo(2),           //    X       X        X        X        X
     MoveBlock(3),         //                                       X

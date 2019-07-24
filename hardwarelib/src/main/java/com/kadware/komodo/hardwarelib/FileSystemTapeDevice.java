@@ -157,9 +157,9 @@ public class FileSystemTapeDevice extends TapeDevice {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final int FILE_MARK_CONTROL_WORD = 0xffffffff;
-    private static final int MAX_BLOCK_SIZE = 128 * 1024;           //  128KBytes
-    private static final int MAX_FILE_SIZE = 175 * 1024 * 1024;     //  175MBytes
-    private static final int MIN_FILE_SIZE = 40 * 1024 * 1024;      //  40MBytes
+    static final int MAX_BLOCK_SIZE = 128 * 1024;           //  128KBytes
+    static final int MAX_FILE_SIZE = 175 * 1024 * 1024;     //  175MBytes
+    static final int MIN_FILE_SIZE = 40 * 1024 * 1024;      //  40MBytes
     private static final Logger LOGGER = LogManager.getLogger(FileSystemTapeDevice.class);
 
     /**
