@@ -65,10 +65,12 @@ public enum IOFunction
             case 11:
                 return RewindInterlock;
             case 12:
-                return Unload;
+                return SetMode;
             case 13:
-                return Write;
+                return Unload;
             case 14:
+                return Write;
+            case 15:
                 return WriteEndOfFile;
             default:
                 return None;

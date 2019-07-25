@@ -157,7 +157,6 @@ public class Test_FileSystemDiskDevice {
     //  Tests
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO need to check io counters
     @Test
     public void create(
     ) {

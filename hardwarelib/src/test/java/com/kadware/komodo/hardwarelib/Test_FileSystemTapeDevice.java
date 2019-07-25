@@ -99,7 +99,7 @@ public class Test_FileSystemTapeDevice {
     }
 
     private static int nextFileIndex = 1;
-    private static Random _random = new Random(System.currentTimeMillis());
+    private static final Random _random = new Random(System.currentTimeMillis());
 
     /**
      * Prepends the system-wide temporary path to the given base name if found
@@ -516,6 +516,11 @@ public class Test_FileSystemTapeDevice {
                                                                        .setTransferCount(128)
                                                                        .build();
 
+        DeviceIOInfo ioInfoMoveBackward = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
+                                                                                .setIOFunction(IOFunction.MoveFileBackward)
+                                                                                .setTransferCount(0)
+                                                                                .build();
+
         DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
                                                                         .setIOFunction(IOFunction.Read)
                                                                         .setTransferCount(0)
@@ -559,6 +564,7 @@ public class Test_FileSystemTapeDevice {
         //  rewind, then read until we hit end of file
         cm.submitAndWait(d, ioInfoRewind);
         assertEquals(DeviceStatus.Successful, ioInfoRewind._status);
+        assertEquals(2, d._miscCount);
 
         boolean done = false;
         while (!done) {
@@ -568,91 +574,43 @@ public class Test_FileSystemTapeDevice {
             if (ioInfoRead._status == DeviceStatus.FileMark) {
                 done = true;
             } else {
-                //TODO verify data
-                break;
+                assertArrayEquals(data, ioInfoRead._byteBuffer);
             }
         }
 
+        assertEquals(blockCount + 1, d._readCount);
+        assertEquals(blockCount * blockSize, d._readBytes);
+        assertEquals(1, d._filesExtended);
+
+        //  Move backward one file mark, then read backward until we hit end of tape
+        cm.submitAndWait(d, ioInfoMoveBackward);
+        assertEquals(DeviceStatus.Successful, ioInfoMoveBackward._status);
         assertEquals(3, d._miscCount);
+        assertEquals(2, d._filesExtended);
+
+        byte[] reverseData = new byte[data.length];
+        for (int sx = data.length - 1, dx = 0; dx < reverseData.length; sx--, dx++) {
+            reverseData[dx] = data[sx];
+        }
+
+        done = false;
+        blockCount = 0;
+        while (!done) {
+            cm.submitAndWait(d, ioInfoRead);
+            assertTrue(ioInfoReadBackward._status == DeviceStatus.Successful
+                       || ioInfoRead._status == DeviceStatus.FileMark);
+            if (ioInfoRead._status == DeviceStatus.FileMark) {
+                done = true;
+            } else {
+                ++blockCount;
+                assertArrayEquals(reverseData, ioInfoRead._byteBuffer);
+                assertEquals(blockCount, d._blocksExtended);
+            }
+        }
 
         d.unmount();
         deleteTestFile(fileName);
     }
-
-    //    @Test
-//    public void ioWrite_ioRead_successful(
-//    ) throws Exception {
-//        Random r = new Random((int)System.currentTimeMillis());
-//        String fileName = getTestFileName();
-//        BlockSize[] blockSizes = {
-//            new BlockSize(128),
-//            new BlockSize(256),
-//            new BlockSize(512),
-//            new BlockSize(1024),
-//            new BlockSize(2048),
-//            new BlockSize(4096),
-//            new BlockSize(8192)
-//        };
-//
-//        //  There is some delay per iteration - it is over a second delay during unmount().
-//        //  I think this is normal and acceptable.  I think.
-//        for (BlockSize blockSize : blockSizes) {
-//            PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-//            BlockCount blockCount = new BlockCount(10000 * prepFactor.getBlocksPerTrack());
-//            FileSystemDiskDevice.createPack(fileName, blockSize, blockCount);
-//
-//            //  set up the device and eat the UA
-//            TestChannelModule cm = new TestChannelModule();
-//            TestDevice d = new TestDevice();
-//            d.mount(fileName);
-//            d.setReady(true);
-//            DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                        .setIOFunction(IOFunction.GetInfo)
-//                                                                        .setTransferCount(128)
-//                                                                        .build();
-//            cm.submitAndWait(d, ioInfo);
-//
-//            for (int x = 0; x < 16; ++x) {
-//                long blockIdVal = r.nextInt() % blockCount.getValue();
-//                if (blockIdVal < 0) {
-//                    blockIdVal = 0 - blockIdVal;
-//                }
-//
-//                //  note - we purposely allow block count of zero
-//                int ioBlockCount = r.nextInt() % 4;
-//                if (ioBlockCount < 0) {
-//                    ioBlockCount = 0 - ioBlockCount;
-//                }
-//
-//                int bufferSize = ioBlockCount * blockSize.getValue();
-//                byte[] writeBuffer = new byte[bufferSize];
-//                r.nextBytes(writeBuffer);
-//
-//                DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                                 .setIOFunction(IOFunction.Write)
-//                                                                                 .setBlockId(blockIdVal)
-//                                                                                 .setBuffer(writeBuffer)
-//                                                                                 .setTransferCount(bufferSize)
-//                                                                                 .build();
-//                cm.submitAndWait(d, ioInfoWrite);
-//                assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
-//                assertEquals(bufferSize, ioInfoWrite._transferredCount);
-//
-//                DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-//                                                                                .setIOFunction(IOFunction.Read)
-//                                                                                .setBlockId(blockIdVal)
-//                                                                                .setTransferCount(bufferSize)
-//                                                                                .build();
-//                cm.submitAndWait(d, ioInfoRead);
-//                assertEquals(DeviceStatus.Successful, ioInfoRead._status);
-//                assertEquals(bufferSize, ioInfoRead._transferredCount);
-//                assertArrayEquals(writeBuffer, ioInfoRead._byteBuffer);
-//            }
-//
-//            d.unmount();
-//            deleteTestFile(fileName);
-//        }
-//    }
 
     @Test
     public void ioWrite_fail_notReady(

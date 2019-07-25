@@ -580,8 +580,15 @@ public class Test_ByteChannelModule {
                                                         .setIOFunction(IOFunction.Reset)
                                                         .build();
         boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);
-
-        assertFalse(scheduled);
+        if (scheduled) {
+            while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                    System.out.println("Caught " + ex.getMessage());
+                }
+            }
+        }
         assertEquals(ChannelStatus.UnconfiguredDevice, cp.getChannelStatus());
         teardown();
     }
