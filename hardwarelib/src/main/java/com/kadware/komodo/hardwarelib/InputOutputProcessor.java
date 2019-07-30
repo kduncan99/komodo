@@ -100,13 +100,66 @@ public class InputOutputProcessor extends Processor {
 
         switch (source._processorType) {
             case InstructionProcessor:
-                //TODO
+                //  The IO was initiated by an IP - send a broadcast.
+                //  An available IP will pick it up, will know it is a signal of a completed IO,
+                //  and will do something pretty smart.  This *might* entail looping through all known
+                //  outstanding channel programs to find the one (or possibly more) which are no longer
+                //  in progress.
+                try {
+                    upiSendBroadcast();
+                } catch (InvalidSystemConfigurationException ex) {
+                    LOGGER.catching(ex);
+                    //TODO how do we stop everything dead?
+                }
                 break;
 
             case SystemProcessor:
-                //TODO
+                //  The IO was initiated by an SP - send a directed interrupt to that SP.
+                //  The SP knows that one of the IOs it initiated is complete - it is up to the SP
+                //  to work out what to do from there.
+                try {
+                    upiSendDirected(source._upiIndex);
+                } catch (UPINotAssignedException ex) {
+                    LOGGER.catching(ex);
+                    //TODO how do we stop everything dead?
+                }
                 break;
         }
+    }
+
+    /**
+     * IOP thread - we pick up UPI traffic and handle it appropriately
+     */
+    @Override
+    public void run() {
+        LOGGER.info(_name + " worker thread starting");
+
+        while (!_workerTerminate) {
+            boolean waitFlag = true;
+
+            //  We don't care about ACKs, they're not relevant in the architecture for IOPs.
+            synchronized (_upiPendingAcknowledgements) {
+                _upiPendingAcknowledgements.clear();
+            }
+
+            //  We DO care about SENDs - one of these indicates that an IO should be scheduled.
+            synchronized (_upiPendingInterrupts) {
+                waitFlag = _upiPendingInterrupts.isEmpty();
+                for (Processor source : _upiPendingInterrupts) {
+                    //TODO
+                }
+            }
+
+            if (waitFlag) {
+                try {
+                    synchronized (this) { wait(100); }
+                } catch (InterruptedException ex) {
+                    LOGGER.catching(ex);
+                }
+            }
+        }
+
+        LOGGER.info(_name + " worker thread terminating");
     }
 
     /**
@@ -176,35 +229,6 @@ public class InputOutputProcessor extends Processor {
             | UPIProcessorTypeException ex) {
             channelProgram.setChannelStatus(ChannelStatus.InvalidAddress);
             return false;
-        }
-    }
-
-    /**
-     * Invoked just before tearing down the configuration.
-     */
-    @Override
-    public void terminate() {}
-
-    /**
-     * Handle UPI interrupt.  We should get these only from clients which are requesting IOs.
-     * @param source processor initiating the interrupt
-     * @param broadcast true if this is a broadcast
-     */
-    @Override
-    public void upiHandleInterrupt(
-        final Processor source,
-        final boolean broadcast
-    ) {
-        if ((source._processorType == ProcessorType.InstructionProcessor)
-            || (source._processorType == ProcessorType.SystemProcessor)) {
-            //  Someone wants to do an IO.
-            //TODO
-        } else {
-            //  This shouldn't happen.
-            LOGGER.error(String.format("%s received a %s interrupt from %s",
-                                       _name,
-                                       broadcast ? "broadcast" : "directed",
-                                       source._name));
         }
     }
 }

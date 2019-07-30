@@ -32,14 +32,17 @@ public class Test_Processor {
         public void initialize(){}
 
         @Override
-        public void upiHandleInterrupt(
-            final Processor source,
-            final boolean broadcast
-        ){
-        }
+        public void run() {
+            while (!_workerTerminate) {
+                try {
+                    synchronized (_workerThread) { _workerThread.wait(1000); }
+                } catch (InterruptedException ex) {
+                    System.out.println("Caught " + ex.getMessage());
+                }
+            }
 
-        @Override
-        public void terminate(){}
+            synchronized (this) { notify(); }
+        }
     }
 
     @Test

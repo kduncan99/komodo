@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
  * This design relieves the burden of memory management from the operating system,
  * placing it in the host operating system which knows far better how to page.
  */
+@SuppressWarnings("Duplicates")
 public class MainStorageProcessor extends Processor {
 
     private final ArraySlice _fixedStorage;
@@ -69,7 +70,7 @@ public class MainStorageProcessor extends Processor {
      * @return segmentIndex of newly-allocated segment
      * @throws AddressingExceptionInterrupt if the given storageSize is incorrect
      */
-    public int createSegment(
+    int createSegment(
         final int storageSize
     ) throws AddressingExceptionInterrupt {
         if (storageSize <= 0) {
@@ -94,7 +95,7 @@ public class MainStorageProcessor extends Processor {
      * @param segmentIndex segment to be deleted
      * @throws AddressingExceptionInterrupt if the segment does not exist
      */
-    public void deleteSegment(
+    void deleteSegment(
         final int segmentIndex
     ) throws AddressingExceptionInterrupt {
         synchronized (this) {
@@ -174,7 +175,7 @@ public class MainStorageProcessor extends Processor {
      * @param storageSize new size of the segment
      * @return (probably new) ArraySlice associated with the segment
      */
-    public synchronized ArraySlice resizeSegment(
+    synchronized ArraySlice resizeSegment(
         final int segmentIndex,
         final int storageSize
     ) throws AddressingExceptionInterrupt {
@@ -195,26 +196,34 @@ public class MainStorageProcessor extends Processor {
     }
 
     /**
-     * Invoked just before tearing down the configuration
+     * processor thread - we don't really do that much here
      */
     @Override
-    public void terminate() {
-        //  Nothing to do
-    }
+    public void run() {
+        LOGGER.info(_name + " worker thread starting");
 
-    /**
-     * Handle UPI interrupt.  We should never get one.
-     * @param source processor initiating the interrupt
-     * @param broadcast true if this is a broadcast
-     */
-    @Override
-    public void upiHandleInterrupt(
-        final Processor source,
-        final boolean broadcast
-    ) {
-        LOGGER.error(String.format("%s received a %s interrupt from %s",
-                                   _name,
-                                   broadcast ? "broadcast" : "directed",
-                                   source._name));
+        while (!_workerTerminate) {
+            synchronized (_upiPendingAcknowledgements) {
+                for (Processor source : _upiPendingAcknowledgements) {
+                    LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
+                }
+                _upiPendingAcknowledgements.clear();
+            }
+
+            synchronized (_upiPendingInterrupts) {
+                for (Processor source : _upiPendingInterrupts) {
+                    LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
+                }
+                _upiPendingInterrupts.clear();
+            }
+
+            try {
+                synchronized (this) { wait(100); }
+            } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
+            }
+        }
+
+        LOGGER.info(_name + " worker thread terminating");
     }
 }

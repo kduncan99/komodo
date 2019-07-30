@@ -4,12 +4,14 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.baselib.Worker;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,7 +19,7 @@ import org.apache.logging.log4j.Logger;
  * Base class which models a Procesor node
  */
 @SuppressWarnings("Duplicates")
-public abstract class Processor extends Node {
+public abstract class Processor extends Node implements Worker {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
@@ -47,6 +49,22 @@ public abstract class Processor extends Node {
      */
     protected static AbsoluteAddress _upiCommunicationsArea = null;
 
+    /**
+     * When an interrupt or an ACK is sent to this processor, an entry is made in the
+     * appropriate set below.  It is up to the individual processor to watch these
+     * sets, and take any appropriate action.
+     */
+    protected final Set<Processor> _upiPendingAcknowledgements = new HashSet<>();
+    protected final Set<Processor> _upiPendingInterrupts = new HashSet<>();
+
+    /**
+     * All processors must implement a thread, if for no other reason than to monitor the UPI tables.
+     * IPs, IOPs, and SPs will all have something useful to do.
+     * MSPs will probably not.
+     */
+    protected boolean _workerTerminate = false; //  worker thread must monitor this, and shut down when it goes true
+    protected final Thread _workerThread;       //  reference to worker thread.
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
@@ -60,6 +78,10 @@ public abstract class Processor extends Node {
         super(NodeCategory.Processor, name);
         _processorType = processorType;
         _upiIndex = upiIndex;
+
+        //  Start the processor thread
+        _workerThread = new Thread(this);
+        _workerTerminate = false;
     }
 
 
@@ -73,8 +95,11 @@ public abstract class Processor extends Node {
      * then super back to this routine before returning.
      */
     @Override
-    public void clear() {
+    public void clear(
+    ) {
         _broadcastDestination = null;
+        _upiPendingInterrupts.clear();
+        _upiPendingAcknowledgements.clear();
     }
 
     /**
@@ -82,22 +107,6 @@ public abstract class Processor extends Node {
      */
     @Override
     public abstract void initialize();
-
-    /**
-     * Invoked just before tearing down the configuration.
-     */
-    @Override
-    public abstract void terminate();
-
-    /**
-     * All processors must implement this, even if they do not participate in UPI interrupts
-     * @param source processor initiating the interrupt
-     * @param broadcast true if this is a broadcast
-     */
-    abstract void upiHandleInterrupt(
-        final Processor source,
-        final boolean broadcast
-    );
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -115,35 +124,87 @@ public abstract class Processor extends Node {
         super.dump(writer);
         try {
             writer.write(String.format("  Type:%s\n", _processorType.toString()));
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("  Pending SENDs from: ");
+            synchronized (_upiPendingInterrupts) {
+                for (Processor p : _upiPendingInterrupts) {
+                    sb.append(String.format("  %s(%d)", p._name, p._upiIndex));
+                }
+            }
+            writer.write(sb.toString());
+
+            sb = new StringBuilder();
+            sb.append("  Pending ACKs from: ");
+            synchronized (_upiPendingAcknowledgements) {
+                for (Processor p : _upiPendingAcknowledgements) {
+                    sb.append(String.format("  %s(%d)", p._name, p._upiIndex));
+                }
+            }
+            writer.write(sb.toString());
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
     }
 
+    @Override
+    public final String getWorkerName() { return _name; }
+
+    /**
+     * Invoked just before tearing down the configuration
+     */
+    @Override
+    public final void terminate() {
+        //  Tell the worker thread to go away.
+        _workerTerminate = true;
+        synchronized (this) { notify(); }
+        while (_workerThread.isAlive()) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
+            }
+        }
+    }
     /**
      * For the subclass to invoke the process of sending a UPI broadcast interrupt, to be handled by any active IP.
-     * We depart from the standard architecture in that we require the destination to fully handle the SEND,
-     * at least to the point at which the source can safely issue a subsequent SEND, before returning.
-     * Hence, there will never be a need for an ACK.
+     * Any other use of this results in undefined behavior.
+     * @return true if the broadcast was sent;
+     * false if no IP was available which did not already have a pending interrupt from this source.
+     * If we return false, the caller must retry at some later point.
      * @throws InvalidSystemConfigurationException if there are no configured IPs
      */
-    protected final void upiSendBroadcast(
+    protected final boolean upiSendBroadcast(
     ) throws InvalidSystemConfigurationException {
         InstructionProcessor ip = getBroadcastProcessor();
-        ip.upiHandleInterrupt(this, true);
+        synchronized (ip._upiPendingInterrupts) {
+            boolean result = ip._upiPendingInterrupts.add(this);
+            if (result) {
+                synchronized (ip) { ip.notify(); }
+            }
+            return result;
+        }
     }
 
     /**
      * For the subclass to invoke the process of sending a directed UPI interrupt.
-     * We depart from the standard architecture in that we require the destination to fully handle the SEND,
-     * at least to the point at which the source can safely issue a subsequent SEND, before returning.
      * @param upiIndex UPI index of the destination processor
+     * @return true if the interrupt was posted;
+     * false if some other interrupt from this processor to the targeted processor is already pending.
+     * If we return false, the caller must retry at some later point.
      * @throws UPINotAssignedException if an unassigned UPI index was provided
      */
-    protected final void upiSendDirected(
+    protected final boolean upiSendDirected(
         int upiIndex
     ) throws UPINotAssignedException  {
-        InventoryManager.getInstance().getProcessor(upiIndex).upiHandleInterrupt(this, false);
+        Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
+        synchronized (destProc._upiPendingInterrupts) {
+            boolean result = destProc._upiPendingInterrupts.add(this);
+            if (result) {
+                synchronized (destProc) { destProc.notify(); }
+            }
+            return result;
+        }
     }
 
 
@@ -190,7 +251,6 @@ public abstract class Processor extends Node {
         return msp.getStorage(absoluteAddress._segment).get(absoluteAddress._offset);
     }
 
-    //TODO do we need this?
     /**
      * Sets a value in main storage
      * @param absoluteAddress MSP UPI and address of the word within the MSP
@@ -214,20 +274,6 @@ public abstract class Processor extends Node {
         }
 
         msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value);
-    }
-
-    //TODO do we need this?
-    /**
-     * Convenience method for the above
-     */
-    static public void setStorageValue(
-        final AbsoluteAddress absoluteAddress,
-        final Word36 value
-    ) throws AddressingExceptionInterrupt,
-             AddressLimitsException,
-             UPIProcessorTypeException,
-             UPINotAssignedException {
-        setStorageValue(absoluteAddress, value.getW());
     }
 
     /**

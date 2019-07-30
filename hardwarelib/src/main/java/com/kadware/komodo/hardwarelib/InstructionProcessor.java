@@ -5,10 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.exceptions.AddressLimitsException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
+import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.functions.FunctionHandler;
 import com.kadware.komodo.hardwarelib.functions.FunctionTable;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
@@ -145,16 +142,6 @@ public class InstructionProcessor extends Processor implements Worker {
     private final Word36                    _quantumTimer = new Word36();
     private boolean                         _stopped = false;
 
-    /**
-     * Set this to cause the worker thread to shut down
-     */
-    private boolean _workerTerminate = false;
-
-    /**
-     * reference to worker thread
-     */
-    private final Thread _workerThread;
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
@@ -176,9 +163,6 @@ public class InstructionProcessor extends Processor implements Worker {
         for (int bx = 0; bx < _baseRegisters.length; ++bx) {
             _baseRegisters[bx] = new BaseRegister();
         }
-
-        _workerThread = new Thread(this);
-        _workerTerminate = false;
 
         for (int jx = 0; jx < JUMP_HISTORY_TABLE_SIZE; ++jx) {
             _jumpHistoryTable[jx] = new Word36();
@@ -248,7 +232,18 @@ public class InstructionProcessor extends Processor implements Worker {
         _baseRegisters[index] = baseRegister;
     }
 
-    public void setBroadcastInterruptEligibility(boolean flag) { _broadcastInterruptEligibility = flag; }
+    public void setBroadcastInterruptEligibility(
+        final boolean flag
+    ) {
+        _broadcastInterruptEligibility = flag;
+        try {
+            Processor.updateBroadcastProcessor();
+        } catch (InvalidSystemConfigurationException ex) {
+            //  this should not be possible
+            LOGGER.catching(ex);
+        }
+    }
+
     public void setCurrentInstruction(long value) { _currentInstruction.setW(value); }
     public void setDayclockComparator(long value) { _dayclockComparator = value; }
     public void setDesignatorRegister(DesignatorRegister dr) { _designatorRegister = dr; }
@@ -429,45 +424,6 @@ public class InstructionProcessor extends Processor implements Worker {
             //      which means Stop Right Now... how do we do that for all callers of this code?
             _indicatorKeyRegister.setBreakpointRegisterMatchCondition(true);
         }
-    }
-
-    /**
-     * If an interrupt is pending, handle it.
-     * If not, check certain conditions to see if one of several certain interrupt classes needs to be raised.
-     * @return true if we did something useful, else false
-     * @throws MachineInterrupt if we need to cause an interrupt to be raised
-     */
-    private boolean checkPendingInterrupts(
-    ) throws MachineInterrupt {
-        //  Is there an interrupt pending?  If so, handle it
-        if (_pendingInterrupt != null) {
-            handleInterrupt();
-            return true;
-        }
-
-        //  Are there any pending conditions which need to be turned into interrupts?
-        if (_indicatorKeyRegister.getBreakpointRegisterMatchCondition() && !_midInstructionInterruptPoint) {
-            if (_breakpointRegister.getHaltFlag()) {
-                stop(StopReason.Breakpoint, 0);
-                return true;
-            } else {
-                throw new BreakpointInterrupt();
-            }
-        }
-
-        if (_quantumTimer.isNegative() && _designatorRegister.getQuantumTimerEnabled()) {
-            throw new QuantumTimerInterrupt();
-        }
-
-        if (_indicatorKeyRegister.getSoftwareBreak() && !_midInstructionInterruptPoint) {
-            throw new SoftwareBreakInterrupt();
-        }
-
-        if (_jumpHistoryThresholdReached && _jumpHistoryFullInterruptEnabled && !_midInstructionInterruptPoint) {
-            throw new JumpHistoryFullInterrupt();
-        }
-
-        return false;
     }
 
     /**
@@ -897,7 +853,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Async thread entry point
+    //  Async thread entry point and helpful sub-methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -906,87 +862,37 @@ public class InstructionProcessor extends Processor implements Worker {
     @Override
     public void run(
     ) {
-        LOGGER.info(String.format("InstructionProcessor worker %s Starting", _name));
+        LOGGER.info(_name + " worker thread starting");
         synchronized(_storageLocks) {
             _storageLocks.put(this, new HashSet<AbsoluteAddress>());
         }
 
         while (!_workerTerminate) {
-            // If the virtual processor is not running, then the thread does nothing other than sleep slowly.
+            //  If the virtual processor is not running, then the thread only watches for UPI traffic,
+            //  and otherwise sleeps slowly, waiting for a notify() which would indicate something needs done.
             if (_cleared || _stopped) {
-                synchronized (_workerThread) {
+                if (!runCheckUPI()) {
                     try {
-                        _workerThread.wait(100);
+                        synchronized (this) { wait(100); }
                     } catch (InterruptedException ex) {
                         LOGGER.catching(ex);
                     }
                 }
             } else {
-                //  Deal with pending interrupts, or conditions which will create a new pending interrupt.
-                boolean somethingDone = false;
-                try {
-                    //  check for pending interrupts
-                    somethingDone = checkPendingInterrupts();
-
-                    //  If we don't have an instruction in F0, fetch one.
-                    if (!somethingDone && !_indicatorKeyRegister.getInstructionInF0()) {
-                        fetchInstruction();
-                        somethingDone = true;
-                    }
-
-                    //  Execute the instruction in F0.
-                    if (!somethingDone) {
-                        _midInstructionInterruptPoint = false;
-                        try {
-                            executeInstruction();
-                        } catch (UnresolvedAddressException ex) {
-                            //  This is not surprising - can happen for basic mode indirect addressing.
-                            //  Update the quantum timer so we can (eventually) interrupt a long or infinite sequence.
-                            _midInstructionInterruptPoint = true;
-                            if (_designatorRegister.getQuantumTimerEnabled()) {
-                                _quantumTimer.add(Word36.NEGATIVE_ONE.getW());
-                            }
-                        }
-
-                        if (!_midInstructionInterruptPoint) {
-                            // Instruction is complete.  Maybe increment PAR.PC
-                            if (_preventProgramCounterIncrement) {
-                                _preventProgramCounterIncrement = false;
-                            } else {
-                                _programAddressRegister.setProgramCounter(_programAddressRegister.getProgramCounter() + 1);
-                            }
-
-                            //  Update IKR and (maybe) the quantum timer
-                            _indicatorKeyRegister.setInstructionInF0(false);
-                            if (_designatorRegister.getQuantumTimerEnabled()) {
-                                _quantumTimer.add(OnesComplement.negate36(_currentInstructionHandler.getQuantumTimerCharge()));
-                            }
-
-                            // Should we stop, given that we've completed an instruction?
-                            if (_currentRunMode == RunMode.SingleInstruction) {
-                                stop(StopReason.Debug, 0);
-                            }
-                        }
-
-                        somethingDone = true;
-                    }
-                } catch (MachineInterrupt interrupt) {
-                    raiseInterrupt(interrupt);
-                    somethingDone = true;
-                }
-
-                // End of the cycle - should we stop?
-                if (_currentRunMode == RunMode.SingleCycle) {
-                    stop(StopReason.Debug, 0);
-                }
-
+                //  This is the algorithm we execute when the processor is 'running'.
+                //  Check for UPI traffic - if none...
+                //  Check for pending machine interrupts - if none...
+                //  Execute (or continue executing) the current instruction.
+                //  If there is nothing at all to do, sleep a little bit.
+                boolean somethingDone = runCheckUPI()
+                                        || runCheckPendingInterruptConditions()
+                                        || runCheckPendingInterrupts();
                 if (!somethingDone) {
-                    synchronized (_workerThread) {
-                        try {
-                            _workerThread.wait(100);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
+                    runCurrentInstruction();
+
+                    // End of the cycle - should we stop?
+                    if (_currentRunMode == RunMode.SingleCycle) {
+                        stop(StopReason.Debug, 0);
                     }
                 }
             }
@@ -996,7 +902,128 @@ public class InstructionProcessor extends Processor implements Worker {
             _storageLocks.remove(this);
         }
 
-        LOGGER.info(String.format("InstructionProcessor worker %s Terminating", _name));
+        LOGGER.info(_name + " worker thread terminating");
+    }
+
+    /**
+     * Check certain conditions to see if one of several certain interrupt classes needs to be raised.
+     * @return true if we did something useful, else false
+     */
+    private boolean runCheckPendingInterruptConditions(
+    ) {
+        if (_indicatorKeyRegister.getBreakpointRegisterMatchCondition() && !_midInstructionInterruptPoint) {
+            if (_breakpointRegister.getHaltFlag()) {
+                stop(StopReason.Breakpoint, 0);
+            } else {
+                raiseInterrupt(new BreakpointInterrupt());
+            }
+
+            return true;
+        }
+
+        if (_quantumTimer.isNegative() && _designatorRegister.getQuantumTimerEnabled()) {
+            raiseInterrupt(new QuantumTimerInterrupt());
+            return true;
+        }
+
+        if (_indicatorKeyRegister.getSoftwareBreak() && !_midInstructionInterruptPoint) {
+            raiseInterrupt(new SoftwareBreakInterrupt());
+            return true;
+        }
+
+        if (_jumpHistoryThresholdReached && _jumpHistoryFullInterruptEnabled && !_midInstructionInterruptPoint) {
+            raiseInterrupt(new JumpHistoryFullInterrupt());
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * If an interrupt is pending, handle it.
+     * If not, check certain conditions to see if one of several certain interrupt classes needs to be raised.
+     * @return true if we did something useful, else false
+     */
+    private boolean runCheckPendingInterrupts(
+    ) {
+        //  Is there an interrupt pending?  If so, handle it
+        if (_pendingInterrupt != null) {
+            try {
+                handleInterrupt();
+            } catch (MachineInterrupt interrupt) {
+                raiseInterrupt(interrupt);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks UPI containers to see if we need to respond to any UPI traffic
+     * @return true if we found something to do, else false
+     */
+    private boolean runCheckUPI() {
+        synchronized (_upiPendingAcknowledgements) {
+            if (!_upiPendingAcknowledgements.isEmpty()) {
+                //TODO
+            }
+        }
+
+        synchronized (_upiPendingInterrupts) {
+            if (!_upiPendingInterrupts.isEmpty()) {
+                //TODO
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Execute (or continue executing) the instruction in F0.
+     */
+    private void runCurrentInstruction() {
+        try {
+            //  If we don't have an instruction in F0, fetch one.
+            if (!_indicatorKeyRegister.getInstructionInF0()) {
+                fetchInstruction();
+            }
+
+            //  Execute the instruction in F0.
+            _midInstructionInterruptPoint = false;
+            try {
+                executeInstruction();
+            } catch (UnresolvedAddressException ex) {
+                //  This is not surprising - can happen for basic mode indirect addressing.
+                //  Update the quantum timer so we can (eventually) interrupt a long or infinite sequence.
+                _midInstructionInterruptPoint = true;
+                if (_designatorRegister.getQuantumTimerEnabled()) {
+                    _quantumTimer.add(Word36.NEGATIVE_ONE.getW());
+                }
+            }
+
+            if (!_midInstructionInterruptPoint) {
+                // Instruction is complete.  Maybe increment PAR.PC
+                if (_preventProgramCounterIncrement) {
+                    _preventProgramCounterIncrement = false;
+                } else {
+                    _programAddressRegister.setProgramCounter(_programAddressRegister.getProgramCounter() + 1);
+                }
+
+                //  Update IKR and (maybe) the quantum timer
+                _indicatorKeyRegister.setInstructionInF0(false);
+                if (_designatorRegister.getQuantumTimerEnabled()) {
+                    _quantumTimer.add(OnesComplement.negate36(_currentInstructionHandler.getQuantumTimerCharge()));
+                }
+
+                // Should we stop, given that we've completed an instruction?
+                if (_currentRunMode == RunMode.SingleInstruction) {
+                    stop(StopReason.Debug, 0);
+                }
+            }
+        } catch (MachineInterrupt interrupt) {
+            raiseInterrupt(interrupt);
+        }
     }
 
 
@@ -1947,16 +1974,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Worker interface implementation
-     * @return our node name
-     */
-    @Override
-    public String getWorkerName(
-    ) {
-        return _name;
-    }
-
-    /**
      * Starts the instantiated thread
      */
     @Override
@@ -2024,50 +2041,6 @@ public class InstructionProcessor extends Processor implements Worker {
                                            _latestStopDetail));
                 this.notify();
             }
-        }
-    }
-
-    /**
-     * Called during config tear-down - terminate the active thread
-     */
-    @Override
-    public void terminate(
-    ) {
-        _workerTerminate = true;
-        synchronized(_workerThread) {
-            _workerThread.notify();
-        }
-
-        while (_workerThread.isAlive()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-            }
-        }
-    }
-
-    /**
-     * Handles an external UPI interrupt
-     * @param source processor initiating the interrupt
-     * @param broadcast true if this is a broadcast
-     */
-    @Override
-    protected void upiHandleInterrupt(
-        final Processor source,
-        final boolean broadcast
-    ) {
-        if (source._processorType == ProcessorType.SystemProcessor) {
-            //  SystemProcessor has something for us - either an IPL or a dayclock interrupt
-            //TODO
-        } else if (source._processorType == ProcessorType.InputOutputProcessor) {
-            //  An IOP completed or aborted an IO that was scheduled by us, or by some other IP
-            //TODO
-        } else {
-            //  Something unacceptable occurred.
-            LOGGER.error(String.format("%s received a %s interrupt from %s",
-                                       _name,
-                                       broadcast ? "broadcast" : "directed",
-                                       source._name));
         }
     }
 

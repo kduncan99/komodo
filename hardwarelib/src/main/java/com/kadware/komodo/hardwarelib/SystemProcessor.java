@@ -66,6 +66,7 @@ public class SystemProcessor extends Processor {
      * Specifically, we allow interrupts from SPs and IPs to IOPs, as well as the reverse,
      * and we allow interrupts from SPs to IPs and the reverse.
      */
+    //TODO should this whole area just be part of the partition data bank?
     private void establishCommunicationsArea(
         final MainStorageProcessor msp,
         final int segment,
@@ -175,34 +176,36 @@ public class SystemProcessor extends Processor {
     public void initialize() {}
 
     /**
-     * Invoked just before tearing down the configuration
+     * This is the running thread
      */
     @Override
-    public void terminate() {}
+    public void run() {
+        LOGGER.info(_name + " worker thread starting");
 
-    /**
-     * Handle UPI interrupt.  We get interrupts from the IOPs when they complete any IOs we've scheduled,
-     * and from IPs when they stop.
-     * @param source processor initiating the interrupt
-     * @param broadcast true if this is a broadcast
-     */
-    @Override
-    public void upiHandleInterrupt(
-        final Processor source,
-        final boolean broadcast
-    ) {
-        if (source._processorType == ProcessorType.InstructionProcessor) {
-            //  An IP just stopped.
-            //TODO
-        } else if (source._processorType == ProcessorType.InputOutputProcessor) {
-            //  An IOP just completed or aborted an IO we scheduled.
-            //TODO
-        } else {
-            //  Something is wrong in Denmark.
-            LOGGER.error(String.format("%s received a %s interrupt from %s",
-                                       _name,
-                                       broadcast ? "broadcast" : "directed",
-                                       source._name));
+        while (!_workerTerminate) {
+            //TODO ACKs mean we can send another IO
+            synchronized (_upiPendingAcknowledgements) {
+                for (Processor source : _upiPendingAcknowledgements) {
+                    LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
+                }
+                _upiPendingAcknowledgements.clear();
+            }
+
+            //TODO SENDs mean an IO is completed
+            synchronized (_upiPendingInterrupts) {
+                for (Processor source : _upiPendingInterrupts) {
+                    LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
+                }
+                _upiPendingInterrupts.clear();
+            }
+
+            try {
+                synchronized (this) { wait(100); }
+            } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
+            }
         }
+
+        LOGGER.info(_name + " worker thread terminating");
     }
 }

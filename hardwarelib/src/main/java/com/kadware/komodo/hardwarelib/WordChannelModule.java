@@ -111,8 +111,8 @@ public class WordChannelModule extends ChannelModule {
                         startIO(tracker);
                         sleepFlag = false;
                     } else if (tracker._completed) {
-                        //  IO is done - notify source, and delist it
-                        tracker._source.upiHandleInterrupt(tracker._ioProcessor, false);
+                        //  CM IO is done - notify source, and delist it
+                        tracker._ioProcessor.finalizeIo(tracker._channelProgram, tracker._source);
                         iter.remove();
                         sleepFlag = false;
                     } else {
@@ -126,12 +126,10 @@ public class WordChannelModule extends ChannelModule {
             }
 
             if (sleepFlag) {
-                synchronized (_workerThread) {
-                    try {
-                        _workerThread.wait(100);
-                    } catch (InterruptedException ex) {
-                        LOGGER.catching(ex);
-                    }
+                try {
+                    synchronized (this) { wait(100); }
+                } catch (InterruptedException ex) {
+                    LOGGER.catching(ex);
                 }
             }
         }

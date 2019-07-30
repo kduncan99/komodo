@@ -240,7 +240,7 @@ public class ByteChannelModule extends ChannelModule {
 
             if (sleepFlag) {
                 try {
-                    Thread.sleep(100);
+                    synchronized (this) { wait(100); }
                 } catch (InterruptedException ex) {
                     LOGGER.catching(ex);
                 }
