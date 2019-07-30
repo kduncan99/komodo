@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Class which models an IO Processor node.
  * An IO is presented to an IO processor in one of two ways:
- *      1) A UPI is sent to the IOP with the absolute address of an IO packet.  TODO
+ *      1) A UPI is sent to the IOP with the absolute address of an IO packet.
  *      2) startIO() is invoked, with the absolute address of an IO packet as a parameter.
  * In either case, the IO is routed directly to the channel module object in question.
  * If the channel module index is wrong, the IO is rejected immediately.
@@ -62,12 +62,6 @@ public class InputOutputProcessor extends Processor {
      */
     @Override
     public void dump(BufferedWriter writer) { super.dump(writer); }
-
-    /**
-     * Nop override
-     */
-    @Override
-    public void initialize() {}
 
     /**
      * ChanneProgram calls here to notify us that it is finished with a channel program.
@@ -170,7 +164,8 @@ public class InputOutputProcessor extends Processor {
         final Processor source,
         final ChannelProgram channelProgram
     ) {
-        ChannelModule channelModule = (ChannelModule) _descendants.get(channelProgram.getChannelModuleIndex());
+        int cmIndex = channelProgram.getChannelModuleIndex();
+        ChannelModule channelModule = (ChannelModule) _descendants.get(cmIndex);
         if (channelModule == null) {
             channelProgram.setChannelStatus(ChannelStatus.UnconfiguredChannelModule);
             return false;
@@ -192,7 +187,7 @@ public class InputOutputProcessor extends Processor {
                     MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(bufferAddress._upiIndex);
                     ArraySlice mspStorage = msp.getStorage(bufferAddress._segment);
                     wordBuffer = new ArraySlice(mspStorage._array,
-                                                mspStorage._offset + bufferAddress._offset + acw._offset,
+                                                mspStorage._offset + bufferAddress._offset,
                                                 bufferSize);
                 }
             } else if (acwCount > 0) {

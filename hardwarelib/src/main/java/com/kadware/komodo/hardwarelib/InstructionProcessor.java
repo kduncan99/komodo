@@ -1974,21 +1974,6 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Starts the instantiated thread
-     */
-    @Override
-    public final void initialize(
-    ) {
-        _workerThread.start();
-        while (!_workerThread.isAlive()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-            }
-        }
-    }
-
-    /**
      * Causes the IP to skip the next instruction.  Implemented by simply incrementing the PC.
      */
     public void skipNextInstruction(

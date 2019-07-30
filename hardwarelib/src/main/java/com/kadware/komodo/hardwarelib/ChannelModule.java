@@ -199,7 +199,7 @@ public abstract class ChannelModule extends Node implements Worker {
         _workerThread.start();
         while (!_workerThread.isAlive()) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(10);
             } catch (InterruptedException ex) {
                 LOGGER.catching(ex);
             }
@@ -227,9 +227,9 @@ public abstract class ChannelModule extends Node implements Worker {
         }
 
         channelProgram.setChannelStatus(ChannelStatus.InProgress);
-        synchronized (_workerThread) {
+        synchronized (this) {
             _trackers.add(createTracker(source, ioProcessor, channelProgram, compositeBuffer));
-            _workerThread.notify();
+            notify();
         }
 
         return true;

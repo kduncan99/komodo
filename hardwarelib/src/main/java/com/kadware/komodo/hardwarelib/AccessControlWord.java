@@ -71,4 +71,25 @@ public class AccessControlWord extends ArraySlice {
     public AddressModifier getAddressModifier() { return AddressModifier.getValue((int) Word36.getS1(get(0))); }
     public AbsoluteAddress getBufferAddress() { return new AbsoluteAddress(this, 1); }
     public int getBufferSize() { return (int) Word36.getH2(get(0)); }
+
+    /**
+     * Update the data in an ArraySlice to produce a valid ACW
+     * @param arena defines an arena of memory, possibly the storage from an MSP
+     * @param offset offset from the start of the arena, where we place the 3-word ACW
+     * @param bufferAddress absolute address of the buffer to be described
+     * @param bufferSize size of the indicated buffer, in words
+     * @param modifier modifer to be encoded
+     */
+    public static void populate(
+        final ArraySlice arena,
+        final int offset,
+        final AbsoluteAddress bufferAddress,
+        final int bufferSize,
+        final AddressModifier modifier
+    ) {
+        long word0 = ((long)(modifier._code)) << 30;
+        word0 |= bufferSize & 0777777;
+        arena.set(offset, word0);
+        bufferAddress.populate(arena, offset + 1);
+    }
 }

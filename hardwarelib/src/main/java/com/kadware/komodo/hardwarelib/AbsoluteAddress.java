@@ -110,4 +110,23 @@ public class AbsoluteAddress {
     ) {
         return String.format("0%o:0%o:%012o", _upiIndex, _segment, _offset);
     }
+
+    /**
+     * Populates a two-word area with our architecturally-defined pattern for representing
+     * an absolute address in main storage.
+     * The format is:
+     *      Word 0  Bits 0-3:  zero
+     *              Bits 4-35: MSP segment
+     *      Word 1  Bits 0-3:  MSP UPI
+     *      Word 1  Bits 4-35: Offset from start of the MSP segment
+     * @param arena defines an arena of memory, possibly the storage from an MSP
+     * @param offset offset from the start of the arena, where we place the 3-word ACW
+     */
+    public void populate(
+        final ArraySlice arena,
+        final int offset
+    ) {
+        arena.set(offset, _segment);
+        arena.set(offset + 1, ((long)(_upiIndex) << 32) | _offset);
+    }
 }

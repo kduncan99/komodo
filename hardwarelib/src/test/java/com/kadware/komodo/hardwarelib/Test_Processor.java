@@ -29,9 +29,6 @@ public class Test_Processor {
         }
 
         @Override
-        public void initialize(){}
-
-        @Override
         public void run() {
             while (!_workerTerminate) {
                 try {

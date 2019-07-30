@@ -198,7 +198,7 @@ public class ByteChannelModule extends ChannelModule {
 
         while (!_workerTerminate) {
             boolean sleepFlag = true;
-            synchronized (_workerThread) {
+            synchronized (this) {
                 Iterator<Tracker> iter = _trackers.iterator();
                 while (iter.hasNext()) {
                     ByteTracker tracker = (ByteTracker) iter.next();

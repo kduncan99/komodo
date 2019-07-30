@@ -170,12 +170,6 @@ public class SystemProcessor extends Processor {
     }
 
     /**
-     * Invoked when configuration is presented
-     */
-    @Override
-    public void initialize() {}
-
-    /**
      * This is the running thread
      */
     @Override

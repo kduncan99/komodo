@@ -82,7 +82,7 @@ public class ChannelProgram extends ArraySlice {
 
         if (accessControlWords != null) {
             set(0, Word36.setS6(get(0), accessControlWords.length));
-            int dx = _offset;
+            int dx = _offset + 4;
             for (AccessControlWord acw : accessControlWords) {
                 _array[dx++] = acw._array[acw._offset];
                 _array[dx++] = acw._array[acw._offset + 1];

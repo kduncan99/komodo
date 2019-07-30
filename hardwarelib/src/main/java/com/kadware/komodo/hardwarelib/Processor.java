@@ -102,12 +102,6 @@ public abstract class Processor extends Node implements Worker {
         _upiPendingAcknowledgements.clear();
     }
 
-    /**
-     * Invoked when the config is built, and before we allow anyone into it.
-     */
-    @Override
-    public abstract void initialize();
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Instance methods
@@ -149,6 +143,21 @@ public abstract class Processor extends Node implements Worker {
 
     @Override
     public final String getWorkerName() { return _name; }
+
+    /**
+     * Starts the instantiated thread
+     */
+    @Override
+    public final void initialize(
+    ) {
+        _workerThread.start();
+        while (!_workerThread.isAlive()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+            }
+        }
+    }
 
     /**
      * Invoked just before tearing down the configuration

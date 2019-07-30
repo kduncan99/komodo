@@ -155,14 +155,6 @@ public class MainStorageProcessor extends Processor {
     }
 
     /**
-     * Invoked when configuration is presented
-     */
-    @Override
-    public void initialize() {
-        _dynamicStorage.clear();
-    }
-
-    /**
      * Reallocates an existing dynamic segment
      * If the new storageSize is less than the existing size, the new segment will contain the front portion
      * of the original segment, truncated as necessary.

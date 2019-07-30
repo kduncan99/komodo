@@ -1,5 +1,4 @@
 -- TODO InProgress
-IP,IOP: UPI send/ack mechanism for IOs
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
@@ -17,6 +16,7 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib
+Use AbsoluteAddress.populate() everywhere it makes sense so we can reconfigure the layout if/when necessary
 SystemProcessor: For starting/monitoring/stopping system, and for console communication
   Move dayclock architecture to SystemProcessor
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
