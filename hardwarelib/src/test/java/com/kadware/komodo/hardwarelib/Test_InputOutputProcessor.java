@@ -295,5 +295,86 @@ public class Test_InputOutputProcessor {
         teardown();
     }
 
-    //TODO need single-buffer, scatter-gather, and a bunch of negative test cases
+    //TODO need single-buffer read, scatter read, gather write, and maybe more negative test cases
+
+    @Test
+    public void gatherWrite(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException {
+        setup();
+
+        long[] baseData0 = new long[80];
+        for (int bdx = 0; bdx < baseData0.length; ++bdx) {
+            baseData0[bdx] = _random.nextLong() & 0_777777_777777L;
+        }
+
+        long[] baseData1 = new long[100];
+        for (int bdx = 0; bdx < baseData1.length; ++bdx) {
+            baseData1[bdx] = _random.nextLong() & 0_777777_777777L;
+        }
+
+        long[] baseData2 = new long[44];
+        for (int bdx = 0; bdx < baseData2.length; ++bdx) {
+            baseData2[bdx] = _random.nextLong() & 0_777777_777777L;
+        }
+
+        int dataSegment0 = _msp.createSegment(baseData0.length);
+        ArraySlice dataStorage0 = _msp.getStorage(dataSegment0);
+        dataStorage0.load(baseData0);
+        AbsoluteAddress dataAddress0 = new AbsoluteAddress(_msp._upiIndex, dataSegment0, 0);
+
+        int dataSegment1 = _msp.createSegment(baseData1.length);
+        ArraySlice dataStorage1 = _msp.getStorage(dataSegment1);
+        dataStorage1.load(baseData1);
+        AbsoluteAddress dataAddress1 = new AbsoluteAddress(_msp._upiIndex, dataSegment1, 0);
+
+        int dataSegment2 = _msp.createSegment(baseData2.length);
+        ArraySlice dataStorage2 = _msp.getStorage(dataSegment2);
+        dataStorage2.load(baseData2);
+        AbsoluteAddress dataAddress2 = new AbsoluteAddress(_msp._upiIndex, dataSegment2, 0);
+
+        int acwSegment = _msp.createSegment(28);
+        ArraySlice acwStorage = _msp.getStorage(acwSegment);
+        AccessControlWord.populate(acwStorage, 0, dataAddress0, baseData0.length, AccessControlWord.AddressModifier.Increment);
+        AccessControlWord.populate(acwStorage, 3, dataAddress1, baseData1.length, AccessControlWord.AddressModifier.Increment);
+        AccessControlWord.populate(acwStorage, 6, dataAddress2, baseData2.length, AccessControlWord.AddressModifier.Increment);
+        AccessControlWord[] acws = {
+            new AccessControlWord(acwStorage, 0),
+            new AccessControlWord(acwStorage, 3),
+            new AccessControlWord(acwStorage, 6)
+        };
+
+        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                        .setChannelModuleIndex(_cmIndex)
+                                                        .setDeviceAddress(_devIndex)
+                                                        .setIOFunction(IOFunction.Write)
+                                                        .setAccessControlWords(acws)
+                                                        .build();
+        boolean scheduled = _iop.startIO(_ip, cp);
+        assert(scheduled);
+        while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                System.out.println("Caught " + ex.getMessage());
+            }
+        }
+
+        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(baseData0.length + baseData1.length + baseData2.length, _cm._lastBuffer._array.length);
+        assertArrayEquals(baseData0, Arrays.copyOfRange(_cm._lastBuffer._array,
+                                                        0,
+                                                        baseData0.length));
+        assertArrayEquals(baseData1, Arrays.copyOfRange(_cm._lastBuffer._array,
+                                                        baseData0.length,
+                                                        baseData0.length + baseData1.length));
+        assertArrayEquals(baseData2, Arrays.copyOfRange(_cm._lastBuffer._array,
+                                                        baseData0.length + baseData1.length,
+                                                        baseData0.length + baseData1.length + baseData2.length));
+
+        teardown();
+    }
+
 }

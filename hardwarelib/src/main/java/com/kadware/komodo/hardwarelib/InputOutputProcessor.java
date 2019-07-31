@@ -195,6 +195,7 @@ public class InputOutputProcessor extends Processor {
                 wordBuffer = new ArraySlice(new long[bufferWords]);
 
                 if (channelProgram.getFunction().isWriteFunction()) {
+                    int dx = 0;
                     for (int acwx = 0; acwx < acwCount; ++acwx) {
                         AccessControlWord acw = channelProgram.getAccessControlWord(acwx);
                         int inc = 0;
@@ -209,7 +210,7 @@ public class InputOutputProcessor extends Processor {
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(bufferAddress._upiIndex);
                         ArraySlice mspStorage = msp.getStorage(bufferAddress._segment);
 
-                        for (int sc = 0, sx = mspStorage._offset + bufferAddress._offset + acw._offset, dx = 0;
+                        for (int sc = 0, sx = mspStorage._offset + bufferAddress._offset;
                              sc < bufferSize;
                              ++sc, ++dx, sx += inc) {
                             wordBuffer._array[dx] = mspStorage._array[sx];
