@@ -8,6 +8,8 @@ import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,8 +104,9 @@ public class InputOutputProcessor extends Processor {
                 try {
                     upiSendBroadcast();
                 } catch (InvalidSystemConfigurationException ex) {
+                    //  I don't think this can happen - if the system config is invalid,
+                    //  the OS can't be running and thus the IP cannot send us an interrupt.
                     LOGGER.catching(ex);
-                    //TODO how do we stop everything dead?
                 }
                 break;
 
@@ -114,8 +117,8 @@ public class InputOutputProcessor extends Processor {
                 try {
                     upiSendDirected(source._upiIndex);
                 } catch (UPINotAssignedException ex) {
+                    //  This also cannot happen - if we got an interrupt from an SP, that SP obviously exists.
                     LOGGER.catching(ex);
-                    //TODO how do we stop everything dead?
                 }
                 break;
         }
@@ -136,14 +139,91 @@ public class InputOutputProcessor extends Processor {
                 _upiPendingAcknowledgements.clear();
             }
 
-            //  We DO care about SENDs - one of these indicates that an IO should be scheduled.
+            //  We DO care about SENDs - they indicate that an IO should be scheduled.
+            //  Use the communication area to retrieve a two-word absolute address.
+            //  This is the address of a channel program in storage.
+            //  Construct a ChannelProgram object around that bit of storage, and start an IO.
+            List<Processor> ackList = new LinkedList<>();
+            int broadcastCount = 0;
+            List<Processor> sendList = new LinkedList<>();
+
             synchronized (_upiPendingInterrupts) {
                 waitFlag = _upiPendingInterrupts.isEmpty();
                 for (Processor source : _upiPendingInterrupts) {
-                    //TODO
+                    try {
+                        AbsoluteAddress addr = _upiCommunicationLookup.get(new UPIIndexPair(source._upiIndex, this._upiIndex));
+                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
+                        ArraySlice mspStorage = msp.getStorage(addr._segment);
+                        ChannelProgram channelProgram = ChannelProgram.create(mspStorage, addr._offset);
+                        boolean started = startIO(source, channelProgram);
+                        if (!started) {
+                            if (source._processorType == ProcessorType.SystemProcessor) {
+                                sendList.add(source);
+                            } else {
+                                ++broadcastCount;
+                            }
+                        }
+                        waitFlag = false;
+                        ackList.add(source);
+                    } catch (AddressingExceptionInterrupt
+                        |  UPINotAssignedException
+                        | UPIProcessorTypeException ex) {
+                        //  Shouldn't be possible
+                        LOGGER.catching(ex);
+                    }
                 }
             }
 
+            //  ACK all the SENDs we processed from the various IPs and the SP as appropriate.
+            //  We don't worry about whether the ACK went through - the source should never have more than
+            //  one SEND to us outstanding, and thus cannot have an unhandled ACK from us at this point.
+            for (Processor ackDest : ackList) {
+                try {
+                    if (!upiAcknowledge(ackDest._upiIndex)) {
+                        LOGGER.error(String.format("ACK from %s to %s was rejected", _name, ackDest._name));
+                    }
+                } catch (UPINotAssignedException ex) {
+                    //  terribly wrong...  can't fix it, just move on.
+                    LOGGER.catching(ex);
+                }
+            }
+
+            //  Now SEND a broadcast for each channel program which ended up *not* scheduled, to notify the OS
+            //  that the IO is already done or dead.  It is conceivable (though not likely) that there is already
+            //  a SEND pending from us to the particular chosen IP - if so, we just wait briefly, then try again.
+            for (int bx = 0; bx < broadcastCount; ++bx) {
+                try {
+                    while (!upiSendBroadcast()) {
+                        try {
+                            synchronized (this) { wait(10); }
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
+                    }
+                } catch (InvalidSystemConfigurationException ex) {
+                    //  this should never happen
+                    LOGGER.catching(ex);
+                }
+            }
+
+            //  SEND a directed interrupt for each channel program not scheduled, invoked by an SP.
+            //  Again, the SP might have an unhandled SEND from us for a previous IO, so we retry if necessary.
+            for (Processor sp : sendList) {
+                try {
+                    while (!upiSendDirected(sp._upiIndex)) {
+                        try {
+                            synchronized (this) { wait(10); }
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
+                    }
+                } catch (UPINotAssignedException ex) {
+                    //  this should never happen
+                    LOGGER.catching(ex);
+                }
+            }
+
+            //  If we didn't do anything, sleep for a bit
             if (waitFlag) {
                 try {
                     synchronized (this) { wait(100); }

@@ -10,13 +10,13 @@ import com.kadware.komodo.hardwarelib.functions.FunctionHandler;
 import com.kadware.komodo.hardwarelib.functions.FunctionTable;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,6 +34,7 @@ public class InstructionProcessor extends Processor implements Worker {
         Normal,
         SingleInstruction,
         SingleCycle,
+        Stopped,
     };
 
     public enum StopReason {
@@ -116,10 +117,9 @@ public class InstructionProcessor extends Processor implements Worker {
     private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
-    private boolean                         _cleared = true;    //TODO this might be a synonym for _stopped - reevaluate later
     private final InstructionWord           _currentInstruction = new InstructionWord();
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
-    private RunMode                         _currentRunMode = RunMode.Normal;   //  TODO why isn't this updated?
+    private RunMode                         _currentRunMode = RunMode.Stopped;
     private static long                     _dayclockComparator = 0;
     private static long                     _dayclockOffset = 0;
     private DesignatorRegister              _designatorRegister = new DesignatorRegister();
@@ -140,7 +140,8 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private final Word36                    _quantumTimer = new Word36();
-    private boolean                         _stopped = false;
+
+    private final Set<Processor> _pendingUPISends = new HashSet<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -205,8 +206,8 @@ public class InstructionProcessor extends Processor implements Worker {
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
     public long getQuantumTimer() { return _quantumTimer.getW(); }
-    public boolean isCleared() { return _cleared; }
-    public boolean isStopped() { return _stopped; }
+    public boolean isCleared() { return (_currentRunMode == RunMode.Stopped) && (_latestStopReason == StopReason.Cleared); }
+    public boolean isStopped() { return _currentRunMode == RunMode.Stopped; }
 
     public void loadActiveBaseTable(
         final ActiveBaseTableEntry[] source
@@ -870,7 +871,7 @@ public class InstructionProcessor extends Processor implements Worker {
         while (!_workerTerminate) {
             //  If the virtual processor is not running, then the thread only watches for UPI traffic,
             //  and otherwise sleeps slowly, waiting for a notify() which would indicate something needs done.
-            if (_cleared || _stopped) {
+            if (isStopped()) {
                 if (!runCheckUPI()) {
                     try {
                         synchronized (this) { wait(100); }
@@ -964,19 +965,71 @@ public class InstructionProcessor extends Processor implements Worker {
      * @return true if we found something to do, else false
      */
     private boolean runCheckUPI() {
+        boolean result = false;
         synchronized (_upiPendingAcknowledgements) {
-            if (!_upiPendingAcknowledgements.isEmpty()) {
-                //TODO
+            for (Processor ackSource : _upiPendingAcknowledgements) {
+                if (_pendingUPISends.remove(ackSource)) {
+                    result = true;
+                } else {
+                    LOGGER.error(String.format("%s got unexpected ACK from %s", _name, ackSource._name));
+                }
             }
         }
 
         synchronized (_upiPendingInterrupts) {
             if (!_upiPendingInterrupts.isEmpty()) {
-                //TODO
+                for (Processor sendSource : _upiPendingInterrupts) {
+                    switch (sendSource._processorType) {
+                        case InputOutputProcessor:
+                            //  UPI Normal (IO completed)
+                            //  Ensure we are running, and raise a class 31 interrupt.
+                            //TODO
+                            if (isStopped()) {
+                                LOGGER.error(String.format("%s got a UPI SEND from %s while stopped",
+                                                           _name,
+                                                           sendSource._name));
+                            } else {
+                                raiseInterrupt(new UPINormalInterrupt(MachineInterrupt.Synchrony.Broadcast, 0));
+                            }
+                            break;
+
+                        case InstructionProcessor:
+                            //  UPI Initial
+                            //  Ensure we are stopped, raise a class 30 interrupt, and start.
+                            //  TODO (how do we get the ICS and L0 BDT information?  It's a mystery...
+                            if (isStopped()) {
+                                raiseInterrupt(new UPIInitialInterrupt());
+                                start();
+                            } else {
+                                LOGGER.error(String.format("%s got a UPI SEND from %s while running",
+                                                           _name,
+                                                           sendSource._name));
+                            }
+                            break;
+
+                        case SystemProcessor:
+                            //  Initial Program Load
+                            //  Ensure we are stopped, raise a class 29 interrupt, and start.
+                            if (isStopped()) {
+                                raiseInterrupt(new InitialProgramLoadInterrupt());
+                                start();
+                            } else {
+                                LOGGER.error(String.format("%s got a UPI SEND from %s while running",
+                                                           _name,
+                                                           sendSource._name));
+                            }
+                            break;
+
+                        default:                    //  should never happen
+                            LOGGER.error(String.format("%s got unexpected UPI interrupt from %s",
+                                                       _name,
+                                                       sendSource._name));
+                    }
+                }
             }
         }
 
-        return false;
+        return result;
     }
 
     /**
@@ -1939,12 +1992,12 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     @Override
     public void clear() {
-        if (!_stopped) {
+        if (!isStopped()) {
             stop(StopReason.Cleared, 0);
-            while (!_stopped) {
+            while (!isStopped()) {
                 synchronized (_workerThread) {
                     try {
-                        _workerThread.wait(100);
+                        _workerThread.wait(10);
                     } catch (InterruptedException ex) {
                         LOGGER.catching(ex);
                     }
@@ -1953,7 +2006,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //TODO whatever it takes to clear things up
-        _cleared = true;
+        _pendingUPISends.clear();
         super.clear();
     }
 
@@ -1989,12 +2042,11 @@ public class InstructionProcessor extends Processor implements Worker {
     public boolean start(
     ) {
         synchronized(this) {
-            if (!_cleared) {
+            if (!isStopped()) {
                 return false;
             }
 
-            _cleared = false;
-            _stopped = false;
+            _currentRunMode = RunMode.Normal;
             this.notify();
             return true;
         }
@@ -2012,10 +2064,10 @@ public class InstructionProcessor extends Processor implements Worker {
         final long detail
     ) {
         synchronized(this) {
-            if (!_stopped) {
+            if (!isStopped()) {
                 _latestStopReason = stopReason;
                 _latestStopDetail = detail;
-                _stopped = true;
+                _currentRunMode = RunMode.Stopped;
                 System.out.println(String.format("%s Stopping:%s Detail:%o",
                                                  _name,
                                                  stopReason.toString(),

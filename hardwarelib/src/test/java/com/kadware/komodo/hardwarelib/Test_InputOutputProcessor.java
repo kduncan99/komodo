@@ -24,6 +24,46 @@ public class Test_InputOutputProcessor {
     //  Stub classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    private static class TestSystemProcessor extends SystemProcessor {
+
+        TestSystemProcessor() {
+            super("SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        }
+
+        @Override
+        public void run() {
+            while (!_workerTerminate) {
+                try {
+                    synchronized (this) { wait(); }
+                } catch (InterruptedException ex) {
+                    System.out.println("Caught " + ex.getMessage());
+                }
+            }
+        }
+
+        //  For now, we do not set up an actual fully-formatted communications area in storage,
+        //  only the individual slots for each source/destination combination.
+        //  We hard-code the size of each slot to 2-words, to contain an absolute address.
+        void setupUPICommunications(
+            final MainStorageProcessor msp
+        ) throws AddressingExceptionInterrupt {
+            int slotSize = 2;
+            List<Processor> processors = InventoryManager.getInstance().getProcessors();
+            int processorCount = processors.size();
+            int areas = processorCount * processorCount;
+            int segmentIndex = msp.createSegment(areas * slotSize);
+            int offset = 0;
+            for (Processor source : processors) {
+                for (Processor destination : processors) {
+                    UPIIndexPair pair = new UPIIndexPair(source._upiIndex, destination._upiIndex);
+                    AbsoluteAddress addr = new AbsoluteAddress(msp._upiIndex, segmentIndex, offset);
+                    _upiCommunicationLookup.put(pair, addr);
+                    offset += slotSize;
+                }
+            }
+        }
+    }
+
     private static class TestInstructionProcessor extends InstructionProcessor {
 
         TestInstructionProcessor() {
@@ -146,6 +186,7 @@ public class Test_InputOutputProcessor {
     private InstructionProcessor _ip = null;
     private InputOutputProcessor _iop = null;
     private MainStorageProcessor _msp = null;
+    private TestSystemProcessor _sp = null;
     private final Random _random = new Random(System.currentTimeMillis());
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -153,8 +194,12 @@ public class Test_InputOutputProcessor {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private void setup(
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              MaxNodesException {
+        _sp = new TestSystemProcessor();
+        _sp.initialize();
+
         _ip = InventoryManager.getInstance().createInstructionProcessor();
         _iop = InventoryManager.getInstance().createInputOutputProcessor();
         _msp = InventoryManager.getInstance().createMainStorageProcessor();
@@ -167,6 +212,8 @@ public class Test_InputOutputProcessor {
         Node.connect(_cm, _devIndex, _dev);
         _cm.initialize();
         _dev.initialize();
+
+        _sp.setupUPICommunications(_msp);
     }
 
     private void teardown(
@@ -178,6 +225,7 @@ public class Test_InputOutputProcessor {
         InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
+        _sp.terminate();
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -194,7 +242,8 @@ public class Test_InputOutputProcessor {
 
     @Test
     public void canConnect_failure(
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
         setup();
@@ -210,7 +259,8 @@ public class Test_InputOutputProcessor {
 
     @Test
     public void threadAlive_true(
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
         setup();
@@ -227,7 +277,8 @@ public class Test_InputOutputProcessor {
 
     @Test
     public void unconfiguredChannelModule(
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              MaxNodesException,
              UPINotAssignedException {
         setup();

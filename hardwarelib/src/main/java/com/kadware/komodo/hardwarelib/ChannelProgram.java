@@ -103,6 +103,22 @@ public class ChannelProgram extends ArraySlice {
     }
 
     /**
+     * Constructor from storage, which uses the number of ACWs in the channel program located
+     * at the storage offset to determine how long the channel program should be.
+     * @param baseSlice describes the general storage where the channel program exists
+     * @param offset offset from the start of the storage where the channel program exists
+     * @return new ChannelProgram array slice
+     */
+    public static ChannelProgram create(
+        final ArraySlice baseSlice,
+        final int offset
+    ) {
+        int acws = (int) baseSlice.get(offset) & 077;
+        int len = 4 + (3 * acws);
+        return new ChannelProgram(baseSlice, offset, len);
+    }
+
+    /**
      * For write operations - creates a temporary contiguous buffer comprised of the individual
      * parts of buffers represented by the ACWs.
      */

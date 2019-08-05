@@ -575,8 +575,8 @@ public class Test_ByteChannelModule {
         setup(DeviceType.Disk);
 
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
-                                                        .setChannelModuleIndex(0)
-                                                        .setDeviceAddress(5)
+                                                        .setChannelModuleIndex(_cmIndex)
+                                                        .setDeviceAddress(_deviceIndex + 1)
                                                         .setIOFunction(IOFunction.Reset)
                                                         .build();
         boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);

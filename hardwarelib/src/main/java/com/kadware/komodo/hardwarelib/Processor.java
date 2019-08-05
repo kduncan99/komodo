@@ -9,8 +9,10 @@ import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +22,38 @@ import org.apache.logging.log4j.Logger;
  */
 @SuppressWarnings("Duplicates")
 public abstract class Processor extends Node implements Worker {
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Nested class
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    static class UPIIndexPair {
+        final int _sourceIndex;
+        final int _destinationIndex;
+
+        UPIIndexPair(
+            final int sourceIndex,
+            final int destinationIndex
+        ) {
+            _sourceIndex = sourceIndex;
+            _destinationIndex = destinationIndex;
+        }
+
+        @Override
+        public boolean equals(
+            final Object obj
+        ) {
+            return (obj instanceof UPIIndexPair)
+                && (((UPIIndexPair) obj)._sourceIndex == _sourceIndex)
+                && (((UPIIndexPair) obj)._destinationIndex == _destinationIndex);
+        }
+
+        @Override
+        public int hashCode() {
+            return (_sourceIndex << 16) | _destinationIndex;
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
@@ -42,20 +76,33 @@ public abstract class Processor extends Node implements Worker {
     private static InstructionProcessor _broadcastDestination = null;
 
     /**
-     * Absolute address of the communications mailboxes for UPI interrupt handling.
-     * This is set by the SystemProcessor at some point prior to IPL, in conjunction with
-     * populating the particular area of storage.
-     * See SystemProcessor class for the format of this area.
-     */
-    protected static AbsoluteAddress _upiCommunicationsArea = null;
-
-    /**
      * When an interrupt or an ACK is sent to this processor, an entry is made in the
      * appropriate set below.  It is up to the individual processor to watch these
      * sets, and take any appropriate action.
      */
-    protected final Set<Processor> _upiPendingAcknowledgements = new HashSet<>();
-    protected final Set<Processor> _upiPendingInterrupts = new HashSet<>();
+    final Set<Processor> _upiPendingAcknowledgements = new HashSet<>();
+    final Set<Processor> _upiPendingInterrupts = new HashSet<>();
+
+    /**
+     * Lookup table of mailbox slots for UPI communication.
+     * Populated by SystemProcessor at any appropriate point prior to OS initialization.
+     * Key is the combination of source and destination UPI indices, value is the AbsoluteAddress
+     * in storage where the communication area is located, for messages from the source processor
+     * to the destination processor.
+     * --
+     * Not every combination of source/destination indices are valid, reflecting the fact that
+     * not every combinaion of processors interrupt each other, that broadcast messages exist
+     * where-in the destination is not known to the source, and that in some cases where
+     * paths *do* exist from one processor to another, no communication area is necessary.
+     * It is up to the SP to determine which combinations are to exist, to build that area in
+     * storage, to store the location of the communications area in the configuration bank
+     * so that the OS can access it, and to populate this container accordingly.
+     * --
+     * The communications area in storage is formatted in a manner only relevant to the SP and
+     * to the OS - the actual absolute addresses of each specific communications slot is
+     * all we care about here.
+     */
+    static final Map<UPIIndexPair, AbsoluteAddress> _upiCommunicationLookup = new HashMap<>();
 
     /**
      * All processors must implement a thread, if for no other reason than to monitor the UPI tables.
@@ -146,6 +193,8 @@ public abstract class Processor extends Node implements Worker {
 
     /**
      * Starts the instantiated thread
+     * The subclass should do any initialization in the run() method,
+     * as we do not allow it to override this method.
      */
     @Override
     public final void initialize(
@@ -175,6 +224,27 @@ public abstract class Processor extends Node implements Worker {
             }
         }
     }
+
+    /**
+     * For the subclass to invoke the process of sending a UPI ACK.
+     * @param upiIndex UPI index of the destination processor
+     * @return true if the ack was posted, false if an ack from this processor to the destination processor is still pending.
+     * If we return false, the caller must retry at some later point.
+     * @throws UPINotAssignedException if an unassigned UPI index was provided
+     */
+    final boolean upiAcknowledge(
+        final int upiIndex
+    ) throws UPINotAssignedException  {
+        Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
+        synchronized (destProc._upiPendingAcknowledgements) {
+            boolean result = destProc._upiPendingAcknowledgements.add(this);
+            if (result) {
+                synchronized (destProc) { destProc.notify(); }
+            }
+            return result;
+        }
+    }
+
     /**
      * For the subclass to invoke the process of sending a UPI broadcast interrupt, to be handled by any active IP.
      * Any other use of this results in undefined behavior.
@@ -183,7 +253,7 @@ public abstract class Processor extends Node implements Worker {
      * If we return false, the caller must retry at some later point.
      * @throws InvalidSystemConfigurationException if there are no configured IPs
      */
-    protected final boolean upiSendBroadcast(
+    final boolean upiSendBroadcast(
     ) throws InvalidSystemConfigurationException {
         InstructionProcessor ip = getBroadcastProcessor();
         synchronized (ip._upiPendingInterrupts) {
@@ -203,8 +273,8 @@ public abstract class Processor extends Node implements Worker {
      * If we return false, the caller must retry at some later point.
      * @throws UPINotAssignedException if an unassigned UPI index was provided
      */
-    protected final boolean upiSendDirected(
-        int upiIndex
+    final boolean upiSendDirected(
+        final int upiIndex
     ) throws UPINotAssignedException  {
         Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
         synchronized (destProc._upiPendingInterrupts) {
