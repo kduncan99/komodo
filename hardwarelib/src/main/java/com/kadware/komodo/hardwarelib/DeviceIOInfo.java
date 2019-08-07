@@ -36,7 +36,7 @@ public class DeviceIOInfo {
      * Required for writes, should be null for reads - the device should create this.
      * Must be at least as large as indicated by _transferCount.
      */
-    final ArraySlice _wordBuffer;
+    ArraySlice _wordBuffer;
 
     /**
      * Number of bytes to be transferred for byte devices

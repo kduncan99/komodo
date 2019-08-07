@@ -92,4 +92,12 @@ public class AccessControlWord extends ArraySlice {
         arena.set(offset, word0);
         bufferAddress.populate(arena, offset + 1);
     }
+
+    @Override
+    public String toString() {
+        return String.format("addr:%s size:%d mod:%s ",
+                             getBufferAddress().toString(),
+                             getBufferSize(),
+                             getAddressModifier().toString());
+    }
 }

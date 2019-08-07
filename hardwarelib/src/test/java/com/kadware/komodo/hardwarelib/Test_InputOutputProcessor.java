@@ -98,7 +98,17 @@ public class Test_InputOutputProcessor {
                 final ArraySlice buffer
             ) {
                 super(source, ioProcessor, channelProgram, buffer);
-                _lastBuffer = buffer;
+                if (channelProgram.getFunction().isWriteFunction()) {
+                    _lastBuffer = buffer;
+                } else if (channelProgram.getFunction().isReadFunction()) {
+                    _lastBuffer = buffer;
+                    Random r = new Random(System.currentTimeMillis());
+                    for (int bx = 0; bx < buffer._array.length; ++bx) {
+                        buffer._array[bx] = r.nextLong() & 0_777777_777777L;
+                    }
+                } else {
+                    _lastBuffer = null;
+                }
             }
         }
 
@@ -156,7 +166,11 @@ public class Test_InputOutputProcessor {
         public void clear() {}
 
         @Override
-        public boolean handleIo(DeviceIOInfo ioInfo) { return false; }
+        public boolean handleIo(
+            DeviceIOInfo ioInfo
+        ) {
+            return false;
+        }
 
         @Override
         public boolean hasByteInterface() { return true; }
@@ -188,6 +202,7 @@ public class Test_InputOutputProcessor {
     private MainStorageProcessor _msp = null;
     private TestSystemProcessor _sp = null;
     private final Random _random = new Random(System.currentTimeMillis());
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  useful methods
@@ -303,6 +318,52 @@ public class Test_InputOutputProcessor {
     }
 
     @Test
+    public void simpleRead(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException {
+        setup();
+
+        int blockSize = 224;
+        int dataSegment = _msp.createSegment(blockSize);
+        ArraySlice dataStorage = _msp.getStorage(dataSegment);
+        AbsoluteAddress dataAddress = new AbsoluteAddress(_msp._upiIndex, dataSegment, 0);
+
+        int acwSegment = _msp.createSegment(28);
+        ArraySlice acwStorage = _msp.getStorage(acwSegment);
+        AccessControlWord.populate(acwStorage,
+                                   0,
+                                   dataAddress,
+                                   blockSize,
+                                   AccessControlWord.AddressModifier.Increment);
+        AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
+
+        BlockId blockId = new BlockId(0);
+        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                        .setChannelModuleIndex(_cmIndex)
+                                                        .setDeviceAddress(_devIndex)
+                                                        .setIOFunction(IOFunction.Read)
+                                                        .setBlockId(blockId)
+                                                        .setAccessControlWords(acws)
+                                                        .build();
+        boolean scheduled = _iop.startIO(_ip, cp);
+        assert(scheduled);
+        while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                System.out.println("Caught " + ex.getMessage());
+            }
+        }
+
+        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertArrayEquals(_cm._lastBuffer._array, dataStorage._array);
+
+        teardown();
+    }
+
+    @Test
     public void simpleWrite(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
@@ -325,9 +386,11 @@ public class Test_InputOutputProcessor {
         AccessControlWord.populate(acwStorage, 0, dataAddress, baseData.length, AccessControlWord.AddressModifier.Increment);
         AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
 
+        BlockId blockId = new BlockId(0);
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)
+                                                        .setBlockId(blockId)
                                                         .setIOFunction(IOFunction.Write)
                                                         .setAccessControlWords(acws)
                                                         .build();
@@ -346,7 +409,7 @@ public class Test_InputOutputProcessor {
         teardown();
     }
 
-    //TODO need single-buffer read, scatter read, gather write, and maybe more negative test cases
+    //TODO need scatter read, gather write, backward, no-increment, and skip ACWs, and maybe more negative test cases
 
     @Test
     public void gatherWrite(

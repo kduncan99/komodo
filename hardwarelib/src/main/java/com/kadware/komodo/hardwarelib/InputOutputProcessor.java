@@ -79,17 +79,18 @@ public class InputOutputProcessor extends Processor {
     ) {
         if (channelProgram.getFunction().isReadFunction()) {
             int acwCount = channelProgram.getAccessControlWordCount();
-            if ((acwCount == 1)
-                && (channelProgram.getAccessControlWord(0).getAddressModifier() == AccessControlWord.AddressModifier.Increment)) {
-                //  composite buffer points to storage - nothing to do here
-            } else if (acwCount == 0) {
-                //  No buffers - again, nothing to do here
-            } else {
-                //  The composite buffer is interim - distribute the results from the read accordingly
-                int wordToCopy = channelProgram.getWordsTransferred();
-                for (int acwx = 0; acwx < channelProgram.getAccessControlWordCount(); ++acwx) {
-                    AccessControlWord acw = channelProgram.getAccessControlWord(acwx);
-
+            //  If acwCount is zero, there are no buffers and no copy is needed.
+            //  If one, and if we are strictly incrementing, the buffer points directly to storage, and again no copy is needed.
+            //  If more than one, or if we are not strictly incrementing, we need to copy data from the temporary buffer to storage.
+            if (acwCount > 0) {
+                AccessControlWord.AddressModifier mod = channelProgram.getAccessControlWord(0).getAddressModifier();
+                if ((acwCount > 1) || (mod != AccessControlWord.AddressModifier.Increment)) {
+                    //  The composite buffer is interim - distribute the results from the read accordingly
+                    int wordsToCopy = channelProgram.getWordsTransferred();
+                    for (int acwx = 0; acwx < channelProgram.getAccessControlWordCount(); ++acwx) {
+                        AccessControlWord acw = channelProgram.getAccessControlWord(acwx);
+                        //TODO
+                    }
                 }
             }
         }

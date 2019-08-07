@@ -3,6 +3,7 @@ Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
 
+
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
@@ -12,6 +13,10 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
 Check BDI$ function in minalib - do we need it, is it right?
+
+
+-- Thoughts
+Do we really need the BlockId and similar classes?
 
 
 -- TODO implement
