@@ -409,7 +409,9 @@ public class Test_InputOutputProcessor {
         teardown();
     }
 
-    //TODO need scatter read, gather write, backward, no-increment, and skip ACWs, and maybe more negative test cases
+    //TODO need read backward (not backward ACW)
+    //TODO need read/write backward, no-increment, and skip ACWs
+    //TODO need more negative test cases
 
     @Test
     public void gatherWrite(
@@ -491,4 +493,14 @@ public class Test_InputOutputProcessor {
         teardown();
     }
 
+    @Test
+    public void scatterRead(
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
+             MaxNodesException,
+             UPINotAssignedException {
+        setup();
+
+        teardown();
+    }
 }

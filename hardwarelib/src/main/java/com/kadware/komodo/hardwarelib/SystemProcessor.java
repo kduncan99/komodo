@@ -25,6 +25,48 @@ public class SystemProcessor extends Processor {
     //  Constructor
     //  ------------------------------------------------------------------------
 
+    //  Tape Boot Procedure:
+    //      A starting IP is specified, along with the device upon which the boot tape is mounted,
+    //      and the disk device on which the DRS pack is mounted.
+    //      The tape path is selected consisting of:
+    //          the tape device on which the boot tape is mounted
+    //          a channel module connected to the tape device
+    //          the IOP which contains the channel module
+    //      A memory block of 1792 words is allocated to contain the loader bank
+    //      The first block is read from the tape into the loader bank
+    //      A memory block is allocated to contain the configuration data bank, and is populated
+    //      A memory block is allocated to contain the initial level 0 BDT, which contains the
+    //          interrupt vector for the IPL interrupt, which contains a GOTO which transfers
+    //          control to the loader bank
+    //      The ICS BReg and XReg are initialized to refer to the interrupt vectors in the initial level 0 BDT,
+    //          BR2 is initialized to refer to the configuration data bank,
+    //          and the IP is started (which causes it to generate a class 29 interrupt - the IPL interrupt).
+    //
+    //  Disk Boot Procedure:
+    //      A starting IP is specified, along with the device upon which the relevant DRS pack is mounted.
+    //      The disk path is selected consisting of:
+    //          the disk device on which the DRS pack is mounted
+    //          a channel module connected to the disk device
+    //          the IOP which contains the channel module
+    //      A memory block of 1792 words is allocated to contain the loader bank
+    //      The first one or two blocks (depending on block size) are read from the DRS pack into the loader bank
+    //      A memory block is allocated to contain the configuration data bank, and is populated
+    //      A memory block is allocated to contain the initial level 0 BDT, which contains the
+    //          interrupt vector for the IPL interrupt, which contains a GOTO which transfers
+    //          control to the loader bank
+    //      The ICS BReg and XReg are initialized to refer to the interrupt vectors in the initial level 0 BDT,
+    //          BR2 is initialized to refer to the configuration data bank,
+    //          and the IP is started (which causes it to generate a class 29 interrupt - the IPL interrupt).
+    //
+    //  Notes:
+    //      Loader code must know how many OS banks exist, and how big they are
+    //      The loader is responsible for creating the Level 0 BDT (at a minimum)
+    //      At some point, the loader must send UPI interrupts to the other IPs in the partition.
+    //          They will have no idea where the Level 0 BDT is, and cannot properly handle the interrupt.
+    //          So - the invoking processor stores the absolute address of the level 0 BDT in the mail slots
+    //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
+    //          register accordingly before raising the Initial (class 30) interrupt.
+
     /**
      * constructor
      * @param name node name of the SP

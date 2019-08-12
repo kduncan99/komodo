@@ -32,6 +32,7 @@ public class URFunctionHandler extends InstructionHandler {
         long[] operands = new long[7];
         ip.getConsecutiveOperands(false, operands);
         BankManipulator.bankManipulation(ip, Instruction.UR, operands);
+        ip.setPreventProgramCounterIncrement();
     }
 
     @Override

@@ -149,7 +149,9 @@ class BaseFunctions {
         "          HALT 01034",
         "",
         "IH_35*    . Interrupt 29 Initial Program Load (IPL)",
-        "          HALT 01035",
+        "          . Default action is to simply return from the interrupt.",
+        "          . This happens every time the IP is started via start().",
+        "          UR        *0,EX1,B26 . ",
         "",
         "IH_36*    . UPI Initial",
         "          HALT 01036",
@@ -837,6 +839,7 @@ class BaseFunctions {
                         long value = loadableBank._startingAddress + loadableBank._content.getSize();
                         ip.setGeneralRegister(GeneralRegisterSet.EX0, value);
                     } catch (MachineInterrupt ex) {
+                        System.out.println("Caught " + ex.getMessage());
                     }
                 } else {
                     //  based on something other than B0, set active base table
@@ -997,7 +1000,35 @@ class BaseFunctions {
                             StringBuilder sb = new StringBuilder();
                             sb.append(String.format("      %08o:", sx));
                             for (int sy = 0; sy < 8; ++sy) {
-                                if ( sx + sy < br._storage.getSize() ) {
+                                if (sx + sy < br._storage.getSize()) {
+                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
+                                }
+                            }
+                            System.out.println(sb.toString());
+                        }
+                    }
+                } else if (bx == 25) {
+                    System.out.println("    Base register describes the RCS stack; Content follows:");
+                    if (br._storage != null) {
+                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("      %08o:", sx));
+                            for (int sy = 0; sy < 8; ++sy) {
+                                if (sx + sy < br._storage.getSize()) {
+                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
+                                }
+                            }
+                            System.out.println(sb.toString());
+                        }
+                    }
+                } else if (bx == 26) {
+                    System.out.println("    Base register describes the ICS stack; Content follows:");
+                    if (br._storage != null) {
+                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("      %08o:", sx));
+                            for (int sy = 0; sy < 8; ++sy) {
+                                if (sx + sy < br._storage.getSize()) {
                                     sb.append(String.format(" %012o", br._storage.get(sx + sy)));
                                 }
                             }

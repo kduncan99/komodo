@@ -1760,14 +1760,16 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         //  set up some fake banks - 30 and 31 are void banks
         for (int bx = 24; bx < 30; ++bx) {
-            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                               false,
-                                               bx * 512,
-                                               bx * 512 + 511,
-                                               new AccessInfo(0, bx),
-                                               new AccessPermissions(false, true, true),
-                                               new AccessPermissions(false, true, true));
-            processors._instructionProcessor.setBaseRegister(bx, br);
+            if (bx != 26) {
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
+                                                   false,
+                                                   bx * 512,
+                                                   bx * 512 + 511,
+                                                   new AccessInfo(0, bx),
+                                                   new AccessPermissions(false, true, true),
+                                                   new AccessPermissions(false, true, true));
+                processors._instructionProcessor.setBaseRegister(bx, br);
+            }
         }
 
         BaseRegister br30 = new BaseRegister();
@@ -1792,16 +1794,20 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         BaseRegister[] baseRegisters = new BaseRegister[32];
         long[] data = getBank(processors._instructionProcessor, 13);
         for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
-            long[] subData = new long[4];
-            subData[0] = data[dx];
-            subData[1] = data[dx + 1];
-            subData[2] = data[dx + 2];
-            subData[3] = data[dx + 3];
-            baseRegisters[bx] = new BaseRegister(subData);
+            if (bx != 26) {
+                long[] subData = new long[4];
+                subData[0] = data[dx];
+                subData[1] = data[dx + 1];
+                subData[2] = data[dx + 2];
+                subData[3] = data[dx + 3];
+                baseRegisters[bx] = new BaseRegister(subData);
+            }
         }
 
         for (int bx = 16; bx < 32; ++bx) {
-            Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+            if (bx != 26) {
+                Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+            }
         }
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
@@ -1847,16 +1853,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
 
-        //  set up some fake banks - 30 and 31 are void banks
+        //  set up some fake banks - 30 and 31 are void banks, 26 is the ICS (leave it alone)
         for (int bx = 24; bx < 30; ++bx) {
-            BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                               false,
-                                               bx * 512,
-                                               bx * 512 + 511,
-                                               new AccessInfo(0, bx),
-                                               new AccessPermissions(false, true, true),
-                                               new AccessPermissions(false, true, true));
-            processors._instructionProcessor.setBaseRegister(bx, br);
+            if (bx != 26) {
+                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
+                                                   false,
+                                                   bx * 512,
+                                                   bx * 512 + 511,
+                                                   new AccessInfo(0, bx),
+                                                   new AccessPermissions(false, true, true),
+                                                   new AccessPermissions(false, true, true));
+                processors._instructionProcessor.setBaseRegister(bx, br);
+            }
         }
 
         BaseRegister br30 = new BaseRegister();

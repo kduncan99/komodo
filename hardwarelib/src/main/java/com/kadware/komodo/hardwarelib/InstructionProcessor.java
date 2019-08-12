@@ -136,7 +136,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private StopReason                      _latestStopReason = StopReason.Initial;
     private boolean                         _midInstructionInterruptPoint = false;
     private MachineInterrupt                _pendingInterrupt = null;
-    private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();    //  TODO do we need this?
+    private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private final Word36                    _quantumTimer = new Word36();
@@ -295,7 +295,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * Also, basic-mode indirect addressing, which also may have lengthy or infinite indirection must be
      * interruptable during the U-field resolution.
      *
-     *  Nonfault interrupts are always taken at the next interrupt point (unless classified as a pended
+     * Nonfault interrupts are always taken at the next interrupt point (unless classified as a pended
      * interrupt; see Table 5–1), which may be either a between instructions or mid-execution interrupt
      * point. Note: the processor is not required to take asynchronous, nonfault interrupts at the next
      * interrupt point as long as the interrupt is not "locked out" longer than one millisecond. When taken
@@ -480,8 +480,9 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Fetches the next instruction based on the current program address register,
-     * and places it in the current instruction register.
+     * Fetches the next instruction based on the current program address register, placing it in the current instruction register.
+     * At this point we also copy the program address register to the preserved program address register so that, even when the
+     * PC gets incremented, we still know the initial PC for this instruction.
      * Basic mode:
      *  We cannot fetch from a large bank (EX, EXR can refer to an instruction in a large bank, but cannot be in one)
      *  We must check upper and lower limits unless the program counter is 0777777 (why? I don't know...)
@@ -524,6 +525,7 @@ public class InstructionProcessor extends Processor implements Worker {
         int pcOffset = programCounter - bReg._lowerLimitNormalized;
         _currentInstruction.setW(bReg._storage.get(pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
+        _preservedProgramAddressRegister.setW(_programAddressRegister.getW());
     }
 
     /**
@@ -703,7 +705,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         int sx = (int)stackOffset;
-        icsStorage.set(sx, _programAddressRegister.getW());
+        icsStorage.set(sx, _preservedProgramAddressRegister.getW());
         icsStorage.set(sx + 1, _designatorRegister.getW());
         icsStorage.set(sx + 2, _indicatorKeyRegister.getW());
         icsStorage.set(sx + 3, _quantumTimer.getW());
@@ -713,11 +715,11 @@ public class InstructionProcessor extends Processor implements Worker {
         //TODO other stuff which needs to be preserved - IP PRM 5.1.3
         //      e.g., results of stuff that we figure out prior to generating U in Basic Mode maybe?
         //      or does it hurt anything to just regenerate that?  We /would/ need the following two lines...
-        //pStack[6].setS1( m_PreservedProgramAddressRegisterValid ? 1 : 0 );
-        //pStack[7].setValue( m_PreservedProgramAddressRegister.getW() );
+        //pStack[6].setS1( _PreservedProgramAddressRegisterValid ? 1 : 0 );
+        //pStack[7].setValue( _PreservedProgramAddressRegister.getW() );
 
         // Create conditionalJump history table entry
-        createJumpHistoryTableEntry(_programAddressRegister.getW());
+        createJumpHistoryTableEntry(_preservedProgramAddressRegister.getW());
 
         BankManipulator.bankManipulation(this, interrupt);
     }
@@ -1738,6 +1740,13 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Mainly for UR, but useful for any code which needs to prevent the PC from being incremented.
+     */
+    public void setPreventProgramCounterIncrement() {
+        _preventProgramCounterIncrement = true;
+    }
+
+    /**
      * Updates PAR.PC and sets the prevent-increment flag according to the given parameters.
      * Used for simple conditionalJump instructions.
      * @param counter program counter value
@@ -1747,8 +1756,8 @@ public class InstructionProcessor extends Processor implements Worker {
         final int counter,
         final boolean preventIncrement
     ) {
-        this._programAddressRegister.setProgramCounter(counter);
-        this._preventProgramCounterIncrement = preventIncrement;
+        _programAddressRegister.setProgramCounter(counter);
+        _preventProgramCounterIncrement = preventIncrement;
     }
 
     /**
@@ -2037,7 +2046,9 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Starts the processor.
      * Since the worker thread is always running, this merely wakes it up so that it can resume instruction processing.
-     * Intended to be used only when the processor is cleared.
+     * Intended to be used only when the processor is cleared. This is to be used for IPL purposes, so we need to
+     * raise a class 29 interrupt.  It is up to the invoking entity to ensure the ICS base and index registers are
+     * properly initialized, along with the Level 0 BDT bank register.
      */
     public boolean start(
     ) {
@@ -2046,6 +2057,8 @@ public class InstructionProcessor extends Processor implements Worker {
                 return false;
             }
 
+            _preservedProgramAddressRegister.setW(_programAddressRegister.getW());
+            raiseInterrupt(new InitialProgramLoadInterrupt());
             _currentRunMode = RunMode.Normal;
             this.notify();
             return true;

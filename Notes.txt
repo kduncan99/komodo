@@ -1,4 +1,6 @@
 -- TODO InProgress
+InstructionProcessor - UPI handler should take level 0 BDT absolute address from the mailslot
+  from the sending IP before raising the class 30 interrupt (and it needs to somehow set up ICS frames as well)
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
@@ -21,6 +23,7 @@ Do we really need the BlockId and similar classes?
 
 -- TODO implement
 * hardwarelib
+Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
 Use AbsoluteAddress.populate() everywhere it makes sense so we can reconfigure the layout if/when necessary
 SystemProcessor: For starting/monitoring/stopping system, and for console communication
   Move dayclock architecture to SystemProcessor

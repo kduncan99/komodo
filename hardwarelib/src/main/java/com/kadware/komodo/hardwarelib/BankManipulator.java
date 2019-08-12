@@ -243,7 +243,7 @@ public class BankManipulator {
             } else if (bmInfo._instruction == InstructionHandler.Instruction.UR) {
                 //  source L,BDI comes from operand L,BDI
                 //  offset comes from operand.PAR.PC
-                bmInfo._sourceBankLevel = (int) (bmInfo._operands[0] >> 33) & 03;
+                bmInfo._sourceBankLevel = (int) (bmInfo._operands[0] >> 33);
                 bmInfo._sourceBankDescriptorIndex = (int) (bmInfo._operands[0] >> 18) & 077777;
                 bmInfo._sourceBankOffset = (int) (bmInfo._operands[0] & 0777777);
             } else if (bmInfo._returnOperation) {
@@ -354,8 +354,20 @@ public class BankManipulator {
                 } else if (bmInfo._loadInstruction) {
                     bmInfo._nextStep = 10;
                     return;
-                } else if (bmInfo._returnOperation || (bmInfo._instruction == InstructionHandler.Instruction.UR)) {
+                } else if (bmInfo._returnOperation) {
                     if (!bmInfo._rcsFrame._designatorRegisterDB12To17.getBasicModeEnabled()) {
+                        //  return to extended mode - addressing exception
+                        throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                               bmInfo._sourceBankLevel,
+                                                               bmInfo._sourceBankDescriptorIndex);
+                    } else {
+                        //  return to basic mode - void bank
+                        bmInfo._nextStep = 10;
+                        return;
+                    }
+                } else if (bmInfo._instruction == InstructionHandler.Instruction.UR) {
+                    DesignatorRegister drReturn = new DesignatorRegister(bmInfo._operands[1]);
+                    if (!drReturn.getBasicModeEnabled()) {
                         //  return to extended mode - addressing exception
                         throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
                                                                bmInfo._sourceBankLevel,
@@ -1288,9 +1300,8 @@ public class BankManipulator {
              RCSGenericStackUnderflowOverflowInterrupt {
         while (bmInfo._nextStep != 0) {
             int currentStep = bmInfo._nextStep;//TODO
-//            System.out.println("Step " + String.valueOf(currentStep));//TODO
             _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-            //TODO
+            //TODO eventually remove the following sanity check
             if (bmInfo._nextStep == currentStep) {
                 System.out.println("Stuck at step " + String.valueOf(currentStep));
                 assert(false);
