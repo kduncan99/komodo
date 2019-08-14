@@ -21,10 +21,6 @@ public class SystemProcessor extends Processor {
 
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
 
-    //  ------------------------------------------------------------------------
-    //  Constructor
-    //  ------------------------------------------------------------------------
-
     //  Tape Boot Procedure:
     //      A starting IP is specified, along with the device upon which the boot tape is mounted,
     //      and the disk device on which the DRS pack is mounted.
@@ -66,6 +62,10 @@ public class SystemProcessor extends Processor {
     //          So - the invoking processor stores the absolute address of the level 0 BDT in the mail slots
     //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
     //          register accordingly before raising the Initial (class 30) interrupt.
+
+    //  ------------------------------------------------------------------------
+    //  Constructor
+    //  ------------------------------------------------------------------------
 
     /**
      * constructor

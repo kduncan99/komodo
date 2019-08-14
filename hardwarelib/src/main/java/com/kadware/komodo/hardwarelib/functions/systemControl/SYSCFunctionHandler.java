@@ -42,9 +42,9 @@ public class SYSCFunctionHandler extends InstructionHandler {
         //      U+0,S2:     UPI of target MSP
         //      U+0,S3:     Zeros
         //      U+0,H2:     Zeros
-        //      U+1,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
-        //      U+2,W:      Zeros
-        //      Upon return, U+2,B5-25 contains the assigned segment index
+        //      U+1,W:      Zeros
+        //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+        //      Upon return U+1,W contains the assigned segment index
 
         //TODO
         //  Subfunction 021: Release dynamic memory block
@@ -53,6 +53,7 @@ public class SYSCFunctionHandler extends InstructionHandler {
         //      U+0,S3:     Zeros
         //      U+0,H2:     Zeros
         //      U+1,W:      Segment index of block to be released
+        //      U+2,W:      Zeros
 
         //TODO
         //  Subfunction 022: Resize dynamic memory block

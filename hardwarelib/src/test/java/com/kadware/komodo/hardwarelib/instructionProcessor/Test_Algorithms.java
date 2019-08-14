@@ -34,7 +34,7 @@ public class Test_Algorithms extends BaseFunctions {
 
         String[] source = {
             "          $EXTEND",
-            "          $INFO 1, 3",
+            "          $INFO 1 3",
             "          $INFO 10 1",
             "",
             "$(0)",

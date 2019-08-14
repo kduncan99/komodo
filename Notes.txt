@@ -1,6 +1,4 @@
 -- TODO InProgress
-InstructionProcessor - UPI handler should take level 0 BDT absolute address from the mailslot
-  from the sending IP before raising the class 30 interrupt (and it needs to somehow set up ICS frames as well)
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
@@ -136,6 +134,7 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
+Desperately need to figure out how to support $EQUF
 Implement LBDI$ in Linker and Assembler, and maybe other such things
 unit tests for string value generation
 unit tests for node references - need to check results
