@@ -60,6 +60,14 @@ public class SystemDictionary extends Dictionary {
         //TODO
 
         //  forms
+        int[] iform = { 6, 4, 4, 4, 2, 16 };
+        Value viform = new FormValue(false, new Form(iform));
+        _initialValues.put("I$", viform);
+
+        int[] eiform = { 6, 4, 4, 4, 2, 4, 12 };
+        Value veiform = new FormValue(false, new Form(eiform));
+        _initialValues.put("EI$", viform);
+
         int[] ifjaxhiu = { 6, 4, 4, 4, 1, 1, 16 };
         Value vfjaxhiu = new FormValue(false, new Form(ifjaxhiu));
         _initialValues.put("PF$FJAXHIU", vfjaxhiu);

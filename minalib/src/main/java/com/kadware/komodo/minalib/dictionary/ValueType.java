@@ -8,14 +8,15 @@ package com.kadware.komodo.minalib.dictionary;
  * Indicates the type of Value
  */
 public enum ValueType {
-    FloatingPoint,
-    Integer,
-    Node,
-    String,
-    InternalName,
-    Procedure,
-    UserFunction,
-    Form,
-    Directive,
     BuiltInFunction,
+    Directive,
+    Equf,
+    FloatingPoint,
+    Form,
+    Integer,
+    InternalName,
+    Node,
+    Procedure,
+    String,
+    UserFunction,
 }
