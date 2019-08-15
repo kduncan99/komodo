@@ -4,14 +4,13 @@
 
 package com.kadware.komodo.kos;
 
-public class IHStop {
+public class IntHandlers {
 
     public static final String[] SOURCE = {
-        ". IHSTOP",
+        ". INTHANDLERS",
         ". Copyright (C) 2019 by Kurt Duncan - All Rights Reserved",
         ".",
-        ". This code contains the interrupt handlers for interrupts which we don't support.",
-        ". All of these interrupts should result in a system stop",
+        ". This code contains the interrupt handlers",
         ".",
         "$(1)      $LIT",
         ".",

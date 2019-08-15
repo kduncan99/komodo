@@ -1,5 +1,4 @@
 -- TODO InProgress
-Lose BlockId and similar classes
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
