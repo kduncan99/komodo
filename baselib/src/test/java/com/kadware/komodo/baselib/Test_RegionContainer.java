@@ -25,11 +25,11 @@ public class Test_RegionContainer {
     @Test
     public void creation_2(
     ) {
-        RegionContainer c = new RegionContainer(new Identifier(5), new Counter(10));
+        RegionContainer c = new RegionContainer(5, 10);
         List<Region> regions = c.getRegions();
         assertEquals(1, regions.size());
-        assertEquals(5, regions.get(0).getFirstUnit().getValue());
-        assertEquals(10, regions.get(0).getExtent().getValue());
+        assertEquals(5, regions.get(0).getFirstUnit());
+        assertEquals(10, regions.get(0).getExtent());
     }
 
     @Test
@@ -39,18 +39,8 @@ public class Test_RegionContainer {
         RegionContainer c = new RegionContainer(r);
         List<Region> regions = c.getRegions();
         assertEquals(1, regions.size());
-        assertEquals(5, regions.get(0).getFirstUnit().getValue());
-        assertEquals(10, regions.get(0).getExtent().getValue());
-    }
-
-    @Test
-    public void creation_4(
-    ) {
-        RegionContainer c = new RegionContainer(5, 10);
-        List<Region> regions = c.getRegions();
-        assertEquals(1, regions.size());
-        assertEquals(5, regions.get(0).getFirstUnit().getValue());
-        assertEquals(10, regions.get(0).getExtent().getValue());
+        assertEquals(5, regions.get(0).getFirstUnit());
+        assertEquals(10, regions.get(0).getExtent());
     }
 
     @Test
@@ -84,8 +74,8 @@ public class Test_RegionContainer {
         assertTrue(c.append(new Region(20, 5)));
         List<Region> regions = c.getRegions();
         assertEquals(2, regions.size());
-        assertEquals(10, regions.get(0).getFirstUnit().getValue());
-        assertEquals(20, regions.get(1).getFirstUnit().getValue());
+        assertEquals(10, regions.get(0).getFirstUnit());
+        assertEquals(20, regions.get(1).getFirstUnit());
     }
 
     @Test
@@ -157,8 +147,8 @@ public class Test_RegionContainer {
         assertEquals(1, regions.size());
 
         Region r1 = regions.get(0);
-        assertEquals(15, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
+        assertEquals(15, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
     }
 
     @Test
@@ -171,8 +161,8 @@ public class Test_RegionContainer {
         assertEquals(1, regions.size());
 
         Region r1 = regions.get(0);
-        assertEquals(15, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
+        assertEquals(15, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
     }
 
     @Test
@@ -186,10 +176,10 @@ public class Test_RegionContainer {
 
         Region r1 = regions.get(0);
         Region r2 = regions.get(1);
-        assertEquals(10, r1.getFirstUnit().getValue());
-        assertEquals(1, r1.getExtent().getValue());
-        assertEquals(19, r2.getFirstUnit().getValue());
-        assertEquals(1, r2.getExtent().getValue());
+        assertEquals(10, r1.getFirstUnit());
+        assertEquals(1, r1.getExtent());
+        assertEquals(19, r2.getFirstUnit());
+        assertEquals(1, r2.getExtent());
     }
 
     @Test
@@ -202,8 +192,8 @@ public class Test_RegionContainer {
         assertEquals(1, regions.size());
 
         Region r1 = regions.get(0);
-        assertEquals(10, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
+        assertEquals(10, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
     }
 
     @Test
@@ -216,8 +206,8 @@ public class Test_RegionContainer {
         assertEquals(1, regions.size());
 
         Region r1 = regions.get(0);
-        assertEquals(10, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
+        assertEquals(10, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
     }
 
     @Test
@@ -232,10 +222,10 @@ public class Test_RegionContainer {
         assertEquals(2, regions.size());
         Region r1 = regions.get(0);
         Region r2 = regions.get(1);
-        assertEquals(10, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
-        assertEquals(35, r2.getFirstUnit().getValue());
-        assertEquals(5, r2.getExtent().getValue());
+        assertEquals(10, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
+        assertEquals(35, r2.getFirstUnit());
+        assertEquals(5, r2.getExtent());
     }
 
     @Test
@@ -251,10 +241,10 @@ public class Test_RegionContainer {
 
         Region r1 = regions.get(0);
         Region r2 = regions.get(1);
-        assertEquals(15, r1.getFirstUnit().getValue());
-        assertEquals(5, r1.getExtent().getValue());
-        assertEquals(30, r2.getFirstUnit().getValue());
-        assertEquals(5, r2.getExtent().getValue());
+        assertEquals(15, r1.getFirstUnit());
+        assertEquals(5, r1.getExtent());
+        assertEquals(30, r2.getFirstUnit());
+        assertEquals(5, r2.getExtent());
     }
 
     @Test

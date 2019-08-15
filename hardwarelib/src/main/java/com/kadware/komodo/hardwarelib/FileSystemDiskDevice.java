@@ -69,35 +69,30 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         String _identifier;
         short _majorVersion;
         short _minorVersion;
-        PrepFactor _prepFactor;
-        BlockSize _blockSize;
-        BlockCount _blockCount;
+        int _prepFactor;
+        int _blockSize;
+        long _blockCount;
 
         /**
          * Constructor where the caller is establishing values
          */
         ScratchPad(
-            final PrepFactor prepFactor,
-            final BlockSize blockSize,
-            final BlockCount blockCount
+            final int prepFactor,
+            final int blockSize,
+            final long blockCount
         ) {
             _identifier = EXPECTED_IDENTIFIER;
             _majorVersion = EXPECTED_MAJOR_VERSION;
             _minorVersion = EXPECTED_MINOR_VERSION;
-            _prepFactor = prepFactor == null ? new PrepFactor() : prepFactor;
-            _blockSize = blockSize == null ? new BlockSize() : blockSize;
-            _blockCount = blockCount == null ? new BlockCount() : blockCount;
+            _prepFactor = prepFactor;
+            _blockSize = blockSize;
+            _blockCount = blockCount;
         }
 
         /**
          * Constructor to be used for subsequent deserializing
          */
-        ScratchPad(
-        ) {
-            _prepFactor = new PrepFactor();
-            _blockSize = new BlockSize();
-            _blockCount = new BlockCount();
-        }
+        ScratchPad() {}
 
         /**
          * Deserializes a scratch pad object from the given Serializer
@@ -108,9 +103,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             _identifier = deserializeString(buffer);
             _majorVersion = buffer.getShort();
             _minorVersion = buffer.getShort();
-            _prepFactor.deserialize(buffer);
-            _blockSize.deserialize(buffer);
-            _blockCount.deserialize(buffer);
+            _prepFactor = buffer.getInt();
+            _blockSize = buffer.getInt();
+            _blockCount = buffer.getLong();
         }
 
         /**
@@ -122,9 +117,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             serializeString(buffer, _identifier);
             buffer.putShort(_majorVersion);
             buffer.putShort(_minorVersion);
-            _prepFactor.serialize(buffer);
-            _blockSize.serialize(buffer);
-            _blockCount.serialize(buffer);
+            buffer.putInt(_prepFactor);
+            buffer.putInt(_blockSize);
+            buffer.putLong(_blockCount);
         }
     };
 
@@ -279,22 +274,22 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         }
 
         long reqByteCount = ioInfo._transferCount;
-        if ((reqByteCount % _blockSize.getValue()) != 0) {
+        if ((reqByteCount % _blockSize) != 0) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
         }
 
         long reqBlockId = ioInfo._blockId;
-        BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
+        long reqBlockCount = reqByteCount / _blockSize;
 
-        if (reqBlockId >= _blockCount.getValue()) {
+        if (reqBlockId >= _blockCount) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
-        if (reqBlockId + reqBlockCount.getValue() > _blockCount.getValue()) {
+        if (reqBlockId + reqBlockCount > _blockCount) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
@@ -385,22 +380,22 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         }
 
         long reqByteCount = ioInfo._transferCount;
-        if ((reqByteCount % _blockSize.getValue()) != 0) {
+        if ((reqByteCount % _blockSize) != 0) {
             ioInfo._status = DeviceStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
         }
 
         long reqBlockId = ioInfo._blockId;
-        BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
+        long reqBlockCount = reqByteCount / _blockSize;
 
-        if (reqBlockId >= _blockCount.getValue()) {
+        if (reqBlockId >= _blockCount) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
-        if (reqBlockId + reqBlockCount.getValue() > _blockCount.getValue()) {
+        if (reqBlockId + reqBlockCount > _blockCount) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
@@ -423,7 +418,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     long calculateByteOffset(
         final long blockId
     ) {
-        return _blockSize == null ? 0 : (blockId + 1) * _blockSize.getValue();
+        return _blockSize == null ? 0 : (blockId + 1) * _blockSize;
     }
 
     /**
@@ -594,19 +589,19 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     static void createPack(
         final String fileName,
-        final BlockSize blockSize,
-        final BlockCount blockCount
+        final int blockSize,
+        final long blockCount
     ) throws InternalError,
              InvalidBlockSizeException,
              InvalidTrackCountException,
              IOException {
-        if (!isValidBlockSize(blockSize.getValue())) {
+        if (!isValidBlockSize(blockSize)) {
             throw new InvalidBlockSizeException(blockSize);
         }
 
-        PrepFactor prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
-        TrackCount trackCount = new TrackCount(prepFactor.getValue() * blockCount.getValue() / 1792);
-        if ((trackCount.getValue() < 10000) || (trackCount.getValue() > 99999)) {
+        int prepFactor = PrepFactor.getPrepFactorFromBlockSize(blockSize);
+        long trackCount = prepFactor * blockCount / 1792;
+        if ((trackCount < 10000) || (trackCount > 99999)) {
             throw new InvalidTrackCountException(trackCount);
         }
 
@@ -614,8 +609,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         RandomAccessFile file = new RandomAccessFile(fileName, "rw");
 
         //  Write scratchpad area.
-        ScratchPad scratchPad = new ScratchPad(new PrepFactor(), blockSize, blockCount);
-        ByteBuffer bb = ByteBuffer.wrap(new byte[blockSize.getValue()]);
+        ScratchPad scratchPad = new ScratchPad(prepFactor, blockSize, blockCount);
+        ByteBuffer bb = ByteBuffer.wrap(new byte[blockSize]);
         scratchPad.serialize(bb);
         file.seek(0);
         file.write(bb.array());

@@ -7,18 +7,19 @@ package com.kadware.komodo.baselib;
 /**
  * Wraps an integer in a thin wrapper to help enhance type checking of things which are really just ints or longs
  */
-public class PrepFactor extends Size {
+public class PrepFactor {
 
-    public PrepFactor() { }
-    public PrepFactor(int value) { super(value); }
+    //  Not instantiable
+    private PrepFactor() {}
 
     /**
      * Determines how many 36-bit blocks, of the size indicated by the value of this object,
      * will be required to make up one track (which is comprised of 1792 36-bit words).
      */
-    public int getBlocksPerTrack(
+    public static int getBlocksPerTrack(
+        final int prepFactor
     ) {
-        return 1792 / getValue();
+        return 1792 / prepFactor;
     }
 
     /**
@@ -26,9 +27,10 @@ public class PrepFactor extends Size {
      * value of this object, presuming said 36-bit words are packed 2 words -> 9 bytes.
      * This presumes the byte buffer size is required to be a power of two; the resulting value will contain some unused bytes.
      */
-    public int getContainingByteBlockSize(
+    public static int getContainingByteBlockSize(
+        final int prepFactor
     ) {
-        switch (getValue()) {
+        switch (prepFactor) {
             case 28:    return 128;
             case 56:    return 256;
             case 112:   return 512;
@@ -45,9 +47,10 @@ public class PrepFactor extends Size {
      * In consideration of the commentary for getContaingByteBlockSize(), this method indicates how many unused
      * bytes there are at the end of the containing byte buffer.
      */
-    public int getContainerByteBlockSlop(
+    public static int getContainerByteBlockSlop(
+        final int prepFactor
     ) {
-        switch (getValue()) {
+        switch (prepFactor) {
             case 28:    return 2;
             case 56:    return 4;
             case 112:   return 8;
@@ -63,28 +66,29 @@ public class PrepFactor extends Size {
     /**
      * Converts a disk pack byte block size to a prep factor
      */
-    public static PrepFactor getPrepFactorFromBlockSize(
-        final BlockSize blockSize
+    public static int getPrepFactorFromBlockSize(
+        final long blockSize
     ) {
-        switch (blockSize.getValue()) {
-            case 128:       return new PrepFactor(28);
-            case 256:       return new PrepFactor(56);
-            case 512:       return new PrepFactor(112);
-            case 1024:      return new PrepFactor(224);
-            case 2048:      return new PrepFactor(448);
-            case 4096:      return new PrepFactor(896);
-            case 8192:      return new PrepFactor(1792);
+        switch ((int) blockSize) {
+            case 128:       return 28;
+            case 256:       return 56;
+            case 512:       return 112;
+            case 1024:      return 224;
+            case 2048:      return 448;
+            case 4096:      return 896;
+            case 8192:      return 1792;
         }
 
-        return new PrepFactor(0);
+        return 0;
     }
 
     /**
      * Indicates whether the value of this object is a valid prep factor
      */
-    public boolean isValid(
+    public static boolean isValid(
+        final int size
     ) {
-        switch (getValue()) {
+        switch (size) {
             case 28:
             case 56:
             case 112:

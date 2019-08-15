@@ -22,12 +22,12 @@ public abstract class DiskDevice extends Device {
     /**
      * Number of blocks on the mounted pack
      */
-    BlockCount _blockCount = null;
+    Long _blockCount = null;
 
     /**
-     * block size (in bytes) of the mounted pack
+     * block size (in bytes) for the blocks on the mounted pack
      */
-    BlockSize _blockSize = null;
+    Integer _blockSize = null;
 
     /**
      * indicates whether a pack is mounted on the device
@@ -135,8 +135,8 @@ public abstract class DiskDevice extends Device {
         long flags = (long)((_isMounted ? 04 : 0) | (_isWriteProtected ? 02 : 0)) << 30;
         buffer[0] |= flags;
 
-        buffer[6] = PrepFactor.getPrepFactorFromBlockSize(_blockSize).getValue();
-        buffer[7] = _blockCount.getValue();
+        buffer[6] = PrepFactor.getPrepFactorFromBlockSize(_blockSize);
+        buffer[7] = _blockCount;
         return as;
     }
 
@@ -195,7 +195,7 @@ public abstract class DiskDevice extends Device {
      * that the pack *is* prepped - after all, it cannot have a block size until we prep it with a prep factor.
      * We don't check to see if the pack is mounted - if it isn't, then block size is zero anyway, and we still return false
      */
-    boolean isPrepped() { return (_blockSize != null) && (_blockSize.getValue() != 0); }
+    boolean isPrepped() { return (_blockSize != null) && (_blockSize != 0); }
 
     /**
      * Makes sure the requested state change is allowable, then calls the superclass to effect said change.

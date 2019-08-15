@@ -26,8 +26,8 @@ public class RegionContainer {
      * @param initialExtent length of the space
      */
     RegionContainer(
-        final Identifier initialFirstUnit,
-        final Counter initialExtent
+        final long initialFirstUnit,
+        final long initialExtent
     ) {
         _regions.add(new Region(initialFirstUnit, initialExtent));
     }
@@ -69,8 +69,8 @@ public class RegionContainer {
      * @return true if successful
      */
     public boolean append(
-        final Identifier firstUnit,
-        final Counter extent
+        final long firstUnit,
+        final long extent
     ) {
         for (Region region : _regions) {
             if ( region.intersects(firstUnit, extent)) {
@@ -99,41 +99,41 @@ public class RegionContainer {
      * @return true if we found any intersections, and thus took any actions
      */
     boolean carve(
-        final Identifier firstUnit,
-        final Counter extent
+        final long firstUnit,
+        final long extent
     ) {
         boolean result = false;
-        long requestedLimit = firstUnit.getValue() + extent.getValue();
+        long requestedLimit = firstUnit + extent;
         for (int rx = 0; rx < _regions.size(); ++rx) {
             Region region = _regions.get(rx);
-            long ourLimit = region.getFirstUnit().getValue() + region.getExtent().getValue();
-            if (firstUnit.getValue() <= region.getFirstUnit().getValue()) {
+            long ourLimit = region.getFirstUnit() + region.getExtent();
+            if (firstUnit <= region.getFirstUnit()) {
                 //  Requested region starting point is less than or aligns with ours.  So...
-                if (requestedLimit <= region.getFirstUnit().getValue()) {
+                if (requestedLimit <= region.getFirstUnit()) {
                     //  Case: requested region entirely preceeds ours, so no intersection and no change
                     //  do nothing
                 } else if (requestedLimit >= ourLimit) {
                     //  Case: requested region contains our complete region - we become empty
-                    region.setExtent(new Counter(0));
-                    region.setFirstUnit(new Identifier(0));
+                    region.setExtent(0);
+                    region.setFirstUnit(0);
                     result = true;
                 } else {
                     //  Case: requested region includes top of our region, but not the end.
                     //  Since the requested first word includes our first word, we just chop out
                     //  a portion of the front of our region, as appropriate.
-                    region.setFirstUnit(new Identifier(requestedLimit));
-                    region.setExtent(new Counter(ourLimit - requestedLimit));
+                    region.setFirstUnit(requestedLimit);
+                    region.setExtent(ourLimit - requestedLimit);
                     result = true;
                 }
             } else {
                 //  Requested region starting point is somewhere beyond our starting point.
-                if (firstUnit.getValue() >= ourLimit) {
+                if (firstUnit >= ourLimit) {
                     //  Case: requested starting point is at or beyond our limit, so no intersection
                     //  Do nothing
                 } else if (requestedLimit >= ourLimit) {
                     //  Case: Requested region ending point aligns with, or is beyond ours.
                     //  Truncate our region to remove the overlapping portion.
-                    region.setExtent(new Counter(firstUnit.getValue() - region.getFirstUnit().getValue()));
+                    region.setExtent(firstUnit - region.getFirstUnit());
                     result = true;
                 } else {
                     //  Case: Requested region ending point is inside of our ending point.
@@ -147,12 +147,12 @@ public class RegionContainer {
                     //
                     //  We do it this way specifically so that we don't iterate into a Region
                     //  which we know has no intersection with the requested region and waste time.
-                    long frontExtent = firstUnit.getValue() - region.getFirstUnit().getValue();
-                    Region newRegion = new Region(region.getFirstUnit(), new Counter(frontExtent));
+                    long frontExtent = firstUnit - region.getFirstUnit();
+                    Region newRegion = new Region(region.getFirstUnit(), frontExtent);
                     _regions.add(rx, newRegion);
 
-                    region.setFirstUnit(new Identifier(requestedLimit));
-                    region.setExtent(new Counter(ourLimit - requestedLimit));
+                    region.setFirstUnit(requestedLimit);
+                    region.setExtent(ourLimit - requestedLimit);
                     result = true;
                 }
             }
@@ -191,14 +191,14 @@ public class RegionContainer {
      * It is entirely possible that the resulting container might contain regions which are contiguous.
      */
     RegionContainer intersection(
-        final Identifier firstUnit,
-        final Counter extent
+        final long firstUnit,
+        final long extent
     ) {
         RegionContainer result = new RegionContainer();
 
         for (Region region : _regions) {
             Region intersection = region.intersection(firstUnit, extent);
-            if (intersection.getExtent().getValue() > 0) {
+            if (intersection.getExtent() > 0) {
                 result.append(intersection.getFirstUnit(), intersection.getExtent());
             }
         }
@@ -219,8 +219,8 @@ public class RegionContainer {
      * Indicates whether the given region defined by firstUnit and extent intersects any region in this container.
      */
     boolean intersects(
-        final Identifier firstUnit,
-        final Counter extent
+        final long firstUnit,
+        final long extent
     ) {
         for (Region region : _regions) {
             if (region.intersects(firstUnit, extent)) {

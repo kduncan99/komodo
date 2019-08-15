@@ -4,16 +4,14 @@
 
 package com.kadware.komodo.hardwarelib.exceptions;
 
-import com.kadware.komodo.baselib.BlockSize;
-
 /**
  * Exception thrown by a method when an invalid block size is detected
  */
 public class InvalidBlockSizeException extends Exception {
 
     public InvalidBlockSizeException(
-        final BlockSize blockSize
+        final long blockSize
     ) {
-        super(String.format("Invalid Block Size:%s", String.valueOf(blockSize)));
+        super(String.format("Invalid Block Size:%d", blockSize));
     }
 }

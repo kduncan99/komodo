@@ -4,16 +4,14 @@
 
 package com.kadware.komodo.hardwarelib.exceptions;
 
-import com.kadware.komodo.baselib.TrackCount;
-
 /**
  * Exception thrown by a method when an invalid track count is detected
  */
 public class InvalidTrackCountException extends Exception {
 
     public InvalidTrackCountException(
-        final TrackCount trackCount
+        final long trackCount
     ) {
-        super(String.format("Invalid Track Count:%s", String.valueOf(trackCount)));
+        super(String.format("Invalid Track Count:%d", trackCount));
     }
 }
