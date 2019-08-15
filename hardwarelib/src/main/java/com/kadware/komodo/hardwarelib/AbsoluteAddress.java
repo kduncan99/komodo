@@ -63,9 +63,27 @@ public class AbsoluteAddress {
         final ArraySlice baseArray,
         final int offset
     ) {
-        _segment = (int) (baseArray.get(offset) & 0x1FFFFFF);
-        _upiIndex = (int) (baseArray.get(offset + 1) >> 32);
-        _offset = (int) (baseArray.get(offset + 1));
+        long w1 = baseArray.get(offset);
+        long w2 = baseArray.get(offset + 1);
+        _segment = (int) (w1 & 0x1FFFFFF);
+        _upiIndex = (int) (w2 >> 32);
+        _offset = (int) w2;
+    }
+
+    /**
+     * Constructor given an absolute address layout in memory - as above, but using discrete long array as source
+     * @param baseArray long array
+     * @param offset offset from the start of baseArray where the absolute address is located
+     */
+    public AbsoluteAddress(
+        final long[] baseArray,
+        final int offset
+    ) {
+        long w1 = baseArray[offset];
+        long w2 = baseArray[offset + 1];
+        _segment = (int) (w1 & 0x1FFFFFF);
+        _upiIndex = (int) (w2 >> 32);
+        _offset = (int) w2;
     }
 
     /**

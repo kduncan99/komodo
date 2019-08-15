@@ -264,7 +264,7 @@ public class ByteChannelModule extends ChannelModule {
             int bytes = (tracker._compositeBuffer != null) ? calculateByteCount(tracker) : 0;
             tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
                                                                     .setIOFunction(cp.getFunction())
-                                                                    .setBlockId(cp.getBlockId().getValue())
+                                                                    .setBlockId(cp.getBlockId())
                                                                     .setTransferCount(bytes)
                                                                     .setBuffer(buffer)
                                                                     .build();
@@ -272,7 +272,7 @@ public class ByteChannelModule extends ChannelModule {
             int bytes = (tracker._compositeBuffer != null) ? calculateByteCount(tracker) : 0;
             tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
                                                                     .setIOFunction(cp.getFunction())
-                                                                    .setBlockId(cp.getBlockId().getValue())
+                                                                    .setBlockId(cp.getBlockId())
                                                                     .setTransferCount(bytes)
                                                                     .build();
         } else {

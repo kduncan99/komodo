@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.util.Arrays;
@@ -346,7 +345,7 @@ public class Test_ByteChannelModule {
             switch (ioInfo._ioFunction) {
                 case Read:
                 {
-                    Long blockId = ioInfo._blockId.getValue();
+                    Long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = DeviceStatus.InvalidBlockId;
                     }
@@ -383,7 +382,7 @@ public class Test_ByteChannelModule {
                 case Write:
                 {
                     int bytesLeft = ioInfo._transferCount;
-                    Long blockId = ioInfo._blockId.getValue();
+                    Long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = DeviceStatus.InvalidBlockId;
                     }
@@ -516,8 +515,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void canConnect_failure(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
+    ) throws CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
         setup(DeviceType.Disk);
@@ -765,7 +763,6 @@ public class Test_ByteChannelModule {
         }
 
         int dataSegmentIndex = _msp.createSegment(blockSize);
-        ArraySlice mspStorage = _msp.getStorage(dataSegmentIndex);
 
         //  Write data block
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -1010,7 +1007,7 @@ public class Test_ByteChannelModule {
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
                                                             .setIOFunction(IOFunction.Write)
-                                                            .setBlockId(new BlockId(blockId))
+                                                            .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
@@ -1036,7 +1033,7 @@ public class Test_ByteChannelModule {
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
                                              .setIOFunction(IOFunction.Read)
-                                             .setBlockId(new BlockId(blockId))
+                                             .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                              .build();
@@ -1102,7 +1099,7 @@ public class Test_ByteChannelModule {
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
                                                             .setIOFunction(IOFunction.Write)
-                                                            .setBlockId(new BlockId(blockId))
+                                                            .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
@@ -1129,7 +1126,7 @@ public class Test_ByteChannelModule {
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
                                              .setIOFunction(IOFunction.Read)
-                                             .setBlockId(new BlockId(blockId))
+                                             .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                              .build();
@@ -1195,7 +1192,7 @@ public class Test_ByteChannelModule {
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
                                                             .setIOFunction(IOFunction.Write)
-                                                            .setBlockId(new BlockId(blockId))
+                                                            .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                                             .build();
@@ -1227,7 +1224,7 @@ public class Test_ByteChannelModule {
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
                                              .setIOFunction(IOFunction.Read)
-                                             .setBlockId(new BlockId(blockId))
+                                             .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
                                              .build();

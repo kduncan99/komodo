@@ -5,11 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 
 /**
  * Sort of a channel program.
@@ -63,7 +59,7 @@ public class ChannelProgram extends ArraySlice {
         final int deviceAddress,
         final IOFunction ioFunction,
         final ByteTranslationFormat byteFormat,
-        final BlockId blockId,
+        final Long blockId,
         final AccessControlWord[] accessControlWords
     ) {
         super(new long[4 + (accessControlWords != null ? 3 * accessControlWords.length : 0)]);
@@ -122,38 +118,39 @@ public class ChannelProgram extends ArraySlice {
      * For write operations - creates a temporary contiguous buffer comprised of the individual
      * parts of buffers represented by the ACWs.
      */
-    public ArraySlice createContiguousBuffer(
-    ) throws AddressingExceptionInterrupt,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
-        long[] destination = new long[getCumulativeTransferWords()];
-        int destx = 0;
-        for (int acwx = 0; acwx < getAccessControlWordCount(); ++acwx) {
-            AccessControlWord acw = getAccessControlWord(acwx);
-            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(acw.getBufferAddress()._upiIndex);
-            ArraySlice source = msp.getStorage(acw.getBufferAddress()._segment);
-
-            int increment = 0;
-            if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Increment) {
-                increment = 1;
-            } else if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Decrement) {
-                increment = -1;
-            }
-
-            for (int sc = 0, srcx = source._offset + acw.getBufferAddress()._offset;
-                 sc < acw.getBufferSize();
-                 ++sc, srcx += increment) {
-                if ((srcx < 0) || (srcx > source._length)) {
-                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                           0,
-                                                           0);
-                }
-                destination[++destx] = source._array[srcx];
-            }
-        }
-
-        return new ArraySlice(destination);
-    }
+    //TODO seems unused - did we dup this code somewhere?
+//    public ArraySlice createContiguousBuffer(
+//    ) throws AddressingExceptionInterrupt,
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
+//        long[] destination = new long[getCumulativeTransferWords()];
+//        int destx = 0;
+//        for (int acwx = 0; acwx < getAccessControlWordCount(); ++acwx) {
+//            AccessControlWord acw = getAccessControlWord(acwx);
+//            MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(acw.getBufferAddress()._upiIndex);
+//            ArraySlice source = msp.getStorage(acw.getBufferAddress()._segment);
+//
+//            int increment = 0;
+//            if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Increment) {
+//                increment = 1;
+//            } else if (acw.getAddressModifier() == AccessControlWord.AddressModifier.Decrement) {
+//                increment = -1;
+//            }
+//
+//            for (int sc = 0, srcx = source._offset + acw.getBufferAddress()._offset;
+//                 sc < acw.getBufferSize();
+//                 ++sc, srcx += increment) {
+//                if ((srcx < 0) || (srcx > source._length)) {
+//                    throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+//                                                           0,
+//                                                           0);
+//                }
+//                destination[++destx] = source._array[srcx];
+//            }
+//        }
+//
+//        return new ArraySlice(destination);
+//    }
 
     //  Getters
     public int getIopUpiIndex() { return (int) Word36.getS1(get(0)); }
@@ -162,7 +159,7 @@ public class ChannelProgram extends ArraySlice {
     public IOFunction getFunction() { return IOFunction.getValue((int) Word36.getS4(get(0))); }
     public ByteTranslationFormat getByteTranslationFormat() { return ByteTranslationFormat.getValue((int) Word36.getS5(get(0))); }
     public int getAccessControlWordCount() { return (int) Word36.getS6(get(0)); }
-    public BlockId getBlockId() { return new BlockId(get(1)); }
+    public long getBlockId() { return get(1); }
     public ChannelStatus getChannelStatus() { return ChannelStatus.getValue((int) Word36.getS1(get(2))); }
     public DeviceStatus getDeviceStatus() { return DeviceStatus.getValue((int) Word36.getS2(get(2))); }
     public int getResidualBytes() { return (int) Word36.getS3(get(2)); }
@@ -180,7 +177,7 @@ public class ChannelProgram extends ArraySlice {
     public void setDeviceAddress(int value) { set(0, Word36.setS3(get(0), value)); }
     public void setIOFunction(IOFunction func) { set(0, Word36.setS4(get(0), func.getCode())); }
     public void setByteTranslationFormat(ByteTranslationFormat fmt) { set(0, Word36.setS5(get(0), fmt.getCode())); }
-    public void setBlockId(BlockId addr) { set(1, addr.getValue()); }
+    public void setBlockId(long addr) { set(1, addr & 0_777777_777777L); }
     public void setChannelStatus(ChannelStatus stat) { set(2, Word36.setS1(get(2), stat.getCode())); }
     public void setDeviceStatus(DeviceStatus stat) { set(2, Word36.setS2(get(2), stat.getCode())); }
     public void setResidualBytes(int value) { set(2, Word36.setS3(get(2), value)); }
@@ -202,7 +199,7 @@ public class ChannelProgram extends ArraySlice {
         private Integer _deviceAddress = null;
         private IOFunction _ioFunction = null;
         private ByteTranslationFormat _byteFormat = null;
-        private BlockId _blockId = null;
+        private Long _blockId = null;
         private AccessControlWord[] _acws = null;
 
         public Builder setIopUpiIndex(int value) { _iopUpiIndex = value; return this; }
@@ -210,7 +207,7 @@ public class ChannelProgram extends ArraySlice {
         public Builder setDeviceAddress(int value) { _deviceAddress = value; return this; }
         public Builder setIOFunction(IOFunction func) { _ioFunction = func; return this; }
         public Builder setByteTranslationFormat(ByteTranslationFormat fmt) { _byteFormat = fmt; return this; }
-        public Builder setBlockId(BlockId id) { _blockId = id; return this; }
+        public Builder setBlockId(long id) { _blockId = id & 0_777777_777777L; return this; }
         public Builder setAccessControlWords(AccessControlWord[] acws) { _acws = acws; return this; }
 
         public ChannelProgram build() {

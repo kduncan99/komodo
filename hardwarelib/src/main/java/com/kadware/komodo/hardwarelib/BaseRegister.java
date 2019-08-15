@@ -206,8 +206,7 @@ public class BaseRegister {
         final int offset
     ) throws AddressingExceptionInterrupt {
         _accessLock = bankDescriptor.getAccessLock();
-        AbsoluteAddress bdAddress = bankDescriptor.getBaseAddress();
-        _baseAddress = new AbsoluteAddress(bdAddress._upiIndex, bdAddress._segment, bdAddress._offset + offset);
+        _baseAddress = bankDescriptor.getBaseAddress();
         _generalAccessPermissions = new AccessPermissions(false,
                                                           bankDescriptor.getGeneraAccessPermissions()._read,
                                                           bankDescriptor.getGeneraAccessPermissions()._write);
@@ -258,9 +257,7 @@ public class BaseRegister {
         _accessLock = new AccessInfo(values[0] & 0777777);
         _lowerLimitNormalized =(int)(((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9));
         _upperLimitNormalized = (int) ((values[1] & 0777777) << (_largeSizeFlag ? 6 : 0)) | (_largeSizeFlag ? 077 : 0);
-        _baseAddress = new AbsoluteAddress((short) (values[3] >> 32),
-                                           (int) (values[2] & 0x1FFFFFF),
-                                           (int) values[3]);
+        _baseAddress = new AbsoluteAddress(values, 2);
         _voidFlag = ((values[0] & 0_000200_000000L) != 0) || (_lowerLimitNormalized > _upperLimitNormalized);
         _storage = _voidFlag ? null : getStorage();
     }

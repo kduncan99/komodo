@@ -417,6 +417,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final BreakpointComparison comparison,
         final AbsoluteAddress absoluteAddress
     ) {
+        //TODO needs work
         if (_breakpointAddress.equals(absoluteAddress)
                 && (((comparison == BreakpointComparison.Fetch) && _breakpointRegister.getFetchFlag())
                     || ((comparison == BreakpointComparison.Read) && _breakpointRegister.getReadFlag())

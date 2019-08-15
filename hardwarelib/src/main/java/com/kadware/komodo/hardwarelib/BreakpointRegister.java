@@ -5,10 +5,11 @@
 package com.kadware.komodo.hardwarelib;
 
 /**
- * Describes a base register - there are 32 of these, each describing a based bank.
+ * Describes a breakpoint register.
  */
 public class BreakpointRegister {
 
+    //TODO broken - needs to use AbsoluteAddress
     private boolean _haltFlag;
     private boolean _fetchFlag;
     private boolean _readFlag;

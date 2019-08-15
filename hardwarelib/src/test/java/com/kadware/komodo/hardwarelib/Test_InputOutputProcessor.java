@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import org.junit.Test;
@@ -59,28 +58,6 @@ public class Test_InputOutputProcessor {
                     AbsoluteAddress addr = new AbsoluteAddress(msp._upiIndex, segmentIndex, offset);
                     _upiCommunicationLookup.put(pair, addr);
                     offset += slotSize;
-                }
-            }
-        }
-    }
-
-    private static class TestInstructionProcessor extends InstructionProcessor {
-
-        TestInstructionProcessor() {
-            super("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
-            try {
-                InventoryManager.getInstance().addInstructionProcessor(this);
-            } catch (NodeNameConflictException | UPIConflictException ex) {
-            }
-        }
-
-        @Override
-        public void run() {
-            while (!_workerTerminate) {
-                try {
-                    synchronized (this) { wait(); }
-                } catch (InterruptedException ex) {
-                    System.out.println("Caught " + ex.getMessage());
                 }
             }
         }
@@ -339,7 +316,7 @@ public class Test_InputOutputProcessor {
                                    AccessControlWord.AddressModifier.Increment);
         AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
 
-        BlockId blockId = new BlockId(0);
+        long blockId = 0;
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)
@@ -386,7 +363,7 @@ public class Test_InputOutputProcessor {
         AccessControlWord.populate(acwStorage, 0, dataAddress, baseData.length, AccessControlWord.AddressModifier.Increment);
         AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
 
-        BlockId blockId = new BlockId(0);
+        long blockId = 0;
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)

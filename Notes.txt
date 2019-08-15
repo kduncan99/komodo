@@ -1,7 +1,10 @@
 -- TODO InProgress
+Lose BlockId and similar classes
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
+SystemProcessor: For starting/monitoring/stopping system, and for console communication
+  Move dayclock architecture to SystemProcessor
 
 
 -- TODO BUGS
@@ -9,6 +12,7 @@ ByteChannelModule unit tests - they wait without being notify()able, which slows
 SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
   Consider abandoning breakpoints...
+  Also, BreakpointRegister is broken
 Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
   or does it wrongly reflect the indirected-to location?
   Applies to all jumps, as well as to LxJ
@@ -16,15 +20,11 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 
 -- Thoughts
-Do we really need the BlockId and similar classes?
 
 
 -- TODO implement
 * hardwarelib
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
-Use AbsoluteAddress.populate() everywhere it makes sense so we can reconfigure the layout if/when necessary
-SystemProcessor: For starting/monitoring/stopping system, and for console communication
-  Move dayclock architecture to SystemProcessor
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
 RAMTapeDevice byte interface, optional compression, optional backing store
 PrinterDevice

@@ -285,16 +285,16 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             return;
         }
 
-        BlockId reqBlockId = ioInfo._blockId;
+        long reqBlockId = ioInfo._blockId;
         BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
-        if (reqBlockId.getValue() >= _blockCount.getValue()) {
+        if (reqBlockId >= _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
-        if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
+        if (reqBlockId + reqBlockCount.getValue() > _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
@@ -391,16 +391,16 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             return;
         }
 
-        BlockId reqBlockId = ioInfo._blockId;
+        long reqBlockId = ioInfo._blockId;
         BlockCount reqBlockCount = new BlockCount(reqByteCount / _blockSize.getValue());
 
-        if (reqBlockId.getValue() >= _blockCount.getValue()) {
+        if (reqBlockId >= _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
-        if (reqBlockId.getValue() + reqBlockCount.getValue() > _blockCount.getValue()) {
+        if (reqBlockId + reqBlockCount.getValue() > _blockCount.getValue()) {
             ioInfo._status = DeviceStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
@@ -420,10 +420,10 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      * Single method for converting a logical block ID to a physical byte offset.
      * Caller must verify blockId is within the blockCount range.
      */
-    protected long calculateByteOffset(
-        final BlockId blockId
+    long calculateByteOffset(
+        final long blockId
     ) {
-        return _blockSize == null ? 0 : (blockId.getValue() + 1) * _blockSize.getValue();
+        return _blockSize == null ? 0 : (blockId + 1) * _blockSize.getValue();
     }
 
     /**

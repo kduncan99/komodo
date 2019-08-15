@@ -8,7 +8,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.PrepFactor;
 import com.kadware.komodo.baselib.Word36;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;

@@ -140,9 +140,7 @@ public class BankDescriptor extends ArraySlice {
      */
     public AbsoluteAddress getBaseAddress(
     ) {
-        return new AbsoluteAddress((short) (get(3) >> 32),
-                                   (int) get(2) & 0777777,
-                                   (int) get(3) & 0xFFFF);
+        return new AbsoluteAddress(this, 2);
     }
 
     /**
@@ -269,16 +267,9 @@ public class BankDescriptor extends ArraySlice {
     /**
      * Special Getter
      * @return U flag (upper limit suppression control)
-     * //TODO re-word the following
-     *          The purpose of U is to permit the BDs not within the last 16,777,216 words of a Very_Large_Bank
-     *          to have a maximum Upper_Limit for full 24-bit indexing. For BD.U := 1, the logical upper limit of the
-     *          Very_Large_Bank is more than the BD can describe were the BD subset to the last word. See 11.2,
-     *          Very_Large_Bank BD Construction.
-     *          When BD.U = 0, indicates transfer of the UL from the Bank_Descriptor to the Base_Register
-     *          considering subsetting (see 4.6.6). When BD.U = 1, indicates that the B.UL := 0777777, regardless
-     *          of any subsetting. Results are Architecturally_Undefined if BD.S ¹ 1 and U = 1.
-     *          For BDs other than BD.Type = Extended_Mode, the BD.U Must_Be_Zero.
-     *
+     *              If clear, the upper limit is taken from the bank descriptor for populating the
+     *              bank register.  If set, the bank register's upper limit is 0777777 non-normalized.
+     *              Only meaningful for large banks (S is set).
      *          BD.U:Word 0 Bit 16
      */
     public boolean getUpperLimitSuppressionControl(
@@ -313,12 +304,7 @@ public class BankDescriptor extends ArraySlice {
     public void setBaseAddress(
         final AbsoluteAddress baseAddress
     ) {
-        long word2 = get(2) & 0_777777_000000L;
-        word2 |= baseAddress._segment;
-        long word3 = (long)(baseAddress._upiIndex & 017) << 32;
-        word3 |= baseAddress._offset;
-        set(2, word2);
-        set(3, word3);
+        baseAddress.populate(this, 2);
     }
 
     /**

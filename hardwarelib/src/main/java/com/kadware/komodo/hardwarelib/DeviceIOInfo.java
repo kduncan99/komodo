@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.BlockId;
 import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 
 /**
@@ -47,7 +46,7 @@ public class DeviceIOInfo {
     /**
      * Identifies a particular hardware block address or offset for device-addressed functions
      */
-    final BlockId _blockId;
+    final long _blockId;
 
     /**
      * Result of the operation
@@ -65,14 +64,14 @@ public class DeviceIOInfo {
         byte[] byteBuffer,
         ArraySlice wordBuffer,
         int transferCount,
-        BlockId blockId
+        Long blockId
     ) {
         _source = source;
         _ioFunction = function;
         _byteBuffer = byteBuffer;
         _wordBuffer = wordBuffer;
         _transferCount = transferCount;
-        _blockId = blockId;
+        _blockId = (blockId == null) ? 0 : blockId;
     }
 
     public static class NonTransferBuilder {
@@ -100,13 +99,13 @@ public class DeviceIOInfo {
         private IOFunction _ioFunction = null;
         private byte[] _buffer = null;
         Integer _transferCount = null;
-        BlockId _blockId = null;
+        Long _blockId = null;
 
         ByteTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
         ByteTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
         ByteTransferBuilder setBuffer(byte[] value) { _buffer = value; return this; }
         ByteTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
-        ByteTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
+        ByteTransferBuilder setBlockId(long value) { _blockId = value; return this; }
 
         public DeviceIOInfo build() {
             if (_source == null) {
@@ -132,13 +131,13 @@ public class DeviceIOInfo {
         private IOFunction _ioFunction = null;
         private ArraySlice _buffer = null;
         Integer _transferCount = null;
-        BlockId _blockId = null;
+        Long _blockId = null;
 
         WordTransferBuilder setSource(ChannelModule value) { _source = value; return this; }
         WordTransferBuilder setIOFunction(IOFunction value) { _ioFunction = value; return this; }
         WordTransferBuilder setBuffer(ArraySlice value) { _buffer = value; return this; }
         WordTransferBuilder setTransferCount(int value) { _transferCount = value; return this; }
-        WordTransferBuilder setBlockId(long value) { _blockId = new BlockId(value); return this; }
+        WordTransferBuilder setBlockId(long value) { _blockId = value; return this; }
 
         public DeviceIOInfo build() {
             if (_source == null) {

@@ -111,7 +111,7 @@ public class Test_FileSystemDiskDevice {
 
         @Override
         public long calculateByteOffset(
-            final BlockId blockId
+            final long blockId
         ) {
             return super.calculateByteOffset(blockId);
         }
@@ -172,7 +172,7 @@ public class Test_FileSystemDiskDevice {
     ) {
         FileSystemDiskDevice d = new TestDevice();
         d._blockSize = new BlockSize(256);
-        assertEquals(3 * 256, d.calculateByteOffset(new BlockId(2)));
+        assertEquals(3 * 256, d.calculateByteOffset(2));
     }
 
     @Test
@@ -180,7 +180,7 @@ public class Test_FileSystemDiskDevice {
     ) {
         TestDevice d = new TestDevice();
         d._blockSize = new BlockSize(256);
-        assertEquals(0x80000001L * 256, d.calculateByteOffset(new BlockId(0x80000000L)));
+        assertEquals(0x80000001L * 256, d.calculateByteOffset(0x80000000L));
     }
 
     @Test
@@ -390,10 +390,10 @@ public class Test_FileSystemDiskDevice {
                                                                            .setTransferCount(128)
                                                                            .build();
         cm.submitAndWait(d, ioInfoGetInfo);
-        BlockId blockId = new BlockId(5);
+        long blockId = 5;
         DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
                                                                         .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockId.getValue())
+                                                                        .setBlockId(blockId)
                                                                         .setTransferCount(blockSize.getValue() - 1)
                                                                         .build();
         cm.submitAndWait(d, ioInfoRead);
@@ -870,11 +870,11 @@ public class Test_FileSystemDiskDevice {
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] readBuffer = new byte[blockSize.getValue()];
-        BlockId blockId = new BlockId(5);
+        long blockId = 5;
 
         DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
                                                                         .setIOFunction(IOFunction.Write)
-                                                                        .setBlockId(blockId.getValue())
+                                                                        .setBlockId(blockId)
                                                                         .setBuffer(readBuffer)
                                                                         .setTransferCount(blockSize.getValue() - 1)
                                                                         .build();
