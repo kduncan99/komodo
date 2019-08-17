@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.minalib;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,12 +29,11 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     public final String _subjectLabel;
 
     public UndefinedReferenceSpecial(
-        final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final Type type,
         final String subjectLabel
     ) {
-        super(fieldDescriptor, isNegative);
+        super(isNegative);
         _type = type;
         _subjectLabel = subjectLabel;
     }
@@ -44,14 +42,7 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     public UndefinedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceSpecial(_fieldDescriptor, isNegative, _type, _subjectLabel);
-    }
-
-    @Override
-    public UndefinedReference copy(
-        final FieldDescriptor newFieldDescriptor
-    ) {
-        return new UndefinedReferenceSpecial(newFieldDescriptor, _isNegative, _type, _subjectLabel);
+        return new UndefinedReferenceSpecial(isNegative, _type, _subjectLabel);
     }
 
     @Override
@@ -60,8 +51,7 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     ) {
         if (obj instanceof UndefinedReferenceSpecial) {
             UndefinedReferenceSpecial refObj = (UndefinedReferenceSpecial) obj;
-            return (_fieldDescriptor.equals(refObj._fieldDescriptor))
-                   && (_isNegative == refObj._isNegative)
+            return (_isNegative == refObj._isNegative)
                    && (_type == refObj._type)
                    && (_subjectLabel.equals(refObj._subjectLabel));
         }
@@ -69,11 +59,14 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     }
 
     @Override
+    public int hashCode() {
+        return _type.hashCode() & _subjectLabel.hashCode();
+    }
+
+    @Override
     public String toString(
     ) {
-        return String.format("[%d:%d]%s%s$->%s",
-                             _fieldDescriptor._startingBit,
-                             _fieldDescriptor._startingBit + _fieldDescriptor._fieldSize - 1,
+        return String.format("%s%s$->%s",
                              _isNegative ? "-" : "+",
                              _type.toString(),
                              _subjectLabel);

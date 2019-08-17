@@ -19,27 +19,28 @@ public class SystemDictionary extends Dictionary {
     private static final Map<String, Value> _initialValues = new HashMap<>();
     static {
         for (int rx = 0; rx < 16; ++rx) {
-            _initialValues.put(String.format("X%d", rx), new IntegerValue(false, rx, null));
-            _initialValues.put(String.format("EX%d", rx), new IntegerValue(false, rx, null));
+            _initialValues.put(String.format("X%d", rx), new IntegerValue(rx));
+            _initialValues.put(String.format("EX%d", rx), new IntegerValue(rx));
         }
 
         for (int rx = 0; rx < 16; ++rx) {
-            _initialValues.put(String.format("A%d", rx), new IntegerValue(false, rx + 12, null));
-            _initialValues.put(String.format("EA%d", rx), new IntegerValue(false, rx + 12, null));
+            _initialValues.put(String.format("A%d", rx), new IntegerValue(rx + 12));
+            _initialValues.put(String.format("EA%d", rx), new IntegerValue(rx + 12));
         }
 
         for (int rx = 0; rx < 16; ++rx) {
-            _initialValues.put(String.format("R%d", rx), new IntegerValue(false, rx + 64, null));
-            _initialValues.put(String.format("ER%d", rx), new IntegerValue(false, rx + 64, null));
+            _initialValues.put(String.format("R%d", rx), new IntegerValue(rx + 64));
+            _initialValues.put(String.format("ER%d", rx), new IntegerValue(rx + 64));
         }
 
         for (int rx = 0; rx < 32; ++rx) {
-            _initialValues.put(String.format("B%d", rx), new IntegerValue(false, rx, null));
+            _initialValues.put(String.format("B%d", rx), new IntegerValue(rx));
         }
 
         //  directives
         _initialValues.put("$BASIC", new DirectiveValue(BASICDirective.class));
         _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
+        _initialValues.put("$EQUF", new DirectiveValue(EQUFDirective.class));
         _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
         _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
@@ -60,25 +61,11 @@ public class SystemDictionary extends Dictionary {
         //TODO
 
         //  forms
-        int[] iform = { 6, 4, 4, 4, 2, 16 };
-        Value viform = new FormValue(false, new Form(iform));
-        _initialValues.put("I$", viform);
-
-        int[] eiform = { 6, 4, 4, 4, 2, 4, 12 };
-        Value veiform = new FormValue(false, new Form(eiform));
-        _initialValues.put("EI$", viform);
-
-        int[] ifjaxhiu = { 6, 4, 4, 4, 1, 1, 16 };
-        Value vfjaxhiu = new FormValue(false, new Form(ifjaxhiu));
-        _initialValues.put("PF$FJAXHIU", vfjaxhiu);
-
-        int[] ifjaxu = { 6, 4, 4, 4, 18 };
-        Value vfjaxu = new FormValue(false, new Form(ifjaxu));
-        _initialValues.put("PF$FJAXU", vfjaxu);
-
-        int[] ifjaxhibd = { 6, 4, 4, 4, 1, 1, 4, 12 };
-        Value vfjaxhibd = new FormValue(false, new Form(ifjaxhibd));
-        _initialValues.put("PF$FJAXHIBD", vfjaxhibd);
+        _initialValues.put("I$", new FormValue(false, Form.I$Form));
+        _initialValues.put("EI$", new FormValue(false, Form.EI$Form));
+        _initialValues.put("PF$FJAXHIU", new FormValue(false, Form.FJAXHIU$Form));
+        _initialValues.put("PF$FJAXU", new FormValue(false, Form.FJAXU$Form));
+        _initialValues.put("PF$FJAXHIBD", new FormValue(false, Form.FJAXHIBD$Form));
     }
 
     /**

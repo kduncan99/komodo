@@ -346,8 +346,7 @@ public class ExpressionParser {
             ++digits;
         }
 
-        return new ValueItem(getLocale(),
-                             new IntegerValue(false, value, null));
+        return new ValueItem(getLocale(), new IntegerValue(value));
     }
 
     /**

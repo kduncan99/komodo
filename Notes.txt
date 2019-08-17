@@ -1,5 +1,5 @@
 -- TODO InProgress
-Desperately need to figure out how to support $EQUF
+Support $EQUF
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?

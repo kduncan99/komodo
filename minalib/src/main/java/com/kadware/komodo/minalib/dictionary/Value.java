@@ -7,8 +7,7 @@ package com.kadware.komodo.minalib.dictionary;
 import com.kadware.komodo.minalib.CharacterMode;
 import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.diagnostics.Diagnostics;
-import com.kadware.komodo.minalib.exceptions.RelocationException;
-import com.kadware.komodo.minalib.exceptions.TypeException;
+import com.kadware.komodo.minalib.exceptions.*;
 
 /**
  * Base class for a Value
@@ -33,12 +32,14 @@ public abstract class Value {
      * @return -1 if this object sorts before (is less than) the given object
      *         +1 if this object sorts after (is greater than) the given object,
      *          0 if both objects sort to the same position (are equal)
+     * @throws FormException if the form attached to the comparison object is not equal to the one attached to this object
      * @throws RelocationException if the relocation info for this object and the comparison object are incompatible
      * @throws TypeException if there is no reasonable way to compare the objects
      */
     public abstract int compareTo(
         final Object obj
-    ) throws RelocationException,
+    ) throws FormException,
+             RelocationException,
              TypeException;
 
     /**

@@ -4,21 +4,16 @@
 
 package com.kadware.komodo.minalib;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
-
 /**
  * Base class for all undefined references
  */
 public abstract class UndefinedReference {
 
-    public final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
     UndefinedReference(
-        final FieldDescriptor fieldDescriptor,
         final boolean isNegative
     ) {
-        _fieldDescriptor = fieldDescriptor;
         _isNegative = isNegative;
     }
 
@@ -26,12 +21,11 @@ public abstract class UndefinedReference {
         final boolean isNegative
     );
 
-    public abstract UndefinedReference copy(
-        final FieldDescriptor newFieldDescriptor
-    );
-
     @Override
     public abstract boolean equals(final Object obj);
+
+    @Override
+    public abstract int hashCode();
 
     @Override
     public abstract String toString();

@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.kadware.komodo.minalib.exceptions;
+
+/**
+ * Thrown when an operation is requested involving two different operands with non-equal forms
+ */
+public class FormException extends AssemblerException {
+
+    public FormException() {}
+
+    public FormException(
+        final String message
+    ) {
+        super(message);
+    }
+}
