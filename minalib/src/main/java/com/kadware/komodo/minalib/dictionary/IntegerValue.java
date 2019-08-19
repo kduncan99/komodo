@@ -12,6 +12,7 @@ import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,14 +21,28 @@ import java.util.TreeMap;
 /**
  * A Value which represents a 36-bit signed integer. Note that this differs from the way MASM works.
  */
+@SuppressWarnings("Duplicates")
 public class IntegerValue extends Value {
+
+    private static class AdjustedFieldMapsResult {
+        final Map<Integer, Field> _effectiveMap1 = new TreeMap<>();
+        final Map<Integer, Field> _effectiveMap2 = new TreeMap<>();
+        boolean _hasUnequalForms;           //  if true, then the effective maps are different that the input values' maps
+        boolean _lostUndefinedReferences;   //  if true, then the above is true *and* there were undef ref's which were lost
+    }
+
+    public static class DivisionResult {
+        public IntegerValue _quotient;
+        public IntegerValue _remainder;
+        public IntegerValue _coveredQuotient;
+    }
 
     public static class Field {
         private final FieldDescriptor _fieldDescriptor;
         private final long _intrinsicValue;
         private final UndefinedReference[] _undefinedReferences;  //  may be empty, but never null
 
-        public Field(
+        Field(
             final FieldDescriptor fieldDescriptor,
             final long intrinsicValue,
             final UndefinedReference[] undefinedReferences
@@ -46,10 +61,26 @@ public class IntegerValue extends Value {
                 throw new InvalidParameterException("Truncation of value in described field");
             }
         }
+
+        /**
+         * Generate additive inverse of this field
+         */
+        Field negate() {
+            UndefinedReference[] newURs = new UndefinedReference[_undefinedReferences.length];
+            for (int ux = 0; ux < newURs.length; ++ux) {
+                newURs[ux] = _undefinedReferences[ux].copy(!_undefinedReferences[ux]._isNegative);
+            }
+
+            try {
+                return new Field(_fieldDescriptor, -_intrinsicValue, newURs);
+            } catch (InvalidParameterException ex) {
+                throw new RuntimeException("Caught " + ex.getMessage());
+            }
+        }
     }
 
     //  Fields, in order by the starting bit number of the bit field
-    public final Map<Integer, Field> _fields = new TreeMap<>();
+    private final Map<Integer, Field> _fields = new TreeMap<>();
 
     /**
      * general constructor
@@ -135,7 +166,7 @@ public class IntegerValue extends Value {
                 Field[] ourFields = _fields.values().toArray(new Field[0]);
                 for (int fx = 0; fx < iobjFields.length; ++fx) {
                     if (!iobjFields[fx]._fieldDescriptor.equals(ourFields[fx]._fieldDescriptor)) {
-                        throw new FormException("Unequal attached forms");
+                        throw new FormException();
                     }
 
                     if ((iobjFields[fx]._undefinedReferences.length != 0) || (ourFields[fx]._undefinedReferences.length != 0)) {
@@ -305,65 +336,335 @@ public class IntegerValue extends Value {
         return sb.toString();
     }
 
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Special arithmetic and other stuff
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     /**
      * Add two IntegerValue objects, observing attached forms and relocation information (if any)
-     * @param addend1 IntegerValue addend
-     * @param addend2 IntegerValue addend
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
      * @return new IntegerValue object representing the sum of the two addends
      */
     public static IntegerValue add(
-        final IntegerValue addend1,
-        final IntegerValue addend2,
+        final IntegerValue operand1,
+        final IntegerValue operand2,
         final Locale locale,
         final Diagnostics diagnostics
-    ) throws FormException,
-             TypeException {
-        if (addend1._flagged || addend2._flagged) {
-            throw new TypeException("Cannot perform arithmetic on flagged values");
-        }
-
-        if (addend1._fields.size() != addend2._fields.size()) {
-            throw new FormException("Operands have incompatible forms");
+    ) {
+        AdjustedFieldMapsResult afmResult = adjustFieldMaps(operand1._fields, operand2._fields);
+        if (afmResult._hasUnequalForms) {
+            diagnostics.append(new FormDiagnostic(locale));
+            if (afmResult._lostUndefinedReferences) {
+                diagnostics.append(new RelocationDiagnostic(locale));
+            }
         }
 
         OnesComplement.Add36Result ar = new OnesComplement.Add36Result();
-        Field[] fields1 = addend1._fields.values().toArray(new Field[0]);
-        Field[] fields2 = addend2._fields.values().toArray(new Field[0]);
-        Field[] resultFields = new Field[fields1.length];
+        Field[] resultFields = new Field[operand1._fields.size()];
         int rfx = 0;
-
         try {
-            for (int fx = 0; fx < fields1.length; ++fx) {
-                Field f1 = fields1[fx];
-                Field f2 = fields2[fx];
-                FieldDescriptor fd1 = f1._fieldDescriptor;
-                FieldDescriptor fd2 = f2._fieldDescriptor;
-                if (!fd1.equals(fd2)) {
-                    throw new FormException("Operands have incompatible forms");
-                }
+            for (Map.Entry<Integer, Field> entry : afmResult._effectiveMap1.entrySet()) {
+                int startingBit = entry.getKey();
+                Field f1 = entry.getValue();
+                Field f2 = afmResult._effectiveMap2.get(startingBit);
+                FieldDescriptor fd = f1._fieldDescriptor;
 
-                long intrinstic1 = extendSign(f1._intrinsicValue, fd1._fieldSize);
-                long intrinstic2 = extendSign(f2._intrinsicValue, fd2._fieldSize);
+                long intrinstic1 = extendSign(f1._intrinsicValue, fd._fieldSize);
+                long intrinstic2 = extendSign(f2._intrinsicValue, fd._fieldSize);
                 OnesComplement.add36(intrinstic1, intrinstic2, ar);
                 if (ar._overflow) {
-                    diagnostics.append(new TruncationDiagnostic(locale, String.format("Truncation in field %s", fd1)));
+                    diagnostics.append(new TruncationDiagnostic(locale, String.format("Truncation in field %s", fd)));
                 }
-
-                int shift = 36 - (fd1._startingBit + fd1._fieldSize);
-                long fieldValue = ar._sum << shift;
 
                 //  normalize the UR's - let any inverses drop out
                 List<UndefinedReference> allRefs = Arrays.asList(f1._undefinedReferences);
                 allRefs.addAll(Arrays.asList(f2._undefinedReferences));
                 List<UndefinedReference> normRefs = normalizeUndefinedReferences(allRefs);
 
-                resultFields[rfx++] = new Field(fd1, fieldValue, normRefs.toArray(new UndefinedReference[0]));
+                resultFields[rfx++] = new Field(fd, ar._sum, normRefs.toArray(new UndefinedReference[0]));
             }
 
             return new IntegerValue(false, resultFields);
         } catch (InvalidParameterException ex) {
             throw new RuntimeException("Caught " + ex.getMessage());
         }
+    }
+
+    /**
+     * Perform a logical AND of two IntegerValue objects, observing attached forms and relocation information (if any)
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
+     * @return new IntegerValue object representing the logical AND of the two operands
+     */
+    public static IntegerValue and(
+        final IntegerValue operand1,
+        final IntegerValue operand2,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) {
+        AdjustedFieldMapsResult afmResult = adjustFieldMaps(operand1._fields, operand2._fields);
+        if (afmResult._hasUnequalForms) {
+            diagnostics.append(new FormDiagnostic(locale));
+        }
+
+        if (hasUndefinedReferences(afmResult._effectiveMap1) || hasUndefinedReferences(afmResult._effectiveMap2)) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        Field[] resultFields = new Field[operand1._fields.size()];
+        int rfx = 0;
+        try {
+            for (Map.Entry<Integer, Field> entry : afmResult._effectiveMap1.entrySet()) {
+                int startingBit = entry.getKey();
+                Field f1 = entry.getValue();
+                Field f2 = afmResult._effectiveMap2.get(startingBit);
+                FieldDescriptor fd = f1._fieldDescriptor;
+
+                long resultValue = f1._intrinsicValue & f2._intrinsicValue;
+                resultFields[rfx++] = new Field(fd, resultValue, new UndefinedReference[0]);
+            }
+
+            return new IntegerValue(false, resultFields);
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Perform a division of two IntegerValue objects, observing attached forms and relocation information (if any)
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
+     * @return new IntegerValue object representing the logical OR of the two operands
+     * @throws ExpressionException on division by zero
+     */
+    public static DivisionResult divide(
+        final IntegerValue operand1,
+        final IntegerValue operand2,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) throws ExpressionException {
+        if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        if ((operand1._fields.size() > 1) || (operand2._fields.size() > 1)) {
+            diagnostics.append(new FormDiagnostic(locale));
+        }
+
+        long intValue1 = operand1.getIntrinsicValue();
+        long intValue2 = operand2.getIntrinsicValue();
+        if (intValue2 == 0) {
+            diagnostics.append(new TruncationDiagnostic(locale, "Division by zero"));
+            throw new ExpressionException();
+        }
+
+        DivisionResult dres = new DivisionResult();
+        long intQuotient = intValue1 / intValue2;
+        long intRemainder = intValue1 % intValue2;
+        long intCovered = intRemainder == 0 ? intQuotient : intQuotient + 1;
+        dres._quotient = new IntegerValue(intQuotient);
+        dres._remainder = new IntegerValue(intRemainder);
+        dres._coveredQuotient = new IntegerValue(intCovered);
+
+        return dres;
+    }
+
+    /**
+     * Indicates number of fields attached to this value
+     */
+    public int getFieldCount() {
+        return _fields.size();
+    }
+
+    /**
+     * Composes the overall intrinsic value of this IV by masking together the intrinsic values
+     * of all the component fields.
+     */
+    public long getIntrinsicValue() {
+        return getIntrinsicValueSum(_fields);
+    }
+
+    /**
+     * Quick indicator of whether this IV has any attached undefined references
+     */
+    public boolean hasUndefinedReferences() {
+        return hasUndefinedReferences(_fields);
+    }
+
+    /**
+     * Multiply two IntegerValue objects, observing attached forms and relocation information (if any)
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
+     * @return new IntegerValue object representing the logical OR of the two operands
+     */
+    public static IntegerValue multiply(
+        final IntegerValue operand1,
+        final IntegerValue operand2,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) {
+        if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        if ((operand1._fields.size() > 1) || (operand2._fields.size() > 1)) {
+            diagnostics.append(new FormDiagnostic(locale));
+        }
+
+        long intValue1 = operand1.getIntrinsicValue();
+        long intValue2 = operand2.getIntrinsicValue();
+        return new IntegerValue(intValue1 * intValue2);
+    }
+
+    /**
+     * Produces an IV which is the additive inverse of this one
+     */
+    public IntegerValue negate() {
+        Field[] negFields = new Field[_fields.values().size()];
+        int fx = 0;
+        for (Field f : _fields.values()) {
+            negFields[fx++] = f.negate();
+        }
+
+        try {
+            return new IntegerValue(false, negFields);
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Perform a logical OR of two IntegerValue objects, observing attached forms and relocation information (if any)
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
+     * @return new IntegerValue object representing the logical OR of the two operands
+     */
+    public static IntegerValue or(
+        final IntegerValue operand1,
+        final IntegerValue operand2,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) {
+        AdjustedFieldMapsResult afmResult = adjustFieldMaps(operand1._fields, operand2._fields);
+        if (afmResult._hasUnequalForms) {
+            diagnostics.append(new FormDiagnostic(locale));
+        }
+
+        if (hasUndefinedReferences(afmResult._effectiveMap1) || hasUndefinedReferences(afmResult._effectiveMap2)) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        Field[] resultFields = new Field[operand1._fields.size()];
+        int rfx = 0;
+        try {
+            for (Map.Entry<Integer, Field> entry : afmResult._effectiveMap1.entrySet()) {
+                int startingBit = entry.getKey();
+                Field f1 = entry.getValue();
+                Field f2 = afmResult._effectiveMap2.get(startingBit);
+                FieldDescriptor fd = f1._fieldDescriptor;
+
+                long resultValue = f1._intrinsicValue | f2._intrinsicValue;
+                resultFields[rfx++] = new Field(fd, resultValue, new UndefinedReference[0]);
+            }
+
+            return new IntegerValue(false, resultFields);
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Perform a logical XOR of two IntegerValue objects, observing attached forms and relocation information (if any)
+     * @param operand1 left-hand operand
+     * @param operand2 right-hand operand
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param diagnostics container of diagnostics in case we need to raise on
+     * @return new IntegerValue object representing the logical XOR of the two operands
+     */
+    public static IntegerValue xor(
+        final IntegerValue operand1,
+        final IntegerValue operand2,
+        final Locale locale,
+        final Diagnostics diagnostics
+    ) {
+        AdjustedFieldMapsResult afmResult = adjustFieldMaps(operand1._fields, operand2._fields);
+        if (afmResult._hasUnequalForms) {
+            diagnostics.append(new FormDiagnostic(locale));
+        }
+
+        if (hasUndefinedReferences(afmResult._effectiveMap1) || hasUndefinedReferences(afmResult._effectiveMap2)) {
+            diagnostics.append(new RelocationDiagnostic(locale));
+        }
+
+        Field[] resultFields = new Field[operand1._fields.size()];
+        int rfx = 0;
+        try {
+            for (Map.Entry<Integer, Field> entry : afmResult._effectiveMap1.entrySet()) {
+                int startingBit = entry.getKey();
+                Field f1 = entry.getValue();
+                Field f2 = afmResult._effectiveMap2.get(startingBit);
+                FieldDescriptor fd = f1._fieldDescriptor;
+
+                long resultValue = f1._intrinsicValue ^ f2._intrinsicValue;
+                resultFields[rfx++] = new Field(fd, resultValue, new UndefinedReference[0]);
+            }
+
+            return new IntegerValue(false, resultFields);
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
+    }
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  helpful private things
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Checks whether two field maps are compatible in terms of field sizes.
+     * If so, we merely return the maps.
+     * Otherwise, we create two new maps with a single field of 36 bits each,
+     * along with a suitably determined intrinsic value for each.
+     */
+    private static AdjustedFieldMapsResult adjustFieldMaps(
+        final Map<Integer, Field> fieldMap1,
+        final Map<Integer, Field> fieldMap2
+    ) {
+        AdjustedFieldMapsResult result = new AdjustedFieldMapsResult();
+        if (fieldsAreEqual(fieldMap1, fieldMap2)) {
+            result._effectiveMap1.putAll(fieldMap1);
+            result._effectiveMap2.putAll(fieldMap2);
+            result._hasUnequalForms = false;
+            result._lostUndefinedReferences = false;
+        } else {
+            result._hasUnequalForms = true;
+            result._lostUndefinedReferences = hasUndefinedReferences(fieldMap1) || hasUndefinedReferences(fieldMap2);
+            try {
+                Field f1 = new Field(FieldDescriptor.W,
+                                     getIntrinsicValueSum(fieldMap1),
+                                     new UndefinedReference[0]);
+                result._effectiveMap1.put(f1._fieldDescriptor._startingBit, f1);
+
+                Field f2 = new Field(FieldDescriptor.W,
+                                     getIntrinsicValueSum(fieldMap2),
+                                     new UndefinedReference[0]);
+                result._effectiveMap2.put(f2._fieldDescriptor._startingBit, f2);
+            } catch (InvalidParameterException ex) {
+                throw new RuntimeException("Caught " + ex.getMessage());
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -385,6 +686,57 @@ public class IntegerValue extends Value {
         }
 
         return operand;
+    }
+
+    /**
+     * Checks the fields described in two field maps to see if they are equivalent
+     * @return true if so, false if not
+     */
+    private static boolean fieldsAreEqual(
+        final Map<Integer, Field> fieldMap1,
+        final Map<Integer, Field> fieldMap2
+    ) {
+        Iterator<Map.Entry<Integer, Field>> iter1 = fieldMap1.entrySet().iterator();
+        Iterator<Map.Entry<Integer, Field>> iter2 = fieldMap2.entrySet().iterator();
+        while (iter1.hasNext() && iter2.hasNext()) {
+            Map.Entry<Integer, Field> entry1 = iter1.next();
+            Map.Entry<Integer, Field> entry2 = iter2.next();
+            if (!entry1.getValue().equals(entry2.getValue())) {
+                return false;
+            }
+        }
+
+        return !iter1.hasNext() && !iter2.hasNext();
+    }
+
+    /**
+     * Calculates the intrinsic value of the various fields in a field map,
+     * observing the various field positions.
+     */
+    private static long getIntrinsicValueSum(
+        final Map<Integer, Field> fieldMap
+    ) {
+        long result = 0;
+        for (Field f : fieldMap.values()) {
+            int shift = 36 - (f._fieldDescriptor._startingBit + f._fieldDescriptor._fieldSize);
+            result |= f._intrinsicValue << shift;
+        }
+        return result;
+    }
+
+    /**
+     * Indicates whether any of the fields in the given field map have undefined reference entries attached
+     */
+    private static boolean hasUndefinedReferences(
+        final Map<Integer, Field> fieldMap
+    ) {
+        for (Field f : fieldMap.values()) {
+            if (f._undefinedReferences.length > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -38,7 +38,7 @@ public class INFODirective extends Directive {
                     return;
                 }
 
-                int lcIndex = (int) ((IntegerValue) v)._value;
+                int lcIndex = (int) ((IntegerValue) v).getIntrinsicValue();
                 if ((lcIndex < 0) || (lcIndex > 063)) {
                     context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
                                                                  "Illegal location counter index value"));
@@ -83,21 +83,22 @@ public class INFODirective extends Directive {
             }
 
             IntegerValue iv = (IntegerValue) v;
-            if ((iv._value < 0) || ((iv._value & 07) == 07) || ((iv._value & 070) == 070)) {
+            long intValue = iv.getIntrinsicValue();
+            if ((intValue < 0) || ((intValue & 07) == 07) || ((intValue & 070) == 070)) {
                 context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale, "Illegal value"));
                 return;
             }
 
-            if ((iv._value & 03) == 03) {
+            if ((intValue & 03) == 03) {
                 context.setQuarterWordMode();
             }
-            if ((iv._value & 05) == 05) {
+            if ((intValue & 05) == 05) {
                 context.setThirdWordMode();
             }
-            if ((iv._value & 030) == 030) {
+            if ((intValue & 030) == 030) {
                 context.setArithmeticFaultCompatibilityMode();
             }
-            if ((iv._value & 050) == 050) {
+            if ((intValue & 050) == 050) {
                 context.setArithmeticFaultNonInterruptMode();
             }
         } catch (ExpressionException ex) {
@@ -129,11 +130,11 @@ public class INFODirective extends Directive {
                 ExpressionParser p = new ExpressionParser(opText, opLoc);
                 Expression e = p.parse(context);
                 Value v = e.evaluate(context);
-                if ((!(v instanceof IntegerValue)) || (((IntegerValue) v)._undefinedReferences.length > 0)) {
+                if ((!(v instanceof IntegerValue)) || (((IntegerValue) v).hasUndefinedReferences())) {
                     context.appendDiagnostic(new ValueDiagnostic(opLoc,
                                                                  "Invalid value type for $INFO group cateogry"));
                 } else {
-                    switch ((int) ((IntegerValue) v)._value) {
+                    switch ((int) ((IntegerValue) v).getIntrinsicValue()) {
                         case 1:     //  Processor Mode Settings
                             handleProcessorModeSettings(context);
                             break;

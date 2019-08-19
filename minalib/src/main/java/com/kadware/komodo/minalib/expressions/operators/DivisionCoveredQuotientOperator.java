@@ -50,24 +50,10 @@ public class DivisionCoveredQuotientOperator extends ArithmeticOperator {
     ) throws ExpressionException {
         try {
             Value[] operands = getTransformedOperands(valueStack, false, context.getDiagnostics());
-
-            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-            if (leftValue._undefinedReferences.length != 0) {
-                context.appendDiagnostic( new RelocationDiagnostic(getLocale() ) );
-            }
-
-            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-            if (rightValue._undefinedReferences.length != 0) {
-                context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
-            }
-
-            if (rightValue._value == 0) {
-                context.appendDiagnostic(new TruncationDiagnostic(getLocale(), "Division by zero"));
-                throw new ExpressionException();
-            }
-
-            long result = leftValue._value % rightValue._value;
-            valueStack.push( new IntegerValue( false, result, null ) );
+            IntegerValue iopLeft = (IntegerValue) operands[0];
+            IntegerValue iopRight = (IntegerValue) operands[1];
+            IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, getLocale(), context.getDiagnostics());
+            valueStack.push(dres._coveredQuotient);
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

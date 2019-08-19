@@ -5,8 +5,9 @@
 package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
+import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
 import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
+import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Stack;
 
@@ -53,20 +54,25 @@ public class ShiftOperator extends ArithmeticOperator {
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
-            //  Undefined references not allowed for the right-hand operand
-            if (iopRight._undefinedReferences.length != 0) {
+            //  Forms other than 1 36-bit form are not allowed for either operand
+            if ((iopLeft.getFieldCount() > 1) || (iopRight.getFieldCount() > 1)) {
+                context.appendDiagnostic(new FormDiagnostic(getLocale()));
+            }
+
+            //  Undefined references not allowed for either operand
+            if (iopLeft.hasUndefinedReferences() || iopRight.hasUndefinedReferences()) {
                 context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             }
 
-            long result = iopLeft._value;
-            long count = iopRight._value;
+            long result = iopLeft.getIntrinsicValue();
+            long count = iopRight.getIntrinsicValue();
             if (count < 0) {
                 result >>= (-count);
             } else {
                 result <<= count;
             }
 
-            valueStack.push(new IntegerValue(iopLeft._flagged, result, iopLeft._undefinedReferences));
+            valueStack.push(new IntegerValue(result));
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

@@ -113,7 +113,7 @@ public class FloatingPointValue extends Value {
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        return new IntegerValue(_flagged, (long)_value, null);
+        return new IntegerValue((long)_value);
     }
 
     /**

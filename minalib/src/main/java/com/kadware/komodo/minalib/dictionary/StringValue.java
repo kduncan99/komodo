@@ -119,7 +119,6 @@ public class StringValue extends Value {
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        int bytesPerWord = _characterMode == CharacterMode.ASCII ? 4 : 6;
         long result;
         if (_characterMode == CharacterMode.ASCII) {
             result = Word36.stringToWord36ASCII(_value).getW();
@@ -141,7 +140,6 @@ public class StringValue extends Value {
         final Locale locale,
         Diagnostics diagnostics
     ) {
-        int bytesPerWord = _characterMode == CharacterMode.ASCII ? 4 : 6;
         long result;
         if (_characterMode == CharacterMode.ASCII) {
             result = Word36.stringToWord36ASCII(_value).getW();
@@ -149,7 +147,7 @@ public class StringValue extends Value {
             result = Word36.stringToWord36Fieldata(_value).getW();
         }
 
-        return new IntegerValue( _flagged, result, null );
+        return new IntegerValue(result);
     }
 
     /**

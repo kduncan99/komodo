@@ -39,12 +39,18 @@ public class RESDirective extends Directive {
                 }
 
                 Value v = e.evaluate(context);
-                if (!(v instanceof IntegerValue) || (((IntegerValue) v)._undefinedReferences.length != 0)) {
+                if (!(v instanceof IntegerValue)) {
                     context.appendDiagnostic(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
                     return;
                 }
 
-                context.advanceLocation(context.getCurrentGenerationLCIndex(), (int) ((IntegerValue) v)._value);
+                IntegerValue iv = (IntegerValue) v;
+                long intValue = iv.getIntrinsicValue();
+                if (iv.hasUndefinedReferences()) {
+                    context.appendDiagnostic(new RelocationDiagnostic(expLocale));
+                }
+
+                context.advanceLocation(context.getCurrentGenerationLCIndex(), (int) intValue);
             } catch (ExpressionException ex) {
                 context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                 return;

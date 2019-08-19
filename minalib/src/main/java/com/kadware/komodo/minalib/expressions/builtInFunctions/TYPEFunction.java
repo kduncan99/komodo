@@ -79,8 +79,9 @@ public class TYPEFunction extends BuiltInFunction {
             case Directive:         iType = 8; break;
             case BuiltInFunction:   iType = 9; break;
             case Form:              iType = 10; break;  //  this one is non-standard
+            case Equf:              iType = 11; break;  //  this one too
         }
 
-        return new IntegerValue(false, iType, null);
+        return new IntegerValue(iType);
     }
 }

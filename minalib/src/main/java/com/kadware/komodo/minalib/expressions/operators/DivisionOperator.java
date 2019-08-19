@@ -53,23 +53,10 @@ public class DivisionOperator extends ArithmeticOperator {
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
-                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-                if (leftValue._undefinedReferences.length != 0) {
-                    context.appendDiagnostic( new RelocationDiagnostic(getLocale() ) );
-                }
-
-                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-                if (rightValue._undefinedReferences.length != 0) {
-                    context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
-                }
-
-                if (rightValue._value == 0) {
-                    context.appendDiagnostic(new TruncationDiagnostic(getLocale(), "Division by zero"));
-                    throw new ExpressionException();
-                }
-
-                long result = leftValue._value / rightValue._value;
-                opResult = new IntegerValue( false, result, null );
+                IntegerValue iopLeft = (IntegerValue) operands[0];
+                IntegerValue iopRight = (IntegerValue) operands[1];
+                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, getLocale(), context.getDiagnostics());
+                opResult = dres._quotient;
             } else {
                 //  must be floating point
                 FloatingPointValue leftValue = (FloatingPointValue)operands[0];

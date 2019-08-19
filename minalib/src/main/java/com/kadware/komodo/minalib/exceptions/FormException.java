@@ -9,11 +9,7 @@ package com.kadware.komodo.minalib.exceptions;
  */
 public class FormException extends AssemblerException {
 
-    public FormException() {}
-
-    public FormException(
-        final String message
-    ) {
-        super(message);
+    public FormException() {
+        super("Incompatible attached forms");
     }
 }

@@ -16,6 +16,7 @@ public abstract class Diagnostic {
         Duplicate,
         Error,
         Fatal,
+        Form,
         Quote,
         Relocation,
         Truncation,
@@ -68,6 +69,7 @@ public abstract class Diagnostic {
             case Duplicate:             return 'D';
             case Error:                 return 'E';
             case Fatal:                 return 'F';
+            case Form:                  return 'M';
             case Quote:                 return 'Q';
             case Relocation:            return 'R';
             case Truncation:            return 'T';

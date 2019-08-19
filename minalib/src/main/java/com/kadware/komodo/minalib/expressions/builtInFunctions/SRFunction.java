@@ -81,17 +81,17 @@ public class SRFunction extends BuiltInFunction {
 
         StringValue sarg = (StringValue)arguments[0];
         IntegerValue iarg = (IntegerValue)arguments[1];
-        if (iarg._undefinedReferences.length != 0) {
+        if (iarg.hasUndefinedReferences()) {
             context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
         }
 
-        if (iarg._value < 0) {
+        if (iarg.hasUndefinedReferences()) {
             context.appendDiagnostic(new ValueDiagnostic(getLocale(), "Count argument cannot be negative"));
             throw new ExpressionException();
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int sx = 0; sx < iarg._value; ++sx) {
+        for (int sx = 0; sx < iarg.getIntrinsicValue(); ++sx) {
             sb.append(sarg._value);
         }
 

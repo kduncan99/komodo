@@ -53,26 +53,17 @@ public class MultiplicationOperator extends ArithmeticOperator {
 
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-                if (leftValue._undefinedReferences.length != 0) {
-                    context.appendDiagnostic( new RelocationDiagnostic(getLocale() ) );
-                }
-
                 IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-                if (rightValue._undefinedReferences.length != 0) {
-                    context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
-                }
-
-                long result = leftValue._value * rightValue._value;
-                opResult = new IntegerValue( false, result, null );
+                opResult = IntegerValue.multiply(leftValue, rightValue, getLocale(), context.getDiagnostics());
             } else {
                 //  must be floating point
                 FloatingPointValue leftValue = (FloatingPointValue)operands[0];
                 FloatingPointValue rightValue = (FloatingPointValue)operands[1];
                 double result = leftValue._value * rightValue._value;
-                opResult = new FloatingPointValue( false, result );
+                opResult = new FloatingPointValue(false, result);
             }
 
-            valueStack.push( opResult );
+            valueStack.push(opResult);
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

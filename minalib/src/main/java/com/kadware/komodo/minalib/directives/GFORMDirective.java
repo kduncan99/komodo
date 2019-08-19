@@ -59,12 +59,13 @@ public class GFORMDirective extends Directive {
                             error = true;
                         } else {
                             IntegerValue iv = (IntegerValue) v;
-                            if ((iv._undefinedReferences.length > 0) || (iv._value <= 0) || (iv._value > 36)) {
+                            long intValue = iv.getIntrinsicValue();
+                            if ((iv.hasUndefinedReferences()) || (intValue <= 0) || (intValue > 36)) {
                                 context.appendDiagnostic(new ValueDiagnostic(sfFieldSize._locale,
                                                                              "Invalid value for field size"));
                                 error = true;
                             } else {
-                                fieldSizes[enx] = (int) iv._value;
+                                fieldSizes[enx] = (int) intValue;
                             }
                         }
                     }

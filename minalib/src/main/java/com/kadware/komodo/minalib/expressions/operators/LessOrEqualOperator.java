@@ -5,8 +5,9 @@
 package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
+import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
 import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
+import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Stack;
 
@@ -39,7 +40,11 @@ public class LessOrEqualOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (operands[0].compareTo(operands[1]) <= 0) ? 1 : 0;
-            valueStack.push( new IntegerValue(false, result, null ) );
+            valueStack.push(new IntegerValue(result));
+        } catch (FormException ex) {
+            //  thrown by compareTo() - we need to post a diag
+            context.appendDiagnostic(new FormDiagnostic(getLocale()));
+            throw new ExpressionException();
         } catch (RelocationException ex) {
             //  thrown by compareTo() - we need to post a diag
             context.appendDiagnostic(new RelocationDiagnostic(getLocale()));

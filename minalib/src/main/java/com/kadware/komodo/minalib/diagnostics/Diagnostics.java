@@ -25,6 +25,7 @@ public class Diagnostics {
         _counters.put(Diagnostic.Level.Duplicate, 0);
         _counters.put(Diagnostic.Level.Error, 0);
         _counters.put(Diagnostic.Level.Fatal, 0);
+        _counters.put(Diagnostic.Level.Form, 0);
         _counters.put(Diagnostic.Level.Quote, 0);
         _counters.put(Diagnostic.Level.Relocation, 0);
         _counters.put(Diagnostic.Level.Truncation, 0);

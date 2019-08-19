@@ -48,7 +48,7 @@ public class Assembler {
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
 
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
-    private static final IntegerValue _zeroValue = new IntegerValue(false, 0, null );
+    private static final IntegerValue _zeroValue = new IntegerValue(0);
 
     //  Resulting diagnostics and the parsed code from a call to assemble()
     private Diagnostics _diagnostics;
@@ -580,7 +580,7 @@ public class Assembler {
         if (!iinfo._jFlag && (jField >= 016)) {
             form = _fjaxuForm;
             values = new IntegerValue[5];
-            values[0] = new IntegerValue( false, iinfo._fField, null );
+            values[0] = new IntegerValue(iinfo._fField, null );
             values[1] = new IntegerValue( false, jField, null );
             values[2] = aValue;
             values[3] = xValue;

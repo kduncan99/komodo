@@ -6,7 +6,6 @@ package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Stack;
 
@@ -51,23 +50,9 @@ public class OrOperator extends LogicalOperator {
 
         try {
             IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-            if (leftValue._undefinedReferences.length != 0) {
-                context.appendDiagnostic( new RelocationDiagnostic(getLocale() ) );
-            }
-            if (leftValue._flagged) {
-                context.appendDiagnostic( new ValueDiagnostic(getLocale(), "Left operand cannot be flagged" ) );
-            }
-
             IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-            if (rightValue._undefinedReferences.length != 0) {
-                context.appendDiagnostic( new RelocationDiagnostic( getLocale() ) );
-            }
-            if (rightValue._flagged) {
-                context.appendDiagnostic( new ValueDiagnostic( getLocale(), "Right operand cannot be flagged" ) );
-            }
-
-            long result = leftValue._value | rightValue._value;
-            valueStack.push( new IntegerValue( false, result, null ) );
+            IntegerValue result = IntegerValue.or(leftValue, rightValue, getLocale(), context.getDiagnostics());
+            valueStack.push(result);
         } catch (TypeException ex) {
             throw new ExpressionException();
         }
