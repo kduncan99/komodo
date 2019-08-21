@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
+
 /**
  * Describes a label for an undefined reference.
  */
@@ -12,10 +14,11 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
     public final String _label;
 
     public UndefinedReferenceToLabel(
+        final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final String label
     ) {
-        super(isNegative);
+        super(fieldDescriptor, isNegative);
         _label = label;
     }
 
@@ -23,7 +26,7 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
     public UndefinedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceToLabel(isNegative, _label);
+        return new UndefinedReferenceToLabel(_fieldDescriptor, isNegative, _label);
     }
 
     @Override

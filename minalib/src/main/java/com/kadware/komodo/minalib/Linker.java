@@ -787,7 +787,7 @@ public class Linker {
         for (int rwx = 0, wax = _locationCounterPoolMap._map.get(poolSpec) - bankDeclaration._startingAddress;
              rwx < lcp._storage.length;
              ++rwx, ++wax) {
-            RelocatableWord36 rw36 = lcp._storage[rwx];
+            RelocatableWord rw36 = lcp._storage[rwx];
 
             //  Check for null - that can happen due to $RES in the assembler
             if (rw36 != null) {

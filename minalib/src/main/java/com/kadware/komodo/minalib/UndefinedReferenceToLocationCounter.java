@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
+
 /**
  * Describes a LC offset for an undefined reference,
  * and will be replaced by the virtual address of the start of the indicated LC pool.
@@ -13,10 +15,11 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     public final int _locationCounterIndex;
 
     public UndefinedReferenceToLocationCounter(
+        final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final int locationCounterIndex
     ) {
-        super(isNegative);
+        super(fieldDescriptor, isNegative);
         _locationCounterIndex = locationCounterIndex;
     }
 
@@ -24,7 +27,7 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     public UndefinedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceToLocationCounter(isNegative, _locationCounterIndex);
+        return new UndefinedReferenceToLocationCounter(_fieldDescriptor, isNegative, _locationCounterIndex);
     }
 
     @Override

@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +31,12 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     public final String _subjectLabel;
 
     public UndefinedReferenceSpecial(
+        final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final Type type,
         final String subjectLabel
     ) {
-        super(isNegative);
+        super(fieldDescriptor, isNegative);
         _type = type;
         _subjectLabel = subjectLabel;
     }
@@ -42,7 +45,7 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     public UndefinedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceSpecial(isNegative, _type, _subjectLabel);
+        return new UndefinedReferenceSpecial(_fieldDescriptor, isNegative, _type, _subjectLabel);
     }
 
     @Override

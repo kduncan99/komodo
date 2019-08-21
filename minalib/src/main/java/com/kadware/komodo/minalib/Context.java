@@ -11,6 +11,8 @@ import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.diagnostics.Diagnostic;
 import com.kadware.komodo.minalib.diagnostics.Diagnostics;
 import com.kadware.komodo.minalib.diagnostics.DuplicateDiagnostic;
+import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -64,11 +66,11 @@ public class Context {
         LocationCounterPool produceLocationCounterPool(
             final Diagnostics diagnostics
         ) {
-            RelocatableWord36[] pool = new RelocatableWord36[_nextOffset];
+            RelocatableWord[] pool = new RelocatableWord[_nextOffset];
             for (Map.Entry<Integer, GeneratedWord> wordEntry : entrySet()) {
                 int lcOffset = wordEntry.getKey();
                 GeneratedWord gw = wordEntry.getValue();
-                pool[lcOffset] = gw.produceRelocatableWord36(diagnostics);
+                pool[lcOffset] = gw.produceRelocatableWord();
             }
 
             return new LocationCounterPool(pool, _extendedModeFlag);
@@ -78,16 +80,13 @@ public class Context {
     //  Class data which is global - that is, there is one copy regardless of the level of
     //  context nesting
     private class Global {
+
         //  relocatable module flags
         private boolean _arithmeticFaultCompatibilityMode = false;
         private boolean _arithmeticFaultNonInterruptMode = false;
         private boolean _quarterWordMode = false;
         private boolean _thirdWordMode = false;
-
-        //  Where diagnostics are posted
         private final Diagnostics _diagnostics;
-
-        //TODO temporarily needed for BDIFunction
         private final String _moduleName;
 
         //  Map of LC indices to the various GeneratedPool objects...
@@ -153,7 +152,7 @@ public class Context {
     private final Local _localData;
     private final Context _parent;
 
-    private static FieldDescriptor _fullField = new FieldDescriptor(0, 36);
+    private static final FieldDescriptor _fullField = new FieldDescriptor(0, 36);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -237,41 +236,27 @@ public class Context {
     }
 
     /**
-     * Generates the given word as a set of subfields for a given location counter index and offset,
+     * Generates a word (with possibly a form attached) for a given location counter index and offset,
      * and places it into the appropriate location counter pool within the given context.
      * Also associates it with the current top-level text line.
      * @param lineSpecifier location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param form indicates the bit fields - there should be one value per bit-field
-     * @param values the values to be used
+     * @param value the integer/intrinsic value to be used
      * @return value indicating the location which applies to the word which was just generated
      */
     public IntegerValue generate(
         final LineSpecifier lineSpecifier,
         final int lcIndex,
-        final Form form,
-        final IntegerValue[] values
+        final IntegerValue value
     ) {
-        if (values.length != form._fieldSizes.length) {
-            throw new RuntimeException("Number of bit-fields in the form differ from number of values");
-        }
-
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp._nextOffset;
-
-        int startingBit = form._leftSlop;
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset);
-        for (int fx = 0; fx < values.length; ++fx) {
-            FieldDescriptor fd = new FieldDescriptor(startingBit, form._fieldSizes[fx]);
-            gw.put(fd, values[fx]);
-            startingBit += form._fieldSizes[fx];
-        }
-
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, value);
         gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
 
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(_fullField, false, lcIndex) };
-        return new IntegerValue(false, lcOffset, refs);
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
+        return new IntegerValue(false, lcOffset, null, refs);
     }
 
     /**
@@ -292,14 +277,17 @@ public class Context {
         int lcOffset = gp._nextOffset;
 
         for (int vx = 0; vx < values.length; ++vx) {
-            GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset + vx);
-            gw.put(_fullField, new IntegerValue(false, values[vx], null));
+            GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
+                                                 lineSpecifier,
+                                                 lcIndex,
+                                                 lcOffset + vx,
+                                                 new IntegerValue(values[vx]));
             gp.store(gw);
             gw._topLevelTextLine._generatedWords.add(gw);
         }
 
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(_fullField, false, lcIndex) };
-        return new IntegerValue(false, lcOffset, refs);
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
+        return new IntegerValue(false, lcOffset, null, refs);
     }
 
     public boolean getArithmeticFaultCompatibilityMode() { return _globalData._arithmeticFaultCompatibilityMode; }
@@ -329,7 +317,7 @@ public class Context {
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
                                                                               false,
                                                                               _localData._currentGenerationLCIndex) };
-        return new IntegerValue(false, lcOffset, refs);
+        return new IntegerValue(false, lcOffset, null, refs);
     }
 
     /**
@@ -350,7 +338,6 @@ public class Context {
 
     /**
      * Determines the zero-level text line involved in this particular retrieval
-     * @return
      */
     private TextLine getTopLevelTextLine() {
         if (_parent != null) {

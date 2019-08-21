@@ -9,10 +9,10 @@ package com.kadware.komodo.minalib;
 class LocationCounterPool {
 
     final boolean _needsExtendedMode;
-    final RelocatableWord36[] _storage;
+    final RelocatableWord[] _storage;
 
     LocationCounterPool(
-        final RelocatableWord36[] storage,
+        final RelocatableWord[] storage,
         final boolean needsExtendedMode
     ) {
         _storage = storage;

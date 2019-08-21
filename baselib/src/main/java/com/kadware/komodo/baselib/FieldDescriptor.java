@@ -33,6 +33,21 @@ public class FieldDescriptor {
         final int startingBit,
         final int fieldSize
     ) {
+        if ((startingBit < 0) || (startingBit > 35)) {
+            throw new RuntimeException("Bad starting bit value: " + String.valueOf(startingBit));
+        }
+
+        if ((fieldSize < 1) || (fieldSize > 36)) {
+            throw new RuntimeException("Bad field size value: " + String.valueOf(fieldSize));
+        }
+
+        if ((startingBit + fieldSize) > 36) {
+            throw new RuntimeException("Bad starting bit/field size combination: "
+                                       + String.valueOf(startingBit)
+                                       + "/"
+                                       + String.valueOf(fieldSize));
+        }
+
         _startingBit = startingBit;
         _fieldSize = fieldSize;
     }
@@ -43,12 +58,15 @@ public class FieldDescriptor {
     ) {
         if (obj instanceof FieldDescriptor) {
             FieldDescriptor fdObj = (FieldDescriptor) obj;
-            if ((fdObj._fieldSize == _fieldSize) && (fdObj._startingBit == _startingBit)) {
-                return true;
-            }
+            return ((fdObj._fieldSize == _fieldSize) && (fdObj._startingBit == _startingBit));
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return _startingBit;
     }
 
     @Override

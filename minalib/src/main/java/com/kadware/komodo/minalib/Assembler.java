@@ -192,9 +192,9 @@ public class Assembler {
         System.out.println("Undefined References:");
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
             LocationCounterPool lcPool = poolEntry.getValue();
-            for (RelocatableWord36 word36 : lcPool._storage) {
-                if (word36 != null) {
-                    for (UndefinedReference ur : word36._undefinedReferences) {
+            for (RelocatableWord rw : lcPool._storage) {
+                if (rw != null) {
+                    for (UndefinedReference ur : rw._references) {
                         if ((ur instanceof UndefinedReferenceToLabel)
                             || (ur instanceof  UndefinedReferenceSpecial)) {
                             references.add(ur);
@@ -230,18 +230,18 @@ public class Assembler {
 
             if (displayCode) {
                 for (GeneratedWord gw : line._generatedWords) {
-                    RelocatableWord36 rw36 = gw._relocatableWord;
+                    RelocatableWord rw = gw.produceRelocatableWord();
                     String gwBase = String.format("  $(%2d) %06o:  %012o",
                                                   gw._locationCounterIndex,
                                                   gw._locationCounterOffset,
-                                                  rw36.getW());
-                    if (rw36._undefinedReferences.length == 0) {
+                                                  rw.getW());
+                    if (rw._references.length == 0) {
                         System.out.println(gwBase);
                     } else {
-                        for (int urx = 0; urx < rw36._undefinedReferences.length; ++urx) {
+                        for (int urx = 0; urx < rw._references.length; ++urx) {
                             System.out.println(String.format("%s %s",
                                                              urx == 0 ? gwBase : "                           ",
-                                                             rw36._undefinedReferences[urx].toString()));
+                                                             rw._references[urx].toString()));
                         }
                     }
                 }
@@ -439,17 +439,21 @@ public class Assembler {
         }
 
         if (firstValue instanceof IntegerValue) {
-            //  Ensure the number of values divides evenly.
             int valueCount = (operandField._subfields.size());
             if (valueCount > 36) {
                 context.appendDiagnostic(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
                 return true;
             }
 
-            IntegerValue[] values = new IntegerValue[valueCount];
-            values[0] = (IntegerValue) firstValue;
+            int[] fieldSizes = new int[valueCount];
+            int fieldSize = 36 / valueCount;
+            for (int fx = 0; fx < valueCount; ++fx) {
+                fieldSizes[fx] = fieldSize;
+            }
+
+            long intValue = ((IntegerValue) firstValue)._value;
             for (int vx = 1; vx < valueCount; ++vx) {
-                values[vx] = _zeroValue;
+                intValue <<= fieldSizes[vx - 1];
                 TextSubfield sfNext = operandField._subfields.get(vx);
                 String sfNextText = sfNext._text;
                 Locale sfNextLocale = sfNext._locale;
@@ -463,7 +467,7 @@ public class Assembler {
 
                     Value vNext = eNext.evaluate(context);
                     if (vNext instanceof IntegerValue) {
-                        values[vx] = (IntegerValue) vNext;
+                        intValue |= ((IntegerValue) vNext)._value;
                     } else {
                         context.appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
                     }
@@ -472,16 +476,9 @@ public class Assembler {
                 }
             }
 
-            int[] fieldSizes = new int[valueCount];
-            int fieldSize = 36 / valueCount;
-            for (int fx = 0; fx < values.length; ++fx) {
-                fieldSizes[fx] = fieldSize;
-            }
-
             context.generate(operandField._locale.getLineSpecifier(),
                              context.getCurrentGenerationLCIndex(),
-                             new Form(fieldSizes),
-                             values);
+                             new IntegerValue(false, intValue, new Form(fieldSizes), new UndefinedReference[0]));
             return true;
         }
 
