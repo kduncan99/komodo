@@ -45,7 +45,7 @@ public class RESDirective extends Directive {
                 }
 
                 IntegerValue iv = (IntegerValue) v;
-                long intValue = iv.getIntrinsicValue();
+                long intValue = iv._value;
                 if (iv.hasUndefinedReferences()) {
                     context.appendDiagnostic(new RelocationDiagnostic(expLocale));
                 }

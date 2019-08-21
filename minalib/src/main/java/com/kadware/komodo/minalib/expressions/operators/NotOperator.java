@@ -59,15 +59,9 @@ public class NotOperator extends Operator {
     ) throws ExpressionException {
         Value operand = getOperands(valueStack)[0];
         if (operand.getType() == ValueType.Integer) {
-            IntegerValue iop = (IntegerValue) operand;
-            if (iop._undefinedReferences.length != 0) {
-                context.appendDiagnostic(
-                    new ValueDiagnostic(getLocale(),
-                                        "Not operator cannot be applied to integer with undefined references"));
-            }
-            long ioperand = iop._value;
-            long iresult = ioperand ^= 0_777777_777777L;
-            valueStack.push(new IntegerValue(false, iresult, null));
+            IntegerValue ioperand = (IntegerValue) operand;
+            IntegerValue iresult = ioperand.negate();
+            valueStack.push(iresult);
         } else {
             postValueDiagnostic(false, context.getDiagnostics());
             throw new ExpressionException();

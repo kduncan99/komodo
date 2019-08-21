@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.minalib;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
 import java.util.Arrays;
 
 /**
@@ -78,5 +79,19 @@ public class Form {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    /**
+     * Generate an array of field descriptors to represent this form
+     */
+    public FieldDescriptor[] getFieldDescriptors() {
+        FieldDescriptor[] result = new FieldDescriptor[_fieldSizes.length];
+        int bit = _leftSlop;
+        for (int fx = 0; fx < _fieldSizes.length; ++fx) {
+            result[fx] = new FieldDescriptor(bit, _fieldSizes[fx]);
+            bit += _fieldSizes[fx];
+        }
+
+        return result;
     }
 }

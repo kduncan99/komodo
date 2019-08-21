@@ -32,7 +32,7 @@ public class Test_CASFunction {
     ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
-        IntegerValue iv = new IntegerValue(false, 060061062063L, null);
+        IntegerValue iv = new IntegerValue(0_060_061_062_063L);
         LineSpecifier ls01 = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls01, 1), iv));
 

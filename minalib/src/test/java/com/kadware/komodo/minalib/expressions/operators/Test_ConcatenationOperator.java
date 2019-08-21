@@ -97,8 +97,8 @@ public class Test_ConcatenationOperator {
     public void integer_ASCII(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue(false, 0_101_102_103_104L, null));
-        valueStack.push(new IntegerValue(false, 0_105_106_107_110L, null));
+        valueStack.push(new IntegerValue(0_101_102_103_104L));
+        valueStack.push(new IntegerValue(0_105_106_107_110L));
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();

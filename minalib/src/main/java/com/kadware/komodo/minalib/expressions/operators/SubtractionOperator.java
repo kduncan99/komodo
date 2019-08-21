@@ -60,8 +60,8 @@ public class SubtractionOperator extends ArithmeticOperator {
 
                 //  Coalesce like-references, remove inverses, etc
                 List<UndefinedReference> temp = new LinkedList<>();
-                temp.addAll(Arrays.asList(iopLeft._undefinedReferences));
-                temp.addAll(Arrays.asList(iopRight._undefinedReferences));
+                temp.addAll(Arrays.asList(iopLeft._references));
+                temp.addAll(Arrays.asList(iopRight._references));
 
                 Map<String, Integer> tallyLabels = new HashMap<>();
                 Map<Integer, Integer> tallyLCIndices = new HashMap<>();
@@ -105,7 +105,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                     }
                 }
 
-                opResult = new IntegerValue(false, intResult, newRefs.toArray(new UndefinedReference[0]));
+                opResult = new IntegerValue(false, intResult, null, newRefs.toArray(new UndefinedReference[0]));
             } else {
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];

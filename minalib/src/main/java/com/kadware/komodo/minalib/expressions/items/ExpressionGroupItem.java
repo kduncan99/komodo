@@ -38,7 +38,7 @@ public class ExpressionGroupItem extends OperandItem {
     //  Prior to evaluation, the calling code must make that determination and set the sub-expression
     //  flag accordingly - it defaults to true.
     private final Expression[] _expressions;
-    boolean _isSubExpression = true;        //  true if case 1 applies (above), false for case 2.
+    private boolean _isSubExpression = true;        //  true if case 1 applies (above), false for case 2.
 
     /**
      * Constructor
@@ -52,8 +52,6 @@ public class ExpressionGroupItem extends OperandItem {
         super(locale);
         _expressions = expressions;
     }
-
-    public boolean isSubExpression() { return _isSubExpression; }
 
     /**
      * Resolves the value of this item.
@@ -136,7 +134,12 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return context.generate(_locale.getLineSpecifier(), context.getCurrentLitLCIndex(), form, values);
+        return context.generate(_locale.getLineSpecifier(),
+                                context.getCurrentLitLCIndex(),
+                                form,
+                                values,
+                                context.getDiagnostics(),
+                                _locale);
     }
 
     public void setIsSubExpression(boolean flag) { _isSubExpression = flag; }

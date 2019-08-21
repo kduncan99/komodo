@@ -49,7 +49,6 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$RES", new DirectiveValue(RESDirective.class));
 
         //  built-in function names
-        _initialValues.put("$BDI", new BuiltInFunctionValue(BDIFunction.class));
         _initialValues.put("$CAS", new BuiltInFunctionValue(CASFunction.class));
         _initialValues.put("$CFS", new BuiltInFunctionValue(CFSFunction.class));
         _initialValues.put("$SL", new BuiltInFunctionValue(SLFunction.class));

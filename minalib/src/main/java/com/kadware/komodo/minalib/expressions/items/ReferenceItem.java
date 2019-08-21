@@ -79,14 +79,14 @@ public class ReferenceItem extends OperandItem {
                     //  because we might need it for a linker special thing such as LBDICALL$.
                     //  If this is the case, then we produce an undefined reference instead of resolving...
                     IntegerValue iv = (IntegerValue) v;
-                    for (UndefinedReference ur : iv._undefinedReferences) {
+                    for (UndefinedReference ur : iv._references) {
                         if (ur instanceof UndefinedReferenceToLocationCounter) {
                             UndefinedReference[] refs = {
                                 new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
                                                               false,
                                                               _reference)
                             };
-                            return new IntegerValue(false, 0, refs);
+                            return new IntegerValue(false, 0, null, refs);
                         }
                     }
 
@@ -119,7 +119,7 @@ public class ReferenceItem extends OperandItem {
                                               false,
                                               _reference)
             };
-            return new IntegerValue(false, 0, refs);
+            return new IntegerValue(false, 0, null, refs);
         }
     }
 
@@ -208,7 +208,10 @@ public class ReferenceItem extends OperandItem {
         //  If we're still sitting on a NodeValue, return the number of child values.
         //  Otherwise, just return the node.
         if (currentValue instanceof NodeValue) {
-            return new IntegerValue(false, ((NodeValue) currentValue).getValueCount(), null);
+            return new IntegerValue(false,
+                                    ((NodeValue) currentValue).getValueCount(),
+                                    null,
+                                    new UndefinedReference[0]);
         } else {
             return currentValue;
         }

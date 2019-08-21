@@ -54,8 +54,8 @@ public class ShiftOperator extends ArithmeticOperator {
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
-            //  Forms other than 1 36-bit form are not allowed for either operand
-            if ((iopLeft.getFieldCount() > 1) || (iopRight.getFieldCount() > 1)) {
+            //  Forms are not allowed for either operand
+            if ((iopLeft._form != null) || (iopRight._form != null)) {
                 context.appendDiagnostic(new FormDiagnostic(getLocale()));
             }
 
@@ -64,8 +64,8 @@ public class ShiftOperator extends ArithmeticOperator {
                 context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             }
 
-            long result = iopLeft.getIntrinsicValue();
-            long count = iopRight.getIntrinsicValue();
+            long result = iopLeft._value;
+            long count = iopRight._value;
             if (count < 0) {
                 result >>= (-count);
             } else {

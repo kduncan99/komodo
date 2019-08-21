@@ -89,11 +89,11 @@ public class SSFunction extends BuiltInFunction {
             IntegerValue iarg1 = (IntegerValue)arguments[1];
             IntegerValue iarg2 = (arguments.length == 3) ? (IntegerValue)arguments[2] : null;
 
-            if (iarg1._undefinedReferences.length != 0) {
+            if (iarg1._references.length != 0) {
                 context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             }
 
-            if ((iarg2 != null) && (iarg2._undefinedReferences.length != 0)) {
+            if ((iarg2 != null) && (iarg2._references.length != 0)) {
                 context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
             }
 

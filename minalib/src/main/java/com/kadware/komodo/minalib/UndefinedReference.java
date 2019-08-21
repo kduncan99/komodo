@@ -6,10 +6,7 @@ package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for all undefined references
@@ -44,6 +41,42 @@ public abstract class UndefinedReference {
     @Override
     public abstract String toString();
 
+    /**
+     * Coalesces an array of U'Rs based on collections of field- and id-equivalent U'Rs.
+     * It is hoped, but not algorithmically necessary, that no two U'Rs have overlapping but non-equivalent field specs.
+     */
+    public static UndefinedReference[] coalesce(
+        final UndefinedReference[] array
+    ) {
+        Map<UndefinedReference, Integer> tallyMap = new HashMap<>();
+        for (UndefinedReference ur : array) {
+            int addend = ur._isNegative ? -1 : 1;
+            Integer tally = tallyMap.get(ur);
+            if (tally == null) {
+                tally = addend;
+            } else {
+                tally += addend;
+            }
+            tallyMap.put(ur, tally);
+        }
+
+        List<UndefinedReference> resultList = new LinkedList<>();
+        for (Map.Entry<UndefinedReference, Integer> entry : tallyMap.entrySet()) {
+            if (entry.getValue() != 0) {
+                boolean isNegative = entry.getValue() < 0;
+                UndefinedReference newUR = entry.getKey().copy(isNegative);
+                for (int x = 0; x < Math.abs(entry.getValue()); ++x) {
+                    resultList.add(newUR);
+                }
+            }
+        }
+
+        return resultList.toArray(new UndefinedReference[0]);
+    }
+
+    /**
+     * Tests two arrays of U'Rs, to see if they are equivalent
+     */
     public static boolean equals(
         final UndefinedReference[] array1,
         final UndefinedReference[] array2

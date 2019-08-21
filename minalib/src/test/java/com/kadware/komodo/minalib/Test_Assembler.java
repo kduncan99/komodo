@@ -19,7 +19,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertTrue(asm.getDiagnostics().isEmpty());
         assertEquals(0, asm.getParsedCode().length);
@@ -37,7 +37,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertTrue(asm.getDiagnostics().isEmpty());
         TextLine[] parsedCode = asm.getParsedCode();
@@ -56,7 +56,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertTrue(asm.getDiagnostics().isEmpty());
     }
@@ -74,7 +74,7 @@ public class Test_Assembler {
 
         assertTrue(asm.getDiagnostics().isEmpty());
         assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START")._undefinedReferences.length);
+        assertEquals(1, module._externalLabels.get("START")._references.length);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class Test_Assembler {
         assertEquals(1, module._storage.size());
         assertTrue(module._storage.containsKey(3));
         assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START")._undefinedReferences.length);
+        assertEquals(1, module._externalLabels.get("START")._references.length);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertFalse(asm.getDiagnostics().isEmpty());
     }
@@ -136,7 +136,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertFalse(asm.getDiagnostics().isEmpty());
     }
@@ -150,7 +150,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertFalse(asm.getDiagnostics().isEmpty());
     }
@@ -164,7 +164,7 @@ public class Test_Assembler {
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        asm.assemble("TEST", source, optionSet);
 
         assertFalse(asm.getDiagnostics().isEmpty());
     }
@@ -194,7 +194,12 @@ public class Test_Assembler {
                 "      + (077, 0777)"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
+//        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
+        Assembler.Option[] optionSet = {
+            Assembler.Option.EMIT_MODULE_SUMMARY,
+            Assembler.Option.EMIT_SOURCE,
+            Assembler.Option.EMIT_GENERATED_CODE,
+        };
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 

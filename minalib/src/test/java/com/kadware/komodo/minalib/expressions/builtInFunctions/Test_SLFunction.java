@@ -45,7 +45,7 @@ public class Test_SLFunction {
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Value result = bif.evaluate(context);
 
-        IntegerValue expected = new IntegerValue(false, 12, null);
+        IntegerValue expected = new IntegerValue(12);
         assertEquals(expected, result);
     }
 }

@@ -91,7 +91,7 @@ public class SRFunction extends BuiltInFunction {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int sx = 0; sx < iarg.getIntrinsicValue(); ++sx) {
+        for (int sx = 0; sx < iarg._value; ++sx) {
             sb.append(sarg._value);
         }
 

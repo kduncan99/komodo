@@ -27,7 +27,7 @@ public class Test_Expression {
     @Test
     public void parseSimpleValue(
     ) throws ExpressionException {
-        Value val = new IntegerValue(false, 42, null);
+        Value val = new IntegerValue(42);
         List<IExpressionItem> items = new LinkedList<>();
         LineSpecifier ls = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls, 1), val));
@@ -44,9 +44,9 @@ public class Test_Expression {
     @Test
     public void parseSimpleMath(
     ) throws ExpressionException {
-        Value addend1 = new IntegerValue(false, 42, null);
-        Value addend2 = new IntegerValue(false, 112, null);
-        Value expected = new IntegerValue(false, 154, null);
+        Value addend1 = new IntegerValue(42);
+        Value addend2 = new IntegerValue(112);
+        Value expected = new IntegerValue(154);
 
         List<IExpressionItem> items = new LinkedList<>();
         LineSpecifier ls10 = new LineSpecifier(0, 10);
@@ -67,10 +67,10 @@ public class Test_Expression {
     public void parseSimpleMathWithPrecedence(
     ) throws ExpressionException {
         //  expression is 5 + 7 * 12...  it should be evaluated at 5 + (7 * 12) == 89
-        Value term1 = new IntegerValue(false, 5, null);
-        Value term2 = new IntegerValue(false, 7, null);
-        Value term3 = new IntegerValue(false, 12, null);
-        Value expected = new IntegerValue(false, 89, null);
+        Value term1 = new IntegerValue(5);
+        Value term2 = new IntegerValue(7);
+        Value term3 = new IntegerValue(12);
+        Value expected = new IntegerValue(89);
 
         List<IExpressionItem> items = new LinkedList<>();
         LineSpecifier ls = new LineSpecifier(0, 10);
