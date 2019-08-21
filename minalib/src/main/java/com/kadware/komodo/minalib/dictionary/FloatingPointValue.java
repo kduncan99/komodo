@@ -128,7 +128,7 @@ public class FloatingPointValue extends Value {
     public StringValue toStringValue(
         final Locale locale,
         final CharacterMode characterMode,
-        Diagnostics diagnostics
+        final Diagnostics diagnostics
     ) throws TypeException {
         diagnostics.append(new ValueDiagnostic(locale, "Cannot convert floating point to a string"));
         throw new TypeException();

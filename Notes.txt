@@ -1,11 +1,6 @@
 -- TODO InProgress
-Rework IntegerValue
-  RelocatableWord36 used to contain field descriptors, now it doesn't... which breaks RelocatableWord36.
-    Do we still even need RelocatableWord36?
-  Assembler is broken - mostly in word generation
-  Context is broken - as above
-  GeneratedWord is broken - where it produces a RelocatableWord (see above)
-  Linker is broken (as we'd expect)
+BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
+BUG: Misc bugs still
 Support $EQUF
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out

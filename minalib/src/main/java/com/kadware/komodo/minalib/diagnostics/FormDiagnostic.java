@@ -19,8 +19,6 @@ public class FormDiagnostic extends Diagnostic {
 
     /**
      * Get the level associated with this instance
-     * <p>
-     * @return
      */
     @Override
     public Level getLevel(

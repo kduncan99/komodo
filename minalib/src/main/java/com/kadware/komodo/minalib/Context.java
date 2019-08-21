@@ -285,8 +285,8 @@ public class Context {
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp._nextOffset;
         if (form._fieldSizes.length != values.length) {
-            diagnostics.append(new FatalDiagnostic(locale,
-                                                   "Contradiction between number of values and number of fields in form"));
+            appendDiagnostic(new FatalDiagnostic(locale,
+                                                 "Contradiction between number of values and number of fields in form"));
             return new IntegerValue(false, lcOffset, null, new UndefinedReference[0]);
         }
 
@@ -295,17 +295,17 @@ public class Context {
         List<UndefinedReference> newRefs = new LinkedList<>();
         for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
             genInt <<= form._fieldSizes[fx];
-            long mask = (1 << form._fieldSizes[fx]) - 1;
+            long mask = (1L << form._fieldSizes[fx]) - 1;
             long temp = values[fx]._value & mask;
-            if (temp != genInt) {
-                diagnostics.append(new TruncationDiagnostic(locale,
-                                                            "Value exceeds size of field in form " + form.toString()));
+            if (temp != values[fx]._value) {
+                appendDiagnostic(new TruncationDiagnostic(locale,
+                                                          "Value exceeds size of field in form " + form.toString()));
             }
+            genInt |= temp;
 
             for (UndefinedReference ur : values[fx]._references) {
                 newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
             }
-
             bit += form._fieldSizes[fx];
         }
 

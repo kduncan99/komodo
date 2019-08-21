@@ -495,13 +495,13 @@ public class IntegerValue extends Value {
         final IntegerValue value1,
         final IntegerValue value2
     ) {
-        if (value1 == null) {
-            return value2 == null;
+        if (value1._form == null) {
+            return value2._form == null;
         } else {
-            if (value2 == null) {
+            if (value2._form == null) {
                 return false;
             } else {
-                return value1.equals(value2);
+                return value1._form.equals(value2._form);
             }
         }
     }

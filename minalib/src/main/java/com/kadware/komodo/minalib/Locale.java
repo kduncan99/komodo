@@ -67,6 +67,6 @@ public class Locale {
     @Override
     public String toString(
     ) {
-        return String.format("[L%s.C%d]", _lineSpecifier.toString(), _column);
+        return String.format("[L%s.C%d]", _lineSpecifier.toString(), _column).replace(" ","");
     }
 }
