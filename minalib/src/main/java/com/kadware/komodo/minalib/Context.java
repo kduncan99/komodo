@@ -5,14 +5,12 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.Dictionary;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
-import com.kadware.komodo.minalib.diagnostics.Diagnostic;
-import com.kadware.komodo.minalib.diagnostics.Diagnostics;
-import com.kadware.komodo.minalib.diagnostics.DuplicateDiagnostic;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
-
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -20,6 +18,7 @@ import java.util.TreeMap;
 /**
  * Represents the current context under which an assembly is being performed
  */
+@SuppressWarnings("Duplicates")
 public class Context {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -152,8 +151,6 @@ public class Context {
     private final Local _localData;
     private final Context _parent;
 
-    private static final FieldDescriptor _fullField = new FieldDescriptor(0, 36);
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  constructor
@@ -257,6 +254,68 @@ public class Context {
 
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
         return new IntegerValue(false, lcOffset, null, refs);
+    }
+
+    /**
+     * Generates a word with a form attached for a given location counter index and offset,
+     * and places it into the appropriate location counter pool within the given context.
+     * Also associates it with the current top-level text line.
+     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
+     * The values parameter is an array with as many entities as there are fields in the form.
+     * Each value must fit within the size of that value's respective field.
+     * The overall integer portion of the generated value is the respective component integer values
+     * shifted into their field positions, and or'd together.
+     * The individual values should not have forms attached, but they may have undefined references.
+     * All such undefined references are adjusted to match the field description of the particular
+     * field to which the reference applies.
+     * @param lineSpecifier location of the text entity generating this word
+     * @param lcIndex index of the location counter pool where-in the value is to be placed
+     * @param form form describing the fields for which values are specified in the values parameter
+     * @param values array of component values, each with potential undefined refereces but no attached forms
+     * @return value indicating the location which applies to the word which was just generated
+     */
+    public IntegerValue generate(
+        final LineSpecifier lineSpecifier,
+        final int lcIndex,
+        final Form form,
+        final IntegerValue[] values,
+        final Diagnostics diagnostics,
+        final Locale locale
+    ) {
+        GeneratedPool gp = obtainPool(lcIndex);
+        int lcOffset = gp._nextOffset;
+        if (form._fieldSizes.length != values.length) {
+            diagnostics.append(new FatalDiagnostic(locale,
+                                                   "Contradiction between number of values and number of fields in form"));
+            return new IntegerValue(false, lcOffset, null, new UndefinedReference[0]);
+        }
+
+        long genInt = 0;
+        int bit = form._leftSlop;
+        List<UndefinedReference> newRefs = new LinkedList<>();
+        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
+            genInt <<= form._fieldSizes[fx];
+            long mask = (1 << form._fieldSizes[fx]) - 1;
+            long temp = values[fx]._value & mask;
+            if (temp != genInt) {
+                diagnostics.append(new TruncationDiagnostic(locale,
+                                                            "Value exceeds size of field in form " + form.toString()));
+            }
+
+            for (UndefinedReference ur : values[fx]._references) {
+                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
+            }
+
+            bit += form._fieldSizes[fx];
+        }
+
+        IntegerValue iv = new IntegerValue(false, genInt, form, newRefs.toArray(new UndefinedReference[0]));
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
+        gp.store(gw);
+        gw._topLevelTextLine._generatedWords.add(gw);
+
+        UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
+        return new IntegerValue(false, lcOffset, null, lcRefs);
     }
 
     /**

@@ -31,6 +31,13 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     }
 
     @Override
+    public UndefinedReference copy(
+        final FieldDescriptor fieldDescriptor
+    ) {
+        return new UndefinedReferenceToLocationCounter(fieldDescriptor, _isNegative, _locationCounterIndex);
+    }
+
+    @Override
     public boolean equals(
         final Object obj
     ) {

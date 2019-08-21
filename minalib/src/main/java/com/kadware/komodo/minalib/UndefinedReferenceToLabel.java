@@ -30,6 +30,13 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
     }
 
     @Override
+    public UndefinedReference copy(
+        final FieldDescriptor fieldDescriptor
+    ) {
+        return new UndefinedReferenceToLabel(fieldDescriptor, _isNegative, _label);
+    }
+
+    @Override
     public boolean equals(
         final Object obj
     ) {

@@ -17,6 +17,7 @@ import java.util.Arrays;
 @SuppressWarnings("Duplicates")
 public class IntegerValue extends Value {
 
+    //TODO following is obsolete
 //    private static class AdjustedFieldMapsResult {
 //        final Map<Integer, Field> _effectiveMap1 = new TreeMap<>();
 //        final Map<Integer, Field> _effectiveMap2 = new TreeMap<>();

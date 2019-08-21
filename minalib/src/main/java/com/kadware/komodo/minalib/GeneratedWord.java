@@ -42,6 +42,15 @@ class GeneratedWord {
     }
 
     /**
+     * Sometimes we need to change the IntegerValue object
+     */
+    GeneratedWord copy(
+        final IntegerValue newValue
+    ) {
+        return new GeneratedWord(_topLevelTextLine, _lineSpecifier, _locationCounterIndex, _locationCounterOffset, newValue);
+    }
+
+    /**
      * Constructs a RelocatableWord object based upon the given IntegerValue.
      * Should be called after we've resolved all references local to the containing module.
      */

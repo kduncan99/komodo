@@ -180,7 +180,7 @@ public class Linker {
             for (RelocatableModule module : _moduleSet._set) {
                 if (module._externalLabels.containsKey("START$")) {
                     IntegerValue iv = module._externalLabels.get("START$");
-                    UndefinedReference[] urs = iv._undefinedReferences;
+                    UndefinedReference[] urs = iv._references;
                     if (urs.length != 1) {
                         raise("Improper START$ label - wrong number of undef refs");
                         continue;
@@ -243,7 +243,7 @@ public class Linker {
             final Integer lcIndex,
             final RelocatableModule relocatableModule
         ) {
-            super(false, value, undefinedReferences);
+            super(false, value, null, undefinedReferences);
             _lcIndex = lcIndex;
             _relocatableModule = relocatableModule;
         }
@@ -590,7 +590,7 @@ public class Linker {
                 long discreteValue = iv._value;
                 List<UndefinedReference> newRefs = new LinkedList<>();
                 Integer lcIndex = null;
-                for (UndefinedReference ur : iv._undefinedReferences) {
+                for (UndefinedReference ur : iv._references) {
                     if (ur instanceof UndefinedReferenceToLabel) {
                         newRefs.add(ur);
                     } else if (ur instanceof UndefinedReferenceToLocationCounter) {
@@ -787,18 +787,18 @@ public class Linker {
         for (int rwx = 0, wax = _locationCounterPoolMap._map.get(poolSpec) - bankDeclaration._startingAddress;
              rwx < lcp._storage.length;
              ++rwx, ++wax) {
-            RelocatableWord rw36 = lcp._storage[rwx];
+            RelocatableWord rw = lcp._storage[rwx];
 
             //  Check for null - that can happen due to $RES in the assembler
-            if (rw36 != null) {
-                long discreteValue = rw36.getW();
+            if (rw != null) {
+                long discreteValue = rw.getW();
 
                 //  If there are any undefined references in the source word from the relocatable module,
                 //  iterate over them.  For each undefined reference, lookup the value for the reference,
                 //  slice out the particular field of the discrete value, add the reference value thereto,
                 //  check for truncation, and splice the resulting value back into the discrete value.
-                if (rw36._undefinedReferences.length > 0) {
-                    for (UndefinedReference ur : rw36._undefinedReferences) {
+                if (rw._references.length > 0) {
+                    for (UndefinedReference ur : rw._references) {
                         if (ur instanceof UndefinedReferenceToLabel) {
                             UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) ur;
                             try {

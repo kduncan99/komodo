@@ -577,35 +577,40 @@ public class Assembler {
         if (!iinfo._jFlag && (jField >= 016)) {
             form = _fjaxuForm;
             values = new IntegerValue[5];
-            values[0] = new IntegerValue(iinfo._fField, null );
-            values[1] = new IntegerValue( false, jField, null );
+            values[0] = new IntegerValue(iinfo._fField);
+            values[1] = new IntegerValue(jField);
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
         } else if ((context.getCodeMode() == CodeMode.Basic) || iinfo._useBMSemantics) {
             form = _fjaxhiuForm;
             values = new IntegerValue[7];
-            values[0] = new IntegerValue(false, iinfo._fField, null);
-            values[1] = new IntegerValue(false, jField, null);
+            values[0] = new IntegerValue(iinfo._fField);
+            values[1] = new IntegerValue(jField);
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue(false, (xValue._flagged ? 1 : 0), null);
-            values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
+            values[4] = new IntegerValue(xValue._flagged ? 1 : 0);
+            values[5] = new IntegerValue(uValue._flagged ? 1 : 0);
             values[6] = uValue;
         } else {
             form = _fjaxhibdForm;
             values = new IntegerValue[8];
-            values[0] = new IntegerValue(false, iinfo._fField, null);
-            values[1] = new IntegerValue(false, jField, null);
+            values[0] = new IntegerValue(iinfo._fField);
+            values[1] = new IntegerValue(jField);
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue(false, (xValue._flagged ? 1 : 0), null);
-            values[5] = new IntegerValue(false, (uValue._flagged ? 1 : 0), null);
+            values[4] = new IntegerValue(xValue._flagged ? 1 : 0);
+            values[5] = new IntegerValue(uValue._flagged ? 1 : 0);
             values[6] = bValue;
             values[7] = uValue;
         }
 
-        context.generate(operationField._locale.getLineSpecifier(), context.getCurrentGenerationLCIndex(), form, values);
+        context.generate(operationField._locale.getLineSpecifier(),
+                         context.getCurrentGenerationLCIndex(),
+                         form,
+                         values,
+                         context.getDiagnostics(),
+                         operationField._locale);
         return true;
     }
 
@@ -626,7 +631,7 @@ public class Assembler {
         IntegerValue aValue = _zeroValue;
 
         if (instructionInfo._aFlag) {
-            aValue = new IntegerValue(false, instructionInfo._aField, null);
+            aValue = new IntegerValue(instructionInfo._aField);
         } else {
             if ((registerSubfield == null) || (registerSubfield._text.isEmpty())) {
                 context.appendDiagnostic(new ErrorDiagnostic(operandField._locale,
@@ -648,18 +653,23 @@ public class Assembler {
                             aValue = (IntegerValue) v;
                             switch (instructionInfo._aSemantics) {
                                 case A:
-                                    aValue = new IntegerValue(aValue._flagged, aValue._value - 12, aValue._undefinedReferences);
+                                    aValue = new IntegerValue(aValue._flagged,
+                                                              aValue._value - 12,
+                                                              null,
+                                                              aValue._references);
                                     break;
 
                                 case R:
-                                    aValue = new IntegerValue(aValue._flagged, aValue._value - 64, aValue._undefinedReferences);
+                                    aValue = new IntegerValue(aValue._flagged,
+                                                              aValue._value - 64,
+                                                              null,
+                                                              aValue._references);
                                     break;
                             }
                         }
                     }
                 } catch (ExpressionException ex) {
-                    context.appendDiagnostic(new ErrorDiagnostic(registerSubfield._locale,
-                                                                     "Syntax Error"));
+                    context.appendDiagnostic(new ErrorDiagnostic(registerSubfield._locale, "Syntax Error"));
                 }
             }
         }
@@ -920,7 +930,7 @@ public class Assembler {
         NodeValue mainNode = new NodeValue(false);
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
             NodeValue subNode = new NodeValue(false);
-            mainNode.setValue(new IntegerValue(false, fx - 1, null), subNode);
+            mainNode.setValue(new IntegerValue(fx - 1), subNode);
             TextField field = textLine._fields.get(fx);
             for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
                 TextSubfield subField = field._subfields.get(sfx);
@@ -933,9 +943,9 @@ public class Assembler {
                         ExpressionParser sfParser = new ExpressionParser(subField._text, subField._locale);
                         Expression sfExpression = sfParser.parse(context);
                         Value sfValue = sfExpression.evaluate(context);
-                        subNode.setValue(new IntegerValue(false, sfx, null), sfValue);
+                        subNode.setValue(new IntegerValue(sfx), sfValue);
                     } catch (ExpressionException ex) {
-                        subNode.setValue(new IntegerValue(false, sfx, null), _zeroValue);
+                        subNode.setValue(new IntegerValue(sfx), _zeroValue);
                         Diagnostic diag = new ErrorDiagnostic(subField._locale, "Syntax error");
                         context.appendDiagnostic(diag);
                     }
@@ -947,6 +957,52 @@ public class Assembler {
         for (TextLine procTextLine : procedureValue._source) {
             assembleTextLine(subContext, procTextLine);
         }
+    }
+
+    /**
+     * Resolves any lingering undefined references once initial assembly is complete, for one particular IntegerValue object.
+     * These will be the forward-references we picked up along the way.
+     * No point checking for loc ctr refs, those aren't resolved until link time.
+     */
+    private IntegerValue resolveReferences(
+        final Context context,
+        final Locale locale,
+        final IntegerValue originalValue
+    ) {
+        IntegerValue newValue = originalValue;
+        if (originalValue._references.length > 0) {
+            long newDiscreteValue = originalValue._value;
+            List<UndefinedReference> newURefs = new LinkedList<>();
+            for (UndefinedReference uRef : originalValue._references) {
+                if (uRef instanceof UndefinedReferenceToLabel) {
+                    UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
+                    try {
+                        Value lookupValue = context.getDictionary().getValue(lRef._label);
+                        if (lookupValue.getType() != ValueType.Integer) {
+                            String msg = String.format("Reference '%s' does not resolve to an integer",
+                                                       lRef._label);
+                            context.appendDiagnostic(new ValueDiagnostic(locale, msg));
+                        } else {
+                            IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
+                            newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
+                            newURefs.addAll(Arrays.asList(lookupIntegerValue._references));
+                        }
+                    } catch (NotFoundException ex) {
+                        //  reference is still not found - propagate it
+                        newURefs.add(uRef);
+                    }
+                } else {
+                    newURefs.add(uRef);
+                }
+            }
+
+            newValue = new IntegerValue(false,
+                                        newDiscreteValue,
+                                        originalValue._form,
+                                        newURefs.toArray(new UndefinedReference[0]));
+        }
+
+        return newValue;
     }
 
     /**
@@ -962,43 +1018,50 @@ public class Assembler {
         for (Map.Entry<Integer, Context.GeneratedPool> poolEntry : context.getGeneratedPools()) {
             Context.GeneratedPool pool = poolEntry.getValue();
             for (Map.Entry<Integer, GeneratedWord> wordEntry : pool.entrySet()) {
-                GeneratedWord gWord = wordEntry.getValue();
-                for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
-                    FieldDescriptor fd = entry.getKey();
-                    IntegerValue originalIV = entry.getValue();
-                    if (originalIV._undefinedReferences.length > 0) {
-                        long newDiscreteValue = originalIV._value;
-                        List<UndefinedReference> newURefs = new LinkedList<>();
-                        for (UndefinedReference uRef : originalIV._undefinedReferences) {
-                            if (uRef instanceof UndefinedReferenceToLabel) {
-                                UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
-                                try {
-                                    Value lookupValue = context.getDictionary().getValue(lRef._label);
-                                    if (lookupValue.getType() != ValueType.Integer) {
-                                        String msg = String.format("Reference '%s' does not resolve to an integer",
-                                                                   lRef._label);
-                                        context.appendDiagnostic(new ValueDiagnostic(new Locale(gWord._lineSpecifier, 1),
-                                                                                     msg));
-                                    } else {
-                                        IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                                        newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
-                                        newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
-                                    }
-                                } catch (NotFoundException ex) {
-                                    //  reference is still not found - propagate it
-                                    newURefs.add(uRef);
-                                }
-                            } else {
-                                newURefs.add(uRef);
-                            }
-                        }
-
-                        IntegerValue newIV = new IntegerValue(originalIV._flagged,
-                                                              newDiscreteValue,
-                                                              newURefs.toArray(new UndefinedReference[0]));
-                        gWord.put(fd, newIV);
-                    }
+                GeneratedWord gw = wordEntry.getValue();
+                IntegerValue originalValue = gw._value;
+                IntegerValue newValue = resolveReferences(context, new Locale(gw._lineSpecifier, 1), originalValue);
+                if (newValue != originalValue) {
+                    pool.put(wordEntry.getKey(), wordEntry.getValue().copy(newValue));
                 }
+
+//                GeneratedWord gWord = wordEntry.getValue();
+//                for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
+//                    FieldDescriptor fd = entry.getKey();
+//                    IntegerValue originalIV = entry.getValue();
+//                    if (originalIV._undefinedReferences.length > 0) {
+//                        long newDiscreteValue = originalIV._value;
+//                        List<UndefinedReference> newURefs = new LinkedList<>();
+//                        for (UndefinedReference uRef : originalIV._undefinedReferences) {
+//                            if (uRef instanceof UndefinedReferenceToLabel) {
+//                                UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
+//                                try {
+//                                    Value lookupValue = context.getDictionary().getValue(lRef._label);
+//                                    if (lookupValue.getType() != ValueType.Integer) {
+//                                        String msg = String.format("Reference '%s' does not resolve to an integer",
+//                                                                   lRef._label);
+//                                        context.appendDiagnostic(new ValueDiagnostic(new Locale(gWord._lineSpecifier, 1),
+//                                                                                     msg));
+//                                    } else {
+//                                        IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
+//                                        newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
+//                                        newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
+//                                    }
+//                                } catch (NotFoundException ex) {
+//                                    //  reference is still not found - propagate it
+//                                    newURefs.add(uRef);
+//                                }
+//                            } else {
+//                                newURefs.add(uRef);
+//                            }
+//                        }
+//
+//                        IntegerValue newIV = new IntegerValue(originalIV._flagged,
+//                                                              newDiscreteValue,
+//                                                              newURefs.toArray(new UndefinedReference[0]));
+//                        gWord.put(fd, newIV);
+//                    }
+//                }
             }
         }
     }

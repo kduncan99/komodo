@@ -49,6 +49,13 @@ public class UndefinedReferenceSpecial extends UndefinedReference {
     }
 
     @Override
+    public UndefinedReference copy(
+        final FieldDescriptor fieldDescriptor
+    ) {
+        return new UndefinedReferenceSpecial(fieldDescriptor, _isNegative, _type, _subjectLabel);
+    }
+
+    @Override
     public boolean equals(
         final Object obj
     ) {

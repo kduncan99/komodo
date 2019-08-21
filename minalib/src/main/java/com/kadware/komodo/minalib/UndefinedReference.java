@@ -5,6 +5,8 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
+
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +29,10 @@ public abstract class UndefinedReference {
 
     public abstract UndefinedReference copy(
         final boolean isNegative
+    );
+
+    public abstract UndefinedReference copy(
+        final FieldDescriptor fieldDescriptor
     );
 
     @Override
