@@ -138,7 +138,6 @@ public class ExpressionGroupItem extends OperandItem {
                                 context.getCurrentLitLCIndex(),
                                 form,
                                 values,
-                                context.getDiagnostics(),
                                 _locale);
     }
 

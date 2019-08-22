@@ -42,6 +42,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
         _initialValues.put("$EQUF", new DirectiveValue(EQUFDirective.class));
         _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));
+        _initialValues.put("$FORM", new DirectiveValue(FORMDirective.class));
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
         _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
         _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
@@ -60,11 +61,11 @@ public class SystemDictionary extends Dictionary {
         //TODO
 
         //  forms
-        _initialValues.put("I$", new FormValue(false, Form.I$Form));
-        _initialValues.put("EI$", new FormValue(false, Form.EI$Form));
-        _initialValues.put("PF$FJAXHIU", new FormValue(false, Form.FJAXHIU$Form));
-        _initialValues.put("PF$FJAXU", new FormValue(false, Form.FJAXU$Form));
-        _initialValues.put("PF$FJAXHIBD", new FormValue(false, Form.FJAXHIBD$Form));
+        _initialValues.put("I$", new FormValue(Form.I$Form));
+        _initialValues.put("EI$", new FormValue(Form.EI$Form));
+        _initialValues.put("PF$FJAXHIU", new FormValue(Form.FJAXHIU$Form));
+        _initialValues.put("PF$FJAXU", new FormValue(Form.FJAXU$Form));
+        _initialValues.put("PF$FJAXHIBD", new FormValue(Form.FJAXHIBD$Form));
     }
 
     /**

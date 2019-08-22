@@ -13,18 +13,16 @@ import com.kadware.komodo.minalib.exceptions.TypeException;
  */
 public class FormValue extends Value {
 
-    private final Form _form;
+    public final Form _form;
 
     /**
      * constructor
-     * @param flagged if this is flagged (probably it isn't)
      * @param form form to be used
      */
     public FormValue(
-        final boolean flagged,
         final Form form
     ) {
-        super(flagged);
+        super(false);
         _form = form;
     }
 
@@ -44,7 +42,7 @@ public class FormValue extends Value {
     }
 
     /**
-     * Create a new copy of this object, with the given flagged value
+     * Create a new copy of this object, with the given flagged value (since we ignore 'flagged', this simply does a copy)
      * @param newFlagged new value for Flagged attribute
      * @return new Value
      */
@@ -52,7 +50,7 @@ public class FormValue extends Value {
     public Value copy(
         final boolean newFlagged
     ) {
-        return new FormValue(newFlagged, _form);
+        return new FormValue(_form);
     }
 
     /**
@@ -66,7 +64,7 @@ public class FormValue extends Value {
     ) {
         if (obj instanceof FormValue) {
             FormValue fvobj = (FormValue) obj;
-            return fvobj._form.equals( _form );
+            return fvobj._form.equals(_form);
         } else {
             return false;
         }
@@ -96,7 +94,7 @@ public class FormValue extends Value {
     {
         int code = 0;
         for (int fieldSize : _form._fieldSizes) {
-            code = code << 1 * fieldSize;
+            code = (code << 1) + fieldSize;
         }
         return code;
     }

@@ -101,13 +101,15 @@ public class Assembler {
                 processProcedure(context, operation, (ProcedureValue) v, textLine);
                 return;
             } else if (v instanceof FormValue) {
-//TODO                processFormValue(context, (FormValue) v);
+                processForm(context, (FormValue) v, textLine, lfc, operandField);
                 return;
             } else if (v instanceof DirectiveValue) {
                 processDirective(context, (DirectiveValue) v, textLine, lfc, operationField);
                 return;
             } else {
-                //TODO complain about misuse of dictionary value
+                context.appendDiagnostic(new ErrorDiagnostic(operationField._locale,
+                                                             "Dictionary value '" + operation + "' used incorrectly"));
+                return;
             }
         } catch (NotFoundException ex) {
             //  ignore it and drop through
@@ -214,7 +216,7 @@ public class Assembler {
      * @param context context of this sub-assembly
      * @param displayCode true to display generated code
      */
-    private void displayResults(
+    private static void displayResults(
         final Context context,
         final boolean displayCode
     ) {
@@ -256,7 +258,7 @@ public class Assembler {
      * @param globalDictionary dictionary containing all the externalize (global) labels
      * @return RelocatableModule object unless there's a fatal error (then we return null)
      */
-    private RelocatableModule generateRelocatableModule(
+    private static RelocatableModule generateRelocatableModule(
         final Context context,
         final String moduleName,
         final Dictionary globalDictionary
@@ -298,7 +300,7 @@ public class Assembler {
      * @param labelField TextField containing the label field (might be null or empty)
      * @return an appropriately populated LabelFieldComponents object
      */
-    private LabelFieldComponents interpretLabelField(
+    private static LabelFieldComponents interpretLabelField(
         final Context context,
         final TextField labelField
     ) {
@@ -370,7 +372,7 @@ public class Assembler {
      * @param operandField represents the operand field, if any
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private boolean processDataGeneration(
+    private static boolean processDataGeneration(
         final Context context,
         final LabelFieldComponents labelFieldComponents,
         final TextField operandField
@@ -494,7 +496,7 @@ public class Assembler {
      * @param labelFieldComponents represents the label field components, if any were specified
      * @param operationField represents the operation field, if any
      */
-    private void processDirective(
+    private static void processDirective(
         final Context context,
         final DirectiveValue directiveValue,
         final TextLine textLine,
@@ -513,6 +515,72 @@ public class Assembler {
             System.out.println("Caught:%s" + ex.toString() + ":" + ex.getMessage());
             context.appendDiagnostic(new FatalDiagnostic(operationField._locale,
                                                              "Internal Error in Assembler.processDirective()"));
+        }
+    }
+
+    /**
+     * Handles form invocations - a special case of data generation
+     * @param context context of this sub-assembly
+     * @param formValue FormValue object which causes us to be here
+     * @param textLine where this came from
+     * @param labelFieldComponents represents the label field components, if any were specified
+     * @param operandField represents the operand field, if any
+     */
+    private static void processForm(
+        final Context context,
+        final FormValue formValue,
+        final TextLine textLine,
+        final LabelFieldComponents labelFieldComponents,
+        final TextField operandField
+    ) {
+        IntegerValue[] opValues = new IntegerValue[operandField._subfields.size()];
+        boolean err = false;
+        for (int opx = 0; opx < opValues.length; ++opx) {
+            TextSubfield opsf = operandField._subfields.get(opx);
+            try {
+                ExpressionParser p = new ExpressionParser(opsf._text, opsf._locale);
+                Expression e = p.parse(context);
+                if (e == null) {
+                    context.appendDiagnostic(new ErrorDiagnostic(opsf._locale, "Syntax error"));
+                    err = true;
+                } else {
+                    Value v = e.evaluate(context);
+                    if (v instanceof IntegerValue) {
+                        IntegerValue iv = (IntegerValue) v;
+                        if (iv._form != null) {
+                            context.appendDiagnostic(new FormDiagnostic(opsf._locale, "Form not allowed"));
+                        }
+
+                        opValues[opx] = iv;
+                    } else {
+                        context.appendDiagnostic(new ValueDiagnostic(opsf._locale, "Wrong value type"));
+                        err = true;
+                    }
+                }
+            } catch (ExpressionException ex) {
+                context.appendDiagnostic(new ErrorDiagnostic(opsf._locale, "Syntax error"));
+                err = true;
+            }
+        }
+
+        if (formValue._form._fieldSizes.length != operandField._subfields.size()) {
+            context.appendDiagnostic(new FormDiagnostic(operandField._locale, "Wrong number of operands for form"));
+            err = true;
+        }
+
+        if (!err) {
+            IntegerValue[] realValues = new IntegerValue[formValue._form._fieldSizes.length];
+            for (int opx = 0; opx < formValue._form._fieldSizes.length; ++opx) {
+                if (opx > opValues.length) {
+                    realValues[opx] = new IntegerValue(0);
+                } else {
+                    realValues[opx] = opValues[opx];
+                }
+            }
+
+            LineSpecifier lSpec = operandField._locale.getLineSpecifier();
+            int lcIndex = context.getCurrentGenerationLCIndex();
+            context.generate(lSpec, lcIndex, formValue._form, realValues, operandField._locale);
         }
     }
 
@@ -609,7 +677,6 @@ public class Assembler {
                          context.getCurrentGenerationLCIndex(),
                          form,
                          values,
-                         context.getDiagnostics(),
                          operationField._locale);
         return true;
     }

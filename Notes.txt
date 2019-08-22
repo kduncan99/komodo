@@ -1,4 +1,5 @@
 -- TODO InProgress
+$FORM and generation using forms
 BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
 BUG: Misc bugs still
 Support $EQUF

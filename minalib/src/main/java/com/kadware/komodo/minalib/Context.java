@@ -279,7 +279,6 @@ public class Context {
         final int lcIndex,
         final Form form,
         final IntegerValue[] values,
-        final Diagnostics diagnostics,
         final Locale locale
     ) {
         GeneratedPool gp = obtainPool(lcIndex);

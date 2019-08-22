@@ -113,7 +113,6 @@ public class GFORMDirective extends Directive {
                                  context.getCurrentGenerationLCIndex(),
                                  new Form(fieldSizes),
                                  values,
-                                 context.getDiagnostics(),
                                  _operationField._locale);
             }
         }

@@ -17,6 +17,13 @@ public class FormDiagnostic extends Diagnostic {
         super(locale, "Incompatible attached forms");
     }
 
+    public FormDiagnostic(
+        final Locale locale,
+        final String message
+    ) {
+        super(locale, message);
+    }
+
     /**
      * Get the level associated with this instance
      */
