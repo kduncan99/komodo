@@ -15,11 +15,25 @@ import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
  * all invoke the static functions which operate against longs.
  * Do NOT change this.
  */
+@SuppressWarnings("Duplicates")
 public class Word36 {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public static class AdditionResult {
+        public final Flags _flags;
+        public final long _value;
+
+        public AdditionResult(
+            final Flags flags,
+            final long value
+        ) {
+            _flags = flags;
+            _value = value;
+        }
+    }
 
     public static class Flags {
         public final boolean _carry;
@@ -39,118 +53,121 @@ public class Word36 {
     //  Constants
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    public static final long BIT_MASK       = 0_777777_777777L;
+    public static final long CARRY_BIT      = BIT_MASK + 1L;
+    public static final long NEGATIVE_BIT   = 0_400000_000000L;
+
     public static final Word36 NEGATIVE_ONE = new Word36(0_777777_777776L);
     public static final Word36 NEGATIVE_ZERO = new Word36(0_777777_777777L);
     public static final Word36 POSITIVE_ONE = new Word36(1);
     public static final Word36 POSITIVE_ZERO = new Word36(0);
 
-    public static final long MASK_B0         = 1L << 35;
-    public static final long MASK_B1         = 1L << 34;
-    public static final long MASK_B2         = 1L << 33;
-    public static final long MASK_B3         = 1L << 32;
-    public static final long MASK_B4         = 1L << 31;
-    public static final long MASK_B5         = 1L << 30;
-    public static final long MASK_B6         = 1L << 29;
-    public static final long MASK_B7         = 1L << 28;
-    public static final long MASK_B8         = 1L << 27;
-    public static final long MASK_B9         = 1L << 26;
-    public static final long MASK_B10        = 1L << 25;
-    public static final long MASK_B11        = 1L << 24;
-    public static final long MASK_B12        = 1L << 23;
-    public static final long MASK_B13        = 1L << 22;
-    public static final long MASK_B14        = 1L << 21;
-    public static final long MASK_B15        = 1L << 20;
-    public static final long MASK_B16        = 1L << 19;
-    public static final long MASK_B17        = 1L << 18;
-    public static final long MASK_B18        = 1L << 17;
-    public static final long MASK_B19        = 1L << 16;
-    public static final long MASK_B20        = 1L << 15;
-    public static final long MASK_B21        = 1L << 14;
-    public static final long MASK_B22        = 1L << 13;
-    public static final long MASK_B23        = 1L << 12;
-    public static final long MASK_B24        = 1L << 11;
-    public static final long MASK_B25        = 1L << 10;
-    public static final long MASK_B26        = 1L << 9;
-    public static final long MASK_B27        = 1L << 8;
-    public static final long MASK_B28        = 1L << 7;
-    public static final long MASK_B29        = 1L << 6;
-    public static final long MASK_B30        = 1L << 5;
-    public static final long MASK_B31        = 1L << 4;
-    public static final long MASK_B32        = 1L << 3;
-    public static final long MASK_B33        = 1L << 2;
-    public static final long MASK_B34        = 1L << 1;
-    public static final long MASK_B35        = 1L;
+    public static final long MASK_B0        = 1L << 35;
+    public static final long MASK_B1        = 1L << 34;
+    public static final long MASK_B2        = 1L << 33;
+    public static final long MASK_B3        = 1L << 32;
+    public static final long MASK_B4        = 1L << 31;
+    public static final long MASK_B5        = 1L << 30;
+    public static final long MASK_B6        = 1L << 29;
+    public static final long MASK_B7        = 1L << 28;
+    public static final long MASK_B8        = 1L << 27;
+    public static final long MASK_B9        = 1L << 26;
+    public static final long MASK_B10       = 1L << 25;
+    public static final long MASK_B11       = 1L << 24;
+    public static final long MASK_B12       = 1L << 23;
+    public static final long MASK_B13       = 1L << 22;
+    public static final long MASK_B14       = 1L << 21;
+    public static final long MASK_B15       = 1L << 20;
+    public static final long MASK_B16       = 1L << 19;
+    public static final long MASK_B17       = 1L << 18;
+    public static final long MASK_B18       = 1L << 17;
+    public static final long MASK_B19       = 1L << 16;
+    public static final long MASK_B20       = 1L << 15;
+    public static final long MASK_B21       = 1L << 14;
+    public static final long MASK_B22       = 1L << 13;
+    public static final long MASK_B23       = 1L << 12;
+    public static final long MASK_B24       = 1L << 11;
+    public static final long MASK_B25       = 1L << 10;
+    public static final long MASK_B26       = 1L << 9;
+    public static final long MASK_B27       = 1L << 8;
+    public static final long MASK_B28       = 1L << 7;
+    public static final long MASK_B29       = 1L << 6;
+    public static final long MASK_B30       = 1L << 5;
+    public static final long MASK_B31       = 1L << 4;
+    public static final long MASK_B32       = 1L << 3;
+    public static final long MASK_B33       = 1L << 2;
+    public static final long MASK_B34       = 1L << 1;
+    public static final long MASK_B35       = 1L;
 
-    private static final long MASK = OnesComplement.BIT_MASK_36;
-    public static final long MASK_NOT_B0     = MASK ^ MASK_B0;
-    public static final long MASK_NOT_B1     = MASK ^ MASK_B1;
-    public static final long MASK_NOT_B2     = MASK ^ MASK_B2;
-    public static final long MASK_NOT_B3     = MASK ^ MASK_B3;
-    public static final long MASK_NOT_B4     = MASK ^ MASK_B4;
-    public static final long MASK_NOT_B5     = MASK ^ MASK_B5;
-    public static final long MASK_NOT_B6     = MASK ^ MASK_B6;
-    public static final long MASK_NOT_B7     = MASK ^ MASK_B7;
-    public static final long MASK_NOT_B8     = MASK ^ MASK_B8;
-    public static final long MASK_NOT_B9     = MASK ^ MASK_B9;
-    public static final long MASK_NOT_B10    = MASK ^ MASK_B10;
-    public static final long MASK_NOT_B11    = MASK ^ MASK_B11;
-    public static final long MASK_NOT_B12    = MASK ^ MASK_B12;
-    public static final long MASK_NOT_B13    = MASK ^ MASK_B13;
-    public static final long MASK_NOT_B14    = MASK ^ MASK_B14;
-    public static final long MASK_NOT_B15    = MASK ^ MASK_B15;
-    public static final long MASK_NOT_B16    = MASK ^ MASK_B16;
-    public static final long MASK_NOT_B17    = MASK ^ MASK_B17;
-    public static final long MASK_NOT_B18    = MASK ^ MASK_B18;
-    public static final long MASK_NOT_B19    = MASK ^ MASK_B19;
-    public static final long MASK_NOT_B20    = MASK ^ MASK_B20;
-    public static final long MASK_NOT_B21    = MASK ^ MASK_B21;
-    public static final long MASK_NOT_B22    = MASK ^ MASK_B22;
-    public static final long MASK_NOT_B23    = MASK ^ MASK_B23;
-    public static final long MASK_NOT_B24    = MASK ^ MASK_B24;
-    public static final long MASK_NOT_B25    = MASK ^ MASK_B25;
-    public static final long MASK_NOT_B26    = MASK ^ MASK_B26;
-    public static final long MASK_NOT_B27    = MASK ^ MASK_B27;
-    public static final long MASK_NOT_B28    = MASK ^ MASK_B28;
-    public static final long MASK_NOT_B29    = MASK ^ MASK_B29;
-    public static final long MASK_NOT_B30    = MASK ^ MASK_B30;
-    public static final long MASK_NOT_B31    = MASK ^ MASK_B31;
-    public static final long MASK_NOT_B32    = MASK ^ MASK_B32;
-    public static final long MASK_NOT_B33    = MASK ^ MASK_B33;
-    public static final long MASK_NOT_B34    = MASK ^ MASK_B34;
-    public static final long MASK_NOT_B35    = MASK ^ MASK_B35;
+    public static final long MASK_NOT_B0    = BIT_MASK ^ MASK_B0;
+    public static final long MASK_NOT_B1    = BIT_MASK ^ MASK_B1;
+    public static final long MASK_NOT_B2    = BIT_MASK ^ MASK_B2;
+    public static final long MASK_NOT_B3    = BIT_MASK ^ MASK_B3;
+    public static final long MASK_NOT_B4    = BIT_MASK ^ MASK_B4;
+    public static final long MASK_NOT_B5    = BIT_MASK ^ MASK_B5;
+    public static final long MASK_NOT_B6    = BIT_MASK ^ MASK_B6;
+    public static final long MASK_NOT_B7    = BIT_MASK ^ MASK_B7;
+    public static final long MASK_NOT_B8    = BIT_MASK ^ MASK_B8;
+    public static final long MASK_NOT_B9    = BIT_MASK ^ MASK_B9;
+    public static final long MASK_NOT_B10   = BIT_MASK ^ MASK_B10;
+    public static final long MASK_NOT_B11   = BIT_MASK ^ MASK_B11;
+    public static final long MASK_NOT_B12   = BIT_MASK ^ MASK_B12;
+    public static final long MASK_NOT_B13   = BIT_MASK ^ MASK_B13;
+    public static final long MASK_NOT_B14   = BIT_MASK ^ MASK_B14;
+    public static final long MASK_NOT_B15   = BIT_MASK ^ MASK_B15;
+    public static final long MASK_NOT_B16   = BIT_MASK ^ MASK_B16;
+    public static final long MASK_NOT_B17   = BIT_MASK ^ MASK_B17;
+    public static final long MASK_NOT_B18   = BIT_MASK ^ MASK_B18;
+    public static final long MASK_NOT_B19   = BIT_MASK ^ MASK_B19;
+    public static final long MASK_NOT_B20   = BIT_MASK ^ MASK_B20;
+    public static final long MASK_NOT_B21   = BIT_MASK ^ MASK_B21;
+    public static final long MASK_NOT_B22   = BIT_MASK ^ MASK_B22;
+    public static final long MASK_NOT_B23   = BIT_MASK ^ MASK_B23;
+    public static final long MASK_NOT_B24   = BIT_MASK ^ MASK_B24;
+    public static final long MASK_NOT_B25   = BIT_MASK ^ MASK_B25;
+    public static final long MASK_NOT_B26   = BIT_MASK ^ MASK_B26;
+    public static final long MASK_NOT_B27   = BIT_MASK ^ MASK_B27;
+    public static final long MASK_NOT_B28   = BIT_MASK ^ MASK_B28;
+    public static final long MASK_NOT_B29   = BIT_MASK ^ MASK_B29;
+    public static final long MASK_NOT_B30   = BIT_MASK ^ MASK_B30;
+    public static final long MASK_NOT_B31   = BIT_MASK ^ MASK_B31;
+    public static final long MASK_NOT_B32   = BIT_MASK ^ MASK_B32;
+    public static final long MASK_NOT_B33   = BIT_MASK ^ MASK_B33;
+    public static final long MASK_NOT_B34   = BIT_MASK ^ MASK_B34;
+    public static final long MASK_NOT_B35   = BIT_MASK ^ MASK_B35;
 
     // general partial-word masks
-    public static final long MASK_H1         = 0_777777_000000L;
-    public static final long MASK_H2         = 0_000000_777777L;
-    public static final long MASK_Q1         = 0_777_000_000_000L;
-    public static final long MASK_Q2         = 0_000_777_000_000L;
-    public static final long MASK_Q3         = 0_000_000_777_000L;
-    public static final long MASK_Q4         = 0_000_000_000_777L;
-    public static final long MASK_S1         = 0_77_00_00_00_00_00L;
-    public static final long MASK_S2         = 0_00_77_00_00_00_00L;
-    public static final long MASK_S3         = 0_00_00_77_00_00_00L;
-    public static final long MASK_S4         = 0_00_00_00_77_00_00L;
-    public static final long MASK_S5         = 0_00_00_00_00_77_00L;
-    public static final long MASK_S6         = 0_00_00_00_00_00_77L;
-    public static final long MASK_T1         = 0_7777_0000_0000L;
-    public static final long MASK_T2         = 0_0000_7777_0000L;
-    public static final long MASK_T3         = 0_0000_0000_7777L;
+    public static final long MASK_H1        = 0_777777_000000L;
+    public static final long MASK_H2        = 0_000000_777777L;
+    public static final long MASK_Q1        = 0_777_000_000_000L;
+    public static final long MASK_Q2        = 0_000_777_000_000L;
+    public static final long MASK_Q3        = 0_000_000_777_000L;
+    public static final long MASK_Q4        = 0_000_000_000_777L;
+    public static final long MASK_S1        = 0_77_00_00_00_00_00L;
+    public static final long MASK_S2        = 0_00_77_00_00_00_00L;
+    public static final long MASK_S3        = 0_00_00_77_00_00_00L;
+    public static final long MASK_S4        = 0_00_00_00_77_00_00L;
+    public static final long MASK_S5        = 0_00_00_00_00_77_00L;
+    public static final long MASK_S6        = 0_00_00_00_00_00_77L;
+    public static final long MASK_T1        = 0_7777_0000_0000L;
+    public static final long MASK_T2        = 0_0000_7777_0000L;
+    public static final long MASK_T3        = 0_0000_0000_7777L;
 
-    public static final long MASK_NOT_H1     = 0_000000_777777L;
-    public static final long MASK_NOT_H2     = 0_777777_000000L;
-    public static final long MASK_NOT_Q1     = 0_000_777_777_777L;
-    public static final long MASK_NOT_Q2     = 0_777_000_777_777L;
-    public static final long MASK_NOT_Q3     = 0_777_777_000_777L;
-    public static final long MASK_NOT_Q4     = 0_777_777_777_000L;
-    public static final long MASK_NOT_S1     = 0_00_77_77_77_77_77L;
-    public static final long MASK_NOT_S2     = 0_77_00_77_77_77_77L;
-    public static final long MASK_NOT_S3     = 0_77_77_00_77_77_77L;
-    public static final long MASK_NOT_S4     = 0_77_77_77_00_77_77L;
-    public static final long MASK_NOT_S5     = 0_77_77_77_77_00_77L;
-    public static final long MASK_NOT_S6     = 0_77_77_77_77_77_00L;
-    public static final long MASK_NOT_T1     = 0_0000_7777_7777L;
-    public static final long MASK_NOT_T2     = 0_7777_0000_7777L;
-    public static final long MASK_NOT_T3     = 0_7777_7777_0000L;
+    public static final long MASK_NOT_H1    = 0_000000_777777L;
+    public static final long MASK_NOT_H2    = 0_777777_000000L;
+    public static final long MASK_NOT_Q1    = 0_000_777_777_777L;
+    public static final long MASK_NOT_Q2    = 0_777_000_777_777L;
+    public static final long MASK_NOT_Q3    = 0_777_777_000_777L;
+    public static final long MASK_NOT_Q4    = 0_777_777_777_000L;
+    public static final long MASK_NOT_S1    = 0_00_77_77_77_77_77L;
+    public static final long MASK_NOT_S2    = 0_77_00_77_77_77_77L;
+    public static final long MASK_NOT_S3    = 0_77_77_00_77_77_77L;
+    public static final long MASK_NOT_S4    = 0_77_77_77_00_77_77L;
+    public static final long MASK_NOT_S5    = 0_77_77_77_77_00_77L;
+    public static final long MASK_NOT_S6    = 0_77_77_77_77_77_00L;
+    public static final long MASK_NOT_T1    = 0_0000_7777_7777L;
+    public static final long MASK_NOT_T2    = 0_7777_0000_7777L;
+    public static final long MASK_NOT_T3    = 0_7777_7777_0000L;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -210,32 +227,29 @@ public class Word36 {
     /**
      * Standard constructor
      */
-    public Word36(
-    ) {
-        _value = 0;
-    }
-
-    /**
-     * Creates a new object given the ones-complement parameter value
-     * @param value ones-complement value to be stored in this object
-     */
-    public Word36(
-        final long value
-    ) {
-        _value = value & MASK;
-    }
+    public Word36()             { _value = 0; }
+    public Word36(long value)   { _value = value & BIT_MASK; }  //  operand is expected to be ones-complement
+    public Word36(Word36 value) { _value = value._value; }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Non-Static methods
+    //  Overrides
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @Override
     public boolean equals(
         final Object obj
     ) {
-        return (obj != null) && (obj instanceof Word36) && (_value == ((Word36)obj)._value);
+        return (obj instanceof Word36) && (_value == ((Word36)obj)._value);
     }
+
+    @Override
+    public int hashCode() { return (int) _value; }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Non-Static methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public long getH1() { return getH1(_value); }
     public long getH2() { return getH2(_value); }
@@ -252,13 +266,6 @@ public class Word36 {
     public long getT1() { return getT1(_value); }
     public long getT2() { return getT2(_value); }
     public long getT3() { return getT3(_value); }
-
-    /**
-     * Partial-word getter
-     * @param index - 0 to 11 indicating which twelfth we want (0 == TW1, 11 == TW12)
-     */
-    public long getTwelfth(int index) { return getTwelfth(_value, index); }
-
     public long getXH1() { return getXH1(_value); }
     public long getXH2() { return getXH2(_value); }
     public long getXT1() { return getXT1(_value); }
@@ -281,20 +288,7 @@ public class Word36 {
     public void setT1(long partialValue) { _value = setT1(_value, partialValue); }
     public void setT2(long partialValue) { _value = setT2(_value, partialValue); }
     public void setT3(long partialValue) { _value = setT3(_value, partialValue); }
-
-    /**
-     * Partial-word setter
-     * @param partialValue value to be stored
-     * @param index 0==TW1, 11=TW12, etc
-     */
-    public void setTwelfth(
-        final long partialValue,
-        final int index
-    ) {
-        _value = setTwelfth(_value, partialValue, index);
-    }
-
-    public void setW(long value) { _value = value & MASK; }
+    public void setW(long value) { _value = value & BIT_MASK; }
 
 
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
@@ -302,103 +296,95 @@ public class Word36 {
     /**
      * Determines if the value of this object is negative (sign bit is set)
      */
-    public boolean isNegative() { return OnesComplement.isNegative36(_value); }
+    public boolean isNegative() { return (_value & NEGATIVE_BIT) != 0; }
 
     /**
      * Determines if the value of this object is positive (sign bit is clear)
      */
-    public boolean isPositive() { return OnesComplement.isPositive36(_value); }
+    public boolean isPositive() { return (_value & NEGATIVE_BIT) == 0; }
 
     /**
      * Determines if the value of this object is zero (positive or negative)
      */
-    public boolean isZero() { return OnesComplement.isZero36(_value); }
+    public boolean isZero() { return (_value == POSITIVE_ZERO._value) || (_value == NEGATIVE_ZERO._value); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     /**
-     * Adds a 36-bit values to our own value, and produces that result along with carry and overflow flags
-     * @param addend 36-bit ones-complement addend
+     * Arithmetically adds another Word36 object to this object.
      * @return carry/overflow flags object
      */
     public Flags add(
-        final long addend
+        final Word36 addend
     ) {
-        OnesComplement.Add36Result addResult = new OnesComplement.Add36Result();
-        OnesComplement.add36(_value, addend, addResult);
-        _value = addResult._sum;
-        return new Flags(addResult._carry, addResult._overflow);
+        AdditionResult ar = add(_value, addend._value);
+        _value = ar._value;
+        return ar._flags;
     }
 
+    public void negate() { _value = negate(_value); }
 
-    //  Conversion from Word36 to String -------------------------------------------------------------------------------------------
 
-    /**
-     * Populates this object with quarter-words derived from the ASCII characters in the source string.
-     * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
-     * Any characters in the string beyond the fourth are ignored.
-     * @param source string to be converted
-     * @return converted data
-     */
-    public static Word36 stringToWord36ASCII(
-        final String source
-    ) {
-        Word36 w = new Word36(0_040_040_040_040L);
-        switch (source.length() > 4 ? 4 : source.length()) {
-            case 4:
-                w.setQ4(source.charAt(3) & 0xff);
-                //  fall thru
-            case 3:
-                w.setQ3(source.charAt(2) & 0xff);
-                //  fall thru
-            case 2:
-                w.setQ2(source.charAt(1) & 0xff);
-                //  fall thru
-            case 1:
-                w.setQ1(source.charAt(0) & 0xff);
-        }
+    //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
-        return w;
-    }
+    public void and(Word36 operand) { _value &= operand._value; }
+    public void not()               { _value = _value ^ BIT_MASK; }
+    public void or(Word36 operand)  { _value |= operand._value; }
+    public void xor(Word36 operand) { _value ^= operand._value; }
 
-    /**
-     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
-     * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
-     * blanks as necessary. Any characters in the string beyond the sixth are ignored.
-     * @param source string to be converted
-     * @return converted data
-     */
-    public static Word36 stringToWord36Fieldata(
-        final String source
-    ) {
-        Word36 w = new Word36(0_050505_050505L);
-        switch (source.length() > 6 ? 6 : source.length()) {
-            case 6:
-                w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
-                //  fall thru
-            case 5:
-                w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
-                //  fall thru
-            case 4:
-                w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
-                //  fall thru
-            case 3:
-                w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
-                //  fall thru
-            case 2:
-                w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
-                //  fall thru
-            case 1:
-                w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
-        }
-        return w;
-    }
+
+    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+
+    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
+    public void leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); }
+    public void leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); }
+    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
+    public void rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); }
+    public void rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); }
+
+
+    //  Conversions ----------------------------------------------------------------------------------------------------------------
+
+    public long getTwosComplement() { return getTwosComplement(_value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
+    //  Static methods - these operate on and return long integers representing ones-complement values
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    //  Tests ----------------------------------------------------------------------------------------------------------------------
+
+    public static boolean isNegative(
+        final long value
+    ) {
+        return (value & NEGATIVE_BIT) == NEGATIVE_BIT;
+    }
+
+    public static boolean isNegativeZero(
+        final long value
+    ) {
+        return value == NEGATIVE_ZERO._value;
+    }
+
+    public static boolean isPositive(
+        final long value
+    ) {
+        return (value & NEGATIVE_BIT) == 0;
+    }
+
+    public static boolean isPositiveZero(
+        final long value
+    ) {
+        return value == POSITIVE_ZERO._value;
+    }
+
+    public static boolean isZero(
+        final long value
+    ) {
+        return isPositiveZero(value) || isNegativeZero(value);
+    }
+
 
     //  Partial-word extraction ----------------------------------------------------------------------------------------------------
 
@@ -565,25 +551,6 @@ public class Word36 {
         final long value
     ) {
         return value & Word36.MASK_T3;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @param twelfthIndex indicates which twelfth to get (0 through 11, 0 containing the most-significat / negative bit)
-     * @return result
-     */
-    public static long getTwelfth(
-        final long value,
-        final int twelfthIndex
-    ) {
-        if ((twelfthIndex < 0) || (twelfthIndex > 11)) {
-            throw new InvalidArgumentRuntimeException(String.format("Twelfth index %d out of range", twelfthIndex));
-        }
-
-        int tx = twelfthIndex % 12;
-        int shift = (11 - tx) * 3;
-        return (value >> shift) & 07;
     }
 
     /**
@@ -855,29 +822,6 @@ public class Word36 {
     }
 
 
-    /**
-     * Injects a new value into a particular partial-value subset of a given existing value
-     * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
-     * @param twelfthIndex indicates which twelfth (0 = left-most, 11 = right-most) is to be affected
-     * @return resulting value
-     */
-    public static long setTwelfth(
-        final long existingValue,
-        final long partialValue,
-        final int twelfthIndex
-    ) {
-        if ((twelfthIndex < 0) || (twelfthIndex > 11)) {
-            throw new InvalidArgumentRuntimeException(String.format("Twelfth index %d out of range", twelfthIndex));
-        }
-
-        int shift = (11 - (twelfthIndex % 12)) * 3;
-        long maskOut = ~(07L << shift);
-        long result = (existingValue & maskOut) | ((partialValue & 07) << shift);
-        return (existingValue & maskOut) | ((partialValue & 07) << shift);
-    }
-
-
     //  Bit getters and setters ----------------------------------------------------------------------------------------------------
 
     /**
@@ -924,36 +868,64 @@ public class Word36 {
     }
 
 
-    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+    //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    /**
-     * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
-     * Actual implementation may not involve iterative shifting.
-     * @param value value to be shifted
-     * @param count number of bits to be shifted
-     * @return resulting value
-     */
-    public static long leftShiftCircular(
-        final long value,
-        final int count
+    public static AdditionResult add(
+        final long operand1,
+        final long operand2
     ) {
-        int actualCount = count % 36;
-        long residue = value >> (36 - actualCount); // end-around shifted portion
-        return ((value << actualCount) & MASK) | residue;
+        boolean neg1 = isNegative(operand1);
+        boolean neg2 = isNegative(operand2);
+
+        long result = addSimple(operand1, operand2);
+        if ((result & CARRY_BIT) != 0) {
+            result &= BIT_MASK;
+            ++result;
+        }
+
+        //TODO
+//        if ((result == NEGATIVE_ZERO._value) && (operand1 != operand2)) {
+//            result = POSITIVE_ZERO._value;
+//        }
+        boolean negRes = isNegative(result);
+
+        boolean carry = result < 0 ? (neg1 && neg2) : (neg1 || neg2);
+        boolean overflow = (neg1 == neg2) && (neg1 != negRes);
+        return new AdditionResult(new Flags(carry, overflow), result);
     }
 
-    /**
-     * Shifts the given 36-bit value left by a number of bits
-     * @param value value to be shifted
-     * @param count number of bits to be shifted
-     * @return resulting value
-     */
-    public static long leftShiftLogical(
-        final long value,
-        final int count
+    public static long addSimple(
+        final long operand1,
+        final long operand2
     ) {
-        return (count > 35) ? 0 : (value << count) & MASK;
+        if ((operand1 == NEGATIVE_ZERO._value) && (operand2 == NEGATIVE_ZERO._value)) {
+            return NEGATIVE_ZERO._value;
+        }
+
+        long native1 = getTwosComplement(operand1);
+        long native2 = getTwosComplement(operand2);
+        return getOnesComplement(native1 + native2);
     }
+
+    public static long getOnesComplement(
+        final long operand
+    ) {
+        return operand < 0 ? negate(-operand) : operand;
+    }
+
+    public static long getTwosComplement(
+        final long operand
+    ) {
+        return isNegative(operand) ? -negate(operand) : operand;
+    }
+
+    public static long negate(
+        final long operand
+    ) {
+        return operand ^ 0_777777_777777L;
+    }
+
+    //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
     /**
      * Logical AND operation (in this context, logical means bitwise)
@@ -976,7 +948,7 @@ public class Word36 {
     public static long logicalNot(
         final long operand
     ) {
-        return operand ^ MASK;
+        return operand ^ BIT_MASK;
     }
 
     /**
@@ -993,6 +965,76 @@ public class Word36 {
     }
 
     /**
+     * Logical XOR operation (in this context, logical means bitwise)
+     * @param operand1 left hand operand
+     * @param operand2 right hand operand
+     * @return bitwise XOR of the two operands
+     */
+    public static long logicalXor(
+        final long operand1,
+        final long operand2
+    ) {
+        return operand1 ^ operand2;
+    }
+
+
+    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+
+    public static long leftShiftAlgebraic(
+        final long value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftAlgebraic(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            return leftShiftLogical(value, count);
+        }
+    }
+
+    /**
+     * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
+     * Actual implementation may not involve iterative shifting.
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static long leftShiftCircular(
+        final long value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftCircular(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            int actualCount = count % 36;
+            long residue = value >> (36 - actualCount); // end-around shifted portion
+            return ((value << actualCount) & BIT_MASK) | residue;
+        }
+    }
+
+    /**
+     * Shifts the given 36-bit value left by a number of bits
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static long leftShiftLogical(
+        final long value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftLogical(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            return (count > 35) ? 0 : (value << count) & BIT_MASK;
+        }
+    }
+
+    /**
      * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
      * @param value 36-bit value to be shifted
      * @param count number of bits to be shifted
@@ -1002,14 +1044,20 @@ public class Word36 {
         final long value,
         final int count
     ) {
-        boolean wasNegative = OnesComplement.isNegative36(value);
-        if ( count > 35 ) {
-            return wasNegative ? OnesComplement.NEGATIVE_ZERO_36 : 0;
+        if (count < 0) {
+            return leftShiftAlgebraic(value, -count);
+        } else if (count == 0) {
+            return value;
         } else {
-            long result = value >> count;
-            if ( wasNegative )
-                result |= ((~(MASK >> count)) & MASK);
-            return result;
+            boolean wasNegative = isNegative(value);
+            if (count > 35) {
+                return wasNegative ? NEGATIVE_ZERO._value : 0;
+            } else {
+                long result = value >> count;
+                if (wasNegative)
+                    result |= ((~(BIT_MASK >> count)) & BIT_MASK);
+                return result;
+            }
         }
     }
 
@@ -1024,10 +1072,16 @@ public class Word36 {
         final long value,
         final int count
     ) {
-        int actualCount = (count % 36);
-        long mask = MASK >> (36 - actualCount);
-        long residue = (value & mask) << (36 - actualCount);
-        return ((value >> actualCount) | residue);
+        if (count < 0) {
+            return leftShiftCircular(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            int actualCount = (count % 36);
+            long mask = BIT_MASK >> (36 - actualCount);
+            long residue = (value & mask) << (36 - actualCount);
+            return ((value >> actualCount) | residue);
+        }
     }
 
     /**
@@ -1040,7 +1094,13 @@ public class Word36 {
         final long value,
         final int count
     ) {
-        return (count > 35) ? 0 : value >> count;
+        if (count < 0) {
+            return leftShiftLogical(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            return (count > 35) ? 0 : value >> count;
+        }
     }
 
 
@@ -1086,6 +1146,70 @@ public class Word36 {
     }
 
 
+    //  Conversion from String to Word36 -------------------------------------------------------------------------------------------
+
+    /**
+     * Populates this object with quarter-words derived from the ASCII characters in the source string.
+     * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
+     * Any characters in the string beyond the fourth are ignored.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static Word36 stringToWord36ASCII(
+        final String source
+    ) {
+        Word36 w = new Word36(0_040_040_040_040L);
+        switch (source.length() > 4 ? 4 : source.length()) {
+            case 4:
+                w.setQ4(source.charAt(3) & 0xff);
+                //  fall thru
+            case 3:
+                w.setQ3(source.charAt(2) & 0xff);
+                //  fall thru
+            case 2:
+                w.setQ2(source.charAt(1) & 0xff);
+                //  fall thru
+            case 1:
+                w.setQ1(source.charAt(0) & 0xff);
+        }
+
+        return w;
+    }
+
+    /**
+     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
+     * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
+     * blanks as necessary. Any characters in the string beyond the sixth are ignored.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static Word36 stringToWord36Fieldata(
+        final String source
+    ) {
+        Word36 w = new Word36(0_050505_050505L);
+        switch (source.length() > 6 ? 6 : source.length()) {
+            case 6:
+                w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
+                //  fall thru
+            case 5:
+                w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
+                //  fall thru
+            case 4:
+                w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
+                //  fall thru
+            case 3:
+                w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
+                //  fall thru
+            case 2:
+                w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
+                //  fall thru
+            case 1:
+                w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
+        }
+        return w;
+    }
+
+
     //  Formatting for display -----------------------------------------------------------------------------------------------------
 
     /**
@@ -1113,14 +1237,11 @@ public class Word36 {
     public static String toASCII(
         final long value
     ) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append(getASCIIForDisplay((int)getQ1(value), '.'));
-        builder.append(getASCIIForDisplay((int)getQ2(value), '.'));
-        builder.append(getASCIIForDisplay((int)getQ3(value), '.'));
-        builder.append(getASCIIForDisplay((int)getQ4(value), '.'));
-
-        return builder.toString();
+        return String.format("%s%s%s%s",
+                             getASCIIForDisplay((int)getQ1(value), '.'),
+                             getASCIIForDisplay((int)getQ2(value), '.'),
+                             getASCIIForDisplay((int)getQ3(value), '.'),
+                             getASCIIForDisplay((int)getQ4(value), '.'));
     }
 
     /**
@@ -1131,16 +1252,13 @@ public class Word36 {
     public static String toFieldata(
         final long value
     ) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append(ASCII_FROM_FIELDATA[(int)getS1(value)]);
-        builder.append(ASCII_FROM_FIELDATA[(int)getS2(value)]);
-        builder.append(ASCII_FROM_FIELDATA[(int)getS3(value)]);
-        builder.append(ASCII_FROM_FIELDATA[(int)getS4(value)]);
-        builder.append(ASCII_FROM_FIELDATA[(int)getS5(value)]);
-        builder.append(ASCII_FROM_FIELDATA[(int)getS6(value)]);
-
-        return builder.toString();
+        return String.format("%s%s%s%s%s%s",
+                             ASCII_FROM_FIELDATA[(int) getS1(value)],
+                             ASCII_FROM_FIELDATA[(int) getS2(value)],
+                             ASCII_FROM_FIELDATA[(int) getS3(value)],
+                             ASCII_FROM_FIELDATA[(int) getS4(value)],
+                             ASCII_FROM_FIELDATA[(int) getS5(value)],
+                             ASCII_FROM_FIELDATA[(int) getS6(value)]);
     }
 
     /**
