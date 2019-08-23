@@ -247,7 +247,7 @@ public class Word36 {
     public int hashCode() { return (int) _value; }
 
     @Override
-    public String toString() { return String.format("%012o%", _value); }
+    public String toString() { return String.format("%012o", _value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

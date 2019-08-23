@@ -654,7 +654,7 @@ public class ArraySlice {
         long[] temp = new long[words];
         int tx = 0;
         for (int sx = 0; sx < source.length(); sx += 4) {
-            temp[tx++] = Word36.stringToWord36ASCII(source.substring(sx)).getW();
+            temp[tx++] = Word36.stringToWordASCII(source.substring(sx)).getW();
         }
 
         return new ArraySlice(temp);
@@ -677,7 +677,7 @@ public class ArraySlice {
         long[] temp = new long[words];
         int tx = 0;
         for (int sx = 0; sx < source.length(); sx += 6) {
-            temp[tx++] = Word36.stringToWord36Fieldata(source.substring(sx)).getW();
+            temp[tx++] = Word36.stringToWordFieldata(source.substring(sx)).getW();
         }
 
         return new ArraySlice(temp);
