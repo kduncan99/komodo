@@ -1,4 +1,5 @@
 -- TODO InProgress
+Reworking Word36, implementing DoubleWord36 (original design just won't work for us)
 $FORM and generation using forms
 BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
 BUG: Misc bugs still

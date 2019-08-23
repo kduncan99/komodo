@@ -11,15 +11,15 @@ package com.kadware.komodo.baselib;
  */
 public class IndexRegister extends GeneralRegister {
 
-    public static final long MASK_XI        = 0_777777_000000l;     //  standard increment value
-    public static final long MASK_XI12      = 0_777700_000000l;     //  increment value for 24/12 exec index register
-    public static final long MASK_XM        = 0_000000_777777l;     //  standard modifier value
-    public static final long MASK_XM24      = 0_000077_777777l;     //  modifier value for 24/12 exec index register
+    public static final long MASK_XI        = 0_777777_000000L;     //  standard increment value
+    public static final long MASK_XI12      = 0_777700_000000L;     //  increment value for 24/12 exec index register
+    public static final long MASK_XM        = 0_000000_777777L;     //  standard modifier value
+    public static final long MASK_XM24      = 0_000077_777777L;     //  modifier value for 24/12 exec index register
 
-    public static final long MASK_NOT_XI    = 0_000000_777777l;
-    public static final long MASK_NOT_XI12  = 0_000077_777777l;
-    public static final long MASK_NOT_XM    = 0_777777_000000l;
-    public static final long MASK_NOT_XM24  = 0_777700_000000l;
+    public static final long MASK_NOT_XI    = 0_000000_777777L;
+    public static final long MASK_NOT_XI12  = 0_000077_777777L;
+    public static final long MASK_NOT_XM    = 0_777777_000000L;
+    public static final long MASK_NOT_XM24  = 0_777700_000000L;
 
     public IndexRegister() {}
     public IndexRegister(final long value) { super(value); }

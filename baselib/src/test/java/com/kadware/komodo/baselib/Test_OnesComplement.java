@@ -4,148 +4,12 @@
 
 package com.kadware.komodo.baselib;
 
-import static org.junit.Assert.*;
-
-import com.kadware.komodo.baselib.OnesComplement;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
-import java.math.BigInteger;
-import org.junit.Test;
-
 /**
  * Unit tests for OnesComplement class
  */
 public class Test_OnesComplement {
 
-    private final long BIT_MASK_36 = 0_777777_777777l;
-    private final long LARGEST_POSITIVE_INTEGER_36 = 0_377777_777777l;
-    private final long NEGATIVE_BIT_36 = 0_400000_000000l;
-    private final long NEGATIVE_ONE_12 = 0_7776l;
-    private final long NEGATIVE_ONE_18 = 0_777776l;
-    private final long NEGATIVE_ONE_36 = 0_777777_777776l;
-    private final long NEGATIVE_ZERO_12 = 0_7777l;
-    private final long NEGATIVE_ZERO_18 = 0_777777l;
-    private final long NEGATIVE_ZERO_36 = 0_777777_777777l;
-    private final long POSITIVE_ONE_12 = 1l;
-    private final long POSITIVE_ONE_18 = 1l;
-    private final long POSITIVE_ONE_36 = 1l;
-    private final long POSITIVE_ZERO_12 = 0l;
-    private final long POSITIVE_ZERO_18 = 0l;
-    private final long POSITIVE_ZERO_36 = 0l;
-    private final long SMALLEST_NEGATIVE_INTEGER_36 = 0_400000_000000l;
-
-    private final long[] BIT_MASK_72 = { 0_777777_777777l, 0_777777_777777l };
-    private final long[] LARGEST_POSITIVE_INTEGER_72 = { 0_377777_777777l, 0_777777_777777l };
-    private final long[] NEGATIVE_BIT_72 = { 0_400000_000000l, 0l };
-    private final long[] NEGATIVE_ONE_72 = { 0_777777_777777l, 0_777777_777776l };
-    private final long[] NEGATIVE_ZERO_72 = { 0_777777_777777l, 0_777777_777777l };
-    private final long[] POSITIVE_ONE_72 = { 0l, 1l };
-    private final long[] POSITIVE_ZERO_72 = { 0l, 0l };
-    private final long[] SMALLEST_NEGATIVE_INTEGER_72 = { 0_400000_000000l, 0l };
-
-
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//    //  36-bit tests
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//
-//    //  Constants ------------------------------------------------------------------------------------------------------------------
-//
-//    @Test
-//    public void constant36_BitMask(
-//    ) {
-//        assertEquals(BIT_MASK_36, OnesComplement.BIT_MASK_36);
-//    }
-//
-//    @Test
-//    public void constant36_HighestPositiveInteger(
-//    ) {
-//        assertEquals(LARGEST_POSITIVE_INTEGER_36, OnesComplement.LARGEST_POSITIVE_INTEGER_36);
-//    }
-//
-//    @Test
-//    public void constant36_NegativeBit(
-//    ) {
-//        assertEquals(NEGATIVE_BIT_36, OnesComplement.NEGATIVE_BIT_36);
-//    }
-//
-//    @Test
-//    public void constant36_NegativeZero(
-//    ) {
-//        assertEquals(NEGATIVE_ZERO_36, OnesComplement.NEGATIVE_ZERO_36);
-//    }
-//
-//    @Test
-//    public void constant36_PositiveZero(
-//    ) {
-//        assertEquals(POSITIVE_ZERO_36, OnesComplement.POSITIVE_ZERO_36);
-//    }
-//
-//    @Test
-//    public void constant36_SmallestNegativeInteger(
-//    ) {
-//        assertEquals(SMALLEST_NEGATIVE_INTEGER_36, OnesComplement.SMALLEST_NEGATIVE_INTEGER_36);
-//    }
-//
-//    @Test
-//    public void constant72_BitMask(
-//    ) {
-//        assertArrayEquals(BIT_MASK_72, OnesComplement.BIT_MASK_72);
-//    }
-//
-//    @Test
-//    public void constant72_HighestPositiveInteger(
-//    ) {
-//        assertArrayEquals(LARGEST_POSITIVE_INTEGER_72, OnesComplement.LARGEST_POSITIVE_INTEGER_72);
-//    }
-//
-//    @Test
-//    public void constant72_NegativeBit(
-//    ) {
-//        assertArrayEquals(NEGATIVE_BIT_72, OnesComplement.NEGATIVE_BIT_72);
-//    }
-//
-//    @Test
-//    public void constant72_NegativeZero(
-//    ) {
-//        assertArrayEquals(NEGATIVE_ZERO_72, OnesComplement.NEGATIVE_ZERO_72);
-//    }
-//
-//    @Test
-//    public void constant72_PositiveZero(
-//    ) {
-//        assertArrayEquals(POSITIVE_ZERO_72, OnesComplement.POSITIVE_ZERO_72);
-//    }
-//
-//    @Test
-//    public void constant72_SmallestNegativeInteger(
-//    ) {
-//        assertArrayEquals(SMALLEST_NEGATIVE_INTEGER_72, OnesComplement.SMALLEST_NEGATIVE_INTEGER_72);
-//    }
-//
 //    //  Tests for sign and for zero ------------------------------------------------------------------------------------------------
-//
-//    @Test
-//    public void isNegative36_PositiveZero(
-//    ) {
-//        assertFalse(OnesComplement.isNegative36(POSITIVE_ZERO_36));
-//    }
-//
-//    @Test
-//    public void isNegative36_PositiveInteger(
-//    ) {
-//        assertFalse(OnesComplement.isNegative36(LARGEST_POSITIVE_INTEGER_36));
-//    }
-//
-//    @Test
-//    public void isNegative36_NegativeZero(
-//    ) {
-//        assertTrue(OnesComplement.isNegative36(NEGATIVE_ZERO_36));
-//    }
-//
-//    @Test
-//    public void isNegative36_NegativeInteger(
-//    ) {
-//        assertTrue(OnesComplement.isNegative36(SMALLEST_NEGATIVE_INTEGER_36));
-//    }
 //
 //    @Test
 //    public void isNegative72_PositiveZero(
@@ -623,9 +487,6 @@ public class Test_OnesComplement {
 //        assertArrayEquals(POSITIVE_ZERO_72, ocr._result);
 //        assertFalse(ocr._overflow);
 //    }
-//
-//
-//    //  Arithmetic -----------------------------------------------------------------------------------------------------------------
 //
 //    @Test
 //    public void absoluteValue36_Positive(
@@ -1206,42 +1067,6 @@ public class Test_OnesComplement {
 //    //???? we should have a unit minalib for divide overflow
 //
 //    @Test
-//    public void leftShiftCircular36_by0(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long expected = parameter;
-//        long result = OnesComplement.leftShiftCircular36(parameter, 0);
-//        assertEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_by3(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long expected = 0_112223_334441l;
-//        long result = OnesComplement.leftShiftCircular36(parameter, 3);
-//        assertEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_by36(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long expected = parameter;
-//        long result = OnesComplement.leftShiftCircular36(parameter, 36);
-//        assertEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_byNeg(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long expected = parameter;
-//        long result = OnesComplement.leftShiftCircular36(parameter, -4);
-//        assertEquals(expected, result);
-//    }
-//
-//    @Test
 //    public void leftShiftCircular72_by0(
 //    ) {
 //        long[] parameter = { 0_111222_333444l, 0_555666_777000l };
@@ -1289,39 +1114,6 @@ public class Test_OnesComplement {
 //        long[] result = new long[2];
 //        OnesComplement.leftShiftCircular72(parameter, -4, result);
 //        assertArrayEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_by3(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long expected = 0_112223_334440l;
-//        long result = OnesComplement.leftShiftLogical36(parameter, 3);
-//        assertEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_by36(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long result = OnesComplement.leftShiftLogical36(parameter, 36);
-//        assertEquals(0, result);
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_negCount(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long result = OnesComplement.leftShiftLogical36(parameter, -5);
-//        assertEquals(parameter, result);
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_zeroCount(
-//    ) {
-//        long parameter = 0_111222_333444l;
-//        long result = OnesComplement.leftShiftLogical36(parameter, 0);
-//        assertEquals(parameter, result);
 //    }
 //
 //    @Test
@@ -1495,30 +1287,6 @@ public class Test_OnesComplement {
 //    }
 //
 //    @Test
-//    public void negate36_PositiveOne(
-//    ) {
-//        assertEquals(NEGATIVE_ONE_36, OnesComplement.negate36(POSITIVE_ONE_36));
-//    }
-//
-//    @Test
-//    public void negate36_PositiveZero(
-//    ) {
-//        assertEquals(NEGATIVE_ZERO_36, OnesComplement.negate36(POSITIVE_ZERO_36));
-//    }
-//
-//    @Test
-//    public void negate36_NegativeOne(
-//    ) {
-//        assertEquals(POSITIVE_ONE_36, OnesComplement.negate36(NEGATIVE_ONE_36));
-//    }
-//
-//    @Test
-//    public void negate36_NegativeZero(
-//    ) {
-//        assertEquals(POSITIVE_ZERO_36, OnesComplement.negate36(NEGATIVE_ZERO_36));
-//    }
-//
-//    @Test
 //    public void negate72_PositiveOne(
 //    ) {
 //        long[] result = new long[2];
@@ -1548,94 +1316,6 @@ public class Test_OnesComplement {
 //        long[] result = new long[2];
 //        OnesComplement.negate72(NEGATIVE_ZERO_72, result);
 //        assertArrayEquals(POSITIVE_ZERO_72, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_negCount(
-//    ) {
-//        long parameter = 033225l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, -3);
-//        assertEquals(parameter, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_3Count(
-//    ) {
-//        long parameter = 0400000_112233l;
-//        long expResult = 0740000_011223l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 3);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_34Count(
-//    ) {
-//        long parameter = 0_421456_321456l;
-//        long expResult = 0_777777_777776l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 34);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_35Count(
-//    ) {
-//        long parameter = 0_421456_321456l;
-//        long expResult = 0_777777_777777l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 35);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_36Count(
-//    ) {
-//        long parameter = 0_421456_321456l;
-//        long expResult = 0_777777_777777l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 36);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_3Count(
-//    ) {
-//        long parameter = 033225l;
-//        long expResult = parameter >> 3;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 3);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_34Count(
-//    ) {
-//        long parameter = 0_321456_321456l;
-//        long expResult = parameter >> 34;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 34);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_35Count(
-//    ) {
-//        long parameter = 0_321456_321456l;
-//        long expResult = parameter >> 35;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 35);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_36Count(
-//    ) {
-//        long parameter = 0_321456_321456l;
-//        long expResult = 0;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 36);
-//        assertEquals(expResult, result);
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_zeroCount(
-//    ) {
-//        long parameter = 033225l;
-//        long result = OnesComplement.rightShiftAlgebraic36(parameter, 0);
-//        assertEquals(parameter, result);
 //    }
 //
 //    @Test
@@ -1749,22 +1429,6 @@ public class Test_OnesComplement {
 //    }
 //
 //    @Test
-//    public void rightShiftCircular36_1(
-//    ) {
-//        long operand = 0_112233_445566l;
-//        long result = OnesComplement.rightShiftCircular36(operand, 6);
-//        assertEquals(0_661122_334455l, result);
-//    }
-//
-//    @Test
-//    public void rightShiftCircular36_2(
-//    ) {
-//        long operand = 0_112200_334400l;
-//        long result = OnesComplement.rightShiftCircular36(operand, 3);
-//        assertEquals(0_011220_033440l, result);
-//    }
-//
-//    @Test
 //    public void rightShiftCircular72_1(
 //    ) {
 //        long operand[] = { 0_000111_222333l, 0_444555_666777l };
@@ -1782,13 +1446,5 @@ public class Test_OnesComplement {
 //        long expected[] = { 0_000001_112220l, 0_000003_334440l };
 //        OnesComplement.rightShiftCircular72(operand, 6, result);
 //        assertArrayEquals(expected, result);
-//    }
-//
-//    @Test
-//    public void rightShiftLogical36(
-//    ) {
-//        long operand = 0_112233_445566l;
-//        long result = OnesComplement.rightShiftLogical36(operand, 9);
-//        assertEquals(0_000112_233445l, result);
 //    }
 }

@@ -18,7 +18,66 @@ public class Test_Word36 {
     //  This simplifies unit testing as well as reducing the opportunity for bugs.
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO need shifts and logic tests and multiplication and ones/twos-complement conversions
+    //TODO need logic tests and multiplication and ones/twos-complement conversions
+
+    //  Tests ----------------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void isNegative_PositiveZero(
+    ) {
+        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
+        assertFalse(word36.isNegative());
+    }
+
+    @Test
+    public void isNegative_PositiveInteger(
+    ) {
+        Word36 word36 = new Word36(0_377777_777777L);
+        assertFalse(word36.isNegative());
+    }
+
+    @Test
+    public void isNegative_NegativeZero(
+    ) {
+        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
+        assertTrue(word36.isNegative());
+    }
+
+    @Test
+    public void isNegative_NegativeInteger(
+    ) {
+        Word36 word36 = new Word36(0_400000_000000L);
+        assertTrue(word36.isNegative());
+    }
+
+    @Test
+    public void isPositive_PositiveZero(
+    ) {
+        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
+        assertTrue(word36.isPositive());
+    }
+
+    @Test
+    public void isPositive_PositiveInteger(
+    ) {
+        Word36 word36 = new Word36(0_377777_777777L);
+        assertTrue(word36.isPositive());
+    }
+
+    @Test
+    public void isPositive_NegativeZero(
+    ) {
+        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
+        assertFalse(word36.isPositive());
+    }
+
+    @Test
+    public void isPositive_NegativeInteger(
+    ) {
+        Word36 word36 = new Word36(0_400000_000000L);
+        assertFalse(word36.isPositive());
+    }
+
 
     //  Arithmetic -----------------------------------------------------------------------------------------------------------------
 
@@ -128,6 +187,38 @@ public class Test_Word36 {
         assertEquals(Word36.POSITIVE_ZERO, w1);
         assertTrue(f._carry);
         assertFalse(f._overflow);
+    }
+
+    @Test
+    public void negate36_PositiveOne(
+    ) {
+        Word36 word36 = new Word36(Word36.POSITIVE_ONE);
+        word36.negate();
+        assertEquals(Word36.NEGATIVE_ONE._value, word36.getW());
+    }
+
+    @Test
+    public void negate36_PositiveZero(
+    ) {
+        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
+        word36.negate();
+        assertEquals(Word36.NEGATIVE_ZERO._value, word36.getW());
+    }
+
+    @Test
+    public void negate36_NegativeOne(
+    ) {
+        Word36 word36 = new Word36(Word36.NEGATIVE_ONE);
+        word36.negate();
+        assertEquals(Word36.POSITIVE_ONE._value, word36.getW());
+    }
+
+    @Test
+    public void negate36_NegativeZero(
+    ) {
+        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
+        word36.negate();
+        assertEquals(Word36.POSITIVE_ZERO._value, word36.getW());
     }
 
 
@@ -450,6 +541,213 @@ public class Test_Word36 {
     }
 
 
+    //  Shifts ---------------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void leftShiftCircular36_by0(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_111222_333444L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftCircular(0);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftCircular36_by3(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_112223_334441L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftCircular(3);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftCircular36_by36(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_111222_333444L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftCircular(36);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftCircular36_byNeg(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_441112_223334L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftCircular(-6);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftLogical36_by3(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_112223_334440L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftLogical(3);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftLogical36_by36(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftLogical(36);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftLogical36_negCount(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_001112_223334L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftLogical(-6);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void leftShiftLogical36_zeroCount(
+    ) {
+        long parameter = 0_111222_333444L;
+        long expected = 0_111222_333444L;
+        Word36 word36 = new Word36(parameter);
+        word36.leftShiftLogical(0);
+        assertEquals(expected, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_negCount(
+    ) {
+        long parameter = 033225L;
+        long expResult = 0332250L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(-3);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_3Count(
+    ) {
+        long parameter = 0400000_112233L;
+        long expResult = 0740000_011223L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(3);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_34Count(
+    ) {
+        long parameter = 0_421456_321456L;
+        long expResult = 0_777777_777776L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(34);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_35Count(
+    ) {
+        long parameter = 0_421456_321456L;
+        long expResult = 0_777777_777777L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(35);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_36Count(
+    ) {
+        long parameter = 0_421456_321456L;
+        long expResult = 0_777777_777777L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(36);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_3Count(
+    ) {
+        long parameter = 033225L;
+        long expResult = parameter >> 3;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(3);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_34Count(
+    ) {
+        long parameter = 0_321456_321456L;
+        long expResult = parameter >> 34;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(34);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_35Count(
+    ) {
+        long parameter = 0_321456_321456L;
+        long expResult = parameter >> 35;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(35);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_36Count(
+    ) {
+        long parameter = 0_321456_321456L;
+        long expResult = 0;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(36);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_zeroCount(
+    ) {
+        long parameter = 033225L;
+        long expResult = 033225L;
+        Word36 word36 = new Word36(parameter);
+        word36.rightShiftAlgebraic(0);
+        assertEquals(expResult, word36.getW());
+    }
+
+    @Test
+    public void rightShiftCircular_1(
+    ) {
+        Word36 word36 = new Word36(0_112233_445566L);
+        word36.rightShiftCircular(6);
+        assertEquals(0_661122_334455L, word36.getW());
+    }
+
+    @Test
+    public void rightShiftCircular_2(
+    ) {
+        Word36 word36 = new Word36(0_112200_334400L);
+        word36.rightShiftCircular(3);
+        assertEquals(0_011220_033440L, word36.getW());
+    }
+
+    @Test
+    public void rightShiftLogical(
+    ) {
+        Word36 word36 = new Word36(0_112233_445566L);
+        word36.rightShiftLogical(9);
+        assertEquals(0_000112_233445L, word36.getW());
+    }
+
+
     //  Display --------------------------------------------------------------------------------------------------------------------
 
     @Test
@@ -479,42 +777,42 @@ public class Test_Word36 {
     @Test
     public void stringToWord36ASCII(
     ) {
-        Word36 w = Word36.stringToWord36ASCII("Help");
+        Word36 w = Word36.stringToWordASCII("Help");
         assertEquals(0_110_145_154_160L, w.getW());
     }
 
     @Test
     public void stringToWord36ASCII_over(
     ) {
-        Word36 w = Word36.stringToWord36ASCII("HelpSlop");
+        Word36 w = Word36.stringToWordASCII("HelpSlop");
         assertEquals(0_110_145_154_160L, w.getW());
     }
 
     @Test
     public void stringToWord36ASCII_partial(
     ) {
-        Word36 w = Word36.stringToWord36ASCII("01");
+        Word36 w = Word36.stringToWordASCII("01");
         assertEquals(0_060_061_040_040L, w.getW());
     }
 
     @Test
     public void stringToWord36Fieldata(
     ) {
-        Word36 w = Word36.stringToWord36Fieldata("Abc@23");
+        Word36 w = Word36.stringToWordFieldata("Abc@23");
         assertEquals(0_060710_006263L, w.getW());
     }
 
     @Test
     public void stringToWord36Fieldata_over(
     ) {
-        Word36 w = Word36.stringToWord36Fieldata("A B C@D E F");
+        Word36 w = Word36.stringToWordFieldata("A B C@D E F");
         assertEquals(0_060507_051000L, w.getW());
     }
 
     @Test
     public void stringToWord36Fieldata_partial(
     ) {
-        Word36 w = Word36.stringToWord36Fieldata("1234");
+        Word36 w = Word36.stringToWordFieldata("1234");
         assertEquals(0_616263_640505L, w.getW());
     }
 

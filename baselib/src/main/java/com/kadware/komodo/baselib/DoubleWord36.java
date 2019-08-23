@@ -72,6 +72,13 @@ public class DoubleWord36 {
     public DoubleWord36(BigInteger value)   { _value = value; }
     public DoubleWord36(DoubleWord36 value) { _value = value._value; }
 
+    public DoubleWord36(
+        final long high,
+        final long low
+    ) {
+        _value = BigInteger.valueOf(high).shiftLeft(36).or(BigInteger.valueOf(low));
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Overrides
@@ -126,6 +133,14 @@ public class DoubleWord36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     public BigInteger getTwosComplement() { return getTwosComplement(_value); }
+
+    /**
+     * Converts to two single word objects.
+     * result[0] is the high value, result[1] is the low value
+     */
+    public Word36[] getWords() {
+        return getWords(_value);
+    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -304,7 +319,7 @@ public class DoubleWord36 {
 //    }
 //
 //    /**
-//     * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
+//     * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
 //     * Actual implementation may not involve iterative shifting.
 //     * @param value value to be shifted
 //     * @param count number of bits to be shifted
@@ -324,29 +339,29 @@ public class DoubleWord36 {
 //            return ((value << actualCount) & BIT_MASK) | residue;
 //        }
 //    }
-//
-//    /**
-//     * Shifts the given 36-bit value left by a number of bits
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static long leftShiftLogical(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftLogical(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            return (count > 35) ? 0 : (value << count) & BIT_MASK;
-//        }
-//    }
-//
+
+    /**
+     * Shifts the given 72-bit value left by a number of bits
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger leftShiftLogical(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftLogical(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            return (count > 35) ? BigInteger.ZERO : value.shiftLeft(count).and(BIT_MASK);
+        }
+    }
+
 //    /**
 //     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
-//     * @param value 36-bit value to be shifted
+//     * @param value 72-bit value to be shifted
 //     * @param count number of bits to be shifted
 //     * @return resulting value
 //     */
@@ -372,7 +387,7 @@ public class DoubleWord36 {
 //    }
 //
 //    /**
-//     * Shifts the given 36-bit value right, with bit[36] rotating to bit[1] at each iteration.
+//     * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
 //     * Actual implementation may not involve iterative shifting.
 //     * @param value value to be shifted
 //     * @param count number of bits to be shifted
@@ -393,150 +408,109 @@ public class DoubleWord36 {
 //            return ((value >> actualCount) | residue);
 //        }
 //    }
-//
-//    /**
-//     * Shifts the given 36-bit value right by a number of bits
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static long rightShiftLogical(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftLogical(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            return (count > 35) ? 0 : value >> count;
-//        }
-//    }
-//
-//
-//    //  Conversion from String to Word36 -------------------------------------------------------------------------------------------
-//
-//    /**
-//     * Populates this object with quarter-words derived from the ASCII characters in the source string.
-//     * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
-//     * Any characters in the string beyond the fourth are ignored.
-//     * @param source string to be converted
-//     * @return converted data
-//     */
-//    public static DoubleWord36 stringToWord36ASCII(
-//        final String source
-//    ) {
-//        DoubleWord36 w = new DoubleWord36(0_040_040_040_040L);
-//        switch (source.length() > 4 ? 4 : source.length()) {
-//            case 4:
-//                w.setQ4(source.charAt(3) & 0xff);
-//                //  fall thru
-//            case 3:
-//                w.setQ3(source.charAt(2) & 0xff);
-//                //  fall thru
-//            case 2:
-//                w.setQ2(source.charAt(1) & 0xff);
-//                //  fall thru
-//            case 1:
-//                w.setQ1(source.charAt(0) & 0xff);
-//        }
-//
-//        return w;
-//    }
-//
-//    /**
-//     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
-//     * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
-//     * blanks as necessary. Any characters in the string beyond the sixth are ignored.
-//     * @param source string to be converted
-//     * @return converted data
-//     */
-//    public static DoubleWord36 stringToWord36Fieldata(
-//        final String source
-//    ) {
-//        DoubleWord36 w = new DoubleWord36(0_050505_050505L);
-//        switch (source.length() > 6 ? 6 : source.length()) {
-//            case 6:
-//                w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
-//                //  fall thru
-//            case 5:
-//                w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
-//                //  fall thru
-//            case 4:
-//                w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
-//                //  fall thru
-//            case 3:
-//                w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
-//                //  fall thru
-//            case 2:
-//                w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
-//                //  fall thru
-//            case 1:
-//                w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
-//        }
-//        return w;
-//    }
-//
-//
-//    //  Formatting for display -----------------------------------------------------------------------------------------------------
-//
-//    /**
-//     * Given an integer which represents an ASCII character, we return the corresponding char if it is displayable,
-//     * or else the alternate character.
-//     * @param value value to be converted
-//     * @param alternate character to be returned if the value presentes an undisplayable character
-//     */
-//    private static char getASCIIForDisplay(
-//        final int value,
-//        final char alternate
-//    ) {
-//        if ((value < 32) || (value >= 127)) {
-//            return alternate;
-//        } else {
-//            return (char) value;
-//        }
-//    }
-//
-//    /**
-//     * Interprets the given 36-bit value as a sequence of 4 ASCII characters, and produces those characters as a result
-//     * @param value 36-bit value
-//     * @return displayable result
-//     */
-//    public static String toASCII(
-//        final long value
-//    ) {
-//        return String.format("%s%s%s%s",
-//                             getASCIIForDisplay((int)getQ1(value), '.'),
-//                             getASCIIForDisplay((int)getQ2(value), '.'),
-//                             getASCIIForDisplay((int)getQ3(value), '.'),
-//                             getASCIIForDisplay((int)getQ4(value), '.'));
-//    }
-//
-//    /**
-//     * Interprets the given 36-bit value as a sequence of 6 Fieldata characters, and produces those characters as a result
-//     * @param value 36-bit value
-//     * @return displayable result
-//     */
-//    public static String toFieldata(
-//        final long value
-//    ) {
-//        return String.format("%s%s%s%s%s%s",
-//                             ASCII_FROM_FIELDATA[(int) getS1(value)],
-//                             ASCII_FROM_FIELDATA[(int) getS2(value)],
-//                             ASCII_FROM_FIELDATA[(int) getS3(value)],
-//                             ASCII_FROM_FIELDATA[(int) getS4(value)],
-//                             ASCII_FROM_FIELDATA[(int) getS5(value)],
-//                             ASCII_FROM_FIELDATA[(int) getS6(value)]);
-//    }
-//
-//    /**
-//     * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
-//     * @param value 36-bit value
-//     * @return displayable result
-//     */
-//    public static String toOctal(
-//        final long value
-//    ) {
-//        return String.format("%012o", value);
-//    }
+
+    /**
+     * Shifts the given 72-bit value right by a number of bits
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger rightShiftLogical(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return leftShiftLogical(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            return (count > 71) ? BigInteger.ZERO : value.shiftRight(count);
+        }
+    }
+
+
+    //  Conversion from String to Word36 -------------------------------------------------------------------------------------------
+
+    /**
+     * Populates this object with quarter-words derived from the ASCII characters in the source string.
+     * If the string does not contain at least 8 characters, we pad the resulting output with blanks as necessary.
+     * Any characters in the string beyond the eighth are ignored.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static DoubleWord36 stringToWordASCII(
+        final String source
+    ) {
+        String s1 = source.substring(0, 4);
+        String s2 = source.length() > 4 ? source.substring(4, 8) : "";
+        Word36 w1 = Word36.stringToWordASCII(s1);
+        Word36 w2 = Word36.stringToWordASCII(s2);
+        return new DoubleWord36(w1._value, w2._value);
+    }
+
+    /**
+     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
+     * in the source string. If the string does not contain at least 12 characters, we pad the resulting output with
+     * blanks as necessary. Any characters in the string beyond the twelfth are ignored.
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static DoubleWord36 stringToWordFieldata(
+        final String source
+    ) {
+        String s1 = source.substring(0, 6);
+        String s2 = source.length() > 6 ? source.substring(6, 12) : "";
+        Word36 w1 = Word36.stringToWordFieldata(s1);
+        Word36 w2 = Word36.stringToWordFieldata(s2);
+        return new DoubleWord36(w1._value, w2._value);
+    }
+
+
+    //  Formatting for display -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Converts to two single word objects.
+     * result[0] is the high value, result[1] is the low value
+     */
+    public static Word36[] getWords(
+        final BigInteger value
+    ) {
+        Word36[] words = new Word36[2];
+        words[0] = new Word36(value.shiftRight(36).longValue());
+        words[1] = new Word36(value.and(SHORT_BIT_MASK).longValue());
+        return words;
+    }
+
+    /**
+     * Interprets the given 72-bit value as a sequence of 8 ASCII characters, and produces those characters as a result
+     */
+    public static String toASCII(
+        final BigInteger value
+    ) {
+        Word36[] words = getWords(value);
+        return String.format("%s%s",
+                             Word36.toASCII(words[0]._value),
+                             Word36.toASCII(words[1]._value));
+    }
+
+    /**
+     * Interprets the given 72-bit value as a sequence of 12 Fieldata characters, and produces those characters as a result
+     */
+    public static String toFieldata(
+        final BigInteger value
+    ) {
+        Word36[] words = getWords(value);
+        return String.format("%s%s",
+                             Word36.toFieldata(words[0]._value),
+                             Word36.toFieldata(words[1]._value));
+    }
+
+    /**
+     * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
+     */
+    public static String toOctal(
+        final BigInteger value
+    ) {
+        return String.format("%024o", value);
+    }
 }

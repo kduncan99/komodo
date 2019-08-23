@@ -962,7 +962,7 @@ public class Word36 {
     }
 
     /**
-     * Shifts the given 36-bit value left, with bit[1] rotating to bit[36] at each iteration.
+     * Shifts the given 36-bit value left, with bit[0] rotating to bit[35] at each iteration.
      * Actual implementation may not involve iterative shifting.
      * @param value value to be shifted
      * @param count number of bits to be shifted
@@ -1030,7 +1030,7 @@ public class Word36 {
     }
 
     /**
-     * Shifts the given 36-bit value right, with bit[36] rotating to bit[1] at each iteration.
+     * Shifts the given 36-bit value right, with bit[35] rotating to bit[0] at each iteration.
      * Actual implementation may not involve iterative shifting.
      * @param value value to be shifted
      * @param count number of bits to be shifted
@@ -1123,7 +1123,7 @@ public class Word36 {
      * @param source string to be converted
      * @return converted data
      */
-    public static Word36 stringToWord36ASCII(
+    public static Word36 stringToWordASCII(
         final String source
     ) {
         Word36 w = new Word36(0_040_040_040_040L);
@@ -1151,7 +1151,7 @@ public class Word36 {
      * @param source string to be converted
      * @return converted data
      */
-    public static Word36 stringToWord36Fieldata(
+    public static Word36 stringToWordFieldata(
         final String source
     ) {
         Word36 w = new Word36(0_050505_050505L);
