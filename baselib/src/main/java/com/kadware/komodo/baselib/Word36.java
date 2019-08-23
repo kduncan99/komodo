@@ -24,9 +24,29 @@ public class Word36 {
 
     public static class AdditionResult {
         public final Flags _flags;
-        public final long _value;
+        public final Word36 _result;
 
         public AdditionResult(
+            final StaticAdditionResult sar
+        ) {
+            _flags = sar._flags;
+            _result = new Word36(sar._value);
+        }
+
+        public AdditionResult(
+            final Flags flags,
+            final Word36 result
+        ) {
+            _flags = flags;
+            _result = result;
+        }
+    }
+
+    public static class StaticAdditionResult {
+        public final Flags _flags;
+        public final long _value;
+
+        public StaticAdditionResult(
             final Flags flags,
             final long value
         ) {
@@ -57,10 +77,14 @@ public class Word36 {
     public static final long CARRY_BIT      = BIT_MASK + 1L;
     public static final long NEGATIVE_BIT   = 0_400000_000000L;
 
-    public static final Word36 NEGATIVE_ONE = new Word36(0_777777_777776L);
-    public static final Word36 NEGATIVE_ZERO = new Word36(0_777777_777777L);
-    public static final Word36 POSITIVE_ONE = new Word36(1);
-    public static final Word36 POSITIVE_ZERO = new Word36(0);
+    public static final long NEGATIVE_ONE   = 0_777777_777776L;
+    public static final long NEGATIVE_ZERO  = 0_777777_777777L;
+    public static final long POSITIVE_ONE   = 01L;
+    public static final long POSITIVE_ZERO  = 0L;
+    public static final Word36 W36_NEGATIVE_ONE  = new Word36(NEGATIVE_ONE);
+    public static final Word36 W36_NEGATIVE_ZERO = new Word36(NEGATIVE_ZERO);
+    public static final Word36 W36_POSITIVE_ONE  = new Word36(POSITIVE_ONE);
+    public static final Word36 W36_POSITIVE_ZERO = new Word36(POSITIVE_ZERO);
 
     public static final long MASK_B0        = 1L << 35;
     public static final long MASK_B1        = 1L << 34;
@@ -217,7 +241,7 @@ public class Word36 {
     //  Data items (not much here)
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    protected long _value = 0;
+    protected final long _value;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -276,22 +300,22 @@ public class Word36 {
     public long getXT3() { return getXT3(_value); }
     public long getW() { return _value; }
 
-    public void setH1(long partialValue) { _value = setH1(_value, partialValue); }
-    public void setH2(long partialValue) { _value = setH2(_value, partialValue); }
-    public void setQ1(long partialValue) { _value = setQ1(_value, partialValue); }
-    public void setQ2(long partialValue) { _value = setQ2(_value, partialValue); }
-    public void setQ3(long partialValue) { _value = setQ3(_value, partialValue); }
-    public void setQ4(long partialValue) { _value = setQ4(_value, partialValue); }
-    public void setS1(long partialValue) { _value = setS1(_value, partialValue); }
-    public void setS2(long partialValue) { _value = setS2(_value, partialValue); }
-    public void setS3(long partialValue) { _value = setS3(_value, partialValue); }
-    public void setS4(long partialValue) { _value = setS4(_value, partialValue); }
-    public void setS5(long partialValue) { _value = setS5(_value, partialValue); }
-    public void setS6(long partialValue) { _value = setS6(_value, partialValue); }
-    public void setT1(long partialValue) { _value = setT1(_value, partialValue); }
-    public void setT2(long partialValue) { _value = setT2(_value, partialValue); }
-    public void setT3(long partialValue) { _value = setT3(_value, partialValue); }
-    public void setW(long value) { _value = value & BIT_MASK; }
+    public Word36 setH1(long partialValue)  { return new Word36(setH1(_value, partialValue)); }
+    public Word36 setH2(long partialValue)  { return new Word36(setH2(_value, partialValue)); }
+    public Word36 setQ1(long partialValue)  { return new Word36(setQ1(_value, partialValue)); }
+    public Word36 setQ2(long partialValue)  { return new Word36(setQ2(_value, partialValue)); }
+    public Word36 setQ3(long partialValue)  { return new Word36(setQ3(_value, partialValue)); }
+    public Word36 setQ4(long partialValue)  { return new Word36(setQ4(_value, partialValue)); }
+    public Word36 setS1(long partialValue)  { return new Word36(setS1(_value, partialValue)); }
+    public Word36 setS2(long partialValue)  { return new Word36(setS2(_value, partialValue)); }
+    public Word36 setS3(long partialValue)  { return new Word36(setS3(_value, partialValue)); }
+    public Word36 setS4(long partialValue)  { return new Word36(setS4(_value, partialValue)); }
+    public Word36 setS5(long partialValue)  { return new Word36(setS5(_value, partialValue)); }
+    public Word36 setS6(long partialValue)  { return new Word36(setS6(_value, partialValue)); }
+    public Word36 setT1(long partialValue)  { return new Word36(setT1(_value, partialValue)); }
+    public Word36 setT2(long partialValue)  { return new Word36(setT2(_value, partialValue)); }
+    public Word36 setT3(long partialValue)  { return new Word36(setT3(_value, partialValue)); }
+    public Word36 setW(long value)          { return new Word36(value); }
 
 
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
@@ -309,42 +333,39 @@ public class Word36 {
     /**
      * Determines if the value of this object is zero (positive or negative)
      */
-    public boolean isZero() { return (_value == POSITIVE_ZERO._value) || (_value == NEGATIVE_ZERO._value); }
+    public boolean isZero() { return (_value == POSITIVE_ZERO) || (_value == NEGATIVE_ZERO); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     /**
      * Arithmetically adds another Word36 object to this object.
-     * @return carry/overflow flags object
      */
-    public Flags add(
+    public AdditionResult add(
         final Word36 addend
     ) {
-        AdditionResult ar = add(_value, addend._value);
-        _value = ar._value;
-        return ar._flags;
+        return new AdditionResult(add(_value, addend._value));
     }
 
-    public void negate() { _value = negate(_value); }
+    public Word36 negate() { return new Word36(negate(_value)); }
 
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
-    public void logicalAnd(Word36 operand)  { _value = logicalAnd(_value, operand._value); }
-    public void logicalNot()                { _value = logicalNot(_value); }
-    public void logicalOr(Word36 operand)   { _value = logicalOr(_value, operand._value); }
-    public void logicalXor(Word36 operand)  { _value = logicalXor(_value, operand._value); }
+    public Word36 logicalAnd(Word36 operand)    { return new Word36(logicalAnd(_value, operand._value)); }
+    public Word36 logicalNot()                  { return new Word36(logicalNot(_value)); }
+    public Word36 logicalOr(Word36 operand)     { return new Word36(logicalOr(_value, operand._value)); }
+    public Word36 logicalXor(Word36 operand)    { return new Word36(logicalXor(_value, operand._value)); }
 
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
-    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
-    public void leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); }
-    public void leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); }
-    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
-    public void rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); }
-    public void rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); }
+    public Word36 leftShiftAlgebraic(int count)   { return new Word36(leftShiftAlgebraic(_value, count)); }
+    public Word36 leftShiftCircular(int count)    { return new Word36(leftShiftCircular(_value, count)); }
+    public Word36 leftShiftLogical(int count)     { return new Word36(leftShiftLogical(_value, count)); }
+    public Word36 rightShiftAlgebraic(int count)  { return new Word36(rightShiftAlgebraic(_value, count)); }
+    public Word36 rightShiftCircular(int count)   { return new Word36(rightShiftCircular(_value, count)); }
+    public Word36 rightShiftLogical(int count)    { return new Word36(rightShiftLogical(_value, count)); }
 
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
@@ -358,223 +379,39 @@ public class Word36 {
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
 
-    public static boolean isNegative(
-        final long value
-    ) {
-        return (value & NEGATIVE_BIT) == NEGATIVE_BIT;
-    }
-
-    public static boolean isNegativeZero(
-        final long value
-    ) {
-        return value == NEGATIVE_ZERO._value;
-    }
-
-    public static boolean isPositive(
-        final long value
-    ) {
-        return (value & NEGATIVE_BIT) == 0;
-    }
-
-    public static boolean isPositiveZero(
-        final long value
-    ) {
-        return value == POSITIVE_ZERO._value;
-    }
-
-    public static boolean isZero(
-        final long value
-    ) {
-        return isPositiveZero(value) || isNegativeZero(value);
-    }
+    public static boolean isNegative(long value)        { return (value & NEGATIVE_BIT) == NEGATIVE_BIT; }
+    public static boolean isNegativeZero(long value)    { return value == NEGATIVE_ZERO; }
+    public static boolean isPositive(long value)        { return (value & NEGATIVE_BIT) == 0; }
+    public static boolean isPositiveZero(long value)    { return value == POSITIVE_ZERO; }
+    public static boolean isZero(long value)            { return isPositiveZero(value) || isNegativeZero(value); }
 
 
     //  Partial-word extraction ----------------------------------------------------------------------------------------------------
 
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getH1(
-        final long value
-    ) {
-        return (value & Word36.MASK_H1) >> 18;
-    }
+    public static long getH1(long value)    { return (value & Word36.MASK_H1) >> 18; }
+    public static long getH2(long value)    { return value & Word36.MASK_H2; }
+    public static long getQ1(long value)    { return (value & Word36.MASK_Q1) >> 27; }
+    public static long getQ2(long value)    { return (value & Word36.MASK_Q2) >> 18; }
+    public static long getQ3(long value)    { return (value & Word36.MASK_Q3) >> 9; }
+    public static long getQ4(long value)    { return value & Word36.MASK_Q4; }
+    public static long getS1(long value)    { return (value & Word36.MASK_S1) >> 30; }
+    public static long getS2(long value)    { return (value & Word36.MASK_S2) >> 24; }
+    public static long getS3(long value)    { return (value & Word36.MASK_S3) >> 18; }
+    public static long getS4(long value)    { return (value & Word36.MASK_S4) >> 12; }
+    public static long getS5(long value)    { return (value & Word36.MASK_S5) >> 6; }
+    public static long getS6(long value)    { return value & Word36.MASK_S6; }
+    public static long getT1(long value)    { return (value & Word36.MASK_T1) >> 24; }
+    public static long getT2(long value)    { return (value & Word36.MASK_T2) >> 12; }
+    public static long getT3(long value)    { return value & Word36.MASK_T3; }
 
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getH2(
-        final long value
-    ) {
-        return value & Word36.MASK_H2;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getQ1(
-        final long value
-    ) {
-        return (value & Word36.MASK_Q1) >> 27;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getQ2(
-        final long value
-    ) {
-        return (value & Word36.MASK_Q2) >> 18;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getQ3(
-        final long value
-    ) {
-        return (value & Word36.MASK_Q3) >> 9;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getQ4(
-        final long value
-    ) {
-        return value & Word36.MASK_Q4;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS1(
-        final long value
-    ) {
-        return (value & Word36.MASK_S1) >> 30;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS2(
-        final long value
-    ) {
-        return (value & Word36.MASK_S2) >> 24;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS3(
-        final long value
-    ) {
-        return (value & Word36.MASK_S3) >> 18;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS4(
-        final long value
-    ) {
-        return (value & Word36.MASK_S4) >> 12;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS5(
-        final long value
-    ) {
-        return (value & Word36.MASK_S5) >> 6;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getS6(
-        final long value
-    ) {
-        return value & Word36.MASK_S6;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getT1(
-        final long value
-    ) {
-        return (value & Word36.MASK_T1) >> 24;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getT2(
-        final long value
-    ) {
-        return (value & Word36.MASK_T2) >> 12;
-    }
-
-    /**
-     * Extracts a partial word (sign-unextended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getT3(
-        final long value
-    ) {
-        return value & Word36.MASK_T3;
-    }
-
-    /**
-     * Extracts a partial word (sign-extended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
-    public static long getXH1(
-        final long value
-    ) {
+    public static long getXH1(long value)
+    {
         long result = getH1(value);
         if ((result & 0400000) != 0)
             result |= 0777777_000000L;
         return result;
     }
 
-    /**
-     * Extracts a partial word (sign-extended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
     public static long getXH2(
         final long value
     ) {
@@ -584,11 +421,6 @@ public class Word36 {
         return result;
     }
 
-    /**
-     * Extracts a partial word (sign-extended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
     public static long getXT1(
         final long value
     ) {
@@ -598,11 +430,6 @@ public class Word36 {
         return result;
     }
 
-    /**
-     * Extracts a partial word (sign-extended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
     public static long getXT2(
         final long value
     ) {
@@ -612,11 +439,6 @@ public class Word36 {
         return result;
     }
 
-    /**
-     * Extracts a partial word (sign-extended) from the given parameter
-     * @param value 36-bit architectural value wrapped in a Java 64-bit signed int
-     * @return result
-     */
     public static long getXT3(
         final long value
     ) {
@@ -827,13 +649,13 @@ public class Word36 {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    public static AdditionResult add(
+    public static StaticAdditionResult add(
         final long operand1,
         final long operand2
     ) {
+        //  All values are ones-complement
         boolean neg1 = isNegative(operand1);
         boolean neg2 = isNegative(operand2);
-
         long result = addSimple(operand1, operand2);
         if ((result & CARRY_BIT) != 0) {
             result &= BIT_MASK;
@@ -841,18 +663,18 @@ public class Word36 {
         }
 
         boolean negRes = isNegative(result);
-
         boolean carry = result < 0 ? (neg1 && neg2) : (neg1 || neg2);
         boolean overflow = (neg1 == neg2) && (neg1 != negRes);
-        return new AdditionResult(new Flags(carry, overflow), result);
+        return new StaticAdditionResult(new Flags(carry, overflow), result);
     }
 
     public static long addSimple(
         final long operand1,
         final long operand2
     ) {
-        if ((operand1 == NEGATIVE_ZERO._value) && (operand2 == NEGATIVE_ZERO._value)) {
-            return NEGATIVE_ZERO._value;
+        //  certain values are twos-complement (native values) - all others are ones-complement
+        if ((operand1 == NEGATIVE_ZERO) && (operand2 == NEGATIVE_ZERO)) {
+            return NEGATIVE_ZERO;
         }
 
         long native1 = getTwosComplement(operand1);
@@ -892,6 +714,7 @@ public class Word36 {
     ) {
         return operand ^ 0_777777_777777L;
     }
+
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
@@ -1019,7 +842,7 @@ public class Word36 {
         } else {
             boolean wasNegative = isNegative(value);
             if (count > 35) {
-                return wasNegative ? NEGATIVE_ZERO._value : 0;
+                return wasNegative ? NEGATIVE_ZERO : 0;
             } else {
                 long result = value >> count;
                 if (wasNegative)
@@ -1126,22 +949,17 @@ public class Word36 {
     public static Word36 stringToWordASCII(
         final String source
     ) {
-        Word36 w = new Word36(0_040_040_040_040L);
-        switch (source.length() > 4 ? 4 : source.length()) {
-            case 4:
-                w.setQ4(source.charAt(3) & 0xff);
-                //  fall thru
-            case 3:
-                w.setQ3(source.charAt(2) & 0xff);
-                //  fall thru
-            case 2:
-                w.setQ2(source.charAt(1) & 0xff);
-                //  fall thru
-            case 1:
-                w.setQ1(source.charAt(0) & 0xff);
+        long value = 0;
+        for (int cx = 0; cx < 4; ++cx) {
+            value <<= 9;
+            if (cx < source.length()) {
+                value |= source.charAt(cx) & 0xFF;
+            } else {
+                value |= 040;
+            }
         }
 
-        return w;
+        return new Word36(value);
     }
 
     /**
@@ -1154,27 +972,17 @@ public class Word36 {
     public static Word36 stringToWordFieldata(
         final String source
     ) {
-        Word36 w = new Word36(0_050505_050505L);
-        switch (source.length() > 6 ? 6 : source.length()) {
-            case 6:
-                w.setS6(FIELDATA_FROM_ASCII[source.charAt(5) & 0xff]);
-                //  fall thru
-            case 5:
-                w.setS5(FIELDATA_FROM_ASCII[source.charAt(4) & 0xff]);
-                //  fall thru
-            case 4:
-                w.setS4(FIELDATA_FROM_ASCII[source.charAt(3) & 0xff]);
-                //  fall thru
-            case 3:
-                w.setS3(FIELDATA_FROM_ASCII[source.charAt(2) & 0xff]);
-                //  fall thru
-            case 2:
-                w.setS2(FIELDATA_FROM_ASCII[source.charAt(1) & 0xff]);
-                //  fall thru
-            case 1:
-                w.setS1(FIELDATA_FROM_ASCII[source.charAt(0) & 0xff]);
+        long value = 0;
+        for (int cx = 0; cx < 6; ++cx) {
+            value <<= 6;
+            if (cx < source.length()) {
+                value |= FIELDATA_FROM_ASCII[source.charAt(cx) & 0xff];
+            } else {
+                value |= 05;
+            }
         }
-        return w;
+
+        return new Word36(value);
     }
 
 

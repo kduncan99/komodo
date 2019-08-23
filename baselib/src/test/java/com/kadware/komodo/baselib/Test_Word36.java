@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.baselib;
 
+import java.math.BigInteger;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -17,8 +18,6 @@ public class Test_Word36 {
     //  Where possible, the instance methods leverage the logic in the static methods.
     //  This simplifies unit testing as well as reducing the opportunity for bugs.
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    //TODO need tests for multiplication
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
@@ -35,10 +34,13 @@ public class Test_Word36 {
     public void toTwos_1() { assertEquals(0L, Word36.getTwosComplement(0)); }
 
     @Test
-    public void toTwos_2() { assertEquals(0_377777_777777L, Word36.getTwosComplement(0_377777_777777L)); }
+    public void toTwos_2() { assertEquals(0L, Word36.getTwosComplement(Word36.BIT_MASK)); }
 
     @Test
-    public void toTwos_3() { assertEquals(0L - 0_314003_300624L, Word36.getTwosComplement(0463774_477153L)); }
+    public void toTwos_3() { assertEquals(0_377777_777777L, Word36.getTwosComplement(0_377777_777777L)); }
+
+    @Test
+    public void toTwos_4() { assertEquals(0L - 0_314003_300624L, Word36.getTwosComplement(0463774_477153L)); }
 
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
@@ -218,113 +220,113 @@ public class Test_Word36 {
     @Test
     public void setH1() {
         Word36 word36 = new Word36(0_012345);
-        word36.setH1(0_775533L);
-        assertEquals(0_775533_012345L, word36.getW());
+        Word36 result = word36.setH1(0_775533L);
+        assertEquals(0_775533_012345L, result.getW());
     }
 
     @Test
     public void setH2() {
         Word36 word36 = new Word36(0_012345_543210L);
-        word36.setH2(0_775533L);
-        assertEquals(0_012345_775533L, word36.getW());
+        Word36 result = word36.setH2(0_775533L);
+        assertEquals(0_012345_775533L, result.getW());
     }
 
     @Test
     public void setQ1() {
         Word36 word36 = new Word36(0_525252_252525L);
-        word36.setQ1(0252);
-        assertEquals(0_252252_252525L, word36.getW());
+        Word36 result = word36.setQ1(0252);
+        assertEquals(0_252252_252525L, result.getW());
     }
 
     @Test
     public void setQ2() {
         Word36 word36 = new Word36(0_525252_252525L);
-        word36.setQ2(0525);
-        assertEquals(0_525525_252525L, word36.getW());
+        Word36 result = word36.setQ2(0525);
+        assertEquals(0_525525_252525L, result.getW());
     }
 
     @Test
     public void setQ3() {
         Word36 word36 = new Word36(0_525252_252525L);
-        word36.setQ3(0525);
-        assertEquals(0_525252_525525L, word36.getW());
+        Word36 result = word36.setQ3(0525);
+        assertEquals(0_525252_525525L, result.getW());
     }
 
     @Test
     public void setQ4() {
         Word36 word36 = new Word36(0_525252_252525L);
-        word36.setQ4(0252);
-        assertEquals(0_525252_252252L, word36.getW());
+        Word36 result = word36.setQ4(0252);
+        assertEquals(0_525252_252252L, result.getW());
     }
 
     @Test
     public void setS1() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS1(0);
-        assertEquals(0_007777_777777L, word36.getW());
+        Word36 result = word36.setS1(0);
+        assertEquals(0_007777_777777L, result.getW());
     }
 
     @Test
     public void setS2() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS2(0);
-        assertEquals(0_770077_777777L, word36.getW());
+        Word36 result = word36.setS2(0);
+        assertEquals(0_770077_777777L, result.getW());
     }
 
     @Test
     public void setS3() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS3(0);
-        assertEquals(0_777700_777777L, word36.getW());
+        Word36 result = word36.setS3(0);
+        assertEquals(0_777700_777777L, result.getW());
     }
 
     @Test
     public void setS4() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS4(0);
-        assertEquals(0_777777_007777L, word36.getW());
+        Word36 result = word36.setS4(0);
+        assertEquals(0_777777_007777L, result.getW());
     }
 
     @Test
     public void setS5() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS5(0);
-        assertEquals(0_777777_770077L, word36.getW());
+        Word36 result = word36.setS5(0);
+        assertEquals(0_777777_770077L, result.getW());
     }
 
     @Test
     public void setS6() {
         Word36 word36 = new Word36(0_777777_777777L);
-        word36.setS6(0);
-        assertEquals(0_777777_777700L, word36.getW());
+        Word36 result = word36.setS6(0);
+        assertEquals(0_777777_777700L, result.getW());
     }
 
     @Test
     public void setT1() {
         Word36 word36 = new Word36(0_4444_4444_4444L);
-        word36.setT1(03333);
-        assertEquals(0_3333_4444_4444L, word36.getW());
+        Word36 result = word36.setT1(03333);
+        assertEquals(0_3333_4444_4444L, result.getW());
     }
 
     @Test
     public void setT2() {
         Word36 word36 = new Word36(0_4444_4444_4444L);
-        word36.setT2(03333);
-        assertEquals(0_4444_3333_4444L, word36.getW());
+        Word36 result = word36.setT2(03333);
+        assertEquals(0_4444_3333_4444L, result.getW());
     }
 
     @Test
     public void setT3() {
         Word36 word36 = new Word36(0_4444_4444_4444L);
-        word36.setT3(03333);
-        assertEquals(0_4444_4444_3333L, word36.getW());
+        Word36 result = word36.setT3(03333);
+        assertEquals(0_4444_4444_3333L, result.getW());
     }
 
     @Test
     public void setW() {
         Word36 word36 = new Word36(0_4444_4444_4444L);
-        word36.setW(0);
-        assertEquals(0, word36.getW());
+        Word36 result = word36.setW(0);
+        assertEquals(0, result.getW());
     }
 
 
@@ -334,136 +336,156 @@ public class Test_Word36 {
     public void addPosPos() {
         Word36 w1 = new Word36(25);
         Word36 w2 = new Word36(1027);
-        Word36.Flags f = w1.add(w2);
-        assertEquals(1052, w1.getTwosComplement());
-        assertFalse(f._carry);
-        assertFalse(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(1052, ar._result.getTwosComplement());
+        assertFalse(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addPosPosOverflow() {
         Word36 w1 = new Word36(0_377777_777777L);
         Word36 w2 = new Word36(1);
-        Word36.Flags f = w1.add(w2);
-        assertFalse(f._carry);
-        assertTrue(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertFalse(ar._flags._carry);
+        assertTrue(ar._flags._overflow);
     }
 
     @Test
     public void addPosNegResultPos() {
         Word36 w1 = new Word36(Word36.getOnesComplement(1234));
         Word36 w2 = new Word36(Word36.getOnesComplement(-234));
-        Word36.Flags f = w1.add(w2);
-        assertEquals(1000, w1.getTwosComplement());
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(1000, ar._result.getTwosComplement());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addPosNegResultNeg() {
         Word36 w1 = new Word36(Word36.getOnesComplement(234));
         Word36 w2 = new Word36(Word36.getOnesComplement(-1234));
-        Word36.Flags f = w1.add(w2);
-        assertEquals(-1000, w1.getTwosComplement());
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(-1000, ar._result.getTwosComplement());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addNegNeg() {
         Word36 w1 = new Word36(Word36.getOnesComplement(-1992));
         Word36 w2 = new Word36(Word36.getOnesComplement(-2933));
-        Word36.Flags f = w1.add(w2);
-        assertEquals(-1992-2933, w1.getTwosComplement());
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(-1992-2933, ar._result.getTwosComplement());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addNegNegOverflow() {
         Word36 w1 = new Word36(0_400000_000000L);
         Word36 w2 = new Word36(0_777777_777776L);
-        Word36.Flags f = w1.add(w2);
-        assertTrue(f._carry);
-        assertTrue(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertTrue(ar._flags._carry);
+        assertTrue(ar._flags._overflow);
     }
 
     @Test
     public void addPosZPosZ() {
-        Word36 w1 = new Word36(Word36.POSITIVE_ZERO._value);
-        Word36 w2 = new Word36(Word36.POSITIVE_ZERO._value);
-        Word36.Flags f = w1.add(w2);
-        assertEquals(Word36.POSITIVE_ZERO, w1);
-        assertFalse(f._carry);
-        assertFalse(f._overflow);
+        Word36 w1 = Word36.W36_POSITIVE_ZERO;
+        Word36 w2 = Word36.W36_POSITIVE_ZERO;
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(Word36.POSITIVE_ZERO, ar._result.getW());
+        assertFalse(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addPosZNegZ() {
-        Word36 w1 = new Word36(Word36.POSITIVE_ZERO._value);
-        Word36 w2 = new Word36(Word36.NEGATIVE_ZERO._value);
-        Word36.Flags f = w1.add(w2);
-        assertEquals(Word36.POSITIVE_ZERO, w1);
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36 w1 = Word36.W36_POSITIVE_ZERO;
+        Word36 w2 = Word36.W36_NEGATIVE_ZERO;
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(Word36.POSITIVE_ZERO, ar._result.getW());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addNegZPosZ() {
-        Word36 w1 = new Word36(Word36.NEGATIVE_ZERO._value);
-        Word36 w2 = new Word36(Word36.POSITIVE_ZERO._value);
-        Word36.Flags f = w1.add(w2);
-        assertEquals(Word36.POSITIVE_ZERO, w1);
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36 w1 = Word36.W36_NEGATIVE_ZERO;
+        Word36 w2 = Word36.W36_POSITIVE_ZERO;
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(Word36.POSITIVE_ZERO, ar._result.getW());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addNegZNegZ() {
-        Word36 w1 = new Word36(Word36.NEGATIVE_ZERO._value);
-        Word36 w2 = new Word36(Word36.NEGATIVE_ZERO._value);
-        Word36.Flags f = w1.add(w2);
-        assertEquals(Word36.NEGATIVE_ZERO, w1);
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36 w1 = Word36.W36_NEGATIVE_ZERO;
+        Word36 w2 = Word36.W36_NEGATIVE_ZERO;
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(Word36.NEGATIVE_ZERO, ar._result.getW());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
     }
 
     @Test
     public void addInverses() {
         Word36 w1 = new Word36(Word36.getOnesComplement(19883));
         Word36 w2 = new Word36(Word36.getOnesComplement(-19883));
-        Word36.Flags f = w1.add(w2);
-        assertEquals(Word36.POSITIVE_ZERO, w1);
-        assertTrue(f._carry);
-        assertFalse(f._overflow);
+        Word36.AdditionResult ar = w1.add(w2);
+        assertEquals(Word36.POSITIVE_ZERO, ar._result.getW());
+        assertTrue(ar._flags._carry);
+        assertFalse(ar._flags._overflow);
+    }
+
+    @Test
+    public void multiply_1() {
+        long factor1 = 0_003234_715364L;
+        long factor2 = 0_073654_717623L;
+        BigInteger product = BigInteger.valueOf(factor1).multiply(BigInteger.valueOf(factor2));
+        BigInteger bi = Word36.multiply(factor1, factor2);
+        assertEquals(product, bi);
+    }
+
+    @Test
+    public void multiply_2() {
+        long factor1 = -29937;
+        long factor2 = 0_073654_717623L;
+        long factor1oc = Word36.getOnesComplement(factor1);
+        long factor2oc = Word36.getOnesComplement(factor2);
+        BigInteger product = BigInteger.valueOf(factor1).multiply(BigInteger.valueOf(factor2));
+        BigInteger bi = DoubleWord36.getTwosComplement(Word36.multiply(factor1oc, factor2oc));
+        assertEquals(product, bi);
     }
 
     @Test
     public void negate36_PositiveOne() {
-        Word36 word36 = new Word36(Word36.POSITIVE_ONE);
-        word36.negate();
-        assertEquals(Word36.NEGATIVE_ONE._value, word36.getW());
+        Word36 word36 = Word36.W36_POSITIVE_ONE;
+        Word36 result = word36.negate();
+        assertEquals(Word36.NEGATIVE_ONE, result.getW());
     }
 
     @Test
     public void negate36_PositiveZero() {
-        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
-        word36.negate();
-        assertEquals(Word36.NEGATIVE_ZERO._value, word36.getW());
+        Word36 word36 = Word36.W36_POSITIVE_ZERO;
+        Word36 result = word36.negate();
+        assertEquals(Word36.NEGATIVE_ZERO, result.getW());
     }
 
     @Test
     public void negate36_NegativeOne() {
-        Word36 word36 = new Word36(Word36.NEGATIVE_ONE);
-        word36.negate();
-        assertEquals(Word36.POSITIVE_ONE._value, word36.getW());
+        Word36 word36 = Word36.W36_NEGATIVE_ONE;
+        Word36 result = word36.negate();
+        assertEquals(Word36.POSITIVE_ONE, result.getW());
     }
 
     @Test
     public void negate36_NegativeZero() {
-        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
-        word36.negate();
-        assertEquals(Word36.POSITIVE_ZERO._value, word36.getW());
+        Word36 word36 = Word36.W36_NEGATIVE_ZERO;
+        Word36 result = word36.negate();
+        assertEquals(Word36.POSITIVE_ZERO, result.getW());
     }
 
 
@@ -474,8 +496,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_111222_333444L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftCircular(0);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftCircular(0);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -483,8 +505,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_112223_334441L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftCircular(3);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftCircular(3);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -492,8 +514,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_111222_333444L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftCircular(36);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftCircular(36);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -501,8 +523,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_441112_223334L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftCircular(-6);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftCircular(-6);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -510,8 +532,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_112223_334440L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftLogical(3);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftLogical(3);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -519,8 +541,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftLogical(36);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftLogical(36);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -528,8 +550,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_001112_223334L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftLogical(-6);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftLogical(-6);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -537,8 +559,8 @@ public class Test_Word36 {
         long parameter = 0_111222_333444L;
         long expected = 0_111222_333444L;
         Word36 word36 = new Word36(parameter);
-        word36.leftShiftLogical(0);
-        assertEquals(expected, word36.getW());
+        Word36 result = word36.leftShiftLogical(0);
+        assertEquals(expected, result.getW());
     }
 
     @Test
@@ -546,8 +568,8 @@ public class Test_Word36 {
         long parameter = 033225L;
         long expResult = 0332250L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(-3);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(-3);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -555,8 +577,8 @@ public class Test_Word36 {
         long parameter = 0400000_112233L;
         long expResult = 0740000_011223L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(3);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(3);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -564,8 +586,8 @@ public class Test_Word36 {
         long parameter = 0_421456_321456L;
         long expResult = 0_777777_777776L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(34);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(34);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -573,8 +595,8 @@ public class Test_Word36 {
         long parameter = 0_421456_321456L;
         long expResult = 0_777777_777777L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(35);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(35);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -582,8 +604,8 @@ public class Test_Word36 {
         long parameter = 0_421456_321456L;
         long expResult = 0_777777_777777L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(36);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(36);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -591,8 +613,8 @@ public class Test_Word36 {
         long parameter = 033225L;
         long expResult = parameter >> 3;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(3);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(3);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -600,8 +622,8 @@ public class Test_Word36 {
         long parameter = 0_321456_321456L;
         long expResult = parameter >> 34;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(34);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(34);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -609,8 +631,8 @@ public class Test_Word36 {
         long parameter = 0_321456_321456L;
         long expResult = parameter >> 35;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(35);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(35);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -618,8 +640,8 @@ public class Test_Word36 {
         long parameter = 0_321456_321456L;
         long expResult = 0;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(36);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(36);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
@@ -627,29 +649,29 @@ public class Test_Word36 {
         long parameter = 033225L;
         long expResult = 033225L;
         Word36 word36 = new Word36(parameter);
-        word36.rightShiftAlgebraic(0);
-        assertEquals(expResult, word36.getW());
+        Word36 result = word36.rightShiftAlgebraic(0);
+        assertEquals(expResult, result.getW());
     }
 
     @Test
     public void rightShiftCircular_1() {
         Word36 word36 = new Word36(0_112233_445566L);
-        word36.rightShiftCircular(6);
-        assertEquals(0_661122_334455L, word36.getW());
+        Word36 result = word36.rightShiftCircular(6);
+        assertEquals(0_661122_334455L, result.getW());
     }
 
     @Test
     public void rightShiftCircular_2() {
         Word36 word36 = new Word36(0_112200_334400L);
-        word36.rightShiftCircular(3);
-        assertEquals(0_011220_033440L, word36.getW());
+        Word36 result = word36.rightShiftCircular(3);
+        assertEquals(0_011220_033440L, result.getW());
     }
 
     @Test
     public void rightShiftLogical() {
         Word36 word36 = new Word36(0_112233_445566L);
-        word36.rightShiftLogical(9);
-        assertEquals(0_000112_233445L, word36.getW());
+        Word36 result = word36.rightShiftLogical(9);
+        assertEquals(0_000112_233445L, result.getW());
     }
 
 
@@ -660,16 +682,16 @@ public class Test_Word36 {
         Word36 op1 = new Word36(0_776655_221100L);
         Word36 op2 = new Word36(0_765432_543210L);
         Word36 exp = new Word36(0_764410_001000L);
-        op1.logicalAnd(op2);
-        assertEquals(exp, op1);
+        Word36 result = op1.logicalAnd(op2);
+        assertEquals(exp, result);
     }
 
     @Test
     public void not() {
         Word36 op1 = new Word36(0_776655_221100L);
         Word36 exp = new Word36(0_001122_556677L);
-        op1.logicalNot();
-        assertEquals(exp, op1);
+        Word36 result = op1.logicalNot();
+        assertEquals(exp, result);
     }
 
     @Test
@@ -677,8 +699,8 @@ public class Test_Word36 {
         Word36 op1 = new Word36(0_776655_221100L);
         Word36 op2 = new Word36(0_765432_543210L);
         Word36 exp = new Word36(0_777677_763310L);
-        op1.logicalOr(op2);
-        assertEquals(exp, op1);
+        Word36 result = op1.logicalOr(op2);
+        assertEquals(exp, result);
     }
 
     @Test
@@ -686,8 +708,8 @@ public class Test_Word36 {
         Word36 op1 = new Word36(0_776655_221100L);
         Word36 op2 = new Word36(0_765432_543210L);
         Word36 exp = new Word36(0_013267_762310L);
-        op1.logicalXor(op2);
-        assertEquals(exp, op1);
+        Word36 result = op1.logicalXor(op2);
+        assertEquals(exp, result);
     }
 
 

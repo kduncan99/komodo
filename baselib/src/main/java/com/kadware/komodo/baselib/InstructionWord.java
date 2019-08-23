@@ -11,6 +11,7 @@ import java.util.Map;
 /**
  * Extends the Word36 class to model an instruction word.
  */
+@SuppressWarnings("Duplicates")
 public class InstructionWord extends Word36 {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -46,10 +47,6 @@ public class InstructionWord extends Word36 {
 
         /**
          * Interprets the given instruction
-         * <p>
-         * @param instruction
-         * <p>
-         * @return
          */
         public abstract String interpret(
             final long instruction
@@ -242,18 +239,6 @@ public class InstructionWord extends Word36 {
 
         /**
          * Constructor for most cases
-         * <p>
-         * @param mode
-         * @param fField
-         * @param jField
-         * @param aField
-         * @param jFlag
-         * @param aFlag
-         * @param grsFlag
-         * @param immediateFlag
-         * @param aSemantics
-         * @param mnemonic
-         * @param useBMSemantics
          */
         public InstructionInfo(
             final Mode mode,
@@ -284,19 +269,6 @@ public class InstructionWord extends Word36 {
 
         /**
          * Constructor for instructions with special handlers
-         * <p>
-         * @param mode
-         * @param fField
-         * @param jField
-         * @param aField
-         * @param jFlag
-         * @param aFlag
-         * @param grsFlag
-         * @param immediateFlag
-         * @param aSemantics
-         * @param mnemonic
-         * @param useBMSemantics
-         * @param handler
          */
         public InstructionInfo(
             final Mode mode,
@@ -332,29 +304,29 @@ public class InstructionWord extends Word36 {
     //  Constants
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public static final long MASK_F         = 0770000000000l;
-    public static final long MASK_J         = 0007400000000l;
-    public static final long MASK_A         = 0000360000000l;
-    public static final long MASK_X         = 0000017000000l;
-    public static final long MASK_H         = 0000000400000l;
-    public static final long MASK_I         = 0000000200000l;
-    public static final long MASK_U         = 0000000177777l;
-    public static final long MASK_HIU       = 0000000777777l;
-    public static final long MASK_B         = 0000000170000l;   // extended-mode base
-    public static final long MASK_IB        = 0000000370000l;   // extended-mode extended-base (5 bits, using I field)
-    public static final long MASK_D         = 0000000007777l;   // extended-mode displacement
+    public static final long MASK_F         = 0770000000000L;
+    public static final long MASK_J         = 0007400000000L;
+    public static final long MASK_A         = 0000360000000L;
+    public static final long MASK_X         = 0000017000000L;
+    public static final long MASK_H         = 0000000400000L;
+    public static final long MASK_I         = 0000000200000L;
+    public static final long MASK_U         = 0000000177777L;
+    public static final long MASK_HIU       = 0000000777777L;
+    public static final long MASK_B         = 0000000170000L;   // extended-mode base
+    public static final long MASK_IB        = 0000000370000L;   // extended-mode extended-base (5 bits, using I field)
+    public static final long MASK_D         = 0000000007777L;   // extended-mode displacement
 
-    public static final long MASK_NOT_F     = 0007777777777l;
-    public static final long MASK_NOT_J     = 0770377777777l;
-    public static final long MASK_NOT_A     = 0777417777777l;
-    public static final long MASK_NOT_X     = 0777760777777l;
-    public static final long MASK_NOT_H     = 0777777377777l;
-    public static final long MASK_NOT_I     = 0777777577777l;
-    public static final long MASK_NOT_U     = 0777777600000l;
-    public static final long MASK_NOT_HIU   = 0777777000000l;
-    public static final long MASK_NOT_B     = 0777777607777l;
-    public static final long MASK_NOT_IB    = 0777777407777l;
-    public static final long MASK_NOT_D     = 0777777770000l;
+    public static final long MASK_NOT_F     = 0007777777777L;
+    public static final long MASK_NOT_J     = 0770377777777L;
+    public static final long MASK_NOT_A     = 0777417777777L;
+    public static final long MASK_NOT_X     = 0777760777777L;
+    public static final long MASK_NOT_H     = 0777777377777L;
+    public static final long MASK_NOT_I     = 0777777577777L;
+    public static final long MASK_NOT_U     = 0777777600000L;
+    public static final long MASK_NOT_HIU   = 0777777000000L;
+    public static final long MASK_NOT_B     = 0777777607777L;
+    public static final long MASK_NOT_IB    = 0777777407777L;
+    public static final long MASK_NOT_D     = 0777777770000L;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -572,7 +544,7 @@ public class InstructionWord extends Word36 {
     /**
      * Mnemonics representing the various values for the j-field when it represents a partial-word
      */
-    public static final String J_FIELD_NAMES[] =
+    public static final String[] J_FIELD_NAMES =
     {
         "W",        "H2",       "H1",       "XH2",
         "XH1/Q2",   "T3/Q4",    "T2/Q3",    "T1/Q1",
@@ -970,31 +942,15 @@ public class InstructionWord extends Word36 {
     /**
      * General constructor
      */
-    public InstructionWord(
-    ) {
-    }
+    public InstructionWord() {}
 
     /**
      * Constructor which takes a ones-complement value
-     * <p>
-     * @param value
      */
-    public InstructionWord(
-        final long value
-    ) {
-        super(value);
-    }
+    public InstructionWord(long value) { super(value); }
 
     /**
      * Constructor which takes component FJAXHIU fields
-     * <p>
-     * @param f
-     * @param j
-     * @param a
-     * @param x
-     * @param h
-     * @param i
-     * @param u
      */
     public InstructionWord(
         final long f,
@@ -1016,12 +972,6 @@ public class InstructionWord extends Word36 {
 
     /**
      * Constructor which takes component FJAXU fields, where U include the H and I bits
-     * <p>
-     * @param f
-     * @param j
-     * @param a
-     * @param x
-     * @param u
      */
     public InstructionWord(
         final long f,
@@ -1039,15 +989,6 @@ public class InstructionWord extends Word36 {
 
     /**
      * Constructor which takes component FJAXHIBD fields
-     * <p>
-     * @param f
-     * @param j
-     * @param a
-     * @param x
-     * @param h
-     * @param i
-     * @param b
-     * @param d
      */
     public InstructionWord(
         final long f,
@@ -1074,255 +1015,39 @@ public class InstructionWord extends Word36 {
     //  Non-static methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Convenience method
-     */
-    public void clear(
-    ) {
-        setW(0);
-    }
+    public long getF()      { return getF(_value); }
+    public long getJ()      { return getJ(_value); }
+    public long getA()      { return getA(_value); }
+    public long getX()      { return getX(_value); }
+    public long getH()      { return getH(_value); }
+    public long getI()      { return getI(_value); }
+    public long getU()      { return getU(_value); }
+    public long getHIU()    { return getHIU(_value); }
+    public long getB()      { return getB(_value); }
+    public long getIB()     { return getIB(_value); }
+    public long getD()      { return getD(_value); }
 
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getF(
-    ) {
-        return getF(_value);
-    }
+    public InstructionWord setF(long newValue)      { return new InstructionWord(setF(_value, newValue)); }
+    public InstructionWord setJ(long newValue)      { return new InstructionWord(setJ(_value, newValue)); }
+    public InstructionWord setA(long newValue)      { return new InstructionWord(setA(_value, newValue)); }
+    public InstructionWord setX(long newValue)      { return new InstructionWord(setX(_value, newValue)); }
+    public InstructionWord setH(long newValue)      { return new InstructionWord(setH(_value, newValue)); }
+    public InstructionWord setI(long newValue)      { return new InstructionWord(setI(_value, newValue)); }
+    public InstructionWord setU(long newValue)      { return new InstructionWord(setU(_value, newValue)); }
+    public InstructionWord setHIU(long newValue)    { return new InstructionWord(setHIU(_value, newValue)); }
+    public InstructionWord setXHIU(long newValue)   { return new InstructionWord(setXHIU(_value, newValue)); }
+    public InstructionWord setB(long newValue)      { return new InstructionWord(setB(_value, newValue)); }
+    public InstructionWord setD(long newValue)      { return new InstructionWord(setD(_value, newValue)); }
 
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getJ(
-    ) {
-        return getJ(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getA(
-    ) {
-        return getA(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getX(
-    ) {
-        return getX(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getH(
-    ) {
-        return getH(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getI(
-    ) {
-        return getI(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getU(
-    ) {
-        return getU(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getHIU(
-    ) {
-        return getHIU(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getB(
-    ) {
-        return getB(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getIB(
-    ) {
-        return getIB(_value);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @return
-     */
-    public long getD(
-    ) {
-        return getD(_value);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setF(
-        final long newValue
-    ) {
-        _value = setF(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setJ(
-        final long newValue
-    ) {
-        _value = setJ(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setA(
-        final long newValue
-    ) {
-        _value = setA(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setX(
-        final long newValue
-    ) {
-        _value = setX(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setH(
-        final long newValue
-    ) {
-        _value = setH(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setI(
-        final long newValue
-    ) {
-        _value = setI(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setU(
-        final long newValue
-    ) {
-        _value = setU(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setHIU(
-        final long newValue
-    ) {
-        _value = setHIU(_value, newValue);
-    }
-
-    public void setXHIU(
-        final long newValue
-    ) {
-        _value = setXHIU(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setB(
-        final long newValue
-    ) {
-        _value = setB(_value, newValue);
-    }
-
-    /**
-     * Partial-word injector
-     * <p>
-     * @param newValue value to be injected into a partial-word of this object's value
-     */
-    public void setD(
-        final long newValue
-    ) {
-        _value = setD(_value, newValue);
-    }
 
     //  Interpretive methods -------------------------------------------------------------------------------------------------------
 
-    public String getMnemonic(
-        final boolean extendedMode
-    ) {
-        return getMnemonic(_value, extendedMode);
-    }
+    public String getMnemonic(boolean extendedMode) { return getMnemonic(_value, extendedMode); }
 
     /**
      * Interprets this instruction word into a displayable string
-     * <p>
      * @param extendedMode assume extended mode - false implies basic mode
      * @param execModeRegistersFlag true to display exec registers instead of user registers for a and x fields
-     * <p>
-     * @return
      */
     public String interpret(
         final boolean extendedMode,
@@ -1336,155 +1061,22 @@ public class InstructionWord extends Word36 {
     //  Static methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getF(
-        final long value
-    ) {
-        return (value & MASK_F) >> 30;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getJ(
-        final long value
-    ) {
-        return (value & MASK_J) >> 26;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getA(
-        final long value
-    ) {
-        return (value & MASK_A) >> 22;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getX(
-        final long value
-    ) {
-        return (value & MASK_X) >> 18;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getH(
-        final long value
-    ) {
-        return (value & MASK_H) >> 17;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getI(
-        final long value
-    ) {
-        return (value & MASK_I) >> 16;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getU(
-        final long value
-    ) {
-        return (value & MASK_U);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getHIU(
-        final long value
-    ) {
-        return (value & MASK_HIU);
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getB(
-        final long value
-    ) {
-        return (value & MASK_B) >> 12;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getIB(
-        final long value
-    ) {
-        return (value & MASK_IB) >> 12;
-    }
-
-    /**
-     * Partial-word extractor
-     * <p>
-     * @param value
-     * <p>
-     * @return
-     */
-    public static long getD(
-        final long value
-    ) {
-        return (value & MASK_D);
-    }
+    public static long getF(long value)     { return (value & MASK_F) >> 30; }
+    public static long getJ(long value)     { return (value & MASK_J) >> 26; }
+    public static long getA(long value)     { return (value & MASK_A) >> 22; }
+    public static long getX(long value)     { return (value & MASK_X) >> 18; }
+    public static long getH(long value)     { return (value & MASK_H) >> 17; }
+    public static long getI(long value)     { return (value & MASK_I) >> 16; }
+    public static long getU(long value)     { return (value & MASK_U); }
+    public static long getHIU(long value)   { return (value & MASK_HIU); }
+    public static long getB(long value)     { return (value & MASK_B) >> 12; }
+    public static long getIB(long value)    { return (value & MASK_IB) >> 12; }
+    public static long getD(long value)     { return (value & MASK_D); }
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setF(
@@ -1496,10 +1088,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setJ(
@@ -1511,10 +1101,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setA(
@@ -1526,10 +1114,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setX(
@@ -1541,10 +1127,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setH(
@@ -1556,10 +1140,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setI(
@@ -1571,10 +1153,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setU(
@@ -1586,10 +1166,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Replace the X, H, I, and U fields of an initial value with those of the new value, returning the result
-     * <p>
      * @param initialValue
      * @param newValue
-     * <p>
      * @return
      */
     public static long setXHIU(
@@ -1603,10 +1181,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setHIU(
@@ -1618,10 +1194,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setB(
@@ -1633,10 +1207,8 @@ public class InstructionWord extends Word36 {
 
     /**
      * Partial-word injector
-     * <p>
      * @param initialValue 36-bit value into which the new partial-word value is to be injected
      * @param newValue the value to be injected into the partial-word
-     * <p>
      * @return the result of the injection operation
      */
     public static long setD(
@@ -1681,7 +1253,6 @@ public class InstructionWord extends Word36 {
     /**
      * Interprets a normal instruction word to a string of displayable text
      * By 'normal', we mean the f-field defines an operation which is modified by the j, a, x, h, i, and u (or b and d) fields.
-     * <p>
      * @param instruction 36-bit word being interpreted
      * @param mnemonic instruction mnemonic
      * @param extendedMode true to consider the b and d fields, false to consider the u field
@@ -1691,8 +1262,6 @@ public class InstructionWord extends Word36 {
      *                  (if appropriate; not for j=U or XU, and not for EM b > 0)
      * @param forceBMSemantics true to force EM instruction to use u-field instead of b and d fields
      * @param execModeRegistersFlag true to display Exec registers instead of User registers for a and x fields
-     * <p>
-     * @return
      */
     private static String interpretNormal(
         final long instruction,
@@ -1831,12 +1400,9 @@ public class InstructionWord extends Word36 {
 
     /**
      * Interprets an instruction word into a displayable string
-     * <p>
      * @param instruction 36-bit instruction to be interpreted
      * @param extendedMode assume extended mode - false implies basic mode
      * @param execModeRegistersFlag true to display exec registers instead of user registers for a and x fields
-     * <p>
-     * @return
      */
     public static String interpret(
         final long instruction,
@@ -1902,12 +1468,7 @@ public class InstructionWord extends Word36 {
 
     /**
      * Retrieves an InstructionInfo object for the given combination of mnemonic and mode
-     * <p>
-     * @param mnemonic
-     * @param mode
-     * <p>
      * @return InstructionInfo object if found, else null
-     * <p>
      * @throws NotFoundException if the mnemonic/mode combination does not exist
      */
     public static InstructionInfo getInstructionInfo(
@@ -1927,11 +1488,6 @@ public class InstructionWord extends Word36 {
 
     /**
      * Translates a j-field spec (such as "H1") to it's j-field integer value
-     * <p>
-     * @param fieldSpec
-     * <p>
-     * @return
-     * <p>
      * @throws NotFoundException if the fieldSpec is not a valid spec
      */
     public static int getJFieldValue(

@@ -33,10 +33,10 @@ public class IndexRegister extends GeneralRegister {
     public long getSignedXM()   { return getSignExtended18(getXM()); }
     public long getSignedXM24() { return getSignExtended24(getXM24()); }
 
-    public void setXI(long newValue)    { _value = (_value & MASK_NOT_XI) | ((newValue << 18) & MASK_XI); }
-    public void setXI12(long newValue)  { _value = (_value & MASK_NOT_XI12) | ((newValue << 24) & MASK_XI12); }
-    public void setXM(long newValue)    { _value = (_value & MASK_NOT_XM) | (newValue & MASK_XM); }
-    public void setXM24(long newValue)  { _value = (_value & MASK_NOT_XM24) | (newValue & MASK_XM24); }
+    public IndexRegister setXI(long newValue)    { return new IndexRegister((_value & MASK_NOT_XI) | ((newValue << 18) & MASK_XI)); }
+    public IndexRegister setXI12(long newValue)  { return new IndexRegister((_value & MASK_NOT_XI12) | ((newValue << 24) & MASK_XI12)); }
+    public IndexRegister setXM(long newValue)    { return new IndexRegister((_value & MASK_NOT_XM) | (newValue & MASK_XM)); }
+    public IndexRegister setXM24(long newValue)  { return new IndexRegister((_value & MASK_NOT_XM24) | (newValue & MASK_XM24)); }
 
     /**
      * Decrements the 18-bit modifier portion by the value in the 18-bit increment portion

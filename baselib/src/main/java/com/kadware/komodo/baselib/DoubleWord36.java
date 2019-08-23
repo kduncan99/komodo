@@ -50,10 +50,15 @@ public class DoubleWord36 {
     public static final BigInteger SHORT_BIT_MASK   = BigInteger.valueOf(Word36.BIT_MASK);
     public static final BigInteger BIT_MASK         = SHORT_BIT_MASK.shiftLeft(36).or(SHORT_BIT_MASK);
 
-    public static final DoubleWord36 NEGATIVE_ONE = new DoubleWord36(BIT_MASK.add(BigInteger.ONE.negate()));
-    public static final DoubleWord36 NEGATIVE_ZERO = new DoubleWord36(BIT_MASK);
-    public static final DoubleWord36 POSITIVE_ONE = new DoubleWord36(BigInteger.ONE);
-    public static final DoubleWord36 POSITIVE_ZERO = new DoubleWord36(BigInteger.ZERO);
+    public static final BigInteger NEGATIVE_ONE     = BIT_MASK.add(BigInteger.ONE.negate());
+    public static final BigInteger NEGATIVE_ZERO    = BIT_MASK;
+    public static final BigInteger POSITIVE_ONE     = BigInteger.ONE;
+    public static final BigInteger POSITIVE_ZERO    = BigInteger.ZERO;
+
+    public static final DoubleWord36 DW36_NEGATIVE_ONE  = new DoubleWord36(NEGATIVE_ONE);
+    public static final DoubleWord36 DW36_NEGATIVE_ZERO = new DoubleWord36(NEGATIVE_ZERO);
+    public static final DoubleWord36 DW36_POSITIVE_ONE  = new DoubleWord36(POSITIVE_ONE);
+    public static final DoubleWord36 DW36_POSITIVE_ZERO = new DoubleWord36(POSITIVE_ZERO);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -124,10 +129,10 @@ public class DoubleWord36 {
 
 //    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
 //    public void leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); }
-//    public void leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); }
+    public void leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); }
 //    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
 //    public void rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); }
-//    public void rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); }
+    public void rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); }
 
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
@@ -237,16 +242,16 @@ public class DoubleWord36 {
     public static BigInteger getTwosComplement(
         final BigInteger operand
     ) {
-        return isNegative(operand) ? negate(operand) : operand;
+        return isNegative(operand) ? negate(operand).negate() : operand;
     }
 
     /**
-     * Arithmetic inverse operation
+     * Arithmetic inverse operation - operand and result are both ones-complement
      */
     public static BigInteger negate(
         final BigInteger operand
     ) {
-        return operand.negate();
+        return operand.not().and(BIT_MASK);
     }
 
 
