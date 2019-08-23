@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
+import java.math.BigInteger;
 
 /**
  * Library for doing architecturally-correct 36-bit operations on integers
@@ -246,6 +246,9 @@ public class Word36 {
     @Override
     public int hashCode() { return (int) _value; }
 
+    @Override
+    public String toString() { return String.format("%012o%", _value); }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Non-Static methods
@@ -328,10 +331,10 @@ public class Word36 {
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
-    public void and(Word36 operand) { _value &= operand._value; }
-    public void not()               { _value = _value ^ BIT_MASK; }
-    public void or(Word36 operand)  { _value |= operand._value; }
-    public void xor(Word36 operand) { _value ^= operand._value; }
+    public void logicalAnd(Word36 operand)  { _value = logicalAnd(_value, operand._value); }
+    public void logicalNot()                { _value = logicalNot(_value); }
+    public void logicalOr(Word36 operand)   { _value = logicalOr(_value, operand._value); }
+    public void logicalXor(Word36 operand)  { _value = logicalXor(_value, operand._value); }
 
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
@@ -822,52 +825,6 @@ public class Word36 {
     }
 
 
-    //  Bit getters and setters ----------------------------------------------------------------------------------------------------
-
-    /**
-     * Bit getter
-     * @param value the value to be interrogated
-     * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
-     * @return true if the bit is set, false if clear
-     */
-    public static boolean getBit(
-        final long value,
-        final long bit
-    ) {
-        if ((bit < 1) || (bit > 36)) {
-            throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
-        }
-
-        long mask = 01_000000_000000L >> bit;
-        return (value & mask) > 0;
-    }
-
-    /**
-     * Bit setter
-     * @param value the value to be modified
-     * @param bit indicates the bit of interest, where the MSB is 1 and the LSB is 36
-     * @param flag true to set the bit, false to clear it
-     * @return the modified value
-     */
-    public static long setBit(
-        final long value,
-        final long bit,
-        final boolean flag
-    ) {
-        if ((bit < 1) || (bit > 36)) {
-            throw new InvalidArgumentRuntimeException(String.format("Bit value %d out of range", bit));
-        }
-
-        long mask = 01_000000_000000L >> bit;
-        long notMask = ~mask & 0_777777_777777L;
-        long result = value & notMask;
-        if (flag) {
-            result |= mask;
-        }
-        return result;
-    }
-
-
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     public static AdditionResult add(
@@ -883,10 +840,6 @@ public class Word36 {
             ++result;
         }
 
-        //TODO
-//        if ((result == NEGATIVE_ZERO._value) && (operand1 != operand2)) {
-//            result = POSITIVE_ZERO._value;
-//        }
         boolean negRes = isNegative(result);
 
         boolean carry = result < 0 ? (neg1 && neg2) : (neg1 || neg2);
@@ -917,6 +870,21 @@ public class Word36 {
         final long operand
     ) {
         return isNegative(operand) ? -negate(operand) : operand;
+    }
+
+    /**
+     * Multiplies two ones-complement 36-bit operands, producing a ones-complement 72-bit result.
+     * The first word of the result is the most-significant bits of the operation,
+     * while the second word is the least-significant.
+     */
+    public static BigInteger multiply(
+        final long operand1,
+        final long operand2
+    ) {
+        long[] result = new long[2];
+        BigInteger biOp1 = BigInteger.valueOf(Word36.getTwosComplement(operand1));
+        BigInteger biOp2 = BigInteger.valueOf(Word36.getTwosComplement(operand2));
+        return DoubleWord36.getOnesComplement(biOp1.multiply(biOp2));
     }
 
     public static long negate(

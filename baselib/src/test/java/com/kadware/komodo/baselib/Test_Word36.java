@@ -18,6 +18,8 @@ public class Test_Word36 {
     //  This simplifies unit testing as well as reducing the opportunity for bugs.
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    //TODO need shifts and logic tests and multiplication and ones/twos-complement conversions
+
     //  Arithmetic -----------------------------------------------------------------------------------------------------------------
 
     @Test
@@ -38,17 +40,6 @@ public class Test_Word36 {
         assertFalse(f._carry);
         assertTrue(f._overflow);
     }
-
-    /*
-The following table illustrates the final condition of the Carry designator (DB18) when positive and
-negative numbers are input to an adder:
-    Adder Inputs        Final Result
-    Value X Value Y     Positive Negative
-        +       +       DB18 = 0 DB18 = 0
-        +       –       DB18 = 1 DB18 = 0
-        –       +       DB18 = 1 DB18 = 0
-        –       –       DB18 = 1 DB18 = 1
-     */
 
     @Test
     public void addPosNegResultPos() {
