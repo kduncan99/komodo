@@ -28,40 +28,40 @@ public class NodeValue extends Value {
      * Normal constructor
      * @param flagged (i.e., has leading asterisk)
      */
-    public NodeValue(
+    private NodeValue(
         final boolean flagged
     ) {
         super(flagged);
     }
 
-    /**
-     * Compares an object to this object
-     * @param obj comparison object
-     * @return -1 if this object sorts before (is less than) the given object
-     *         +1 if this object sorts after (is greater than) the given object,
-     *          0 if both objects sort to the same position (are equal)
-     * @throws TypeException if there is no reasonable way to compare the objects
-     */
-    @Override
-    public int compareTo(
-        final Object obj
-    ) throws TypeException {
-        throw new TypeException();
-    }
+//    /**
+//     * Compares an object to this object
+//     * @param obj comparison object
+//     * @return -1 if this object sorts before (is less than) the given object
+//     *         +1 if this object sorts after (is greater than) the given object,
+//     *          0 if both objects sort to the same position (are equal)
+//     * @throws TypeException if there is no reasonable way to compare the objects
+//     */
+//    @Override
+//    public int compareTo(
+//        final Object obj
+//    ) throws TypeException {
+//        throw new TypeException();
+//    }
 
-    /**
-     * Create a new copy of this object, with the given flagged value
-     * @param newFlagged new attribute
-     * @return new value
-     */
-    @Override
-    public NodeValue copy(
-        final boolean newFlagged
-    ) {
-        NodeValue newValue = new NodeValue(newFlagged);
-        newValue._values.putAll(_values);
-        return newValue;
-    }
+//    /**
+//     * Create a new copy of this object, with the given flagged value
+//     * @param newFlagged new attribute
+//     * @return new value
+//     */
+//    @Override
+//    public NodeValue copy(
+//        final boolean newFlagged
+//    ) {
+//        NodeValue newValue = new NodeValue(newFlagged);
+//        newValue._values.putAll(_values);
+//        return newValue;
+//    }
 
     /**
      * Removes a value given a selector
@@ -129,15 +129,7 @@ public class NodeValue extends Value {
         return true;
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public ValueType getType(
-    ) {
-        return ValueType.Node;
-    }
+    @Override public ValueType getType() { return ValueType.Node; }
 
     /**
      * Retrieves the value associated with a given selector
@@ -186,35 +178,35 @@ public class NodeValue extends Value {
         _values.put(key, value);
     }
 
-    /**
-     * Transform the value to an FloatingPointValue, if possible
-     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics where we post any necessary diagnostics
-     * @return new value
-     * @throws TypeException because we cannot do this
-     */
-    @Override
-    public FloatingPointValue toFloatingPointValue(
-        final Locale locale,
-        Diagnostics diagnostics
-    ) throws TypeException {
-        throw new TypeException();
-    }
+//    /**
+//     * Transform the value to an FloatingPointValue, if possible
+//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
+//     * @param diagnostics where we post any necessary diagnostics
+//     * @return new value
+//     * @throws TypeException because we cannot do this
+//     */
+//    @Override
+//    public FloatingPointValue toFloatingPointValue(
+//        final Locale locale,
+//        Diagnostics diagnostics
+//    ) throws TypeException {
+//        throw new TypeException();
+//    }
 
-    /**
-     * Transform the value to an IntegerValue, if possible
-     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics where we post any necessary diagnostics
-     * @return new value
-     * @throws TypeException because we cannot do this
-     */
-    @Override
-    public IntegerValue toIntegerValue(
-        final Locale locale,
-        Diagnostics diagnostics
-    ) throws TypeException {
-        throw new TypeException();
-    }
+//    /**
+//     * Transform the value to an IntegerValue, if possible
+//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
+//     * @param diagnostics where we post any necessary diagnostics
+//     * @return new value
+//     * @throws TypeException because we cannot do this
+//     */
+//    @Override
+//    public IntegerValue toIntegerValue(
+//        final Locale locale,
+//        Diagnostics diagnostics
+//    ) throws TypeException {
+//        throw new TypeException();
+//    }
 
     /**
      * For display purposes
@@ -226,19 +218,35 @@ public class NodeValue extends Value {
         return String.format("%s<node>", _flagged ? "*" : "");
     }
 
-    /**
-     * Transform the value to a StringValue, if possible
-     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-     * @param diagnostics where we post any necessary diagnostics
-     * @return new value
-     * @throws TypeException because we cannot do this
-     */
-    @Override
-    public StringValue toStringValue(
-        final Locale locale,
-        CharacterMode characterMode,
-        Diagnostics diagnostics
-    ) throws TypeException {
-        throw new TypeException();
+//    /**
+//     * Transform the value to a StringValue, if possible
+//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
+//     * @param diagnostics where we post any necessary diagnostics
+//     * @return new value
+//     * @throws TypeException because we cannot do this
+//     */
+//    @Override
+//    public StringValue toStringValue(
+//        final Locale locale,
+//        CharacterMode characterMode,
+//        Diagnostics diagnostics
+//    ) throws TypeException {
+//        throw new TypeException();
+//    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Builder
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public static class Builder {
+
+        boolean _flagged = false;
+
+        public Builder setFlagged(boolean value) { _flagged = value; return this; }
+
+        public NodeValue build() {
+            return new NodeValue(_flagged);
+        }
     }
 }

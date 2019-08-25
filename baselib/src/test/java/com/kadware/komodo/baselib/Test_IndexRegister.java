@@ -102,121 +102,121 @@ public class Test_IndexRegister {
     public void setXM(
     ) {
         IndexRegister w = new IndexRegister(0_112233_445566l);
-        w.setXM(0_332211);
-        assertEquals(0_112233_332211l, w.getW());
+        IndexRegister result = w.setXM(0_332211);
+        assertEquals(0_112233_332211l, result.getW());
     }
 
     @Test
     public void setXM24(
     ) {
         IndexRegister w = new IndexRegister(0_112233_445566l);
-        w.setXM24(0_000044_332211);
-        assertEquals(0_112244_332211l, w.getW());
+        IndexRegister result = w.setXM24(0_000044_332211);
+        assertEquals(0_112244_332211l, result.getW());
     }
 
     @Test
     public void setXI(
     ) {
         IndexRegister w = new IndexRegister(0_112233_445566l);
-        w.setXI(0_776655);
-        assertEquals(0_776655_445566l, w.getW());
+        IndexRegister result = w.setXI(0_776655);
+        assertEquals(0_776655_445566l, result.getW());
     }
 
     @Test
     public void setXI12(
     ) {
         IndexRegister w = new IndexRegister(0_112233_445566l);
-        w.setXI12(0_7766);
-        assertEquals(0_776633_445566l, w.getW());
+        IndexRegister result = w.setXI12(0_7766);
+        assertEquals(0_776633_445566l, result.getW());
     }
 
     @Test
     public void decrement18_1(
     ) {
         IndexRegister w = new IndexRegister(0_000010_000010l);
-        w.decrementModifier18();
-        assertEquals(010, w.getXI());
-        assertEquals(0, w.getXM());
+        IndexRegister result = w.decrementModifier18();
+        assertEquals(010, result.getXI());
+        assertEquals(0, result.getXM());
     }
 
     @Test
     public void decrement18_2(
     ) {
         IndexRegister w = new IndexRegister(0_000020_000010l);
-        w.decrementModifier18();
-        assertEquals(020, w.getXI());
-        assertEquals(0_777767, w.getXM());
+        IndexRegister result = w.decrementModifier18();
+        assertEquals(020, result.getXI());
+        assertEquals(0_777767, result.getXM());
     }
 
     @Test
     public void increment18_pos_pos(
     ) {
         IndexRegister w = new IndexRegister(0_000010_000010l);
-        w.incrementModifier18();
-        assertEquals(010, w.getXI());
-        assertEquals(020, w.getXM());
+        IndexRegister result = w.incrementModifier18();
+        assertEquals(010, result.getXI());
+        assertEquals(020, result.getXM());
     }
 
     @Test
     public void increment18_pos_neg(
     ) {
         IndexRegister w = new IndexRegister(0_000010_777775l);
-        w.incrementModifier18();
-        assertEquals(010, w.getXI());
-        assertEquals(06, w.getXM());
+        IndexRegister result = w.incrementModifier18();
+        assertEquals(010, result.getXI());
+        assertEquals(06, result.getXM());
     }
 
     @Test
     public void increment18_neg_pos(
     ) {
         IndexRegister w = new IndexRegister(0_777767_000004l);
-        w.incrementModifier18();
-        assertEquals(0_777767, w.getXI());
-        assertEquals(0_777773, w.getXM());
+        IndexRegister result = w.incrementModifier18();
+        assertEquals(0_777767, result.getXI());
+        assertEquals(0_777773, result.getXM());
     }
 
     @Test
     public void increment18_neg_neg(
     ) {
         IndexRegister w = new IndexRegister(0_777776_777776l);
-        w.incrementModifier18();
-        assertEquals(0_777776, w.getXI());
-        assertEquals(0_777775, w.getXM());
+        IndexRegister result = w.incrementModifier18();
+        assertEquals(0_777776, result.getXI());
+        assertEquals(0_777775, result.getXM());
     }
 
     @Test
     public void increment24_pos_pos(
     ) {
         IndexRegister w = new IndexRegister(0_0010_00000010l);
-        w.incrementModifier24();
-        assertEquals(010, w.getXI12());
-        assertEquals(020, w.getXM24());
+        IndexRegister result = w.incrementModifier24();
+        assertEquals(010, result.getXI12());
+        assertEquals(020, result.getXM24());
     }
 
     @Test
     public void increment24_pos_neg(
     ) {
         IndexRegister w = new IndexRegister(0_0010_77777775l);
-        w.incrementModifier24();
-        assertEquals(010, w.getXI12());
-        assertEquals(06, w.getXM24());
+        IndexRegister result = w.incrementModifier24();
+        assertEquals(010, result.getXI12());
+        assertEquals(06, result.getXM24());
     }
 
     @Test
     public void increment24_neg_pos(
     ) {
         IndexRegister w = new IndexRegister(0_7767_00000004l);
-        w.incrementModifier24();
-        assertEquals(0_7767, w.getXI12());
-        assertEquals(0_77777773, w.getXM24());
+        IndexRegister result = w.incrementModifier24();
+        assertEquals(0_7767, result.getXI12());
+        assertEquals(0_77777773, result.getXM24());
     }
 
     @Test
     public void increment24_neg_neg(
     ) {
         IndexRegister w = new IndexRegister(0_7776_77777776l);
-        w.incrementModifier24();
-        assertEquals(0_7776, w.getXI12());
-        assertEquals(0_77777775, w.getXM24());
+        IndexRegister result = w.incrementModifier24();
+        assertEquals(0_7776, result.getXI12());
+        assertEquals(0_77777775, result.getXM24());
     }
 }

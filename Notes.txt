@@ -1,5 +1,6 @@
 -- TODO InProgress
 Reworking Word36, implementing DoubleWord36 (original design just won't work for us)
+Putting justification and precision back in, because we really do need it (esp. for floating point)
 $FORM and generation using forms
 BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
 BUG: Misc bugs still

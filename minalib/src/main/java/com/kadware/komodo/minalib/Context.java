@@ -5,6 +5,8 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.Dictionary;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
@@ -284,8 +286,8 @@ public class Context {
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp._nextOffset;
         if (form._fieldSizes.length != values.length) {
-            appendDiagnostic(new FatalDiagnostic(locale,
-                                                 "Contradiction between number of values and number of fields in form"));
+            appendDiagnostic(new FormDiagnostic(locale,
+                                                "Contradiction between number of values and number of fields in form"));
             return new IntegerValue(false, lcOffset, null, new UndefinedReference[0]);
         }
 
@@ -295,16 +297,25 @@ public class Context {
         for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
             genInt <<= form._fieldSizes[fx];
             long mask = (1L << form._fieldSizes[fx]) - 1;
-            long temp = values[fx]._value & mask;
-            if (temp != values[fx]._value) {
+
+            long fieldValue = values[fx]._value;
+            boolean trunc = false;
+            if (OnesComplement.isPositive36(values[fx]._value)) {
+                trunc = (fieldValue & mask) != fieldValue;
+            } else {
+                trunc = (fieldValue | mask) != 0_777777_777777L;
+            }
+
+            if (trunc) {
                 appendDiagnostic(new TruncationDiagnostic(locale,
                                                           "Value exceeds size of field in form " + form.toString()));
             }
-            genInt |= temp;
 
+            genInt |= values[fx]._value & mask;
             for (UndefinedReference ur : values[fx]._references) {
                 newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
             }
+
             bit += form._fieldSizes[fx];
         }
 

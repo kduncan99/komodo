@@ -92,160 +92,160 @@ public class Test_InstructionWord {
     public void setF_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setF(023);
-        assertEquals(0_230000_000000l, iw.getW());
+        InstructionWord result = iw.setF(023);
+        assertEquals(0_230000_000000l, result.getW());
     }
 
     @Test
     public void setF_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setF(0);
-        assertEquals(0_007777_777777, iw.getW());
+        InstructionWord result = iw.setF(0);
+        assertEquals(0_007777_777777, result.getW());
     }
 
     @Test
     public void setJ_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setJ(03);
-        assertEquals(0_001400_000000l, iw.getW());
+        InstructionWord result = iw.setJ(03);
+        assertEquals(0_001400_000000l, result.getW());
     }
 
     @Test
     public void setJ_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setJ(0);
-        assertEquals(0_770377_777777l, iw.getW());
+        InstructionWord result = iw.setJ(0);
+        assertEquals(0_770377_777777l, result.getW());
     }
 
     @Test
     public void setA_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setA(013);
-        assertEquals(0_000260_000000l, iw.getW());
+        InstructionWord result = iw.setA(013);
+        assertEquals(0_000260_000000l, result.getW());
     }
 
     @Test
     public void setA_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setA(013);
-        assertEquals(0_777677_777777l, iw.getW());
+        InstructionWord result = iw.setA(013);
+        assertEquals(0_777677_777777l, result.getW());
     }
 
     @Test
     public void setX_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setX(014);
-        assertEquals(0_000014_000000l, iw.getW());
+        InstructionWord result = iw.setX(014);
+        assertEquals(0_000014_000000l, result.getW());
     }
 
     @Test
     public void setX_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setX(014);
-        assertEquals(0_777774_777777l, iw.getW());
+        InstructionWord result = iw.setX(014);
+        assertEquals(0_777774_777777l, result.getW());
     }
 
     @Test
     public void setH_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setH(1);
-        assertEquals(0_000000_400000l, iw.getW());
+        InstructionWord result = iw.setH(1);
+        assertEquals(0_000000_400000l, result.getW());
     }
 
     @Test
     public void setH_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setH(0);
-        assertEquals(0_777777_377777l, iw.getW());
+        InstructionWord result = iw.setH(0);
+        assertEquals(0_777777_377777l, result.getW());
     }
 
     @Test
     public void setI_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setH(1);
-        assertEquals(0_000000_400000l, iw.getW());
+        InstructionWord result = iw.setH(1);
+        assertEquals(0_000000_400000l, result.getW());
     }
 
     @Test
     public void setI_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setI(0);
-        assertEquals(0_777777_577777l, iw.getW());
+        InstructionWord result = iw.setI(0);
+        assertEquals(0_777777_577777l, result.getW());
     }
 
     @Test
     public void setU(
     ) {
         InstructionWord iw = new InstructionWord(0_112233_645566l);
-        iw.setU(0_102030);
-        assertEquals(0_112233_702030l, iw.getW());
+        InstructionWord result = iw.setU(0_102030);
+        assertEquals(0_112233_702030l, result.getW());
     }
 
     @Test
     public void setHIU(
     ) {
         InstructionWord iw = new InstructionWord(0_112233_145566l);
-        iw.setHIU(0_600012l);
-        assertEquals(0_112233_600012l, iw.getW());
+        InstructionWord result = iw.setHIU(0_600012l);
+        assertEquals(0_112233_600012l, result.getW());
     }
 
     @Test
     public void setXHIU_over0(
     ) {
         InstructionWord iw = new InstructionWord(0);
-        iw.setXHIU(0_012_334455l);
-        assertEquals(0_012_334455l, iw.getW());
+        InstructionWord result = iw.setXHIU(0_012_334455l);
+        assertEquals(0_012_334455l, result.getW());
     }
 
     @Test
     public void setXHIU_over7(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setXHIU(0_002_334455l);
-        assertEquals(0_777762_334455l, iw.getW());
+        InstructionWord result = iw.setXHIU(0_002_334455l);
+        assertEquals(0_777762_334455l, result.getW());
     }
 
     @Test
     public void setB_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setB(013);
-        assertEquals(0_000000_130000l, iw.getW());
+        InstructionWord result = iw.setB(013);
+        assertEquals(0_000000_130000l, result.getW());
     }
 
     @Test
     public void setB_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setB(013);
-        assertEquals(0_777777_737777l, iw.getW());
+        InstructionWord result = iw.setB(013);
+        assertEquals(0_777777_737777l, result.getW());
     }
 
     @Test
     public void setD_0(
     ) {
         InstructionWord iw = new InstructionWord();
-        iw.setD(01723);
-        assertEquals(0_000000_001723l, iw.getW());
+        InstructionWord result = iw.setD(01723);
+        assertEquals(0_000000_001723l, result.getW());
     }
 
     @Test
     public void setD_077(
     ) {
         InstructionWord iw = new InstructionWord(0_777777_777777l);
-        iw.setD(01723);
-        assertEquals(0_777777_771723l, iw.getW());
+        InstructionWord result = iw.setD(01723);
+        assertEquals(0_777777_771723l, result.getW());
     }
 
 

@@ -53,32 +53,32 @@ public class Test_TDate {
     public void setDay(
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
-        tdate.setDay(31);
-        assertEquals(0_00_37_00_000000l, tdate.getW());
+        TDate result = tdate.setDay(31);
+        assertEquals(0_00_37_00_000000l, result.getW());
     }
 
     @Test
     public void setMonth(
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
-        tdate.setMonth(12);
-        assertEquals(0_14_00_00_000000l, tdate.getW());
+        TDate result = tdate.setMonth(12);
+        assertEquals(0_14_00_00_000000l, result.getW());
     }
 
     @Test
     public void setSeconds(
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
-        tdate.setSeconds(3600);
-        assertEquals(0_00_00_00_007020l, tdate.getW());
+        TDate result = tdate.setSeconds(3600);
+        assertEquals(0_00_00_00_007020l, result.getW());
     }
 
     @Test
     public void setYear(
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
-        tdate.setYear(12);
-        assertEquals(0_00_00_14_000000l, tdate.getW());
+        TDate result = tdate.setYear(12);
+        assertEquals(0_00_00_14_000000l, result.getW());
     }
 
 }

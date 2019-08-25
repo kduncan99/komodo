@@ -249,10 +249,18 @@ public class Word36 {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Standard constructor
+     * Default constructor
      */
     public Word36()             { _value = 0; }
-    public Word36(long value)   { _value = value & BIT_MASK; }  //  operand is expected to be ones-complement
+
+    /**
+     * Constructor given a ones-complement integer
+     */
+    public Word36(long value)   { _value = value & BIT_MASK; }
+
+    /**
+     * Constructor from another object of the same type
+     */
     public Word36(Word36 value) { _value = value._value; }
 
 
@@ -371,6 +379,8 @@ public class Word36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     public long getTwosComplement() { return getTwosComplement(_value); }
+    public String toASCII()         { return toASCII(_value); }
+    public String toFieldata()      { return toFieldata(_value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

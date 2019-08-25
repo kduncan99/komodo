@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.baselib;
 
+import com.sun.org.apache.xpath.internal.operations.Mult;
+
 import java.math.BigInteger;
 
 /**
@@ -16,37 +18,54 @@ public class DoubleWord36 {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-//    public static class AdditionResult {
-//        public final Flags _flags;
-//        public final long _value;
-//
-//        public AdditionResult(
-//            final Flags flags,
-//            final long value
-//        ) {
-//            _flags = flags;
-//            _value = value;
-//        }
-//    }
-//
-//    public static class Flags {
-//        public final boolean _carry;
-//        public final boolean _overflow;
-//
-//        public Flags(
-//            final boolean carry,
-//            final boolean overflow
-//        ) {
-//            _carry = carry;
-//            _overflow = overflow;
-//        }
-//    }
+    public static class AdditionResult {
+        public final boolean _carry;
+        public final boolean _overflow;
+        public final BigInteger _value;
+
+        public AdditionResult(
+            final boolean carry,
+            final boolean overflow,
+            final BigInteger value
+        ) {
+            _carry = carry;
+            _overflow = overflow;
+            _value = value;
+        }
+    }
+
+    public static class DivisionResult {
+        public final BigInteger _result;
+        public final BigInteger _remainder;
+
+        public DivisionResult(
+            final BigInteger result,
+            final BigInteger remainder
+        ) {
+            _result = result;
+            _remainder = remainder;
+        }
+    }
+
+    public static class MultiplicationResult {
+        public final boolean _overflow;
+        public final BigInteger _value;
+
+        public MultiplicationResult(
+            final boolean overflow,
+            final BigInteger value
+        ) {
+            _overflow = overflow;
+            _value = value;
+        }
+    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constants
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    public static final BigInteger CARRY_BIT        = BigInteger.valueOf(1).shiftLeft(72);
     public static final BigInteger SHORT_BIT_MASK   = BigInteger.valueOf(Word36.BIT_MASK);
     public static final BigInteger BIT_MASK         = SHORT_BIT_MASK.shiftLeft(36).or(SHORT_BIT_MASK);
 
@@ -65,14 +84,14 @@ public class DoubleWord36 {
     //  Data items (not much here)
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    protected BigInteger _value = BigInteger.ZERO;
+    protected final BigInteger _value;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public DoubleWord36()                   {}
+    public DoubleWord36()                   { _value = BigInteger.ZERO; }
     public DoubleWord36(long value)         { _value = BigInteger.valueOf(value); }
     public DoubleWord36(BigInteger value)   { _value = value; }
     public DoubleWord36(DoubleWord36 value) { _value = value._value; }
@@ -110,42 +129,95 @@ public class DoubleWord36 {
     }
 
 
+    //  Miscellaneous --------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Compares another DoubleWord36 to this one in the context of floating point operations.
+     * @return -1 if this object is less than the comparable object,
+     *          1 if this object is greater
+     *          0 if the objects are equal
+     */
+    public int floatingPointCompareTo(
+        final DoubleWord36 comp
+    ) {
+        //  If the signs are unequal, the positive value is greater.
+        boolean thisNeg = isNegative();
+        boolean thatNeg = comp.isNegative();
+        if (thisNeg != thatNeg) {
+            return thisNeg ? -1 : 1;
+        }
+
+        //  If the exponents are unequal the larger value is greater (unless we are negative, then the opposite is true)
+        int thisExponent = _value.shiftRight(60).and(BigInteger.valueOf(03777)).intValue();
+        int thatExponent = comp._value.shiftRight(60).and(BigInteger.valueOf(03777)).intValue();
+        if (thisExponent != thatExponent) {
+            if (thisNeg) {
+                return thisExponent < thatExponent ? 1 : -1;
+            } else {
+                return thisExponent < thatExponent ? -1 : 1;
+            }
+        }
+
+        //  If the mantissas are unequal, the larger is greater (unless we are negative...)
+        long thisMantissa = _value.and(BigInteger.valueOf(0_000077_777777_777777_777777L)).longValue();
+        long thatMantissa = comp._value.and(BigInteger.valueOf(0_000077_777777_777777_777777L)).longValue();
+        if (thisMantissa != thatMantissa) {
+            if (thisNeg) {
+                return thisMantissa < thatMantissa ? 1 : -1;
+            } else {
+                return thisMantissa < thatMantissa ? -1 : 1;
+            }
+        }
+
+        //  Values are equal
+        return 0;
+    }
+
+
+    //  Getter(s) ------------------------------------------------------------------------------------------------------------------
+
+    public BigInteger get() { return _value; }
+    public Word36[] getWords() { return getWords(_value); }
+
+
+    //  Tests ----------------------------------------------------------------------------------------------------------------------
+
+    public boolean isNegative() { return isNegative(_value); }
+    public boolean isNegativeZero() { return isNegativeZero(_value); }
+    public boolean isPositive() { return isPositive(_value); }
+    public boolean isPositiveZero() { return isPositiveZero(_value); }
+    public boolean isZero()     { return isZero(_value); }
+
+
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    public void negate() {
-        _value = negate(_value);
-    }
+    public AdditionResult add(DoubleWord36 operand)             { return add(_value, operand._value); }
+    public DivisionResult divide(DoubleWord36 divisor)          { return divide(_value, divisor._value); }
+    public MultiplicationResult multiply(DoubleWord36 operand)  { return multiply(_value, operand._value); }
+    public DoubleWord36 negate()                                { return new DoubleWord36(negate(_value)); }
 
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
-    public void logicalAnd(DoubleWord36 operand)    { _value = logicalAnd(_value, operand._value); }
-    public void logicalNot()                        { _value = logicalNot(_value); }
-    public void logicalOr(DoubleWord36 operand)     { _value = logicalOr(_value, operand._value); }
-    public void logicalXor(DoubleWord36 operand)    { _value = logicalXor(_value, operand._value); }
+    public DoubleWord36 logicalAnd(DoubleWord36 operand)    { return new DoubleWord36(logicalAnd(_value, operand._value)); }
+    public DoubleWord36 logicalNot()                        { return new DoubleWord36(logicalNot(_value)); }
+    public DoubleWord36 logicalOr(DoubleWord36 operand)     { return new DoubleWord36(logicalOr(_value, operand._value)); }
+    public DoubleWord36 logicalXor(DoubleWord36 operand)    { return new DoubleWord36(logicalXor(_value, operand._value)); }
 
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
 //    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
 //    public void leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); }
-    public void leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); }
+    public DoubleWord36 leftShiftLogical(int count)     { return new DoubleWord36(leftShiftLogical(_value, count)); }
 //    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
 //    public void rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); }
-    public void rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); }
+    public DoubleWord36 rightShiftLogical(int count)    { return new DoubleWord36(rightShiftLogical(_value, count)); }
 
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     public BigInteger getTwosComplement() { return getTwosComplement(_value); }
-
-    /**
-     * Converts to two single word objects.
-     * result[0] is the high value, result[1] is the low value
-     */
-    public Word36[] getWords() {
-        return getWords(_value);
-    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -190,38 +262,62 @@ public class DoubleWord36 {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-//    public static AdditionResult add(
-//        final long operand1,
-//        final long operand2
-//    ) {
-//        boolean neg1 = isNegative(operand1);
-//        boolean neg2 = isNegative(operand2);
-//
-//        long result = addSimple(operand1, operand2);
-//        if ((result & CARRY_BIT) != 0) {
-//            result &= BIT_MASK;
-//            ++result;
-//        }
-//
-//        boolean negRes = isNegative(result);
-//
-//        boolean carry = result < 0 ? (neg1 && neg2) : (neg1 || neg2);
-//        boolean overflow = (neg1 == neg2) && (neg1 != negRes);
-//        return new AdditionResult(new Flags(carry, overflow), result);
-//    }
-//
-//    public static long addSimple(
-//        final long operand1,
-//        final long operand2
-//    ) {
-//        if ((operand1 == NEGATIVE_ZERO._value) && (operand2 == NEGATIVE_ZERO._value)) {
-//            return NEGATIVE_ZERO._value;
-//        }
-//
-//        long native1 = getTwosComplement(operand1);
-//        long native2 = getTwosComplement(operand2);
-//        return getOnesComplement(native1 + native2);
-//    }
+    public static AdditionResult add(
+        final BigInteger operand1,
+        final BigInteger operand2
+    ) {
+        boolean neg1 = isNegative(operand1);
+        boolean neg2 = isNegative(operand2);
+
+        BigInteger result = addSimple(operand1, operand2);
+        if (!result.and(CARRY_BIT).equals(BigInteger.ZERO)) {
+            result = result.and(BIT_MASK).add(BigInteger.ONE);
+        }
+
+        boolean negRes = isNegative(result);
+
+        boolean carry = result.compareTo(BigInteger.ZERO) < 1 ? (neg1 && neg2) : (neg1 || neg2);
+        boolean overflow = (neg1 == neg2) && (neg1 != negRes);
+        return new AdditionResult(carry, overflow, result);
+    }
+
+    public static BigInteger addSimple(
+        final BigInteger operand1,
+        final BigInteger operand2
+    ) {
+        if ((operand1 == NEGATIVE_ZERO) && (operand2 == NEGATIVE_ZERO)) {
+            return NEGATIVE_ZERO;
+        }
+
+        BigInteger native1 = getTwosComplement(operand1);
+        BigInteger native2 = getTwosComplement(operand2);
+        return getOnesComplement(native1.add(native2));
+    }
+
+    public static DivisionResult divide(
+        final BigInteger dividend,
+        final BigInteger divisor
+    ) {
+        BigInteger[] tempResults = getTwosComplement(dividend).divideAndRemainder(getTwosComplement(divisor));
+        return new DivisionResult(getOnesComplement(tempResults[0]), getOnesComplement(tempResults[1]));
+    }
+
+    /**
+     * Extends the sign of an arbitrarily-sized value, to the full 72 bits
+     */
+    public static BigInteger extendSign(
+        final BigInteger operand,
+        final int fieldSize
+    ) {
+        BigInteger signBitMask = BigInteger.ONE.shiftLeft(fieldSize - 1);
+        if (operand.and(signBitMask).equals(BigInteger.ZERO)) {
+            return operand;
+        } else {
+            BigInteger fieldBitMask = BigInteger.ONE.shiftLeft(fieldSize).subtract(BigInteger.ONE);
+            BigInteger fieldNotMask = BIT_MASK.xor(fieldBitMask);
+            return operand.or(fieldNotMask);
+        }
+    }
 
     /**
      * Converts a twos-complement BigInteger operand to ones-complement
@@ -243,6 +339,18 @@ public class DoubleWord36 {
         final BigInteger operand
     ) {
         return isNegative(operand) ? negate(operand).negate() : operand;
+    }
+
+    /**
+     * Arithmetic multiplication - operands and result are ones-complement
+     */
+    public static MultiplicationResult multiply(
+        final BigInteger operand1,
+        final BigInteger operand2
+    ) {
+        BigInteger tempResult = getTwosComplement(operand1).multiply(getTwosComplement(operand2));
+        BigInteger result = getOnesComplement(tempResult).and(BIT_MASK);
+        return new MultiplicationResult(!tempResult.equals(result), result);
     }
 
     /**

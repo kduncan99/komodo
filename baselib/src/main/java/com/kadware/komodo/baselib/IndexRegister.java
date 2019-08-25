@@ -42,23 +42,23 @@ public class IndexRegister extends GeneralRegister {
      * Decrements the 18-bit modifier portion by the value in the 18-bit increment portion
      * using ones-complement arithmetic and assuming both the modifier and increment portions are signed fields.
      */
-    public void decrementModifier18() {
-        setXM(addSimple(getSignedXM(), negate(getSignedXI())));
+    public IndexRegister decrementModifier18() {
+        return setXM(addSimple(getSignedXM(), negate(getSignedXI())));
     }
 
     /**
      * Increments the 18-bit modifier portion by the value in the 18-bit increment portion
      * using ones-complement arithmetic and assuming both the modifier and increment portions are signed fields.
      */
-    public void incrementModifier18() {
-        setXM(addSimple(getSignedXM(), getSignedXI()));
+    public IndexRegister incrementModifier18() {
+        return setXM(addSimple(getSignedXM(), getSignedXI()));
     }
 
     /**
      * Increments the 24-bit modifier portion by the value in the 12-bit increment portion
      * using ones-complement arithmetic and assuming both the index and modifier portions are signed fields.
      */
-    public void incrementModifier24() {
-        setXM24(addSimple(getSignedXM24(), getSignedXI12()));
+    public IndexRegister incrementModifier24() {
+        return setXM24(addSimple(getSignedXM24(), getSignedXI12()));
     }
 }
