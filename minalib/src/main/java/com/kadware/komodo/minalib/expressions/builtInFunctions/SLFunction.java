@@ -7,6 +7,7 @@ package com.kadware.komodo.minalib.expressions.builtInFunctions;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 
 /**
@@ -26,35 +27,9 @@ public class SLFunction extends BuiltInFunction {
         super(locale, argumentExpressions);
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public String getFunctionName(
-    ) {
-        return "$SL";
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMaximumArguments(
-    ) {
-        return 1;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMinimumArguments(
-    ) {
-        return 1;
-    }
+    @Override public String getFunctionName()   { return "$SL"; }
+    @Override public int getMaximumArguments()  { return 1; }
+    @Override public int getMinimumArguments()  { return 1; }
 
     /**
      * Evaluator
@@ -72,7 +47,12 @@ public class SLFunction extends BuiltInFunction {
             throw new ExpressionException();
         }
 
-        StringValue sarg = (StringValue)arguments[0];
-        return new IntegerValue(sarg._value.length());
+        try {
+            StringValue sarg = (StringValue) arguments[0];
+            return new IntegerValue.Builder().setValue(sarg._value.length())
+                                             .build();
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
     }
 }

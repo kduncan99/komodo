@@ -328,34 +328,15 @@ public class Word36 {
 
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
 
-    /**
-     * Determines if the value of this object is negative (sign bit is set)
-     */
     public boolean isNegative() { return (_value & NEGATIVE_BIT) != 0; }
-
-    /**
-     * Determines if the value of this object is positive (sign bit is clear)
-     */
     public boolean isPositive() { return (_value & NEGATIVE_BIT) == 0; }
-
-    /**
-     * Determines if the value of this object is zero (positive or negative)
-     */
     public boolean isZero() { return (_value == POSITIVE_ZERO) || (_value == NEGATIVE_ZERO); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    /**
-     * Arithmetically adds another Word36 object to this object.
-     */
-    public AdditionResult add(
-        final Word36 addend
-    ) {
-        return new AdditionResult(add(_value, addend._value));
-    }
-
-    public Word36 negate() { return new Word36(negate(_value)); }
+    public AdditionResult add(Word36 addend)    { return new AdditionResult(add(_value, addend._value)); }
+    public Word36 negate()                      { return new Word36(negate(_value)); }
 
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
@@ -379,8 +360,8 @@ public class Word36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     public long getTwosComplement() { return getTwosComplement(_value); }
-    public String toASCII()         { return toASCII(_value); }
-    public String toFieldata()      { return toFieldata(_value); }
+    public String toStringFromASCII()         { return toStringFromASCII(_value); }
+    public String toStringFromFieldata()      { return toStringFromFieldata(_value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -1016,11 +997,22 @@ public class Word36 {
     }
 
     /**
+     * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
+     * @param value 36-bit value
+     * @return displayable result
+     */
+    public static String toOctal(
+        final long value
+    ) {
+        return String.format("%012o", value);
+    }
+
+    /**
      * Interprets the given 36-bit value as a sequence of 4 ASCII characters, and produces those characters as a result
      * @param value 36-bit value
      * @return displayable result
      */
-    public static String toASCII(
+    public static String toStringFromASCII(
         final long value
     ) {
         return String.format("%s%s%s%s",
@@ -1035,7 +1027,7 @@ public class Word36 {
      * @param value 36-bit value
      * @return displayable result
      */
-    public static String toFieldata(
+    public static String toStringFromFieldata(
         final long value
     ) {
         return String.format("%s%s%s%s%s%s",
@@ -1045,16 +1037,5 @@ public class Word36 {
                              ASCII_FROM_FIELDATA[(int) getS4(value)],
                              ASCII_FROM_FIELDATA[(int) getS5(value)],
                              ASCII_FROM_FIELDATA[(int) getS6(value)]);
-    }
-
-    /**
-     * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
-     * @param value 36-bit value
-     * @return displayable result
-     */
-    public static String toOctal(
-        final long value
-    ) {
-        return String.format("%012o", value);
     }
 }

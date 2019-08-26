@@ -718,13 +718,13 @@ public class Test_Word36 {
     @Test
     public void toASCII() {
         long word = 0_101_102_103_104L;
-        assertEquals("ABCD", Word36.toASCII(word));
+        assertEquals("ABCD", Word36.toStringFromASCII(word));
     }
 
     @Test
     public void toFieldata() {
         long word = 0_05_06_07_10_11_12L;
-        assertEquals(" ABCDE", Word36.toFieldata(word));
+        assertEquals(" ABCDE", Word36.toStringFromFieldata(word));
     }
 
     @Test

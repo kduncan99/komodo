@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.sun.org.apache.xpath.internal.operations.Mult;
-
 import java.math.BigInteger;
 
 /**
@@ -217,7 +215,10 @@ public class DoubleWord36 {
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
-    public BigInteger getTwosComplement() { return getTwosComplement(_value); }
+    public BigInteger getTwosComplement()   { return getTwosComplement(_value); }
+    public String toOctal()                 { return toOctal(_value); }
+    public String toStringFromASCII()       { return toStringFromASCII(_value); }
+    public String toStringFromFieldata()    { return toStringFromFieldata(_value); }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -229,35 +230,11 @@ public class DoubleWord36 {
     /**
      * Tests 72-bit ones-complement value to see if it is negative
      */
-    public static boolean isNegative(
-        final BigInteger value
-    ) {
-        return (value.shiftRight(71).intValue() == 1);
-    }
-
-    public static boolean isNegativeZero(
-        final BigInteger value
-    ) {
-        return value.equals(NEGATIVE_ZERO);
-    }
-
-    public static boolean isPositive(
-        final BigInteger value
-    ) {
-        return !isNegative(value);
-    }
-
-    public static boolean isPositiveZero(
-        final BigInteger value
-    ) {
-        return value.equals(POSITIVE_ZERO);
-    }
-
-    public static boolean isZero(
-        final BigInteger value
-    ) {
-        return isPositiveZero(value) || isNegativeZero(value);
-    }
+    public static boolean isNegative(BigInteger value)      { return (value.shiftRight(71).intValue() == 1); }
+    public static boolean isNegativeZero(BigInteger value)  { return value.equals(NEGATIVE_ZERO); }
+    public static boolean isPositive(BigInteger value)      { return !isNegative(value); }
+    public static boolean isPositiveZero(BigInteger value)  { return value.equals(POSITIVE_ZERO); }
+    public static boolean isZero(BigInteger value)          { return isPositiveZero(value) || isNegativeZero(value); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
@@ -542,7 +519,7 @@ public class DoubleWord36 {
     }
 
 
-    //  Conversion from String to Word36 -------------------------------------------------------------------------------------------
+    //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     /**
      * Populates this object with quarter-words derived from the ASCII characters in the source string.
@@ -595,35 +572,35 @@ public class DoubleWord36 {
     }
 
     /**
-     * Interprets the given 72-bit value as a sequence of 8 ASCII characters, and produces those characters as a result
-     */
-    public static String toASCII(
-        final BigInteger value
-    ) {
-        Word36[] words = getWords(value);
-        return String.format("%s%s",
-                             Word36.toASCII(words[0]._value),
-                             Word36.toASCII(words[1]._value));
-    }
-
-    /**
-     * Interprets the given 72-bit value as a sequence of 12 Fieldata characters, and produces those characters as a result
-     */
-    public static String toFieldata(
-        final BigInteger value
-    ) {
-        Word36[] words = getWords(value);
-        return String.format("%s%s",
-                             Word36.toFieldata(words[0]._value),
-                             Word36.toFieldata(words[1]._value));
-    }
-
-    /**
      * Interprets the given 36-bit value as a sequence of 12 Octal digits, and produces those characters as a result
      */
     public static String toOctal(
         final BigInteger value
     ) {
         return String.format("%024o", value);
+    }
+
+    /**
+     * Interprets the given 72-bit value as a sequence of 8 ASCII characters, and produces those characters as a result
+     */
+    public static String toStringFromASCII(
+        final BigInteger value
+    ) {
+        Word36[] words = getWords(value);
+        return String.format("%s%s",
+                             Word36.toStringFromASCII(words[0]._value),
+                             Word36.toStringFromASCII(words[1]._value));
+    }
+
+    /**
+     * Interprets the given 72-bit value as a sequence of 12 Fieldata characters, and produces those characters as a result
+     */
+    public static String toStringFromFieldata(
+        final BigInteger value
+    ) {
+        Word36[] words = getWords(value);
+        return String.format("%s%s",
+                             Word36.toStringFromFieldata(words[0]._value),
+                             Word36.toStringFromFieldata(words[1]._value));
     }
 }

@@ -698,7 +698,7 @@ public class ArraySlice {
             if (delimitFlag && (wx != 0)) {
                 builder.append(" ");
             }
-            builder.append(Word36.toASCII(get(wx)));
+            builder.append(Word36.toStringFromASCII(get(wx)));
         }
 
         return builder.toString();
@@ -719,7 +719,7 @@ public class ArraySlice {
             if (delimitFlag && (wx != 0)) {
                 builder.append(" ");
             }
-            builder.append(Word36.toFieldata(get(wx)));
+            builder.append(Word36.toStringFromFieldata(get(wx)));
         }
 
         return builder.toString();

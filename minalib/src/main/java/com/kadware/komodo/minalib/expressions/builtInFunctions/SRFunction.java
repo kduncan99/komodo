@@ -8,7 +8,9 @@ import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
+import java.math.BigInteger;
 
 /**
  * Produces a particular number of some character in the current character set
@@ -28,35 +30,9 @@ public class SRFunction extends BuiltInFunction {
         super(locale, argumentExpressions);
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public String getFunctionName(
-    ) {
-        return "$SR";
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMaximumArguments(
-    ) {
-        return 2;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMinimumArguments(
-    ) {
-        return 2;
-    }
+    @Override public String getFunctionName()   { return "$SR"; }
+    @Override public int getMaximumArguments()  { return 2; }
+    @Override public int getMinimumArguments()  { return 2; }
 
     /**
      * Evaluator
@@ -90,11 +66,22 @@ public class SRFunction extends BuiltInFunction {
             throw new ExpressionException();
         }
 
+        if (iarg._value.get().compareTo(BigInteger.valueOf(0_777777)) > 0) {
+            context.appendDiagnostic(new ValueDiagnostic(getLocale(), "Count argument cannot exceed 0700000"));
+            throw new ExpressionException();
+        }
+
         StringBuilder sb = new StringBuilder();
-        for (int sx = 0; sx < iarg._value; ++sx) {
+        for (int sx = 0; sx < iarg._value.get().intValue(); ++sx) {
             sb.append(sarg._value);
         }
 
-        return new StringValue(false, sb.toString(), sarg._characterMode);
+        try {
+            return new StringValue.Builder().setValue(sb.toString())
+                                            .setCharacterMode(sarg._characterMode)
+                                            .build();
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
     }
 }

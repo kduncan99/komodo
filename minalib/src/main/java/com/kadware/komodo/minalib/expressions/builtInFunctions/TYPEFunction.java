@@ -7,6 +7,7 @@ package com.kadware.komodo.minalib.expressions.builtInFunctions;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 
 /**
@@ -26,35 +27,9 @@ public class TYPEFunction extends BuiltInFunction {
         super(locale, argumentExpressions);
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public String getFunctionName(
-    ) {
-        return "$TYPE";
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMaximumArguments(
-    ) {
-        return 1;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getMinimumArguments(
-    ) {
-        return 1;
-    }
+    @Override public String getFunctionName()   { return "$TYPE"; }
+    @Override public int getMaximumArguments()  { return 1; }
+    @Override public int getMinimumArguments()  { return 1; }
 
     /**
      * Evaluator
@@ -82,6 +57,11 @@ public class TYPEFunction extends BuiltInFunction {
             case Equf:              iType = 11; break;  //  this one too
         }
 
-        return new IntegerValue(iType);
+        try {
+            return new IntegerValue.Builder().setValue(iType)
+                                             .build();
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
+        }
     }
 }

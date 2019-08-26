@@ -504,15 +504,15 @@ public class Test_DoubleWord36 {
     //  Display --------------------------------------------------------------------------------------------------------------------
 
 //    @Test
-//    public void toASCII() {
+//    public void toStringFromASCII() {
 //        long word = 0_101_102_103_104L;
-//        assertEquals("ABCD", Word36.toASCII(word));
+//        assertEquals("ABCD", Word36.toStringFromASCII(word));
 //    }
 //
 //    @Test
-//    public void toFieldata() {
+//    public void toStringFromFieldata() {
 //        long word = 0_05_06_07_10_11_12L;
-//        assertEquals(" ABCDE", Word36.toFieldata(word));
+//        assertEquals(" ABCDE", Word36.toStringFromFieldata(word));
 //    }
 //
 //    @Test

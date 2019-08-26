@@ -201,9 +201,9 @@ public class IntegerValue extends Value {
 //        }
 //
 //        if (characterMode == CharacterMode.ASCII) {
-//            return new StringValue(false, _value.toASCII(), characterMode);
+//            return new StringValue(false, _value.toStringFromASCII(), characterMode);
 //        } else {
-//            return new StringValue(false, _value.toFieldata(), characterMode);
+//            return new StringValue(false, _value.toStringFromFieldata(), characterMode);
 //        }
 //    }
 

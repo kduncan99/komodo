@@ -5,6 +5,8 @@
 package com.kadware.komodo.minalib.expressions.builtInFunctions;
 
 import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.StringValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.*;
 import com.kadware.komodo.minalib.expressions.Expression;
@@ -12,6 +14,7 @@ import com.kadware.komodo.minalib.expressions.Expression;
 /**
  * Converts the parameter to a string in the current character set
  */
+@SuppressWarnings("Duplicates")
 public class CFSFunction extends BuiltInFunction {
 
     /**
@@ -26,35 +29,9 @@ public class CFSFunction extends BuiltInFunction {
         super(locale, argumentExpressions);
     }
 
-    /**
-     * Getter
-     * @return the function name
-     */
-    @Override
-    public String getFunctionName(
-    ) {
-        return "$CFS";
-    }
-
-    /**
-     * Getter
-     * @return max arguments we expect
-     */
-    @Override
-    public int getMaximumArguments(
-    ) {
-        return 1;
-    }
-
-    /**
-     * Getter
-     * @return min arguments we expect
-     */
-    @Override
-    public int getMinimumArguments(
-    ) {
-        return 1;
-    }
+    @Override public String getFunctionName()   { return "$CFS"; }
+    @Override public int getMaximumArguments()  { return 1; }
+    @Override public int getMinimumArguments()  { return 1; }
 
     /**
      * Evaluator
@@ -68,10 +45,17 @@ public class CFSFunction extends BuiltInFunction {
     ) throws ExpressionException {
         try {
             Value[] arguments = evaluateArguments(context);
-            return arguments[0].toStringValue(getLocale(), CharacterMode.Fieldata, context.getDiagnostics());
-        } catch (TypeException ex) {
-            context.appendDiagnostic(getValueDiagnostic(1));
-            throw new ExpressionException();
+            if (arguments[0] instanceof IntegerValue) {
+                IntegerValue iv = (IntegerValue) arguments[0];
+                return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
+                                                .setCharacterMode(CharacterMode.Fieldata)
+                                                .build();
+            } else {
+                context.appendDiagnostic(getValueDiagnostic(1));
+                throw new ExpressionException();
+            }
+        } catch (InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex.getMessage());
         }
     }
 }
