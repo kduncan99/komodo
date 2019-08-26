@@ -13,8 +13,10 @@ import com.kadware.komodo.minalib.dictionary.FormValue;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.ExpressionParser;
+import java.math.BigInteger;
 
 @SuppressWarnings("Duplicates")
 public class FORMDirective extends Directive {
@@ -59,11 +61,12 @@ public class FORMDirective extends Directive {
                                 err = true;
                             }
 
-                            if ((iv._value < 1) || (iv._value > 36)) {
+                            if ((iv._value.get().compareTo(BigInteger.ONE) < 0)
+                                || (iv._value.get().compareTo(BigInteger.valueOf(36)) > 0)) {
                                 context.appendDiagnostic(new ValueDiagnostic(sfLocale, "Invalid value for field size"));
                                 err = true;
                             } else {
-                                fieldSizes[sfx] = (int) iv._value;
+                                fieldSizes[sfx] = iv._value.get().intValue();
                                 count += fieldSizes[sfx];
                             }
                         } else {
@@ -82,9 +85,13 @@ public class FORMDirective extends Directive {
             }
 
             if (!err) {
-                context.getDictionary().addValue(labelFieldComponents._labelLevel,
-                                                 labelFieldComponents._label,
-                                                 new FormValue(new Form(fieldSizes)));
+                try {
+                    context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                                                     labelFieldComponents._label,
+                                                     new FormValue.Builder().setForm(new Form(fieldSizes)).build());
+                } catch (InvalidParameterException ex) {
+                    throw new RuntimeException("Caught " + ex.getMessage());
+                }
             }
         }
     }

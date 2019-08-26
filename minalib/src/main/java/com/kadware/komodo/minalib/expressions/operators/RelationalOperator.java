@@ -6,6 +6,8 @@ package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.FloatingPointValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.dictionary.ValueType;
 import com.kadware.komodo.minalib.diagnostics.Diagnostics;
@@ -16,6 +18,7 @@ import java.util.Stack;
 /**
  * Base class for infix relational operators
  */
+@SuppressWarnings("Duplicates")
 public abstract class RelationalOperator extends Operator {
 
     /**
@@ -62,23 +65,35 @@ public abstract class RelationalOperator extends Operator {
         ValueType opType1 = operands[1].getType();
 
         if (opType0 != opType1) {
-            //  The types are not the same.  Conversions will automatically post diags and throw TypeExceptions
             if (opType0 == ValueType.FloatingPoint) {
-                operands[1] = operands[1].toFloatingPointValue(getLocale(), diagnostics);
-            } else if (opType1 == ValueType.FloatingPoint) {
-                operands[0] = operands[0].toFloatingPointValue(getLocale(), diagnostics);
-            } else if (opType0 == ValueType.Integer) {
-                operands[1] = operands[1].toIntegerValue(getLocale(), diagnostics);
-            } else if (opType1 == ValueType.Integer) {
-                operands[0] = operands[0].toIntegerValue(getLocale(), diagnostics);
-            } else {
-                //  At this point, at most, one of the parameters is String, but at least one of them is bad.
-                //  They're definitely not both strings, and neither is integer or float.
-                if (opType0 != ValueType.String) {
-                    postValueDiagnostic(true, diagnostics);
-                }
-                if (opType1 != ValueType.String) {
+                if (opType1 == ValueType.Integer) {
+                    operands[1] = FloatingPointValue.convertFromInteger((IntegerValue) operands[1]);
+                } else {
                     postValueDiagnostic(false, diagnostics);
+                    throw new TypeException();
+                }
+            } else if (opType0 == ValueType.Integer) {
+                if (opType1 == ValueType.FloatingPoint) {
+                    operands[0] = FloatingPointValue.convertFromInteger((IntegerValue) operands[0]);
+                } else {
+                    postValueDiagnostic(false, diagnostics);
+                    throw new TypeException();
+                }
+            } else if (opType0 == ValueType.String) {
+                //  RHS is  not acceptable for LHS of String
+                postValueDiagnostic(false, diagnostics);
+                throw new TypeException();
+            } else {
+                //  LHS is not acceptable, RHS may not be acceptable
+                postValueDiagnostic(true, diagnostics);
+                switch (operands[1].getType()) {
+                    case Integer:
+                    case FloatingPoint:
+                    case String:
+                        break;
+
+                    default:
+                        postValueDiagnostic(false, diagnostics);
                 }
                 throw new TypeException();
             }

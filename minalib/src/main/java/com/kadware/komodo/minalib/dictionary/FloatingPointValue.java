@@ -7,6 +7,7 @@ package com.kadware.komodo.minalib.dictionary;
 import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+import java.math.BigInteger;
 
 /**
  * A Value which represents a floating point thing.
@@ -256,6 +257,60 @@ public class FloatingPointValue extends Value {
         return String.format("%s%d.%d", neg ? "-" : "", integral, conversion);
     }
 
+    /*
+        32+4+2 = 38:      0010 0110 . 0000 0000
+                               0010 . 0110       e04   2.375 x 2^4        .25
+                                                       2.375 x 16 = 38
+                                                                          .375
+     */
+
+
+
+    /**
+     * Create a FloatingPointValue from an IntegerValue.
+     * There is some trouble, as the integer value is 72bit signed, and the integral portion of a float is only 60 bits.
+     * So... we set up the integer value is the fractional portion with the exponent set appropriately, then
+     * shift left until we shift a 1 out of the fractional portion, adjusting the exponent appropriately.
+     * Then we take the top 60 bits from the 72-bit fractional portion.
+     */
+    public static FloatingPointValue convertFromInteger(
+        final IntegerValue integerValue
+    ) {
+        try {
+            if (integerValue._value.isPositiveZero()) {
+                return new FloatingPointValue.Builder().setValue(0)
+                                                       .build();
+            } else if (integerValue._value.isNegativeZero()) {
+                return new FloatingPointValue.Builder().setValue(DoubleWord36.DW36_NEGATIVE_ZERO)
+                                                       .build();
+            } else {
+                long signBit = 0;
+                BigInteger fractional;
+
+                if (integerValue._value.isPositive()) {
+                    fractional = integerValue._value.get();
+                } else {
+                    signBit = 0_700000_000000L;
+                    fractional = integerValue._value.negate().get();
+                }
+
+                int exponent = 72;
+                while (!fractional.and(DoubleWord36.CARRY_BIT).equals(BigInteger.ZERO)) {
+                    fractional = fractional.shiftLeft(1);
+                    --exponent;
+                }
+
+                long loWord = fractional.shiftRight(12).longValue();
+                long highWord = fractional.shiftRight(48).and(DoubleWord36.SHORT_BIT_MASK).longValue();
+                highWord |= signBit;
+                highWord |= ((exponent + 127) & 03777) << 24;
+                return new FloatingPointValue(false, false, highWord, loWord, ValuePrecision.Default);
+            }
+        } catch(InvalidParameterException ex) {
+            throw new RuntimeException("Caught " + ex);
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Builder
@@ -276,7 +331,7 @@ public class FloatingPointValue extends Value {
         public FloatingPointValue build(
         ) throws InvalidParameterException {
             if (_value == null) {
-                throw new InvalidParameterException("Value not specified for IntegerValue builder");
+                throw new InvalidParameterException("Value not specified for FloatingPointValue builder");
             }
 
             return new FloatingPointValue(_flagged, _value, _precision);

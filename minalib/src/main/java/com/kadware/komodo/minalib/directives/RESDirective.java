@@ -9,6 +9,7 @@ import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.*;
+import java.math.BigInteger;
 
 @SuppressWarnings("Duplicates")
 public class RESDirective extends Directive {
@@ -45,7 +46,12 @@ public class RESDirective extends Directive {
                 }
 
                 IntegerValue iv = (IntegerValue) v;
-                long intValue = iv._value;
+                if (iv._value.get().compareTo(BigInteger.valueOf(0777777)) > 0) {
+                    context.appendDiagnostic(new ValueDiagnostic(expLocale, "Value to large for $RES directive"));
+                    return;
+                }
+
+                long intValue = iv._value.get().longValue();
                 if (iv.hasUndefinedReferences()) {
                     context.appendDiagnostic(new RelocationDiagnostic(expLocale));
                 }

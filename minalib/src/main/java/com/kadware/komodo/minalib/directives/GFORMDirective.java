@@ -9,6 +9,7 @@ import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.*;
+import java.math.BigInteger;
 
 @SuppressWarnings("Duplicates")
 public class GFORMDirective extends Directive {
@@ -59,12 +60,14 @@ public class GFORMDirective extends Directive {
                             error = true;
                         } else {
                             IntegerValue iv = (IntegerValue) v;
-                            if ((iv.hasUndefinedReferences()) || (iv._value <= 0) || (iv._value > 36)) {
+                            if ((iv.hasUndefinedReferences())
+                                || (iv._value.get().compareTo(BigInteger.ZERO) <= 0)
+                                || (iv._value.get().compareTo(BigInteger.valueOf(36)) > 0)) {
                                 context.appendDiagnostic(new ValueDiagnostic(sfFieldSize._locale,
                                                                              "Invalid value for field size"));
                                 error = true;
                             } else {
-                                fieldSizes[enx] = (int) iv._value;
+                                fieldSizes[enx] = iv._value.get().intValue();
                             }
                         }
                     }

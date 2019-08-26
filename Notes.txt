@@ -1,6 +1,8 @@
 -- TODO InProgress
-Reworking Word36, implementing DoubleWord36 (original design just won't work for us)
+make sure we don't propagate flagged attribute in any of the operators
+Reworking Word36, implementing DoubleWord36, making IntegerValue 72 bits (original design just won't work for us)
 Putting justification and precision back in, because we really do need it (esp. for floating point)
+Working on supporting floating point
 $FORM and generation using forms
 BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
 BUG: Misc bugs still
@@ -147,15 +149,13 @@ support special form for BT instruction
 support node references on LHS of $EQU statements
 need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
 remove UndefinedReferenceDiagnostic (I think...)
-use DiagnosticDirective for stuff
+use DiagnosticDirective for stuff.. now I forgot what this means
 pick up the rest of the unit tests we need to do but haven't yet
 do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
 add test cases for interrupts (many of them already marked TODO)
-float values - firm this up (how do we support it)
 data generation - floats
 can we do implicit base register (and do it right)?  also with the $LIT directive...
-make sure we don't propagate flagged attribute in any of the operators
 support user-defined functions
 allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
 functions
