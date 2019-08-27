@@ -24,332 +24,415 @@ public class Test_DoubleWord36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     @Test
-    public void toOnes_1() {
+    public void toOnes_Zero() {
         assertEquals(BigInteger.ZERO, DoubleWord36.getOnesComplement(BigInteger.ZERO));
     }
 
     @Test
-    public void toOnes_2() {
+    public void toOnes_PositiveValue() {
         assertEquals(DoubleWord36.SHORT_BIT_MASK, DoubleWord36.getOnesComplement(DoubleWord36.SHORT_BIT_MASK));
     }
 
     @Test
-    public void toOnes_3() {
-        BigInteger op = BigInteger.valueOf(0_377777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L));
-        assertEquals(op, DoubleWord36.getOnesComplement(op));
+    public void toOnes_NegativeOne() {
+        BigInteger op = BigInteger.ONE.negate();
+        BigInteger expResult = DoubleWord36.BIT_MASK.subtract(BigInteger.ONE);
+        assertEquals(expResult, DoubleWord36.getOnesComplement(op));
     }
 
     @Test
-    public void toOnes_4() {
+    public void toOnes_NegativeValue() {
         BigInteger op = BigInteger.valueOf(-293884);
         BigInteger expected = BigInteger.valueOf(0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777776_702003L));
         assertEquals(expected, DoubleWord36.getOnesComplement(op));
     }
 
     @Test
-    public void toTwos_1() {
+    public void toTwos_PositiveZero() {
         assertEquals(BigInteger.ZERO, DoubleWord36.getTwosComplement(BigInteger.ZERO));
     }
 
     @Test
-    public void toTwos_2() {
+    public void toTwos_NegativeZero() {
         assertEquals(BigInteger.ZERO, DoubleWord36.getTwosComplement(DoubleWord36.BIT_MASK));
     }
 
-//    @Test
-//    public void toTwos_3() {
-//        assertEquals(0_377777_777777L, DoubleWord36.getTwosComplement(0_377777_777777L));
-//    }
-//
-//    @Test
-//    public void toTwos_4() {
-//        assertEquals(0L - 0_314003_300624L, DoubleWord36.getTwosComplement(0463774_477153L));
-//    }
+    @Test
+    public void toTwos_NegativeOne() {
+        assertEquals(BigInteger.ONE.negate(), DoubleWord36.getTwosComplement(DoubleWord36.BIT_MASK.subtract(BigInteger.ONE)));
+    }
+
+    @Test
+    public void toTwos_NegativeValue() {
+        BigInteger negativeOnesOperand = DoubleWord36.BIT_MASK.xor(BigInteger.valueOf(07777)); // negative 07777
+        BigInteger expected = BigInteger.valueOf(-07777);
+        assertEquals(expected, DoubleWord36.getTwosComplement(negativeOnesOperand));
+    }
 
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
 
-//    @Test
-//    public void isNegative_PositiveZero() {
-//        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
-//        assertFalse(word36.isNegative());
-//    }
-//
-//    @Test
-//    public void isNegative_PositiveInteger() {
-//        Word36 word36 = new Word36(0_377777_777777L);
-//        assertFalse(word36.isNegative());
-//    }
-//
-//    @Test
-//    public void isNegative_NegativeZero() {
-//        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
-//        assertTrue(word36.isNegative());
-//    }
-//
-//    @Test
-//    public void isNegative_NegativeInteger() {
-//        Word36 word36 = new Word36(0_400000_000000L);
-//        assertTrue(word36.isNegative());
-//    }
-//
-//    @Test
-//    public void isPositive_PositiveZero() {
-//        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
-//        assertTrue(word36.isPositive());
-//    }
-//
-//    @Test
-//    public void isPositive_PositiveInteger() {
-//        Word36 word36 = new Word36(0_377777_777777L);
-//        assertTrue(word36.isPositive());
-//    }
-//
-//    @Test
-//    public void isPositive_NegativeZero() {
-//        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
-//        assertFalse(word36.isPositive());
-//    }
-//
-//    @Test
-//    public void isPositive_NegativeInteger() {
-//        Word36 word36 = new Word36(0_400000_000000L);
-//        assertFalse(word36.isPositive());
-//    }
+    @Test
+    public void isNegative_PositiveZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        assertFalse(dw.isNegative());
+    }
+
+    @Test
+    public void isNegative_PositiveInteger() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.BIT_MASK.shiftRight(1));
+        assertFalse(dw.isNegative());
+    }
+
+    @Test
+    public void isNegative_NegativeZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        assertTrue(dw.isNegative());
+    }
+
+    @Test
+    public void isNegative_NegativeInteger() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_BIT);
+        assertTrue(dw.isNegative());
+    }
+
+    @Test
+    public void isPositive_PositiveZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        assertTrue(dw.isPositive());
+    }
+
+    @Test
+    public void isPositive_PositiveInteger() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.BIT_MASK.shiftRight(1));
+        assertTrue(dw.isPositive());
+    }
+
+    @Test
+    public void isPositive_NegativeZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        assertFalse(dw.isPositive());
+    }
+
+    @Test
+    public void isPositive_NegativeInteger() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_BIT);
+        assertFalse(dw.isPositive());
+    }
 
 
     //  Arithmetic -----------------------------------------------------------------------------------------------------------------
 
-//    @Test
-//    public void addPosPos() {
-//        Word36 w1 = new Word36(25);
-//        Word36 w2 = new Word36(1027);
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(1052, w1.getTwosComplement());
-//        assertFalse(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addPosPosOverflow() {
-//        Word36 w1 = new Word36(0_377777_777777L);
-//        Word36 w2 = new Word36(1);
-//        Word36.Flags f = w1.add(w2);
-//        assertFalse(f._carry);
-//        assertTrue(f._overflow);
-//    }
-//
-//    @Test
-//    public void addPosNegResultPos() {
-//        Word36 w1 = new Word36(Word36.getOnesComplement(1234));
-//        Word36 w2 = new Word36(Word36.getOnesComplement(-234));
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(1000, w1.getTwosComplement());
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addPosNegResultNeg() {
-//        Word36 w1 = new Word36(Word36.getOnesComplement(234));
-//        Word36 w2 = new Word36(Word36.getOnesComplement(-1234));
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(-1000, w1.getTwosComplement());
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addNegNeg() {
-//        Word36 w1 = new Word36(Word36.getOnesComplement(-1992));
-//        Word36 w2 = new Word36(Word36.getOnesComplement(-2933));
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(-1992-2933, w1.getTwosComplement());
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addNegNegOverflow() {
-//        Word36 w1 = new Word36(0_400000_000000L);
-//        Word36 w2 = new Word36(0_777777_777776L);
-//        Word36.Flags f = w1.add(w2);
-//        assertTrue(f._carry);
-//        assertTrue(f._overflow);
-//    }
-//
-//    @Test
-//    public void addPosZPosZ() {
-//        Word36 w1 = new Word36(Word36.POSITIVE_ZERO._value);
-//        Word36 w2 = new Word36(Word36.POSITIVE_ZERO._value);
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(Word36.POSITIVE_ZERO, w1);
-//        assertFalse(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addPosZNegZ() {
-//        Word36 w1 = new Word36(Word36.POSITIVE_ZERO._value);
-//        Word36 w2 = new Word36(Word36.NEGATIVE_ZERO._value);
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(Word36.POSITIVE_ZERO, w1);
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addNegZPosZ() {
-//        Word36 w1 = new Word36(Word36.NEGATIVE_ZERO._value);
-//        Word36 w2 = new Word36(Word36.POSITIVE_ZERO._value);
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(Word36.POSITIVE_ZERO, w1);
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addNegZNegZ() {
-//        Word36 w1 = new Word36(Word36.NEGATIVE_ZERO._value);
-//        Word36 w2 = new Word36(Word36.NEGATIVE_ZERO._value);
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(Word36.NEGATIVE_ZERO, w1);
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void addInverses() {
-//        Word36 w1 = new Word36(Word36.getOnesComplement(19883));
-//        Word36 w2 = new Word36(Word36.getOnesComplement(-19883));
-//        Word36.Flags f = w1.add(w2);
-//        assertEquals(Word36.POSITIVE_ZERO, w1);
-//        assertTrue(f._carry);
-//        assertFalse(f._overflow);
-//    }
-//
-//    @Test
-//    public void multiply_1() {
-//        long factor1 = 0_003234_715364L;
-//        long factor2 = 0_073654_717623L;
-//        BigInteger product = BigInteger.valueOf(factor1).multiply(BigInteger.valueOf(factor2));
-//        BigInteger bi = Word36.multiply(factor1, factor2);
-//        assertEquals(product, bi);
-//    }
-//
-//    @Test
-//    public void multiply_2() {
-//        long factor1 = -29937;
-//        long factor2 = 0_073654_717623L;
-//        long factor1oc = Word36.getOnesComplement(factor1);
-//        long factor2oc = Word36.getOnesComplement(factor2);
-//        BigInteger product = BigInteger.valueOf(factor1).multiply(BigInteger.valueOf(factor2));
-//        BigInteger bi = DoubleWord36.getTwosComplement(Word36.multiply(factor1oc, factor2oc));
-//        assertEquals(product, bi);
-//    }
-//
-//    @Test
-//    public void negate36_PositiveOne() {
-//        Word36 word36 = new Word36(Word36.POSITIVE_ONE);
-//        word36.negate();
-//        assertEquals(Word36.NEGATIVE_ONE._value, word36.getW());
-//    }
-//
-//    @Test
-//    public void negate36_PositiveZero() {
-//        Word36 word36 = new Word36(Word36.POSITIVE_ZERO);
-//        word36.negate();
-//        assertEquals(Word36.NEGATIVE_ZERO._value, word36.getW());
-//    }
-//
-//    @Test
-//    public void negate36_NegativeOne() {
-//        Word36 word36 = new Word36(Word36.NEGATIVE_ONE);
-//        word36.negate();
-//        assertEquals(Word36.POSITIVE_ONE._value, word36.getW());
-//    }
-//
-//    @Test
-//    public void negate36_NegativeZero() {
-//        Word36 word36 = new Word36(Word36.NEGATIVE_ZERO);
-//        word36.negate();
-//        assertEquals(Word36.POSITIVE_ZERO._value, word36.getW());
-//    }
+    @Test
+    public void addPosPos() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.getOnesComplement(25));
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.getOnesComplement(1027));
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(BigInteger.valueOf(1052), ar._value.getTwosComplement());
+        assertFalse(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addPosPosOverflow() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.NEGATIVE_BIT.subtract(BigInteger.ONE));
+        DoubleWord36 w2 = new DoubleWord36(1);
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertFalse(ar._carry);
+        assertTrue(ar._overflow);
+    }
+
+    @Test
+    public void addPosNegResultPos() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.getOnesComplement(1234));
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.getOnesComplement(-234));
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(BigInteger.valueOf(1000), ar._value.getTwosComplement());
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addPosNegResultNeg() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.getOnesComplement(234));
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.getOnesComplement(-1234));
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(BigInteger.valueOf(-1000), ar._value.getTwosComplement());
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addNegNeg() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.getOnesComplement(-1992));
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.getOnesComplement(-2933));
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(BigInteger.valueOf(-1992-2933), ar._value.getTwosComplement());
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addNegNegOverflow() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.NEGATIVE_BIT);  //  highest magnitude negative number
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.NEGATIVE_BIT);
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertTrue(ar._carry);
+        assertTrue(ar._overflow);
+    }
+
+    @Test
+    public void addPosZPosZ() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(DoubleWord36.POSITIVE_ZERO, ar._value._value);
+        assertFalse(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addPosZNegZ() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        DoubleWord36.AdditionResult ar  = w1.add(w2);
+        assertEquals(DoubleWord36.POSITIVE_ZERO, ar._value._value);
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addNegZPosZ() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(DoubleWord36.POSITIVE_ZERO, ar._value._value);
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addNegZNegZ() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(DoubleWord36.NEGATIVE_ZERO, ar._value._value);
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void addInverses() {
+        DoubleWord36 w1 = new DoubleWord36(DoubleWord36.getOnesComplement(19883));
+        DoubleWord36 w2 = new DoubleWord36(DoubleWord36.getOnesComplement(-19883));
+        DoubleWord36.AdditionResult ar = w1.add(w2);
+        assertEquals(DoubleWord36.POSITIVE_ZERO, ar._value._value);
+        assertTrue(ar._carry);
+        assertFalse(ar._overflow);
+    }
+
+    @Test
+    public void multiply_1() {
+        BigInteger factor1 = BigInteger.valueOf(0_003234_715364L);
+        BigInteger factor2 = BigInteger.valueOf(0_073654_717623L);
+        BigInteger expProduct = factor1.multiply(factor2);
+
+        DoubleWord36 dwFactor1 = new DoubleWord36(DoubleWord36.getOnesComplement(factor1));
+        DoubleWord36 dwFactor2 = new DoubleWord36(DoubleWord36.getOnesComplement(factor2));
+        DoubleWord36.MultiplicationResult mr = dwFactor1.multiply(dwFactor2);
+        BigInteger product = mr._value.getTwosComplement();
+
+        assertEquals(expProduct, product);
+        assertFalse(mr._overflow);
+    }
+
+    @Test
+    public void multiply_2() {
+        BigInteger factor1 = BigInteger.valueOf(-29937);
+        BigInteger factor2 = BigInteger.valueOf(0_073654_717623L);
+        BigInteger expProduct = factor1.multiply(factor2);
+
+        DoubleWord36 dwFactor1 = new DoubleWord36(DoubleWord36.getOnesComplement(factor1));
+        DoubleWord36 dwFactor2 = new DoubleWord36(DoubleWord36.getOnesComplement(factor2));
+        DoubleWord36.MultiplicationResult mr = dwFactor1.multiply(dwFactor2);
+        BigInteger product = mr._value.getTwosComplement();
+
+        assertEquals(expProduct, product);
+        assertFalse(mr._overflow);
+    }
+
+    @Test
+    public void multiply_3() {
+        BigInteger factor1 = DoubleWord36.BIT_MASK.shiftRight(1);
+        BigInteger factor2 = DoubleWord36.BIT_MASK.shiftRight(1);
+
+        DoubleWord36 dwFactor1 = new DoubleWord36(DoubleWord36.getOnesComplement(factor1));
+        DoubleWord36 dwFactor2 = new DoubleWord36(DoubleWord36.getOnesComplement(factor2));
+        DoubleWord36.MultiplicationResult mr = dwFactor1.multiply(dwFactor2);
+
+        assertTrue(mr._overflow);
+    }
+
+    @Test
+    public void multiply_zero() {
+        BigInteger factor1 = BigInteger.ZERO;
+        BigInteger factor2 = DoubleWord36.SHORT_BIT_MASK;
+        BigInteger expProduct = factor1.multiply(factor2);
+
+        DoubleWord36 dwFactor1 = new DoubleWord36(DoubleWord36.getOnesComplement(factor1));
+        DoubleWord36 dwFactor2 = new DoubleWord36(DoubleWord36.getOnesComplement(factor2));
+        DoubleWord36.MultiplicationResult mr = dwFactor1.multiply(dwFactor2);
+        BigInteger product = mr._value.getTwosComplement();
+
+        assertEquals(expProduct, product);
+        assertFalse(mr._overflow);
+    }
+
+    @Test
+    public void negate_PositiveOne() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.POSITIVE_ONE);
+        DoubleWord36 result = dw.negate();
+        assertEquals(DoubleWord36.NEGATIVE_ONE, result._value);
+    }
+
+    @Test
+    public void negate_PositiveZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.POSITIVE_ZERO);
+        DoubleWord36 result = dw.negate();
+        assertEquals(DoubleWord36.NEGATIVE_ZERO, result._value);
+    }
+
+    @Test
+    public void negate_NegativeOne() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_ONE);
+        DoubleWord36 result = dw.negate();
+        assertEquals(DoubleWord36.POSITIVE_ONE, result._value);
+    }
+
+    @Test
+    public void negate_NegativeZero() {
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.NEGATIVE_ZERO);
+        DoubleWord36 result = dw.negate();
+        assertEquals(DoubleWord36.POSITIVE_ZERO, result._value);
+    }
 
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 
-//    @Test
-//    public void leftShiftCircular36_by0() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_111222_333444L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftCircular(0);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_by3() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_112223_334441L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftCircular(3);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_by36() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_111222_333444L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftCircular(36);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftCircular36_byNeg() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_441112_223334L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftCircular(-6);
-//        assertEquals(expected, word36.getW());
-//    }
+    @Test
+    public void leftShiftCircular_by0() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        BigInteger expected = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftCircular(0);
+        assertEquals(expected, result._value);
+    }
 
-//    @Test
-//    public void leftShiftLogical36_by3() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_112223_334440L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftLogical(3);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_by36() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftLogical(36);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_negCount() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_001112_223334L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftLogical(-6);
-//        assertEquals(expected, word36.getW());
-//    }
-//
-//    @Test
-//    public void leftShiftLogical36_zeroCount() {
-//        long parameter = 0_111222_333444L;
-//        long expected = 0_111222_333444L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.leftShiftLogical(0);
-//        assertEquals(expected, word36.getW());
-//    }
+    @Test
+    public void leftShiftCircular_by3() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_112223_334444L;
+        long expPartial2 = 0_445556_667771L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftCircular(3);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftCircular_by36() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_444555_666777L;
+        long expPartial2 = 0_111222_333444L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftCircular(36);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftCircular_by72() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_111222_333444L;
+        long expPartial2 = 0_444555_666777L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftCircular(72);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftCircular_byNeg() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_770001_112223L;
+        long expPartial2 = 0_334445_556667L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftCircular(-6);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftLogical_by3() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_001112_223334L;
+        long expPartial2 = 0_445556_667770L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftLogical(3);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftLogical_by36() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_444555_666777L;
+        long expPartial2 = 0_000000_000000L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftLogical(36);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftLogical_negCount() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_0000_0001_1122L;
+        long expPartial2 = 0_2333_4445_5566L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftLogical(-12);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftLogical_zeroCount() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_000111_222333L;
+        long expPartial2 = 0_444555_666777L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftLogical(0);
+        assertEquals(expected, result._value);
+    }
 
 //    @Test
 //    public void rightShiftAlgebraic36_negCount() {
@@ -440,65 +523,146 @@ public class Test_DoubleWord36 {
 //        word36.rightShiftAlgebraic(0);
 //        assertEquals(expResult, word36.getW());
 //    }
-//
-//    @Test
-//    public void rightShiftCircular_1() {
-//        Word36 word36 = new Word36(0_112233_445566L);
-//        word36.rightShiftCircular(6);
-//        assertEquals(0_661122_334455L, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftCircular_2() {
-//        Word36 word36 = new Word36(0_112200_334400L);
-//        word36.rightShiftCircular(3);
-//        assertEquals(0_011220_033440L, word36.getW());
-//    }
 
-//    @Test
-//    public void rightShiftLogical() {
-//        Word36 word36 = new Word36(0_112233_445566L);
-//        word36.rightShiftLogical(9);
-//        assertEquals(0_000112_233445L, word36.getW());
-//    }
+    @Test
+    public void rightShiftCircular_neg9() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_777000_111222L;
+        long expPartial2 = 0_333444_555666L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftCircular(9);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftCircular_pos9() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_777000_111222L;
+        long expPartial2 = 0_333444_555666L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftCircular(9);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftCircular_pos36() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_444555_666777L;
+        long expPartial2 = 0_000111_222333L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftCircular(36);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftCircular_pos72() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_000111_222333L;
+        long expPartial2 = 0_444555_666777L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftCircular(72);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftLogical() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_000111_222333L;
+        long expPartial2 = 0_444555_666777L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftCircular(72);
+        assertEquals(expected, result._value);
+    }
 
 
     //  Logic tests ----------------------------------------------------------------------------------------------------------------
 
-//    @Test
-//    public void and() {
-//        Word36 op1 = new Word36(0_776655_221100L);
-//        Word36 op2 = new Word36(0_765432_543210L);
-//        Word36 exp = new Word36(0_764410_001000L);
-//        op1.logicalAnd(op2);
-//        assertEquals(exp, op1);
-//    }
-//
-//    @Test
-//    public void not() {
-//        Word36 op1 = new Word36(0_776655_221100L);
-//        Word36 exp = new Word36(0_001122_556677L);
-//        op1.logicalNot();
-//        assertEquals(exp, op1);
-//    }
-//
-//    @Test
-//    public void or() {
-//        Word36 op1 = new Word36(0_776655_221100L);
-//        Word36 op2 = new Word36(0_765432_543210L);
-//        Word36 exp = new Word36(0_777677_763310L);
-//        op1.logicalOr(op2);
-//        assertEquals(exp, op1);
-//    }
-//
-//    @Test
-//    public void xor() {
-//        Word36 op1 = new Word36(0_776655_221100L);
-//        Word36 op2 = new Word36(0_765432_543210L);
-//        Word36 exp = new Word36(0_013267_762310L);
-//        op1.logicalXor(op2);
-//        assertEquals(exp, op1);
-//    }
+    @Test
+    public void and() {
+        long op1high = 0_777666_555444L;
+        long op1low = 0_333222_111000L;
+        long op2high = 0_776655_443322L;
+        long op2low = 0_110077_665544L;
+
+        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
+        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
+        BigInteger result = op1.and(op2);
+
+        DoubleWord36 dw1 = new DoubleWord36(op1);
+        DoubleWord36 dw2 = new DoubleWord36(op2);
+        DoubleWord36 expResult = new DoubleWord36(result);
+
+        DoubleWord36 dwResult = dw1.logicalAnd(dw2);
+        assertEquals(expResult, dwResult);
+    }
+
+    @Test
+    public void not() {
+        long op1high = 0_777666_555444L;
+        long op1low = 0_333222_111000L;
+
+        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
+        BigInteger result = op1.not();
+
+        DoubleWord36 dw1 = new DoubleWord36(op1);
+        DoubleWord36 expResult = new DoubleWord36(result);
+
+        DoubleWord36 dwResult = dw1.logicalNot();
+        assertEquals(expResult, dwResult);
+    }
+
+    @Test
+    public void or() {
+        long op1high = 0_777666_555444L;
+        long op1low = 0_333222_111000L;
+        long op2high = 0_776655_443322L;
+        long op2low = 0_110077_665544L;
+
+        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
+        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
+        BigInteger result = op1.or(op2);
+
+        DoubleWord36 dw1 = new DoubleWord36(op1);
+        DoubleWord36 dw2 = new DoubleWord36(op2);
+        DoubleWord36 expResult = new DoubleWord36(result);
+
+        DoubleWord36 dwResult = dw1.logicalOr(dw2);
+        assertEquals(expResult, dwResult);
+    }
+
+    @Test
+    public void xor() {
+        long op1high = 0_777666_555444L;
+        long op1low = 0_333222_111000L;
+        long op2high = 0_776655_443322L;
+        long op2low = 0_110077_665544L;
+
+        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
+        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
+        BigInteger result = op1.xor(op2);
+
+        DoubleWord36 dw1 = new DoubleWord36(op1);
+        DoubleWord36 dw2 = new DoubleWord36(op2);
+        DoubleWord36 expResult = new DoubleWord36(result);
+
+        DoubleWord36 dwResult = dw1.logicalXor(dw2);
+        assertEquals(expResult, dwResult);
+    }
 
 
     //  Display --------------------------------------------------------------------------------------------------------------------

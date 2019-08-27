@@ -336,6 +336,8 @@ public class Word36 {
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     public AdditionResult add(Word36 addend)    { return new AdditionResult(add(_value, addend._value)); }
+    public int compare(Word36 operand)          { return compare(_value, operand._value); }
+    public DoubleWord36 multiply(Word36 factor) { return new DoubleWord36(multiply(_value, factor._value)); }
     public Word36 negate()                      { return new Word36(negate(_value)); }
 
 
@@ -671,6 +673,19 @@ public class Word36 {
         long native1 = getTwosComplement(operand1);
         long native2 = getTwosComplement(operand2);
         return getOnesComplement(native1 + native2);
+    }
+
+    /**
+     * Compares two values
+     * Returns -1 if operand1 < operand2,
+     *          1 if operand1 > operand2,
+     *          0 if they are equal
+     */
+    public static int compare(
+        final long operand1,
+        final long operand2
+    ) {
+        return Long.compare(operand1, operand2);
     }
 
     public static long getOnesComplement(

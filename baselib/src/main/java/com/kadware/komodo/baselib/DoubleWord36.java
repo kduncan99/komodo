@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
-
 import java.math.BigInteger;
 
 /**
@@ -70,6 +68,20 @@ public class DoubleWord36 {
         }
     }
 
+    public static class MultiplyFloatingPointResult {
+        public final boolean _overflow;
+        public final boolean _underflow;
+        public final DoubleWord36 _value;
+
+        public MultiplyFloatingPointResult(
+            final StaticMultiplyFloatingPointResult smfpr
+        ) {
+            _overflow = smfpr._overflow;
+            _underflow = smfpr._underflow;
+            _value = new DoubleWord36(smfpr._value);
+        }
+    }
+
     public static class StaticAddFloatingPointResult {
         public boolean _overFlow;
         public boolean _underFlow;
@@ -128,6 +140,22 @@ public class DoubleWord36 {
         }
     }
 
+    public static class StaticMultiplyFloatingPointResult {
+        public final boolean _overflow;
+        public final boolean _underflow;
+        public final BigInteger _value;
+
+        public StaticMultiplyFloatingPointResult(
+            final boolean overflow,
+            final boolean underflow,
+            final BigInteger value
+        ) {
+            _overflow = overflow;
+            _underflow = underflow;
+            _value = value;
+        }
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constants
@@ -136,7 +164,9 @@ public class DoubleWord36 {
     public static final BigInteger CARRY_BIT        = BigInteger.valueOf(1).shiftLeft(72);
     public static final BigInteger SHORT_BIT_MASK   = BigInteger.valueOf(Word36.BIT_MASK);
     public static final BigInteger BIT_MASK         = SHORT_BIT_MASK.shiftLeft(36).or(SHORT_BIT_MASK);
+    public static final BigInteger NOT_BIT_MASK     = BIT_MASK.not();
 
+    public static final BigInteger NEGATIVE_BIT     = BigInteger.ONE.shiftLeft(71);
     public static final BigInteger NEGATIVE_ONE     = BIT_MASK.add(BigInteger.ONE.negate());
     public static final BigInteger NEGATIVE_ZERO    = BIT_MASK;
     public static final BigInteger POSITIVE_ONE     = BigInteger.ONE;
@@ -197,52 +227,6 @@ public class DoubleWord36 {
     }
 
 
-    //  Miscellaneous --------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Compares another DoubleWord36 to this one in the context of floating point operations.
-     * @return -1 if this object is less than the comparable object,
-     *          1 if this object is greater
-     *          0 if the objects are equal
-     */
-    public int floatingPointCompareTo(
-        final DoubleWord36 comp
-    ) {
-        //  If the signs are unequal, the positive value is greater.
-        boolean thisNeg = isNegative();
-        boolean thatNeg = comp.isNegative();
-        if (thisNeg != thatNeg) {
-            return thisNeg ? -1 : 1;
-        }
-
-        //  If the absolute values of the characteristics are unequal the larger value
-        //  belongs to the greater floating point value (unless we are negative, then the opposite is true)
-        int thisCharacteristic = getAbsoluteCharacteristic(_value);
-        int thatCharacteristic = getAbsoluteCharacteristic(comp._value);
-        if (thisCharacteristic != thatCharacteristic) {
-            if (thisNeg) {
-                return thisCharacteristic < thatCharacteristic ? 1 : -1;
-            } else {
-                return thisCharacteristic < thatCharacteristic? -1 : 1;
-            }
-        }
-
-        //  If the mantissas are unequal, the larger is greater (unless we are negative...)
-        long thisMantissa = getMantissa(_value);
-        long thatMantissa = getMantissa(comp._value);
-        if (thisMantissa != thatMantissa) {
-            if (thisNeg) {
-                return thisMantissa < thatMantissa ? 1 : -1;
-            } else {
-                return thisMantissa < thatMantissa ? -1 : 1;
-            }
-        }
-
-        //  Values are equal
-        return 0;
-    }
-
-
     //  Getter(s) ------------------------------------------------------------------------------------------------------------------
 
     public BigInteger get() { return _value; }
@@ -260,13 +244,16 @@ public class DoubleWord36 {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    public AdditionResult add(DoubleWord36 operand)             { return new AdditionResult(add(_value, operand._value)); }
-    public AddFloatingPointResult addFloatingPoint(DoubleWord36 operand)
-        { return new AddFloatingPointResult(addFloatingPoint(_value, operand._value)); }
+    public AdditionResult add(DoubleWord36 addend)              { return new AdditionResult(add(_value, addend._value)); }
+    public AddFloatingPointResult addFloatingPoint(DoubleWord36 addend)
+        { return new AddFloatingPointResult(addFloatingPoint(_value, addend._value)); }
     public int compareFloatingPoint(DoubleWord36 operand)       { return compareFloatingPoint(_value, operand._value); }
+    public int compareTo(DoubleWord36 operand)                  { return compare(_value, operand._value); }
     public DivisionResult divide(DoubleWord36 divisor)          { return new DivisionResult(divide(_value, divisor._value)); }
+    public DoubleWord36 divideFloatingPoint(DoubleWord36 divisor)
+        { return new DoubleWord36(divideFloatingPoint(_value, divisor._value)); }
     public DoubleWord36 extendSign(int fieldSize)               { return new DoubleWord36(extendSign(_value, fieldSize)); }
-    public MultiplicationResult multiply(DoubleWord36 operand)  { return new MultiplicationResult(multiply(_value, operand._value)); }
+    public MultiplicationResult multiply(DoubleWord36 factor)   { return new MultiplicationResult(multiply(_value, factor._value)); }
     public DoubleWord36 negate()                                { return new DoubleWord36(negate(_value)); }
 
 
@@ -281,10 +268,10 @@ public class DoubleWord36 {
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
 //    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
-//    public void leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); }
+    public DoubleWord36 leftShiftCircular(int count)    { return new DoubleWord36(leftShiftCircular(_value, count)); }
     public DoubleWord36 leftShiftLogical(int count)     { return new DoubleWord36(leftShiftLogical(_value, count)); }
 //    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
-//    public void rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); }
+    public DoubleWord36 rightShiftCircular(int count)   { return new DoubleWord36(rightShiftCircular(_value, count)); }
     public DoubleWord36 rightShiftLogical(int count)    { return new DoubleWord36(rightShiftLogical(_value, count)); }
 
 
@@ -305,7 +292,7 @@ public class DoubleWord36 {
     /**
      * Tests 72-bit ones-complement value to see if it is negative
      */
-    public static boolean isNegative(BigInteger value)      { return (value.shiftRight(71).intValue() == 1); }
+    public static boolean isNegative(BigInteger value)      { return value.and(NEGATIVE_BIT).equals(NEGATIVE_BIT); }
     public static boolean isNegativeZero(BigInteger value)  { return value.equals(NEGATIVE_ZERO); }
     public static boolean isPositive(BigInteger value)      { return !isNegative(value); }
     public static boolean isPositiveZero(BigInteger value)  { return value.equals(POSITIVE_ZERO); }
@@ -318,20 +305,20 @@ public class DoubleWord36 {
      * Adds two BigInteger operands presuming they represent a 72-bit signed integer value
      */
     public static StaticAdditionResult add(
-        final BigInteger operand1,
-        final BigInteger operand2
+        final BigInteger addend1,
+        final BigInteger addend2
     ) {
-        boolean neg1 = isNegative(operand1);
-        boolean neg2 = isNegative(operand2);
+        boolean neg1 = isNegative(addend1);
+        boolean neg2 = isNegative(addend2);
 
-        BigInteger result = addSimple(operand1, operand2);
+        BigInteger result = addSimple(addend1, addend2);
         if (!result.and(CARRY_BIT).equals(BigInteger.ZERO)) {
             result = result.and(BIT_MASK).add(BigInteger.ONE);
         }
 
         boolean negRes = isNegative(result);
 
-        boolean carry = result.compareTo(BigInteger.ZERO) < 1 ? (neg1 && neg2) : (neg1 || neg2);
+        boolean carry = result.compareTo(BigInteger.ZERO) < 0 ? (neg1 && neg2) : (neg1 || neg2);
         boolean overflow = (neg1 == neg2) && (neg1 != negRes);
         return new StaticAdditionResult(carry, overflow, result);
     }
@@ -340,12 +327,12 @@ public class DoubleWord36 {
      * Adds two BigInteger operands on the presumption they both represent 72-bit floating point values.
      */
     public static StaticAddFloatingPointResult addFloatingPoint(
-        final BigInteger operand1,
-        final BigInteger operand2
+        final BigInteger addend1,
+        final BigInteger addend2
     ) {
         //  Get the magnitude of the caracteristics, then get the magnitude of their difference.
-        int characteristic1 = getAbsoluteCharacteristic(operand1);
-        int characteristic2 = getAbsoluteCharacteristic(operand2);
+        int characteristic1 = getAbsoluteCharacteristic(addend1);
+        int characteristic2 = getAbsoluteCharacteristic(addend2);
         int expDiff = Math.abs(characteristic1 - characteristic2);
 
         //  Get the mantissas, which are in ones-complement form, and shift the one corresponding to the
@@ -354,10 +341,10 @@ public class DoubleWord36 {
         //  However, rather than mess with arithmetic shifting, we convert to positive, do the shift,
         //  then convert back to negative.
         //  Also note the sign of the result - it will be the sign of the characteristic with the larger magnitude.
-        boolean op1Neg = isNegative(operand1);
-        boolean op2Neg = isNegative(operand1);
-        long mantissa1 = getMantissa(operand1);
-        long mantissa2 = getMantissa(operand2);
+        boolean op1Neg = isNegative(addend1);
+        boolean op2Neg = isNegative(addend2);
+        long mantissa1 = getMantissa(addend1);
+        long mantissa2 = getMantissa(addend2);
 
         boolean resultNeg = false;
         if (characteristic1 < characteristic2) {
@@ -397,16 +384,29 @@ public class DoubleWord36 {
      * Simple addition of 72-bit signed integers for the case where we don't care about carry or overflow
      */
     public static BigInteger addSimple(
-        final BigInteger operand1,
-        final BigInteger operand2
+        final BigInteger addend1,
+        final BigInteger addend2
     ) {
-        if ((operand1 == NEGATIVE_ZERO) && (operand2 == NEGATIVE_ZERO)) {
+        if (addend1.equals(NEGATIVE_ZERO) && addend2.equals(NEGATIVE_ZERO)) {
             return NEGATIVE_ZERO;
         }
 
-        BigInteger native1 = getTwosComplement(operand1);
-        BigInteger native2 = getTwosComplement(operand2);
+        BigInteger native1 = getTwosComplement(addend1);
+        BigInteger native2 = getTwosComplement(addend2);
         return getOnesComplement(native1.add(native2));
+    }
+
+    /**
+     * Compares two values
+     * Returns -1 if operand1 < operand2,
+     *          1 if operand1 > operand2,
+     *          0 if they are equal
+     */
+    public static int compare(
+        final BigInteger operand1,
+        final BigInteger operand2
+    ) {
+        return operand1.compareTo(operand2);
     }
 
     /**
@@ -464,6 +464,13 @@ public class DoubleWord36 {
         return new StaticDivisionResult(getOnesComplement(tempResults[0]), getOnesComplement(tempResults[1]));
     }
 
+    public static BigInteger divideFloatingPoint(
+        final BigInteger dividend,
+        final BigInteger divisor
+    ) {
+        return null;//TODO
+    }
+
     /**
      * Extends the sign of an arbitrarily-sized value, to the full 72 bits
      */
@@ -482,37 +489,87 @@ public class DoubleWord36 {
     }
 
     /**
-     * Converts a twos-complement BigInteger operand to ones-complement
-     */
-    public static BigInteger getOnesComplement(
-        final BigInteger operand
-    ) {
-        if (operand.compareTo(BigInteger.ZERO) >= 0) {
-            return operand;
-        } else {
-            return operand.negate().not().and(BIT_MASK);
-        }
-    }
-
-    /**
-     * Converts a ones-complement BigInteger operand to twos-complement
-     */
-    public static BigInteger getTwosComplement(
-        final BigInteger operand
-    ) {
-        return isNegative(operand) ? negate(operand).negate() : operand;
-    }
-
-    /**
      * Arithmetic multiplication - operands and result are ones-complement
      */
     public static StaticMultiplicationResult multiply(
-        final BigInteger operand1,
-        final BigInteger operand2
+        final BigInteger factor1,
+        final BigInteger factor2
     ) {
-        BigInteger tempResult = getTwosComplement(operand1).multiply(getTwosComplement(operand2));
-        BigInteger result = getOnesComplement(tempResult).and(BIT_MASK);
-        return new StaticMultiplicationResult(!tempResult.equals(result), result);
+        BigInteger tcResult = getTwosComplement(factor1).multiply(getTwosComplement(factor2));
+        boolean overflow;
+        if (tcResult.compareTo(BigInteger.ZERO) < 0) {
+            //  negative result, should have leading 1's
+            overflow = !tcResult.and(NOT_BIT_MASK).equals(NOT_BIT_MASK);
+        } else {
+            //  positive result, should have leading 0's
+            overflow = !tcResult.and(NOT_BIT_MASK).equals(BigInteger.ZERO);
+        }
+
+        BigInteger result = getOnesComplement(tcResult).and(BIT_MASK);
+        return new StaticMultiplicationResult(overflow, result);
+    }
+
+    /**
+     * Multiply two floating point numbers
+     */
+    public static StaticMultiplyFloatingPointResult multiplyFloatingPoint(
+        final BigInteger factor1,
+        final BigInteger factor2
+    ) {
+        //  Make a note of whether the result should be negative, then make sure both operands are positive.
+        //  Get unbiased exponents from the biased characteristics so we can manipulate them as signed ints.
+        boolean isNeg1 = isNegative(factor1);
+        boolean isNeg2 = isNegative(factor2);
+        boolean resultNeg = isNeg1 != isNeg2;
+
+        BigInteger op1 = isNeg1 ? getOnesComplement(factor1) : factor1;
+        BigInteger op2 = isNeg2 ? getOnesComplement(factor2) : factor2;
+        int exp1 = getAbsoluteCharacteristic(op1);
+        int exp2 = getAbsoluteCharacteristic(op2);
+
+        //  Before we get all extra-curricular, check the operands - if either is zero, the result is positive zero.
+        //  Note (once again) that a floating point zero is formatted as a 72-bit integer zero.
+        if (op1.equals(BigInteger.ZERO) || op2.equals(BigInteger.ZERO)) {
+            return new StaticMultiplyFloatingPointResult(false, false, BigInteger.ZERO);
+        }
+
+        //  Now convert the fractional mantissas to integral, with corresponding adjustments to the exponents
+        long[] conversion1 = convertMantissaToIntegral(getMantissa(op1), exp1);
+        long integral1 = conversion1[0];
+        exp1 = (int) conversion1[1];
+
+        long[] conversion2 = convertMantissaToIntegral(getMantissa(op2), exp2);
+        long integral2 = conversion2[0];
+        exp2 = (int) conversion2[1];
+
+        //  Multiple the integrals and add the exponents.
+        //  Do it with a BigInteger since 60bits x 60bits is potentially 119 bits.
+        //  Then shift that result back to the right until there are no ones to the left of the 60-bit mantissa field.
+        //  This fits the mantissa value back down into 60 bits.
+        BigInteger resultIntegral = BigInteger.valueOf(integral1).multiply(BigInteger.valueOf(integral2));
+        int resultExponent = exp1 + exp2;
+        while (!resultIntegral.and(BIT_MASK).equals(resultIntegral)) {
+            resultIntegral.shiftRight(1);
+            ++resultExponent;
+        }
+
+        //  Now normalize the thing (left-justifying if/as necessary) and note over/underflow
+        BigInteger leftBig = BigInteger.valueOf(0x0800_0000_0000_0000L);
+        while (resultIntegral.and(leftBig).equals(BigInteger.ZERO)) {
+            resultIntegral.shiftLeft(1);
+            --resultExponent;
+        }
+
+        boolean overflow = resultExponent > 01777;
+        boolean underflow = resultExponent < -02000;
+
+        //  Finish rebuilding the overall floating point value
+        BigInteger resultValue = resultIntegral.or(BigInteger.valueOf(resultExponent + 1024).shiftLeft(60));
+        if (resultNeg) {
+            resultValue = logicalNot(resultValue);
+        }
+
+        return new StaticMultiplyFloatingPointResult(overflow, underflow, resultValue);
     }
 
     /**
@@ -592,28 +649,28 @@ public class DoubleWord36 {
 //            return leftShiftLogical(value, count);
 //        }
 //    }
-//
-//    /**
-//     * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
-//     * Actual implementation may not involve iterative shifting.
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static long leftShiftCircular(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftCircular(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            int actualCount = count % 36;
-//            long residue = value >> (36 - actualCount); // end-around shifted portion
-//            return ((value << actualCount) & BIT_MASK) | residue;
-//        }
-//    }
+
+    /**
+     * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
+     * Actual implementation may not involve iterative shifting.
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger leftShiftCircular(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftCircular(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            int actualCount = count % 72;
+            BigInteger residue = value.shiftRight(72 - actualCount);  // end-around shifted portion
+            return value.shiftLeft(actualCount).and(BIT_MASK).or(residue);
+        }
+    }
 
     /**
      * Shifts the given 72-bit value left by a number of bits
@@ -630,7 +687,7 @@ public class DoubleWord36 {
         } else if (count == 0) {
             return value;
         } else {
-            return (count > 35) ? BigInteger.ZERO : value.shiftLeft(count).and(BIT_MASK);
+            return (count > 71) ? BigInteger.ZERO : value.shiftLeft(count).and(BIT_MASK);
         }
     }
 
@@ -660,29 +717,29 @@ public class DoubleWord36 {
 //            }
 //        }
 //    }
-//
-//    /**
-//     * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
-//     * Actual implementation may not involve iterative shifting.
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static long rightShiftCircular(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftCircular(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            int actualCount = (count % 36);
-//            long mask = BIT_MASK >> (36 - actualCount);
-//            long residue = (value & mask) << (36 - actualCount);
-//            return ((value >> actualCount) | residue);
-//        }
-//    }
+
+    /**
+     * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
+     * Actual implementation may not involve iterative shifting.
+     * @param value value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger rightShiftCircular(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return leftShiftCircular(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            int actualCount = (count % 72);
+            BigInteger mask = BIT_MASK.shiftRight(72 - actualCount);
+            BigInteger residue = (value.and(mask)).shiftLeft(72 - actualCount);
+            return value.shiftRight(actualCount).or(residue);
+        }
+    }
 
     /**
      * Shifts the given 72-bit value right by a number of bits
@@ -744,6 +801,37 @@ public class DoubleWord36 {
         value = value.or(BigInteger.valueOf(normalizedCharacteristic).shiftLeft(60));
         value = value.or(BigInteger.valueOf(normalizedMantissa));
         return value;
+    }
+
+    /**
+     * Converts a twos-complement BigInteger operand to ones-complement
+     */
+    public static BigInteger getOnesComplement(
+        final BigInteger operand
+    ) {
+        if (operand.compareTo(BigInteger.ZERO) >= 0) {
+            return operand;
+        } else {
+            return operand.negate().not().and(BIT_MASK);
+        }
+    }
+
+    /**
+     * As above, but conventiently for simple twos-complement integer operands
+     */
+    public static BigInteger getOnesComplement(
+        final long operand
+    ) {
+        return getOnesComplement(BigInteger.valueOf(operand));
+    }
+
+    /**
+     * Converts a ones-complement BigInteger operand to twos-complement
+     */
+    public static BigInteger getTwosComplement(
+        final BigInteger operand
+    ) {
+        return isNegative(operand) ? negate(operand).negate() : operand;
     }
 
     /**
@@ -839,16 +927,42 @@ public class DoubleWord36 {
      */
     //TODO fold this back into addFloatingPoint if we don't use it anywhere else
     private static long addMantissas(
-        final long operand1,
-        final long operand2
+        final long addend1,
+        final long addend2
     ) {
-        long sum = operand1 + operand2;
+        long sum = addend1 + addend2;
         if (sum > 0x0FFF_FFFF_FFFF_FFFFL) {
             sum &= 0x0FFF_FFFF_FFFF_FFFFL;
             ++sum;
         }
 
         return sum;
+    }
+
+    /**
+     * Converts a fractional mantissa to an integral value by conceptually shifting it left until
+     * into the integral field until the fractional portion is zero, and then we return the
+     * interim result with the accordingly-downward-adjusted exponent.
+     * (In practice, we shift right until the right-most bit is non-zero, and present the result as the integral number).
+     * @param mantissa initial mantissa value
+     * @param exponent initial exponent which corresponds to the initial mantissa value
+     * @return two-word array: [0] is the resulting integral value, [1] is the resulting signed exponent
+     */
+    private static long[] convertMantissaToIntegral(
+        final long mantissa,
+        final long exponent
+    ) {
+        long resultMantissa = mantissa;
+        int countDown = 60;
+        while ((resultMantissa & 01) == 0) {
+            resultMantissa >>= 1;
+            --countDown;
+        }
+
+        long[] result = new long[2];
+        result[0] = resultMantissa;
+        result[1] = exponent - countDown;
+        return result;
     }
 
     /**
@@ -916,7 +1030,8 @@ public class DoubleWord36 {
     }
 
     /**
-     * Shifts the bits of a mantissa to the right, in order to increase the corresponding exponent
+     * Shifts the bits of a mantissa to the right, in order to increase the corresponding exponent.
+     * This version uses a known number of bits.
      * @param operand 60-bit mantissa, which will be ones-complemented if the containing fp value is negative
      * @param count number of bits to be shifted
      * @param isNegative true if the containing fp value is negative
