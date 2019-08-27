@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import java.util.Arrays;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -29,9 +28,6 @@ public class ArraySlice {
         _array = array;
         _offset = 0;
         _length = array.length;
-        if (_offset < 2000000000 || _length < 2000000000) {//TODO
-            assert (_length < 2000000000);
-        }
     }
 
     /**
@@ -39,27 +35,23 @@ public class ArraySlice {
      * @param array base array
      * @param offset offset into the base array at which point this subset begins
      * @param length length of this subset
-     * @throws InvalidArgumentRuntimeException if offset or index (or the combination thereof) is invalid
      */
     public ArraySlice(
         final long[] array,
         final int offset,
         final int length
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         if ((offset + length > array.length) || (offset < 0) || (length < 0)) {
-            throw new InvalidArgumentRuntimeException(
-                String.format("Invalid arguments array size=%d requested offset=%d length=%d",
-                              array.length,
-                              offset,
-                              length));
+            String msg = String.format("Invalid arguments array size=%d requested offset=%d length=%d",
+                                       array.length,
+                                       offset,
+                                       length);
+            throw new RuntimeException(msg);
         }
 
         _array = array;
         _offset = offset;
         _length = length;
-        if (_offset < 2000000000 || _length < 2000000000) {//TODO
-            assert (_length < 2000000000);
-        }
     }
 
     /**
@@ -67,27 +59,23 @@ public class ArraySlice {
      * @param baseSlice base slice
      * @param offset offset into the slice's subset of the base array, at which this slice's subset begins
      * @param length length of this subset
-     * @throws InvalidArgumentRuntimeException if offset or index (or the combination thereof) is invalid
      */
     public ArraySlice(
         final ArraySlice baseSlice,
         final int offset,
         final int length
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         if ((offset + length > baseSlice._length) || (offset < 0) || (length < 0)) {
-            throw new InvalidArgumentRuntimeException(
-                String.format("Invalid arguments base slice size=%d requested offset=%d length=%d",
-                              baseSlice._length,
-                              offset,
-                              length));
+            String msg = String.format("Invalid arguments base slice size=%d requested offset=%d length=%d",
+                                       baseSlice._length,
+                                       offset,
+                                       length);
+            throw new RuntimeException(msg);
         }
 
         _array = baseSlice._array;
         _offset = offset + baseSlice._offset;
         _length = length;
-        if (_offset < 2000000000 || _length < 2000000000) {//TODO
-            assert (_length < 2000000000);
-        }
     }
 
     /**
@@ -159,16 +147,12 @@ public class ArraySlice {
      * Gets the value at the given index
      * @param index of the value
      * @return the value
-     * @throws InvalidArgumentRuntimeException if index is invalid
      */
     public long get(
         final int index
-    ) throws InvalidArgumentRuntimeException {
-        if ((index < 0) || (index >= _length)){
-            throw new InvalidArgumentRuntimeException(
-                String.format("Invalid index=%d slice length=%d",
-                              index,
-                              _length));
+    ) {
+        if ((index < 0) || (index >= _length)) {
+            throw new RuntimeException(String.format("Invalid index=%d slice length=%d", index, _length));
         }
 
         return _array[index + _offset];
@@ -224,16 +208,15 @@ public class ArraySlice {
      * @param sourceIndex index into source array of first value to be loaded
      * @param sourceLength number of values to be loaded
      * @param destinationIndex index into destination slice of first value to be stored
-     * @throws InvalidArgumentRuntimeException if any parameter or combination of parameters doesn't make sense
      */
     public void load(
         final long[] source,
         final int sourceIndex,
         final int sourceLength,
         final int destinationIndex
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         if (sourceIndex + sourceLength > source.length) {
-            throw new InvalidArgumentRuntimeException(
+            throw new RuntimeException(
                 String.format("Invalid parameter source array length:%d source index:%d source length:%d",
                               source.length,
                               sourceIndex,
@@ -241,7 +224,7 @@ public class ArraySlice {
         }
 
         if (destinationIndex + sourceLength > _length) {
-            throw new InvalidArgumentRuntimeException(
+            throw new RuntimeException(
                 String.format("Invalid parameter slice length:%d destination index:%d source length:%d",
                               _length,
                               destinationIndex,
@@ -262,9 +245,9 @@ public class ArraySlice {
     public void load(
         final ArraySlice source,
         final int destinationIndex
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         if (destinationIndex + source._length > _length) {
-            throw new InvalidArgumentRuntimeException(
+            throw new RuntimeException(
                 String.format("Invalid parameter source length:%d destination index:%d destination length:%d",
                               source._length,
                               destinationIndex,
@@ -282,14 +265,13 @@ public class ArraySlice {
      * @param sourceIndex index into source array of first value to be loaded
      * @param sourceLength number of values to be loaded
      * @param destinationIndex index into destination slice of first value to be stored
-     * @throws InvalidArgumentRuntimeException if any parameter or combination of parameters doesn't make sense
      */
     public void load(
         final ArraySlice source,
         final int sourceIndex,
         final int sourceLength,
         final int destinationIndex
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         load(source._array, source._offset + sourceIndex, sourceLength, destinationIndex);
     }
 
@@ -621,17 +603,13 @@ public class ArraySlice {
      * Sets a value into the array at the given index, which is offset further by this subset's offset
      * @param index index into the subset at which the value should be stored
      * @param value value to be stored
-     * @throws InvalidArgumentRuntimeException if the index is invalid
      */
     public void set(
         final int index,
         final long value
-    ) throws InvalidArgumentRuntimeException {
+    ) {
         if ((index < 0) || (index >= _length)){
-            throw new InvalidArgumentRuntimeException(
-                String.format("Invalid index=%d slice length=%d",
-                              index,
-                              _length));
+            throw new RuntimeException(String.format("Invalid index=%d slice length=%d", index, _length));
         }
 
         _array[index + _offset] = value;

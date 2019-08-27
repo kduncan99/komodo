@@ -330,7 +330,7 @@ public class Word36 {
 
     public boolean isNegative() { return (_value & NEGATIVE_BIT) != 0; }
     public boolean isPositive() { return (_value & NEGATIVE_BIT) == 0; }
-    public boolean isZero() { return (_value == POSITIVE_ZERO) || (_value == NEGATIVE_ZERO); }
+    public boolean isZero()     { return (_value == POSITIVE_ZERO) || (_value == NEGATIVE_ZERO); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------

@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.logging.log4j.Level;
@@ -72,19 +71,19 @@ public class Test_ArraySlice {
         }
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor2_error1() {
         long[] base = new long[8];
         new ArraySlice(base, -2, 4);
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor2_error2() {
         long[] base = new long[8];
         new ArraySlice(base, 2, 8);
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor2_error3() {
         long[] base = new long[8];
         new ArraySlice(base, 256, 8);
@@ -104,21 +103,21 @@ public class Test_ArraySlice {
         }
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor3_error1() {
         long[] base = new long[8];
         ArraySlice slice1 = new ArraySlice(base, 2, 4);
         new ArraySlice(slice1, -2, 4);
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor3_error2() {
         long[] base = new long[8];
         ArraySlice slice1 = new ArraySlice(base, 2, 4);
         new ArraySlice(slice1, 2, 4);
     }
 
-    @Test(expected = InvalidArgumentRuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testConstructor3_error3() {
         long[] base = new long[8];
         ArraySlice slice1 = new ArraySlice(base, 2, 4);

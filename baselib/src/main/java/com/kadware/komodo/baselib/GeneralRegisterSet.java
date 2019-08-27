@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -184,7 +183,7 @@ public class GeneralRegisterSet {
         final int registerIndex
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
-            throw new InvalidArgumentRuntimeException(String.format("registerIndex=%d", registerIndex));
+            throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
         return _registers[registerIndex];
@@ -200,7 +199,7 @@ public class GeneralRegisterSet {
         final GeneralRegister value
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
-            throw new InvalidArgumentRuntimeException(String.format("registerIndex=%d", registerIndex));
+            throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
         _registers[registerIndex].setW(value.getW());
@@ -216,11 +215,11 @@ public class GeneralRegisterSet {
         final long value
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
-            throw new InvalidArgumentRuntimeException(String.format("registerIndex=%d", registerIndex));
+            throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
         if (value > 0_777777_777777l) {
-            throw new InvalidArgumentRuntimeException(String.format("value is out of range for 36-bits:0%o", value));
+            throw new RuntimeException(String.format("value is out of range for 36-bits:0%o", value));
         }
 
         _registers[registerIndex].setW(value);
@@ -251,7 +250,6 @@ public class GeneralRegisterSet {
 
     /**
      * Writes the content of this GRS to the given buffered writer
-     * @param writer
      */
     public void log(
         final BufferedWriter writer

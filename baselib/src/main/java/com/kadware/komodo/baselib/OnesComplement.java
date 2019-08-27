@@ -5,8 +5,6 @@
 package com.kadware.komodo.baselib;
 
 import java.math.BigInteger;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
-
 import java.util.Arrays;
 
 /**
