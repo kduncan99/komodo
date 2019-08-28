@@ -784,12 +784,9 @@ public class Test_DoubleWord36 {
 
     @Test
     public void floatingFromNegativeInteger() {
-        DoubleWord36 dw = new DoubleWord36(077777);
+        DoubleWord36 dw = new DoubleWord36(077777).negate();
         DoubleWord36 exp = new DoubleWord36(15,0_7777_7000_0000_0000_0000L,true);
-
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
-        System.out.println(String.format("%024o", exp._value));//TODO
-        System.out.println(String.format("%024o", bi));//TODO
         assertEquals(exp._value, bi);
     }
 
@@ -864,16 +861,14 @@ public class Test_DoubleWord36 {
 
     @Test
     public void normalizeFun() {
-        long integral = 07L;
-        long fractional = 0_7777_0000_0000_0000_0000L;
+        long integral = 0x7L;
+        long fractional = 0xFFF0_0000_0000_0000L;
         int exponent = 12;
-        long expMantissa = 0_7777_7000_0000_0000_0000L;
+        long expMantissa = 0_77777_00000_00000_00000L;
         int expExponent = 15;
 
         DoubleWord36.NormalizeUnbiasedExponentResult nuer
             = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-        System.out.println(String.format("expected %024o  E%d", expMantissa, expExponent));//TODO
-        System.out.println(String.format("actual   %024o  E%d", nuer._mantissa, nuer._exponent));//TODO
 
         assertEquals(expMantissa, nuer._mantissa);
         assertEquals(expExponent, nuer._exponent);
@@ -905,7 +900,6 @@ public class Test_DoubleWord36 {
 
         DoubleWord36.NormalizeUnbiasedExponentResult nuer
             = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-        System.out.println(String.format("%024o", nuer._mantissa));//TODO
 
         assertEquals(expMantissa, nuer._mantissa);
         assertTrue(nuer._overflow);

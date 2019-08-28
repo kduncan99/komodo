@@ -885,9 +885,9 @@ public class Word36 {
             return value;
         } else {
             int actualCount = (count % 36);
-            long mask = BIT_MASK >> (36 - actualCount);
+            long mask = BIT_MASK >>> (36 - actualCount);
             long residue = (value & mask) << (36 - actualCount);
-            return ((value >> actualCount) | residue);
+            return ((value >>> actualCount) | residue);
         }
     }
 
@@ -906,7 +906,7 @@ public class Word36 {
         } else if (count == 0) {
             return value;
         } else {
-            return (count > 35) ? 0 : value >> count;
+            return (count > 35) ? 0 : value >>> count;
         }
     }
 
