@@ -554,95 +554,86 @@ public class Test_DoubleWord36 {
     }
 
     //TODO
-//    @Test
-//    public void rightShiftAlgebraic36_negCount() {
-//        long parameter = 033225L;
-//        long expResult = 0332250L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(-3);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_3Count() {
-//        long parameter = 0400000_112233L;
-//        long expResult = 0740000_011223L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(3);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_34Count() {
-//        long parameter = 0_421456_321456L;
-//        long expResult = 0_777777_777776L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(34);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_35Count() {
-//        long parameter = 0_421456_321456L;
-//        long expResult = 0_777777_777777L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(35);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_neg_36Count() {
-//        long parameter = 0_421456_321456L;
-//        long expResult = 0_777777_777777L;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(36);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_3Count() {
+    @Test
+    public void rightShiftAlgebraic_negCount() {
+        long partial1 = 0_400000_000000L;
+        long partial2 = 0_112233_445566L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long expPartial1 = 0_400000_000011L;
+        long expPartial2 = 0_223344_556600L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftAlgebraic(-6);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_24Count() {
+        long partial1 = 0_400000_111222L;
+        long partial2 = 0_334455_000000L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long expPartial1 = 0_777777_774000L;
+        long expPartial2 = 0_001112_223344L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftAlgebraic(24);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_neg_71Count() {
+        long partial1 = 0_400000_111222L;
+        long partial2 = 0_334455_000000L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long expPartial1 = 0_777777_777777L;
+        long expPartial2 = 0_777777_777777L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftAlgebraic(71);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_3Count() {
 //        long parameter = 033225L;
 //        long expResult = parameter >> 3;
 //        Word36 word36 = new Word36(parameter);
 //        word36.rightShiftAlgebraic(3);
 //        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_34Count() {
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_34Count() {
 //        long parameter = 0_321456_321456L;
 //        long expResult = parameter >> 34;
 //        Word36 word36 = new Word36(parameter);
 //        word36.rightShiftAlgebraic(34);
 //        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_35Count() {
-//        long parameter = 0_321456_321456L;
-//        long expResult = parameter >> 35;
-//        Word36 word36 = new Word36(parameter);
-//        word36.rightShiftAlgebraic(35);
-//        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_pos_36Count() {
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_pos_72Count() {
 //        long parameter = 0_321456_321456L;
 //        long expResult = 0;
 //        Word36 word36 = new Word36(parameter);
 //        word36.rightShiftAlgebraic(36);
 //        assertEquals(expResult, word36.getW());
-//    }
-//
-//    @Test
-//    public void rightShiftAlgebraic36_zeroCount() {
+    }
+
+    @Test
+    public void rightShiftAlgebraic36_zeroCount() {
 //        long parameter = 033225L;
 //        long expResult = 033225L;
 //        Word36 word36 = new Word36(parameter);
 //        word36.rightShiftAlgebraic(0);
 //        assertEquals(expResult, word36.getW());
-//    }
+    }
 
     @Test
     public void rightShiftCircular_neg9() {
@@ -792,22 +783,27 @@ public class Test_DoubleWord36 {
 
     //  Display --------------------------------------------------------------------------------------------------------------------
 
-    //TODO
-//    @Test
-//    public void toStringFromASCII() {
-//        long word = 0_101_102_103_104L;
-//        assertEquals("ABCD", Word36.toStringFromASCII(word));
-//    }
-//
-//    @Test
-//    public void toStringFromFieldata() {
-//        long word = 0_05_06_07_10_11_12L;
-//        assertEquals(" ABCDE", Word36.toStringFromFieldata(word));
-//    }
-//
-//    @Test
-//    public void toOctal() {
-//        long word = 0_05_06_07_10_11_12L;
-//        assertEquals("050607101112", Word36.toOctal(word));
-//    }
+    @Test
+    public void toStringFromASCII() {
+        long word1 = 0_101_102_103_104L;
+        long word2 = 0_105_106_107_110L;
+        BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
+        assertEquals("ABCDEFGH", DoubleWord36.toStringFromASCII(bi));
+    }
+
+    @Test
+    public void toStringFromFieldata() {
+        long word1 = 0_050607101112L;
+        long word2 = 0_606162636465L;
+        BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
+        assertEquals(" ABCDE012345", DoubleWord36.toStringFromFieldata(bi));
+    }
+
+    @Test
+    public void toOctal() {
+        long word1 = 0_050607101112L;
+        long word2 = 0_606162636465L;
+        BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
+        assertEquals("050607101112606162636465", DoubleWord36.toOctal(bi));
+    }
 }
