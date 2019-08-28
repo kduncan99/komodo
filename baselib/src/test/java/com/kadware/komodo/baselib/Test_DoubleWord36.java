@@ -24,69 +24,57 @@ public class Test_DoubleWord36 {
     @Test
     public void stringToWordASCII() {
         DoubleWord36 dw = DoubleWord36.stringToWordASCII("HelpSlop");
-        long exp1 = 0_110_145_154_160L;
-        long exp2 = 0_123_154_157_160L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_110_145_154_160L, 0_123_154_157_160L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWord36ASCII_over() {
         DoubleWord36 dw = DoubleWord36.stringToWordASCII("0123456789");
-        long exp1 = 0_060_061_062_063L;
-        long exp2 = 0_064_065_066_067L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_060_061_062_063L, 0_064_065_066_067L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWordASCII_partial() {
         DoubleWord36 dw = DoubleWord36.stringToWordASCII("Help10");
-        long exp1 = 0_110_145_154_160L;
-        long exp2 = 0_061_060_040_040L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_110_145_154_160L, 0_061_060_040_040L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWordFieldata() {
         DoubleWord36 dw = DoubleWord36.stringToWordFieldata("Abc@23HIJKLM");
-        long exp1 = 0_060710_006263L;
-        long exp2 = 0_151617_202122L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_060710_006263L, 0_151617_202122L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWordFieldata_over() {
         DoubleWord36 dw = DoubleWord36.stringToWordFieldata("0123 0123 0123 0123 0123");
-        long exp1 = 0_606162_630560L;
-        long exp2 = 0_616263_056061L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_606162_630560L, 0_616263_056061L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWordFieldata_partial1() {
         DoubleWord36 dw = DoubleWord36.stringToWordFieldata("1234");
-        long exp1 = 0_616263_640505L;
-        long exp2 = 0_050505_050505L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_616263_640505L, 0_050505_050505L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void stringToWordFieldata_partial2() {
         DoubleWord36 dw = DoubleWord36.stringToWordFieldata("12345678");
-        long exp1 = 0_616263_646566L;
-        long exp2 = 0_677005_050505L;
-        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
-        assertEquals(expected, dw._value);
+        DoubleWord36 exp = new DoubleWord36(0_616263_646566L, 0_677005_050505L);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void toOnes_Zero() {
-        assertEquals(BigInteger.ZERO, DoubleWord36.getOnesComplement(BigInteger.ZERO));
+        DoubleWord36 dw = new DoubleWord36(BigInteger.ZERO);
+        DoubleWord36 exp = new DoubleWord36(BigInteger.ZERO);
+        assertEquals(exp, dw);
     }
 
     @Test
@@ -96,16 +84,16 @@ public class Test_DoubleWord36 {
 
     @Test
     public void toOnes_NegativeOne() {
-        BigInteger op = BigInteger.ONE.negate();
-        BigInteger expResult = DoubleWord36.BIT_MASK.subtract(BigInteger.ONE);
-        assertEquals(expResult, DoubleWord36.getOnesComplement(op));
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.getOnesComplement(BigInteger.ONE.negate()));
+        DoubleWord36 exp = new DoubleWord36(DoubleWord36.BIT_MASK.subtract(BigInteger.ONE));
+        assertEquals(exp, dw);
     }
 
     @Test
     public void toOnes_NegativeValue() {
-        BigInteger op = BigInteger.valueOf(-293884);
-        BigInteger expected = BigInteger.valueOf(0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777776_702003L));
-        assertEquals(expected, DoubleWord36.getOnesComplement(op));
+        DoubleWord36 dw = new DoubleWord36(DoubleWord36.getOnesComplement(BigInteger.valueOf(-293884)));
+        DoubleWord36 exp = new DoubleWord36(BigInteger.valueOf(0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777776_702003L)));
+        assertEquals(exp, dw);
     }
 
     @Test
@@ -730,78 +718,199 @@ public class Test_DoubleWord36 {
     public void and() {
         long op1high = 0_777666_555444L;
         long op1low = 0_333222_111000L;
+        DoubleWord36 dw1 = new DoubleWord36(op1high, op1low);
+
         long op2high = 0_776655_443322L;
         long op2low = 0_110077_665544L;
+        DoubleWord36 dw2 = new DoubleWord36(op2high, op2low);
 
-        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
-        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
-        BigInteger result = op1.and(op2);
-
-        DoubleWord36 dw1 = new DoubleWord36(op1);
-        DoubleWord36 dw2 = new DoubleWord36(op2);
-        DoubleWord36 expResult = new DoubleWord36(result);
-
-        DoubleWord36 dwResult = dw1.logicalAnd(dw2);
-        assertEquals(expResult, dwResult);
+        DoubleWord36 exp = new DoubleWord36(dw1._value.and(dw2._value));
+        DoubleWord36 dw = dw1.logicalAnd(dw2);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void not() {
         long op1high = 0_777666_555444L;
         long op1low = 0_333222_111000L;
+        DoubleWord36 dw1 = new DoubleWord36(op1high, op1low);
 
-        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
-        BigInteger result = op1.not();
-
-        DoubleWord36 dw1 = new DoubleWord36(op1);
-        DoubleWord36 expResult = new DoubleWord36(result);
-
-        DoubleWord36 dwResult = dw1.logicalNot();
-        assertEquals(expResult, dwResult);
+        DoubleWord36 exp = new DoubleWord36(dw1._value.not());
+        DoubleWord36 dw = dw1.logicalNot();
+        assertEquals(exp, dw);
     }
 
     @Test
     public void or() {
         long op1high = 0_777666_555444L;
         long op1low = 0_333222_111000L;
+        DoubleWord36 dw1 = new DoubleWord36(op1high, op1low);
+
         long op2high = 0_776655_443322L;
         long op2low = 0_110077_665544L;
+        DoubleWord36 dw2 = new DoubleWord36(op2high, op2low);
 
-        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
-        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
-        BigInteger result = op1.or(op2);
-
-        DoubleWord36 dw1 = new DoubleWord36(op1);
-        DoubleWord36 dw2 = new DoubleWord36(op2);
-        DoubleWord36 expResult = new DoubleWord36(result);
-
-        DoubleWord36 dwResult = dw1.logicalOr(dw2);
-        assertEquals(expResult, dwResult);
+        DoubleWord36 exp = new DoubleWord36(dw1._value.or(dw2._value));
+        DoubleWord36 dw = dw1.logicalOr(dw2);
+        assertEquals(exp, dw);
     }
 
     @Test
     public void xor() {
         long op1high = 0_777666_555444L;
         long op1low = 0_333222_111000L;
+        DoubleWord36 dw1 = new DoubleWord36(op1high, op1low);
+
         long op2high = 0_776655_443322L;
         long op2low = 0_110077_665544L;
+        DoubleWord36 dw2 = new DoubleWord36(op2high, op2low);
 
-        BigInteger op1 = BigInteger.valueOf(op1high).shiftLeft(36).or(BigInteger.valueOf(op1low));
-        BigInteger op2 = BigInteger.valueOf(op2high).shiftLeft(36).or(BigInteger.valueOf(op2low));
-        BigInteger result = op1.xor(op2);
-
-        DoubleWord36 dw1 = new DoubleWord36(op1);
-        DoubleWord36 dw2 = new DoubleWord36(op2);
-        DoubleWord36 expResult = new DoubleWord36(result);
-
-        DoubleWord36 dwResult = dw1.logicalXor(dw2);
-        assertEquals(expResult, dwResult);
+        DoubleWord36 exp = new DoubleWord36(dw1._value.xor(dw2._value));
+        DoubleWord36 dw = dw1.logicalXor(dw2);
+        assertEquals(exp, dw);
     }
 
 
-    //  Floating Point -------------------------------------------------------------------------------------------------------------
+    //  Floating Point methods -----------------------------------------------------------------------------------------------------
 
-    //TODO
+    @Test
+    public void floatingFromInteger() {
+        DoubleWord36 dw = new DoubleWord36(0777);
+        DoubleWord36 exp = new DoubleWord36(9,0_7770_0000_0000_0000_0000L,false);
+
+        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
+        assertEquals(exp._value, bi);
+    }
+
+    @Test
+    public void floatingFromNegativeInteger() {
+        DoubleWord36 dw = new DoubleWord36(077777);
+        DoubleWord36 exp = new DoubleWord36(15,0_7777_7000_0000_0000_0000L,true);
+
+        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
+        System.out.println(String.format("%024o", exp._value));//TODO
+        System.out.println(String.format("%024o", bi));//TODO
+        assertEquals(exp._value, bi);
+    }
+
+    @Test
+    public void floatingFromIntegerZero() {
+        DoubleWord36 dw = DoubleWord36.DW36_POSITIVE_ZERO;
+        DoubleWord36 exp = new DoubleWord36(0,0L,false);
+
+        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
+        assertEquals(exp._value, bi);
+    }
+
+    @Test
+    public void floatingFromIntegerNegativeZero() {
+        DoubleWord36 dw = DoubleWord36.DW36_NEGATIVE_ZERO;
+        DoubleWord36 exp = new DoubleWord36(0,0L,true);
+
+        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
+        assertEquals(exp._value, bi);
+    }
+
+    @Test
+    public void normalizeZero() {
+        long integral = 0L;
+        long fractional = 0L;
+        int exponent = 077777;
+        long expMantissa = 0L;
+        int expExponent = 0;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertEquals(expExponent, nuer._exponent);
+        assertFalse(nuer._overflow);
+        assertFalse(nuer._underflow);
+    }
+
+    @Test
+    public void normalizeInteger() {
+        long integral = 01234L;     //  001010011100
+        long fractional = 0L;       //  000000000000 (of course)
+        int exponent = -6;          //  making the real number 001010.011100, or .10100111 e4
+        long expMantissa = 0_5160_0000_0000_0000_0000L;
+        int expExponent = 4;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertEquals(expExponent, nuer._exponent);
+        assertFalse(nuer._overflow);
+        assertFalse(nuer._underflow);
+    }
+
+    @Test
+    public void normalizeFraction() {
+        long integral = 0L;
+        long fractional = 0x007E_0000_0000_0000L;   //  000----0000000.000000000111111000000----000  E4
+        int exponent = 4;                           //  making the real number 0.00000111111 E0, or .111111 E-5
+        long expMantissa = 0_7700_0000_0000_0000_0000L;
+        int expExponent = -5;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertEquals(expExponent, nuer._exponent);
+        assertFalse(nuer._overflow);
+        assertFalse(nuer._underflow);
+    }
+
+    @Test
+    public void normalizeFun() {
+        long integral = 07L;
+        long fractional = 0_7777_0000_0000_0000_0000L;
+        int exponent = 12;
+        long expMantissa = 0_7777_7000_0000_0000_0000L;
+        int expExponent = 15;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+        System.out.println(String.format("expected %024o  E%d", expMantissa, expExponent));//TODO
+        System.out.println(String.format("actual   %024o  E%d", nuer._mantissa, nuer._exponent));//TODO
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertEquals(expExponent, nuer._exponent);
+        assertFalse(nuer._overflow);
+        assertFalse(nuer._underflow);
+    }
+
+    @Test
+    public void normalizeUnderflow() {
+        long integral = 0L;
+        long fractional = 0x0001L;
+        int exponent = -1000;
+        long expMantissa = 0_4000_0000_0000_0000_0000L;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertFalse(nuer._overflow);
+        assertTrue(nuer._underflow);
+    }
+
+    @Test
+    public void normalizeOverflow() {
+        long integral = 0x7070_0000_0000_0000L;
+        long fractional = 0L;
+        int exponent = 01776;
+        long expMantissa = 0_7016_0000_0000_0000_0000L;
+
+        DoubleWord36.NormalizeUnbiasedExponentResult nuer
+            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
+        System.out.println(String.format("%024o", nuer._mantissa));//TODO
+
+        assertEquals(expMantissa, nuer._mantissa);
+        assertTrue(nuer._overflow);
+        assertFalse(nuer._underflow);
+    }
 
 
     //  Display --------------------------------------------------------------------------------------------------------------------

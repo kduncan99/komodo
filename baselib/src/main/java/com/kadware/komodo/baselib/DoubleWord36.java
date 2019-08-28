@@ -82,6 +82,25 @@ public class DoubleWord36 {
         }
     }
 
+    public static class NormalizeUnbiasedExponentResult {
+        public boolean _overflow;
+        public boolean _underflow;
+        public long _mantissa;
+        public int _exponent;
+
+        public NormalizeUnbiasedExponentResult(
+            final boolean overflow,
+            final boolean underflow,
+            final long mantissa,
+            final int exponent
+        ) {
+            _overflow = overflow;
+            _underflow = underflow;
+            _mantissa = mantissa;
+            _exponent = exponent;
+        }
+    }
+
     public static class StaticAddFloatingPointResult {
         public boolean _overFlow;
         public boolean _underFlow;
@@ -172,10 +191,14 @@ public class DoubleWord36 {
     public static final BigInteger POSITIVE_ONE     = BigInteger.ONE;
     public static final BigInteger POSITIVE_ZERO    = BigInteger.ZERO;
 
-    public static final DoubleWord36 DW36_NEGATIVE_ONE  = new DoubleWord36(NEGATIVE_ONE);
-    public static final DoubleWord36 DW36_NEGATIVE_ZERO = new DoubleWord36(NEGATIVE_ZERO);  //  works for floating point as well
-    public static final DoubleWord36 DW36_POSITIVE_ONE  = new DoubleWord36(POSITIVE_ONE);
-    public static final DoubleWord36 DW36_POSITIVE_ZERO = new DoubleWord36(POSITIVE_ZERO);  //  works for floating point as well
+    public static final DoubleWord36 DW36_NEGATIVE_ONE              = new DoubleWord36(NEGATIVE_ONE);
+    public static final DoubleWord36 DW36_NEGATIVE_ZERO             = new DoubleWord36(NEGATIVE_ZERO);  //  works for floating point as well
+    public static final DoubleWord36 DW36_NEGATIVE_ZERO_FLOATING    = DW36_NEGATIVE_ZERO;
+    public static final DoubleWord36 DW36_POSITIVE_ONE              = new DoubleWord36(POSITIVE_ONE);
+    public static final DoubleWord36 DW36_POSITIVE_ZERO             = new DoubleWord36(POSITIVE_ZERO);  //  works for floating point as well
+    public static final DoubleWord36 DW36_POSITIVE_ZERO_FLOATING    = DW36_POSITIVE_ZERO;
+
+    private static final int CHARACTERISTIC_BIAS = 1024;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -199,6 +222,50 @@ public class DoubleWord36 {
         final long low
     ) {
         _value = BigInteger.valueOf(high).shiftLeft(36).or(BigInteger.valueOf(low));
+    }
+
+    /**
+     * Constructs a DW36 object representing a normalized floating point number using the component portions thereof
+     * @param exponent The unbiased signed exponent
+     * @param mantissa The fractional portion
+     * @param negative true if the presented value should be arithmetically inverted (i.e., is negative)
+     */
+    public DoubleWord36(
+        final int exponent,
+        final long mantissa,
+        final boolean negative
+    ) {
+        if (mantissa == 0) {
+            _value = negative ? NEGATIVE_ZERO : POSITIVE_ZERO;
+        } else {
+            NormalizeUnbiasedExponentResult nuer = normalizeUnbiasedExponent(0L, mantissa, exponent);
+            assert (!nuer._overflow);
+            assert (!nuer._underflow);
+            int characteristic = nuer._exponent + CHARACTERISTIC_BIAS;
+            BigInteger bi = BigInteger.valueOf(characteristic).shiftLeft(60).or(BigInteger.valueOf(nuer._mantissa));
+            if (negative) {
+                bi = negate(bi);
+            }
+            _value = bi;
+        }
+    }
+
+    /**
+     * Constructs a DW36 object representing a normalized floating point number using the component portions thereof
+     * @param integral The magnitude of the integral portion (right-justified, of course)
+     * @param fractional The magnitude of the fractional portion, left-justified
+     *                   i.e., 10100...00 (for 60 bits) indicates decimal 0.5 + 0.125 == 0.625
+     * @param exponent Initial exponent (probably zero, only here to help disambiguate this c'tor from the previous)
+     * @param negative true if the presented value should be arithmetically inverted (i.e., is negative)
+     */
+    public DoubleWord36(
+        final long integral,
+        final long fractional,
+        final int exponent,
+        final boolean negative
+    ) {
+        NormalizeUnbiasedExponentResult nuer = normalizeUnbiasedExponent(integral, fractional, exponent);
+        _value = negative ? negate(BigInteger.valueOf(nuer._mantissa)) : BigInteger.valueOf(nuer._mantissa);
     }
 
 
@@ -411,6 +478,8 @@ public class DoubleWord36 {
 
     /**
      * Compares two DoubleWord36 objects in the context of floating point operations.
+     * Performs normalization before doing the comparison... for obvious reasons.
+     * Results are indeterminate if the normalization process produces and over or under flow.
      * @return -1 if operand1 is less than operand2
      *          1 if operand1 is greater than operand2
      *          0 if the operands are equal
@@ -428,8 +497,18 @@ public class DoubleWord36 {
 
         //  If the absolute values of the characteristics are unequal the larger value
         //  belongs to the greater floating point value (unless we are negative, then the opposite is true)
-        int thisCharacteristic = getAbsoluteCharacteristic(operand1);
-        int thatCharacteristic = getAbsoluteCharacteristic(operand2);
+        long thisCharacteristic = getAbsoluteCharacteristic(operand1);
+        long thisMantissa = getMantissa(operand1);
+        long[] thisNormal = normalizeMantissa(thisMantissa, thisCharacteristic, thisNeg);
+        thisCharacteristic = thisNormal[1];
+        thisMantissa = thisNormal[0];
+
+        long thatCharacteristic = getAbsoluteCharacteristic(operand2);
+        long thatMantissa = getMantissa(operand2);
+        long[] thatNormal = normalizeMantissa(thatMantissa, thatCharacteristic, thatNeg);
+        thatCharacteristic = thatNormal[1];
+        thatMantissa = thatNormal[0];
+
         if (thisCharacteristic != thatCharacteristic) {
             if (thisNeg) {
                 return thisCharacteristic < thatCharacteristic ? 1 : -1;
@@ -439,8 +518,6 @@ public class DoubleWord36 {
         }
 
         //  If the mantissas are unequal, the larger is greater (unless we are negative...)
-        long thisMantissa = getMantissa(operand1);
-        long thatMantissa = getMantissa(operand2);
         if (thisMantissa != thatMantissa) {
             if (thisNeg) {
                 return thisMantissa < thatMantissa ? 1 : -1;
@@ -564,7 +641,7 @@ public class DoubleWord36 {
         boolean underflow = resultExponent < -02000;
 
         //  Finish rebuilding the overall floating point value
-        BigInteger resultValue = resultIntegral.or(BigInteger.valueOf(resultExponent + 1024).shiftLeft(60));
+        BigInteger resultValue = resultIntegral.or(BigInteger.valueOf(resultExponent + CHARACTERISTIC_BIAS).shiftLeft(60));
         if (resultNeg) {
             resultValue = logicalNot(resultValue);
         }
@@ -777,8 +854,8 @@ public class DoubleWord36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Converts a 72-bit integer value in a DoubleWord36 object to a 72-bit floating point value
-     * in a DoubleWord36 object.
+     * Converts a 72-bit integer value in a DoubleWord36 object to a
+     * 72-bit normalized floating point value in a DoubleWord36 object.
      */
     public static BigInteger floatingPointFromInteger(
         final DoubleWord36 operand
@@ -790,30 +867,21 @@ public class DoubleWord36 {
         }
 
         boolean isNegative = operand.isNegative();
+        BigInteger absolute = isNegative ? operand._value.negate() : operand._value;
+        System.out.println(String.format("abs:        %024o", absolute));//TODO
 
-        //  Create a mantissa and normalize it down to 60 bits
-        boolean truncation = false;
-        BigInteger mantissa = operand.get();
-        int characteristic = 1024;
-        BigInteger badMask = BigInteger.valueOf(0xFFF).shiftLeft(60);
-        while (!mantissa.and(badMask).equals(BigInteger.ZERO)) {
-            ++characteristic;
-            if (mantissa.and(BigInteger.ONE).equals(BigInteger.ONE)) {
-                truncation = true;
-            }
-            mantissa = mantissa.shiftRight(1);
-        }
+        //  Convert 72-bit integer to 60-bit integral and fractional.
+        //  DoubleWord36 guarantees the initial value is no more than 72 bits.
+        //  Note that we do not guarantee normalization at this point.
+        long integral = absolute.shiftRight(12).longValue();
+        long fractional = absolute.and(BigInteger.valueOf(07777)).longValue() << 48;
+        System.out.println(String.format("integral:   %024o", integral));//TODO
+        System.out.println(String.format("fractional: %024o", fractional));//TODO
+        int exponent = 12;
 
-        //  Now normalize it the other direction as necessary.
-        //  No need to check for over/underflow - can't happen here.
-        long[] result = normalizeMantissa(mantissa.longValue(), characteristic + 1024, isNegative);
-        long normalizedMantissa = result[0];
-        long normalizedCharacteristic = result[1];
-
-        BigInteger value = isNegative ? BigInteger.ONE.shiftLeft(71) : BigInteger.ZERO;
-        value = value.or(BigInteger.valueOf(normalizedCharacteristic).shiftLeft(60));
-        value = value.or(BigInteger.valueOf(normalizedMantissa));
-        return value;
+        NormalizeUnbiasedExponentResult nuer = normalizeUnbiasedExponent(integral, fractional, exponent);
+        int characteristic = nuer._exponent + CHARACTERISTIC_BIAS;
+        return BigInteger.valueOf(characteristic).shiftLeft(60).or(BigInteger.valueOf(nuer._mantissa));
     }
 
     /**
@@ -845,6 +913,64 @@ public class DoubleWord36 {
         final BigInteger operand
     ) {
         return isNegative(operand) ? negate(operand).negate() : operand;
+    }
+
+    /**
+     * Produces a DW36 object representing a normalize floating point value given the component portions
+     * @param integral The magnitude of the integral portion (right-justified, of course)
+     *                 range +/- 0x7FFF_FFFF_FFFF_FFFF
+     * @param fractional The magnitude of the fractional portion, left-justified
+     *                   i.e., 10100...00 (for 64 bits) indicates decimal 0.5 + 0.125 == 0.625
+     *                   range +/- 0x7FFF_FFFF_FFFF_FFFF
+     * @param exponent Initial unbiased exponent (zero would be nice, but we take whatever)
+     *                 range +/- 0x7FFF_FFFF  (large magnitudes will result in over/underflow)
+     */
+    public static NormalizeUnbiasedExponentResult normalizeUnbiasedExponent(
+        final long integral,
+        final long fractional,
+        final int exponent
+    ) {
+        if ((integral == 0) && (fractional == 0)) {
+            return new NormalizeUnbiasedExponentResult(false, false, 0, 0);
+        }
+
+        //  put integral in left 64 bits, fractional in right 64 bits
+        //  downshift until the entire content is in the lower 64 bits
+        BigInteger bigMantissa = (BigInteger.valueOf(integral).shiftLeft(64).or(BigInteger.valueOf(fractional)));
+        BigInteger fractionalMask = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
+        BigInteger firstFractionalBit = (BigInteger.ONE.shiftLeft(63));
+        BigInteger upperMask = fractionalMask.shiftLeft(64);
+
+        int resultExponent = exponent;
+        System.out.println(String.format("  bigMantissa: %022o:%022o  E%d",
+                                         bigMantissa.shiftRight(64),
+                                         bigMantissa.and(BigInteger.valueOf(0xFFFF_FFFF_FFFF_FFFFL)).shiftLeft(2),
+                                         resultExponent));//TODO
+        while (!bigMantissa.and(upperMask).equals(BigInteger.ZERO)) {
+            bigMantissa = bigMantissa.shiftRight(1);
+            ++resultExponent;
+        }
+        System.out.println(String.format("  shiftedRight:%022o:%022o  E%d",
+                                         bigMantissa.shiftRight(64),
+                                         bigMantissa.and(BigInteger.valueOf(0xFFFF_FFFF_FFFF_FFFFL)).shiftLeft(2),
+                                         resultExponent));//TODO
+
+        //  just in case we're unnormalized the other direction, upshift back to the upper/lower partition
+        while (bigMantissa.and(firstFractionalBit).equals(BigInteger.ZERO)) {
+            bigMantissa = bigMantissa.shiftLeft(1);
+            --resultExponent;
+        }
+        System.out.println(String.format("  shiftedLeft: %022o:%022o  E%d",
+                                         bigMantissa.shiftRight(64),
+                                         bigMantissa.and(BigInteger.valueOf(0xFFFF_FFFF_FFFF_FFFFL)).shiftLeft(2),
+                                         resultExponent));//TODO
+
+        //  Now get a 60-bit mantissa from the left-justified 64 bits in the BigInteger
+        long mantissa = bigMantissa.shiftRight(4).and(BIT_MASK).longValue();
+        return new NormalizeUnbiasedExponentResult (resultExponent >= CHARACTERISTIC_BIAS,
+                                                    resultExponent < -CHARACTERISTIC_BIAS,
+                                                    mantissa,
+                                                    resultExponent);
     }
 
     /**
