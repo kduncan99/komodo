@@ -4,10 +4,8 @@
 
 package com.kadware.komodo.baselib;
 
-import org.junit.Test;
-
 import java.math.BigInteger;
-
+import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
@@ -22,6 +20,44 @@ public class Test_DoubleWord36 {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
+
+    //TODO
+
+    //    @Test
+    //    public void stringToWord36ASCII() {
+    //        Word36 w = Word36.stringToWordASCII("Help");
+    //        assertEquals(0_110_145_154_160L, w.getW());
+    //    }
+    //
+    //    @Test
+    //    public void stringToWord36ASCII_over() {
+    //        Word36 w = Word36.stringToWordASCII("HelpSlop");
+    //        assertEquals(0_110_145_154_160L, w.getW());
+    //    }
+    //
+    //    @Test
+    //    public void stringToWord36ASCII_partial() {
+    //        Word36 w = Word36.stringToWordASCII("01");
+    //        assertEquals(0_060_061_040_040L, w.getW());
+    //    }
+    //
+    //    @Test
+    //    public void stringToWord36Fieldata() {
+    //        Word36 w = Word36.stringToWordFieldata("Abc@23");
+    //        assertEquals(0_060710_006263L, w.getW());
+    //    }
+    //
+    //    @Test
+    //    public void stringToWord36Fieldata_over() {
+    //        Word36 w = Word36.stringToWordFieldata("A B C@D E F");
+    //        assertEquals(0_060507_051000L, w.getW());
+    //    }
+    //
+    //    @Test
+    //    public void stringToWord36Fieldata_partial() {
+    //        Word36 w = Word36.stringToWordFieldata("1234");
+    //        assertEquals(0_616263_640505L, w.getW());
+    //    }
 
     @Test
     public void toOnes_Zero() {
@@ -319,6 +355,8 @@ public class Test_DoubleWord36 {
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 
+    //TODO  leftShiftAlgebraic tests
+
     @Test
     public void leftShiftCircular_by0() {
         long partial1 = 0_111222_333444L;
@@ -434,6 +472,7 @@ public class Test_DoubleWord36 {
         assertEquals(expected, result._value);
     }
 
+    //TODO
 //    @Test
 //    public void rightShiftAlgebraic36_negCount() {
 //        long parameter = 033225L;
@@ -665,8 +704,14 @@ public class Test_DoubleWord36 {
     }
 
 
+    //  Floating Point -------------------------------------------------------------------------------------------------------------
+
+    //TODO
+
+
     //  Display --------------------------------------------------------------------------------------------------------------------
 
+    //TODO
 //    @Test
 //    public void toStringFromASCII() {
 //        long word = 0_101_102_103_104L;
@@ -683,44 +728,5 @@ public class Test_DoubleWord36 {
 //    public void toOctal() {
 //        long word = 0_05_06_07_10_11_12L;
 //        assertEquals("050607101112", Word36.toOctal(word));
-//    }
-
-
-    //  Misc -----------------------------------------------------------------------------------------------------------------------
-
-//    @Test
-//    public void stringToWord36ASCII() {
-//        Word36 w = Word36.stringToWordASCII("Help");
-//        assertEquals(0_110_145_154_160L, w.getW());
-//    }
-//
-//    @Test
-//    public void stringToWord36ASCII_over() {
-//        Word36 w = Word36.stringToWordASCII("HelpSlop");
-//        assertEquals(0_110_145_154_160L, w.getW());
-//    }
-//
-//    @Test
-//    public void stringToWord36ASCII_partial() {
-//        Word36 w = Word36.stringToWordASCII("01");
-//        assertEquals(0_060_061_040_040L, w.getW());
-//    }
-//
-//    @Test
-//    public void stringToWord36Fieldata() {
-//        Word36 w = Word36.stringToWordFieldata("Abc@23");
-//        assertEquals(0_060710_006263L, w.getW());
-//    }
-//
-//    @Test
-//    public void stringToWord36Fieldata_over() {
-//        Word36 w = Word36.stringToWordFieldata("A B C@D E F");
-//        assertEquals(0_060507_051000L, w.getW());
-//    }
-//
-//    @Test
-//    public void stringToWord36Fieldata_partial() {
-//        Word36 w = Word36.stringToWordFieldata("1234");
-//        assertEquals(0_616263_640505L, w.getW());
 //    }
 }

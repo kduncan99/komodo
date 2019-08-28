@@ -2,16 +2,9 @@
 make sure we don't propagate flagged attribute in any of the operators
 Reworking Word36, implementing DoubleWord36, making IntegerValue 72 bits (original design just won't work for us)
 Putting justification and precision back in, because we really do need it (esp. for floating point)
-Working on supporting floating point
+Working on supporting floating point (double/single)
 $FORM and generation using forms
-BUG: Minalib somehow doesn't display M (FormDiagnostic) diags...
-BUG: Misc bugs still
 Support $EQUF
-Reworking the entire IO stack
-Redo all the node and subclasses tests, many of which are commented out
-For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
-SystemProcessor: For starting/monitoring/stopping system, and for console communication
-  Move dayclock architecture to SystemProcessor
 
 
 -- TODO BUGS
@@ -31,6 +24,11 @@ Check BDI$ function in minalib - do we need it, is it right?
 
 -- TODO implement
 * hardwarelib
+Reworking the entire IO stack
+Redo all the node and subclasses tests, many of which are commented out
+For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
+SystemProcessor: For starting/monitoring/stopping system, and for console communication
+  Move dayclock architecture to SystemProcessor
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
 RAMTapeDevice byte interface, optional compression, optional backing store

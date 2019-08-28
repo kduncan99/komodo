@@ -499,6 +499,8 @@ public class Test_Word36 {
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 
+    //TODO leftShiftAlgebraic tests
+
     @Test
     public void leftShiftCircular_by0() {
         long parameter = 0_111222_333444L;
@@ -583,7 +585,7 @@ public class Test_Word36 {
     @Test
     public void rightShiftAlgebraic_neg_3Count() {
         long parameter = 0400000_112233L;
-        long expResult = 0740000_011223L;
+        long expResult = 0440000_011223L;
         Word36 word36 = new Word36(parameter);
         Word36 result = word36.rightShiftAlgebraic(3);
         assertEquals(expResult, result.getW());
@@ -591,19 +593,19 @@ public class Test_Word36 {
 
     @Test
     public void rightShiftAlgebraic_neg_34Count() {
-        long parameter = 0_421456_321456L;
-        long expResult = 0_777777_777776L;
+        long parameter = 0_721456_321456L;
+        long expResult = 0_400000_000003L;
         Word36 word36 = new Word36(parameter);
         Word36 result = word36.rightShiftAlgebraic(34);
         assertEquals(expResult, result.getW());
     }
 
     @Test
-    public void rightShiftAlgebraic_neg_35Count() {
-        long parameter = 0_421456_321456L;
-        long expResult = 0_777777_777777L;
+    public void rightShiftAlgebraic_neg_minus18Count() {
+        long parameter = 0_423232_123123L;
+        long expResult = 0_523123_000000L;
         Word36 word36 = new Word36(parameter);
-        Word36 result = word36.rightShiftAlgebraic(35);
+        Word36 result = word36.rightShiftAlgebraic(-18);
         assertEquals(expResult, result.getW());
     }
 

@@ -777,6 +777,12 @@ public class Word36 {
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
+    /**
+     * Does an algebraic shift left - the sign bit is never altered.
+     * @param value 36-bit value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
     public static long leftShiftAlgebraic(
         final long value,
         final int count
@@ -786,7 +792,8 @@ public class Word36 {
         } else if (count == 0) {
             return value;
         } else {
-            return leftShiftLogical(value, count);
+            boolean wasNegative = isNegative(value);
+            return (wasNegative ? NEGATIVE_BIT : 0) | ((value & (BIT_MASK >> 1)) << count);
         }
     }
 
@@ -852,7 +859,7 @@ public class Word36 {
             } else {
                 long result = value >> count;
                 if (wasNegative)
-                    result |= ((~(BIT_MASK >> count)) & BIT_MASK);
+                    result |= NEGATIVE_BIT;
                 return result;
             }
         }

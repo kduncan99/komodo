@@ -267,10 +267,9 @@ public class DoubleWord36 {
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
-//    public void leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); }
     public DoubleWord36 leftShiftCircular(int count)    { return new DoubleWord36(leftShiftCircular(_value, count)); }
     public DoubleWord36 leftShiftLogical(int count)     { return new DoubleWord36(leftShiftLogical(_value, count)); }
-//    public void rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); }
+    public DoubleWord36 rightShiftAlgebraic(int count)  { return new DoubleWord36(rightShiftAlgebraic(_value, count)); }
     public DoubleWord36 rightShiftCircular(int count)   { return new DoubleWord36(rightShiftCircular(_value, count)); }
     public DoubleWord36 rightShiftLogical(int count)    { return new DoubleWord36(rightShiftLogical(_value, count)); }
 
@@ -635,20 +634,30 @@ public class DoubleWord36 {
     }
 
 
-//    //  Shift Operations -----------------------------------------------------------------------------------------------------------
-//
-//    public static long leftShiftAlgebraic(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftAlgebraic(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            return leftShiftLogical(value, count);
-//        }
-//    }
+    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Does an algebraic shift left - the sign bit is never altered.
+     * @param value 72-bit value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger leftShiftAlgebraic(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return rightShiftAlgebraic(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            BigInteger result = value.and(BIT_MASK.shiftRight(1)).shiftLeft(1);
+            if (isNegative(value)) {
+                result = result.or(NEGATIVE_BIT);
+            }
+            return result;
+        }
+    }
 
     /**
      * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
@@ -691,32 +700,32 @@ public class DoubleWord36 {
         }
     }
 
-//    /**
-//     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
-//     * @param value 72-bit value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static long rightShiftAlgebraic(
-//        final long value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftAlgebraic(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            boolean wasNegative = isNegative(value);
-//            if (count > 35) {
-//                return wasNegative ? NEGATIVE_ZERO._value : 0;
-//            } else {
-//                long result = value >> count;
-//                if (wasNegative)
-//                    result |= ((~(BIT_MASK >> count)) & BIT_MASK);
-//                return result;
-//            }
-//        }
-//    }
+    /**
+     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
+     * @param value 72-bit value to be shifted
+     * @param count number of bits to be shifted
+     * @return resulting value
+     */
+    public static BigInteger rightShiftAlgebraic(
+        final BigInteger value,
+        final int count
+    ) {
+        if (count < 0) {
+            return leftShiftAlgebraic(value, -count);
+        } else if (count == 0) {
+            return value;
+        } else {
+            boolean wasNegative = isNegative(value);
+            if (count > 35) {
+                return wasNegative ? DoubleWord36.NEGATIVE_ZERO : DoubleWord36.POSITIVE_ZERO;
+            } else {
+                BigInteger result = value.shiftRight(count);
+                if (wasNegative)
+                    result = result.or(NEGATIVE_BIT);
+                return result;
+            }
+        }
+    }
 
     /**
      * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
