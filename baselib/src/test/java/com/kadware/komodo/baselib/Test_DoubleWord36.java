@@ -809,6 +809,24 @@ public class Test_DoubleWord36 {
     }
 
     @Test
+    public void isNegativeFloating()        { assertTrue((DoubleWord36.DW36_NEGATIVE_ONE).isNegativeFloatingPoint()); }
+
+    @Test
+    public void isNegativeZeroFloating()    { assertTrue((DoubleWord36.DW36_NEGATIVE_ZERO_FLOATING).isNegativeZeroFloatingPoint()); }
+
+    @Test
+    public void isPositiveFloating()        { assertTrue((DoubleWord36.DW36_POSITIVE_ONE).isPositiveFloatingPoint()); }
+
+    @Test
+    public void isPositiveZeroFloating()    { assertTrue((DoubleWord36.DW36_POSITIVE_ZERO_FLOATING).isPositiveZeroFloatingPoint()); }
+
+    @Test
+    public void isZeroFloating_negative()   { assertTrue((DoubleWord36.DW36_NEGATIVE_ZERO_FLOATING).isZeroFloatingPoint()); }
+
+    @Test
+    public void isZeroFloating_positive()   { assertTrue((DoubleWord36.DW36_POSITIVE_ZERO_FLOATING).isZeroFloatingPoint()); }
+
+    @Test
     public void normalizeZero() {
         long integral = 0L;
         long fractional = 0L;

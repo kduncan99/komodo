@@ -302,11 +302,18 @@ public class DoubleWord36 {
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
 
-    public boolean isNegative() { return isNegative(_value); }
-    public boolean isNegativeZero() { return isNegativeZero(_value); }
-    public boolean isPositive() { return isPositive(_value); }
-    public boolean isPositiveZero() { return isPositiveZero(_value); }
-    public boolean isZero()     { return isZero(_value); }
+    public boolean isNegative()                 { return isNegative(_value); }
+    public boolean isNegativeZero()             { return isNegativeZero(_value); }
+    public boolean isPositive()                 { return isPositive(_value); }
+    public boolean isPositiveZero()             { return isPositiveZero(_value); }
+    public boolean isZero()                     { return isZero(_value); }
+
+    //  Floating point +/- is formatted exactly the same as integer +/- zero
+    public boolean isNegativeFloatingPoint()     { return isNegative(_value); }
+    public boolean isNegativeZeroFloatingPoint() { return isNegativeZero(_value); }
+    public boolean isPositiveFloatingPoint()     { return isPositive(_value); }
+    public boolean isPositiveZeroFloatingPoint() { return isPositiveZero(_value); }
+    public boolean isZeroFloatingPoint()         { return isZero(_value); }
 
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
