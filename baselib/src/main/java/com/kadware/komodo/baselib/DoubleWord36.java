@@ -267,6 +267,7 @@ public class DoubleWord36 {
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
+    public DoubleWord36 leftShiftAlgebraic(int count)   { return new DoubleWord36(leftShiftAlgebraic(_value, count)); }
     public DoubleWord36 leftShiftCircular(int count)    { return new DoubleWord36(leftShiftCircular(_value, count)); }
     public DoubleWord36 leftShiftLogical(int count)     { return new DoubleWord36(leftShiftLogical(_value, count)); }
     public DoubleWord36 rightShiftAlgebraic(int count)  { return new DoubleWord36(rightShiftAlgebraic(_value, count)); }
@@ -651,7 +652,7 @@ public class DoubleWord36 {
         } else if (count == 0) {
             return value;
         } else {
-            BigInteger result = value.and(BIT_MASK.shiftRight(1)).shiftLeft(1);
+            BigInteger result = value.shiftLeft(count).and(BIT_MASK.shiftRight(1));
             if (isNegative(value)) {
                 result = result.or(NEGATIVE_BIT);
             }
@@ -715,14 +716,17 @@ public class DoubleWord36 {
         } else if (count == 0) {
             return value;
         } else {
-            boolean wasNegative = isNegative(value);
-            if (count > 35) {
-                return wasNegative ? DoubleWord36.NEGATIVE_ZERO : DoubleWord36.POSITIVE_ZERO;
+            boolean isNegative = isNegative(value);
+            if (count > 71) {
+                return isNegative ? DoubleWord36.NEGATIVE_ZERO : DoubleWord36.POSITIVE_ZERO;
             } else {
-                BigInteger result = value.shiftRight(count);
-                if (wasNegative)
-                    result = result.or(NEGATIVE_BIT);
-                return result;
+                if (isNegative) {
+                    int signBits = count;
+                    BigInteger signMask = BigInteger.ONE.shiftLeft(signBits).subtract(BigInteger.ONE).shiftLeft(72 - signBits);
+                    return value.shiftRight(count).or(signMask);
+                } else {
+                    return value.shiftRight(count);
+                }
             }
         }
     }
@@ -853,8 +857,9 @@ public class DoubleWord36 {
     public static DoubleWord36 stringToWordASCII(
         final String source
     ) {
-        String s1 = source.substring(0, 4);
-        String s2 = source.length() > 4 ? source.substring(4, 8) : "";
+        String padded = source + "       ";
+        String s1 = padded.substring(0, 4);
+        String s2 = padded.substring(4, 8);
         Word36 w1 = Word36.stringToWordASCII(s1);
         Word36 w2 = Word36.stringToWordASCII(s2);
         return new DoubleWord36(w1._value, w2._value);
@@ -870,8 +875,9 @@ public class DoubleWord36 {
     public static DoubleWord36 stringToWordFieldata(
         final String source
     ) {
-        String s1 = source.substring(0, 6);
-        String s2 = source.length() > 6 ? source.substring(6, 12) : "";
+        String padded = source + "           ";
+        String s1 = padded.substring(0, 6);
+        String s2 = padded.substring(6, 12);
         Word36 w1 = Word36.stringToWordFieldata(s1);
         Word36 w2 = Word36.stringToWordFieldata(s2);
         return new DoubleWord36(w1._value, w2._value);

@@ -21,43 +21,68 @@ public class Test_DoubleWord36 {
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
-    //TODO
+    @Test
+    public void stringToWordASCII() {
+        DoubleWord36 dw = DoubleWord36.stringToWordASCII("HelpSlop");
+        long exp1 = 0_110_145_154_160L;
+        long exp2 = 0_123_154_157_160L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
 
-    //    @Test
-    //    public void stringToWord36ASCII() {
-    //        Word36 w = Word36.stringToWordASCII("Help");
-    //        assertEquals(0_110_145_154_160L, w.getW());
-    //    }
-    //
-    //    @Test
-    //    public void stringToWord36ASCII_over() {
-    //        Word36 w = Word36.stringToWordASCII("HelpSlop");
-    //        assertEquals(0_110_145_154_160L, w.getW());
-    //    }
-    //
-    //    @Test
-    //    public void stringToWord36ASCII_partial() {
-    //        Word36 w = Word36.stringToWordASCII("01");
-    //        assertEquals(0_060_061_040_040L, w.getW());
-    //    }
-    //
-    //    @Test
-    //    public void stringToWord36Fieldata() {
-    //        Word36 w = Word36.stringToWordFieldata("Abc@23");
-    //        assertEquals(0_060710_006263L, w.getW());
-    //    }
-    //
-    //    @Test
-    //    public void stringToWord36Fieldata_over() {
-    //        Word36 w = Word36.stringToWordFieldata("A B C@D E F");
-    //        assertEquals(0_060507_051000L, w.getW());
-    //    }
-    //
-    //    @Test
-    //    public void stringToWord36Fieldata_partial() {
-    //        Word36 w = Word36.stringToWordFieldata("1234");
-    //        assertEquals(0_616263_640505L, w.getW());
-    //    }
+    @Test
+    public void stringToWord36ASCII_over() {
+        DoubleWord36 dw = DoubleWord36.stringToWordASCII("0123456789");
+        long exp1 = 0_060_061_062_063L;
+        long exp2 = 0_064_065_066_067L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
+
+    @Test
+    public void stringToWordASCII_partial() {
+        DoubleWord36 dw = DoubleWord36.stringToWordASCII("Help10");
+        long exp1 = 0_110_145_154_160L;
+        long exp2 = 0_061_060_040_040L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
+
+    @Test
+    public void stringToWordFieldata() {
+        DoubleWord36 dw = DoubleWord36.stringToWordFieldata("Abc@23HIJKLM");
+        long exp1 = 0_060710_006263L;
+        long exp2 = 0_151617_202122L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
+
+    @Test
+    public void stringToWordFieldata_over() {
+        DoubleWord36 dw = DoubleWord36.stringToWordFieldata("0123 0123 0123 0123 0123");
+        long exp1 = 0_606162_630560L;
+        long exp2 = 0_616263_056061L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
+
+    @Test
+    public void stringToWordFieldata_partial1() {
+        DoubleWord36 dw = DoubleWord36.stringToWordFieldata("1234");
+        long exp1 = 0_616263_640505L;
+        long exp2 = 0_050505_050505L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
+
+    @Test
+    public void stringToWordFieldata_partial2() {
+        DoubleWord36 dw = DoubleWord36.stringToWordFieldata("12345678");
+        long exp1 = 0_616263_646566L;
+        long exp2 = 0_677005_050505L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+        assertEquals(expected, dw._value);
+    }
 
     @Test
     public void toOnes_Zero() {
@@ -355,7 +380,62 @@ public class Test_DoubleWord36 {
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 
-    //TODO  leftShiftAlgebraic tests
+    @Test
+    public void leftShiftAlgebraic_zeroCount() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        BigInteger expected = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftAlgebraic(0);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftAlgebraic_pos() {
+        long partial1 = 0_111222_333444L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long exp1 = 0_222333_444444L;
+        long exp2 = 0_555666_777000L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftAlgebraic(9);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftAlgebraic_neg() {
+        long partial1 = 0_777666_555444L;
+        long partial2 = 0_333222_111000L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long exp1 = 0_732221_110000L;
+        long exp2 = 0_000000_000000L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftAlgebraic(39);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void leftShiftAlgebraic_negCount() {
+        long partial1 = 0_777666_555444L;
+        long partial2 = 0_333222_111000L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
+        long exp1 = 0_7777_7776_6655L;
+        long exp2 = 0_5444_3332_2211L;
+        BigInteger expected = BigInteger.valueOf(exp1).shiftLeft(36).or(BigInteger.valueOf(exp2));
+
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.leftShiftAlgebraic(-12);
+        assertEquals(expected, result._value);
+    }
 
     @Test
     public void leftShiftCircular_by0() {
@@ -363,6 +443,7 @@ public class Test_DoubleWord36 {
         long partial2 = 0_444555_666777L;
         BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
         BigInteger expected = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+
         DoubleWord36 dw = new DoubleWord36(parameter);
         DoubleWord36 result = dw.leftShiftCircular(0);
         assertEquals(expected, result._value);

@@ -853,13 +853,16 @@ public class Word36 {
         } else if (count == 0) {
             return value;
         } else {
-            boolean wasNegative = isNegative(value);
+            boolean isNegative = isNegative(value);
             if (count > 35) {
-                return wasNegative ? NEGATIVE_ZERO : 0;
+                return isNegative ? NEGATIVE_ZERO : 0;
             } else {
                 long result = value >> count;
-                if (wasNegative)
-                    result |= NEGATIVE_BIT;
+                if (isNegative) {
+                    long bitMask = ((1L << count) - 1) << (36 - count);
+                    result |= bitMask;
+                }
+
                 return result;
             }
         }

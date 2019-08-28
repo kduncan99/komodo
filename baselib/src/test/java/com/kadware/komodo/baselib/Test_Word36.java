@@ -584,8 +584,8 @@ public class Test_Word36 {
 
     @Test
     public void rightShiftAlgebraic_neg_3Count() {
-        long parameter = 0400000_112233L;
-        long expResult = 0440000_011223L;
+        long parameter = 0_400000_112233L;
+        long expResult = 0_740000_011223L;
         Word36 word36 = new Word36(parameter);
         Word36 result = word36.rightShiftAlgebraic(3);
         assertEquals(expResult, result.getW());
@@ -593,10 +593,10 @@ public class Test_Word36 {
 
     @Test
     public void rightShiftAlgebraic_neg_34Count() {
-        long parameter = 0_721456_321456L;
-        long expResult = 0_400000_000003L;
+        long parameter = 0_421456_321456L;
+        long expResult = 0_777777_777742L;
         Word36 word36 = new Word36(parameter);
-        Word36 result = word36.rightShiftAlgebraic(34);
+        Word36 result = word36.rightShiftAlgebraic(30);
         assertEquals(expResult, result.getW());
     }
 
