@@ -827,6 +827,39 @@ public class Test_DoubleWord36 {
     public void isZeroFloating_positive()   { assertTrue((DoubleWord36.DW36_POSITIVE_ZERO_FLOATING).isZeroFloatingPoint()); }
 
     @Test
+    public void addFloatingZeros() {
+        DoubleWord36 dw1 = new DoubleWord36(0, 0, false);
+        DoubleWord36 dw2 = new DoubleWord36(0, 0, false);
+        DoubleWord36 exp = new DoubleWord36(0, 0, false);
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    @Test
+    public void addFloatingPosIntegerPosInteger() {
+        DoubleWord36 dw1 = new DoubleWord36(1024, 0, 0, false);
+        DoubleWord36 dw2 = new DoubleWord36(1024, 0, 2, false);
+        DoubleWord36 exp = new DoubleWord36(1024+4096, 0, 0, false);    //  1010000000000.
+            //  exp is 1010000000000. ==> 0.1010...0 E13  ==>  0_2015_5000_0000_0000_0000_0000
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    //  TODO arithmetic
+
+    //  TODO logical
+
+    //  TODO shift
+
+    //  TODO conversions (including normalize tests - not the unbiased ones)
+
+    @Test
     public void normalizeZero() {
         long integral = 0L;
         long fractional = 0L;

@@ -199,6 +199,13 @@ public class DoubleWord36 {
     public static final DoubleWord36 DW36_POSITIVE_ZERO_FLOATING    = DW36_POSITIVE_ZERO;
 
     private static final int CHARACTERISTIC_BIAS = 1024;
+    private static final int CHARACTERISTIC_BITS = 12;
+    private static final int MANTISSA_BITS = 60;
+    private static final long MANTISSA_MASK = (1 << MANTISSA_BITS) - 1;
+    private static final long MANTISSA_LEFTMOST_BIT = (1 << (MANTISSA_BITS - 1));
+    private static final BigInteger BI_MANTISSA_LEFTMOST_BIT = BigInteger.valueOf(MANTISSA_LEFTMOST_BIT);
+    private static final BigInteger BI_MANTISSA_MASK = BigInteger.valueOf(MANTISSA_MASK);
+    private static final BigInteger BI_CHARACTERISTIC_MASK = BigInteger.valueOf(CHARACTERISTIC_BITS).shiftLeft(MANTISSA_BITS);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -265,7 +272,15 @@ public class DoubleWord36 {
         final boolean negative
     ) {
         NormalizeUnbiasedExponentResult nuer = normalizeUnbiasedExponent(integral, fractional, exponent);
-        _value = negative ? negate(BigInteger.valueOf(nuer._mantissa)) : BigInteger.valueOf(nuer._mantissa);
+        assert(!nuer._overflow);
+        assert(!nuer._underflow);
+        int characteristic = nuer._exponent + CHARACTERISTIC_BIAS;
+        BigInteger value = BigInteger.valueOf(characteristic).shiftLeft(60);
+        value = value.or(BigInteger.valueOf(nuer._mantissa));
+        if (negative) {
+            value = negate(value);
+        }
+        _value = value;
     }
 
 
@@ -382,14 +397,13 @@ public class DoubleWord36 {
         final BigInteger addend1,
         final BigInteger addend2
     ) {
-        boolean neg1 = isNegative(addend1);
-        boolean neg2 = isNegative(addend2);
-
         BigInteger result = addSimple(addend1, addend2);
         if (!result.and(CARRY_BIT).equals(BigInteger.ZERO)) {
             result = result.and(BIT_MASK).add(BigInteger.ONE);
         }
 
+        boolean neg1 = isNegative(addend1);
+        boolean neg2 = isNegative(addend2);
         boolean negRes = isNegative(result);
 
         boolean carry = result.compareTo(BigInteger.ZERO) < 0 ? (neg1 && neg2) : (neg1 || neg2);
@@ -404,54 +418,61 @@ public class DoubleWord36 {
         final BigInteger addend1,
         final BigInteger addend2
     ) {
-        //  Get the magnitude of the caracteristics, then get the magnitude of their difference.
-        int characteristic1 = getAbsoluteCharacteristic(addend1);
-        int characteristic2 = getAbsoluteCharacteristic(addend2);
-        int expDiff = Math.abs(characteristic1 - characteristic2);
+        //  Normalize the addends so we can easily determine the resulting sign
+        BigInteger normal1 = normalize(addend1);
+        BigInteger normal2 = normalize(addend2);
 
-        //  Get the mantissas, which are in ones-complement form, and shift the one corresponding to the
-        //  smaller exponent to the right by the number of bits indicated by expDiff.
-        //  If the mantissa is negative, this is an arithmetic shift (preserving the sign bit).
-        //  However, rather than mess with arithmetic shifting, we convert to positive, do the shift,
-        //  then convert back to negative.
-        //  Also note the sign of the result - it will be the sign of the characteristic with the larger magnitude.
-        boolean op1Neg = isNegative(addend1);
-        boolean op2Neg = isNegative(addend2);
-        long mantissa1 = getMantissa(addend1);
-        long mantissa2 = getMantissa(addend2);
+        //  Get the component parts of the addends
+        boolean isNeg1 = isNegative(normal1);
+        int exponent1 = getAbsoluteCharacteristic(normal1) - CHARACTERISTIC_BIAS;
+        long mantissa1 = getAbsoluteMantissa(normal1);
 
-        boolean resultNeg = false;
-        if (characteristic1 < characteristic2) {
-            mantissa1 = shiftMantissaRight(mantissa1, expDiff, op1Neg);
-            resultNeg = op2Neg;
-        } else if (characteristic2 < characteristic1) {
-            mantissa2 = shiftMantissaRight(mantissa2, expDiff, op2Neg);
-            resultNeg = op1Neg;
+        boolean isNeg2 = isNegative(normal2);
+        int exponent2 = getAbsoluteCharacteristic(normal2) - CHARACTERISTIC_BIAS;
+        long mantissa2 = getAbsoluteMantissa(normal2);
+
+        //  Shift the value with the smaller exponent to the right until the exponents match
+        boolean resultNeg;
+        if (exponent1 < exponent2) {
+            int diff = exponent2 - exponent1;
+            mantissa1 >>>= diff;
+            exponent1 = exponent2;
+            resultNeg = isNeg1;
+        } else if (exponent2 < exponent1) {
+            int diff = exponent1 - exponent2;
+            mantissa2 >>>= diff;
+            exponent2 = exponent1;
+            resultNeg = isNeg2;
+        } else {
+            resultNeg = mantissa1 < mantissa2;
         }
 
-        //  Add the values.
-        //  If the result is zero, then we construct the special positive zero floating point value.
-        long resultMantissa = addMantissas(mantissa1, mantissa2);
+        //  Add or subtract the mantissas.
+        //  If the result is zero, we return the positive zero result
+        long resultMantissa = (isNeg1 == isNeg2) ? mantissa1 + mantissa2 : mantissa1 - mantissa2;
         if (resultMantissa == 0) {
             return new StaticAddFloatingPointResult(false, false, POSITIVE_ZERO);
         }
 
         //  Normalize the mantissa.  If the biased characteristic goes negative we have an underflow.
         //  If the biased characteristic goes greater than 11 bits, we have an overflow.
-        //  Start with the larger absolute characteristic.
-        int resultCharacteristic = Math.max(characteristic1, characteristic2);
-        long[] normalized = normalizeMantissa(resultMantissa, resultCharacteristic, resultNeg);
-        long normalMantissa = normalized[0];
-        long normalCharacteristic = normalized[1];
 
-        //  Check for over/under, then construct the floating point value
-        boolean underFlow = normalCharacteristic < 0;
-        boolean overFlow = normalCharacteristic > 03777;
-        BigInteger value = resultNeg ? BigInteger.ONE.shiftLeft(71) : BigInteger.ZERO;
-        value = value.or(BigInteger.valueOf(normalCharacteristic & 03777).shiftLeft(60));
-        value = value.or(BigInteger.valueOf(normalMantissa));
 
-        return new StaticAddFloatingPointResult(overFlow, underFlow, value);
+//        //  Start with the larger absolute characteristic.
+//        int resultCharacteristic = characteristic1;
+//        long[] normalized = normalize(resultMantissa, resultCharacteristic, resultNeg);
+//        long normalMantissa = normalized[0];
+//        long normalCharacteristic = normalized[1];
+//        System.out.println(String.format("MantNrm: %024o Char:%d", normalMantissa, normalCharacteristic));//TODO
+//
+//        //  Check for over/under, then construct the floating point value
+//        boolean underFlow = normalCharacteristic < 0;
+//        boolean overFlow = normalCharacteristic > 03777;
+//        BigInteger value = resultNeg ? BigInteger.ONE.shiftLeft(71) : BigInteger.ZERO;
+//        value = value.or(BigInteger.valueOf(normalCharacteristic & 03777).shiftLeft(60));
+//        value = value.or(BigInteger.valueOf(normalMantissa));
+//
+//        return new StaticAddFloatingPointResult(overFlow, underFlow, value);
     }
 
     /**
@@ -485,8 +506,6 @@ public class DoubleWord36 {
 
     /**
      * Compares two DoubleWord36 objects in the context of floating point operations.
-     * Performs normalization before doing the comparison... for obvious reasons.
-     * Results are indeterminate if the normalization process produces and over or under flow.
      * @return -1 if operand1 is less than operand2
      *          1 if operand1 is greater than operand2
      *          0 if the operands are equal
@@ -496,40 +515,45 @@ public class DoubleWord36 {
         final BigInteger operand2
     ) {
         //  If the signs are unequal, the positive value is greater.
-        boolean thisNeg = isNegative(operand1);
-        boolean thatNeg = isNegative(operand2);
-        if (thisNeg != thatNeg) {
-            return thisNeg ? -1 : 1;
+        boolean neg1 = isNegative(operand1);
+        boolean neg2 = isNegative(operand2);
+        if (neg1 != neg2) {
+            return neg1 ? -1 : 1;
         }
 
-        //  If the absolute values of the characteristics are unequal the larger value
-        //  belongs to the greater floating point value (unless we are negative, then the opposite is true)
-        long thisCharacteristic = getAbsoluteCharacteristic(operand1);
-        long thisMantissa = getMantissa(operand1);
-        long[] thisNormal = normalizeMantissa(thisMantissa, thisCharacteristic, thisNeg);
-        thisCharacteristic = thisNormal[1];
-        thisMantissa = thisNormal[0];
+        //  Signs are equal - normalize the operands and compare the absolute values of the characteristics.
+        //  If they are unequal, return the appropriate value taking into account whether the numbers are
+        //  both negative or both positive.
+        BigInteger normal1 = normalize(operand1);
+        BigInteger normal2 = normalize(operand2);
+        int characteristic1 = getAbsoluteCharacteristic(normal1);
+        int characteristic2 = getAbsoluteCharacteristic(normal2);
 
-        long thatCharacteristic = getAbsoluteCharacteristic(operand2);
-        long thatMantissa = getMantissa(operand2);
-        long[] thatNormal = normalizeMantissa(thatMantissa, thatCharacteristic, thatNeg);
-        thatCharacteristic = thatNormal[1];
-        thatMantissa = thatNormal[0];
-
-        if (thisCharacteristic != thatCharacteristic) {
-            if (thisNeg) {
-                return thisCharacteristic < thatCharacteristic ? 1 : -1;
+        if (characteristic1 != characteristic2) {
+            if (neg1) {
+                return characteristic1 < characteristic2 ? 1 : -1;
             } else {
-                return thisCharacteristic < thatCharacteristic? -1 : 1;
+                return characteristic1 < characteristic2 ? -1 : 1;
             }
         }
 
+        //  The characteristics are equal.  Check the absolute values of the mantissas.
         //  If the mantissas are unequal, the larger is greater (unless we are negative...)
-        if (thisMantissa != thatMantissa) {
-            if (thisNeg) {
-                return thisMantissa < thatMantissa ? 1 : -1;
+        long mantissa1 = getMantissa(operand1);
+        if (neg1) {
+            mantissa1 ^= MANTISSA_MASK;
+        }
+
+        long mantissa2 = getMantissa(operand2);
+        if (neg2) {
+            mantissa2 ^= MANTISSA_MASK;
+        }
+
+        if (mantissa1 != mantissa2) {
+            if (neg1) {
+                return mantissa1 < mantissa2 ? 1 : -1;
             } else {
-                return thisMantissa < thatMantissa ? -1 : 1;
+                return mantissa1 < mantissa2 ? -1 : 1;
             }
         }
 
@@ -626,6 +650,8 @@ public class DoubleWord36 {
         long integral2 = conversion2[0];
         exp2 = (int) conversion2[1];
 
+        //TODO can we improve this by using normalize() ?
+
         //  Multiple the integrals and add the exponents.
         //  Do it with a BigInteger since 60bits x 60bits is potentially 119 bits.
         //  Then shift that result back to the right until there are no ones to the left of the 60-bit mantissa field.
@@ -638,8 +664,7 @@ public class DoubleWord36 {
         }
 
         //  Now normalize the thing (left-justifying if/as necessary) and note over/underflow
-        BigInteger leftBig = BigInteger.valueOf(0x0800_0000_0000_0000L);
-        while (resultIntegral.and(leftBig).equals(BigInteger.ZERO)) {
+        while (resultIntegral.and(BI_MANTISSA_LEFTMOST_BIT).equals(BigInteger.ZERO)) {
             resultIntegral.shiftLeft(1);
             --resultExponent;
         }
@@ -878,13 +903,12 @@ public class DoubleWord36 {
 
         //  Convert 72-bit integer down to the 60-bit precision required for a mantissa.
         //  If the top 12-bits are non-zero, we must shift-right.
-        BigInteger maskTop12 = BigInteger.valueOf(07777).shiftLeft(60);
         int exponent = 0;
-        if (!absolute.and(maskTop12).equals(BigInteger.ZERO)) {
+        if (!absolute.and(BI_CHARACTERISTIC_MASK).equals(BigInteger.ZERO)) {
             do {
                 absolute = absolute.shiftRight(1);
                 ++exponent;
-            } while (!absolute.and(maskTop12).equals(BigInteger.ZERO));
+            } while (!absolute.and(BI_CHARACTERISTIC_MASK).equals(BigInteger.ZERO));
         }
 
         NormalizeUnbiasedExponentResult nuer = normalizeUnbiasedExponent(absolute.longValue(), 0L, exponent);
@@ -925,6 +949,27 @@ public class DoubleWord36 {
     }
 
     /**
+     * Normalizes a 72-bit floating point value in a DoubleWord36 object
+     */
+    public static BigInteger normalize(
+        final BigInteger operand
+    ) {
+        int exponent = getAbsoluteCharacteristic(operand);
+        long mantissa = getAbsoluteMantissa(operand);
+        while ((mantissa & MANTISSA_LEFTMOST_BIT) == 0) {
+            mantissa <<= 1;
+            --exponent;
+        }
+
+        BigInteger bi = BigInteger.valueOf(exponent).shiftLeft(MANTISSA_BITS).and(BI_CHARACTERISTIC_MASK).or(BigInteger.valueOf(mantissa));
+        if (isNegative(operand)) {
+            bi = negate(bi);
+        }
+
+        return bi;
+    }
+
+    /**
      * Produces a DW36 object representing a normalize floating point value given the component portions
      * @param integral The magnitude of the integral portion (right-justified, of course)
      *                 range +/- 0x7FFF_FFFF_FFFF_FFFF
@@ -953,13 +998,13 @@ public class DoubleWord36 {
             tempIntegral >>>= 1;
             tempFractional >>>= 1;
             if (residue != 0) {
-                tempFractional |= 0x8000_0000_0000_0000L;
+                tempFractional |= MANTISSA_LEFTMOST_BIT;
             }
             ++resultExponent;
         }
 
         //  Upshift fractional until it is normalized TO 64 BITS...
-        while ((tempFractional & 0x8000_0000_0000_0000L) == 0) {
+        while ((tempFractional & MANTISSA_LEFTMOST_BIT) == 0) {
             tempFractional <<= 1;
             --resultExponent;
         }
@@ -1073,8 +1118,8 @@ public class DoubleWord36 {
         final long addend2
     ) {
         long sum = addend1 + addend2;
-        if (sum > 0x0FFF_FFFF_FFFF_FFFFL) {
-            sum &= 0x0FFF_FFFF_FFFF_FFFFL;
+        if (sum > MANTISSA_MASK) {
+            sum &= MANTISSA_MASK;
             ++sum;
         }
 
@@ -1095,7 +1140,7 @@ public class DoubleWord36 {
         final long exponent
     ) {
         long resultMantissa = mantissa;
-        int countDown = 60;
+        int countDown = MANTISSA_BITS;
         while ((resultMantissa & 01) == 0) {
             resultMantissa >>>= 1;
             --countDown;
@@ -1117,15 +1162,33 @@ public class DoubleWord36 {
     private static int getAbsoluteCharacteristic(
         final BigInteger operand
     ) {
-        int characteristic = operand.shiftRight(60).and(BigInteger.valueOf(07777)).intValue();
-        if ((characteristic & 04000) > 0) { characteristic ^= 07777; }
+        int characteristic = operand.and(BI_CHARACTERISTIC_MASK).shiftRight(MANTISSA_BITS).intValue();
+        if (isNegative(operand)) {
+            characteristic ^= 07777;
+        }
         return characteristic;
     }
 
+    /**
+     * Retrieves the magnitude of the mantissa from the given operand which holds a fully-formed floating point value.
+     * @param operand floating point value
+     * @return absolute value of the mantissa
+     */
+    private static long getAbsoluteMantissa(
+        final BigInteger operand
+    ) {
+        if (isNegative(operand)) {
+            return negate(operand).and(BI_MANTISSA_MASK).longValue();
+        } else {
+            return operand.and(BI_MANTISSA_MASK).longValue();
+        }
+    }
+
+    //TODO do we still need this, given we have the above?
     private static long getMantissa(
         final BigInteger operand
     ) {
-        return operand.and(BigInteger.valueOf(0xFFFF_FFFF_FFFFL)).longValue();
+        return operand.and(BI_MANTISSA_MASK).longValue();
     }
 
     /**
@@ -1134,41 +1197,7 @@ public class DoubleWord36 {
     private static long negateMantissa(
         final long operand
     ) {
-        return ~(operand | 0xF000_0000_0000_0000L);
-    }
-
-    /**
-     * Normalizes the mantissa according to the sign of the characteristic.
-     * The characteristic is the 11-bit biased characteristic, ones-complemented if isNegative is true
-     * The mantissa is a 60-bit value, ones-complemented if isNegative is true
-     * @return two long values: [1] is the new characteristic and [0] is the shifted mantissa
-     */
-    private static long[] normalizeMantissa(
-        final long mantissa,
-        final long characteristic,
-        final boolean isNegative
-    ) {
-        long resultCharacteristic = characteristic;
-        long resultMantissa = mantissa;
-        if (isNegative) {
-            resultCharacteristic = (resultCharacteristic ^ 03777) & 03777;
-            resultMantissa = (resultMantissa ^ 0x0FFF_FFFF_FFFF_FFFFL) & 0x0FFF_FFFF_FFFF_FFFFL;
-        }
-
-        while ((resultCharacteristic & 0x0800_0000_0000_0000L) == 0) {
-            resultCharacteristic <<= 1;
-            --resultCharacteristic;
-        }
-
-        if (isNegative) {
-            resultCharacteristic = (resultCharacteristic ^ 03777) & 03777;
-            resultMantissa = (resultMantissa ^ 0x0FFF_FFFF_FFFF_FFFFL) & 0x0FFF_FFFF_FFFF_FFFFL;
-        }
-
-        long[] result = new long[2];
-        result[0] = resultMantissa;
-        result[1] = resultCharacteristic;
-        return result;
+        return (operand ^ MANTISSA_MASK) & MANTISSA_MASK;
     }
 
     /**
@@ -1185,9 +1214,14 @@ public class DoubleWord36 {
         final boolean isNegative
     ) {
         long result = operand;
-        if (isNegative) { result = negateMantissa(result); }
+        if (isNegative) {
+            result = negateMantissa(result);
+        }
+
         result >>>= count;
-        if (isNegative) { result = negateMantissa(result); }
+        if (isNegative) {
+            result = negateMantissa(result);
+        }
         return result;
     }
 }
