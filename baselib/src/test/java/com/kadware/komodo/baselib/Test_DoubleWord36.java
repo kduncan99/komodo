@@ -5,7 +5,12 @@
 package com.kadware.komodo.baselib;
 
 import java.math.BigInteger;
+
+import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import static org.junit.Assert.*;
 
 /**
@@ -771,19 +776,217 @@ public class Test_DoubleWord36 {
     }
 
 
-    //  Floating Point methods -----------------------------------------------------------------------------------------------------
+    //  Floating Point private (worker) methods ------------------------------------------------------------------------------------
 
     @Test
-    public void floatingFromInteger() {
-        DoubleWord36 dw = new DoubleWord36(0777);
-        DoubleWord36 exp = new DoubleWord36(9,0_7770_0000_0000_0000_0000L,false);
-
-        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
-        assertEquals(exp._value, bi);
+    public void checkExponent_lowest(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36.checkExponent(DoubleWord36.LOWEST_EXPONENT);
     }
 
     @Test
-    public void floatingFromNegativeInteger() {
+    public void checkExponent_highest(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36.checkExponent(DoubleWord36.HIGHEST_EXPONENT);
+    }
+
+    @Test
+    public void checkExponent_zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36.checkExponent(0);
+    }
+
+    @Test(expected = CharacteristOverflowException.class)
+    public void checkExponent_over(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36.checkExponent(DoubleWord36.HIGHEST_EXPONENT + 1);
+    }
+
+    @Test(expected = CharacteristUnderflowException.class)
+    public void checkExponent_under(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36.checkExponent(DoubleWord36.LOWEST_EXPONENT - 1);
+    }
+
+    @Test
+    public void convertMantissaToIntegral_zero() {
+        long mantissa64 = 0;
+        int exponent = 0;
+        long expIntegral = 0;
+        int expExponent = 0;
+
+        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
+        long resultIntegral = result[0];
+        int resultExponent = (int) result[1];
+
+        assertEquals(expIntegral, resultIntegral);
+        assertEquals(expExponent, resultExponent);
+    }
+
+    @Test
+    public void convertMantissaToIntegral_simple() {
+        long mantissa64 = 0xFFFF_0000_0000_0000L;
+        int exponent = 0;
+        long expIntegral = 0xFFFF;
+        int expExponent = -16;
+
+        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
+        long resultIntegral = result[0];
+        int resultExponent = (int) result[1];
+
+        assertEquals(expIntegral, resultIntegral);
+        assertEquals(expExponent, resultExponent);
+    }
+
+    @Test
+    public void convertMantissaToIntegral_withExponent() {
+        long mantissa64 = 0xFFFF_0000_0000_0000L;
+        int exponent = 8;
+        long expIntegral = 0xFFFF;
+        int expExponent = -8;
+
+        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
+        long resultIntegral = result[0];
+        int resultExponent = (int) result[1];
+
+        assertEquals(expIntegral, resultIntegral);
+        assertEquals(expExponent, resultExponent);
+    }
+
+    @Test
+    public void getAbsoluteCharacteristic_pos(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x8000_0000_0000_0000L, -3, false);
+        int expCharacteristic = -3 + DoubleWord36.CHARACTERISTIC_BIAS;
+
+        int characteristic = DoubleWord36.getAbsoluteCharacteristic(bi);
+        assertEquals(expCharacteristic, characteristic);
+    }
+
+    @Test
+    public void getAbsoluteCharacteristic_neg(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x8000_0000_0000_0000L, 4, true);
+        int expCharacteristic = 4 + DoubleWord36.CHARACTERISTIC_BIAS;
+
+        int characteristic = DoubleWord36.getAbsoluteCharacteristic(bi);
+        assertEquals(expCharacteristic, characteristic);
+    }
+
+    @Test
+    public void getAbsoluteMantissa_pos(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x00FF_0000_0000_0000L, 0, false);
+        long expMantissa = 0xFF00_0000_0000_0000L;
+
+        long mantissa = DoubleWord36.getAbsoluteMantissa(bi);
+        assertEquals(expMantissa, mantissa);
+    }
+
+    @Test
+    public void getAbsoluteMantissa_neg(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x00FF_0000_0000_0000L, 0, true);
+        long expMantissa = 0xFF00_0000_0000_0000L;
+
+        long mantissa = DoubleWord36.getAbsoluteMantissa(bi);
+        assertEquals(expMantissa, mantissa);
+    }
+
+    @Test
+    public void normalizeComponents_Zero() {
+        long integral = 0L;
+        long fractional = 0L;
+        int exponent = 077777;
+        long expMantissa = 0L;
+        int expExponent = 0;
+
+        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
+        long normalizedMantissa = ncResult[0];
+        int normalizedExponent = (int) ncResult[1];
+
+        assertEquals(expMantissa, normalizedMantissa);
+        assertEquals(expExponent, normalizedExponent);
+    }
+
+    @Test
+    public void normalizeComponents_Integer() {
+        long integral = 01234L;     //  001010011100
+        long fractional = 0L;
+        int exponent = -6;          //  making the real number 001010.011100, or .10100111 e4
+        long expMantissa = 0xA700_0000_0000_0000L;
+        int expExponent = 4;
+
+        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
+        long normalizedMantissa = ncResult[0];
+        int normalizedExponent = (int) ncResult[1];
+
+        assertEquals(expMantissa, normalizedMantissa);
+        assertEquals(expExponent, normalizedExponent);
+    }
+
+    @Test
+    public void normalizeComponents_Fraction() {
+        long integral = 0L;
+        long fractional = 0x007E_0000_0000_0000L;   //  000----0000000.000000000111111000000----000  E4
+        int exponent = 4;                           //  making the real number 0.00000111111 E0, or .111111 E-5
+        long expMantissa = 0xFC00_0000_0000_0000L;
+        int expExponent = -5;
+
+        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
+        long normalizedMantissa = ncResult[0];
+        int normalizedExponent = (int) ncResult[1];
+
+        assertEquals(expMantissa, normalizedMantissa);
+        assertEquals(expExponent, normalizedExponent);
+    }
+
+    @Test
+    public void normalizeComponents_Fun() {
+        long integral = 0x7L;
+        long fractional = 0xFFF0_0000_0000_0000L;
+        int exponent = 12;
+        long expMantissa = 0xFFFE_0000_0000_0000L;
+        int expExponent = 15;
+
+        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
+        long normalizedMantissa = ncResult[0];
+        int normalizedExponent = (int) ncResult[1];
+
+        assertEquals(expMantissa, normalizedMantissa);
+        assertEquals(expExponent, normalizedExponent);
+    }
+
+
+    //  Floating Point methods -----------------------------------------------------------------------------------------------------
+
+    @Test
+    public void floatingFromInteger(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw = new DoubleWord36(0777);
+        DoubleWord36 expected = new DoubleWord36(9,0_7770_0000_0000_0000_0000L,false);
+
+        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
+        System.out.println(String.format("dw= %024o", dw._value));
+        System.out.println(String.format("exp=%024o", expected._value));
+        System.out.println(String.format("act=%024o", bi));
+        assertEquals(expected._value, bi);
+    }
+
+    @Test
+    public void floatingFromNegativeInteger(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
         DoubleWord36 dw = new DoubleWord36(077777).negate();
         DoubleWord36 exp = new DoubleWord36(15,0_7777_7000_0000_0000_0000L,true);
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
@@ -791,7 +994,9 @@ public class Test_DoubleWord36 {
     }
 
     @Test
-    public void floatingFromIntegerZero() {
+    public void floatingFromIntegerZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
         DoubleWord36 dw = DoubleWord36.DW36_POSITIVE_ZERO;
         DoubleWord36 exp = new DoubleWord36(0,0L,false);
 
@@ -800,7 +1005,9 @@ public class Test_DoubleWord36 {
     }
 
     @Test
-    public void floatingFromIntegerNegativeZero() {
+    public void floatingFromIntegerNegativeZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
         DoubleWord36 dw = DoubleWord36.DW36_NEGATIVE_ZERO;
         DoubleWord36 exp = new DoubleWord36(0,0L,true);
 
@@ -827,7 +1034,9 @@ public class Test_DoubleWord36 {
     public void isZeroFloating_positive()   { assertTrue((DoubleWord36.DW36_POSITIVE_ZERO_FLOATING).isZeroFloatingPoint()); }
 
     @Test
-    public void addFloatingZeros() {
+    public void addFloatingZeros(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
         DoubleWord36 dw1 = new DoubleWord36(0, 0, false);
         DoubleWord36 dw2 = new DoubleWord36(0, 0, false);
         DoubleWord36 exp = new DoubleWord36(0, 0, false);
@@ -838,12 +1047,20 @@ public class Test_DoubleWord36 {
         assertEquals(exp, afpr._value);
     }
 
+    //  TODO arithmetic
     @Test
-    public void addFloatingPosIntegerPosInteger() {
+    public void addFloatingPosIntegerPosInteger(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
         DoubleWord36 dw1 = new DoubleWord36(1024, 0, 0, false);
+            //  dw1 is 10000000000. ==> 0.1...0 E11  ==>  0_2013_4000_0000_0000_0000
+        System.out.println(String.format("dw1=%024o", dw1._value));//TODO
         DoubleWord36 dw2 = new DoubleWord36(1024, 0, 2, false);
+            //  dw2 is 1000000000000. ==> 0.1...0 E13  ==>  0_2015_4000_0000_0000_0000
+        System.out.println(String.format("dw2=%024o", dw2._value));//TODO
         DoubleWord36 exp = new DoubleWord36(1024+4096, 0, 0, false);    //  1010000000000.
             //  exp is 1010000000000. ==> 0.1010...0 E13  ==>  0_2015_5000_0000_0000_0000_0000
+        System.out.println(String.format("exp=%024o", exp._value));//TODO
         DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
 
         assertFalse(afpr._overFlow);
@@ -851,111 +1068,26 @@ public class Test_DoubleWord36 {
         assertEquals(exp, afpr._value);
     }
 
-    //  TODO arithmetic
+    public void addFloatingInverses(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(1024, 0, 0, false);
+        //  dw1 is 10000000000. ==> 0.1...0 E11  ==>  0_2013_4000_0000_0000_0000
+        System.out.println(String.format("dw1=%024o", dw1._value));//TODO
+        DoubleWord36 dw2 = new DoubleWord36(1024, 0, 2, false);
+        //  dw2 is 1000000000000. ==> 0.1...0 E13  ==>  0_2015_4000_0000_0000_0000
+        System.out.println(String.format("dw2=%024o", dw2._value));//TODO
+        DoubleWord36 exp = new DoubleWord36(1024+4096, 0, 0, false);    //  1010000000000.
+        //  exp is 1010000000000. ==> 0.1010...0 E13  ==>  0_2015_5000_0000_0000_0000_0000
+        System.out.println(String.format("exp=%024o", exp._value));//TODO
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
 
-    //  TODO logical
-
-    //  TODO shift
-
-    //  TODO conversions (including normalize tests - not the unbiased ones)
-
-    @Test
-    public void normalizeZero() {
-        long integral = 0L;
-        long fractional = 0L;
-        int exponent = 077777;
-        long expMantissa = 0L;
-        int expExponent = 0;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertEquals(expExponent, nuer._exponent);
-        assertFalse(nuer._overflow);
-        assertFalse(nuer._underflow);
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
     }
 
-    @Test
-    public void normalizeInteger() {
-        long integral = 01234L;     //  001010011100
-        long fractional = 0L;       //  000000000000 (of course)
-        int exponent = -6;          //  making the real number 001010.011100, or .10100111 e4
-        long expMantissa = 0_5160_0000_0000_0000_0000L;
-        int expExponent = 4;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertEquals(expExponent, nuer._exponent);
-        assertFalse(nuer._overflow);
-        assertFalse(nuer._underflow);
-    }
-
-    @Test
-    public void normalizeFraction() {
-        long integral = 0L;
-        long fractional = 0x007E_0000_0000_0000L;   //  000----0000000.000000000111111000000----000  E4
-        int exponent = 4;                           //  making the real number 0.00000111111 E0, or .111111 E-5
-        long expMantissa = 0_7700_0000_0000_0000_0000L;
-        int expExponent = -5;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertEquals(expExponent, nuer._exponent);
-        assertFalse(nuer._overflow);
-        assertFalse(nuer._underflow);
-    }
-
-    @Test
-    public void normalizeFun() {
-        long integral = 0x7L;
-        long fractional = 0xFFF0_0000_0000_0000L;
-        int exponent = 12;
-        long expMantissa = 0_77777_00000_00000_00000L;
-        int expExponent = 15;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertEquals(expExponent, nuer._exponent);
-        assertFalse(nuer._overflow);
-        assertFalse(nuer._underflow);
-    }
-
-    @Test
-    public void normalizeUnderflow() {
-        long integral = 0L;
-        long fractional = 0x0001L;
-        int exponent = -1000;
-        long expMantissa = 0_4000_0000_0000_0000_0000L;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertFalse(nuer._overflow);
-        assertTrue(nuer._underflow);
-    }
-
-    @Test
-    public void normalizeOverflow() {
-        long integral = 0x7070_0000_0000_0000L;
-        long fractional = 0L;
-        int exponent = 01776;
-        long expMantissa = 0_7016_0000_0000_0000_0000L;
-
-        DoubleWord36.NormalizeUnbiasedExponentResult nuer
-            = DoubleWord36.normalizeUnbiasedExponent(integral, fractional, exponent);
-
-        assertEquals(expMantissa, nuer._mantissa);
-        assertTrue(nuer._overflow);
-        assertFalse(nuer._underflow);
-    }
+    //  TODO conversions (including public normalize tests)
 
 
     //  Display --------------------------------------------------------------------------------------------------------------------
