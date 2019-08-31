@@ -502,6 +502,16 @@ public class Test_Word36 {
     //TODO leftShiftAlgebraic tests
 
     @Test
+    public void leftShiftAlgebraic() {
+        //  sign bit always remains unchanged...
+        long parameter = 0_3123_4537_0123L;
+        long expected =  0_2247_1276_0246L;
+        Word36 word36 = new Word36(parameter);
+        Word36 result = word36.leftShiftAlgebraic(1);
+        assertEquals(expected, result.getW());
+    }
+
+    @Test
     public void leftShiftCircular_by0() {
         long parameter = 0_111222_333444L;
         long expected = 0_111222_333444L;

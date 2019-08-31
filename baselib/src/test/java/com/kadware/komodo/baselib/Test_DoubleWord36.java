@@ -704,7 +704,7 @@ public class Test_DoubleWord36 {
     }
 
     @Test
-    public void rightShiftLogical() {
+    public void rightShiftLogical_zeroCount() {
         long partial1 = 0_000111_222333L;
         long partial2 = 0_444555_666777L;
         BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
@@ -712,7 +712,46 @@ public class Test_DoubleWord36 {
         long expPartial2 = 0_444555_666777L;
         BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
         DoubleWord36 dw = new DoubleWord36(parameter);
-        DoubleWord36 result = dw.rightShiftCircular(72);
+        DoubleWord36 result = dw.rightShiftLogical(0);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftLogical_normal() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_0000_0001_1122L;
+        long expPartial2 = 0_2333_4445_5566L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftLogical(12);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftLogical_72Count() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0L;
+        long expPartial2 = 0L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftLogical(72);
+        assertEquals(expected, result._value);
+    }
+
+    @Test
+    public void rightShiftLogical_negCount() {
+        long partial1 = 0_000111_222333L;
+        long partial2 = 0_444555_666777L;
+        BigInteger parameter = BigInteger.valueOf(partial1).shiftLeft(36).or(BigInteger.valueOf(partial2));
+        long expPartial1 = 0_222333_444555L;
+        long expPartial2 = 0_666777_000000L;
+        BigInteger expected = BigInteger.valueOf(expPartial1).shiftLeft(36).or(BigInteger.valueOf(expPartial2));
+        DoubleWord36 dw = new DoubleWord36(parameter);
+        DoubleWord36 result = dw.rightShiftLogical(-18);
         assertEquals(expected, result._value);
     }
 
@@ -966,6 +1005,28 @@ public class Test_DoubleWord36 {
         assertEquals(expExponent, normalizedExponent);
     }
 
+    @Test
+    public void toDouble(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw = new DoubleWord36(0xF000_0000_0000_0000L, 2, false);
+        double expected = 3.75F;
+
+        double result = dw.toFloat();
+        assertEquals(Double.doubleToRawLongBits(expected), Double.doubleToLongBits(result));
+    }
+
+    @Test
+    public void toFloat(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw = new DoubleWord36(0xF000_0000_0000_0000L, 2, false);
+        float expected = 3.75F;
+
+        float result = dw.toFloat();
+        assertEquals(Float.floatToRawIntBits(expected), Float.floatToRawIntBits(result));
+    }
+
 
     //  Floating Point methods -----------------------------------------------------------------------------------------------------
 
@@ -974,12 +1035,9 @@ public class Test_DoubleWord36 {
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         DoubleWord36 dw = new DoubleWord36(0777);
-        DoubleWord36 expected = new DoubleWord36(9,0_7770_0000_0000_0000_0000L,false);
+        DoubleWord36 expected = new DoubleWord36(0_7770_0000_0000_0000_0000L, 9, false);
 
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
-        System.out.println(String.format("dw= %024o", dw._value));
-        System.out.println(String.format("exp=%024o", expected._value));
-        System.out.println(String.format("act=%024o", bi));
         assertEquals(expected._value, bi);
     }
 
@@ -988,7 +1046,7 @@ public class Test_DoubleWord36 {
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         DoubleWord36 dw = new DoubleWord36(077777).negate();
-        DoubleWord36 exp = new DoubleWord36(15,0_7777_7000_0000_0000_0000L,true);
+        DoubleWord36 exp = new DoubleWord36(0_7777_7000_0000_0000_0000L, 15, true);
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
         assertEquals(exp._value, bi);
     }
@@ -998,7 +1056,7 @@ public class Test_DoubleWord36 {
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         DoubleWord36 dw = DoubleWord36.DW36_POSITIVE_ZERO;
-        DoubleWord36 exp = new DoubleWord36(0,0L,false);
+        DoubleWord36 exp = new DoubleWord36(0L, 0, false);
 
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
         assertEquals(exp._value, bi);
@@ -1009,7 +1067,7 @@ public class Test_DoubleWord36 {
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         DoubleWord36 dw = DoubleWord36.DW36_NEGATIVE_ZERO;
-        DoubleWord36 exp = new DoubleWord36(0,0L,true);
+        DoubleWord36 exp = new DoubleWord36(0L, 0, true);
 
         BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
         assertEquals(exp._value, bi);
@@ -1034,12 +1092,12 @@ public class Test_DoubleWord36 {
     public void isZeroFloating_positive()   { assertTrue((DoubleWord36.DW36_POSITIVE_ZERO_FLOATING).isZeroFloatingPoint()); }
 
     @Test
-    public void addFloatingZeros(
+    public void addFloating_Zeros(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
-        DoubleWord36 dw1 = new DoubleWord36(0, 0, false);
-        DoubleWord36 dw2 = new DoubleWord36(0, 0, false);
-        DoubleWord36 exp = new DoubleWord36(0, 0, false);
+        DoubleWord36 dw1 = new DoubleWord36(0.0);
+        DoubleWord36 dw2 = new DoubleWord36(0.0F);
+        DoubleWord36 exp = new DoubleWord36(0.0);
         DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
 
         assertFalse(afpr._overFlow);
@@ -1047,20 +1105,13 @@ public class Test_DoubleWord36 {
         assertEquals(exp, afpr._value);
     }
 
-    //  TODO arithmetic
     @Test
-    public void addFloatingPosIntegerPosInteger(
+    public void addFloating_PosPos(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
-        DoubleWord36 dw1 = new DoubleWord36(1024, 0, 0, false);
-            //  dw1 is 10000000000. ==> 0.1...0 E11  ==>  0_2013_4000_0000_0000_0000
-        System.out.println(String.format("dw1=%024o", dw1._value));//TODO
-        DoubleWord36 dw2 = new DoubleWord36(1024, 0, 2, false);
-            //  dw2 is 1000000000000. ==> 0.1...0 E13  ==>  0_2015_4000_0000_0000_0000
-        System.out.println(String.format("dw2=%024o", dw2._value));//TODO
-        DoubleWord36 exp = new DoubleWord36(1024+4096, 0, 0, false);    //  1010000000000.
-            //  exp is 1010000000000. ==> 0.1010...0 E13  ==>  0_2015_5000_0000_0000_0000_0000
-        System.out.println(String.format("exp=%024o", exp._value));//TODO
+        DoubleWord36 dw1 = new DoubleWord36(1024.5);
+        DoubleWord36 dw2 = new DoubleWord36(4096.75);
+        DoubleWord36 exp = new DoubleWord36(5121.25);
         DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
 
         assertFalse(afpr._overFlow);
@@ -1068,18 +1119,13 @@ public class Test_DoubleWord36 {
         assertEquals(exp, afpr._value);
     }
 
-    public void addFloatingInverses(
+    @Test
+    public void addFloating_Inverses(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
-        DoubleWord36 dw1 = new DoubleWord36(1024, 0, 0, false);
-        //  dw1 is 10000000000. ==> 0.1...0 E11  ==>  0_2013_4000_0000_0000_0000
-        System.out.println(String.format("dw1=%024o", dw1._value));//TODO
-        DoubleWord36 dw2 = new DoubleWord36(1024, 0, 2, false);
-        //  dw2 is 1000000000000. ==> 0.1...0 E13  ==>  0_2015_4000_0000_0000_0000
-        System.out.println(String.format("dw2=%024o", dw2._value));//TODO
-        DoubleWord36 exp = new DoubleWord36(1024+4096, 0, 0, false);    //  1010000000000.
-        //  exp is 1010000000000. ==> 0.1010...0 E13  ==>  0_2015_5000_0000_0000_0000_0000
-        System.out.println(String.format("exp=%024o", exp._value));//TODO
+        DoubleWord36 dw1 = new DoubleWord36(1024.875F);
+        DoubleWord36 dw2 = new DoubleWord36(-1024.875);
+        DoubleWord36 exp = new DoubleWord36(0.0);
         DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
 
         assertFalse(afpr._overFlow);
@@ -1087,7 +1133,180 @@ public class Test_DoubleWord36 {
         assertEquals(exp, afpr._value);
     }
 
-    //  TODO conversions (including public normalize tests)
+    @Test
+    public void addFloating_PosNeg_ResultPos1(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(1000.0);
+        DoubleWord36 dw2 = new DoubleWord36(-500.0);
+        DoubleWord36 exp = new DoubleWord36(500.0);
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    @Test
+    public void addFloating_PosNeg_ResultPos2(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(0x8080, 0x8080_0000_0000_0000L, 0, false);
+        DoubleWord36 dw2 = new DoubleWord36(0x8080, 0x0000_0000_0000_0000L, 0, true);
+        DoubleWord36 exp = new DoubleWord36(0L, 0x8080_0000_0000_0000L, 0, false);
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    @Test
+    public void addFloating_PosNeg_ResultNeg(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(2.5);
+        DoubleWord36 dw2 = new DoubleWord36(-5.25);
+        DoubleWord36 exp = new DoubleWord36(-2.75);
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    @Test
+    public void addFloating_NegNeg(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(1024, 0x8000_0000_0000_0000L, 0, true);
+        DoubleWord36 dw2 = new DoubleWord36(1024, 0x3000_0000_0000_0000L, 2, true);
+        DoubleWord36 exp = new DoubleWord36(1024 + 4096 + 1, 0x4000_0000_0000_0000L, 0, true);
+        DoubleWord36.AddFloatingPointResult afpr = dw1.addFloatingPoint(dw2);
+
+        assertFalse(afpr._overFlow);
+        assertFalse(afpr._underFlow);
+        assertEquals(exp, afpr._value);
+    }
+
+    //  TODO compareFloatingPoint
+    @Test
+    public void compareFloatingPoint_1(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(1024, 0x8000_0000_0000_0000L, 0, true);
+        DoubleWord36 dw2 = new DoubleWord36(1024, 0x3000_0000_0000_0000L, 2, true);
+
+        int result = dw1.compareFloatingPoint(dw2);
+        assertEquals(-1, result);
+    }
+
+    @Test
+    public void compareFloatingPoint_2(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(0.0);
+        DoubleWord36 dw2 = new DoubleWord36(-0.0);
+
+        int result = dw1.compareFloatingPoint(dw2);
+        assertEquals(0, result);
+    }
+
+    @Test
+    public void compareFloatingPoint_3(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(10.112);
+        DoubleWord36 dw2 = new DoubleWord36(10.0999999999);
+
+        int result = dw1.compareFloatingPoint(dw2);
+        assertEquals(1, result);
+    }
+
+    //  TODO divideFloatingPoint
+
+    //  TODO multiplyFloatingPoint
+    @Test
+    public void multiplyFloating_1(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(5.0);   //  .1010000 E3
+        DoubleWord36 dw2 = new DoubleWord36(4.0);   //  .1000000 E3
+        DoubleWord36 exp = new DoubleWord36(20.0);  //  .1010000 E5
+
+        DoubleWord36.MultiplyFloatingPointResult mfpr = dw1.multiplyFloatingPoint(dw2);
+        System.out.println(String.format("dw1:%024o", dw1._value));//TODO
+        System.out.println(String.format("dw2:%024o", dw2._value));//TODO
+        System.out.println(String.format("exp:%024o", exp._value));//TODO
+        System.out.println(String.format("res:%024o", mfpr._value._value));//TODO
+        assertEquals(exp, mfpr._value);
+        assertFalse(mfpr._overflow);
+        assertFalse(mfpr._underflow);
+    }
+
+    @Test
+    public void multiplyFloating_2(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw1 = new DoubleWord36(-3.14159);
+        DoubleWord36 dw2 = new DoubleWord36(10.0);
+        DoubleWord36 exp = new DoubleWord36(-31.4159);
+
+        DoubleWord36.MultiplyFloatingPointResult mfpr = dw1.multiplyFloatingPoint(dw2);
+        System.out.println(String.format("dw1:%024o", dw1._value));//TODO
+        System.out.println(String.format("dw2:%024o", dw2._value));//TODO
+        System.out.println(String.format("exp:%024o", exp._value));//TODO
+        System.out.println(String.format("res:%024o", mfpr._value._value));//TODO
+        System.out.println(DoubleWord36.toDouble(mfpr._value._value));//TODO
+        System.out.println(-3.14159 * 100000);//TODO
+        assertEquals(exp, mfpr._value);
+        assertFalse(mfpr._overflow);
+        assertFalse(mfpr._underflow);
+    }
+
+    @Test
+    public void normalize_Zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw = new DoubleWord36(0.0F);
+        DoubleWord36 expected = new DoubleWord36(0L, 0L);
+
+        DoubleWord36 result = dw.normalize();
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void normalize_NegativeZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        DoubleWord36 dw = new DoubleWord36(-0.0F);
+        DoubleWord36 expected = new DoubleWord36(0xFFFF_FFFF_FFFF_FFFFL, 0xFFFF_FFFF_FFFF_FFFFL);
+
+        DoubleWord36 result = dw.normalize();
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void normalize_Positive(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger operand = BigInteger.valueOf(0_2011_0000_7777L).shiftLeft(36);
+        BigInteger expected = BigInteger.valueOf(0_1775_7777_0000L).shiftLeft(36);
+
+        BigInteger result = DoubleWord36.normalize(operand);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void normalize_Negative(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        BigInteger operand = DoubleWord36.negate(BigInteger.valueOf(0_2011_0000_7777L).shiftLeft(36));
+        BigInteger expected = DoubleWord36.negate(BigInteger.valueOf(0_1775_7777_0000L).shiftLeft(36));
+
+        BigInteger result = DoubleWord36.normalize(operand);
+        assertEquals(expected, result);
+    }
 
 
     //  Display --------------------------------------------------------------------------------------------------------------------
@@ -1097,7 +1316,8 @@ public class Test_DoubleWord36 {
         long word1 = 0_101_102_103_104L;
         long word2 = 0_105_106_107_110L;
         BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
-        assertEquals("ABCDEFGH", DoubleWord36.toStringFromASCII(bi));
+        DoubleWord36 dw = new DoubleWord36(bi);
+        assertEquals("ABCDEFGH", dw.toStringFromASCII());
     }
 
     @Test
@@ -1105,7 +1325,8 @@ public class Test_DoubleWord36 {
         long word1 = 0_050607101112L;
         long word2 = 0_606162636465L;
         BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
-        assertEquals(" ABCDE012345", DoubleWord36.toStringFromFieldata(bi));
+        DoubleWord36 dw = new DoubleWord36(bi);
+        assertEquals(" ABCDE012345", dw.toStringFromFieldata());
     }
 
     @Test
@@ -1113,6 +1334,7 @@ public class Test_DoubleWord36 {
         long word1 = 0_050607101112L;
         long word2 = 0_606162636465L;
         BigInteger bi = BigInteger.valueOf(word1).shiftLeft(36).or(BigInteger.valueOf(word2));
-        assertEquals("050607101112606162636465", DoubleWord36.toOctal(bi));
+        DoubleWord36 dw = new DoubleWord36(bi);
+        assertEquals("050607101112606162636465", dw.toOctal());
     }
 }

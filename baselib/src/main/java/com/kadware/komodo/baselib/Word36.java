@@ -792,8 +792,7 @@ public class Word36 {
         } else if (count == 0) {
             return value;
         } else {
-            boolean wasNegative = isNegative(value);
-            return (wasNegative ? NEGATIVE_BIT : 0) | ((value & (BIT_MASK >> 1)) << count);
+            return (value & 0_400000_000000L) | ((value << count) & 0_377777_777777L);
         }
     }
 
