@@ -13,6 +13,61 @@ import static org.junit.Assert.assertEquals;
 
 public class Test_FloatingPointComponents {
 
+    private String padZero(
+        final String input,
+        final int digits
+    ) {
+        StringBuilder sb = new StringBuilder();
+        while (input.length() + sb.length() < digits) {
+            sb.append("0");
+        }
+        sb.append(input);
+        return sb.toString();
+    }
+
+    private String decompose(final double value) {
+        long bits = Double.doubleToRawLongBits(value);
+        long sign = bits >>> 63;
+        long characteristic = (bits >>> 52) & 0x7FF;
+        long mantissa = bits & 0xF_FFFF_FFFF_FFFFL;
+        long unbiasedExponent = characteristic - FloatingPointComponents.IEEE754_DOUBLE_EXPONENT_BIAS;
+        long actualMantissa = mantissa | 0x10_0000_0000_0000L;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("---------------------------------------------\n");
+        sb.append(String.format("double value:    %s\n", String.valueOf(value)));
+        sb.append(String.format("raw bits:        %s\n", padZero(Long.toBinaryString(bits), 64)));
+        sb.append(String.format("sign:            %s\n", Long.toBinaryString(sign)));
+        sb.append(String.format("characteristic:  %s\n", padZero(Long.toBinaryString(characteristic), 11)));
+        sb.append(String.format("mantissa:        %s\n", padZero(Long.toBinaryString(mantissa), 52)));
+        sb.append(String.format("exponent:        %d\n", unbiasedExponent));
+        sb.append(String.format("adjustedMantissa:%s   (note first bit is left of decimal)\n", Long.toBinaryString(actualMantissa)));
+        return sb.toString();
+    }
+
+    private String decompose(
+        final FloatingPointComponents fpc
+    ) throws CharacteristOverflowException, CharacteristUnderflowException {
+        DoubleWord36 dw36 = fpc.toDoubleWord36();
+        BigInteger bits = dw36._value;
+        long sign = bits.shiftRight(71).longValue();
+        long characteristic = bits.shiftRight(60).and(BigInteger.valueOf(03777)).longValue();
+        long mantissa = bits.and(BigInteger.valueOf(0_7777_7777).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L))).longValue();
+        long unbiasedExponent = characteristic - FloatingPointComponents.DW36_EXPONENT_BIAS;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("---------------------------------------------\n");
+        sb.append(String.format("FPC value:       %s\n", fpc.toString()));
+        sb.append(String.format("DW36 value:      %s\n", dw36.toOctal()));
+        sb.append(String.format("raw bits:        %s\n", padZero(bits.toString(2), 72)));
+        sb.append(String.format("sign:            %s\n", Long.toBinaryString(sign)));
+        sb.append(String.format("characteristic:  %s\n", padZero(Long.toBinaryString(characteristic), 11)));
+        sb.append(String.format("mantissa:        %s\n", padZero(Long.toBinaryString(mantissa), 60)));
+        sb.append(String.format("exponent:        %d\n", unbiasedExponent));
+        sb.append(String.format("toDouble():      %f\n", fpc.toDouble()));
+        return sb.toString();
+    }
+
     //  constructors ---------------------------------------------------------------------------------------------------------------
 
     //  TODO
@@ -20,6 +75,47 @@ public class Test_FloatingPointComponents {
     //  add ------------------------------------------------------------------------------------------------------------------------
 
     //  TODO
+    @Test
+    public void add_simple(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = 5.5;
+        double value2 = 23.335;
+        double expValue = value1 + value2;
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.add(operand2);
+        assertEquals(expValue, result.toDouble(), 0);
+    }
+
+    @Test
+    public void add_negative(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = 5.5;
+        double value2 = -23.335;
+        double expValue = value1 + value2;
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.add(operand2);
+        assertEquals(expValue, result.toDouble(), 0);
+    }
+
+    @Test
+    public void add_inverse(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = 3.14159;
+        double value2 = -3.14159;
+        double expValue = value1 + value2;
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.add(operand2);
+        assertEquals(expValue, result.toDouble(), 0);
+    }
 
     //  checkExponent --------------------------------------------------------------------------------------------------------------
 
@@ -76,11 +172,75 @@ public class Test_FloatingPointComponents {
 
     //  is**** ---------------------------------------------------------------------------------------------------------------------
 
-    //  TODO
+    @Test
+    public void isNegativeZero() {
+        assertTrue(FloatingPointComponents.COMP_NEGATIVE_ZERO.isNegativeZero());
+        assertFalse(FloatingPointComponents.COMP_POSITIVE_ZERO.isNegativeZero());
+        assertFalse(new FloatingPointComponents(0.5).isNegativeZero());
+    }
+
+    @Test
+    public void isPositiveZero() {
+        assertFalse(FloatingPointComponents.COMP_NEGATIVE_ZERO.isPositiveZero());
+        assertTrue(FloatingPointComponents.COMP_POSITIVE_ZERO.isPositiveZero());
+        assertFalse(new FloatingPointComponents(0.5).isPositiveZero());
+    }
+
+    @Test
+    public void isZero() {
+        assertTrue(FloatingPointComponents.COMP_NEGATIVE_ZERO.isZero());
+        assertTrue(FloatingPointComponents.COMP_POSITIVE_ZERO.isZero());
+        assertFalse(new FloatingPointComponents(0.5).isZero());
+    }
 
     //  multiply -------------------------------------------------------------------------------------------------------------------
 
     //  TODO
+    @Test
+    public void multiply_zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = 0.0;
+        double value2 = 3.14159;
+        double expectedValue = 0.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        FloatingPointComponents result = operand1.multiply(operand2);
+
+        assertEquals(expectedValue, result.toDouble(), 0);
+    }
+
+    @Test
+    public void multiply_negativeZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = -0.0F;
+        double value2 = 3.14159F;
+        double expectedValue = 0.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        FloatingPointComponents result = operand1.multiply(operand2);
+
+        assertEquals(expectedValue, result.toDouble(), 0);
+    }
+
+    @Test
+    public void multiply_simple(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        double value1 = 1000.0;
+        double value2 = 3.14159;
+        double expectedValue = 3141.59;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.multiply(operand2);
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
 
     //  normalize ------------------------------------------------------------------------------------------------------------------
 
@@ -112,9 +272,6 @@ public class Test_FloatingPointComponents {
         FloatingPointComponents expected = new FloatingPointComponents(false, 4, 0L, 0_5160_0000_0000_0000_0000L);
 
         FloatingPointComponents result = operand.normalize();
-//        System.out.println(operand.toString());//TODO
-//        System.out.println(expected.toString());//TODO
-//        System.out.println(result.toString());//TODO
         assertEquals(expected, result);
     }
 
@@ -126,9 +283,6 @@ public class Test_FloatingPointComponents {
         FloatingPointComponents expected = new FloatingPointComponents(false, -8, 0L, 0_7700_0000_0000_0000_0000L);
 
         FloatingPointComponents result = operand.normalize();
-//        System.out.println(operand.toString());//TODO
-//        System.out.println(expected.toString());//TODO
-//        System.out.println(result.toString());//TODO
         assertEquals(expected, result);
     }
 
@@ -140,9 +294,6 @@ public class Test_FloatingPointComponents {
         FloatingPointComponents expected = new FloatingPointComponents(true, 15, 0L, 0_7777_7000_0000_0000_0000L);
 
         FloatingPointComponents result = operand.normalize();
-//        System.out.println(operand.toString());//TODO
-//        System.out.println(expected.toString());//TODO
-//        System.out.println(result.toString());//TODO
         assertEquals(expected, result);
     }
 
@@ -156,9 +307,6 @@ public class Test_FloatingPointComponents {
                                                                       0_0000_7777_0000_0000_0000L);
 
         FloatingPointComponents result = operand.normalize();
-//        System.out.println(operand.toString());//TODO
-//        System.out.println(expected.toString());//TODO
-//        System.out.println(result.toString());//TODO
     }
 
     @Test(expected = CharacteristOverflowException.class)
@@ -171,16 +319,12 @@ public class Test_FloatingPointComponents {
                                                                       0L);
 
         FloatingPointComponents result = operand.normalize();
-//        System.out.println(operand.toString());//TODO
-//        System.out.println(expected.toString());//TODO
-//        System.out.println(result.toString());//TODO
     }
 
     //  toDouble -------------------------------------------------------------------------------------------------------------------
 
-    //TODO need more
     @Test
-    public void toDouble(
+    public void toDouble_1(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
@@ -190,15 +334,25 @@ public class Test_FloatingPointComponents {
         assertEquals(2083.5, operand.toDouble(), 0);
     }
 
+    @Test
+    public void toDouble_2(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(true,
+                                                                      0,
+                                                                      1000000,
+                                                                      0_6000_0000_0000_0000_0000L);
+        assertEquals(-1000000.75, operand.toDouble(), 0);
+    }
+
     //  toDoubleWord36 -------------------------------------------------------------------------------------------------------------
 
     //TODO
 
     //  toFloat --------------------------------------------------------------------------------------------------------------------
 
-    //TODO need more
     @Test
-    public void toFloat(
+    public void toFloat_1(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
@@ -206,6 +360,17 @@ public class Test_FloatingPointComponents {
                                                                       01010L,
                                                                       0_7000_0000_0000_0000_0000L);
         assertEquals(2083.5F, operand.toFloat(), 0);
+    }
+
+    @Test
+    public void toFloat_2(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(true,
+                                                                      0,
+                                                                      1000000,
+                                                                      0_6000_0000_0000_0000_0000L);
+        assertEquals(-1000000.75F, operand.toFloat(), 0);
     }
 
     //  toWord36 -------------------------------------------------------------------------------------------------------------------
@@ -216,29 +381,6 @@ public class Test_FloatingPointComponents {
 
     //TODO
 
-
-//    @Test
-//    public void toDouble(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36 dw = new DoubleWord36(0xF000_0000_0000_0000L, 2, false);
-//        double expected = 3.75F;
-//
-//        double result = dw.toFloat();
-//        assertEquals(Double.doubleToRawLongBits(expected), Double.doubleToLongBits(result));
-//    }
-//
-//    @Test
-//    public void toFloat(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36 dw = new DoubleWord36(0xF000_0000_0000_0000L, 2, false);
-//        float expected = 3.75F;
-//
-//        float result = dw.toFloat();
-//        assertEquals(Float.floatToRawIntBits(expected), Float.floatToRawIntBits(result));
-//    }
-//
 //    @Test
 //    public void floatingFromInteger(
 //    ) throws CharacteristOverflowException,
