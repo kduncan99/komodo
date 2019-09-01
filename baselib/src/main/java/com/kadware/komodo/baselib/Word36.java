@@ -32,14 +32,6 @@ public class Word36 {
             _flags = sar._flags;
             _result = new Word36(sar._value);
         }
-
-        public AdditionResult(
-            final Flags flags,
-            final Word36 result
-        ) {
-            _flags = flags;
-            _result = result;
-        }
     }
 
     public static class StaticAdditionResult {

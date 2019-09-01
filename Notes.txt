@@ -1,8 +1,8 @@
 -- TODO InProgress
+Working on supporting floating point (double/single)
 make sure we don't propagate flagged attribute in any of the operators
 Reworking Word36, implementing DoubleWord36, making IntegerValue 72 bits (original design just won't work for us)
 Putting justification and precision back in, because we really do need it (esp. for floating point)
-Working on supporting floating point (double/single)
 $FORM and generation using forms
 Support $EQUF
 

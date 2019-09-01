@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.kadware.komodo.baselib;
 
 import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
@@ -9,194 +13,210 @@ import static org.junit.Assert.assertEquals;
 
 public class Test_FloatingPointComponents {
 
-//    @Test
-//    public void checkExponent_lowest(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36.checkExponent(DoubleWord36.LOWEST_EXPONENT);
-//    }
-//
-//    @Test
-//    public void checkExponent_highest(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36.checkExponent(DoubleWord36.HIGHEST_EXPONENT);
-//    }
-//
-//    @Test
-//    public void checkExponent_zero(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36.checkExponent(0);
-//    }
-//
-//    @Test(expected = CharacteristOverflowException.class)
-//    public void checkExponent_over(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36.checkExponent(DoubleWord36.HIGHEST_EXPONENT + 1);
-//    }
-//
-//    @Test(expected = CharacteristUnderflowException.class)
-//    public void checkExponent_under(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        DoubleWord36.checkExponent(DoubleWord36.LOWEST_EXPONENT - 1);
-//    }
-//
-//    @Test
-//    public void convertMantissaToIntegral_zero() {
-//        long mantissa64 = 0;
-//        int exponent = 0;
-//        long expIntegral = 0;
-//        int expExponent = 0;
-//
-//        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
-//        long resultIntegral = result[0];
-//        int resultExponent = (int) result[1];
-//
-//        assertEquals(expIntegral, resultIntegral);
-//        assertEquals(expExponent, resultExponent);
-//    }
-//
-//    @Test
-//    public void convertMantissaToIntegral_simple() {
-//        long mantissa64 = 0xFFFF_0000_0000_0000L;
-//        int exponent = 0;
-//        long expIntegral = 0xFFFF;
-//        int expExponent = -16;
-//
-//        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
-//        long resultIntegral = result[0];
-//        int resultExponent = (int) result[1];
-//
-//        assertEquals(expIntegral, resultIntegral);
-//        assertEquals(expExponent, resultExponent);
-//    }
-//
-//    @Test
-//    public void convertMantissaToIntegral_withExponent() {
-//        long mantissa64 = 0xFFFF_0000_0000_0000L;
-//        int exponent = 8;
-//        long expIntegral = 0xFFFF;
-//        int expExponent = -8;
-//
-//        long[] result = DoubleWord36.convertMantissaToIntegral(mantissa64, exponent);
-//        long resultIntegral = result[0];
-//        int resultExponent = (int) result[1];
-//
-//        assertEquals(expIntegral, resultIntegral);
-//        assertEquals(expExponent, resultExponent);
-//    }
-//
-//    @Test
-//    public void getAbsoluteCharacteristic_pos(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x8000_0000_0000_0000L, -3, false);
-//        int expCharacteristic = -3 + DoubleWord36.CHARACTERISTIC_BIAS;
-//
-//        int characteristic = DoubleWord36.getAbsoluteCharacteristic(bi);
-//        assertEquals(expCharacteristic, characteristic);
-//    }
-//
-//    @Test
-//    public void getAbsoluteCharacteristic_neg(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x8000_0000_0000_0000L, 4, true);
-//        int expCharacteristic = 4 + DoubleWord36.CHARACTERISTIC_BIAS;
-//
-//        int characteristic = DoubleWord36.getAbsoluteCharacteristic(bi);
-//        assertEquals(expCharacteristic, characteristic);
-//    }
-//
-//    @Test
-//    public void getAbsoluteMantissa_pos(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x00FF_0000_0000_0000L, 0, false);
-//        long expMantissa = 0xFF00_0000_0000_0000L;
-//
-//        long mantissa = DoubleWord36.getAbsoluteMantissa(bi);
-//        assertEquals(expMantissa, mantissa);
-//    }
-//
-//    @Test
-//    public void getAbsoluteMantissa_neg(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        BigInteger bi = DoubleWord36.floatingPointFromComponents(0x00FF_0000_0000_0000L, 0, true);
-//        long expMantissa = 0xFF00_0000_0000_0000L;
-//
-//        long mantissa = DoubleWord36.getAbsoluteMantissa(bi);
-//        assertEquals(expMantissa, mantissa);
-//    }
-//
-//    @Test
-//    public void normalizeComponents_Zero() {
-//        long integral = 0L;
-//        long fractional = 0L;
-//        int exponent = 077777;
-//        long expMantissa = 0L;
-//        int expExponent = 0;
-//
-//        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
-//        long normalizedMantissa = ncResult[0];
-//        int normalizedExponent = (int) ncResult[1];
-//
-//        assertEquals(expMantissa, normalizedMantissa);
-//        assertEquals(expExponent, normalizedExponent);
-//    }
-//
-//    @Test
-//    public void normalizeComponents_Integer() {
-//        long integral = 01234L;     //  001010011100
-//        long fractional = 0L;
-//        int exponent = -6;          //  making the real number 001010.011100, or .10100111 e4
-//        long expMantissa = 0xA700_0000_0000_0000L;
-//        int expExponent = 4;
-//
-//        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
-//        long normalizedMantissa = ncResult[0];
-//        int normalizedExponent = (int) ncResult[1];
-//
-//        assertEquals(expMantissa, normalizedMantissa);
-//        assertEquals(expExponent, normalizedExponent);
-//    }
-//
-//    @Test
-//    public void normalizeComponents_Fraction() {
-//        long integral = 0L;
-//        long fractional = 0x007E_0000_0000_0000L;   //  000----0000000.000000000111111000000----000  E4
-//        int exponent = 4;                           //  making the real number 0.00000111111 E0, or .111111 E-5
-//        long expMantissa = 0xFC00_0000_0000_0000L;
-//        int expExponent = -5;
-//
-//        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
-//        long normalizedMantissa = ncResult[0];
-//        int normalizedExponent = (int) ncResult[1];
-//
-//        assertEquals(expMantissa, normalizedMantissa);
-//        assertEquals(expExponent, normalizedExponent);
-//    }
-//
-//    @Test
-//    public void normalizeComponents_Fun() {
-//        long integral = 0x7L;
-//        long fractional = 0xFFF0_0000_0000_0000L;
-//        int exponent = 12;
-//        long expMantissa = 0xFFFE_0000_0000_0000L;
-//        int expExponent = 15;
-//
-//        long[] ncResult = DoubleWord36.normalizeComponents(integral, fractional, exponent);
-//        long normalizedMantissa = ncResult[0];
-//        int normalizedExponent = (int) ncResult[1];
-//
-//        assertEquals(expMantissa, normalizedMantissa);
-//        assertEquals(expExponent, normalizedExponent);
-//    }
-//
+    //  constructors ---------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  add ------------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  checkExponent --------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void checkExponent_lowest(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents.checkExponent(FloatingPointComponents.LOWEST_EXPONENT);
+    }
+
+    @Test
+    public void checkExponent_highest(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents.checkExponent(FloatingPointComponents.HIGHEST_EXPONENT);
+    }
+
+    @Test
+    public void checkExponent_zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents.checkExponent(0);
+    }
+
+    @Test(expected = CharacteristUnderflowException.class)
+    public void checkExponent_under(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents.checkExponent(FloatingPointComponents.LOWEST_EXPONENT -1);
+    }
+
+    @Test(expected = CharacteristOverflowException.class)
+    public void checkExponent_over(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents.checkExponent(FloatingPointComponents.HIGHEST_EXPONENT + 1);
+    }
+
+    //  compare --------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  divide ---------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  equals ---------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  hashCode -------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  is**** ---------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  multiply -------------------------------------------------------------------------------------------------------------------
+
+    //  TODO
+
+    //  normalize ------------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void normalize_NegativeZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents result = FloatingPointComponents.COMP_NEGATIVE_ZERO.normalize();
+        assertFalse(result.isPositiveZero());
+        assertTrue(result.isNegativeZero());
+        assertTrue(result.isZero());
+    }
+
+    @Test
+    public void normalize_PositiveZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents result = FloatingPointComponents.COMP_POSITIVE_ZERO.normalize();
+        assertTrue(result.isPositiveZero());
+        assertFalse(result.isNegativeZero());
+        assertTrue(result.isZero());
+    }
+
+    @Test
+    public void normalize_Integer(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false, -6, 01234, 0L);
+        FloatingPointComponents expected = new FloatingPointComponents(false, 4, 0L, 0_5160_0000_0000_0000_0000L);
+
+        FloatingPointComponents result = operand.normalize();
+//        System.out.println(operand.toString());//TODO
+//        System.out.println(expected.toString());//TODO
+//        System.out.println(result.toString());//TODO
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void normalize_Fraction(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false, 4, 0, 0_0000_7700_0000_0000_0000L);
+        FloatingPointComponents expected = new FloatingPointComponents(false, -8, 0L, 0_7700_0000_0000_0000_0000L);
+
+        FloatingPointComponents result = operand.normalize();
+//        System.out.println(operand.toString());//TODO
+//        System.out.println(expected.toString());//TODO
+//        System.out.println(result.toString());//TODO
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void normalize_IntegralAndFraction(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(true, 12, 07L, 0_7777_0000_0000_0000_0000L);
+        FloatingPointComponents expected = new FloatingPointComponents(true, 15, 0L, 0_7777_7000_0000_0000_0000L);
+
+        FloatingPointComponents result = operand.normalize();
+//        System.out.println(operand.toString());//TODO
+//        System.out.println(expected.toString());//TODO
+//        System.out.println(result.toString());//TODO
+        assertEquals(expected, result);
+    }
+
+    @Test(expected = CharacteristUnderflowException.class)
+    public void normalize_Underflow(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      FloatingPointComponents.LOWEST_EXPONENT,
+                                                                      0L,
+                                                                      0_0000_7777_0000_0000_0000L);
+
+        FloatingPointComponents result = operand.normalize();
+//        System.out.println(operand.toString());//TODO
+//        System.out.println(expected.toString());//TODO
+//        System.out.println(result.toString());//TODO
+    }
+
+    @Test(expected = CharacteristOverflowException.class)
+    public void normalize_Overflow(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      FloatingPointComponents.HIGHEST_EXPONENT,
+                                                                      01L,
+                                                                      0L);
+
+        FloatingPointComponents result = operand.normalize();
+//        System.out.println(operand.toString());//TODO
+//        System.out.println(expected.toString());//TODO
+//        System.out.println(result.toString());//TODO
+    }
+
+    //  toDouble -------------------------------------------------------------------------------------------------------------------
+
+    //TODO need more
+    @Test
+    public void toDouble(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      2,
+                                                                      01010L,
+                                                                      0_7000_0000_0000_0000_0000L);
+        assertEquals(2083.5, operand.toDouble(), 0);
+    }
+
+    //  toDoubleWord36 -------------------------------------------------------------------------------------------------------------
+
+    //TODO
+
+    //  toFloat --------------------------------------------------------------------------------------------------------------------
+
+    //TODO need more
+    @Test
+    public void toFloat(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      2,
+                                                                      01010L,
+                                                                      0_7000_0000_0000_0000_0000L);
+        assertEquals(2083.5F, operand.toFloat(), 0);
+    }
+
+    //  toWord36 -------------------------------------------------------------------------------------------------------------------
+
+    //TODO
+
+    //  toString -------------------------------------------------------------------------------------------------------------------
+
+    //TODO
+
+
 //    @Test
 //    public void toDouble(
 //    ) throws CharacteristOverflowException,
@@ -218,9 +238,6 @@ public class Test_FloatingPointComponents {
 //        float result = dw.toFloat();
 //        assertEquals(Float.floatToRawIntBits(expected), Float.floatToRawIntBits(result));
 //    }
-//
-//
-//    //  Floating Point methods -----------------------------------------------------------------------------------------------------
 //
 //    @Test
 //    public void floatingFromInteger(

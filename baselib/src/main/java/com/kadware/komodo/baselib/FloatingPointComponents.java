@@ -212,6 +212,40 @@ public class FloatingPointComponents {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Overrides
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public boolean equals(
+        final Object obj
+    ) {
+        if (obj instanceof FloatingPointComponents) {
+            FloatingPointComponents fpc = (FloatingPointComponents) obj;
+            return (_isNegative == fpc._isNegative)
+                   && (_exponent == fpc._exponent)
+                   && (_integral == fpc._integral)
+                   && (_mantissa == fpc._mantissa);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (_exponent ^ _integral ^ _mantissa);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s%o.%020o E%d",
+                             _isNegative ? "-" : "",
+                             _integral,
+                             _mantissa,
+                             _exponent);
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Emitters
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -243,8 +277,9 @@ public class FloatingPointComponents {
 
             //  Our internal mantissa is always bigger than the IEEE mantissa.  Down-shift it to fit.
             //  Don't forget to eliminate the MSB, which is always implicit in IEEE.
-            long resultMantissa = (normalized._mantissa & (MANTISSA_MASK >> 1)) >> (MANTISSA_BITS - IEEE754_DOUBLE_MANTISSA_BITS);
-            long resultCharacteristic = ((long) normalized._exponent + IEEE754_DOUBLE_EXPONENT_BIAS) << IEEE754_DOUBLE_MANTISSA_BITS;
+            long resultMantissa = normalized._mantissa >> (MANTISSA_BITS - IEEE754_DOUBLE_MANTISSA_BITS - 1);
+            resultMantissa &= IEEE754_DOUBLE_MANTISSA_MASK;
+            long resultCharacteristic = ((long)normalized._exponent + IEEE754_DOUBLE_EXPONENT_BIAS - 1) << IEEE754_DOUBLE_MANTISSA_BITS;
             long resultSign = _isNegative ? IEEE754_DOUBLE_SIGN_BIT : 0;
             rawBits = resultSign | resultCharacteristic | resultMantissa;
         }
@@ -280,8 +315,9 @@ public class FloatingPointComponents {
 
             //  Our internal mantissa is always bigger than the IEEE mantissa.  Down-shift it to fit.
             //  Don't forget to eliminate the MSB, which is always implicit in IEEE.
-            int resultMantissa = (int) ((normalized._mantissa & (MANTISSA_MASK >> 1)) >> (MANTISSA_BITS - IEEE754_SINGLE_MANTISSA_BITS));
-            int resultCharacteristic = normalized._exponent << IEEE754_SINGLE_MANTISSA_BITS;
+            int resultMantissa = (int)(normalized._mantissa >> (MANTISSA_BITS - IEEE754_SINGLE_MANTISSA_BITS - 1));
+            resultMantissa &= IEEE754_SINGLE_MANTISSA_MASK;
+            int resultCharacteristic = (normalized._exponent + IEEE754_SINGLE_EXPONENT_BIAS - 1) << IEEE754_SINGLE_MANTISSA_BITS;
             int resultSign = _isNegative ? IEEE754_SINGLE_SIGN_BIT : 0;
             rawBits = resultSign | resultCharacteristic | resultMantissa;
         }
@@ -359,7 +395,7 @@ public class FloatingPointComponents {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public Methods
+    //  Arithmetic
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     public FloatingPointComponents add(
@@ -409,6 +445,21 @@ public class FloatingPointComponents {
     }
 
     /**
+     * Compares this object to another, taking into account this and that and trying to do the right thing.
+     * @param operand value we compare against
+     * @param precision fractional precision in bits (anything over 59 is pointless, but accepted)
+     * @return 0 if the objects match,
+     *          -1 if this object is less than the operand,
+     *          1 if this object is greater than the operand
+     */
+    public int compare(
+        final FloatingPointComponents operand,
+        final int precision
+    ) {
+        return 0;//TODO
+    }
+
+    /**
      * Divides this value by a divisor
      */
     public FloatingPointComponents divide(
@@ -424,6 +475,18 @@ public class FloatingPointComponents {
         final FloatingPointComponents divisor
     ) {
         return null;//TODO
+    }
+
+    public boolean isNegativeZero() {
+        return _isNegative && (_mantissa == 0) && (_integral == 0);
+    }
+
+    public boolean isPositiveZero() {
+        return !_isNegative && (_mantissa == 0) && (_integral == 0);
+    }
+
+    public boolean isZero() {
+        return (_mantissa == 0) && (_integral == 0);
     }
 
     /**
@@ -449,13 +512,22 @@ public class FloatingPointComponents {
     public FloatingPointComponents normalize(
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException {
+        if (isZero()) {
+            return this;
+        }
+
         long tempIntegral = _integral;
         long tempMantissa = _mantissa;
         int tempExponent = _exponent;
 
         if (tempIntegral > 0) {
             do {
-
+                tempMantissa >>= 1;
+                if ((tempIntegral & 0x01) == 0x01) {
+                    tempMantissa |= MANTISSA_LEFTMOST_BIT;
+                }
+                tempIntegral >>= 1;
+                ++tempExponent;
             } while (tempIntegral > 0);
         } else {
             while ((tempMantissa & MANTISSA_LEFTMOST_BIT) == 0) {

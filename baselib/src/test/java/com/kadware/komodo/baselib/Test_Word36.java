@@ -499,7 +499,7 @@ public class Test_Word36 {
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 
-    //TODO leftShiftAlgebraic tests
+    //TODO a few more leftShiftAlgebraic tests
 
     @Test
     public void leftShiftAlgebraic() {
