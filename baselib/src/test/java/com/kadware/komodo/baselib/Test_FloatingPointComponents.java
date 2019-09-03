@@ -7,6 +7,8 @@ package com.kadware.komodo.baselib;
 import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
 import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
 import java.math.BigInteger;
+
+import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -161,6 +163,104 @@ public class Test_FloatingPointComponents {
     //  divide ---------------------------------------------------------------------------------------------------------------------
 
     //  TODO
+    @Test
+    public void divide_simple(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = 32.5;
+        double value2 = 2.5;
+        double expectedValue = 13.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        System.out.println(new FloatingPointComponents(expectedValue));//TODO
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
+    @Test
+    public void divide_bigger(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = -47166.560546875;
+        double value2 = -11.515625;
+        double expectedValue = 4095.875;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
+    @Test
+    public void divide_small(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = -1.0/128.0;          //-0.000000375;
+        double value2 = -1.0/4.0;            //-0.0025;
+        double expectedValue = 1.0/32.0;     //0.000015;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        System.out.println(String.format("dividend:        %s", operand1.toString()));//TODO
+        System.out.println(String.format("divisor:         %s", operand2.toString()));//TODO
+        System.out.println(String.format("expected:        %s", new FloatingPointComponents(expectedValue).toString()));//TODO
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        System.out.println(String.format("result:          %s", result.toString()));//TODO
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
+    @Test
+    public void divide_zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = 0.0;
+        double value2 = 11.515625;
+        double expectedValue = 0.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
+    @Test
+    public void divide_negative_zero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = -0.0;
+        double value2 = 11.515625;
+        double expectedValue = -0.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        assertEquals(expectedValue, result.toDouble(), 0.000001);
+    }
+
+    @Test(expected = DivideByZeroException.class)
+    public void divide_byZero(
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        double value1 = 1002.378475;
+        double value2 = 0.0;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+
+        FloatingPointComponents result = operand1.divide(operand2);
+    }
 
     //  equals ---------------------------------------------------------------------------------------------------------------------
 

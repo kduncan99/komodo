@@ -6,6 +6,8 @@ package com.kadware.komodo.baselib;
 
 import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
 import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
+import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -513,8 +515,57 @@ public class FloatingPointComponents {
      */
     public FloatingPointComponents divide(
         final FloatingPointComponents divisor
-    ) {
-        return null;//TODO
+    ) throws CharacteristOverflowException,
+             CharacteristUnderflowException,
+             DivideByZeroException {
+        //  Is the result going to be negative?
+        //  If either factor is zero, simply return zero
+        boolean resultNegative = _isNegative != divisor._isNegative;
+        if (divisor.isZero()) {
+            throw new DivideByZeroException();
+        } else if (isZero()) {
+            return resultNegative ? COMP_NEGATIVE_ZERO : COMP_POSITIVE_ZERO;
+        }
+
+        //  Normalize dividend and divisor, then down-shift such that the least-significant non-zero
+        //  bit is in the right-most bit.  Divide the values, then normalize the quotient.
+        FloatingPointComponents normalDividend = normalize();
+        FloatingPointComponents normalDivisor = divisor.normalize();
+        System.out.println(String.format("normal dividend: %s", normalDividend.toString()));//TODO
+        System.out.println(String.format("normal divisor:  %s", normalDivisor.toString()));//TODO
+        long tempDividend = normalDividend._mantissa;
+        while ((tempDividend & 01) == 0) {
+            tempDividend >>= 1;
+        }
+        long tempDivisor = normalDivisor._mantissa;
+        while ((tempDivisor & 01) == 0) {
+            tempDivisor >>= 1;
+        }
+        System.out.println(String.format("temp dividend:   %020o", tempDividend));//TODO
+        System.out.println(String.format("temp divisor:    %020o", tempDivisor));//TODO
+
+        //TODO Still some trouble with decimal point here... what to do?
+
+        BigInteger biDividend = BigInteger.valueOf(tempDividend).shiftLeft(60);
+        BigInteger biDivisor = BigInteger.valueOf(tempDivisor).shiftLeft(60);
+        System.out.println(String.format("bi dividend:     %040o", biDividend));//TODO
+        System.out.println(String.format("bi divisor:      %040o", biDivisor));//TODO
+
+        BigInteger biQuotient = biDividend.divide(biDivisor);
+        System.out.println(String.format("bi quotient:     %040o", biQuotient));//TODO
+
+        long quotient = biQuotient.and(BI_MANTISSA_MASK).longValue();
+        System.out.println(String.format("raw quotient:    %020o", quotient));//TODO
+        assert(quotient != 0);
+        while ((quotient & MANTISSA_LEFTMOST_BIT) == 0) {
+            quotient <<= 1;
+        }
+        System.out.println(String.format("normal quotient: %020o", quotient));//TODO
+
+        //  Compute new exponent and check it
+        int resultExponent = normalDividend._exponent - normalDivisor._exponent;
+        checkExponent(resultExponent);
+        return new FloatingPointComponents(resultNegative, resultExponent, 0L, quotient);
     }
 
     /**
@@ -539,7 +590,7 @@ public class FloatingPointComponents {
     }
 
     /**
-     * Multiplies this value by some other factor
+     * Multiplies this value by some other factor.
      */
     public FloatingPointComponents multiply(
         final FloatingPointComponents factor
@@ -551,6 +602,8 @@ public class FloatingPointComponents {
         if (isZero() || factor.isZero()) {
             return resultNegative ? COMP_NEGATIVE_ZERO : COMP_POSITIVE_ZERO;
         }
+
+        //TODO Normalize the factors
 
         //  Zeros are out of the way.  Downshift the mantissas until the LSB is non-zero.
         //  Keep track of positions right of the decimal point
