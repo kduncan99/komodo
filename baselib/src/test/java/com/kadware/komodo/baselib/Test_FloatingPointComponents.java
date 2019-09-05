@@ -201,18 +201,15 @@ public class Test_FloatingPointComponents {
     ) throws CharacteristOverflowException,
              CharacteristUnderflowException,
              DivideByZeroException {
-        double value1 = -1.0/128.0;          //-0.000000375;
-        double value2 = -1.0/4.0;            //-0.0025;
-        double expectedValue = 1.0/32.0;     //0.000015;
+        double value1 = -1.0/128.0;
+        double value2 = -1.0/4.0;
+        double expectedValue = 1.0/32.0;
 
         FloatingPointComponents operand1 = new FloatingPointComponents(value1);
         FloatingPointComponents operand2 = new FloatingPointComponents(value2);
-        System.out.println(String.format("dividend:        %s", operand1.toString()));//TODO
-        System.out.println(String.format("divisor:         %s", operand2.toString()));//TODO
-        System.out.println(String.format("expected:        %s", new FloatingPointComponents(expectedValue).toString()));//TODO
+        FloatingPointComponents exp = new FloatingPointComponents(expectedValue);//TODO
 
         FloatingPointComponents result = operand1.divide(operand2);
-        System.out.println(String.format("result:          %s", result.toString()));//TODO
         assertEquals(expectedValue, result.toDouble(), 0.000001);
     }
 

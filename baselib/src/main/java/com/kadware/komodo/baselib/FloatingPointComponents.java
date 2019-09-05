@@ -200,6 +200,10 @@ public class FloatingPointComponents {
             //  Pull real exponent and mantissa out of the IEEE 754 value.
             //  The mantissa will have its most significant bit just left of the decimal, so keep that in mind.
             long bits = Double.doubleToRawLongBits(value);
+
+            long masked = bits & IEEE754_DOUBLE_CHARACTERISTIC_MASK;//TODO
+            long shifted = masked >> IEEE754_DOUBLE_MANTISSA_BITS;//TODO
+
             int tempExponent = (int) ((bits & IEEE754_DOUBLE_CHARACTERISTIC_MASK) >> IEEE754_DOUBLE_MANTISSA_BITS);
             tempExponent -= IEEE754_DOUBLE_EXPONENT_BIAS;
 
@@ -527,44 +531,50 @@ public class FloatingPointComponents {
             return resultNegative ? COMP_NEGATIVE_ZERO : COMP_POSITIVE_ZERO;
         }
 
-        //  Normalize dividend and divisor, then down-shift such that the least-significant non-zero
-        //  bit is in the right-most bit.  Divide the values, then normalize the quotient.
-        FloatingPointComponents normalDividend = normalize();
-        FloatingPointComponents normalDivisor = divisor.normalize();
-        System.out.println(String.format("normal dividend: %s", normalDividend.toString()));//TODO
-        System.out.println(String.format("normal divisor:  %s", normalDivisor.toString()));//TODO
-        long tempDividend = normalDividend._mantissa;
-        while ((tempDividend & 01) == 0) {
-            tempDividend >>= 1;
+        //  So, it seems the least error-prone solution which preserves the probable behavior of the
+        //  2200-series, is to do the long division ourselves.
+        //  Normalize, then downshift the dividend and divisor an equal number of bits
+        //  if and while the lowest bit of either is zero.  This makes the arithmetic a bit nicer.
+        FloatingPointComponents normDividend = normalize();
+        FloatingPointComponents normDivisor = divisor.normalize();
+        long workingDividend = normDividend._mantissa;
+        long workingDivisor = normDivisor._mantissa;
+        while (((workingDividend & 01) == 0) && (workingDivisor & 01) == 0) {
+            workingDividend >>= 1;
+            workingDivisor >>= 1;
         }
-        long tempDivisor = normalDivisor._mantissa;
-        while ((tempDivisor & 01) == 0) {
-            tempDivisor >>= 1;
-        }
-        System.out.println(String.format("temp dividend:   %020o", tempDividend));//TODO
-        System.out.println(String.format("temp divisor:    %020o", tempDivisor));//TODO
 
-        //TODO Still some trouble with decimal point here... what to do?
+        //  Keep track of the number of times we've iterated before we've hit the divisor's decimal point, and after.
+        //  The sum of these corresponds to the total number of subtractions we've done.
+        //  Set the working quotient to zero.
+        int before = 0;
+        int after = 0;
+        long quotient = 0;
 
-        BigInteger biDividend = BigInteger.valueOf(tempDividend).shiftLeft(60);
-        BigInteger biDivisor = BigInteger.valueOf(tempDivisor).shiftLeft(60);
-        System.out.println(String.format("bi dividend:     %040o", biDividend));//TODO
-        System.out.println(String.format("bi divisor:      %040o", biDivisor));//TODO
-
-        BigInteger biQuotient = biDividend.divide(biDivisor);
-        System.out.println(String.format("bi quotient:     %040o", biQuotient));//TODO
-
-        long quotient = biQuotient.and(BI_MANTISSA_MASK).longValue();
-        System.out.println(String.format("raw quotient:    %020o", quotient));//TODO
-        assert(quotient != 0);
-        while ((quotient & MANTISSA_LEFTMOST_BIT) == 0) {
+        //  Loop while the workingDividend is non-zero *and* we've not iterated MANTISSA_BITS ties.
+        while ((workingDividend != 0) && (before + after < MANTISSA_BITS)) {
+            //  First, shift the quotient left by one digit.
             quotient <<= 1;
-        }
-        System.out.println(String.format("normal quotient: %020o", quotient));//TODO
 
-        //  Compute new exponent and check it
-        int resultExponent = normalDividend._exponent - normalDivisor._exponent;
-        checkExponent(resultExponent);
+            //  Can we subtract?  If so, do that and add one to the quotient.
+            //  (we can only subtract one, at most, workingDivisor from the workingDividend).
+            if (workingDividend > workingDivisor) {
+                workingDividend -= workingDivisor;
+                quotient++;
+            }
+
+            //  Now we either shift the divisor right, or the dividend left.
+            //  If the divisor is zero in the lowest bit, do that.  Otherwise, do the other.
+            if ((workingDivisor & 01) == 0) {
+                workingDivisor >>= 1;
+                before++;
+            } else {
+                workingDividend <<= 1;
+                after++;
+            }
+        }
+
+        int resultExponent = normDividend._exponent - normDivisor._exponent + 1;
         return new FloatingPointComponents(resultNegative, resultExponent, 0L, quotient);
     }
 
