@@ -16,20 +16,6 @@ public class DoubleWord36 {
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-//    public static class AddFloatingPointResult {
-//        public boolean _overFlow;
-//        public boolean _underFlow;
-//        public DoubleWord36 _value;
-//
-//        public AddFloatingPointResult(
-//            final StaticAddFloatingPointResult sfpar
-//        ) {
-//            _overFlow = sfpar._overFlow;
-//            _underFlow = sfpar._underFlow;
-//            _value = new DoubleWord36(sfpar._value);
-//        }
-//    }
-
     public static class AdditionResult {
         public final boolean _carry;
         public final boolean _overflow;
@@ -67,36 +53,6 @@ public class DoubleWord36 {
             _value = new DoubleWord36(smr._value);
         }
     }
-
-//    public static class MultiplyFloatingPointResult {
-//        public final boolean _overflow;
-//        public final boolean _underflow;
-//        public final DoubleWord36 _value;
-//
-//        public MultiplyFloatingPointResult(
-//            final StaticMultiplyFloatingPointResult smfpr
-//        ) {
-//            _overflow = smfpr._overflow;
-//            _underflow = smfpr._underflow;
-//            _value = new DoubleWord36(smfpr._value);
-//        }
-//    }
-
-//    public static class StaticAddFloatingPointResult {
-//        public boolean _overFlow;
-//        public boolean _underFlow;
-//        public final BigInteger _value;
-//
-//        public StaticAddFloatingPointResult(
-//            final boolean overFlow,
-//            final boolean underFlow,
-//            final BigInteger value
-//        ) {
-//            _overFlow = overFlow;
-//            _underFlow = underFlow;
-//            _value = value;
-//        }
-//    }
 
     public static class StaticAdditionResult {
         public final boolean _carry;
@@ -140,22 +96,6 @@ public class DoubleWord36 {
         }
     }
 
-//    public static class StaticMultiplyFloatingPointResult {
-//        public final boolean _overflow;
-//        public final boolean _underflow;
-//        public final BigInteger _value;
-//
-//        public StaticMultiplyFloatingPointResult(
-//            final boolean overflow,
-//            final boolean underflow,
-//            final BigInteger value
-//        ) {
-//            _overflow = overflow;
-//            _underflow = underflow;
-//            _value = value;
-//        }
-//    }
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constants
@@ -174,10 +114,8 @@ public class DoubleWord36 {
 
     public static final DoubleWord36 DW36_NEGATIVE_ONE              = new DoubleWord36(NEGATIVE_ONE);
     public static final DoubleWord36 DW36_NEGATIVE_ZERO             = new DoubleWord36(NEGATIVE_ZERO);
-//    public static final DoubleWord36 DW36_NEGATIVE_ZERO_FLOATING    = DW36_NEGATIVE_ZERO;
     public static final DoubleWord36 DW36_POSITIVE_ONE              = new DoubleWord36(POSITIVE_ONE);
     public static final DoubleWord36 DW36_POSITIVE_ZERO             = new DoubleWord36(POSITIVE_ZERO);
-//    public static final DoubleWord36 DW36_POSITIVE_ZERO_FLOATING    = DW36_POSITIVE_ZERO;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -196,24 +134,6 @@ public class DoubleWord36 {
     public DoubleWord36(BigInteger value)   { _value = value; }
     public DoubleWord36(DoubleWord36 value) { _value = value._value; }
 
-//    public DoubleWord36(
-//        final double value
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        _value = fromDouble(value);
-//    }
-
-//    public DoubleWord36(
-//        final float value
-//    ) {
-//        try {
-//            _value = fromFloat(value);
-//        } catch (CharacteristOverflowException | CharacteristUnderflowException ex) {
-//            throw new RuntimeException("Impossible error");
-//        }
-//    }
-
-
     /**
      * Constructs a 72-bit integer given the component 36-bit integers provided in the high and low parameters
      * @param high Most significant 36 bits wrapped in a long
@@ -225,53 +145,6 @@ public class DoubleWord36 {
     ) {
         _value = BigInteger.valueOf(high & 0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(low & 0_777777_777777L));
     }
-
-//    /**
-//     * Constructs a DW36 object representing a normalized floating point number using the component portions thereof
-//     * @param mantissa The fractional portion, right shifted in 60-bit field (NOT 64-BIT FIELD)
-//     * @param exponent The unbiased signed exponent
-//     * @param negative true if the presented value should be arithmetically inverted (i.e., is negative)
-//     */
-//    public DoubleWord36(
-//        final long mantissa,
-//        final int exponent,
-//        final boolean negative
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        _value = floatingPointFromComponents(mantissa, exponent, negative);
-//    }
-
-//    /**
-//     * Constructs a DW36 object representing a normalized floating point number using the component portions thereof
-//     * @param integral The 60-bit magnitude of the integral portion, right-justified
-//     * @param fractional The 60-bit magnitude of the fractional portion, left-justified
-//     * @param exponent Initial exponent (probably zero, only here to help disambiguate this c'tor from the previous)
-//     * @param negative true if the presented value should be arithmetically inverted (i.e., is negative)
-//     */
-//    public DoubleWord36(
-//        final long integral,
-//        final long fractional,
-//        final int exponent,
-//        final boolean negative
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        if ((integral == 0) && (fractional == 0)) {
-//            _value = BigInteger.ZERO;
-//        } else {
-//            long[] normalized = normalizeComponents(integral, fractional, exponent);
-//            long normalizedMantissa = normalized[0] >>> 4;
-//            long normalizedExponent = normalized[1];
-//            checkExponent(normalizedExponent);
-//
-//            int characteristic = (int) normalizedExponent + CHARACTERISTIC_BIAS;
-//            BigInteger value = BigInteger.valueOf(characteristic).shiftLeft(MANTISSA_BITS);
-//            value = value.or(BigInteger.valueOf(normalizedMantissa));
-//            if (negative) {
-//                value = negate(value);
-//            }
-//            _value = value;
-//        }
-//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -301,15 +174,8 @@ public class DoubleWord36 {
 
     //  Getter(s) ------------------------------------------------------------------------------------------------------------------
 
-    public BigInteger get() { return _value; }
-
-//    public Components getComponents() {
-//        return new Components(isNegative(),
-//                              getAbsoluteCharacteristic(_value) - CHARACTERISTIC_BIAS,
-//                              getAbsoluteMantissa(_value));
-//    }
-
-    public Word36[] getWords() { return getWords(_value); }
+    public BigInteger get()     { return _value; }
+    public Word36[] getWords()  { return getWords(_value); }
 
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
@@ -320,28 +186,14 @@ public class DoubleWord36 {
     public boolean isPositiveZero()             { return isPositiveZero(_value); }
     public boolean isZero()                     { return isZero(_value); }
 
-    //  Floating point +/- is formatted exactly the same as integer +/- zero
-//    public boolean isNegativeFloatingPoint()     { return isNegative(_value); }
-//    public boolean isNegativeZeroFloatingPoint() { return isNegativeZero(_value); }
-//    public boolean isPositiveFloatingPoint()     { return isPositive(_value); }
-//    public boolean isPositiveZeroFloatingPoint() { return isPositiveZero(_value); }
-//    public boolean isZeroFloatingPoint()         { return isZero(_value); }
-
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
     public AdditionResult add(DoubleWord36 addend)              { return new AdditionResult(add(_value, addend._value)); }
-//    public AddFloatingPointResult addFloatingPoint(DoubleWord36 addend)
-//        { return new AddFloatingPointResult(addFloatingPoint(_value, addend._value)); }
-//    public int compareFloatingPoint(DoubleWord36 operand)       { return compareFloatingPoint(_value, operand._value); }
     public int compareTo(DoubleWord36 operand)                  { return compare(_value, operand._value); }
     public DivisionResult divide(DoubleWord36 divisor)          { return new DivisionResult(divide(_value, divisor._value)); }
-//    public DoubleWord36 divideFloatingPoint(DoubleWord36 divisor)
-//        { return new DoubleWord36(divideFloatingPoint(_value, divisor._value)); }
     public DoubleWord36 extendSign(int fieldSize)               { return new DoubleWord36(extendSign(_value, fieldSize)); }
     public MultiplicationResult multiply(DoubleWord36 factor)   { return new MultiplicationResult(multiply(_value, factor._value)); }
-//    public MultiplyFloatingPointResult multiplyFloatingPoint(DoubleWord36 factor)
-//        { return new MultiplyFloatingPointResult(multiplyFloatingPoint(_value, factor._value)); }
     public DoubleWord36 negate()                                { return new DoubleWord36(negate(_value)); }
 
 
@@ -366,25 +218,6 @@ public class DoubleWord36 {
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
     public BigInteger getTwosComplement()   { return getTwosComplement(_value); }
-
-//    public DoubleWord36 normalize(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        return new DoubleWord36(normalize(_value));
-//    }
-
-//    public double toDouble(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        return toDouble(_value);
-//    }
-
-//    public float toFloat(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
-//        return toFloat(_value);
-//    }
-
     public String toOctal()                 { return toOctal(_value); }
     public String toStringFromASCII()       { return toStringFromASCII(_value); }
     public String toStringFromFieldata()    { return toStringFromFieldata(_value); }
@@ -495,7 +328,7 @@ public class DoubleWord36 {
 //        try {
 //            BigInteger value = floatingPointFromComponents(normalMantissa, normalExponent, resultNegative);
 //            return new StaticAddFloatingPointResult(overflow, underflow, value);
-//        } catch (CharacteristOverflowException | CharacteristUnderflowException ex) {
+//        } catch (CharacteristicOverflowException | CharacteristicUnderflowException ex) {
 //            throw new RuntimeException("Impossible condition:" + ex.getMessage());
 //        }
 //    }
@@ -693,7 +526,7 @@ public class DoubleWord36 {
 //            checkExponent(normalExponent);
 //            BigInteger biValue = floatingPointFromComponents(normalMantissa, (int) normalExponent, resultNeg);
 //            return new StaticMultiplyFloatingPointResult(overflow, underflow, biValue);
-//        } catch (CharacteristOverflowException | CharacteristUnderflowException ex) {
+//        } catch (CharacteristicOverflowException | CharacteristicUnderflowException ex) {
 //            throw new RuntimeException("Impossible condition");
 //        }
 //    }
@@ -913,8 +746,8 @@ public class DoubleWord36 {
 //        final long mantissa,
 //        final int exponent,
 //        final boolean negative
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        if (mantissa == 0) {
 //            return negative ? NEGATIVE_ZERO : POSITIVE_ZERO;
 //        } else {
@@ -938,8 +771,8 @@ public class DoubleWord36 {
 //     */
 //    public static BigInteger floatingPointFromInteger(
 //        final DoubleWord36 operand
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        if (operand.isPositiveZero()) {
 //            return DoubleWord36.POSITIVE_ZERO;
 //        } else if (operand.isNegativeZero()) {
@@ -979,8 +812,8 @@ public class DoubleWord36 {
 //     */
 //    public static BigInteger fromDouble(
 //        final double operand
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        long bits = Double.doubleToRawLongBits(operand);
 //        if (bits == 0) {
 //            return POSITIVE_ZERO;
@@ -1001,8 +834,8 @@ public class DoubleWord36 {
 //     */
 //    public static BigInteger fromFloat(
 //        final float operand
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        int bits = Float.floatToRawIntBits(operand);
 //        if (bits == 0) {
 //            return POSITIVE_ZERO;
@@ -1053,8 +886,8 @@ public class DoubleWord36 {
 //     */
 //    public static BigInteger normalize(
 //        final BigInteger operand
-//    ) throws CharacteristUnderflowException,
-//             CharacteristOverflowException {
+//    ) throws CharacteristicUnderflowException,
+//             CharacteristicOverflowException {
 //        boolean negative = isNegative(operand);
 //        long mantissa = getAbsoluteMantissa(operand);
 //
@@ -1164,14 +997,14 @@ public class DoubleWord36 {
 //     */
 //    protected static void checkExponent(
 //        final long exponent
-//    ) throws CharacteristUnderflowException,
-//             CharacteristOverflowException {
+//    ) throws CharacteristicUnderflowException,
+//             CharacteristicOverflowException {
 //        if (exponent < LOWEST_EXPONENT) {
-//            throw new CharacteristUnderflowException();
+//            throw new CharacteristicUnderflowException();
 //        }
 //
 //        if (exponent > HIGHEST_EXPONENT) {
-//            throw new CharacteristOverflowException();
+//            throw new CharacteristicOverflowException();
 //        }
 //    }
 

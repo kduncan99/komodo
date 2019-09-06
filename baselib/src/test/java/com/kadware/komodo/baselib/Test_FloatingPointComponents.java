@@ -4,11 +4,10 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
-import java.math.BigInteger;
-
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
+import java.math.BigInteger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -49,7 +48,7 @@ public class Test_FloatingPointComponents {
 
     private String decompose(
         final FloatingPointComponents fpc
-    ) throws CharacteristOverflowException, CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException, CharacteristicUnderflowException {
         DoubleWord36 dw36 = fpc.toDoubleWord36();
         BigInteger bits = dw36._value;
         long sign = bits.shiftRight(71).longValue();
@@ -79,8 +78,8 @@ public class Test_FloatingPointComponents {
     //  TODO
     @Test
     public void add_simple(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = 5.5;
         double value2 = 23.335;
         double expValue = value1 + value2;
@@ -93,8 +92,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void add_negative(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = 5.5;
         double value2 = -23.335;
         double expValue = value1 + value2;
@@ -107,8 +106,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void add_inverse(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = 3.14159;
         double value2 = -3.14159;
         double expValue = value1 + value2;
@@ -123,36 +122,36 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void checkExponent_lowest(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents.checkExponent(FloatingPointComponents.LOWEST_EXPONENT);
     }
 
     @Test
     public void checkExponent_highest(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents.checkExponent(FloatingPointComponents.HIGHEST_EXPONENT);
     }
 
     @Test
     public void checkExponent_zero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents.checkExponent(0);
     }
 
-    @Test(expected = CharacteristUnderflowException.class)
+    @Test(expected = CharacteristicUnderflowException.class)
     public void checkExponent_under(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents.checkExponent(FloatingPointComponents.LOWEST_EXPONENT -1);
     }
 
-    @Test(expected = CharacteristOverflowException.class)
+    @Test(expected = CharacteristicOverflowException.class)
     public void checkExponent_over(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents.checkExponent(FloatingPointComponents.HIGHEST_EXPONENT + 1);
     }
 
@@ -165,8 +164,8 @@ public class Test_FloatingPointComponents {
     //  TODO
     @Test
     public void divide_simple(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = 32.5;
         double value2 = 2.5;
@@ -174,7 +173,6 @@ public class Test_FloatingPointComponents {
 
         FloatingPointComponents operand1 = new FloatingPointComponents(value1);
         FloatingPointComponents operand2 = new FloatingPointComponents(value2);
-        System.out.println(new FloatingPointComponents(expectedValue));//TODO
 
         FloatingPointComponents result = operand1.divide(operand2);
         assertEquals(expectedValue, result.toDouble(), 0.000001);
@@ -182,8 +180,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void divide_bigger(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = -47166.560546875;
         double value2 = -11.515625;
@@ -198,8 +196,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void divide_small(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = -1.0/128.0;
         double value2 = -1.0/4.0;
@@ -215,8 +213,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void divide_zero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = 0.0;
         double value2 = 11.515625;
@@ -231,8 +229,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void divide_negative_zero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = -0.0;
         double value2 = 11.515625;
@@ -247,8 +245,8 @@ public class Test_FloatingPointComponents {
 
     @Test(expected = DivideByZeroException.class)
     public void divide_byZero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         double value1 = 1002.378475;
         double value2 = 0.0;
@@ -276,6 +274,8 @@ public class Test_FloatingPointComponents {
         assertFalse(new FloatingPointComponents(0.5).isNegativeZero());
     }
 
+    //  TODO isNormalized
+
     @Test
     public void isPositiveZero() {
         assertFalse(FloatingPointComponents.COMP_NEGATIVE_ZERO.isPositiveZero());
@@ -295,8 +295,8 @@ public class Test_FloatingPointComponents {
     //  TODO
     @Test
     public void multiply_zero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = 0.0;
         double value2 = 3.14159;
         double expectedValue = 0.0;
@@ -310,8 +310,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void multiply_negativeZero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = -0.0F;
         double value2 = 3.14159F;
         double expectedValue = 0.0;
@@ -325,8 +325,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void multiply_simple(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         double value1 = 1000.0;
         double value2 = 3.14159;
         double expectedValue = 3141.59;
@@ -343,8 +343,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void normalize_NegativeZero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents result = FloatingPointComponents.COMP_NEGATIVE_ZERO.normalize();
         assertFalse(result.isPositiveZero());
         assertTrue(result.isNegativeZero());
@@ -353,8 +353,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void normalize_PositiveZero(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents result = FloatingPointComponents.COMP_POSITIVE_ZERO.normalize();
         assertTrue(result.isPositiveZero());
         assertFalse(result.isNegativeZero());
@@ -363,8 +363,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void normalize_Integer(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false, -6, 01234, 0L);
         FloatingPointComponents expected = new FloatingPointComponents(false, 4, 0L, 0_5160_0000_0000_0000_0000L);
 
@@ -374,8 +374,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void normalize_Fraction(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false, 4, 0, 0_0000_7700_0000_0000_0000L);
         FloatingPointComponents expected = new FloatingPointComponents(false, -8, 0L, 0_7700_0000_0000_0000_0000L);
 
@@ -385,8 +385,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void normalize_IntegralAndFraction(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(true, 12, 07L, 0_7777_0000_0000_0000_0000L);
         FloatingPointComponents expected = new FloatingPointComponents(true, 15, 0L, 0_7777_7000_0000_0000_0000L);
 
@@ -394,10 +394,10 @@ public class Test_FloatingPointComponents {
         assertEquals(expected, result);
     }
 
-    @Test(expected = CharacteristUnderflowException.class)
+    @Test(expected = CharacteristicUnderflowException.class)
     public void normalize_Underflow(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                       FloatingPointComponents.LOWEST_EXPONENT,
                                                                       0L,
@@ -406,10 +406,10 @@ public class Test_FloatingPointComponents {
         FloatingPointComponents result = operand.normalize();
     }
 
-    @Test(expected = CharacteristOverflowException.class)
+    @Test(expected = CharacteristicOverflowException.class)
     public void normalize_Overflow(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                       FloatingPointComponents.HIGHEST_EXPONENT,
                                                                       01L,
@@ -422,8 +422,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void toDouble_1(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                       2,
                                                                       01010L,
@@ -433,8 +433,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void toDouble_2(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(true,
                                                                       0,
                                                                       1000000,
@@ -450,8 +450,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void toFloat_1(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                       2,
                                                                       01010L,
@@ -461,8 +461,8 @@ public class Test_FloatingPointComponents {
 
     @Test
     public void toFloat_2(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         FloatingPointComponents operand = new FloatingPointComponents(true,
                                                                       0,
                                                                       1000000,
@@ -480,8 +480,8 @@ public class Test_FloatingPointComponents {
 
 //    @Test
 //    public void floatingFromInteger(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = new DoubleWord36(0777);
 //        DoubleWord36 expected = new DoubleWord36(0_7770_0000_0000_0000_0000L, 9, false);
 //
@@ -491,8 +491,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void floatingFromNegativeInteger(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = new DoubleWord36(077777).negate();
 //        DoubleWord36 exp = new DoubleWord36(0_7777_7000_0000_0000_0000L, 15, true);
 //        BigInteger bi = DoubleWord36.floatingPointFromInteger(dw);
@@ -501,8 +501,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void floatingFromIntegerZero(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = DoubleWord36.DW36_POSITIVE_ZERO;
 //        DoubleWord36 exp = new DoubleWord36(0L, 0, false);
 //
@@ -512,8 +512,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void floatingFromIntegerNegativeZero(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = DoubleWord36.DW36_NEGATIVE_ZERO;
 //        DoubleWord36 exp = new DoubleWord36(0L, 0, true);
 //
@@ -541,8 +541,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_Zeros(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(0.0);
 //        DoubleWord36 dw2 = new DoubleWord36(0.0F);
 //        DoubleWord36 exp = new DoubleWord36(0.0);
@@ -555,8 +555,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_PosPos(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(1024.5);
 //        DoubleWord36 dw2 = new DoubleWord36(4096.75);
 //        DoubleWord36 exp = new DoubleWord36(5121.25);
@@ -569,8 +569,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_Inverses(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(1024.875F);
 //        DoubleWord36 dw2 = new DoubleWord36(-1024.875);
 //        DoubleWord36 exp = new DoubleWord36(0.0);
@@ -583,8 +583,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_PosNeg_ResultPos1(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(1000.0);
 //        DoubleWord36 dw2 = new DoubleWord36(-500.0);
 //        DoubleWord36 exp = new DoubleWord36(500.0);
@@ -597,8 +597,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_PosNeg_ResultPos2(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(0x8080, 0x8080_0000_0000_0000L, 0, false);
 //        DoubleWord36 dw2 = new DoubleWord36(0x8080, 0x0000_0000_0000_0000L, 0, true);
 //        DoubleWord36 exp = new DoubleWord36(0L, 0x8080_0000_0000_0000L, 0, false);
@@ -611,8 +611,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_PosNeg_ResultNeg(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(2.5);
 //        DoubleWord36 dw2 = new DoubleWord36(-5.25);
 //        DoubleWord36 exp = new DoubleWord36(-2.75);
@@ -625,8 +625,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void addFloating_NegNeg(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(1024, 0x8000_0000_0000_0000L, 0, true);
 //        DoubleWord36 dw2 = new DoubleWord36(1024, 0x3000_0000_0000_0000L, 2, true);
 //        DoubleWord36 exp = new DoubleWord36(1024 + 4096 + 1, 0x4000_0000_0000_0000L, 0, true);
@@ -640,8 +640,8 @@ public class Test_FloatingPointComponents {
 //    //  TODO compareFloatingPoint
 //    @Test
 //    public void compareFloatingPoint_1(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(1024, 0x8000_0000_0000_0000L, 0, true);
 //        DoubleWord36 dw2 = new DoubleWord36(1024, 0x3000_0000_0000_0000L, 2, true);
 //
@@ -651,8 +651,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void compareFloatingPoint_2(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(0.0);
 //        DoubleWord36 dw2 = new DoubleWord36(-0.0);
 //
@@ -662,8 +662,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void compareFloatingPoint_3(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(10.112);
 //        DoubleWord36 dw2 = new DoubleWord36(10.0999999999);
 //
@@ -676,8 +676,8 @@ public class Test_FloatingPointComponents {
 //    //  TODO multiplyFloatingPoint
 //    @Test
 //    public void multiplyFloating_1(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(5.0);   //  .1010000 E3
 //        DoubleWord36 dw2 = new DoubleWord36(4.0);   //  .1000000 E3
 //        DoubleWord36 exp = new DoubleWord36(20.0);  //  .1010000 E5
@@ -694,8 +694,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void multiplyFloating_2(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw1 = new DoubleWord36(-3.14159);
 //        DoubleWord36 dw2 = new DoubleWord36(10.0);
 //        DoubleWord36 exp = new DoubleWord36(-31.4159);
@@ -714,8 +714,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void normalize_Zero(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = new DoubleWord36(0.0F);
 //        DoubleWord36 expected = new DoubleWord36(0L, 0L);
 //
@@ -725,8 +725,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void normalize_NegativeZero(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        DoubleWord36 dw = new DoubleWord36(-0.0F);
 //        DoubleWord36 expected = new DoubleWord36(0xFFFF_FFFF_FFFF_FFFFL, 0xFFFF_FFFF_FFFF_FFFFL);
 //
@@ -736,8 +736,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void normalize_Positive(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        BigInteger operand = BigInteger.valueOf(0_2011_0000_7777L).shiftLeft(36);
 //        BigInteger expected = BigInteger.valueOf(0_1775_7777_0000L).shiftLeft(36);
 //
@@ -747,8 +747,8 @@ public class Test_FloatingPointComponents {
 //
 //    @Test
 //    public void normalize_Negative(
-//    ) throws CharacteristOverflowException,
-//             CharacteristUnderflowException {
+//    ) throws CharacteristicOverflowException,
+//             CharacteristicUnderflowException {
 //        BigInteger operand = DoubleWord36.negate(BigInteger.valueOf(0_2011_0000_7777L).shiftLeft(36));
 //        BigInteger expected = DoubleWord36.negate(BigInteger.valueOf(0_1775_7777_0000L).shiftLeft(36));
 //

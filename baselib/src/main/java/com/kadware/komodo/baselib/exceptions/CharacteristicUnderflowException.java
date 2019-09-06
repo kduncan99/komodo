@@ -6,9 +6,9 @@ package com.kadware.komodo.baselib.exceptions;
 
 /**
  * Exception thrown by a method when it is asked to do perform a floating point operation which would
- * result in a characteristic overflow.
+ * result in a characteristic underflow.
  */
-public class CharacteristOverflowException extends Exception {
+public class CharacteristicUnderflowException extends Exception {
 
-    public CharacteristOverflowException() {}
+    public CharacteristicUnderflowException() {}
 }

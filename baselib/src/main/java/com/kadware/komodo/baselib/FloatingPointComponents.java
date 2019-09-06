@@ -4,10 +4,10 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
-import java.math.BigDecimal;
+
 import java.math.BigInteger;
 
 /**
@@ -313,18 +313,18 @@ public class FloatingPointComponents {
      * This provides one extra bit of precision.
      */
     public double toDouble(
-    ) throws CharacteristOverflowException,
-            CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         long rawBits;
-        FloatingPointComponents normalized = normalize();
+        FloatingPointComponents normalized = normalizeNoThrow();
 
         if ((_integral == 0) && (_mantissa == 0)) {
             rawBits = _isNegative ? IEEE754_DOUBLE_NEGATIVE_ZERO : IEEE754_DOUBLE_POSITIVE_ZERO;
         } else {
             if (normalized._exponent < Double.MIN_EXPONENT) {
-                throw new CharacteristUnderflowException();
+                throw new CharacteristicUnderflowException();
             } else if (normalized._exponent > Double.MAX_EXPONENT) {
-                throw new CharacteristOverflowException();
+                throw new CharacteristicOverflowException();
             }
 
             //  Our internal mantissa is always bigger than the IEEE754 mantissa.  Down-shift it to fit.
@@ -351,18 +351,18 @@ public class FloatingPointComponents {
      * This provides one extra bit of precision.
      */
     public float toFloat(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         int rawBits;
-        FloatingPointComponents normalized = normalize();
+        FloatingPointComponents normalized = normalizeNoThrow();
 
         if ((_integral == 0) && (_mantissa == 0)) {
             rawBits = _isNegative ? IEEE754_SINGLE_NEGATIVE_ZERO : IEEE754_SINGLE_POSITIVE_ZERO;
         } else {
             if (normalized._exponent < Float.MIN_EXPONENT) {
-                throw new CharacteristUnderflowException();
+                throw new CharacteristicUnderflowException();
             } else if (normalized._exponent > Float.MAX_EXPONENT) {
-                throw new CharacteristOverflowException();
+                throw new CharacteristicOverflowException();
             }
 
             //  Our internal mantissa is always bigger than the IEEE754 mantissa.  Down-shift it to fit.
@@ -387,18 +387,18 @@ public class FloatingPointComponents {
      * Negative zero format is 0_777777_777777_777777_777777
      */
     public DoubleWord36 toDoubleWord36(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         BigInteger rawBits;
-        FloatingPointComponents normalized = normalize();
+        FloatingPointComponents normalized = normalizeNoThrow();
 
         if ((_integral == 0) && (_mantissa == 0)) {
             rawBits = _isNegative ? DW36_NEGATIVE_ZERO : DW36_NEGATIVE_ZERO;
         } else {
             if (normalized._exponent < DW36_LOWEST_EXPONENT) {
-                throw new CharacteristUnderflowException();
+                throw new CharacteristicUnderflowException();
             } else if (normalized._exponent > DW36_HIGHEST_EXPONENT) {
-                throw new CharacteristOverflowException();
+                throw new CharacteristicOverflowException();
             }
 
             rawBits = BigInteger.valueOf(normalized._exponent).add(DW36BI_EXPONENT_BIAS).shiftLeft(DW36_MANTISSA_BITS);
@@ -421,18 +421,18 @@ public class FloatingPointComponents {
      * Negative zero format is 0_777777_777777
      */
     public Word36 toWord36(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         long rawBits;
-        FloatingPointComponents normalized = normalize();
+        FloatingPointComponents normalized = normalizeNoThrow();
 
         if ((_integral == 0) && (_mantissa == 0)) {
             rawBits = _isNegative ? W36_NEGATIVE_ZERO : W36_NEGATIVE_ZERO;
         } else {
             if (normalized._exponent < W36_LOWEST_EXPONENT) {
-                throw new CharacteristUnderflowException();
+                throw new CharacteristicUnderflowException();
             } else if (normalized._exponent > W36_HIGHEST_EXPONENT) {
-                throw new CharacteristOverflowException();
+                throw new CharacteristicOverflowException();
             }
 
             rawBits = (normalized._exponent + W36_EXPONENT_BIAS) << W36_MANTISSA_BITS;
@@ -455,11 +455,11 @@ public class FloatingPointComponents {
      */
     public FloatingPointComponents add(
         final FloatingPointComponents addend
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         //  Normalize the addends, Check for zeros and then shift the addend with the smaller exponent such that the exponents match.
-        FloatingPointComponents normal1 = normalize();
-        FloatingPointComponents normal2 = addend.normalize();
+        FloatingPointComponents normal1 = normalizeNoThrow();
+        FloatingPointComponents normal2 = addend.normalizeNoThrow();
         if (normal1._mantissa == 0) {
             return normal2;
         } else if (normal2._mantissa == 0) {
@@ -496,6 +496,7 @@ public class FloatingPointComponents {
         }
 
         //  Done.
+        checkExponent(resultExponent);
         return new FloatingPointComponents(resultNegative, resultExponent, 0L, resultMantissa);
     }
 
@@ -511,7 +512,32 @@ public class FloatingPointComponents {
         final FloatingPointComponents operand,
         final int precision
     ) {
-        return 0;//TODO
+        if (!isZero() && !operand.isZero()) {
+            //  If the signs disagree, the positive value is greater
+            if (_isNegative != operand._isNegative) {
+                return _isNegative ? -1 : 1;
+            }
+
+            //  Normalize, and if the exponents disagree, the value with the larger exponent is greater
+            FloatingPointComponents normThis = normalizeNoThrow();
+            FloatingPointComponents normThat = operand.normalizeNoThrow();
+            if (normThis._exponent != normThat._exponent) {
+                return (normThis._exponent > normThat._exponent) ? 1 : -1;
+            }
+
+            //  Signs and normalized exponents agree - compare the mantissas (the integral values have already been shifted down).
+            //  Apply the precision first, though...
+            int realPrecision = precision < 1 ? precision : 1;
+            realPrecision = realPrecision <= MANTISSA_BITS ? realPrecision : MANTISSA_BITS;
+            long mask = (1L << realPrecision) - 1;
+            mask <<= (60 - realPrecision);
+
+            long shiftedThis = normThis._mantissa & mask;
+            long shiftedThat = normThat._mantissa & mask;
+            return Long.compare(shiftedThis, shiftedThat);
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -519,8 +545,8 @@ public class FloatingPointComponents {
      */
     public FloatingPointComponents divide(
         final FloatingPointComponents divisor
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException,
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
              DivideByZeroException {
         //  Is the result going to be negative?
         //  If either factor is zero, simply return zero
@@ -535,8 +561,8 @@ public class FloatingPointComponents {
         //  2200-series, is to do the long division ourselves.
         //  Normalize, then downshift the dividend and divisor an equal number of bits
         //  if and while the lowest bit of either is zero.  This makes the arithmetic a bit nicer.
-        FloatingPointComponents normDividend = normalize();
-        FloatingPointComponents normDivisor = divisor.normalize();
+        FloatingPointComponents normDividend = normalizeNoThrow();
+        FloatingPointComponents normDivisor = divisor.normalizeNoThrow();
         long workingDividend = normDividend._mantissa;
         long workingDivisor = normDivisor._mantissa;
         while (((workingDividend & 01) == 0) && (workingDivisor & 01) == 0) {
@@ -547,6 +573,7 @@ public class FloatingPointComponents {
         //  Keep track of the number of times we've iterated before we've hit the divisor's decimal point, and after.
         //  The sum of these corresponds to the total number of subtractions we've done.
         //  Set the working quotient to zero.
+        //TODO not sure if we need to track before & after separately - if things don't go wrong, replace this with a single counter
         int before = 0;
         int after = 0;
         long quotient = 0;
@@ -575,6 +602,7 @@ public class FloatingPointComponents {
         }
 
         int resultExponent = normDividend._exponent - normDivisor._exponent + 1;
+        checkExponent(resultExponent);
         return new FloatingPointComponents(resultNegative, resultExponent, 0L, quotient);
     }
 
@@ -587,14 +615,30 @@ public class FloatingPointComponents {
         return null;//TODO
     }
 
+    /**
+     * Test for negative zero
+     */
     public boolean isNegativeZero() {
         return _isNegative && (_mantissa == 0) && (_integral == 0);
     }
 
+    /**
+     * Tests whether this value is normalized
+     */
+    public boolean isNormalized() {
+        return (isZero() || ((_integral == 0) && (_mantissa & MANTISSA_LEFTMOST_BIT) != 0));
+    }
+
+    /**
+     * Test for positive zero
+     */
     public boolean isPositiveZero() {
         return !_isNegative && (_mantissa == 0) && (_integral == 0);
     }
 
+    /**
+     * Test for negative or positive zero
+     */
     public boolean isZero() {
         return (_mantissa == 0) && (_integral == 0);
     }
@@ -604,8 +648,8 @@ public class FloatingPointComponents {
      */
     public FloatingPointComponents multiply(
         final FloatingPointComponents factor
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
         //  Is the result going to be negative?
         //  If either factor is zero, simply return zero
         boolean resultNegative = _isNegative != factor._isNegative;
@@ -680,9 +724,32 @@ public class FloatingPointComponents {
      * and incrementing or decrementing the exponent accordingly.
      */
     public FloatingPointComponents normalize(
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
-        if (isZero()) {
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
+        FloatingPointComponents normalized = normalizeNoThrow();
+        checkExponent(normalized._exponent);
+        return normalized;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Private Methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    protected static void checkExponent(
+        final int exponent
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
+        if (exponent < LOWEST_EXPONENT) {
+            throw new CharacteristicUnderflowException();
+        } else if (exponent > HIGHEST_EXPONENT) {
+            throw new CharacteristicOverflowException();
+        }
+    }
+
+    protected FloatingPointComponents normalizeNoThrow(
+    ) {
+        if (isNormalized()) {
             return this;
         }
 
@@ -706,23 +773,7 @@ public class FloatingPointComponents {
             }
         }
 
-        checkExponent(tempExponent);
         return new FloatingPointComponents(_isNegative, tempExponent, tempIntegral, tempMantissa);
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Private Methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    protected static void checkExponent(
-        final int exponent
-    ) throws CharacteristOverflowException,
-             CharacteristUnderflowException {
-        if (exponent < LOWEST_EXPONENT) {
-            throw new CharacteristUnderflowException();
-        } else if (exponent > HIGHEST_EXPONENT) {
-            throw new CharacteristOverflowException();
-        }
-    }
 }

@@ -6,10 +6,7 @@ package com.kadware.komodo.baselib;
 
 import java.math.BigInteger;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristUnderflowException;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
