@@ -4,9 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.FloatingPointValue;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.dictionary.ValueType;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Stack;
 
@@ -16,25 +19,8 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public class MultiplicationOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public MultiplicationOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 7;
-    }
+    public MultiplicationOperator(Locale locale) { super(locale); }
+    @Override public final int getPrecedence() { return 7; }
 
     /**
      * Evaluator
@@ -52,15 +38,15 @@ public class MultiplicationOperator extends ArithmeticOperator {
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
-                IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-                IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-                opResult = IntegerValue.multiply(leftValue, rightValue, getLocale(), context.getDiagnostics());
+                //  both ops are integer
+                IntegerValue iopLeft = (IntegerValue) operands[0];
+                IntegerValue iopRight = (IntegerValue) operands[1];
+                opResult = IntegerValue.multiply(iopLeft, iopRight, _locale, context.getDiagnostics());
             } else {
-                //  must be floating point
-                FloatingPointValue leftValue = (FloatingPointValue)operands[0];
-                FloatingPointValue rightValue = (FloatingPointValue)operands[1];
-                double result = leftValue._value * rightValue._value;
-                opResult = new FloatingPointValue(false, result);
+                //  both ops are floating point
+                FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
+                FloatingPointValue iopRight = (FloatingPointValue)operands[1];
+                opResult = FloatingPointValue.multiply(iopLeft, iopRight, _locale, context.getDiagnostics());
             }
 
             valueStack.push(opResult);

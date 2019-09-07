@@ -4,10 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.diagnostics.*;
-import com.kadware.komodo.minalib.exceptions.*;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -16,25 +18,8 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public class DivisionRemainderOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale locale of text
-     */
-    public DivisionRemainderOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 7;
-    }
+    public DivisionRemainderOperator(Locale locale) { super(locale); }
+    @Override public final int getPrecedence() { return 7; }
 
     /**
      * Evaluator
@@ -51,7 +36,7 @@ public class DivisionRemainderOperator extends ArithmeticOperator {
             Value[] operands = getTransformedOperands(valueStack, false, context.getDiagnostics());
             IntegerValue iopLeft = (IntegerValue) operands[0];
             IntegerValue iopRight = (IntegerValue) operands[1];
-            IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, getLocale(), context.getDiagnostics());
+            IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, context.getDiagnostics());
             valueStack.push(dres._remainder);
         } catch (TypeException ex) {
             throw new ExpressionException();

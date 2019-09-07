@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.dictionary.Value;
-import com.kadware.komodo.minalib.diagnostics.ValueDiagnostic;
-import com.kadware.komodo.minalib.exceptions.*;
-
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -16,35 +16,9 @@ import java.util.Stack;
  */
 public class FlaggedOperator extends Operator {
 
-    /**
-     * Constructor
-     * @param locale locale of the operator
-     */
-    public FlaggedOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getPrecedence(
-    ) {
-        return 0;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public Type getType(
-    ) {
-        return Type.Prefix;
-    }
+    public FlaggedOperator(Locale locale) { super(locale); }
+    @Override public int getPrecedence() { return 0; }
+    @Override public Type getType() { return Type.Prefix; }
 
     /**
      * Evaluator
@@ -57,12 +31,11 @@ public class FlaggedOperator extends Operator {
         final Context context,
         Stack<Value> valueStack
     ) throws ExpressionException {
-        //  I think pretty much anything can be flagged
         Value operand = getOperands(valueStack)[0];
         try {
             valueStack.push(operand.copy(true));
         } catch (TypeException ex) {
-            context.appendDiagnostic(new ValueDiagnostic(getLocale(), "Cannot apply flag to this operand"));
+            postValueDiagnostic(false, context.getDiagnostics());
             throw new ExpressionException();
         }
     }

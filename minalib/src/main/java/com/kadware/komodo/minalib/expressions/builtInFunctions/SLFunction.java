@@ -7,7 +7,6 @@ package com.kadware.komodo.minalib.expressions.builtInFunctions;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 
 /**
@@ -20,7 +19,7 @@ public class SLFunction extends BuiltInFunction {
      * @param locale location of this function
      * @param argumentExpressions argument expressions
      */
-    public SLFunction(
+    SLFunction(
         final Locale locale,
         final Expression[] argumentExpressions
     ) {
@@ -47,12 +46,7 @@ public class SLFunction extends BuiltInFunction {
             throw new ExpressionException();
         }
 
-        try {
-            StringValue sarg = (StringValue) arguments[0];
-            return new IntegerValue.Builder().setValue(sarg._value.length())
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        StringValue sarg = (StringValue) arguments[0];
+        return new IntegerValue.Builder().setValue(sarg._value.length()).build();
     }
 }

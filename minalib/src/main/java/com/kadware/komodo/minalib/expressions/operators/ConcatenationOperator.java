@@ -4,9 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.exceptions.*;
+import com.kadware.komodo.minalib.CharacterMode;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.StringValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import java.util.Stack;
 
 /**
@@ -14,35 +17,9 @@ import java.util.Stack;
  */
 public class ConcatenationOperator extends Operator {
 
-    /**
-     * Constructor
-     * @param locale location of the operator
-     */
-    public ConcatenationOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getPrecedence(
-    ) {
-        return 3;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public Type getType(
-    ) {
-        return Type.Infix;
-    }
+    public ConcatenationOperator(Locale locale) { super(locale); }
+    @Override public int getPrecedence() { return 3; }
+    @Override public Type getType() { return Type.Infix; }
 
     /**
      * Evaluator
@@ -57,18 +34,28 @@ public class ConcatenationOperator extends Operator {
     ) throws ExpressionException {
         Value[] operands = getOperands(valueStack);
 
-        try {
-            StringValue leftValue = operands[0].toStringValue(getLocale(), context.getCharacterMode(), context.getDiagnostics());
-            StringValue rightValue = operands[1].toStringValue(getLocale(), context.getCharacterMode(), context.getDiagnostics());
-            String newValue = leftValue._value + rightValue._value;
+        boolean error = false;
+        if (!(operands[0] instanceof StringValue)) {
+            postValueDiagnostic(true, context.getDiagnostics());
+            error = true;
+        }
 
-            boolean ascii = (leftValue._characterMode == CharacterMode.ASCII)
-                                || (rightValue._characterMode == CharacterMode.ASCII);
-            CharacterMode charMode = ascii ? CharacterMode.ASCII : CharacterMode.Fieldata;
+        if (!(operands[1] instanceof StringValue)) {
+            postValueDiagnostic(false, context.getDiagnostics());
+            error = true;
+        }
 
-            valueStack.push( new StringValue(false, newValue, charMode) );
-        } catch (TypeException ex) {
+        if (error) {
             throw new ExpressionException();
         }
+
+        StringValue leftValue = (StringValue) operands[0];
+        StringValue rightValue = (StringValue) operands[1];
+        String newValue = leftValue._value + rightValue._value;
+
+        boolean ascii = (leftValue._characterMode == CharacterMode.ASCII)
+                            || (rightValue._characterMode == CharacterMode.ASCII);
+        CharacterMode charMode = ascii ? CharacterMode.ASCII : CharacterMode.Fieldata;
+        valueStack.push(new StringValue.Builder().setValue(newValue).setCharacterMode(charMode).build());
     }
 }

@@ -85,13 +85,9 @@ public class FORMDirective extends Directive {
             }
 
             if (!err) {
-                try {
-                    context.getDictionary().addValue(labelFieldComponents._labelLevel,
-                                                     labelFieldComponents._label,
-                                                     new FormValue.Builder().setForm(new Form(fieldSizes)).build());
-                } catch (InvalidParameterException ex) {
-                    throw new RuntimeException("Caught " + ex.getMessage());
-                }
+                context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                                                 labelFieldComponents._label,
+                                                 new FormValue.Builder().setForm(new Form(fieldSizes)).build());
             }
         }
     }

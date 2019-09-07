@@ -4,12 +4,16 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
 import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.exceptions.*;
-
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.FormException;
+import com.kadware.komodo.minalib.exceptions.RelocationException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -17,15 +21,7 @@ import java.util.Stack;
  */
 public class LessThanOperator extends RelationalOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public LessThanOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public LessThanOperator(Locale locale) { super(locale); }
 
     /**
      * Evaluator
@@ -41,14 +37,14 @@ public class LessThanOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (operands[0].compareTo(operands[1]) < 0) ? 1 : 0;
-            valueStack.push(new IntegerValue(result));
+            valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (FormException ex) {
             //  thrown by compareTo() - we need to post a diag
-            context.appendDiagnostic(new FormDiagnostic(getLocale()));
+            context.appendDiagnostic(new FormDiagnostic(_locale));
             throw new ExpressionException();
         } catch (RelocationException ex) {
             //  thrown by compareTo() - we need to post a diag
-            context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
+            context.appendDiagnostic(new RelocationDiagnostic(_locale));
             throw new ExpressionException();
         } catch (TypeException ex) {
             //  thrown by getTransformedOperands() - diagnostic already posted

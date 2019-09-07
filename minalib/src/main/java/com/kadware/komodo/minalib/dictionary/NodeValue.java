@@ -4,9 +4,6 @@
 
 package com.kadware.komodo.minalib.dictionary;
 
-import com.kadware.komodo.minalib.CharacterMode;
-import com.kadware.komodo.minalib.Locale;
-import com.kadware.komodo.minalib.diagnostics.Diagnostics;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.HashMap;
@@ -28,40 +25,36 @@ public class NodeValue extends Value {
      * Normal constructor
      * @param flagged (i.e., has leading asterisk)
      */
-    private NodeValue(
-        final boolean flagged
-    ) {
-        super(flagged);
+    private NodeValue(boolean flagged) { super(flagged); }
+
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws TypeException {
+        throw new TypeException();
     }
 
-//    /**
-//     * Compares an object to this object
-//     * @param obj comparison object
-//     * @return -1 if this object sorts before (is less than) the given object
-//     *         +1 if this object sorts after (is greater than) the given object,
-//     *          0 if both objects sort to the same position (are equal)
-//     * @throws TypeException if there is no reasonable way to compare the objects
-//     */
-//    @Override
-//    public int compareTo(
-//        final Object obj
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new attribute
-//     * @return new value
-//     */
-//    @Override
-//    public NodeValue copy(
-//        final boolean newFlagged
-//    ) {
-//        NodeValue newValue = new NodeValue(newFlagged);
-//        newValue._values.putAll(_values);
-//        return newValue;
-//    }
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new attribute
+     * @return new value
+     */
+    @Override
+    public NodeValue copy(
+        final boolean newFlagged
+    ) {
+        NodeValue newValue = new NodeValue(newFlagged);
+        newValue._values.putAll(_values);
+        return newValue;
+    }
 
     /**
      * Removes a value given a selector

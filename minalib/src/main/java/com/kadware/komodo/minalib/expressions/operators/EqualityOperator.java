@@ -4,10 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.exceptions.*;
-
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -15,16 +17,7 @@ import java.util.Stack;
  */
 public class EqualityOperator extends RelationalOperator {
 
-    /**
-     * Constructor
-     * <p>
-     * @param locale
-     */
-    public EqualityOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public EqualityOperator(Locale locale) { super(locale); }
 
     /**
      * Evaluator
@@ -40,7 +33,7 @@ public class EqualityOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (operands[0].equals(operands[1])) ? 1 : 0;
-            valueStack.push(new IntegerValue(result));
+            valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

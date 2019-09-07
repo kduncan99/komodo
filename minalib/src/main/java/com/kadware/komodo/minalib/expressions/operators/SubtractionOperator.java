@@ -4,11 +4,19 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
+import com.kadware.komodo.baselib.DoubleWord36;
+import com.kadware.komodo.baselib.FloatingPointComponents;
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.diagnostics.ErrorDiagnostic;
+import com.kadware.komodo.minalib.diagnostics.TruncationDiagnostic;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.minalib.exceptions.*;
+
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -56,7 +64,10 @@ public class SubtractionOperator extends ArithmeticOperator {
                 IntegerValue iopLeft = (IntegerValue)operands[0];
                 IntegerValue iopRight = (IntegerValue)operands[1];
 
-                long intResult = iopLeft._value - iopRight._value;
+                DoubleWord36.AdditionResult ar = iopLeft._value.add(iopRight._value.negate());
+                if (ar._overflow) {
+                    context.appendDiagnostic(new TruncationDiagnostic(_locale, "Addition overflow"));
+                }
 
                 //  Coalesce like-references, remove inverses, etc
                 List<UndefinedReference> temp = new LinkedList<>();
@@ -105,12 +116,13 @@ public class SubtractionOperator extends ArithmeticOperator {
                     }
                 }
 
-                opResult = new IntegerValue(false, intResult, null, newRefs.toArray(new UndefinedReference[0]));
+                opResult = new IntegerValue.Builder().setValue(ar._value)
+                                                     .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                     .build();
             } else {
-                FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
-                FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                double result = iopLeft._value - iopRight._value;
-                opResult = new FloatingPointValue(false, result);
+                FloatingPointValue iopLeft = (FloatingPointValue) operands[0];
+                FloatingPointValue iopRight = (FloatingPointValue) operands[1];
+                opResult = FloatingPointValue.add(iopLeft, FloatingPointValue.negate(iopRight), _locale, context.getDiagnostics());
             }
 
             valueStack.push(opResult);

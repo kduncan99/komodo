@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.dictionary.Value;
@@ -19,7 +18,7 @@ import java.util.Stack;
  */
 public abstract class Operator {
 
-    private final Locale _locale;
+    public final Locale _locale;
 
     public enum Type {
         Infix,
@@ -27,15 +26,7 @@ public abstract class Operator {
         Postfix,
     }
 
-    /**
-     * Constructor
-     * @param locale locale of the operator in the source code
-     */
-    public Operator(
-        final Locale locale
-    ) {
-        _locale = locale;
-    }
+    public Operator(Locale locale) { _locale = locale; }
 
     /**
      * Evaluator
@@ -47,15 +38,6 @@ public abstract class Operator {
         final Context context,
         Stack<Value> valueStack
     ) throws ExpressionException;
-
-    /**
-     * Getter
-     * @return locale value
-     */
-    public Locale getLocale(
-    ) {
-        return _locale;
-    }
 
     /**
      * Retrieves the precedence for this operator.
@@ -81,17 +63,17 @@ public abstract class Operator {
         Stack<Value> valueStack
     ) {
         if ((getType() == Type.Infix) && (valueStack.size() > 1)) {
-                Value[] result = new Value[2];
-                result[1] = valueStack.pop();
-                result[0] = valueStack.pop();
-                return result;
+            Value[] result = new Value[2];
+            result[1] = valueStack.pop();
+            result[0] = valueStack.pop();
+            return result;
         } else if ((getType() != Type.Infix) && !valueStack.isEmpty()) {
             Value[] result = new Value[1];
             result[0] = valueStack.pop();
             return result;
         }
 
-        throw new InternalErrorRuntimeException("Insufficient operands in valueStack Operator.getOperands()");
+        throw new RuntimeException("Insufficient operands in valueStack Operator.getOperands()");
     }
 
     /**

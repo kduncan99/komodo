@@ -4,13 +4,13 @@
 
 package com.kadware.komodo.minalib;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.baselib.OnesComplement;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.Dictionary;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +61,8 @@ public class Context {
 
         /**
          * Produces a LocationCounterPool object to represent the content of this pool
-         * @param diagnostics where we store any diagnostics we produce
-         * @return array
          */
         LocationCounterPool produceLocationCounterPool(
-            final Diagnostics diagnostics
         ) {
             RelocatableWord[] pool = new RelocatableWord[_nextOffset];
             for (Map.Entry<Integer, GeneratedWord> wordEntry : entrySet()) {
@@ -255,7 +252,9 @@ public class Context {
         gw._topLevelTextLine._generatedWords.add(gw);
 
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue(false, lcOffset, null, refs);
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(refs)
+                                         .build();
     }
 
     /**
@@ -288,22 +287,22 @@ public class Context {
         if (form._fieldSizes.length != values.length) {
             appendDiagnostic(new FormDiagnostic(locale,
                                                 "Contradiction between number of values and number of fields in form"));
-            return new IntegerValue(false, lcOffset, null, new UndefinedReference[0]);
+            return new IntegerValue.Builder().setValue(lcOffset).build();
         }
 
-        long genInt = 0;
+        BigInteger genInt = BigInteger.ZERO;
         int bit = form._leftSlop;
         List<UndefinedReference> newRefs = new LinkedList<>();
         for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
-            genInt <<= form._fieldSizes[fx];
-            long mask = (1L << form._fieldSizes[fx]) - 1;
+            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
+            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
 
-            long fieldValue = values[fx]._value;
-            boolean trunc = false;
-            if (OnesComplement.isPositive36(values[fx]._value)) {
-                trunc = (fieldValue & mask) != fieldValue;
+            BigInteger fieldValue = values[fx]._value.get();
+            boolean trunc;
+            if (values[fx]._value.isPositiveZero()) {
+                trunc = !fieldValue.and(mask).equals(fieldValue);
             } else {
-                trunc = (fieldValue | mask) != 0_777777_777777L;
+                trunc = !fieldValue.and(mask).equals(DoubleWord36.SHORT_BIT_MASK);
             }
 
             if (trunc) {
@@ -311,7 +310,7 @@ public class Context {
                                                           "Value exceeds size of field in form " + form.toString()));
             }
 
-            genInt |= values[fx]._value & mask;
+            genInt = genInt.or(values[fx]._value.get().and(mask));
             for (UndefinedReference ur : values[fx]._references) {
                 newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
             }
@@ -319,13 +318,18 @@ public class Context {
             bit += form._fieldSizes[fx];
         }
 
-        IntegerValue iv = new IntegerValue(false, genInt, form, newRefs.toArray(new UndefinedReference[0]));
+        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(genInt))
+                                                    .setForm(form)
+                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .build();
         GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
         gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
 
         UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue(false, lcOffset, null, lcRefs);
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(lcRefs)
+                                         .build();
     }
 
     /**
@@ -346,17 +350,20 @@ public class Context {
         int lcOffset = gp._nextOffset;
 
         for (int vx = 0; vx < values.length; ++vx) {
+            IntegerValue iv = new IntegerValue.Builder().setValue(values[vx]).build();
             GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
                                                  lineSpecifier,
                                                  lcIndex,
                                                  lcOffset + vx,
-                                                 new IntegerValue(values[vx]));
+                                                 iv);
             gp.store(gw);
             gw._topLevelTextLine._generatedWords.add(gw);
         }
 
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue(false, lcOffset, null, refs);
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(refs)
+                                         .build();
     }
 
     public boolean getArithmeticFaultCompatibilityMode() { return _globalData._arithmeticFaultCompatibilityMode; }
@@ -386,7 +393,9 @@ public class Context {
         UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
                                                                               false,
                                                                               _localData._currentGenerationLCIndex) };
-        return new IntegerValue(false, lcOffset, null, refs);
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(refs)
+                                         .build();
     }
 
     /**
@@ -449,7 +458,7 @@ public class Context {
     ) {
         Map<Integer, LocationCounterPool> result = new TreeMap<>();
         for (Map.Entry<Integer, GeneratedPool> entry : _globalData._generatedPools.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool(_globalData._diagnostics));
+            result.put(entry.getKey(), entry.getValue().produceLocationCounterPool());
         }
         return result;
     }

@@ -4,10 +4,9 @@
 
 package com.kadware.komodo.minalib;
 
-import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
+import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.*;
@@ -18,6 +17,7 @@ import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.ExpressionParser;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,9 +46,6 @@ public class Assembler {
     private static final Form _fjaxuForm = new Form(_fjaxuFields);
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
-
-    //  A useful IntegerValue containing zero, no flags, and no unidentified references.
-    private static final IntegerValue _zeroValue = new IntegerValue(0);
 
     //  Resulting diagnostics and the parsed code from a call to assemble()
     private Diagnostics _diagnostics;
@@ -101,7 +98,7 @@ public class Assembler {
                 processProcedure(context, operation, (ProcedureValue) v, textLine);
                 return;
             } else if (v instanceof FormValue) {
-                processForm(context, (FormValue) v, textLine, lfc, operandField);
+                processForm(context, (FormValue) v, operandField);
                 return;
             } else if (v instanceof DirectiveValue) {
                 processDirective(context, (DirectiveValue) v, textLine, lfc, operationField);
@@ -252,6 +249,40 @@ public class Assembler {
     }
 
     /**
+     * Generates data into the given context representing this value
+     * @param fpValue value object
+     * @param context context of the current assembly
+     * @param locale locale of the code which generated this word
+     */
+    private static void generateFloatingPoint(
+        final FloatingPointValue fpValue,
+        final Context context,
+        final Locale locale
+    ) {
+        try {
+            if (fpValue._precision == ValuePrecision.Double) {
+                DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
+                Word36[] word36s = dw36.getWords();
+                long[] word36 = { word36s[0].getW(), word36s[1].getW() };
+                context.generate(locale.getLineSpecifier(),
+                                 context.getCurrentGenerationLCIndex(),
+                                 word36);
+            } else {
+                //  single precision generation is the default...
+                Word36 w36 = fpValue._value.toWord36();
+                long[] word36 = { w36.getW() };
+                context.generate(locale.getLineSpecifier(),
+                                 context.getCurrentGenerationLCIndex(),
+                                 word36);
+            }
+        } catch (CharacteristicOverflowException ex) {
+            context.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
+        } catch (CharacteristicUnderflowException ex) {
+            context.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic underflow"));
+        }
+    }
+
+    /**
      * Generates the RelocatableModule based on the various internal structures we've built up
      * @param context context of this sub-assembly
      * @param moduleName name of the module
@@ -273,7 +304,7 @@ public class Assembler {
                     }
                 }
             } catch (NotFoundException ex) {
-                //  can't happen
+                throw new RuntimeException("Can't happen: " + ex.getMessage());
             }
         }
 
@@ -291,6 +322,58 @@ public class Assembler {
                                                          "Could not generate relocatable module:" + ex.getMessage()));
             return null;
         }
+    }
+
+    /**
+     * Generates data into the given context representing this value.
+     * Need to account for character mode, precision, and justification.
+     * @param sValue value object
+     * @param context context of the current assembly
+     * @param locale locale of the code which generated this word
+     */
+    private static void generateString(
+        final StringValue sValue,
+        final Context context,
+        final Locale locale
+    ) {
+        CharacterMode generateMode = sValue._characterMode == CharacterMode.Default ? context.getCharacterMode() : sValue._characterMode;
+        int charsPerWord = generateMode == CharacterMode.ASCII ? 4 : 6;
+
+        int charsExpected;
+        if (sValue._precision == ValuePrecision.Single) {
+            charsExpected = charsPerWord;
+        } else if (sValue._precision == ValuePrecision.Double){
+            charsExpected = 2 * charsPerWord;
+        } else {
+            charsExpected = sValue._value.length();
+            int mod = sValue._value.length() % charsPerWord;
+            if (mod != 0) {
+                charsExpected += (charsPerWord - mod);
+            }
+        }
+
+        int padChars;
+        String effectiveString = sValue._value;
+        if (charsExpected < sValue._value.length()) {
+            context.appendDiagnostic(new TruncationDiagnostic(locale, "String truncated"));
+        } else if (charsExpected > sValue._value.length()) {
+            padChars = charsExpected - sValue._value.length();
+            if (sValue._justification == ValueJustification.Right) {
+                String padString = generateMode == CharacterMode.ASCII ? "\0\0\0\0\0\0\0\0" : "@@@@@@@@@@@@";
+                effectiveString = padString.substring(0, padChars) + effectiveString;
+            }
+        }
+
+        ArraySlice slice;
+        if (generateMode == CharacterMode.ASCII) {
+            slice = ArraySlice.stringToWord36ASCII(effectiveString);
+        } else {
+            slice = ArraySlice.stringToWord36Fieldata(effectiveString);
+        }
+
+        context.generate(locale.getLineSpecifier(),
+                         context.getCurrentGenerationLCIndex(),
+                         slice._array);
     }
 
     /**
@@ -404,39 +487,12 @@ public class Assembler {
         }
 
         if (firstValue instanceof FloatingPointValue) {
-            FloatingPointValue fpValue = (FloatingPointValue) firstValue;
-            //TODO implement floating point handling
+            Locale loc = operandField._subfields.get(0)._locale;
             if (operandField._subfields.size() > 1) {
-                Locale loc = operandField._subfields.get(1)._locale;
                 context.appendDiagnostic(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
             }
 
-            return true;
-        }
-
-        if (firstValue instanceof StringValue) {
-            StringValue sValue = (StringValue) firstValue;
-
-            if (operandField._subfields.size() > 1) {
-                Locale loc = operandField._subfields.get(1)._locale;
-                context.appendDiagnostic(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
-            }
-
-            if (sValue._characterMode == CharacterMode.ASCII) {
-                ArraySlice slice = ArraySlice.stringToWord36ASCII(sValue._value);
-                context.generate(operandField._locale.getLineSpecifier(),
-                                 context.getCurrentGenerationLCIndex(),
-                                 slice.getAll());
-                return true;
-            } else if (sValue._characterMode == CharacterMode.Fieldata) {
-                ArraySlice slice = ArraySlice.stringToWord36Fieldata(sValue._value);
-                context.generate(operandField._locale.getLineSpecifier(),
-                                 context.getCurrentGenerationLCIndex(),
-                                 slice.getAll());
-            } else {
-                throw new InternalErrorRuntimeException("Bad character mode");
-            }
-
+            generateFloatingPoint((FloatingPointValue) firstValue, context, loc);
             return true;
         }
 
@@ -453,9 +509,9 @@ public class Assembler {
                 fieldSizes[fx] = fieldSize;
             }
 
-            long intValue = ((IntegerValue) firstValue)._value;
+            BigInteger intValue = ((IntegerValue) firstValue)._value.get();
             for (int vx = 1; vx < valueCount; ++vx) {
-                intValue <<= fieldSizes[vx - 1];
+                intValue = intValue.shiftLeft(fieldSizes[vx - 1]);
                 TextSubfield sfNext = operandField._subfields.get(vx);
                 String sfNextText = sfNext._text;
                 Locale sfNextLocale = sfNext._locale;
@@ -469,7 +525,7 @@ public class Assembler {
 
                     Value vNext = eNext.evaluate(context);
                     if (vNext instanceof IntegerValue) {
-                        intValue |= ((IntegerValue) vNext)._value;
+                        intValue = intValue.or(((IntegerValue) vNext)._value.get());
                     } else {
                         context.appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
                     }
@@ -478,9 +534,22 @@ public class Assembler {
                 }
             }
 
+            IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
+                                                        .setForm(new Form(fieldSizes))
+                                                        .build();
             context.generate(operandField._locale.getLineSpecifier(),
                              context.getCurrentGenerationLCIndex(),
-                             new IntegerValue(false, intValue, new Form(fieldSizes), new UndefinedReference[0]));
+                             iv);
+            return true;
+        }
+
+        if (firstValue instanceof StringValue) {
+            Locale loc = operandField._subfields.get(0)._locale;
+            if (operandField._subfields.size() > 1) {
+                context.appendDiagnostic(new ErrorDiagnostic(loc, "Too many subfields for data generation"));
+            }
+
+            generateString((StringValue) firstValue, context, loc);
             return true;
         }
 
@@ -504,7 +573,7 @@ public class Assembler {
         final TextField operationField
     ) {
         try {
-            Class<?> clazz = directiveValue._clazz;
+            Class<?> clazz = directiveValue._class;
             Constructor<?> ctor = clazz.getConstructor();
             Directive directive = (Directive) (ctor.newInstance());
             directive.process(context, textLine, labelFieldComponents);
@@ -522,15 +591,11 @@ public class Assembler {
      * Handles form invocations - a special case of data generation
      * @param context context of this sub-assembly
      * @param formValue FormValue object which causes us to be here
-     * @param textLine where this came from
-     * @param labelFieldComponents represents the label field components, if any were specified
      * @param operandField represents the operand field, if any
      */
     private static void processForm(
         final Context context,
         final FormValue formValue,
-        final TextLine textLine,
-        final LabelFieldComponents labelFieldComponents,
         final TextField operandField
     ) {
         IntegerValue[] opValues = new IntegerValue[operandField._subfields.size()];
@@ -572,7 +637,7 @@ public class Assembler {
             IntegerValue[] realValues = new IntegerValue[formValue._form._fieldSizes.length];
             for (int opx = 0; opx < formValue._form._fieldSizes.length; ++opx) {
                 if (opx > opValues.length) {
-                    realValues[opx] = new IntegerValue(0);
+                    realValues[opx] = IntegerValue.POSITIVE_ZERO;
                 } else {
                     realValues[opx] = opValues[opx];
                 }
@@ -600,7 +665,7 @@ public class Assembler {
     ) {
         //  Deal with the operation field
         TextSubfield mnemonicSubfield = operationField.getSubfield(0);
-        InstructionWord.InstructionInfo iinfo = null;
+        InstructionWord.InstructionInfo iinfo;
         try {
             iinfo = processMnemonicOperationField(context, mnemonicSubfield);
         } catch (NotFoundException ex) {
@@ -637,7 +702,7 @@ public class Assembler {
         IntegerValue aValue = processMnemonicGetAField(context, iinfo, operandField, opSubfields[0]);
         IntegerValue uValue = processMnemonicGetUField(context, operandField, opSubfields[1]);
         IntegerValue xValue = processMnemonicGetXField(context, opSubfields[2]);
-        IntegerValue bValue = baseSubfieldAllowed ? processMnemonicGetBField(context, opSubfields[3]) : _zeroValue;
+        IntegerValue bValue = baseSubfieldAllowed ? processMnemonicGetBField(context, opSubfields[3]) : IntegerValue.POSITIVE_ZERO;
 
         //  Create the instruction word
         Form form;
@@ -645,30 +710,30 @@ public class Assembler {
         if (!iinfo._jFlag && (jField >= 016)) {
             form = _fjaxuForm;
             values = new IntegerValue[5];
-            values[0] = new IntegerValue(iinfo._fField);
-            values[1] = new IntegerValue(jField);
+            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
         } else if ((context.getCodeMode() == CodeMode.Basic) || iinfo._useBMSemantics) {
             form = _fjaxhiuForm;
             values = new IntegerValue[7];
-            values[0] = new IntegerValue(iinfo._fField);
-            values[1] = new IntegerValue(jField);
+            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue(xValue._flagged ? 1 : 0);
-            values[5] = new IntegerValue(uValue._flagged ? 1 : 0);
+            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
+            values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
             values[6] = uValue;
         } else {
             form = _fjaxhibdForm;
             values = new IntegerValue[8];
-            values[0] = new IntegerValue(iinfo._fField);
-            values[1] = new IntegerValue(jField);
+            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue(xValue._flagged ? 1 : 0);
-            values[5] = new IntegerValue(uValue._flagged ? 1 : 0);
+            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
+            values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
             values[6] = bValue;
             values[7] = uValue;
         }
@@ -695,10 +760,10 @@ public class Assembler {
         final TextField operandField,
         final TextSubfield registerSubfield
     ) {
-        IntegerValue aValue = _zeroValue;
+        IntegerValue aValue = IntegerValue.POSITIVE_ZERO;
 
         if (instructionInfo._aFlag) {
-            aValue = new IntegerValue(instructionInfo._aField);
+            aValue = new IntegerValue.Builder().setValue(instructionInfo._aField).build();
         } else {
             if ((registerSubfield == null) || (registerSubfield._text.isEmpty())) {
                 context.appendDiagnostic(new ErrorDiagnostic(operandField._locale,
@@ -718,19 +783,20 @@ public class Assembler {
                         } else {
                             //  Reduce the value appropriately for the a-field
                             aValue = (IntegerValue) v;
+                            int aInteger = aValue._value.get().intValue();
                             switch (instructionInfo._aSemantics) {
                                 case A:
-                                    aValue = new IntegerValue(aValue._flagged,
-                                                              aValue._value - 12,
-                                                              null,
-                                                              aValue._references);
+                                    aValue = new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                                                       .setValue(aInteger - 12)
+                                                                       .setReferences(aValue._references)
+                                                                       .build();
                                     break;
 
                                 case R:
-                                    aValue = new IntegerValue(aValue._flagged,
-                                                              aValue._value - 64,
-                                                              null,
-                                                              aValue._references);
+                                    aValue = new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                                                       .setValue(aInteger - 64)
+                                                                       .setReferences(aValue._references)
+                                                                       .build();
                                     break;
                             }
                         }
@@ -754,8 +820,7 @@ public class Assembler {
         final Context context,
         final TextSubfield baseSubfield
     ) {
-        IntegerValue bValue = _zeroValue;
-
+        IntegerValue bValue = IntegerValue.POSITIVE_ZERO;
         if ((baseSubfield != null) && !baseSubfield._text.isEmpty()) {
             try {
                 ExpressionParser p = new ExpressionParser(baseSubfield._text, baseSubfield._locale);
@@ -879,8 +944,7 @@ public class Assembler {
         final TextField operandField,
         final TextSubfield valueSubfield
     ) {
-        IntegerValue uValue = _zeroValue;
-
+        IntegerValue uValue = IntegerValue.POSITIVE_ZERO;
         if ((valueSubfield == null) || (valueSubfield._text.isEmpty())) {
             context.appendDiagnostic(new ErrorDiagnostic(operandField._locale,
                                                              "Missing operand value (U, u, or d subfield)"));
@@ -916,8 +980,7 @@ public class Assembler {
         final Context context,
         final TextSubfield indexSubfield
     ) {
-        IntegerValue xValue = _zeroValue;
-
+        IntegerValue xValue = IntegerValue.POSITIVE_ZERO;
         if ((indexSubfield != null) && !indexSubfield._text.isEmpty()) {
             try {
                 ExpressionParser p = new ExpressionParser(indexSubfield._text, indexSubfield._locale);
@@ -994,25 +1057,28 @@ public class Assembler {
     ) {
         Context subContext = new Context(context, procedureValue._source);
 
-        NodeValue mainNode = new NodeValue(false);
+        NodeValue mainNode = new NodeValue.Builder().build();
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
-            NodeValue subNode = new NodeValue(false);
-            mainNode.setValue(new IntegerValue(fx - 1), subNode);
+            NodeValue subNode = new NodeValue.Builder().build();
+            mainNode.setValue(new IntegerValue.Builder().setValue(fx - 1).build(), subNode);
             TextField field = textLine._fields.get(fx);
             for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
                 TextSubfield subField = field._subfields.get(sfx);
                 if ((fx == 1) && (sfx == 0)) {
                     //  This is the proc name - handle it accordingly (no expression evaluation)
-                    subNode.setValue(_zeroValue, new StringValue(false, subField._text, CharacterMode.ASCII));
+                    subNode.setValue(IntegerValue.POSITIVE_ZERO,
+                                     new StringValue.Builder().setValue(subField._text)
+                                                              .setCharacterMode(CharacterMode.ASCII)
+                                                              .build());
                 } else {
                     try {
                         //  Evaluate the given subfield, and place the result in the appropriate position of nv
                         ExpressionParser sfParser = new ExpressionParser(subField._text, subField._locale);
                         Expression sfExpression = sfParser.parse(context);
                         Value sfValue = sfExpression.evaluate(context);
-                        subNode.setValue(new IntegerValue(sfx), sfValue);
+                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), sfValue);
                     } catch (ExpressionException ex) {
-                        subNode.setValue(new IntegerValue(sfx), _zeroValue);
+                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), IntegerValue.POSITIVE_ZERO);
                         Diagnostic diag = new ErrorDiagnostic(subField._locale, "Syntax error");
                         context.appendDiagnostic(diag);
                     }
@@ -1038,7 +1104,7 @@ public class Assembler {
     ) {
         IntegerValue newValue = originalValue;
         if (originalValue._references.length > 0) {
-            long newDiscreteValue = originalValue._value;
+            BigInteger newDiscreteValue = originalValue._value.get();
             List<UndefinedReference> newURefs = new LinkedList<>();
             for (UndefinedReference uRef : originalValue._references) {
                 if (uRef instanceof UndefinedReferenceToLabel) {
@@ -1051,7 +1117,9 @@ public class Assembler {
                             context.appendDiagnostic(new ValueDiagnostic(locale, msg));
                         } else {
                             IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                            newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
+                            BigInteger addend = BigInteger.valueOf(lRef._isNegative ? -1 : 1);
+                            addend = addend.multiply(lookupIntegerValue._value.get());
+                            newDiscreteValue = newDiscreteValue.add(addend);
                             newURefs.addAll(Arrays.asList(lookupIntegerValue._references));
                         }
                     } catch (NotFoundException ex) {
@@ -1063,10 +1131,10 @@ public class Assembler {
                 }
             }
 
-            newValue = new IntegerValue(false,
-                                        newDiscreteValue,
-                                        originalValue._form,
-                                        newURefs.toArray(new UndefinedReference[0]));
+            newValue = new IntegerValue.Builder().setValue(new DoubleWord36(newDiscreteValue))
+                                                 .setForm(originalValue._form)
+                                                 .setReferences(newURefs.toArray(new UndefinedReference[0]))
+                                                 .build();
         }
 
         return newValue;

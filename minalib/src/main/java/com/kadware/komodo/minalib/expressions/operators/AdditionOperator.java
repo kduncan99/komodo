@@ -4,9 +4,12 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
-import com.kadware.komodo.minalib.dictionary.*;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.FloatingPointValue;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.dictionary.ValueType;
 import com.kadware.komodo.minalib.exceptions.*;
 import java.util.Stack;
 
@@ -16,25 +19,8 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public class AdditionOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale location of this operator
-     */
-    public AdditionOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 6;
-    }
+    public AdditionOperator(Locale locale)  { super(locale); }
+    public final int getPrecedence()        { return 6; }
 
     /**
      * Evaluator
@@ -52,14 +38,15 @@ public class AdditionOperator extends ArithmeticOperator {
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
+                //  both ops are integer
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                opResult = IntegerValue.add(iopLeft, iopRight, getLocale(), context.getDiagnostics());
+                opResult = IntegerValue.add(iopLeft, iopRight, _locale, context.getDiagnostics());
             } else {
+                //  both ops are floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                double result = iopLeft._value + iopRight._value;
-                opResult = new FloatingPointValue(false, result);
+                opResult = FloatingPointValue.add(iopLeft, iopRight, _locale, context.getDiagnostics());
             }
 
             valueStack.push(opResult);

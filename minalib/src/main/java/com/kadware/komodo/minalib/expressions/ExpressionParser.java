@@ -346,7 +346,7 @@ public class ExpressionParser {
             ++digits;
         }
 
-        return new ValueItem(getLocale(), new IntegerValue(value));
+        return new ValueItem(getLocale(), new IntegerValue.Builder().setValue(value).build());
     }
 
     /**
@@ -527,8 +527,7 @@ public class ExpressionParser {
             throw new ExpressionException();
         }
 
-        return new ValueItem(getLocale(),
-                             new StringValue(false, sb.toString(), context.getCharacterMode()));
+        return new ValueItem(getLocale(), new StringValue.Builder().setValue(sb.toString()).build());
     }
 
 

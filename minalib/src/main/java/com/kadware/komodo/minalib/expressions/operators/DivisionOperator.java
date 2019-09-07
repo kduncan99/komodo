@@ -4,11 +4,14 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.diagnostics.*;
-import com.kadware.komodo.minalib.exceptions.*;
-
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.FloatingPointValue;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.dictionary.ValueType;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -17,25 +20,8 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public class DivisionOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public DivisionOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 7;
-    }
+    public DivisionOperator(Locale locale) { super(locale); }
+    @Override public final int getPrecedence() { return 7; }
 
     /**
      * Evaluator
@@ -50,22 +36,17 @@ public class DivisionOperator extends ArithmeticOperator {
     ) throws ExpressionException {
         try {
             Value[] operands = getTransformedOperands(valueStack, true, context.getDiagnostics());
-            Value opResult;
-
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, getLocale(), context.getDiagnostics());
-                opResult = dres._quotient;
+                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, context.getDiagnostics());
+                valueStack.push(dres._quotient);
             } else {
-                //  must be floating point
-                FloatingPointValue leftValue = (FloatingPointValue)operands[0];
-                FloatingPointValue rightValue = (FloatingPointValue)operands[1];
-                double result = leftValue._value / rightValue._value;
-                opResult = new FloatingPointValue( false, result );
+                //  both ops are floating point
+                FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
+                FloatingPointValue iopRight = (FloatingPointValue)operands[1];
+                FloatingPointValue value = FloatingPointValue.divide(iopLeft, iopRight, _locale, context.getDiagnostics());
             }
-
-            valueStack.push(opResult);
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

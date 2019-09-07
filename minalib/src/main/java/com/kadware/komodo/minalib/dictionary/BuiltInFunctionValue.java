@@ -3,8 +3,7 @@
  */
 
 package com.kadware.komodo.minalib.dictionary;
-
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 
 /**
  * Class which represents a built-in-function name and related stuffs
@@ -19,33 +18,33 @@ public class BuiltInFunctionValue extends Value {
      */
     private BuiltInFunctionValue(Class clazz) { _class = clazz; }
 
-//    /**
-//     * Compares an object to this object
-//     * @param obj comparison object
-//     * @return -1 if this object sorts before (is less than) the given object
-//     *         +1 if this object sorts after (is greater than) the given object,
-//     *          0 if both objects sort to the same position (are equal)
-//     * @throws TypeException if there is no reasonable way to compare the objects
-//     */
-//    @Override
-//    public int compareTo(
-//        final Object obj
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws TypeException {
+        throw new TypeException();
+    }
 
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new attribute value
-//     * @return new value
-//     * @throws TypeException
-//     */
-//    @Override
-//    public BuiltInFunctionValue copy(
-//        final boolean newFlagged
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new attribute value
+     * @return new value
+     * @throws TypeException
+     */
+    @Override
+    public BuiltInFunctionValue copy(
+        final boolean newFlagged
+    ) throws TypeException {
+        throw new TypeException();
+    }
 
     /**
      * Check for equality
@@ -138,9 +137,9 @@ public class BuiltInFunctionValue extends Value {
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
 
         public BuiltInFunctionValue build(
-        ) throws InvalidParameterException {
+        ) {
             if (_class == null) {
-                throw new InvalidParameterException("Class not specified for BuiltInFunctionValue builder");
+                throw new RuntimeException("Class not specified for BuiltInFunctionValue builder");
             }
 
             return new BuiltInFunctionValue(_class);

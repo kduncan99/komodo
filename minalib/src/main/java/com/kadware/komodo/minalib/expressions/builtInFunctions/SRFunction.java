@@ -8,7 +8,6 @@ import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import java.math.BigInteger;
 
@@ -23,7 +22,7 @@ public class SRFunction extends BuiltInFunction {
      * @param locale location of the function
      * @param argumentExpressions arguments
      */
-    public SRFunction(
+    SRFunction(
         final Locale locale,
         final Expression[] argumentExpressions
     ) {
@@ -76,12 +75,8 @@ public class SRFunction extends BuiltInFunction {
             sb.append(sarg._value);
         }
 
-        try {
-            return new StringValue.Builder().setValue(sb.toString())
-                                            .setCharacterMode(sarg._characterMode)
-                                            .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new StringValue.Builder().setValue(sb.toString())
+                                        .setCharacterMode(sarg._characterMode)
+                                        .build();
     }
 }

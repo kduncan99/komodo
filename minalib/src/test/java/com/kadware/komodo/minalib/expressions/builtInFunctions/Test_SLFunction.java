@@ -32,7 +32,7 @@ public class Test_SLFunction {
     ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
-        StringValue sv = new StringValue(false, "Hello Stupid", CharacterMode.ASCII);
+        StringValue sv = new StringValue.Builder().setValue("Hello Stupid").setCharacterMode(CharacterMode.ASCII).build();
         LineSpecifier ls01 = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls01, 1), sv));
 
@@ -45,7 +45,7 @@ public class Test_SLFunction {
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Value result = bif.evaluate(context);
 
-        IntegerValue expected = new IntegerValue(12);
+        IntegerValue expected = new IntegerValue.Builder().setValue(12).build();
         assertEquals(expected, result);
     }
 }

@@ -7,8 +7,7 @@ package com.kadware.komodo.minalib.dictionary;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.minalib.Form;
 import com.kadware.komodo.minalib.UndefinedReference;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
-
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Arrays;
 
 /**
@@ -40,17 +39,39 @@ public class EqufValue extends Value {
         _references = undefinedReferences;
     }
 
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new value for Flagged attribute
-//     * @return new Value
-//     */
-//    @Override
-//    public Value copy(
-//        final boolean newFlagged
-//    ) {
-//        return new EqufValue(newFlagged, _value, _form, _references);
-//    }
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws TypeException {
+        if (obj instanceof EqufValue) {
+            EqufValue ev = (EqufValue) obj;
+            if (ev._form.equals(_form)) {
+                return ev._value.compare(ev._value);
+            }
+        }
+
+        throw new TypeException();
+    }
+
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new value for Flagged attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final boolean newFlagged
+    ) {
+        return new EqufValue(newFlagged, _value, _form, _references);
+    }
 
     @Override
     public boolean equals(
@@ -137,9 +158,9 @@ public class EqufValue extends Value {
         public Builder setValue(long value)                         { _value = new Word36(value); return this; }
 
         public EqufValue build(
-        ) throws InvalidParameterException {
+        ) {
             if (_value == null) {
-                throw new InvalidParameterException("Value not specified for EqufValue builder");
+                throw new RuntimeException("Value not specified for EqufValue builder");
             }
 
             return new EqufValue(_flagged, _value, _form, _references);

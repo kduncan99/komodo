@@ -4,11 +4,13 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
 import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.*;
+import java.math.BigInteger;
 import java.util.Stack;
 
 /**
@@ -56,23 +58,23 @@ public class ShiftOperator extends ArithmeticOperator {
 
             //  Forms are not allowed for either operand
             if ((iopLeft._form != null) || (iopRight._form != null)) {
-                context.appendDiagnostic(new FormDiagnostic(getLocale()));
+                context.appendDiagnostic(new FormDiagnostic(_locale));
             }
 
             //  Undefined references not allowed for either operand
             if (iopLeft.hasUndefinedReferences() || iopRight.hasUndefinedReferences()) {
-                context.appendDiagnostic(new RelocationDiagnostic(getLocale()));
+                context.appendDiagnostic(new RelocationDiagnostic(_locale));
             }
 
-            long result = iopLeft._value;
-            long count = iopRight._value;
+            BigInteger result = iopLeft._value.get();
+            int count = iopRight._value.get().intValue();
             if (count < 0) {
-                result >>= (-count);
+                result = result.shiftRight(-count);
             } else {
-                result <<= count;
+                result = result.shiftLeft(count);
             }
 
-            valueStack.push(new IntegerValue(result));
+            valueStack.push(new IntegerValue.Builder().setValue(new DoubleWord36(result)).build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }

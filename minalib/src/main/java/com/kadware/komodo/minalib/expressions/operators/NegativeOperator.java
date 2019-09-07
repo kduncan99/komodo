@@ -66,7 +66,7 @@ public class NegativeOperator extends Operator {
 
             case FloatingPoint:
                 FloatingPointValue fpoperand = (FloatingPointValue) operand;
-                FloatingPointValue fpresult = new FloatingPointValue(false, -fpoperand._value);
+                FloatingPointValue fpresult = new FloatingPointValue.Builder().setValue(fpoperand._value.negate()).build();
                 valueStack.push(fpresult);
                 break;
 

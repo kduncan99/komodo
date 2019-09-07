@@ -4,16 +4,25 @@
 
 package com.kadware.komodo.minalib.dictionary;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.minalib.CharacterMode;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.diagnostics.TruncationDiagnostic;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 
 /**
  * A Value which represents a string.
  * We do not do justification (all strings are left-justified) - it isn't worth the hassle...
  */
+@SuppressWarnings("Duplicates")
 public class StringValue extends Value {
 
+    private static final String FIELDATA_ZERO = "@@@@@@@@@@@@";
+    private static final String ASCII_ZERO = "\0\0\0\0\0\0\0\0";
+
     public final CharacterMode _characterMode;
+    public final ValueJustification _justification;
     public final String _value;
 
     /**
@@ -31,54 +40,65 @@ public class StringValue extends Value {
         final ValuePrecision precision,
         final ValueJustification justification
     ) {
-        super(flagged, precision, justification);
+        super(flagged, precision);
         _characterMode = characterMode;
         _value = value;
+        _justification = justification;
     }
 
-//    /**
-//     * Compares an object to this object
-//     * @param obj comparison object
-//     * @return -1 if this object sorts before (is less than) the given object
-//     *         +1 if this object sorts after (is greater than) the given object,
-//     *          0 if both objects sort to the same position (are equal)
-//     * @throws TypeException if there is no reasonable way to compare the objects
-//     */
-//    @Override
-//    public int compareTo(
-//        final Object obj
-//    ) throws TypeException {
-//        if (obj instanceof StringValue) {
-//            StringValue sobj = (StringValue) obj;
-//            if ( sobj._flagged == _flagged ) {
-//                return _value.compareTo( ((StringValue) obj)._value );
-//            }
-//        }
-//        throw new TypeException();
-//    }
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws TypeException {
+        if (obj instanceof StringValue) {
+            StringValue sobj = (StringValue) obj;
+            return _value.compareTo( ((StringValue) obj)._value );
+        } else {
+            throw new TypeException();
+        }
+    }
 
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new value for Flagged attribute
-//     * @return new Value
-//     */
-//    @Override
-//    public Value copy(
-//        final boolean newFlagged
-//    ) {
-//        return new StringValue(newFlagged, _value, _characterMode);
-//    }
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new value for Flagged attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final boolean newFlagged
+    ) {
+        return new StringValue(newFlagged, _value, _characterMode, _precision, _justification);
+    }
 
-//    /**
-//     * Creates a new copy of this object, with the given character mode
-//     * @param newMode new value for Mode attribute
-//     * @return new Value
-//     */
-//    public Value copy(
-//        final CharacterMode newMode
-//    ) {
-//        return new StringValue(_flagged, _value, newMode);
-//    }
+    /**
+     * Creates a new copy of this object, with the given justification
+     * @param newJustification new value for ValueJustification attribute
+     * @return new Value
+     */
+    public Value copy(
+        final ValueJustification newJustification
+    ) {
+        return new StringValue(_flagged, _value, _characterMode, _precision, newJustification);
+    }
+
+    /**
+     * Creates a new copy of this object, with the given character mode
+     * @param newMode new value for Mode attribute
+     * @return new Value
+     */
+    public Value copy(
+        final CharacterMode newMode
+    ) {
+        return new StringValue(_flagged, _value, newMode, _precision, _justification);
+    }
 
     /**
      * Check for equality
@@ -101,73 +121,30 @@ public class StringValue extends Value {
 
     @Override public int hashCode() { return _value.hashCode(); }
 
-//    /**
-//     * Transform the value to an FloatingPointValue, if possible - probably won't mean anything though.
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) {
-//        long result;
-//        if (_characterMode == CharacterMode.ASCII) {
-//            result = Word36.stringToWord36ASCII(_value).getW();
-//        } else {
-//            result = Word36.stringToWord36Fieldata(_value).getW();
-//        }
-//
-//        return new FloatingPointValue( _flagged, result );
-//    }
-
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) {
-//        long result;
-//        if (_characterMode == CharacterMode.ASCII) {
-//            result = Word36.stringToWord36ASCII(_value).getW();
-//        } else {
-//            result = Word36.stringToWord36Fieldata(_value).getW();
-//        }
-//
-//        return new IntegerValue(result);
-//    }
-
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode - we ignore this, as this applies only to conversions of something else
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        final CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) {
-//        return this;
-//    }
-
     /**
      * For display purposes
      * @return displayable string
      */
     @Override
     public String toString() {
-        return String.format("%s%s",
-                             _flagged ? "*" : "",
-                             _value);
+        StringBuilder sb = new StringBuilder();
+
+        if (_flagged) { sb.append("*"); }
+        sb.append(_value);
+
+        if (_justification == ValueJustification.Left) {
+            sb.append("L");
+        } else if (_justification == ValueJustification.Right) {
+            sb.append("R");
+        }
+
+        if (_precision == ValuePrecision.Single) {
+            sb.append("S");
+        } else if (_precision == ValuePrecision.Double) {
+            sb.append("D");
+        }
+
+        return sb.toString();
     }
 
 
@@ -190,9 +167,9 @@ public class StringValue extends Value {
         public Builder setValue(String value)                       { _value = value; return this; }
 
         public StringValue build(
-        ) throws InvalidParameterException {
+        ) {
             if (_value == null) {
-                throw new InvalidParameterException("Value not specified for IntegerValue builder");
+                throw new RuntimeException("Value not specified for IntegerValue builder");
             }
 
             return new StringValue(_flagged, _value, _characterMode, _precision, _justification);

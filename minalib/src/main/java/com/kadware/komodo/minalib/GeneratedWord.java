@@ -5,7 +5,6 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
-import com.kadware.komodo.baselib.FieldDescriptor;
 
 /**
  * A subset of an IntegerValue - basically, the same thing but with no attached form.
@@ -55,6 +54,6 @@ class GeneratedWord {
      * Should be called after we've resolved all references local to the containing module.
      */
     RelocatableWord produceRelocatableWord() {
-        return new RelocatableWord(_value._value, _value._references);
+        return new RelocatableWord(_value._value.get().longValue(), _value._references);
     }
 }

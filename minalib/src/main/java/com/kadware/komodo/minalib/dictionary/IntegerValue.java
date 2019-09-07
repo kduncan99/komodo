@@ -38,6 +38,11 @@ public class IntegerValue extends Value {
         }
     }
 
+    //  A useful IntegerValue containing zero, no flags, and no unidentified references.
+    //  Also, a negative version thereof.
+    public static final IntegerValue NEGATIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.NEGATIVE_ZERO)).build();
+    public static final IntegerValue POSITIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.POSITIVE_ZERO)).build();
+
     public final Form _form;
     public final UndefinedReference[] _references;
     public final DoubleWord36 _value;
@@ -47,83 +52,71 @@ public class IntegerValue extends Value {
      * @param flagged - leading asterisk
      * @param value - ones-complement integer value
      * @param precision - single, double, or default (used for generating code)
-     * @param justification - left, right, or default (default is always right... left is available, but doesn't make much sense)
      * @param form - an attached form (null if none)
      * @param references - zero or more undefined references (null not allowed)
      */
-    private IntegerValue(
+    protected IntegerValue(
         final boolean flagged,
         final DoubleWord36 value,
         final ValuePrecision precision,
-        final ValueJustification justification,
         final Form form,
         final UndefinedReference[] references
     ) {
-        super(flagged, precision, justification);
+        super(flagged, precision);
         _form = form;
         _references = Arrays.copyOf(references, references.length);
         _value = value;
     }
 
-//    /**
-//     * Compares an object to this object
-//     * @param obj comparison object
-//     * @return -1 if this object sorts before (is less than) the given object
-//     *         +1 if this object sorts after (is greater than) the given object,
-//     *          0 if both objects sort to the same position (are equal)
-//     * @throws FormException if the form attached to the comparison object is not equal to the one attached to this object
-//     * @throws RelocationException if the relocation info for this object and the comparison object are incompatible
-//     * @throws TypeException if there is no reasonable way to compare the objects
-//     */
-//    @Override
-//    public int compareTo(
-//        final Object obj
-//    ) throws FormException,
-//             RelocationException,
-//             TypeException {
-//        if (obj instanceof IntegerValue) {
-//            IntegerValue iobj = (IntegerValue)obj;
-//
-//            if ((_form != null) && (iobj._form != null) && !_form.equals(iobj._form)) {
-//                throw new FormException();
-//            } else if (_form != iobj._form) {
-//                throw new FormException();
-//            }
-//
-//            if (!UndefinedReference.equals(_references, iobj._references)) {
-//                throw new RelocationException();
-//            }
-//
-//            //  Convert to twos-complement and compare
-//            BigInteger thisTwos = _value.getTwosComplement();
-//            BigInteger thatTwos = iobj._value.getTwosComplement();
-//            return thisTwos.compareTo(thatTwos);
-//        } else {
-//            throw new TypeException();
-//        }
-//    }
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws FormException if the form attached to the comparison object is not equal to the one attached to this object
+     * @throws RelocationException if the relocation info for this object and the comparison object are incompatible
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws FormException,
+             RelocationException,
+             TypeException {
+        if (obj instanceof IntegerValue) {
+            IntegerValue iobj = (IntegerValue)obj;
 
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new attribute value
-//     * @return new value
-//     */
-//    @Override
-//    public Value copy(
-//        final boolean newFlagged
-//    ) {
-//        try {
-//            return new IntegerValue.Builder().setFlagged(newFlagged)
-//                                             .setForm(_form)
-//                                             .setJustification(_justification)
-//                                             .setPrecision(_precision)
-//                                             .setReferences(_references)
-//                                             .setValue(_value)
-//                                             .build();
-//        } catch (InvalidParameterException ex) {
-//            throw new RuntimeException("Caught " + ex.getMessage());
-//        }
-//    }
+            if ((_form != null) && (iobj._form != null) && !_form.equals(iobj._form)) {
+                throw new FormException();
+            } else if (_form != iobj._form) {
+                throw new FormException();
+            }
+
+            if (!UndefinedReference.equals(_references, iobj._references)) {
+                throw new RelocationException();
+            }
+
+            //  Convert to twos-complement and compare
+            BigInteger thisTwos = _value.getTwosComplement();
+            BigInteger thatTwos = iobj._value.getTwosComplement();
+            return thisTwos.compareTo(thatTwos);
+        } else {
+            throw new TypeException();
+        }
+    }
+
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new attribute value
+     * @return new value
+     */
+    @Override
+    public Value copy(
+        final boolean newFlagged
+    ) {
+        return new IntegerValue(newFlagged, _value, _precision, _form, _references);
+    }
 
     /**
      * Check for equality
@@ -146,66 +139,6 @@ public class IntegerValue extends Value {
 
     @Override public ValueType getType() { return ValueType.Integer; }
     @Override public int hashCode() { return _value.hashCode(); }
-
-//    /**
-//     * Transform the value to a FloatingPointValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        if (_form != null) {
-//            diagnostics.append(new ErrorDiagnostic(locale, "Integer value has a form attached"));
-//        }
-//        if (_references.length > 0) {
-//            diagnostics.append(new RelocationDiagnostic(locale));
-//        }
-//
-//        return new FloatingPointValue(false, new DoubleWord36(_value.getW()));
-//    }
-//
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        return new IntegerValue(false, _value, _form, _references);
-//    }
-//
-//    /**
-//     * Transform the value to a StringValue, if possible.
-//     * This presumes that the integer value is one field with no relocation.
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        final CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        if (_form != null) {
-//            diagnostics.append(new ErrorDiagnostic(locale, "Integer value has a form attached"));
-//        }
-//
-//        if (characterMode == CharacterMode.ASCII) {
-//            return new StringValue(false, _value.toStringFromASCII(), characterMode);
-//        } else {
-//            return new StringValue(false, _value.toStringFromFieldata(), characterMode);
-//        }
-//    }
 
     /**
      * For display purposes
@@ -259,11 +192,11 @@ public class IntegerValue extends Value {
         //  If there is no form for the result, the process is fairly straight-forward
         BigInteger biResult;
         if (resultForm == null) {
-            DoubleWord36.AdditionResult ar = operand1._value.add(operand2._value);
-            if (ar._overflow) {
+            DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(operand1._value.get(), operand2._value.get());
+            if (sar._overflow) {
                 diagnostics.append(new TruncationDiagnostic(locale, "Result of addition is truncated"));
             }
-            biResult = ar._value;
+            biResult = sar._value;
         } else {
             //  We have to do the additions per-field, and they have to be ones-complement signed regardless of the field size.
             BigInteger bi1 = operand1._value.get();
@@ -277,13 +210,13 @@ public class IntegerValue extends Value {
 
                 BigInteger temp1 = DoubleWord36.extendSign(bi1.shiftRight(shift).and(mask), fd._fieldSize);
                 BigInteger temp2 = DoubleWord36.extendSign(bi2.shiftRight(shift).and(mask), fd._fieldSize);
-                DoubleWord36.AdditionResult ar = DoubleWord36.add(temp1, temp2);
-                if (ar._overflow || !((ar._value.and(notMask)).equals(BigInteger.ZERO))) {
+                DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(temp1, temp2);
+                if (sar._overflow || !((sar._value.and(notMask)).equals(BigInteger.ZERO))) {
                     String msg = String.format("Result of addition is truncated in field %s", fd.toString());
                     diagnostics.append(new TruncationDiagnostic(locale, msg));
                 }
 
-                biResult = biResult.or(ar._value);
+                biResult = biResult.or(sar._value);
             }
         }
 
@@ -298,14 +231,10 @@ public class IntegerValue extends Value {
         }
         resultRefs = UndefinedReference.coalesce(resultRefs);
 
-        try {
-            return new IntegerValue.Builder().setValue(new DoubleWord36(biResult))
-                                             .setForm(resultForm)
-                                             .setReferences(resultRefs)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setValue(new DoubleWord36(biResult))
+                                         .setForm(resultForm)
+                                         .setReferences(resultRefs)
+                                         .build();
     }
 
     /**
@@ -337,14 +266,10 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalAnd(operand2._value);
-        try {
-            return new IntegerValue.Builder().setForm(resultForm)
-                                             .setReferences(refList.toArray(new UndefinedReference[0]))
-                                             .setValue(newValue)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setForm(resultForm)
+                                         .setReferences(refList.toArray(new UndefinedReference[0]))
+                                         .setValue(newValue)
+                                         .build();
     }
 
     /**
@@ -382,16 +307,12 @@ public class IntegerValue extends Value {
         if (dwRemainder.isZero()) {
             dwCovered = dwRemainder;
         } else {
-            dwCovered = new DoubleWord36(dres._remainder.add(BigInteger.ONE));
+            dwCovered = new DoubleWord36(DoubleWord36.addSimple(dwRemainder.get(), BigInteger.ONE));
         }
 
-        try {
-            return new DivisionResult(new IntegerValue.Builder().setValue(dwQuotient).build(),
-                                      new IntegerValue.Builder().setValue(dwRemainder).build(),
-                                      new IntegerValue.Builder().setValue(dwCovered).build());
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new DivisionResult(new IntegerValue.Builder().setValue(dwQuotient).build(),
+                                  new IntegerValue.Builder().setValue(dwRemainder).build(),
+                                  new IntegerValue.Builder().setValue(dwCovered).build());
     }
 
     /**
@@ -428,12 +349,8 @@ public class IntegerValue extends Value {
             diagnostics.append(new TruncationDiagnostic(locale, "Result of multiplication too large"));
         }
 
-        try {
-            DoubleWord36 dw = new DoubleWord36(mr._value);
-            return new IntegerValue.Builder().setValue(dw).build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        DoubleWord36 dw = new DoubleWord36(mr._value);
+        return new IntegerValue.Builder().setValue(dw).build();
     }
 
     /**
@@ -446,16 +363,11 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = _value.negate();
-        try {
-            return new IntegerValue.Builder().setValue(newValue)
-                                             .setForm(_form)
-                                             .setReferences(negRefs)
-                                             .setPrecision(_precision)
-                                             .setJustification(_justification)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setValue(newValue)
+                                         .setForm(_form)
+                                         .setReferences(negRefs)
+                                         .setPrecision(_precision)
+                                         .build();
     }
 
     /**
@@ -470,16 +382,11 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = _value.negate();
-        try {
-            return new IntegerValue.Builder().setValue(newValue)
-                                             .setForm(_form)
-                                             .setReferences(_references)
-                                             .setPrecision(_precision)
-                                             .setJustification(_justification)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setValue(newValue)
+                                         .setForm(_form)
+                                         .setReferences(_references)
+                                         .setPrecision(_precision)
+                                         .build();
     }
 
     /**
@@ -511,14 +418,10 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalOr(operand2._value);
-        try {
-            return new IntegerValue.Builder().setForm(resultForm)
-                                             .setReferences(refList.toArray(new UndefinedReference[0]))
-                                             .setValue(newValue)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setForm(resultForm)
+                                         .setReferences(refList.toArray(new UndefinedReference[0]))
+                                         .setValue(newValue)
+                                         .build();
     }
 
     /**
@@ -550,14 +453,10 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalXor(operand2._value);
-        try {
-            return new IntegerValue.Builder().setForm(resultForm)
-                                             .setReferences(refList.toArray(new UndefinedReference[0]))
-                                             .setValue(newValue)
-                                             .build();
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
-        }
+        return new IntegerValue.Builder().setForm(resultForm)
+                                         .setReferences(refList.toArray(new UndefinedReference[0]))
+                                         .setValue(newValue)
+                                         .build();
     }
 
 
@@ -594,14 +493,12 @@ public class IntegerValue extends Value {
 
         boolean _flagged = false;
         Form _form = null;
-        ValueJustification _justification = ValueJustification.Default;
         ValuePrecision _precision = ValuePrecision.Default;
         UndefinedReference[] _references = new UndefinedReference[0];
         DoubleWord36 _value = null;
 
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
         public Builder setForm(Form value)                          {_form = value; return this; }
-        public Builder setJustification(ValueJustification value)   { _justification = value; return this; }
         public Builder setPrecision(ValuePrecision value)           { _precision = value; return this; }
         public Builder setReferences(UndefinedReference[] values)   { _references = Arrays.copyOf(values, values.length); return this; }
         public Builder setValue(DoubleWord36 value)                 { _value = value; return this; }
@@ -609,12 +506,12 @@ public class IntegerValue extends Value {
         public Builder setValue(long value)                         { _value = new DoubleWord36(0, value); return this; }
 
         public IntegerValue build(
-        ) throws InvalidParameterException {
+        ) {
             if (_value == null) {
-                throw new InvalidParameterException("Value not specified for IntegerValue builder");
+                throw new RuntimeException("Value not specified for IntegerValue builder");
             }
 
-            return new IntegerValue(_flagged, _value, _precision, _justification, _form, _references);
+            return new IntegerValue(_flagged, _value, _precision, _form, _references);
         }
     }
 }

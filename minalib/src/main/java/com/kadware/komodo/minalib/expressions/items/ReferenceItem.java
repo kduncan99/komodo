@@ -10,13 +10,11 @@ import com.kadware.komodo.minalib.dictionary.BuiltInFunctionValue;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.NodeValue;
 import com.kadware.komodo.minalib.dictionary.Value;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.builtInFunctions.BuiltInFunction;
 import com.kadware.komodo.minalib.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.minalib.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.Expression;
-import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import java.lang.reflect.*;
 
@@ -70,60 +68,56 @@ public class ReferenceItem extends OperandItem {
         final Context context
     ) throws ExpressionException {
         try {
-            try {
-                //  Look up the reference in the dictionary.
-                //  It must be a particular type of value, else we have an expression exception.
-                Value v = context.getDictionary().getValue(_reference);
-                switch (v.getType()) {
-                    case Integer: {
-                        //  If this has a location counter index associated with it, we don't want to resolve it yet
-                        //  because we might need it for a linker special thing such as LBDICALL$.
-                        //  If this is the case, then we produce an undefined reference instead of resolving...
-                        IntegerValue iv = (IntegerValue) v;
-                        for (UndefinedReference ur : iv._references) {
-                            if (ur instanceof UndefinedReferenceToLocationCounter) {
-                                UndefinedReference[] refs = {
-                                    new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
-                                                                  false,
-                                                                  _reference)
-                                };
-                                return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
-                            }
+            //  Look up the reference in the dictionary.
+            //  It must be a particular type of value, else we have an expression exception.
+            Value v = context.getDictionary().getValue(_reference);
+            switch (v.getType()) {
+                case Integer: {
+                    //  If this has a location counter index associated with it, we don't want to resolve it yet
+                    //  because we might need it for a linker special thing such as LBDICALL$.
+                    //  If this is the case, then we produce an undefined reference instead of resolving...
+                    IntegerValue iv = (IntegerValue) v;
+                    for (UndefinedReference ur : iv._references) {
+                        if (ur instanceof UndefinedReferenceToLocationCounter) {
+                            UndefinedReference[] refs = {
+                                new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                              false,
+                                                              _reference)
+                            };
+                            return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
                         }
-
-                        //  Otherwise, resolve the label
-                        return resolveLabel(context, v);
                     }
 
-                    case FloatingPoint:
-                    case String:
-                        return resolveLabel(context, v);
-
-                    case BuiltInFunction:
-                        return resolveFunction(context, v);
-
-                    case Node:
-                        return resolveNode(context, v);
-
-                    case UserFunction:
-                        //TODO
-
-                    default:
-                        context.appendDiagnostic(new ValueDiagnostic(_locale, "Wrong value type referenced"));
-                        throw new ExpressionException();
+                    //  Otherwise, resolve the label
+                    return resolveLabel(context, v);
                 }
-            } catch (NotFoundException ex) {
-                //  reference not found - create an IntegerValue with a value of zero
-                //  and an attached positive UndefinedReference.
-                UndefinedReference[] refs = {
-                    new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
-                                                  false,
-                                                  _reference)
-                };
-                return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
+
+                case FloatingPoint:
+                case String:
+                    return resolveLabel(context, v);
+
+                case BuiltInFunction:
+                    return resolveFunction(context, v);
+
+                case Node:
+                    return resolveNode(context, v);
+
+                case UserFunction:
+                    //TODO
+
+                default:
+                    context.appendDiagnostic(new ValueDiagnostic(_locale, "Wrong value type referenced"));
+                    throw new ExpressionException();
             }
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
+        } catch (NotFoundException ex) {
+            //  reference not found - create an IntegerValue with a value of zero
+            //  and an attached positive UndefinedReference.
+            UndefinedReference[] refs = {
+                new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
+                                              false,
+                                              _reference)
+            };
+            return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
         }
     }
 
@@ -152,7 +146,7 @@ public class ReferenceItem extends OperandItem {
                 | InstantiationException
                 | InvocationTargetException
                 | NoSuchMethodException ex) {
-            throw new InternalErrorRuntimeException(String.format("Caught:%s in ExpressonParser.parseFunction()", ex));
+            throw new RuntimeException(String.format("Caught:%s in ExpressonParser.parseFunction()", ex));
         }
     }
 
@@ -211,15 +205,11 @@ public class ReferenceItem extends OperandItem {
 
         //  If we're still sitting on a NodeValue, return the number of child values.
         //  Otherwise, just return the node.
-        try {
-            if (currentValue instanceof NodeValue) {
-                return new IntegerValue.Builder().setValue(((NodeValue) currentValue).getValueCount())
-                                                 .build();
-            } else {
-                return currentValue;
-            }
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
+        if (currentValue instanceof NodeValue) {
+            return new IntegerValue.Builder().setValue(((NodeValue) currentValue).getValueCount())
+                                             .build();
+        } else {
+            return currentValue;
         }
     }
 }

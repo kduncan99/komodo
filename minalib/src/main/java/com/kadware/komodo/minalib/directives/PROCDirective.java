@@ -7,8 +7,6 @@ package com.kadware.komodo.minalib.directives;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.ProcedureValue;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -76,25 +74,21 @@ public class PROCDirective extends Directive {
                                                               "Reached end of file before end of proc")));
             }
 
-            try {
-                ProcedureValue procValue = new ProcedureValue.Builder().setValue(textLines.toArray(new TextLine[0]))
-                                                                       .build();
-                if (labelFieldComponents._label == null) {
-                    Locale loc = new Locale(textLine._lineSpecifier, 1);
-                    context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
-                    return;
-                }
+            ProcedureValue procValue = new ProcedureValue.Builder().setValue(textLines.toArray(new TextLine[0]))
+                                                                   .build();
+            if (labelFieldComponents._label == null) {
+                Locale loc = new Locale(textLine._lineSpecifier, 1);
+                context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
+                return;
+            }
 
-                if (context.getDictionary().hasValue(labelFieldComponents._label)) {
-                    Locale loc = new Locale(textLine._lineSpecifier, 1);
-                    context.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
-                } else {
-                    context.getDictionary().addValue(labelFieldComponents._labelLevel,
-                                                     labelFieldComponents._label,
-                                                     procValue);
-                }
-            } catch (InvalidParameterException ex) {
-                throw new RuntimeException("Caught " + ex.getMessage());
+            if (context.getDictionary().hasValue(labelFieldComponents._label)) {
+                Locale loc = new Locale(textLine._lineSpecifier, 1);
+                context.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
+            } else {
+                context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                                                 labelFieldComponents._label,
+                                                 procValue);
             }
         }
     }

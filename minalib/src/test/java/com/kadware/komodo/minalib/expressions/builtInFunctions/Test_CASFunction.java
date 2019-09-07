@@ -32,7 +32,7 @@ public class Test_CASFunction {
     ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
-        IntegerValue iv = new IntegerValue(0_060_061_062_063L);
+        IntegerValue iv = new IntegerValue.Builder().setValue(0_060_061_062_063L).build();
         LineSpecifier ls01 = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls01, 1), iv));
 
@@ -45,7 +45,7 @@ public class Test_CASFunction {
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Value result = bif.evaluate(context);
 
-        StringValue expected = new StringValue(false, "0123", CharacterMode.ASCII);
+        StringValue expected = new StringValue.Builder().setValue("0123").setCharacterMode(CharacterMode.ASCII).build();
         assertEquals(expected, result);
     }
 }

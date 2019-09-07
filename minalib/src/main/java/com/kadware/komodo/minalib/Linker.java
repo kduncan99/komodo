@@ -25,7 +25,7 @@ public class Linker {
     //  Public enums, classes, etc
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public static enum Option {
+    public enum Option {
         OPTION_NO_ENTRY_POINT,
         OPTION_QUARTER_WORD_MODE,
         OPTION_THIRD_WORD_MODE,
@@ -202,7 +202,7 @@ public class Linker {
                     _entryPointRelocatableModule = module;
                     _foundEntryPoint = true;
                     long lcBase = findLocationCounterAddress(module, lcRef._locationCounterIndex);
-                    _entryPointAddress = (int) iv._value + (int) lcBase;
+                    _entryPointAddress = iv._value.get().intValue() + (int) lcBase;
 
                     for (BankDeclaration bd : _bankDeclarations) {
                         if (_entryPointBank != null) {
@@ -243,7 +243,7 @@ public class Linker {
             final Integer lcIndex,
             final RelocatableModule relocatableModule
         ) {
-            super(false, value, null, undefinedReferences);
+            super(false, new DoubleWord36(value), ValuePrecision.Default, null, undefinedReferences);
             _lcIndex = lcIndex;
             _relocatableModule = relocatableModule;
         }
@@ -587,7 +587,7 @@ public class Linker {
                 //  We have to resolve LC references now, or we will lose the module locality.
                 //  We will *not* resolve label references, as the resolved values for them are
                 //  being built in this loop, and some of them likely are not yet located.
-                long discreteValue = iv._value;
+                long discreteValue = iv._value.get().longValue();
                 List<UndefinedReference> newRefs = new LinkedList<>();
                 Integer lcIndex = null;
                 for (UndefinedReference ur : iv._references) {
@@ -746,15 +746,11 @@ public class Linker {
             //  original field value is negative...  sign-extend it.
             tempValue |= notMask;
         }
-
-        OnesComplement.OnesComplement36Result ocr = new OnesComplement.OnesComplement36Result();
-        OnesComplement.getOnesComplement36(tempValue, ocr);
-        ocr._result += newValue;
-        tempValue = OnesComplement.getNative36(ocr._result);
+        tempValue = Word36.addSimple(tempValue, newValue);
 
         //  Check for field overflow...
         boolean trunc;
-        if (OnesComplement.isPositive36(tempValue)) {
+        if (Word36.isPositive(tempValue)) {
             trunc = (tempValue & notMask) != 0;
         } else {
             trunc = (tempValue | mask) != 0_777777_777777L;
@@ -805,7 +801,7 @@ public class Linker {
                                 IntegerValue iv = (IntegerValue) _dictionary.getValue(lRef._label);
                                 discreteValue = integrateValue(discreteValue,
                                                                ur._fieldDescriptor,
-                                                               iv._value,
+                                                               iv._value.get().longValue(),
                                                                poolSpec._module._name,
                                                                poolSpec._lcIndex);
                             } catch (NotFoundException ex) {

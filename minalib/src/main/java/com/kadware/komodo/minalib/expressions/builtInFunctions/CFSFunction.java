@@ -22,7 +22,7 @@ public class CFSFunction extends BuiltInFunction {
      * @param locale location of the text for the function
      * @param argumentExpressions argument expressions
      */
-    public CFSFunction(
+    CFSFunction(
         final Locale locale,
         final Expression[] argumentExpressions
     ) {
@@ -43,19 +43,15 @@ public class CFSFunction extends BuiltInFunction {
     public Value evaluate(
         final Context context
     ) throws ExpressionException {
-        try {
-            Value[] arguments = evaluateArguments(context);
-            if (arguments[0] instanceof IntegerValue) {
-                IntegerValue iv = (IntegerValue) arguments[0];
-                return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
-                                                .setCharacterMode(CharacterMode.Fieldata)
-                                                .build();
-            } else {
-                context.appendDiagnostic(getValueDiagnostic(1));
-                throw new ExpressionException();
-            }
-        } catch (InvalidParameterException ex) {
-            throw new RuntimeException("Caught " + ex.getMessage());
+        Value[] arguments = evaluateArguments(context);
+        if (arguments[0] instanceof IntegerValue) {
+            IntegerValue iv = (IntegerValue) arguments[0];
+            return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
+                                            .setCharacterMode(CharacterMode.Fieldata)
+                                            .build();
+        } else {
+            context.appendDiagnostic(getValueDiagnostic(1));
+            throw new ExpressionException();
         }
     }
 }

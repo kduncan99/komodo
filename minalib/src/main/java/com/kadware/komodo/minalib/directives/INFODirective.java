@@ -38,7 +38,7 @@ public class INFODirective extends Directive {
                     return;
                 }
 
-                int lcIndex = (int) ((IntegerValue) v)._value;
+                int lcIndex = ((IntegerValue) v)._value.get().intValue();
                 if ((lcIndex < 0) || (lcIndex > 063)) {
                     context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
                                                                  "Illegal location counter index value"));
@@ -83,7 +83,7 @@ public class INFODirective extends Directive {
             }
 
             IntegerValue iv = (IntegerValue) v;
-            long intValue = iv._value;
+            long intValue = iv._value.get().longValue();
             if ((intValue < 0) || ((intValue & 07) == 07) || ((intValue & 070) == 070)) {
                 context.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale, "Illegal value"));
                 return;
@@ -134,7 +134,7 @@ public class INFODirective extends Directive {
                     context.appendDiagnostic(new ValueDiagnostic(opLoc,
                                                                  "Invalid value type for $INFO group cateogry"));
                 } else {
-                    switch ((int) ((IntegerValue) v)._value) {
+                    switch (((IntegerValue) v)._value.get().intValue()) {
                         case 1:     //  Processor Mode Settings
                             handleProcessorModeSettings(context);
                             break;

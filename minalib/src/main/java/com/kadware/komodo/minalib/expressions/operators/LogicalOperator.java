@@ -5,6 +5,7 @@
 package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import java.util.Stack;
@@ -14,15 +15,7 @@ import java.util.Stack;
  */
 public abstract class LogicalOperator extends Operator {
 
-    /**
-     * Constructor
-     * @param locale indicates the line and column where this operator was specified
-     */
-    LogicalOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    LogicalOperator(Locale locale) { super(locale); }
 
     /**
      * Evaluator
@@ -41,8 +34,29 @@ public abstract class LogicalOperator extends Operator {
      * @return value
      */
     @Override
-    public final Type getType(
-    ) {
-        return Type.Infix;
+    public abstract Type getType();
+
+    /**
+     * Extra sauce on the generic routine ...
+     * All logical operators require integer values
+     */
+    protected Value[] getOperands(
+        final Stack<Value> valueStack,
+        final Context context
+    ) throws ExpressionException {
+        Value[] result = getOperands(valueStack);
+        boolean error = false;
+        for (int vx = 0; vx < result.length; ++vx) {
+            if (!(result[vx] instanceof IntegerValue)) {
+                postValueDiagnostic((result.length > 1) && (vx == 0), context.getDiagnostics());
+                error = true;
+            }
+        }
+
+        if (error) {
+            throw new ExpressionException();
+        }
+
+        return result;
     }
 }

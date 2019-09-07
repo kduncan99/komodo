@@ -4,9 +4,11 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.exceptions.*;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import java.util.Stack;
 
 /**
@@ -15,25 +17,9 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public class AndOperator extends LogicalOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public AndOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getPrecedence(
-    ) {
-        return 5;
-    }
+    public AndOperator(Locale locale) { super(locale); }
+    @Override public int getPrecedence() { return 5; }
+    @Override public Type getType() { return Type.Infix; }
 
     /**
      * Evaluator
@@ -46,15 +32,10 @@ public class AndOperator extends LogicalOperator {
         final Context context,
         Stack<Value> valueStack
     ) throws ExpressionException {
-        Value[] operands = getOperands(valueStack);
-
-        try {
-            IntegerValue leftValue = operands[0].toIntegerValue(getLocale(), context.getDiagnostics());
-            IntegerValue rightValue = operands[1].toIntegerValue(getLocale(), context.getDiagnostics());
-            IntegerValue result = IntegerValue.and(leftValue, rightValue, getLocale(), context.getDiagnostics());
-            valueStack.push(result);
-        } catch (TypeException ex) {
-            throw new ExpressionException();
-        }
+        Value[] operands = getOperands(valueStack, context);
+        IntegerValue leftValue = (IntegerValue) operands[0];
+        IntegerValue rightValue = (IntegerValue) operands[1];
+        IntegerValue result = IntegerValue.and(leftValue, rightValue, _locale, context.getDiagnostics());
+        valueStack.push(result);
     }
 }

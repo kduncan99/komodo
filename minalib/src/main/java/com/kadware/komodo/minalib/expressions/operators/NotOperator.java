@@ -4,47 +4,21 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.diagnostics.ValueDiagnostic;
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-
 import java.util.Stack;
 
 /**
  * Class for negation operator
  */
-public class NotOperator extends Operator {
+public class NotOperator extends LogicalOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public NotOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getPrecedence(
-    ) {
-        return 1;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public Type getType(
-    ) {
-        return Type.Prefix;
-    }
+    public NotOperator(Locale locale) { super(locale); }
+    @Override public int getPrecedence() { return 1; }
+    @Override public Type getType() { return Type.Prefix; }
 
     /**
      * Evaluator
@@ -57,14 +31,9 @@ public class NotOperator extends Operator {
         final Context context,
         Stack<Value> valueStack
     ) throws ExpressionException {
-        Value operand = getOperands(valueStack)[0];
-        if (operand.getType() == ValueType.Integer) {
-            IntegerValue ioperand = (IntegerValue) operand;
-            IntegerValue iresult = ioperand.negate();
-            valueStack.push(iresult);
-        } else {
-            postValueDiagnostic(false, context.getDiagnostics());
-            throw new ExpressionException();
-        }
+        Value[] operands = getOperands(valueStack, context);
+        IntegerValue ioperand = (IntegerValue) operands[0];
+        IntegerValue iresult = ioperand.negate();
+        valueStack.push(iresult);
     }
 }

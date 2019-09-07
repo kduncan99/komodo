@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
+import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.*;
@@ -20,12 +21,13 @@ import static org.junit.Assert.*;
  */
 public class Test_ConcatenationOperator {
 
+    //TODO needs lots of tests regarding mixing precision and justification values
     @Test
     public void simple_ASCII(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
-        valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.ASCII).build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.ASCII).build());
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Diagnostics diags = new Diagnostics();
@@ -48,8 +50,8 @@ public class Test_ConcatenationOperator {
     public void simple_Fdata(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
-        valueStack.push(new StringValue(false, "DEF", CharacterMode.Fieldata));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.Fieldata).build());
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         context.setCharacterMode(CharacterMode.Fieldata);
@@ -73,8 +75,8 @@ public class Test_ConcatenationOperator {
     public void simple_mixed(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue(false, "ABC", CharacterMode.Fieldata));
-        valueStack.push(new StringValue(false, "DEF", CharacterMode.ASCII));
+        valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
+        valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.ASCII).build());
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
@@ -97,8 +99,8 @@ public class Test_ConcatenationOperator {
     public void integer_ASCII(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue(0_101_102_103_104L));
-        valueStack.push(new IntegerValue(0_105_106_107_110L));
+        valueStack.push(new IntegerValue.Builder().setValue(0_101_102_103_104L).build());
+        valueStack.push(new IntegerValue.Builder().setValue(0_105_106_107_110L).build());
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         Diagnostics diags = new Diagnostics();
@@ -121,8 +123,8 @@ public class Test_ConcatenationOperator {
     public void incompatibleType(
     ) {
         Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new StringValue(false, "ABC", CharacterMode.ASCII));
-        valueStack.push(new FloatingPointValue(false, 1.0));
+        valueStack.push(new StringValue.Builder().setValue("ABC").build());
+        valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(1.0)).build());
 
         Context context = new Context(new Dictionary(), new String[0],  "TEST");
         LineSpecifier ls = new LineSpecifier(0, 123);

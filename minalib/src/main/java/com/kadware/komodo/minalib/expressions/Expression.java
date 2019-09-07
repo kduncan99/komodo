@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.minalib.expressions;
 
-import com.kadware.komodo.baselib.exceptions.*;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.expressions.items.*;
@@ -88,7 +87,7 @@ public class Expression {
 
         //  There should now be exactly one value on the value stack.
         if (valueStack.size() != 1) {
-            throw new InternalErrorRuntimeException("value stack does not have 1 item left at end of expression evaluation");
+            throw new RuntimeException("value stack does not have 1 item left at end of expression evaluation");
         }
 
         return valueStack.pop();

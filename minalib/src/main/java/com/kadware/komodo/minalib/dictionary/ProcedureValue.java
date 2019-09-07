@@ -4,8 +4,8 @@
 
 package com.kadware.komodo.minalib.dictionary;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+import com.kadware.komodo.minalib.TextLine;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 
 /**
  * A Value which represents a proc.
@@ -26,32 +26,32 @@ public class ProcedureValue extends Value {
         _source = source;
     }
 
-//    /**
-//     * Compares an object to this object
-//     * @param obj comparison object
-//     * @return -1 if this object sorts before (is less than) the given object
-//     *         +1 if this object sorts after (is greater than) the given object,
-//     *          0 if both objects sort to the same position (are equal)
-//     * @throws TypeException if there is no reasonable way to compare the objects
-//     */
-//    @Override
-//    public int compareTo(
-//        final Object obj
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
+    /**
+     * Compares an object to this object
+     * @param obj comparison object
+     * @return -1 if this object sorts before (is less than) the given object
+     *         +1 if this object sorts after (is greater than) the given object,
+     *          0 if both objects sort to the same position (are equal)
+     * @throws TypeException if there is no reasonable way to compare the objects
+     */
+    @Override
+    public int compareTo(
+        final Object obj
+    ) throws TypeException {
+        throw new TypeException();
+    }
 
-//    /**
-//     * Create a new copy of this object, with the given flagged value
-//     * @param newFlagged new value for Flagged attribute
-//     * @return new Value
-//     */
-//    @Override
-//    public Value copy(
-//        final boolean newFlagged
-//    ) {
-//        return new ProcedureValue(newFlagged, _source);
-//    }
+    /**
+     * Create a new copy of this object, with the given flagged value
+     * @param newFlagged new value for Flagged attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final boolean newFlagged
+    ) {
+        return new ProcedureValue(newFlagged, _source);
+    }
 
     /**
      * Check for equality
@@ -145,9 +145,9 @@ public class ProcedureValue extends Value {
         public Builder setValue(TextLine[] value)   {_value = value; return this; }
 
         public ProcedureValue build(
-        ) throws InvalidParameterException {
+        ) {
             if (_value == null) {
-                throw new InvalidParameterException("Value not specified for IntegerValue builder");
+                throw new RuntimeException("Value not specified for IntegerValue builder");
             }
 
             return new ProcedureValue(_flagged, _value);

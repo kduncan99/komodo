@@ -4,10 +4,16 @@
 
 package com.kadware.komodo.minalib.expressions.operators;
 
-import com.kadware.komodo.minalib.*;
-import com.kadware.komodo.minalib.dictionary.*;
-import com.kadware.komodo.minalib.exceptions.*;
-
+import com.kadware.komodo.minalib.Context;
+import com.kadware.komodo.minalib.Locale;
+import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
+import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
+import com.kadware.komodo.minalib.dictionary.IntegerValue;
+import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.kadware.komodo.minalib.exceptions.FormException;
+import com.kadware.komodo.minalib.exceptions.RelocationException;
+import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 
 /**
@@ -15,15 +21,7 @@ import java.util.Stack;
  */
 public class InequalityOperator extends RelationalOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public InequalityOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public InequalityOperator(Locale locale) { super(locale); }
 
     /**
      * Evaluator
@@ -39,7 +37,7 @@ public class InequalityOperator extends RelationalOperator {
         try {
             Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
             int result = (!operands[0].equals(operands[1])) ? 1 : 0;
-            valueStack.push(new IntegerValue(result));
+            valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (TypeException ex) {
             throw new ExpressionException();
         }
