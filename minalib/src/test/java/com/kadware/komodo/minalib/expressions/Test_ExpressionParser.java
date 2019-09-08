@@ -29,7 +29,7 @@ public class Test_ExpressionParser {
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof IntegerValue);
-        assertEquals(14458L, ((IntegerValue)v)._value);
+        assertEquals(14458L, ((IntegerValue)v)._value.get().longValue());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class Test_ExpressionParser {
         assertTrue(item1 instanceof ValueItem);
         Value v1 = ((ValueItem)item1)._value;
         assertTrue(v1 instanceof IntegerValue);
-        assertEquals(14458L, ((IntegerValue)v1)._value);
+        assertEquals(14458L, ((IntegerValue)v1)._value.get().longValue());
     }
 
     @Test

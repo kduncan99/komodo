@@ -96,30 +96,6 @@ public class Test_ConcatenationOperator {
     }
 
     @Test
-    public void integer_ASCII(
-    ) throws ExpressionException {
-        Stack<Value> valueStack = new Stack<>();
-        valueStack.push(new IntegerValue.Builder().setValue(0_101_102_103_104L).build());
-        valueStack.push(new IntegerValue.Builder().setValue(0_105_106_107_110L).build());
-
-        Context context = new Context(new Dictionary(), new String[0],  "TEST");
-        Diagnostics diags = new Diagnostics();
-
-        LineSpecifier ls = new LineSpecifier(0, 15);
-        Operator op = new ConcatenationOperator(new Locale(ls, 18));
-        op.evaluate(context, valueStack);
-
-        assertTrue(diags.getDiagnostics().isEmpty());
-        assertEquals(1, valueStack.size());
-        assertEquals(ValueType.String, valueStack.peek().getType());
-
-        StringValue vResult = (StringValue)valueStack.pop();
-        assertFalse(vResult._flagged);
-        assertEquals("ABCDEFGH", vResult._value);
-        assertEquals(CharacterMode.ASCII, vResult._characterMode);
-    }
-
-    @Test
     public void incompatibleType(
     ) {
         Stack<Value> valueStack = new Stack<>();

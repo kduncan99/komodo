@@ -127,12 +127,15 @@ public class IntegerValue extends Value {
     public boolean equals(
         final Object obj
     ) {
-        //TODO bug here - form might be null
         if (obj instanceof IntegerValue) {
             IntegerValue iv = (IntegerValue) obj;
-            return (_value.equals(iv._value))
-                   && (_form.equals(iv._form)
-                   && UndefinedReference.equals(_references, iv._references));
+            if (!_value.equals(iv._value)) { return false; }
+            if (_form != null) {
+                if (iv._form == null) { return false; }
+                if (!_form.equals(iv._form)) { return false; }
+            } else if (iv._form != null) { return false; }
+
+            return UndefinedReference.equals(_references, iv._references);
         }
 
         return false;

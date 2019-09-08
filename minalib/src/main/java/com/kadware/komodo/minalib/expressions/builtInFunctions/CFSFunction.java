@@ -8,6 +8,7 @@ import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.StringValue;
 import com.kadware.komodo.minalib.dictionary.Value;
+import com.kadware.komodo.minalib.dictionary.ValuePrecision;
 import com.kadware.komodo.minalib.exceptions.*;
 import com.kadware.komodo.minalib.expressions.Expression;
 
@@ -46,9 +47,20 @@ public class CFSFunction extends BuiltInFunction {
         Value[] arguments = evaluateArguments(context);
         if (arguments[0] instanceof IntegerValue) {
             IntegerValue iv = (IntegerValue) arguments[0];
-            return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
-                                            .setCharacterMode(CharacterMode.Fieldata)
-                                            .build();
+            if (iv._precision == ValuePrecision.Double) {
+                return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
+                                                .setCharacterMode(CharacterMode.Fieldata)
+                                                .build();
+            } else {
+                String str = iv._value.getWords()[1].toStringFromFieldata();
+                return new StringValue.Builder().setValue(str)
+                                                .setCharacterMode(CharacterMode.Fieldata)
+                                                .build();
+            }
+//            IntegerValue iv = (IntegerValue) arguments[0];
+//            return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
+//                                            .setCharacterMode(CharacterMode.Fieldata)
+//                                            .build();
         } else {
             context.appendDiagnostic(getValueDiagnostic(1));
             throw new ExpressionException();

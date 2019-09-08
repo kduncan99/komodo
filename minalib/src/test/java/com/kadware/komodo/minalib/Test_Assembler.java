@@ -221,10 +221,10 @@ public class Test_Assembler {
         //TODO inner value is not generated as a literal
         String[] source = {
             "$(1)  + 15",
-            "      + ((077000777), 5)"
+            "      + ((077000777) + 5)"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };
+        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 

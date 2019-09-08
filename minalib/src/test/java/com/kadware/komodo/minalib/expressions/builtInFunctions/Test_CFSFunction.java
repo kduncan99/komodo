@@ -5,7 +5,6 @@
 package com.kadware.komodo.minalib.expressions.builtInFunctions;
 
 import com.kadware.komodo.baselib.DoubleWord36;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.minalib.CharacterMode;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.LineSpecifier;
@@ -15,22 +14,24 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.items.IExpressionItem;
 import com.kadware.komodo.minalib.expressions.items.ValueItem;
+import org.junit.Test;
+
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for the addition operator
  */
-public class Test_CASFunction {
+public class Test_CFSFunction {
 
     @Test
     public void test_single(
     ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
-        IntegerValue iv = new IntegerValue.Builder().setValue(0_060_061_062_063L).build();
+        IntegerValue iv = new IntegerValue.Builder().setValue(0_606162636465L).build();
         LineSpecifier ls01 = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls01, 1), iv));
 
@@ -38,12 +39,12 @@ public class Test_CASFunction {
         expressions[0] = new Expression(items);
 
         LineSpecifier ls10 = new LineSpecifier(0, 10);
-        BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
+        BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Value result = bif.evaluate(context);
 
-        StringValue expected = new StringValue.Builder().setValue("0123").setCharacterMode(CharacterMode.ASCII).build();
+        StringValue expected = new StringValue.Builder().setValue("012345").setCharacterMode(CharacterMode.Fieldata).build();
         assertEquals(expected, result);
     }
 
@@ -52,7 +53,7 @@ public class Test_CASFunction {
     ) throws ExpressionException {
 
         List<IExpressionItem> items = new LinkedList<>();
-        DoubleWord36 dw36 = new DoubleWord36(0_060061062063L, 0_064065066067L);
+        DoubleWord36 dw36 = new DoubleWord36(0_050607101112L, 0_626364656667L);
         IntegerValue iv = new IntegerValue.Builder().setValue(dw36).setPrecision(ValuePrecision.Double).build();
         LineSpecifier ls01 = new LineSpecifier(0, 1);
         items.add(new ValueItem(new Locale(ls01, 1), iv));
@@ -61,12 +62,12 @@ public class Test_CASFunction {
         expressions[0] = new Expression(items);
 
         LineSpecifier ls10 = new LineSpecifier(0, 10);
-        BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
+        BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
         Context context = new Context(new Dictionary(), new String[0], "TEST");
         Value result = bif.evaluate(context);
 
-        StringValue expected = new StringValue.Builder().setValue("01234567").setCharacterMode(CharacterMode.ASCII).build();
+        StringValue expected = new StringValue.Builder().setValue(" ABCDE234567").setCharacterMode(CharacterMode.Fieldata).build();
         assertEquals(expected, result);
     }
 }

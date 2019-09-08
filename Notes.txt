@@ -19,6 +19,7 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
   Applies to all jumps, as well as to LxJ
 
 * minalib
+((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
 
 
@@ -158,7 +159,6 @@ support node references on LHS of $EQU statements
 need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
 remove UndefinedReferenceDiagnostic (I think...)
 use DiagnosticDirective for stuff.. now I forgot what this means
-pick up the rest of the unit tests we need to do but haven't yet
 do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
 add test cases for interrupts (many of them already marked TODO)
