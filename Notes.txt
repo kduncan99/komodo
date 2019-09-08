@@ -19,9 +19,11 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
 * minalib
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
+Do we emit diagnostics at the point where 'S' is applied to a value larger than 36 bits? Or only when we generate code?
 
 
 -- TODO Thoughts
+Maybe move all the function handlers to the InstructionProcessor class...
 
 
 -- TODO implement

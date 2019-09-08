@@ -7,7 +7,6 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 
 /**
  * An 8-word Word36Array which describes a bank.
@@ -52,7 +51,7 @@ public class BankDescriptor extends ArraySlice {
                 case 6:     return QueueRepository;
             }
 
-            throw new InvalidArgumentRuntimeException(String.format("Bad code passed to BankType.get:%d", code));
+            throw new RuntimeException(String.format("Bad code passed to BankType.get:%d", code));
         }
     }
 

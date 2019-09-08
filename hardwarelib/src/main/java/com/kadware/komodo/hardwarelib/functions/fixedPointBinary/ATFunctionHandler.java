@@ -27,16 +27,16 @@ public class ATFunctionHandler extends InstructionHandler {
         long operand1 = ip.getExecOrUserARegister((int)iw.getA()).getW();
         long operand2 = ip.getOperand(true, true, false, false);
 
-        long op1t1 = Word36.getT1(operand1);
-        long op1t2 = Word36.getT2(operand1);
-        long op1t3 = Word36.getT3(operand1);
-        long op2t1 = Word36.getT1(operand2);
-        long op2t2 = Word36.getT2(operand2);
-        long op2t3 = Word36.getT3(operand2);
+        long op1t1 = Word36.getSignExtended12(Word36.getT1(operand1));
+        long op1t2 = Word36.getSignExtended12(Word36.getT2(operand1));
+        long op1t3 = Word36.getSignExtended12(Word36.getT3(operand1));
+        long op2t1 = Word36.getSignExtended12(Word36.negate(Word36.getT1(operand2)));
+        long op2t2 = Word36.getSignExtended12(Word36.negate(Word36.getT2(operand2)));
+        long op2t3 = Word36.getSignExtended12(Word36.negate(Word36.getT3(operand2)));
 
-        long resultt1 = OnesComplement.add12Simple(op1t1, op2t1);
-        long resultt2 = OnesComplement.add12Simple(op1t2, op2t2);
-        long resultt3 = OnesComplement.add12Simple(op1t3, op2t3);
+        long resultt1 = Word36.addSimple(op1t1, op2t1) & 07777;
+        long resultt2 = Word36.addSimple(op1t2, op2t2) & 07777;
+        long resultt3 = Word36.addSimple(op1t3, op2t3) & 07777;
         long result = (resultt1 << 24) | (resultt2 << 12) | resultt3;
 
         ip.getExecOrUserARegister((int)iw.getA()).setW(result);

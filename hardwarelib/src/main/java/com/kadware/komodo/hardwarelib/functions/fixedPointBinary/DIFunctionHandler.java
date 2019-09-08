@@ -18,16 +18,17 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 @SuppressWarnings("Duplicates")
 public class DIFunctionHandler extends InstructionHandler {
 
-    private final long[] _dividend = { 0, 0 };
-    private final long[] _divisor = { 0, 0 };
-    private final OnesComplement.DivideResult _dr = new OnesComplement.DivideResult();
-
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
+        /*TODO
+A divide check occurs if the absolute value of the dividend (Aa,Aa+1) is not less than the absolute
+value of the divisor (U) multiplied by 235, or if the divisor = 0. Divide Check is handled as
+described in 6.3.
+         */
         _dividend[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
         _dividend[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
 

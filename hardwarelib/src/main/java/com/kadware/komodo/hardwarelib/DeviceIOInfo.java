@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 
 /**
  * Represents an IO passed from a ChannelModule object to one of its descendant Device objects
@@ -84,9 +83,9 @@ public class DeviceIOInfo {
 
         public DeviceIOInfo build() {
             if (_source == null) {
-                throw new InvalidArgumentRuntimeException("No source parameter");
+                throw new RuntimeException("No source parameter");
             } else if (_ioFunction == null) {
-                throw new InvalidArgumentRuntimeException("No ioFunction parameter");
+                throw new RuntimeException("No ioFunction parameter");
             }
 
             return new DeviceIOInfo(_source, _ioFunction, null, null, 0, null);
@@ -109,16 +108,16 @@ public class DeviceIOInfo {
 
         public DeviceIOInfo build() {
             if (_source == null) {
-                throw new InvalidArgumentRuntimeException("No source parameter");
+                throw new RuntimeException("No source parameter");
             } else if (_ioFunction == null) {
-                throw new InvalidArgumentRuntimeException("No ioFunction parameter");
+                throw new RuntimeException("No ioFunction parameter");
             } else if (_ioFunction.isWriteFunction() && _ioFunction.requiresBuffer() && (_buffer == null)) {
-                throw new InvalidArgumentRuntimeException("No buffer parameter");
+                throw new RuntimeException("No buffer parameter");
             } else if ((_ioFunction.isReadFunction() || (!_ioFunction.requiresBuffer()))
                        && (_buffer != null)) {
-                throw new InvalidArgumentRuntimeException("Buffer wrongly provided");
+                throw new RuntimeException("Buffer wrongly provided");
             } else if (_transferCount == null) {
-                throw new InvalidArgumentRuntimeException("No transferCount parameter");
+                throw new RuntimeException("No transferCount parameter");
             }
 
             return new DeviceIOInfo(_source, _ioFunction, _buffer, null, _transferCount, _blockId);
@@ -141,16 +140,16 @@ public class DeviceIOInfo {
 
         public DeviceIOInfo build() {
             if (_source == null) {
-                throw new InvalidArgumentRuntimeException("No source parameter");
+                throw new RuntimeException("No source parameter");
             } else if (_ioFunction == null) {
-                throw new InvalidArgumentRuntimeException("No ioFunction parameter");
+                throw new RuntimeException("No ioFunction parameter");
             } else if (_ioFunction.isWriteFunction() && _ioFunction.requiresBuffer() && (_buffer == null)) {
-                throw new InvalidArgumentRuntimeException("No buffer parameter");
+                throw new RuntimeException("No buffer parameter");
             } else if ((_ioFunction.isReadFunction() || (!_ioFunction.requiresBuffer()))
                 && (_buffer != null)) {
-                throw new InvalidArgumentRuntimeException("Buffer wrongly provided");
+                throw new RuntimeException("Buffer wrongly provided");
             } else if (_transferCount == null) {
-                throw new InvalidArgumentRuntimeException("No transferCount parameter");
+                throw new RuntimeException("No transferCount parameter");
             }
 
             return new DeviceIOInfo(_source, _ioFunction, null, _buffer, _transferCount, _blockId);

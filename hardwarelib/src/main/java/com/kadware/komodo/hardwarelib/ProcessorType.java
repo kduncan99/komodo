@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.exceptions.InternalErrorRuntimeException;
-
 @SuppressWarnings("Duplicates")
 public enum ProcessorType {
     SystemProcessor(0),
@@ -29,6 +27,6 @@ public enum ProcessorType {
             case 3:     return MainStorageProcessor;
         }
 
-        throw new InternalErrorRuntimeException("Invalid code for ProcessorType.getValue()");
+        throw new RuntimeException("Invalid code for ProcessorType.getValue()");
     }
 }

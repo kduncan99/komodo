@@ -17,12 +17,18 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
  */
 public class DSFFunctionHandler extends InstructionHandler {
 
-    private final long[] _dividend = { 0, 0 };
-    private final long[] _divisor = { 0, 0 };
-    private final OnesComplement.DivideResult _dr = new OnesComplement.DivideResult();
+    /*TODO
+        [(Aa || 36 sign bits) RIGHT ALGEBRAIC SHIFT 1]  (U)  Aa+1
+        The 36-bit signed contents of Aa concatenated with 36 sign bits on the right (the dividend) are
+        fetched, shifted right algebraically 1 bit position, and divided algebraically by the contents of U (the
+        divisor), which is fetched under F0.j control. The 36-bit signed quotient is then stored into Aa+1
+        and the remainder is discarded.
+        A divide check occurs if the absolute value of the dividend (Aa) is not less than the absolute value
+        of the divisor (U), or if the divisor = 0. Divide check is handled as described in 6.3.
+     */
 
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
