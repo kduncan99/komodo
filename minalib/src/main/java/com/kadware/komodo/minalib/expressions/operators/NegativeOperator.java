@@ -15,35 +15,10 @@ import java.util.Stack;
  */
 public class NegativeOperator extends Operator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public NegativeOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public NegativeOperator(Locale locale) { super(locale); }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public int getPrecedence(
-    ) {
-        return 9;
-    }
-
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public Type getType(
-    ) {
-        return Type.Prefix;
-    }
+    @Override public int getPrecedence() { return 9; }
+    @Override public Type getType() { return Type.Prefix; }
 
     /**
      * Evaluator

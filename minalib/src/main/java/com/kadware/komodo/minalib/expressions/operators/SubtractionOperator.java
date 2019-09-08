@@ -25,25 +25,9 @@ import java.util.*;
 @SuppressWarnings("Duplicates")
 public class SubtractionOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public SubtractionOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public SubtractionOperator(Locale locale) { super(locale); }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 6;
-    }
+    @Override public final int getPrecedence() { return 6; }
 
     /**
      * Evaluator

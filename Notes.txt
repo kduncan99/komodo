@@ -1,8 +1,6 @@
 -- TODO InProgress
+Working on post-fix operators - need some unit tests for them
 Working on supporting floating point (double/single)
-make sure we don't propagate flagged attribute in any of the operators
-Reworking Word36, implementing DoubleWord36, making IntegerValue 72 bits (original design just won't work for us)
-Putting justification and precision back in, because we really do need it (esp. for floating point)
 $FORM and generation using forms
 Support $EQUF
 
@@ -147,8 +145,6 @@ IP: search and masked search instructions (and unit tests)
 
 * minalib
 more FloatingPointValue unit tests?
-L,R justification operators
-D,S precision operators
 Implement LBDI$ in Linker and Assembler, and maybe other such things
 unit tests for string value generation
 unit tests for node references - need to check results

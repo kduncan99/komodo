@@ -39,8 +39,6 @@ public class IntegerValue extends Value {
     }
 
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
-    //  Also, a negative version thereof.
-    public static final IntegerValue NEGATIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.NEGATIVE_ZERO)).build();
     public static final IntegerValue POSITIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.POSITIVE_ZERO)).build();
 
     public final Form _form;
@@ -116,6 +114,18 @@ public class IntegerValue extends Value {
         final boolean newFlagged
     ) {
         return new IntegerValue(newFlagged, _value, _precision, _form, _references);
+    }
+
+    /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final ValuePrecision newPrecision
+    ) {
+        return new IntegerValue(_flagged, _value, newPrecision, _form, _references);
     }
 
     /**

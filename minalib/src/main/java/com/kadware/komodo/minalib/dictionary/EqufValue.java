@@ -73,6 +73,19 @@ public class EqufValue extends Value {
         return new EqufValue(newFlagged, _value, _form, _references);
     }
 
+    /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     * @throws TypeException if object cannot be copied
+     */
+    @Override
+    public Value copy(
+        final ValuePrecision newPrecision
+    ) throws TypeException {
+        throw new TypeException();
+    }
+
     @Override
     public boolean equals(
         final Object obj

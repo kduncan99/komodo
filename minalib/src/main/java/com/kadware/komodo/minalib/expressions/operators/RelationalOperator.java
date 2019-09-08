@@ -21,15 +21,7 @@ import java.util.Stack;
 @SuppressWarnings("Duplicates")
 public abstract class RelationalOperator extends Operator {
 
-    /**
-     * Constructor
-     * @param locale locale of operator
-     */
-    RelationalOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    RelationalOperator(Locale locale) { super(locale); }
 
     /**
      * Evaluator
@@ -115,23 +107,6 @@ public abstract class RelationalOperator extends Operator {
         return operands;
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 2;
-    }
-
-    /**
-     * Retrieves the type of this operator
-     * @return value
-     */
-    @Override
-    public final Type getType(
-    ) {
-        return Type.Infix;
-    }
+    @Override public final int getPrecedence() { return 2; }
+    @Override public final Type getType() { return Type.Infix; }
 }

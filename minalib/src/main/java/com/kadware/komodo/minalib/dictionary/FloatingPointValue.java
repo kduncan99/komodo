@@ -5,12 +5,9 @@
 package com.kadware.komodo.minalib.dictionary;
 
 import com.kadware.komodo.baselib.FloatingPointComponents;
-import com.kadware.komodo.baselib.DoubleWord36;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
 import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
-import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.diagnostics.Diagnostics;
 import com.kadware.komodo.minalib.diagnostics.ErrorDiagnostic;
@@ -26,9 +23,7 @@ public class FloatingPointValue extends Value {
 
     public final FloatingPointComponents _value;
 
-    static final FloatingPointValue NEGATIVE_ZERO =
-        new FloatingPointValue(false, FloatingPointComponents.COMP_NEGATIVE_ZERO, ValuePrecision.Default);
-    static final FloatingPointValue POSITIVE_ZERO =
+    private static final FloatingPointValue POSITIVE_ZERO =
         new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
 
     /**
@@ -74,8 +69,20 @@ public class FloatingPointValue extends Value {
     @Override
     public Value copy(
         final boolean newFlagged
-    ) throws TypeException {
-        throw new TypeException();
+    ) {
+        return new FloatingPointValue(newFlagged, _value, _precision);
+    }
+
+    /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final ValuePrecision newPrecision
+    ) {
+        return new FloatingPointValue(_flagged, _value, newPrecision);
     }
 
     /**

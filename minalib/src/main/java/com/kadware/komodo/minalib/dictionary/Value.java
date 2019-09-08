@@ -73,6 +73,16 @@ public abstract class Value {
     ) throws TypeException;
 
     /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     * @throws TypeException if object cannot be copied
+     */
+    public abstract Value copy(
+        final ValuePrecision newPrecision
+    ) throws TypeException;
+
+    /**
      * Check for equality
      * Must be overridden by subclass
      * @param obj comparison object

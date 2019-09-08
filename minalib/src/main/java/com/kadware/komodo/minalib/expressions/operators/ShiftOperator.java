@@ -18,25 +18,9 @@ import java.util.Stack;
  */
 public class ShiftOperator extends ArithmeticOperator {
 
-    /**
-     * Constructor
-     * @param locale location of operator
-     */
-    public ShiftOperator(
-        final Locale locale
-    ) {
-        super(locale);
-    }
+    public ShiftOperator(Locale locale) { super(locale); }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public final int getPrecedence(
-    ) {
-        return 7;
-    }
+    @Override public final int getPrecedence() { return 7; }
 
     /**
      * Evaluator

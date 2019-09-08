@@ -4,11 +4,7 @@
 
 package com.kadware.komodo.minalib.dictionary;
 
-import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.minalib.CharacterMode;
-import com.kadware.komodo.minalib.Context;
-import com.kadware.komodo.minalib.Locale;
-import com.kadware.komodo.minalib.diagnostics.TruncationDiagnostic;
 import com.kadware.komodo.minalib.exceptions.TypeException;
 
 /**
@@ -17,9 +13,6 @@ import com.kadware.komodo.minalib.exceptions.TypeException;
  */
 @SuppressWarnings("Duplicates")
 public class StringValue extends Value {
-
-    private static final String FIELDATA_ZERO = "@@@@@@@@@@@@";
-    private static final String ASCII_ZERO = "\0\0\0\0\0\0\0\0";
 
     public final CharacterMode _characterMode;
     public final ValueJustification _justification;
@@ -60,7 +53,7 @@ public class StringValue extends Value {
     ) throws TypeException {
         if (obj instanceof StringValue) {
             StringValue sobj = (StringValue) obj;
-            return _value.compareTo( ((StringValue) obj)._value );
+            return _value.compareTo(sobj._value);
         } else {
             throw new TypeException();
         }
@@ -87,6 +80,18 @@ public class StringValue extends Value {
         final ValueJustification newJustification
     ) {
         return new StringValue(_flagged, _value, _characterMode, _precision, newJustification);
+    }
+
+    /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     */
+    @Override
+    public Value copy(
+        final ValuePrecision newPrecision
+    ) {
+        return new StringValue(_flagged, _value, _characterMode, newPrecision, _justification);
     }
 
     /**
@@ -118,7 +123,6 @@ public class StringValue extends Value {
     }
 
     @Override public ValueType getType() { return ValueType.String; }
-
     @Override public int hashCode() { return _value.hashCode(); }
 
     /**

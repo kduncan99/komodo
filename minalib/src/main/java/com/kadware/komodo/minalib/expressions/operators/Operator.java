@@ -42,6 +42,28 @@ public abstract class Operator {
     /**
      * Retrieves the precedence for this operator.
      * higher values are evaluated before lower values.
+     * We keep track of precedence here for convenience:
+     *      0   Flagged
+     *      1   Logical NOT
+     *      2   All relational operators
+     *      3   String Concatenation
+     *      4   Logical OR
+     *      5   Logical AND
+     *      6   Addition
+     *      6   Subtraction
+     *      7   Division
+     *      7   Division Covered Quotient
+     *      7   Division
+     *      7   Multiplication
+     *      7   Shift operators
+     *      8   '*''/' Fixed-point integer scaling (not implemented yet)
+     *      8   '*+' Floating-point power of 10 positive scaling (not implemented yet)
+     *      8   '*-' Floating-point power of 10 negative scaling (not implemented yet)
+     *      8   '*''//' Floating-point power of 2 scaling (not implemented yet)
+     *      9   Negate
+     *      9   Positive
+     *      10  Left/Right Justification
+     *      10  Single/Double Precision
      * @return precedence
      */
     public abstract int getPrecedence();

@@ -434,12 +434,22 @@ public class ExpressionParser {
 
     /**
      * If _index points to a postfix operator, we construct an Operator object and return it.
-     * Since StringValue doesn't like justification, we do not support L and R post-fix operators.
      * @return Operator object if found, else null
      */
     private OperatorItem parsePostfixOperator(
     ) {
-        //  Currently there are no post-fix operators (we don't do precision)
+        Locale locale = getLocale();
+
+        if (skipToken("L")) {
+            return new OperatorItem(new LeftJustificationOperator(locale));
+        } else if (skipToken("R")) {
+            return new OperatorItem(new RightJustificationOperator(locale));
+        } else if (skipToken("D")) {
+            return new OperatorItem(new DoublePrecisionOperator(locale));
+        } else if (skipToken("S")) {
+            return new OperatorItem(new SinglePrecisionOperator(locale));
+        }
+
         return null;
     }
 

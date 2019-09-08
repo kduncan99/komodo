@@ -37,11 +37,24 @@ public class BuiltInFunctionValue extends Value {
      * Create a new copy of this object, with the given flagged value
      * @param newFlagged new attribute value
      * @return new value
-     * @throws TypeException
+     * @throws TypeException if object cannot be copied
      */
     @Override
-    public BuiltInFunctionValue copy(
+    public Value copy(
         final boolean newFlagged
+    ) throws TypeException {
+        throw new TypeException();
+    }
+
+    /**
+     * Create a new copy of this object, with the given precision value
+     * @param newPrecision new value for precision attribute
+     * @return new Value
+     * @throws TypeException if object cannot be copied
+     */
+    @Override
+    public Value copy(
+        final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();
     }
@@ -65,53 +78,6 @@ public class BuiltInFunctionValue extends Value {
 
     @Override public int hashCode() { return _class.hashCode(); }
     @Override public ValueType getType() { return ValueType.BuiltInFunction; }
-
-//    /**
-//     * Transform the value to an FloatingPointValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
 
     /**
      * For display purposes
