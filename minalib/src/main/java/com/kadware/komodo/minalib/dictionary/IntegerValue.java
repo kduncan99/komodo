@@ -127,6 +127,7 @@ public class IntegerValue extends Value {
     public boolean equals(
         final Object obj
     ) {
+        //TODO bug here - form might be null
         if (obj instanceof IntegerValue) {
             IntegerValue iv = (IntegerValue) obj;
             return (_value.equals(iv._value))

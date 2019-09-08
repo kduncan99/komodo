@@ -189,14 +189,13 @@ public class Test_Assembler {
     @Test
     public void lit1(
     ) {
-        //TODO bug - literal is generated, but address in $(1) has no LC undef ref
         String[] source = {
-                "$(1)  + 15",
-                "      + (077, 0777)"
+            "$(1)  + 15",
+            "      + (077, 0777)",
+            "      + ((0111+FOO, 0111), 0111+FEE+FOE)"
         };
 
-//        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };
+        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 
@@ -205,12 +204,12 @@ public class Test_Assembler {
 
         LocationCounterPool lcp0 = module._storage.get(0);
         assertNotEquals(null, lcp0);
-        assertEquals(1, lcp0._storage.length);
+        assertEquals(3, lcp0._storage.length);
         assertEquals(0_000077_000777L, lcp0._storage[0].getW());
 
         LocationCounterPool lcp1 = module._storage.get(1);
         assertNotEquals(null, lcp1);
-        assertEquals(2, lcp1._storage.length);
+        assertEquals(3, lcp1._storage.length);
         assertEquals(0_017L, lcp1._storage[0].getW());
         assertEquals(0, lcp1._storage[1].getW());
         assertEquals(1, lcp1._storage[1]._references.length);
@@ -222,7 +221,7 @@ public class Test_Assembler {
         //TODO inner value is not generated as a literal
         String[] source = {
             "$(1)  + 15",
-            "      + ((077000777) + 5)"
+            "      + ((077000777), 5)"
         };
 
         Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };
@@ -234,7 +233,7 @@ public class Test_Assembler {
 
         LocationCounterPool lcp0 = module._storage.get(0);
         assertNotEquals(null, lcp0);
-        assertEquals(2, lcp0._storage.length);
+        assertEquals(1, lcp0._storage.length);
         assertEquals(0_77000777L, lcp0._storage[0].getW());
         assertEquals(5, lcp0._storage[1].getW());
         assertEquals(1, lcp0._storage[1]._references.length);

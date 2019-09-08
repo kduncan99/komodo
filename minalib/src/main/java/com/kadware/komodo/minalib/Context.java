@@ -299,7 +299,7 @@ public class Context {
 
             BigInteger fieldValue = values[fx]._value.get();
             boolean trunc;
-            if (values[fx]._value.isPositiveZero()) {
+            if (values[fx]._value.isPositive()) {
                 trunc = !fieldValue.and(mask).equals(fieldValue);
             } else {
                 trunc = !fieldValue.and(mask).equals(DoubleWord36.SHORT_BIT_MASK);

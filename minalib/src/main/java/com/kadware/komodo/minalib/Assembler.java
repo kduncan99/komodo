@@ -239,7 +239,7 @@ public class Assembler {
                     } else {
                         for (int urx = 0; urx < rw._references.length; ++urx) {
                             System.out.println(String.format("%s %s",
-                                                             urx == 0 ? gwBase : "                           ",
+                                                             urx == 0 ? gwBase : "                             ",
                                                              rw._references[urx].toString()));
                         }
                     }
@@ -496,6 +496,7 @@ public class Assembler {
             return true;
         }
 
+        //TODO move this to generateInteger() - later
         if (firstValue instanceof IntegerValue) {
             int valueCount = (operandField._subfields.size());
             if (valueCount > 36) {
@@ -509,9 +510,14 @@ public class Assembler {
                 fieldSizes[fx] = fieldSize;
             }
 
-            BigInteger intValue = ((IntegerValue) firstValue)._value.get();
-            for (int vx = 1; vx < valueCount; ++vx) {
-                intValue = intValue.shiftLeft(fieldSizes[vx - 1]);
+            BigInteger intValue = BigInteger.ZERO;
+            List<UndefinedReference> newRefs = new LinkedList<>();
+            int startingBit = 0;
+            for (int vx = 0; vx < valueCount; ++vx) {
+                if (vx > 0) {
+                    intValue = intValue.shiftLeft(fieldSizes[vx - 1]);
+                }
+
                 TextSubfield sfNext = operandField._subfields.get(vx);
                 String sfNextText = sfNext._text;
                 Locale sfNextLocale = sfNext._locale;
@@ -523,19 +529,27 @@ public class Assembler {
                         continue;
                     }
 
-                    Value vNext = eNext.evaluate(context);
+                    Value vNext = vx == 0 ? firstValue : eNext.evaluate(context);
                     if (vNext instanceof IntegerValue) {
-                        intValue = intValue.or(((IntegerValue) vNext)._value.get());
+                        IntegerValue ivNext = (IntegerValue) vNext;
+                        FieldDescriptor fd = new FieldDescriptor(startingBit,fieldSizes[vx]);
+                        for (UndefinedReference ur : ((IntegerValue) vNext)._references) {
+                            newRefs.add(ur.copy(fd));
+                        }
+                        intValue = intValue.or(ivNext._value.get());
                     } else {
                         context.appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
                     }
                 } catch (ExpressionException ex) {
                     context.appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
                 }
+
+                startingBit += fieldSizes[vx];
             }
 
             IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
                                                         .setForm(new Form(fieldSizes))
+                                                        .setReferences(newRefs.toArray(new UndefinedReference[0]))
                                                         .build();
             context.generate(operandField._locale.getLineSpecifier(),
                              context.getCurrentGenerationLCIndex(),
