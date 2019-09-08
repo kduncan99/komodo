@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.exceptions.InvalidArgumentRuntimeException;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.util.HashMap;

@@ -26,6 +26,9 @@ String concatenation does not honor precision per MASM 5.3.1
 
 
 -- TODO implement
+* baselib
+more FloatingPointComponent tests
+
 * hardwarelib
 Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
@@ -142,11 +145,13 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
+more FloatingPointValue unit tests?
 L,R justification operators
 D,S precision operators
 Implement LBDI$ in Linker and Assembler, and maybe other such things
 unit tests for string value generation
 unit tests for node references - need to check results
+unit tests for more built-in functions - we're missing a lot of them
 support special form for JGD instruction
 support special form for BT instruction
 support node references on LHS of $EQU statements

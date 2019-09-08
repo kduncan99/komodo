@@ -10,7 +10,6 @@ import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.ArithmeticExceptionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 
 /**
