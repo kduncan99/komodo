@@ -70,6 +70,7 @@ public class DesignatorRegister {
     public void setQuantumTimerEnabled(boolean flag)                { changeBit(MASK_QuantumTimerEnabled, flag); }
     public void setDeferrableInterruptEnabled(boolean flag)         { changeBit(MASK_DeferrableInterruptEnabled, flag); }
     public void setS4(long value)                                   { _value = Word36.setS4(_value, value); }
+    public void setW(long value)                                    { _value = value & Word36.BIT_MASK; }
 
     public void setProcessorPrivilege(
         final int value
@@ -89,5 +90,4 @@ public class DesignatorRegister {
     public void setArithmeticExceptionEnabled(boolean flag)         { changeBit(MASK_ArithmeticExceptionEnabled, flag); }
     public void setBasicModeBaseRegisterSelection(boolean flag)     { changeBit(MASK_BasicModeBaseRegisterSelection, flag); }
     public void setQuarterWordModeEnabled(boolean flag)             { changeBit(MASK_QuarterWordModeEnabled, flag); }
-    public void setW(long value)                                    { _value = value & Word36.BIT_MASK; }
 }

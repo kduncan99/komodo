@@ -56,7 +56,7 @@ public abstract class MachineInterrupt extends Exception {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
     public enum ConditionCategory {
         None(0),
@@ -72,7 +72,7 @@ public abstract class MachineInterrupt extends Exception {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
     public enum Deferrability {
         None(0),
@@ -88,7 +88,7 @@ public abstract class MachineInterrupt extends Exception {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
     public enum InterruptPoint {
         None(0),
@@ -105,7 +105,7 @@ public abstract class MachineInterrupt extends Exception {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
     public enum Synchrony {
         None(0),
@@ -125,7 +125,7 @@ public abstract class MachineInterrupt extends Exception {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
 
     private final ConditionCategory _conditionCategory;

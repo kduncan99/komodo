@@ -261,7 +261,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
     public void setIndicatorKeyRegister(long value) { _indicatorKeyRegister.setW(value); }
     public void setJumpHistoryFullInterruptEnabled(boolean flag) { _jumpHistoryFullInterruptEnabled = flag; }
-    public void setProgramAddressRegister(long value) { _programAddressRegister.setW(value); }
     public void setQuantumTimer(long value) { _quantumTimer = value; }
 
 
@@ -526,7 +525,7 @@ public class InstructionProcessor extends Processor implements Worker {
         int pcOffset = programCounter - bReg._lowerLimitNormalized;
         _currentInstruction.setW(bReg._storage.get(pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
-        _preservedProgramAddressRegister.setW(_programAddressRegister.getW());
+        _preservedProgramAddressRegister.set(_programAddressRegister.get());
     }
 
     /**
@@ -706,7 +705,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         int sx = (int)stackOffset;
-        icsStorage.set(sx, _preservedProgramAddressRegister.getW());
+        icsStorage.set(sx, _preservedProgramAddressRegister.get());
         icsStorage.set(sx + 1, _designatorRegister.getW());
         icsStorage.set(sx + 2, _indicatorKeyRegister.getW());
         icsStorage.set(sx + 3, _quantumTimer & Word36.BIT_MASK);
@@ -720,8 +719,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //pStack[7].setValue( _PreservedProgramAddressRegister.getW() );
 
         // Create conditionalJump history table entry
-        createJumpHistoryTableEntry(_preservedProgramAddressRegister.getW());
-
+        createJumpHistoryTableEntry(_preservedProgramAddressRegister.get());
         BankManipulator.bankManipulation(this, interrupt);
     }
 
@@ -2056,7 +2054,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 return false;
             }
 
-            _preservedProgramAddressRegister.setW(_programAddressRegister.getW());
+            _preservedProgramAddressRegister.set(_programAddressRegister.get());
             raiseInterrupt(new InitialProgramLoadInterrupt());
             _currentRunMode = RunMode.Normal;
             this.notify();

@@ -33,7 +33,7 @@ public class SBUFunctionHandler extends InstructionHandler {
         long operand;
         int brIndex = (int) iw.getA();
         if (brIndex == 0) {
-            operand = ip.getProgramAddressRegister().getH1() << 18;
+            operand = ip.getProgramAddressRegister().getLBDI() << 18;
         } else {
             operand = ip.getActiveBaseTableEntries()[brIndex - 1]._value;
         }

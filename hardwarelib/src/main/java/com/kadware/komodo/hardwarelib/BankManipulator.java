@@ -165,9 +165,9 @@ public class BankManipulator {
         ) {
             if (bmInfo._instruction != null) {
                 if (bmInfo._instruction == InstructionHandler.Instruction.CALL) {
-                    bmInfo._priorBankLevel = bmInfo._instructionProcessor.getProgramAddressRegister().getLevel();
-                    bmInfo._priorBankDescriptorIndex
-                        = bmInfo._instructionProcessor.getProgramAddressRegister().getBankDescriptorIndex();
+                    ProgramAddressRegister par = bmInfo._instructionProcessor.getProgramAddressRegister();
+                    bmInfo._priorBankLevel = par.getLBDI() >> 15;
+                    bmInfo._priorBankDescriptorIndex = par.getLBDI() & 077777;
                 } else if ((bmInfo._lxjInstruction) && (bmInfo._lxjInterfaceSpec < 2)) {
                     //  We're supposed to be here for normal LxJ and for LxJ/CALL, but we also catch LxJ/GOTO
                     //  (interfaceSpec == 1 and target BD is extended with enter access, or gate)
@@ -789,8 +789,8 @@ public class BankManipulator {
         ) {
             if (bmInfo._transferMode == TransferMode.ExtendedToBasic) {
                 bmInfo._instructionProcessor.setBaseRegister(0, new BaseRegister());
-                long newPar = bmInfo._instructionProcessor.getProgramAddressRegister().getProgramCounter();
-                bmInfo._instructionProcessor.setProgramAddressRegister(newPar);
+                ProgramAddressRegister par = bmInfo._instructionProcessor.getProgramAddressRegister();
+                par.setLBDI(0L);
             } else if (bmInfo._transferMode == TransferMode.BasicToExtended) {
                 bmInfo._instructionProcessor.setBaseRegister(bmInfo._baseRegisterIndex, new BaseRegister());
             }
@@ -1007,10 +1007,10 @@ public class BankManipulator {
                 //      DB6 is set if this is a HardwareCheck interrupt
                 //  Indicator/Key register is zeroed out.
                 //  Quantum timer is undefined, and the rest of the ASP is not relevant.
-                long par = (long) bmInfo._targetBankLevel << 33;
-                par |= (long) bmInfo._targetBankDescriptorIndex << 18;
-                par |= bmInfo._targetBankOffset;
-                bmInfo._instructionProcessor.setProgramAddressRegister(par);
+                long lbdi = (bmInfo._targetBankLevel << 15) | bmInfo._targetBankLevel;
+                ProgramAddressRegister par = bmInfo._instructionProcessor.getProgramAddressRegister();
+                par.setLBDI(lbdi);
+                par.setProgramCounter(bmInfo._targetBankOffset);
 
                 boolean hwCheck = bmInfo._interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck;
                 DesignatorRegister newDR = new DesignatorRegister(0);
@@ -1026,7 +1026,7 @@ public class BankManipulator {
             } else if (bmInfo._instruction == InstructionHandler.Instruction.UR) {
                 //  Entire ASP is loaded from 7 consecutive operand words.
                 //  ISW0, ISW1, and SSF of Indicator/Key register are ignored, and some Designator Bits are set-to-zero.
-                bmInfo._instructionProcessor.setProgramAddressRegister(bmInfo._operands[0]);
+                bmInfo._instructionProcessor.getProgramAddressRegister().set(bmInfo._operands[0]);
                 bmInfo._instructionProcessor.setDesignatorRegister(new DesignatorRegister(bmInfo._operands[1]));
                 IndicatorKeyRegister ikr = new IndicatorKeyRegister(bmInfo._operands[2]);
                 ikr.setShortStatusField(bmInfo._indicatorKeyRegister.getShortStatusField());
@@ -1091,9 +1091,8 @@ public class BankManipulator {
             if (bmInfo._baseRegisterIndex == 0) {
                 //  This is already done for interrupt handling and UR
                 if ((bmInfo._interrupt == null) && (bmInfo._instruction != InstructionHandler.Instruction.UR)) {
-                    long newPar = bmInfo._instructionProcessor.getProgramAddressRegister().getH2();
-                    newPar |= (long) bmInfo._targetBankLevel << 33 | (long) bmInfo._targetBankDescriptorIndex << 18;
-                    bmInfo._instructionProcessor.setProgramAddressRegister(newPar);
+                    ProgramAddressRegister par = bmInfo._instructionProcessor.getProgramAddressRegister();
+                    par.setLBDI((bmInfo._targetBankLevel << 15) | bmInfo._targetBankDescriptorIndex);
                 }
             } else if (bmInfo._baseRegisterIndex < 16) {
                 if (bmInfo._targetBankDescriptor == null) {

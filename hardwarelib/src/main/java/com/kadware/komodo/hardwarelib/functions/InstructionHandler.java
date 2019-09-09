@@ -74,8 +74,8 @@ public abstract class InstructionHandler extends FunctionHandler {
         rcsXReg.setXM(framePointer);
 
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        long reentry = par.getH1() << 18;
-        reentry |= (par.getH2() + 1) & 0777777;
+        long reentry = par.getLBDI() << 18;
+        reentry |= (par.getProgramCounter() + 1) & 0777777;
 
         long state = (bField & 03) << 24;
         state |= ip.getDesignatorRegister().getW() & 0_000077_000000;

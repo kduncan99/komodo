@@ -12,20 +12,8 @@ import com.kadware.komodo.baselib.Word36;
 public class VirtualAddress extends Word36 {
 
     //TODO need unit tests for this
-    /**
-     * Standard constructor
-     */
-    public VirtualAddress() {}
-
-    /**
-     * Basic mode initial value constructor
-     * @param value composite value / bank name / etc - 36 bit value
-     */
-    public VirtualAddress(
-        final long value
-    ) {
-        super(value);
-    }
+    public VirtualAddress()             {}
+    public VirtualAddress(long value)   { super(value); }
 
     /**
      * Basic mode initial value constructor
@@ -58,8 +46,8 @@ public class VirtualAddress extends Word36 {
     }
 
     public int getBankDescriptorIndex() { return (int) (getH1() & 077777); }
-    public int getLevel() { return (int) (getW() >> 33); }
-    public int getOffset() { return (int) getH2(); }
+    public int getLevel()               { return (int) (getW() >> 33); }
+    public int getOffset()              { return (int) getH2(); }
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
@@ -99,9 +87,9 @@ public class VirtualAddress extends Word36 {
         return value;
     }
 
-    public void setBankDescriptorIndex(int bdIndex) { setH1((getH1() & 0700000) | (bdIndex & 077777)); }
-    public void setLevel(int level) { setH1((getH1() & 077777) | ((level & 07) << 15)); }
-    public void setOffset(int offset) { setH2(offset); }
+//    public void setBankDescriptorIndex(int bdIndex) { setH1((getH1() & 0700000) | (bdIndex & 077777)); }
+//    public void setLevel(int level)                 { setH1((getH1() & 077777) | ((level & 07) << 15)); }
+//    public void setOffset(int offset)               { setH2(offset); }
 
     /**
      * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)

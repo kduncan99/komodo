@@ -832,7 +832,7 @@ class BaseFunctions {
                 if (brIndex == 0) {
                     //  based on B0 - put L,BDI in PAR
                     int lbdi = (loadableBank._bankLevel << 15) | loadableBank._bankDescriptorIndex;
-                    ip.setProgramAddressRegister((long) lbdi << 18);
+                    ip.getProgramAddressRegister().setLBDI(lbdi);
                 } else if (brIndex == 25) {
                     //  this is a return control stack to be based on B25 - load the appropriate X register EX0
                     try {
@@ -917,7 +917,7 @@ class BaseFunctions {
 
         try {
             System.out.println("Debug Info:");
-            System.out.println(String.format("  PAR: %012o", ip.getProgramAddressRegister().getW()));
+            System.out.println(String.format("  PAR: %012o", ip.getProgramAddressRegister().get()));
             System.out.println(String.format("  DR:  %012o", ip.getDesignatorRegister().getW()));
             final int regsPerLine = 4;
 
