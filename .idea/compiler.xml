@@ -6,10 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="hardwarelib" />
+        <module name="sandbox" />
         <module name="baselib" />
         <module name="kos" />
-        <module name="sandbox" />
+        <module name="hardwarelib" />
         <module name="minalib" />
       </profile>
     </annotationProcessing>

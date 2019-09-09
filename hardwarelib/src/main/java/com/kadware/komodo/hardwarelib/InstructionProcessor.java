@@ -139,7 +139,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final ProgramAddressRegister    _preservedProgramAddressRegister = new ProgramAddressRegister();
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
-    private final Word36                    _quantumTimer = new Word36();
+    private long                            _quantumTimer = 0;
 
     private final Set<Processor> _pendingUPISends = new HashSet<>();
 
@@ -205,7 +205,7 @@ public class InstructionProcessor extends Processor implements Worker {
     public StopReason getLatestStopReason() { return _latestStopReason; }
     public long getLatestStopDetail() { return _latestStopDetail; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
-    public long getQuantumTimer() { return _quantumTimer.getW(); }
+    public long getQuantumTimer() { return _quantumTimer; }
     public boolean isCleared() { return (_currentRunMode == RunMode.Stopped) && (_latestStopReason == StopReason.Cleared); }
     public boolean isStopped() { return _currentRunMode == RunMode.Stopped; }
 
@@ -262,7 +262,7 @@ public class InstructionProcessor extends Processor implements Worker {
     public void setIndicatorKeyRegister(long value) { _indicatorKeyRegister.setW(value); }
     public void setJumpHistoryFullInterruptEnabled(boolean flag) { _jumpHistoryFullInterruptEnabled = flag; }
     public void setProgramAddressRegister(long value) { _programAddressRegister.setW(value); }
-    public void setQuantumTimer(long value) { _quantumTimer.setW(value); }
+    public void setQuantumTimer(long value) { _quantumTimer = value; }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -363,9 +363,9 @@ public class InstructionProcessor extends Processor implements Worker {
             }
         }
 
-        long result = OnesComplement.add36Simple(addend1, addend2);
+        long result = Word36.addSimple(addend1, addend2);
         if (offset != 0) {
-            result = OnesComplement.add36Simple(result, offset);
+            result = Word36.addSimple(result, offset);
         }
 
         return (int)result;
@@ -404,7 +404,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
         }
 
-        return (int) OnesComplement.add36Simple(addend1, addend2);
+        return (int) Word36.addSimple(addend1, addend2);
     }
 
     /**
@@ -709,7 +709,7 @@ public class InstructionProcessor extends Processor implements Worker {
         icsStorage.set(sx, _preservedProgramAddressRegister.getW());
         icsStorage.set(sx + 1, _designatorRegister.getW());
         icsStorage.set(sx + 2, _indicatorKeyRegister.getW());
-        icsStorage.set(sx + 3, _quantumTimer.getW());
+        icsStorage.set(sx + 3, _quantumTimer & Word36.BIT_MASK);
         icsStorage.set(sx + 4, interrupt.getInterruptStatusWord0().getW());
         icsStorage.set(sx + 5, interrupt.getInterruptStatusWord1().getW());
 
@@ -925,7 +925,7 @@ public class InstructionProcessor extends Processor implements Worker {
             return true;
         }
 
-        if (_quantumTimer.isNegative() && _designatorRegister.getQuantumTimerEnabled()) {
+        if ((_quantumTimer < 0) && _designatorRegister.getQuantumTimerEnabled()) {
             raiseInterrupt(new QuantumTimerInterrupt());
             return true;
         }
@@ -1054,7 +1054,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 //  Update the quantum timer so we can (eventually) interrupt a long or infinite sequence.
                 _midInstructionInterruptPoint = true;
                 if (_designatorRegister.getQuantumTimerEnabled()) {
-                    _quantumTimer.add(Word36.NEGATIVE_ONE.getW());
+                    --_quantumTimer;
                 }
             }
 
@@ -1069,7 +1069,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 //  Update IKR and (maybe) the quantum timer
                 _indicatorKeyRegister.setInstructionInF0(false);
                 if (_designatorRegister.getQuantumTimerEnabled()) {
-                    _quantumTimer.add(OnesComplement.negate36(_currentInstructionHandler.getQuantumTimerCharge()));
+                    _quantumTimer -= _currentInstructionHandler.getQuantumTimerCharge();
                 }
 
                 // Should we stop, given that we've completed an instruction?
@@ -1137,7 +1137,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * @param bankDescriptorIndex BDI of the bank 0:077777
      * @return BankDescriptor object unless l,bdi is 0,0, in which case we return null
      */
-    public BankDescriptor findBankDescriptor(
+    BankDescriptor findBankDescriptor(
         final int bankLevel,
         final int bankDescriptorIndex
     ) throws AddressingExceptionInterrupt {
@@ -1224,7 +1224,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 addend2 = xReg.getSignedXM();
             }
 
-            long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
+            long relativeAddress = Word36.addSimple(addend1, addend2);
             if (relativeAddress == 0777777) {
                 relativeAddress = 0;
             }
@@ -1265,7 +1265,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
             }
 
-            long relativeAddress = OnesComplement.add36Simple(addend1, addend2);
+            long relativeAddress = Word36.addSimple(addend1, addend2);
             if (relativeAddress == 0777777) {
                 relativeAddress = 0;
             }
@@ -1436,13 +1436,13 @@ public class InstructionProcessor extends Processor implements Worker {
             //  24-bit indexing?
            if (!_designatorRegister.getBasicModeEnabled() && (privilege < 2) && exec24Index) {
                 //  Add the 24-bit modifier
-                value = OnesComplement.add36Simple(value, xReg.getXM24());
+                value = Word36.addSimple(value, xReg.getXM24());
                 if (_currentInstruction.getH() != 0) {
                     xReg.incrementModifier24();
                 }
             } else {
                 //  Add the 18-bit modifier
-                value = OnesComplement.add36Simple(value, xReg.getXM());
+                value = Word36.addSimple(value, xReg.getXM());
                 if (_currentInstruction.getH() != 0) {
                     xReg.incrementModifier18();
                 }
@@ -1668,7 +1668,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 if (sum == 0) {
                     result = true;
                 }
-                sum += OnesComplement.getNative36(incrementValue);
+                sum += Word36.getTwosComplement(incrementValue);
                 if (sum == 0) {
                     result = true;
                 }
@@ -1678,16 +1678,15 @@ public class InstructionProcessor extends Processor implements Worker {
                 _designatorRegister.setOverflow(false);
             } else {
                 long sum = reg.getW();
-                result = OnesComplement.isZero36(sum);
-                OnesComplement.Add36Result ocResult = new OnesComplement.Add36Result();
-                OnesComplement.add36(sum, incrementValue, ocResult);
-                if (OnesComplement.isZero36(ocResult._sum)) {
+                result = Word36.isZero(sum);
+                Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
+                if (Word36.isZero(sar._value)) {
                     result = true;
                 }
 
-                reg.setW(ocResult._sum);
-                _designatorRegister.setCarry(ocResult._carry);
-                _designatorRegister.setOverflow(ocResult._overflow);
+                reg.setW(sar._value);
+                _designatorRegister.setCarry(sar._flags._carry);
+                _designatorRegister.setOverflow(sar._flags._overflow);
             }
 
             return result;
@@ -1713,7 +1712,7 @@ public class InstructionProcessor extends Processor implements Worker {
             if (sum == 0) {
                 result = true;
             }
-            sum += OnesComplement.getNative36(incrementValue);
+            sum += Word36.getTwosComplement(incrementValue);
             if (sum == 0) {
                 result = true;
             }
@@ -1721,18 +1720,17 @@ public class InstructionProcessor extends Processor implements Worker {
             _designatorRegister.setCarry(false);
             _designatorRegister.setOverflow(false);
         } else {
-            if (OnesComplement.isZero36(sum)) {
+            if (Word36.isZero(sum)) {
                 result = true;
             }
-            OnesComplement.Add36Result ocResult = new OnesComplement.Add36Result();
-            OnesComplement.add36(sum, incrementValue, ocResult);
-            if (OnesComplement.isZero36(ocResult._sum)) {
+            Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
+            if (Word36.isZero(sar._value)) {
                 result = true;
             }
 
-            _designatorRegister.setCarry(ocResult._carry);
-            _designatorRegister.setOverflow(ocResult._overflow);
-            sum = ocResult._sum;
+            _designatorRegister.setCarry(sar._flags._carry);
+            _designatorRegister.setOverflow(sar._flags._overflow);
+            sum = sar._value;
         }
 
         long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
@@ -2115,7 +2113,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final boolean quarterWordMode
     ) {
         switch (partialWordIndicator) {
-            case InstructionWord.W:     return source & OnesComplement.BIT_MASK_36;
+            case InstructionWord.W:     return source & Word36.BIT_MASK;
             case InstructionWord.H2:    return Word36.getH2(source);
             case InstructionWord.H1:    return Word36.getH1(source);
             case InstructionWord.XH2:   return Word36.getXH2(source);

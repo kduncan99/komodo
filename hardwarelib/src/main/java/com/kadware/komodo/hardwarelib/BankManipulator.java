@@ -24,7 +24,7 @@ public class BankManipulator {
 
     private static class BankManipulationInfo {
         //  Determined at construction
-        private boolean _callOperation = false;                     //  true if CALL, LOCL, LxJ, LxJ/CALL, or interrupt
+        private final boolean _callOperation;                       //  true if CALL, LOCL, LxJ, LxJ/CALL, or interrupt
         private final InstructionHandler.Instruction _instruction;  //  null if this is for interrupt handling
         private final InstructionProcessor _instructionProcessor;   //  processor invoking this action
         private final MachineInterrupt _interrupt;                  //  null if invoked by instruction handling
@@ -1303,7 +1303,7 @@ public class BankManipulator {
             _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
             //TODO eventually remove the following sanity check
             if (bmInfo._nextStep == currentStep) {
-                System.out.println("Stuck at step " + String.valueOf(currentStep));
+                System.out.println(String.format("Stuck at step %d", currentStep));
                 assert(false);
             }
         }

@@ -4,8 +4,8 @@
 
 package com.kadware.komodo.hardwarelib.functions.conditionalJump;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -16,18 +16,16 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
  */
 public class DJZFunctionHandler extends InstructionHandler {
 
-    private final long[] _operand = new long[2];
-
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        _operand[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        _operand[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
-        if (OnesComplement.isZero72(_operand)) {
-            int counter = (int)ip.getJumpOperand(true);
+        DoubleWord36 dw36 = new DoubleWord36(ip.getExecOrUserARegister((int)iw.getA()).getW(),
+                                             ip.getExecOrUserARegister((int)iw.getA() + 1).getW());
+        if (dw36.isZero()) {
+            int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
     }

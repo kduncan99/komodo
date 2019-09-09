@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
@@ -35,8 +35,8 @@ public class MTNWFunctionHandler extends InstructionHandler {
         long maskedALow = aValueLow & opMask;
         long maskedAHigh = aValueHigh & opMask;
 
-        if ((OnesComplement.compare36(maskedALow, maskedU) >= 0)
-            || (OnesComplement.compare36(maskedU, maskedAHigh) > 0)) {
+        if ((Word36.compare(maskedALow, maskedU) >= 0)
+            || (Word36.compare(maskedU, maskedAHigh) > 0)) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

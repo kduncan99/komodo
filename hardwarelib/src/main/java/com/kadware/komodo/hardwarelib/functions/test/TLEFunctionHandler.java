@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -26,7 +26,7 @@ public class TLEFunctionHandler extends InstructionHandler {
 
         long uValue = ip.getOperand(true, true, true, true);
         long aValue = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        if (OnesComplement.getNative36(uValue) <= OnesComplement.getNative36(aValue)) {
+        if (Word36.compare(uValue, aValue) <= 0) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

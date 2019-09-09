@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
@@ -25,14 +25,10 @@ public class TWFunctionHandler extends InstructionHandler {
         //  Skip NI if A(a) < (U) <= A(a+1)
 
         long uValue = ip.getOperand(true, true, true, true);
-        long aValueLow = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        long aValueHigh = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
+        long aValue = ip.getExecOrUserARegister((int)iw.getA()).getW();
+        long aValuePlus = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
 
-        long nativeU = OnesComplement.getNative36(uValue);
-        long nativeALow = OnesComplement.getNative36(aValueLow);
-        long nativeAHigh = OnesComplement.getNative36(aValueHigh);
-
-        if ((nativeALow < nativeU) && (nativeU <= nativeAHigh)) {
+        if ((Word36.compare(aValue, uValue) < 0) && (Word36.compare(uValue, aValuePlus) <= 0)) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

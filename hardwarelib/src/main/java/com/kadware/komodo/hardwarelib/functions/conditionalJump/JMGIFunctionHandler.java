@@ -6,7 +6,7 @@ package com.kadware.komodo.hardwarelib.functions.conditionalJump;
 
 import com.kadware.komodo.baselib.IndexRegister;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -32,8 +32,8 @@ public class JMGIFunctionHandler extends InstructionHandler {
         DesignatorRegister dr = ip.getDesignatorRegister();
         IndexRegister xreg = ip.getExecOrUserXRegister((int)iw.getA());
         long modValue = xreg.getSignedXM();
-        if (OnesComplement.isPositive36(modValue) && !OnesComplement.isZero36(modValue)) {
-            int counter = (int)ip.getJumpOperand(true);
+        if (Word36.isPositive(modValue) && !Word36.isZero(modValue)) {
+            int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 

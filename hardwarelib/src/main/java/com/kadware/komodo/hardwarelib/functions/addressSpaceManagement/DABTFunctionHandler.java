@@ -31,7 +31,7 @@ public class DABTFunctionHandler extends InstructionHandler {
         ActiveBaseTableEntry[] entries = ip.getActiveBaseTableEntries();
         long[] values = new long[15];
         for (int ax = 0; ax < 15; ++ax) {
-            values[ax] = entries[ax].getW();
+            values[ax] = entries[ax]._value;
         }
 
         ip.storeConsecutiveOperands(false, values);

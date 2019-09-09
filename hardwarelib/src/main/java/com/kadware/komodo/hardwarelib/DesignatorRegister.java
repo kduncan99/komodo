@@ -62,12 +62,14 @@ public class DesignatorRegister {
     public boolean getBasicModeBaseRegisterSelection()      { return (_value & MASK_BasicModeBaseRegisterSelection) != 0; }
     public boolean getQuarterWordModeEnabled()              { return (_value & MASK_QuarterWordModeEnabled) != 0; }
     public long getW()                                      { return _value; }
+    public long getS4()                                     { return Word36.getS4(_value); }
 
     public void setActivityLevelQueueMonitorEnabled(boolean flag)   { changeBit(MASK_ActivityLevelQueueMonitorEnabled, flag); }
     public void setFaultHandlingInProgress(boolean flag)            { changeBit(MASK_FaultHandlingInProgress, flag); }
     public void setExecutive24BitIndexingEnabled(boolean flag)      { changeBit(MASK_Executive24BitIndexingEnabled, flag); }
     public void setQuantumTimerEnabled(boolean flag)                { changeBit(MASK_QuantumTimerEnabled, flag); }
     public void setDeferrableInterruptEnabled(boolean flag)         { changeBit(MASK_DeferrableInterruptEnabled, flag); }
+    public void setS4(long value)                                   { _value = Word36.setS4(_value, value); }
 
     public void setProcessorPrivilege(
         final int value

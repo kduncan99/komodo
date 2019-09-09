@@ -18,6 +18,7 @@ public class IndicatorKeyRegister {
     public IndicatorKeyRegister(long value)                 { _value = value & Word36.BIT_MASK; }
 
     public void clear()                                     { _value = 0; }
+    public long getW()                                      { return _value; }
     public int getShortStatusField()                        { return (int) Word36.getS1(_value); }
     public int getMidInstructionDescription()               { return (int) (Word36.getS2(_value) >> 3); }
     public int getPendingInterruptInformation()             { return (int) (Word36.getS2(_value) & 07); }
@@ -29,6 +30,7 @@ public class IndicatorKeyRegister {
     public boolean getBreakpointRegisterMatchCondition()    { return (getPendingInterruptInformation() & 04) != 0; }
     public boolean getSoftwareBreak()                       { return (getPendingInterruptInformation() & 02) != 0; }
 
+    public void setW(long value)                            { _value = value; }
     public void setShortStatusField(int value)              { _value = Word36.setS1(_value, value); }
     public void setMidInstructionDescription(int value)     { _value = (_value & 0_770777_777777L) | ((value & 07) << 27); }
     public void setPendingInterruptInformation(int value)   { _value = (_value & 0_777077_777777L) | ((value & 07) << 24); }
