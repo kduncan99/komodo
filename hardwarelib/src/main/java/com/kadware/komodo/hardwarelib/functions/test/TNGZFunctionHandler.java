@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
@@ -22,9 +22,9 @@ public class TNGZFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //  Skip NI if (U) > +0
+        //  Skip NI if (U) < 1
         long op = ip.getOperand(true, true, true, true);
-        if (OnesComplement.isNegative36(op) || OnesComplement.isPositiveZero36(op)) {
+        if (Word36.isNegative(op) || Word36.isPositiveZero(op)) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

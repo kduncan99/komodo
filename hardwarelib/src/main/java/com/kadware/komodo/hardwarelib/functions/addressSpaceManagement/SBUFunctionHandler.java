@@ -35,7 +35,7 @@ public class SBUFunctionHandler extends InstructionHandler {
         if (brIndex == 0) {
             operand = ip.getProgramAddressRegister().getH1() << 18;
         } else {
-            operand = ip.getActiveBaseTableEntries()[brIndex - 1].getW();
+            operand = ip.getActiveBaseTableEntries()[brIndex - 1]._value;
         }
 
         ip.storeOperand(false, true, false, false, operand);

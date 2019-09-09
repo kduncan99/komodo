@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -25,14 +25,12 @@ public class TGMFunctionHandler extends InstructionHandler {
         //  Skip NI if |(U)| > A(a)
 
         long uValue = ip.getOperand(true, true, true, false);
-        long uNative = OnesComplement.getNative36(uValue);
-        if (uNative < 0) {
-            uNative = 0 - uNative;
+        if (Word36.isNegative(uValue)) {
+            uValue = Word36.negate(uValue);
         }
 
         long aValue = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        long aNative = OnesComplement.getNative36(aValue);
-        if (uNative > aNative) {
+        if (Word36.compare(uValue, aValue) > 0) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }

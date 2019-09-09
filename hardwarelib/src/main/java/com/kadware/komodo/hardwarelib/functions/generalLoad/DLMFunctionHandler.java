@@ -5,30 +5,28 @@
 package com.kadware.komodo.hardwarelib.functions.generalLoad;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 
 /**
- * Handles the DLN instruction f=071 j=015
+ * Handles the DLM instruction f=071 j=015
  */
 public class DLMFunctionHandler extends InstructionHandler {
 
-    //  Mitigates object proliferation, but requires sync'd thread protection
-    private final long operands[] = new long[2];
-
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
+        long[] operands = new long[2];
         ip.getConsecutiveOperands(true, operands);
-        if (OnesComplement.isNegative36(operands[0])) {
-            operands[0] = (~operands[0]) & OnesComplement.BIT_MASK_36;
-            operands[1] = (~operands[1]) & OnesComplement.BIT_MASK_36;
+        if (Word36.isNegative(operands[0])) {
+            operands[0] = (~operands[0]) & Word36.BIT_MASK;
+            operands[1] = (~operands[1]) & Word36.BIT_MASK;
         }
 
         int grsIndex = ip.getExecOrUserARegisterIndex((int)iw.getA());

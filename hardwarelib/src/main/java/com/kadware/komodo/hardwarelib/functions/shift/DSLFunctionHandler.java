@@ -4,8 +4,9 @@
 
 package com.kadware.komodo.hardwarelib.functions.shift;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -14,24 +15,26 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 /**
  * Handles the DSL instruction f=073 j=003
  */
+@SuppressWarnings("Duplicates")
 public class DSLFunctionHandler extends InstructionHandler {
 
-    private final long[] _operand = new long[2];
-    private final long[] _result = new long[2];
-
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        _operand[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        _operand[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
-        int count = (int)ip.getImmediateOperand() & 0177;
-        OnesComplement.rightShiftLogical72(_operand, count, _result);
+        long[] operand = new long[2];
+        operand[0] = ip.getExecOrUserARegister((int)iw.getA()).getW();
+        operand[1] = ip.getExecOrUserARegister((int)iw.getA() + 1).getW();
 
-        ip.getExecOrUserARegister((int)iw.getA()).setW(_result[0]);
-        ip.getExecOrUserARegister((int)iw.getA() + 1).setW(_result[1]);
+        int count = (int) ip.getImmediateOperand() & 0177;
+        DoubleWord36 dw36 = new DoubleWord36(operand[0], operand[1]);
+        DoubleWord36 result = dw36.rightShiftLogical(count);
+        Word36[] components = result.getWords();
+
+        ip.getExecOrUserARegister((int) iw.getA()).setW(components[0].getW());
+        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(components[1].getW());
     }
 
     @Override

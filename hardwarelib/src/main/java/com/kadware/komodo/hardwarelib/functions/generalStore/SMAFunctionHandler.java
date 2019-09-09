@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.generalStore;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -23,8 +23,8 @@ public class SMAFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long op = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        if (OnesComplement.isNegative36(op)) {
-            op = OnesComplement.negate36(op);
+        if (Word36.isNegative(op)) {
+            op = Word36.negate(op);
         }
         ip.storeOperand(true, true, true, true, op);
     }

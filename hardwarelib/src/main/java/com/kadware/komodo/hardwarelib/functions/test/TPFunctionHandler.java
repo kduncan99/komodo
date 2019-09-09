@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.functions.test;
 
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -24,7 +24,7 @@ public class TPFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         //  Skip NI if (U) > 0
         long op = ip.getOperand(true, true, true, true);
-        if (OnesComplement.isPositive36(op)) {
+        if (Word36.isPositive(op)) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);
         }
     }
