@@ -4,20 +4,15 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.Word36;
-
 /**
 * Represents an active base table entry.
 * It's basically a Word36 with special getters
 */
-public class ActiveBaseTableEntry extends Word36 {
+public class ActiveBaseTableEntry {
 
-    public ActiveBaseTableEntry(
-        final long value
-    ) {
-        _value = value;
-    }
+    public final long _value;
 
+    public ActiveBaseTableEntry(long value) { _value = value; }
     public ActiveBaseTableEntry(
         final int level,
         final int bankDescriptorIndex,

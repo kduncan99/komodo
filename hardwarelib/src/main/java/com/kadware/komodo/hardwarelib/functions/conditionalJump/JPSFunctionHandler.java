@@ -6,7 +6,7 @@ package com.kadware.komodo.hardwarelib.functions.conditionalJump;
 
 import com.kadware.komodo.baselib.GeneralRegister;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -25,12 +25,12 @@ public class JPSFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         GeneralRegister reg = ip.getExecOrUserARegister((int)iw.getA());
         long operand = reg.getW();
-        if (OnesComplement.isPositive36(operand)) {
-            int counter = (int)ip.getJumpOperand(true);
+        if (Word36.isPositive(operand)) {
+            int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 
-        reg.setW(OnesComplement.leftShiftCircular36(operand, 1));
+        reg.setW(Word36.leftShiftCircular(operand, 1));
     }
 
     @Override

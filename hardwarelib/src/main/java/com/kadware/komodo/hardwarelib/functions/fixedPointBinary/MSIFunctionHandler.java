@@ -4,8 +4,9 @@
 
 package com.kadware.komodo.hardwarelib.functions.fixedPointBinary;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.InstructionWord;
-import com.kadware.komodo.baselib.OnesComplement;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -15,26 +16,28 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 /**
  * Handles the MSI instruction f=031
  */
+@SuppressWarnings("Duplicates")
 public class MSIFunctionHandler extends InstructionHandler {
 
-    private final long[] _product = { 0, 0 };
-
     @Override
-    public synchronized void handle(
+    public void handle(
         final InstructionProcessor ip,
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        long operand1 = ip.getExecOrUserARegister((int)iw.getA()).getW();
-        long operand2 = ip.getOperand(true, true, true, true);
-        OnesComplement.multiply36(operand1, operand2, _product);
-
-        ip.getExecOrUserARegister((int)iw.getA()).setW(_product[1]);
+        DoubleWord36 factor1 = new DoubleWord36(0, ip.getExecOrUserARegister((int) iw.getA()).getW());
+        DoubleWord36 factor2 = new DoubleWord36(0, ip.getOperand(true,
+                                                                 true,
+                                                                 true,
+                                                                 true));
+        DoubleWord36.MultiplicationResult mr = factor1.multiply(factor2);
+        Word36[] resultWords = mr._value.getWords();
+        ip.getExecOrUserARegister((int) iw.getA()).setW(resultWords[0].getW());
+        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(resultWords[1].getW());
 
         //  check for overflow conditions.
         //  result[0] must be positive or negative zero, and the signs of result[0] and result[1] must match.
-        if ((!OnesComplement.isZero36(_product[0]))
-            || (OnesComplement.isNegative36(_product[0]) != OnesComplement.isNegative36(_product[1]))) {
+        if (!resultWords[0].isZero() || (resultWords[1].isPositive() != resultWords[0].isPositive())) {
             throw new OperationTrapInterrupt(OperationTrapInterrupt.Reason.MultiplySingleIntegerOverflow);
         }
     }
