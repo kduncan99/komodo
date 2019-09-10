@@ -30,16 +30,15 @@ public class JMGIFunctionHandler extends InstructionHandler {
         //  X(0) is used for X(a) if a == 0 (contrast to F0.x == 0 -> no indexing)
         //  In Extended Mode, X(a) incrementation is always 18 bits.
         DesignatorRegister dr = ip.getDesignatorRegister();
-        IndexRegister xreg = ip.getExecOrUserXRegister((int)iw.getA());
+        int iaReg = (int) iw.getA();
+        IndexRegister xreg = ip.getExecOrUserXRegister(iaReg);
         long modValue = xreg.getSignedXM();
         if (Word36.isPositive(modValue) && !Word36.isZero(modValue)) {
             int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 
-        if (!dr.getBasicModeEnabled() || (iw.getA() != iw.getX()) || (iw.getH() == 0)) {
-            xreg.incrementModifier18();
-        }
+        ip.setExecOrUserXRegister(iaReg, IndexRegister.incrementModifier18(xreg.getW()));
     }
 
     @Override

@@ -444,8 +444,8 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
             "          LA,U      A0,010",
             "          LA,XU     A1,0777776",
             "          LA,U      A2,0",
-            "          JGD       A1,BAD1       . should not happen (a1 is 015)",
-            "          JGD       A2,BAD2       . also should not happen",
+            "          JGD       A1,BAD1       . should not jump, A1:=0777777_777775",
+            "          JGD       A2,BAD2       . also should not jump, A2:=0777777_777777",
             "",
             "LOOP",
             "          AA,U      A2,2          . should happen 9 times",
@@ -454,7 +454,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
             "",
             "BAD1      HALT      077",
             "BAD2      HALT      076",
-            };
+        };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
@@ -621,9 +621,9 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
             "          LXM,U     X1,0            .",
             "          JMGI      X1,BAD1         . should not happen",
             "",
-            "          LXI,U     X2,01           . set up X2 so we take a jump to zero,",
-            "          LXM,U     X2,TARGET2      .   but indexed by the address in X2",
-            "          JMGI      X2,0,*X2        . should take this",
+            "          LXI,U     X2,01           .",
+            "          LXM,U     X2,2            .",
+            "          JMGI      X2,TARGET2      . should take this and increment X2",
             "          HALT      075             . should not happen",
             "",
             "TARGET2             .",
@@ -652,7 +652,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(0_000002_000004L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
         Assert.assertEquals(0_000002_000002L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        Assert.assertEquals(0_000001_001015L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        Assert.assertEquals(0_000001_000003L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
         Assert.assertEquals(0_777776_000007L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
         Assert.assertEquals(0_000002_001023L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
     }

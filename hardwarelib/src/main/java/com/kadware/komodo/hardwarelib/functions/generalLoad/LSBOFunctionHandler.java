@@ -24,8 +24,8 @@ public class LSBOFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long operand = ip.getOperand(true, true, true, true);
-        IndexRegister ixReg = ip.getExecOrUserXRegister((int) iw.getA());
-        ip.setExecOrUserXRegister((int) iw.getA(), Word36.setS1(ixReg.getW(), operand));
+        IndexRegister xReg = ip.getExecOrUserXRegister((int) iw.getA());
+        ip.setExecOrUserXRegister((int) iw.getA(), Word36.setS1(xReg.getW(), operand));
     }
 
     @Override

@@ -26,14 +26,15 @@ public class JGDFunctionHandler extends InstructionHandler {
         //  right-most 3 bits of j-field concatenated to the 4 bits of a-field is a GRS index.
         //  If the associated register is greater than zero, we effect a conditionalJump to U.
         //  In any case, the register value is decremented by 1
-        int regIndex = ((int)(iw.getJ() & 07) << 4) | (int)iw.getA();
+        int regIndex = ((int) (iw.getJ() & 07) << 4) | (int) iw.getA();
         GeneralRegister reg = ip.getGeneralRegister(regIndex);
         if (reg.isPositive() && !reg.isZero()) {
             int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 
-        reg.setW(Word36.addSimple(reg.getW(), 0_777777_777776L));
+        long result = Word36.addSimple(reg.getW(), 0_777777_777776L);
+        ip.setGeneralRegister(regIndex, result);
     }
 
     @Override

@@ -23,14 +23,15 @@ public class JPSFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        GeneralRegister reg = ip.getExecOrUserARegister((int)iw.getA());
+        int iaReg = (int) iw.getA();
+        GeneralRegister reg = ip.getExecOrUserARegister(iaReg);
         long operand = reg.getW();
         if (Word36.isPositive(operand)) {
             int counter = ip.getJumpOperand(true);
             ip.setProgramCounter(counter, true);
         }
 
-        reg.setW(Word36.leftShiftCircular(operand, 1));
+        ip.setExecOrUserARegister(iaReg, Word36.leftShiftCircular(operand, 1));
     }
 
     @Override
