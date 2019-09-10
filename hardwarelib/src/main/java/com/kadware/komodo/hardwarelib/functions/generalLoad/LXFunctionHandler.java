@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.functions.generalLoad;
 
+import com.kadware.komodo.baselib.IndexRegister;
 import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
@@ -22,7 +23,7 @@ public class LXFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long operand = ip.getOperand(true, true, true, true);
-        ip.getExecOrUserXRegister((int)iw.getA()).setW(operand);
+        ip.setExecOrUserXRegister((int) iw.getA(), operand);
     }
 
     @Override

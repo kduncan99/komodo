@@ -4,7 +4,9 @@
 
 package com.kadware.komodo.hardwarelib.functions.generalLoad;
 
+import com.kadware.komodo.baselib.IndexRegister;
 import com.kadware.komodo.baselib.InstructionWord;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -22,7 +24,9 @@ public class LSBLFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long operand = ip.getOperand(true, true, true, true);
-        ip.getExecOrUserXRegister((int)iw.getA()).setS2(operand);
+        int ixReg = (int) iw.getA();
+        IndexRegister xReg = ip.getExecOrUserXRegister(ixReg);
+        ip.setExecOrUserXRegister(ixReg, Word36.setS2(xReg.getW(), operand));
     }
 
     @Override

@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.functions.generalLoad;
 
+import com.kadware.komodo.baselib.GeneralRegister;
 import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
@@ -22,10 +23,10 @@ public class LNMAFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long operand = ip.getOperand(true, true, true, true);
-        if ((operand & 0_400000_000000l) == 0) {
+        if ((operand & 0_400000_000000L) == 0) {
             operand = ~operand;
         }
-        ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
+        ip.setExecOrUserARegister((int) iw.getA(), operand);
     }
 
     @Override

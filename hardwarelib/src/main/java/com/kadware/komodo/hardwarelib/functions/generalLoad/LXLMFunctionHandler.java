@@ -28,8 +28,9 @@ public class LXLMFunctionHandler extends InstructionHandler {
         }
 
         long operand = ip.getOperand(true, true, false, false);
-        IndexRegister xReg = (IndexRegister)ip.getExecOrUserXRegister((int)iw.getA());
-        xReg.setXM24(operand);
+        int ixReg = (int) iw.getA();
+        IndexRegister xReg = ip.getExecOrUserXRegister(ixReg);
+        ip.setExecOrUserXRegister(ixReg, IndexRegister.setXM24(xReg.getW(), operand));
     }
 
     @Override

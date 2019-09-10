@@ -291,7 +291,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         long[] bankData = getBank(processors._instructionProcessor, 15);
-        showDebugInfo(processors);
+        showDebugInfo(processors);//TODO
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
         assertEquals(03, bankData[2]);

@@ -196,33 +196,19 @@ public class GeneralRegisterSet {
      */
     public void setRegister(
         final int registerIndex,
-        final GeneralRegister value
-    ) {
-        if ((registerIndex < 0) || (registerIndex >= 128)) {
-            throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
-        }
-
-        _registers[registerIndex].setW(value.getW());
-    }
-
-    /**
-     * Sets the value of a particular GeneralRegister to the given 36-bit value
-     * @param registerIndex indicates which GR is to be set
-     * @param value 36-bit value to which the GR is to be set
-     */
-    public void setRegister(
-        final int registerIndex,
         final long value
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
             throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
-        if (value > 0_777777_777777l) {
-            throw new RuntimeException(String.format("value is out of range for 36-bits:0%o", value));
+        if ((registerIndex >= X0) && (registerIndex <= X15)) {
+            _registers[registerIndex] = new IndexRegister(value);
+        } else if ((registerIndex >= GeneralRegisterSet.EX0) && (registerIndex <= GeneralRegisterSet.EX15)) {
+            _registers[registerIndex] = new IndexRegister(value);
+        } else {
+            _registers[registerIndex] = new GeneralRegister(value);
         }
-
-        _registers[registerIndex].setW(value);
     }
 
     /**
@@ -260,7 +246,7 @@ public class GeneralRegisterSet {
                 StringBuilder sb = new StringBuilder();
                 sb.append(String.format("  %5s:", NAMES[rx]));
                 for (int ry = 0; ry < 8; ++ry) {
-                    sb.append(String.format(" %012o", _registers[rx + ry]));
+                    sb.append(String.format(" %012o", _registers[rx + ry].getW()));
                 }
                 sb.append("\n");
                 writer.write(sb.toString());

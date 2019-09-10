@@ -23,8 +23,9 @@ public class LXIFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         long operand = ip.getOperand(true, true, true, true);
-        IndexRegister xReg = (IndexRegister)ip.getExecOrUserXRegister((int)iw.getA());
-        xReg.setXI(operand);
+        int regIndex = (int) iw.getA();
+        IndexRegister xReg = ip.getExecOrUserXRegister(regIndex);
+        ip.setExecOrUserXRegister(regIndex, IndexRegister.setXI(xReg.getW(), operand));
     }
 
     @Override

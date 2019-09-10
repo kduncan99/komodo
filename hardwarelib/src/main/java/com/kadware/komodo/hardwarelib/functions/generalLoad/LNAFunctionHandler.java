@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.functions.generalLoad;
 
+import com.kadware.komodo.baselib.GeneralRegister;
 import com.kadware.komodo.baselib.InstructionWord;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
@@ -23,7 +24,7 @@ public class LNAFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         //  we can just *not* the operand, because the following setW() will truncate the errant bits outside of the 36-bit word.
         long operand = ~(ip.getOperand(true, true, true, true));
-        ip.getExecOrUserARegister((int)iw.getA()).setW(operand);
+        ip.setExecOrUserARegister((int) iw.getA(), operand);
     }
 
     @Override

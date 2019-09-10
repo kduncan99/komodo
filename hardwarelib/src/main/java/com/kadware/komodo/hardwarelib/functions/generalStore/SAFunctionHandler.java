@@ -21,7 +21,8 @@ public class SAFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        ip.storeOperand(true, true, true, true, ip.getExecOrUserARegister((int)iw.getA()).getW());
+        long value = ip.getExecOrUserARegister((int) iw.getA()).getW();
+        ip.storeOperand(true, true, true, true, value);
     }
 
     @Override

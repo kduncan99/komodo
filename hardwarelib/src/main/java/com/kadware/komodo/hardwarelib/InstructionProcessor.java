@@ -117,7 +117,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
     private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
     private boolean                         _broadcastInterruptEligibility = false;
-    private final InstructionWord           _currentInstruction = new InstructionWord();
+    private InstructionWord                 _currentInstruction = null;
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Stopped;
     private static long                     _dayclockComparator = 0;
@@ -256,6 +256,7 @@ public class InstructionProcessor extends Processor implements Worker {
         if (!GeneralRegisterSet.isAccessAllowed(index, _designatorRegister.getProcessorPrivilege(), true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
         }
+
         _generalRegisterSet.setRegister(index, value);
     }
 
@@ -523,7 +524,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         int pcOffset = programCounter - bReg._lowerLimitNormalized;
-        _currentInstruction.setW(bReg._storage.get(pcOffset));
+        _currentInstruction = new InstructionWord(bReg._storage.get(pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
         _preservedProgramAddressRegister.set(_programAddressRegister.get());
     }
@@ -570,7 +571,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
                 //  then throw UnresolvedAddressException so the caller knows we're not done here.
                 int wx = relativeAddress - br._lowerLimitNormalized;
-                _currentInstruction.setXHIU(br._storage.get(wx));
+                _currentInstruction = _currentInstruction.setXHIU(br._storage.get(wx));
                 throw new UnresolvedAddressException();
             }
 
@@ -686,8 +687,8 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         // Acquire a stack frame, and verify limits
-        IndexRegister icsXReg = (IndexRegister)_generalRegisterSet.getRegister(ICS_INDEX_REGISTER);
-        icsXReg.decrementModifier18();
+        IndexRegister icsXReg = (IndexRegister) _generalRegisterSet.getRegister(ICS_INDEX_REGISTER);
+        _generalRegisterSet.setRegister(ICS_INDEX_REGISTER, IndexRegister.decrementModifier18(icsXReg.getW()));
         long stackOffset = icsXReg.getH2();
         long stackFrameSize = icsXReg.getXI();
         long stackFrameLimit = stackOffset + stackFrameSize;
@@ -1244,7 +1245,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
                 //  then throw UnresolvedAddressException so the caller knows we're not done here.
                 int wx = (int) relativeAddress - br._lowerLimitNormalized;
-                _currentInstruction.setXHIU(br._storage.get(wx));
+                _currentInstruction = _currentInstruction.setXHIU(br._storage.get(wx));
                 throw new UnresolvedAddressException();
             }
 
@@ -1429,20 +1430,20 @@ public class InstructionProcessor extends Processor implements Worker {
                 value = 0;
 
             //  Add the contents of Xx(m), and do index register incrementation if appropriate.
-            IndexRegister xReg = getExecOrUserXRegister((int)_currentInstruction.getX());
+            IndexRegister xReg = getExecOrUserXRegister((int) _currentInstruction.getX());
 
             //  24-bit indexing?
            if (!_designatorRegister.getBasicModeEnabled() && (privilege < 2) && exec24Index) {
                 //  Add the 24-bit modifier
                 value = Word36.addSimple(value, xReg.getXM24());
                 if (_currentInstruction.getH() != 0) {
-                    xReg.incrementModifier24();
+                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(xReg.getW()));
                 }
             } else {
                 //  Add the 18-bit modifier
                 value = Word36.addSimple(value, xReg.getXM());
                 if (_currentInstruction.getH() != 0) {
-                    xReg.incrementModifier18();
+                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(xReg.getW()));
                 }
             }
         }
@@ -1609,14 +1610,13 @@ public class InstructionProcessor extends Processor implements Worker {
     public void incrementIndexRegisterInF0(
     ) {
         if ((_currentInstruction.getX() != 0) && (_currentInstruction.getH() != 0)) {
-            IndexRegister iReg = getExecOrUserXRegister((int)_currentInstruction.getX());
+            IndexRegister iReg = getExecOrUserXRegister((int) _currentInstruction.getX());
             if (!_designatorRegister.getBasicModeEnabled()
                     && (_designatorRegister.getExecutive24BitIndexingEnabled())
                     && (_designatorRegister.getProcessorPrivilege() < 2)) {
-                iReg.incrementModifier24();
+                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(iReg.getW()));
             } else {
-                iReg.incrementModifier18();
-            }
+                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(iReg.getW()));            }
         }
     }
 
@@ -1734,6 +1734,45 @@ public class InstructionProcessor extends Processor implements Worker {
         long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
         baseRegister._storage.set(readOffset, storageResult);
         return result;
+    }
+
+    /**
+     * Sets a new value for the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
+     * @param registerIndex A register index of interest
+     * @param value new value
+     */
+    public void setExecOrUserARegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserARegisterIndex(registerIndex), value);
+    }
+
+    /**
+     * Sets a new value for the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
+     * @param registerIndex R register index of interest
+     * @param value new value
+     */
+    public void setExecOrUserRRegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserRRegisterIndex(registerIndex), value);
+    }
+
+    /**
+     * Sets a new value for the IndexRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
+     * @param registerIndex X register index of interest
+     * @param value new value
+     */
+    public void setExecOrUserXRegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserXRegisterIndex(registerIndex), value);
     }
 
     /**
