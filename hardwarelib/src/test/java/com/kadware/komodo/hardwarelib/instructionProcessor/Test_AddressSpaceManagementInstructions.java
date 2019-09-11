@@ -2083,6 +2083,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         long[] data = getBank(processors._instructionProcessor, 2);
+        showDebugInfo(processors);//TODO
         assertEquals(0_600004_000000L, data[0]);
         assertEquals(0_600005_000000L, data[1]);
     }
@@ -2399,7 +2400,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Processors processors = loadModule(absoluteModule);
 
         startAndWait(processors._instructionProcessor);
-        showDebugInfo(processors);
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);

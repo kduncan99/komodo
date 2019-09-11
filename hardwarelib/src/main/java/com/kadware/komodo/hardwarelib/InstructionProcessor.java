@@ -501,7 +501,7 @@ public class InstructionProcessor extends Processor implements Worker {
     ) throws MachineInterrupt {
         _midInstructionInterruptPoint = false;
         boolean basicMode = _designatorRegister.getBasicModeEnabled();
-        int programCounter = _programAddressRegister.getProgramCounter();
+        long programCounter = _programAddressRegister.getProgramCounter();
 
         BaseRegister bReg;
         if (basicMode) {
@@ -523,8 +523,8 @@ public class InstructionProcessor extends Processor implements Worker {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
         }
 
-        int pcOffset = programCounter - bReg._lowerLimitNormalized;
-        _currentInstruction = new InstructionWord(bReg._storage.get(pcOffset));
+        long pcOffset = programCounter - bReg._lowerLimitNormalized;
+        _currentInstruction = new InstructionWord(bReg._storage.get((int) pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
         _preservedProgramAddressRegister.set(_programAddressRegister.get());
     }
@@ -744,7 +744,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private boolean isWithinLimits(
         final BaseRegister baseRegister,
-        final int offset
+        final long offset
     ) {
         return !baseRegister._voidFlag
                && (offset >= baseRegister._lowerLimitNormalized)
@@ -1174,7 +1174,7 @@ public class InstructionProcessor extends Processor implements Worker {
      *          else zero if the address is not within any based bank limits.
      */
     public int findBasicModeBank(
-        final int relativeAddress,
+        final long relativeAddress,
         final boolean updateDB31
     ) {
         boolean db31Flag = _designatorRegister.getBasicModeBaseRegisterSelection();
@@ -1789,7 +1789,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * @param preventIncrement true to set the prevent-increment flag
      */
     public void setProgramCounter(
-        final int counter,
+        final long counter,
         final boolean preventIncrement
     ) {
         _programAddressRegister.setProgramCounter(counter);

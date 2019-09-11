@@ -37,14 +37,14 @@ public class LBNFunctionHandler extends InstructionHandler {
         }
 
         boolean skip = false;
-        int bankName = 0;
+        long bankName = 0;
         long operand = ip.getOperand(false, true, false, false);
         VirtualAddress va = new VirtualAddress(operand);
-        int origLevel = (int) va.getLevel();
-        int origBDI = (int) va.getBankDescriptorIndex();
+        int origLevel = va.getLevel();
+        int origBDI = va.getBankDescriptorIndex();
 
         if (origLevel == 0 && (va.getBankDescriptorIndex() < 32)) {
-            bankName = (int) va.getH1();
+            bankName = va.getH1();
             skip = true;
         } else {
             BankDescriptor bd = getBankDescriptor(ip, origLevel, origBDI, false);
@@ -61,9 +61,9 @@ public class LBNFunctionHandler extends InstructionHandler {
             }
         }
 
-        IndexRegister xReg = ip.getExecOrUserXRegister((int) iw.getA());
-        xReg.setXI(bankName);
-        xReg.setXM(0);
+        int ixReg = (int) iw.getA();
+        IndexRegister xReg = ip.getExecOrUserXRegister(ixReg);
+        ip.setExecOrUserXRegister(ixReg, bankName << 18);
 
         if (skip) {
             ip.setProgramCounter(ip.getProgramAddressRegister().getProgramCounter() + 1, false);

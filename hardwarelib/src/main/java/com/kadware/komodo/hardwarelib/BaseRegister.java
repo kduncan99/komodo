@@ -278,7 +278,7 @@ public class BaseRegister {
      * @throws ReferenceViolationInterrupt if the address is outside of limits
      */
     public void checkAccessLimits(
-        final int relativeAddress,
+        final long relativeAddress,
         final boolean fetchFlag
     ) throws ReferenceViolationInterrupt {
         if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress > _upperLimitNormalized)) {
@@ -325,7 +325,7 @@ public class BaseRegister {
      * @throws ReferenceViolationInterrupt if the address is outside of limits
      */
     public void checkAccessLimits(
-        final int relativeAddress,
+        final long relativeAddress,
         final boolean fetchFlag,
         final boolean readFlag,
         final boolean writeFlag,
@@ -345,7 +345,7 @@ public class BaseRegister {
      * @throws ReferenceViolationInterrupt if the address is outside of limits
      */
     public void checkAccessLimits(
-        final int relativeAddress,
+        final long relativeAddress,
         final int count,
         final boolean readFlag,
         final boolean writeFlag,

@@ -25,7 +25,7 @@ public class TRAFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         int brIndex = ip.getBasicModeBankRegisterIndex();
         long result = ((brIndex == 0) ? 0 : 0400000_000000L) | ((long) (brIndex & 03) << 33);
-        ip.getExecOrUserXRegister((int) iw.getA()).setW(result);
+        ip.setExecOrUserXRegister((int) iw.getA(), result);
 
         if (brIndex != 0) {
             try {

@@ -24,9 +24,9 @@ public class SLJFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         //  Increment PAR.PC, and store it in U, then update PAR.PC to reference U+1
         ProgramAddressRegister par = ip.getProgramAddressRegister();
-        int returnPC = par.getProgramCounter() + 1;
+        long returnPC = par.getProgramCounter() + 1;
         ip.storePartialOperand(returnPC, InstructionWord.H2, true);
-        int newPC = ip.getJumpOperand(true);
+        long newPC = ip.getJumpOperand(true);
         ip.setProgramCounter(newPC + 1, true);
     }
 

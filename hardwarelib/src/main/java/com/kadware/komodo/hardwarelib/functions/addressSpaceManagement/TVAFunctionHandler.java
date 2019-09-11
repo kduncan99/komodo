@@ -505,7 +505,7 @@ public class TVAFunctionHandler extends InstructionHandler {
             final ScratchPad scratchPad
         ) {
             if (scratchPad._skipNextInstruction) {
-                int nextAddr = scratchPad._instructionProcessor.getProgramAddressRegister().getProgramCounter() + 1;
+                long nextAddr = scratchPad._instructionProcessor.getProgramAddressRegister().getProgramCounter() + 1;
                 scratchPad._instructionProcessor.setProgramCounter(nextAddr, false);
             }
 

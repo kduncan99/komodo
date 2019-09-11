@@ -1298,13 +1298,7 @@ public class BankManipulator {
              InvalidInstructionInterrupt,
              RCSGenericStackUnderflowOverflowInterrupt {
         while (bmInfo._nextStep != 0) {
-            int currentStep = bmInfo._nextStep;//TODO
             _bankManipulationSteps[bmInfo._nextStep].handler(bmInfo);
-            //TODO eventually remove the following sanity check
-            if (bmInfo._nextStep == currentStep) {
-                System.out.println(String.format("Stuck at step %d", currentStep));
-                assert(false);
-            }
         }
     }
 
