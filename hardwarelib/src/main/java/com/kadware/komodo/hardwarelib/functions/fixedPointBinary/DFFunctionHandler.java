@@ -58,8 +58,8 @@ public class DFFunctionHandler extends InstructionHandler {
             remainder = dr._result.get().longValue() & Word36.BIT_MASK;
         }
 
-        ip.getExecOrUserARegister((int) iw.getA()).setW(quotient);
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(remainder);
+        ip.setExecOrUserARegister((int) iw.getA(), quotient);
+        ip.setExecOrUserARegister((int) iw.getA() + 1, remainder);
     }
 
     @Override

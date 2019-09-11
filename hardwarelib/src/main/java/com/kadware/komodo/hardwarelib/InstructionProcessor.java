@@ -1671,7 +1671,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     result = true;
                 }
 
-                reg.setW(sum);
+                _generalRegisterSet.setRegister(relAddress, sum);
                 _designatorRegister.setCarry(false);
                 _designatorRegister.setOverflow(false);
             } else {
@@ -1682,7 +1682,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     result = true;
                 }
 
-                reg.setW(sar._value);
+                _generalRegisterSet.setRegister(relAddress, sar._value);
                 _designatorRegister.setCarry(sar._flags._carry);
                 _designatorRegister.setOverflow(sar._flags._overflow);
             }

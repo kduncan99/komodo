@@ -15,7 +15,7 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 /**
  * Handles the ANA instruction f=015
  */
-@SuppressWarnings("Duplciates")
+@SuppressWarnings("Duplicates")
 public class ANAFunctionHandler extends InstructionHandler {
 
     @Override
@@ -29,7 +29,7 @@ public class ANAFunctionHandler extends InstructionHandler {
 
         Word36.StaticAdditionResult sar = Word36.add(operand1, operand2);
 
-        ip.getExecOrUserARegister((int)iw.getA()).setW(sar._value);
+        ip.setExecOrUserARegister((int) iw.getA(), sar._value);
         ip.getDesignatorRegister().setCarry(sar._flags._carry);
         ip.getDesignatorRegister().setOverflow(sar._flags._overflow);
         if (ip.getDesignatorRegister().getOperationTrapEnabled() && sar._flags._overflow) {

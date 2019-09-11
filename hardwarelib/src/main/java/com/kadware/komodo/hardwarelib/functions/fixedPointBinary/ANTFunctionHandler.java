@@ -38,7 +38,7 @@ public class ANTFunctionHandler extends InstructionHandler {
         long resultt3 = Word36.addSimple(op1t3, op2t3) & 07777;
         long result = (resultt1 << 24) | (resultt2 << 12) | resultt3;
 
-        ip.getExecOrUserARegister((int)iw.getA()).setW(result);
+        ip.setExecOrUserARegister((int) iw.getA(), result);
     }
 
     @Override

@@ -26,14 +26,11 @@ public class MSIFunctionHandler extends InstructionHandler {
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         DoubleWord36 factor1 = new DoubleWord36(0, ip.getExecOrUserARegister((int) iw.getA()).getW());
-        DoubleWord36 factor2 = new DoubleWord36(0, ip.getOperand(true,
-                                                                 true,
-                                                                 true,
-                                                                 true));
+        DoubleWord36 factor2 = new DoubleWord36(0, ip.getOperand(true, true, true, true));
+
         DoubleWord36.MultiplicationResult mr = factor1.multiply(factor2);
         Word36[] resultWords = mr._value.getWords();
-        ip.getExecOrUserARegister((int) iw.getA()).setW(resultWords[0].getW());
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(resultWords[1].getW());
+        ip.setExecOrUserARegister((int) iw.getA(), resultWords[1].getW());
 
         //  check for overflow conditions.
         //  result[0] must be positive or negative zero, and the signs of result[0] and result[1] must match.

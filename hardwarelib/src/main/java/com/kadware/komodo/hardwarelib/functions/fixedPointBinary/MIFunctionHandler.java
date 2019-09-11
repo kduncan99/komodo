@@ -15,6 +15,7 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 /**
  * Handles the MI instruction f=030
  */
+@SuppressWarnings("Duplicates")
 public class MIFunctionHandler extends InstructionHandler {
 
     @Override
@@ -30,8 +31,9 @@ public class MIFunctionHandler extends InstructionHandler {
                                                                  true));
         DoubleWord36.MultiplicationResult mr = factor1.multiply(factor2);
         Word36[] resultWords = mr._value.getWords();
-        ip.getExecOrUserARegister((int) iw.getA()).setW(resultWords[0].getW());
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(resultWords[1].getW());
+
+        ip.setExecOrUserARegister((int) iw.getA(), resultWords[0].getW());
+        ip.setExecOrUserARegister((int) iw.getA() + 1, resultWords[1].getW());
     }
 
     @Override

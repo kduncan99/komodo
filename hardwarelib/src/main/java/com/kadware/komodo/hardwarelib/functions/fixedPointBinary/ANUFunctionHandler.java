@@ -29,7 +29,7 @@ public class ANUFunctionHandler extends InstructionHandler {
 
         Word36.StaticAdditionResult sar = Word36.add(operand1, operand2);
 
-        ip.getExecOrUserARegister((int)iw.getA() + 1).setW(sar._value);
+        ip.setExecOrUserARegister((int) iw.getA() + 1, sar._value);
         ip.getDesignatorRegister().setCarry(sar._flags._carry);
         ip.getDesignatorRegister().setOverflow(sar._flags._overflow);
         if (ip.getDesignatorRegister().getOperationTrapEnabled() && sar._flags._overflow) {

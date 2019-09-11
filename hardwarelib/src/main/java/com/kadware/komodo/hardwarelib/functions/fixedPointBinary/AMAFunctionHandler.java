@@ -32,7 +32,7 @@ public class AMAFunctionHandler extends InstructionHandler {
 
         Word36.StaticAdditionResult sar = Word36.add(operand1, operand2);
 
-        ip.getExecOrUserARegister((int)iw.getA()).setW(sar._value);
+        ip.setExecOrUserARegister((int) iw.getA(), sar._value);
         ip.getDesignatorRegister().setCarry(sar._flags._carry);
         ip.getDesignatorRegister().setOverflow(sar._flags._overflow);
         if (ip.getDesignatorRegister().getOperationTrapEnabled() && sar._flags._overflow) {

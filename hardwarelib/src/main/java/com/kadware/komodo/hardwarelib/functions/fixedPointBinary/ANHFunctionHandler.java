@@ -32,9 +32,9 @@ public class ANHFunctionHandler extends InstructionHandler {
 
         long resulth1 = Word36.addSimple(op1h1, op2h1);
         long resulth2 = Word36.addSimple(op1h2, op2h2);
-        long result = ((resulth1 << 18) & 0_777777) | (resulth2 & 0_777777);
+        long result = ((resulth1 & 0_777777) << 18) | (resulth2 & 0_777777);
 
-        ip.getExecOrUserARegister((int)iw.getA()).setW(result);
+        ip.setExecOrUserARegister((int) iw.getA(), result);
     }
 
     @Override

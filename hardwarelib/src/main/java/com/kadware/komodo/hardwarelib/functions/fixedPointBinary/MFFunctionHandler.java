@@ -31,7 +31,6 @@ public class MFFunctionHandler extends InstructionHandler {
         final InstructionWord iw
     ) throws MachineInterrupt,
              UnresolvedAddressException {
-        //TODO
         BigInteger operand1 = BigInteger.valueOf(ip.getExecOrUserARegister((int)iw.getA()).getW());
         BigInteger operand2 = BigInteger.valueOf(ip.getOperand(true,
                                                                true,
@@ -41,8 +40,8 @@ public class MFFunctionHandler extends InstructionHandler {
         DoubleWord36 result = new DoubleWord36(DoubleWord36.leftShiftCircular(smr._value, 1));
         Word36[] components = result.getWords();
 
-        ip.getExecOrUserARegister((int) iw.getA()).setW(components[0].getW());
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(components[1].getW());
+        ip.setExecOrUserARegister((int) iw.getA(), components[0].getW());
+        ip.setExecOrUserARegister((int) iw.getA() + 1, components[1].getW());
     }
 
     @Override

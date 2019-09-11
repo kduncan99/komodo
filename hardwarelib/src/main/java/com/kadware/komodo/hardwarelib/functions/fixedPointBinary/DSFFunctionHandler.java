@@ -50,10 +50,10 @@ public class DSFFunctionHandler extends InstructionHandler {
             }
         } else {
             DoubleWord36.DivisionResult dr = dwDividend.divide(dwDivisor);
-            quotient = dr._result.get().shiftRight(36).longValue() & Word36.BIT_MASK;
+            quotient = dr._result.get().longValue() & Word36.BIT_MASK;
         }
 
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(quotient);
+        ip.setExecOrUserARegister((int) iw.getA() + 1, quotient);
     }
 
     @Override

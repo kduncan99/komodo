@@ -19,7 +19,7 @@ import com.kadware.komodo.hardwarelib.functions.InstructionHandler;
 @SuppressWarnings("Duplicates")
 public class SUB1FunctionHandler extends InstructionHandler {
 
-    private static final long NEGATIVE_ONE_36 = 0_777777_777776l;
+    private static final long NEGATIVE_ONE_36 = 0_777777_777776L;
 
     @Override
     public void handle(

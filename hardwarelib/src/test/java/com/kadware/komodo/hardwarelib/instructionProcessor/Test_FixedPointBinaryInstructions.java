@@ -1324,7 +1324,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This unit test is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 5",
@@ -1334,9 +1334,9 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
             "          $LIT",
             "",
             "$(1),START$*",
-            "          SUB1,T2   (05555,0001,05555),,B2",
-            "          SUB1,H1   (0),,B2",
-            "          SUB1      (0),,B2",
+            "          SUB1,T2   (05555,0001,05555),,B2 . 1's comp, carry/overflow valid",
+            "          SUB1,H1   (0),,B2                . 2's comp, carry/overflow undefined",
+            "          SUB1      (0),,B2                . 1's comp, carry/overflow valid",
             "          HALT      0",
         };
 
@@ -1359,7 +1359,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         assertEquals(0_777777_777776L, bankData[2]);
 
         //  check overflow and carry from the last instruction
-        assertFalse(processors._instructionProcessor.getDesignatorRegister().getCarry());
+        assertTrue(processors._instructionProcessor.getDesignatorRegister().getCarry());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
     }
 

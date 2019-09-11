@@ -54,12 +54,12 @@ public class DIFunctionHandler extends InstructionHandler {
             }
         } else {
             DoubleWord36.DivisionResult dr = dwDividend.divide(dwDivisor);
-            quotient = dr._result.get().shiftRight(36).longValue() & Word36.BIT_MASK;
-            remainder = dr._result.get().longValue() & Word36.BIT_MASK;
+            quotient = dr._result.get().longValue() & Word36.BIT_MASK;
+            remainder = dr._remainder.get().longValue() & Word36.BIT_MASK;
         }
 
-        ip.getExecOrUserARegister((int) iw.getA()).setW(quotient);
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(remainder);
+        ip.setExecOrUserARegister((int) iw.getA(), quotient);
+        ip.setExecOrUserARegister((int) iw.getA() + 1, remainder);
     }
 
     @Override

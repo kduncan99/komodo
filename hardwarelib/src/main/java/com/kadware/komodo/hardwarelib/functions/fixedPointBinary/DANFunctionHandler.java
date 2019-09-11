@@ -42,8 +42,8 @@ public class DANFunctionHandler extends InstructionHandler {
             ar._value.get().longValue() & Word36.BIT_MASK
         };
 
-        ip.getExecOrUserARegister((int) iw.getA()).setW(result[0]);
-        ip.getExecOrUserARegister((int) iw.getA() + 1).setW(result[1]);
+        ip.setExecOrUserARegister((int) iw.getA(), result[0]);
+        ip.setExecOrUserARegister((int) iw.getA() + 1, result[1]);
 
         ip.getDesignatorRegister().setCarry(ar._carry);
         ip.getDesignatorRegister().setOverflow(ar._overflow);
