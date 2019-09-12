@@ -159,7 +159,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(0_777777_777775L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(processors._instructionProcessor.getDesignatorRegister().getCarry());
+        assertTrue(processors._instructionProcessor.getDesignatorRegister().getCarry());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
     }
 
@@ -267,7 +267,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(0777777_777775L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(processors._instructionProcessor.getDesignatorRegister().getCarry());
+        assertTrue(processors._instructionProcessor.getDesignatorRegister().getCarry());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
     }
 
@@ -333,7 +333,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(07, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
         Assert.assertEquals(0_777777_777772L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertFalse(processors._instructionProcessor.getDesignatorRegister().getCarry());
+        assertTrue(processors._instructionProcessor.getDesignatorRegister().getCarry());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
     }
 
@@ -384,7 +384,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
             "          LX,U      X0,007",
             "          ANX,U     X0,014",
             "          HALT      0",
-            };
+        };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
         assert(absoluteModule != null);
@@ -397,7 +397,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(0_777777_777772L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertFalse(processors._instructionProcessor.getDesignatorRegister().getCarry());
+        assertTrue(processors._instructionProcessor.getDesignatorRegister().getCarry());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
     }
 

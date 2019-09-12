@@ -29,9 +29,9 @@ public class ANTFunctionHandler extends InstructionHandler {
         long op1t1 = Word36.getSignExtended12(Word36.getT1(operand1));
         long op1t2 = Word36.getSignExtended12(Word36.getT2(operand1));
         long op1t3 = Word36.getSignExtended12(Word36.getT3(operand1));
-        long op2t1 = Word36.negate(Word36.getSignExtended12(Word36.negate(Word36.getT1(operand2))));
-        long op2t2 = Word36.negate(Word36.getSignExtended12(Word36.negate(Word36.getT2(operand2))));
-        long op2t3 = Word36.negate(Word36.getSignExtended12(Word36.negate(Word36.getT3(operand2))));
+        long op2t1 = Word36.negate(Word36.getSignExtended12(Word36.getT1(operand2)));
+        long op2t2 = Word36.negate(Word36.getSignExtended12(Word36.getT2(operand2)));
+        long op2t3 = Word36.negate(Word36.getSignExtended12(Word36.getT3(operand2)));
 
         long resultt1 = Word36.addSimple(op1t1, op2t1) & 07777;
         long resultt2 = Word36.addSimple(op1t2, op2t2) & 07777;
