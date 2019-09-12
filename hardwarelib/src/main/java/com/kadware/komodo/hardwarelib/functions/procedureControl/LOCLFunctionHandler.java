@@ -24,8 +24,9 @@ public class LOCLFunctionHandler extends InstructionHandler {
              UnresolvedAddressException {
         rcsPush(ip, 0);
         IndexRegister xReg = ip.getExecOrUserXRegister(0);
-        xReg.setH1(ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0);
-        xReg.setH2(ip.getIndicatorKeyRegister().getAccessInfo().get());
+        long newXValue = IndexRegister.setH1(xReg.getW(), ip.getDesignatorRegister().getBasicModeEnabled() ? 0_400000_000000L : 0);
+        newXValue = IndexRegister.setH2(newXValue, ip.getIndicatorKeyRegister().getAccessInfo().get());
+        ip.setExecOrUserXRegister(0, newXValue);
         int counter = ip.getJumpOperand(true);
         ip.setProgramCounter(counter, true);
     }
