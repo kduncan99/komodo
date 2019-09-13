@@ -1990,8 +1990,8 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private final FunctionHandler[] BASIC_MODE_FUNCTION074_014_HANDLERS = {
             new JOFunctionHandler(),    //  000
-            null,           //  001
-            null,           //  002
+            new JFUFunctionHandler(),   //  001
+            new JFOFunctionHandler(),   //  002
             new JDFFunctionHandler(),   //  003
             null,           //  004
             null,           //  005
@@ -2012,8 +2012,8 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private final FunctionHandler[] BASIC_MODE_FUNCTION074_015_HANDLERS = {
             new JNOFunctionHandler(),   //  000
-            null,           //  001
-            null,           //  002
+            new JNFUFunctionHandler(),  //  001
+            new JNFOFunctionHandler(),  //  002
             new JNDFFunctionHandler(),  //  003
             null,           //  004
             new HLTJFunctionHandler(),  //  005
@@ -2500,8 +2500,8 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private final FunctionHandler[] EXTENDED_MODE_FUNCTION074_014_HANDLERS = {
             new JOFunctionHandler(),    //  000
-            null,           //  001
-            null,           //  002
+            new JFUFunctionHandler(),   //  001
+            new JFOFunctionHandler(),   //  002
             new JDFFunctionHandler(),   //  003
             new JCFunctionHandler(),    //  004
             new JNCFunctionHandler(),   //  005
@@ -2522,8 +2522,8 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private final FunctionHandler[] EXTENDED_MODE_FUNCTION074_015_HANDLERS = {
             new JNOFunctionHandler(),   //  000
-            null,           //  001
-            null,           //  002
+            new JNFUFunctionHandler(),  //  001
+            new JNFOFunctionHandler(),  //  002
             new JNDFFunctionHandler(),  //  003
             new JFunctionHandler(),     //  004
             new HLTJFunctionHandler(),  //  005
@@ -2732,11 +2732,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             int iaReg = (int) iw.getA();
             long operand1 = getExecOrUserARegister(iaReg).getW();
             long operand2 = getOperand(true, true, true, true);
@@ -2759,11 +2755,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AAIJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -2780,11 +2772,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ACELFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 2) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -2814,11 +2802,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ADD1FunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -2838,11 +2822,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AHFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int) iw.getA()).getW();
             long operand2 = getOperand(true, true, false, false);
 
@@ -2866,11 +2846,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AMAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
             if (Word36.isNegative(operand2)) {
@@ -2895,11 +2871,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = Word36.negate(getOperand(true, true, true, true));
 
@@ -2921,11 +2893,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int) iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
             setExecOrUserARegister((int) iw.getA() + 1, operand1 & operand2);
@@ -2939,11 +2907,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANHFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, false, false);
 
@@ -2967,11 +2931,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANMAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
             if (Word36.isPositive(operand2)) {
@@ -2996,11 +2956,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANTFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, false, false);
 
@@ -3027,11 +2983,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = Word36.negate(getOperand(true, true, true, true));
 
@@ -3053,11 +3005,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ANXFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserXRegister((int)iw.getA()).getW();
             long operand2 = Word36.negate(getOperand(true, true, true, true));
 
@@ -3079,11 +3027,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ATFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, false, false);
 
@@ -3110,11 +3054,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
 
@@ -3136,11 +3076,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class AXFunctionHandler extends InstructionHandler {
 
-        @Override
-        public synchronized void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserXRegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
 
@@ -3162,10 +3098,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class BUYFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord instructionWord
-        ) throws MachineInterrupt {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean longModifier = _designatorRegister.getExecutive24BitIndexingEnabled();
             int ixReg = (int) _currentInstruction.getX();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -3196,11 +3129,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class CALLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(false, true, false, false);
             new InstructionProcessor.BankManipulator().bankManipulation(Instruction.CALL, operand);
         }
@@ -3213,11 +3142,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] operand1 = {
                 getExecOrUserARegister((int)iw.getA()).getW(),
                 getExecOrUserARegister((int)iw.getA() + 1).getW()
@@ -3253,11 +3178,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DABTFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 1) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -3279,11 +3200,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DANFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] operand1 = {
                 getExecOrUserARegister((int)iw.getA()).getW(),
                 getExecOrUserARegister((int)iw.getA() + 1).getW()
@@ -3319,11 +3236,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DCELFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 2) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -3351,11 +3264,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DECFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean twosComplement = chooseTwosComplementBasedOnJField(iw, _designatorRegister);
             boolean skip = incrementOperand(true, true, NEGATIVE_ONE_36, twosComplement);
 
@@ -3374,11 +3283,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DEC2FunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean twosComplement = chooseTwosComplementBasedOnJField(iw, _designatorRegister);
             boolean skip = incrementOperand(true, true, NEGATIVE_TWO_36, twosComplement);
 
@@ -3401,11 +3306,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] dividend = {
                 getExecOrUserARegister((int) iw.getA()).getW(),
                 getExecOrUserARegister((int) iw.getA() + 1).getW()
@@ -3448,11 +3349,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] dividend = {
                 getExecOrUserARegister((int) iw.getA()).getW(),
                 getExecOrUserARegister((int) iw.getA() + 1).getW()
@@ -3492,11 +3389,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DJZFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             DoubleWord36 dw36 = new DoubleWord36(getExecOrUserARegister((int)iw.getA()).getW(),
                                                  getExecOrUserARegister((int)iw.getA() + 1).getW());
             if (dw36.isZero()) {
@@ -3513,11 +3406,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
             getConsecutiveOperands(true, operands);
 
@@ -3534,11 +3423,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DLMFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
             getConsecutiveOperands(true, operands);
             if (Word36.isNegative(operands[0])) {
@@ -3559,11 +3444,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DLNFunctionHandler extends InstructionHandler {
 
-        @Override
-        public synchronized void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
             getConsecutiveOperands(true, operands);
             operands[0] = (~operands[0]) & Word36.BIT_MASK;
@@ -3579,6 +3460,22 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the DS instruction f=071 j=012
+     */
+    private class DSFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            int grsIndex = getExecOrUserARegisterIndex((int) iw.getA());
+            long[] operands = new long[2];
+            operands[0] = getGeneralRegister(grsIndex).getW();
+            operands[1] = getGeneralRegister(grsIndex + 1).getW();
+            storeConsecutiveOperands(true, operands);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.DS; }
+    }
+
+    /**
      * Handles the DSF instruction f=035
      * A(a)||36 sign bits gets algebraically shifted right one bit, then divided by 36-bit U.
      * The 36-bit result is stored in A(a+1), the remainder is lost.
@@ -3587,11 +3484,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class DSFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long[] dividend = new long[2];
             dividend[0] = getExecOrUserARegister((int) iw.getA()).getW();
             dividend[1] = Word36.isNegative(dividend[0]) ? Word36.BIT_MASK : 0;
@@ -3624,11 +3517,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ENZFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean twosComplement = chooseTwosComplementBasedOnJField(iw, _designatorRegister);
             boolean skip = incrementOperand(true, true, 0, twosComplement);
 
@@ -3647,11 +3536,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ERFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getImmediateOperand();
             throw new SignalInterrupt(SignalInterrupt.SignalType.ExecutiveRequest, (int) operand);
         }
@@ -3664,11 +3549,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class GOTOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(false, true, false, false);
             new BankManipulator().bankManipulation(Instruction.GOTO, operand);
         }
@@ -3677,16 +3558,29 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the HALT instruction (f=077 j=017 a=017)
+     * Causes the processor to error halt and notify the SCF.
+     */
+    private class HALTFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            if (!_developmentMode && (_designatorRegister.getProcessorPrivilege() > 0)) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            stop(InstructionProcessor.StopReason.Debug, getImmediateOperand());
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.HALT; }
+    }
+
+    /**
      * Handles the HJ instruction basic mode f=074 j=05
      */
     private class HJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
-            //  Always conditionalJump
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            //  Always jump
             setProgramCounter(getJumpOperand(true), true);
         }
 
@@ -3698,16 +3592,12 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class HLTJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
 
-            //  Always conditionalJump, but halt thereafter
+            //  Always jump, but halt thereafter
             setProgramCounter(getJumpOperand(true), true);
             stop(InstructionProcessor.StopReason.HaltJumpExecuted, 0);
         }
@@ -3716,15 +3606,28 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the IAR instruction (extended mode only f=073 j=017 a=06)
+     * Causes the processor to error halt and notify the SCF.
+     */
+    private class IARFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            if (_designatorRegister.getProcessorPrivilege() > 0) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            stop(InstructionProcessor.StopReason.InitiateAutoRecovery, getImmediateOperand());
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.IAR; }
+    }
+
+    /**
      * Handles the INC instruction f=005, a=010
      */
     private class INCFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean twosComplement = chooseTwosComplementBasedOnJField(iw, _designatorRegister);
             boolean skip = incrementOperand(true, true, 01, twosComplement);
 
@@ -3743,11 +3646,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class INC2FunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean twosComplement = chooseTwosComplementBasedOnJField(iw, _designatorRegister);
             boolean skip = incrementOperand(true, true, 02, twosComplement);
 
@@ -3762,15 +3661,63 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the IPC instruction f=073 j=017 a=010
+     */
+    private class IPCFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            //  PP has to be 0
+            int procPriv = _designatorRegister.getProcessorPrivilege();
+            if (procPriv > 0) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            //  Retrieve U to get the subfunction
+            long operand = getOperand(false, false, false, false);
+            int subFunc = (int) Word36.getS1(operand);
+
+            //  We do recognize a few subfunctions...
+            switch (subFunc) {
+                case 0: //  clear reset designator
+                    //???? don't really know what this is yet...
+                    //      maybe resetting the IP puts it into reset mode (see IPL interrupts)
+                    //      and we need, at some point, to clear reset mode programmatically?
+                    break;
+
+                case 1: //  enable conditionalJump-history-full interrupt
+                    _jumpHistoryFullInterruptEnabled = true;
+                    break;
+
+                case 2: //  disable conditionalJump-history-full interrupt
+                    _jumpHistoryFullInterruptEnabled = false;
+                    break;
+
+                case 3: //  synchronize page invalidates (we don't do this, so it's a NOP)
+                    //????
+                    break;
+
+                case 4: //  clear broadcast interrupt eligibility
+                    _broadcastInterruptEligibility = false;
+                    break;
+
+                case 5: //  set broadcast interrupt eligibility
+                    _broadcastInterruptEligibility = true;
+                    break;
+
+                default:
+                    throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
+            }
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.IPC; }
+    }
+
+    /**
      * Handles the J instruction - extended mode f=074 j=015 a=004, basic mode f=074 j=004 a=000
      */
     private class JFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             setProgramCounter(getJumpOperand(true), true);
         }
 
@@ -3782,11 +3729,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JBFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if ((getExecOrUserARegister((int)iw.getA()).getW() & 0x01) == 0x01) {
                 int counter = getJumpOperand(true);
                 setProgramCounter(counter, true);
@@ -3801,11 +3744,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JCFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getCarry()) {
                 int counter = getJumpOperand(true);
                 setProgramCounter(counter, true);
@@ -3820,11 +3759,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JDFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getDivideCheck()) {
                 int counter = getJumpOperand(true);
                 setProgramCounter(counter, true);
@@ -3840,11 +3775,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JFOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getCharacteristicOverflow()) {
                 int counter = getJumpOperand(true);
                 setProgramCounter(counter, true);
@@ -3860,11 +3791,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JFUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getCharacteristicUnderflow()) {
                 int counter = getJumpOperand(true);
                 setProgramCounter(counter, true);
@@ -3880,11 +3807,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JGDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  right-most 3 bits of j-field concatenated to the 4 bits of a-field is a GRS index.
             //  If the associated register is greater than zero, we effect a conditionalJump to U.
             //  In any case, the register value is decremented by 1
@@ -3907,12 +3830,8 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JKFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
-            //  Get the conditionalJump operand, but don't jump.
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            //  Get the jump operand, but don't jump.
             getJumpOperand(false);
         }
 
@@ -3924,11 +3843,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JMGIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  If X(a).mod > 0, effect a conditionalJump to U
             //  In any case Increment X(a).mod by X(a).inc
             //  In Basic Mode if F0.h is true (U resolution x-reg incrementation) and F0.a == F0.x, we increment only once
@@ -3953,14 +3868,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
-            if (getExecOrUserARegister((int)iw.getA()).isNegative()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            if (getExecOrUserARegister((int) iw.getA()).isNegative()) {
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -3972,14 +3882,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNBFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
-            if ((getExecOrUserARegister((int)iw.getA()).getW() & 0x01) == 0x0) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            if ((getExecOrUserARegister((int) iw.getA()).getW() & 0x01) == 0x0) {
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -3991,14 +3896,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNCFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getCarry()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4010,14 +3910,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNDFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getDivideCheck()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             } else {
                 _designatorRegister.setDivideCheck(false);
             }
@@ -4031,14 +3926,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNFOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getCharacteristicOverflow()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
             _designatorRegister.setCharacteristicOverflow(false);
         }
@@ -4051,14 +3941,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNFUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getCharacteristicUnderflow()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
             _designatorRegister.setCharacteristicUnderflow(false);
         }
@@ -4071,14 +3956,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!_designatorRegister.getOverflow()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4090,17 +3970,12 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNSFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             int iaReg = (int) iw.getA();
             GeneralRegister reg = getExecOrUserARegister(iaReg);
             long operand = reg.getW();
             if (Word36.isNegative(operand)) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
 
             setExecOrUserARegister(iaReg, Word36.leftShiftCircular(operand, 1));
@@ -4114,14 +3989,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JNZFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (!getExecOrUserARegister((int)iw.getA()).isZero()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4133,14 +4003,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getOverflow()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4152,14 +4017,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JPFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (getExecOrUserARegister((int) iw.getA()).isPositive()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4171,17 +4031,12 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JPSFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             int iaReg = (int) iw.getA();
             GeneralRegister reg = getExecOrUserARegister(iaReg);
             long operand = reg.getW();
             if (Word36.isPositive(operand)) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
 
             setExecOrUserARegister(iaReg, Word36.leftShiftCircular(operand, 1));
@@ -4195,14 +4050,9 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class JZFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (getExecOrUserARegister((int)iw.getA()).isZero()) {
-                int counter = getJumpOperand(true);
-                setProgramCounter(counter, true);
+                setProgramCounter(getJumpOperand(true), true);
             }
         }
 
@@ -4214,11 +4064,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class KCHGFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 1) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4239,11 +4085,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             setExecOrUserARegister((int) iw.getA(), operand);
         }
@@ -4256,11 +4098,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LAEFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4282,22 +4120,13 @@ public class InstructionProcessor extends Processor implements Worker {
      * Operates much like LA,[q1-q4], except that the quarter-word designation is taken from bits 4-5 of X(x).
      * X-incrementation is not supported - results are undefined.
      */
-
-    //  Array of j-field values indexed by the quarter-word designator where
-    //  des==0 -> Q1, des==1 -> Q2, etc.
-    private static final int[] LAQW_J_FIELDS = { 7, 4, 6, 5 };
-
     private class LAQWFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
-            int designator = (int) getExecOrUserXRegister((int)iw.getX()).getS1() & 03;
-            int jField = LAQW_J_FIELDS[designator];
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            int designator = (int) getExecOrUserXRegister((int) iw.getX()).getS1() & 03;
+            int jField = QW_J_FIELDS[designator];
             long operand = getPartialOperand(jField, true);
-            setGeneralRegister(getExecOrUserARegisterIndex((int)iw.getA()), operand);
+            setGeneralRegister(getExecOrUserARegisterIndex((int) iw.getA()), operand);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LAQW; }
@@ -4308,11 +4137,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LBEFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4329,11 +4154,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LBEDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4361,11 +4182,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LBJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getJumpOperand(false);
             new BankManipulator().bankManipulation(Instruction.LBJ, operand);
         }
@@ -4382,11 +4199,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LBNFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4432,11 +4245,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LBUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4449,13 +4258,12 @@ public class InstructionProcessor extends Processor implements Worker {
         public Instruction getInstruction() { return Instruction.LBU; }
     }
 
+    /**
+     * Handles the LBUD instruction f=075 j=07
+     */
     private class LBUDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4484,11 +4292,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4508,11 +4312,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LDJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getJumpOperand(false);
             new BankManipulator().bankManipulation(Instruction.LDJ, operand);
         }
@@ -4525,11 +4325,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LIJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getJumpOperand(false);
             new BankManipulator().bankManipulation(Instruction.LIJ, operand);
         }
@@ -4542,11 +4338,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LMAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             if ((operand & 0_400000_000000L) != 0) {
                 operand = ~operand;
@@ -4562,11 +4354,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LMCFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4585,11 +4373,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LMJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Increment PAR.PC and store it in X(a)Modifier, then set PAR.PC to U
             int ixReg = (int) iw.getA();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -4606,11 +4390,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LNAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  We can just *not* the operand, because the following set will result in
             //  truncating the errant bits outside of the 36-bit word.
             long operand = ~(getOperand(true, true, true, true));
@@ -4625,11 +4405,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LNMAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             if ((operand & 0_400000_000000L) == 0) {
                 operand = ~operand;
@@ -4645,11 +4421,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LOCLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             rcsPush(0);
             IndexRegister xReg = getExecOrUserXRegister(0);
             long newXValue = IndexRegister.setH1(xReg.getW(), _designatorRegister.getBasicModeEnabled() ? 0_400000_000000L : 0);
@@ -4667,11 +4439,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LPDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getJumpOperand(false);
             _designatorRegister = new DesignatorRegister(operand & 0157);
         }
@@ -4684,11 +4452,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LRFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             setExecOrUserRRegister((int) iw.getA(), operand);
         }
@@ -4701,11 +4465,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LRDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4748,11 +4508,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LRSFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Grab descriptor first
             int descriptorRegisterIndex = getExecOrUserARegisterIndex((int)iw.getA());
             long descriptor = getGeneralRegister(descriptorRegisterIndex).getW();
@@ -4789,11 +4545,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LSBLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             int ixReg = (int) iw.getA();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -4803,16 +4555,12 @@ public class InstructionProcessor extends Processor implements Worker {
         @Override public Instruction getInstruction() { return Instruction.LSBL; }
     }
 
-    /**
+    /*
      * Handles the LSBO instruction f=060, extended mode only
      */
     private class LSBOFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             IndexRegister xReg = getExecOrUserXRegister((int) iw.getA());
             setExecOrUserXRegister((int) iw.getA(), Word36.setS1(xReg.getW(), operand));
@@ -4826,11 +4574,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LUDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(false, true, false, false);
             _designatorRegister = new DesignatorRegister(operand & 0670157);
         }
@@ -4843,11 +4587,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LXFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             setExecOrUserXRegister((int) iw.getA(), operand);
         }
@@ -4860,11 +4600,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LXIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             int regIndex = (int) iw.getA();
             IndexRegister xReg = getExecOrUserXRegister(regIndex);
@@ -4879,11 +4615,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LXLMFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if ((_designatorRegister.getProcessorPrivilege() > 0) && (_designatorRegister.getBasicModeEnabled())) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -4902,11 +4634,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LXMFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             int ixReg = (int) iw.getA();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -4921,11 +4649,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class LXSIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(true, true, true, true);
             int ixReg = (int) iw.getA();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -4947,11 +4671,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class MFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             BigInteger operand1 = BigInteger.valueOf(getExecOrUserARegister((int)iw.getA()).getW());
             BigInteger operand2 = BigInteger.valueOf(getOperand(true,
                                                                    true,
@@ -4973,11 +4693,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class MIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             BigInteger factor1 = BigInteger.valueOf(getExecOrUserARegister((int) iw.getA()).getW());
             BigInteger sgnExFactor1 = DoubleWord36.extendSign(factor1, 36);
             BigInteger factor2 = BigInteger.valueOf(getOperand(true, true, true, true));
@@ -4997,11 +4713,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class MLUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long opAa = getExecOrUserARegister((int) iw.getA()).getW();
             long opR2 = getExecOrUserRRegister(2).getW();
             long compR2 = Word36.negate(opR2);
@@ -5018,11 +4730,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class MSIFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             DoubleWord36 factor1 = new DoubleWord36(0, getExecOrUserARegister((int) iw.getA()).getW());
             DoubleWord36 factor2 = new DoubleWord36(0, getOperand(true, true, true, true));
 
@@ -5045,11 +4753,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class NOPFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             getJumpOperand(false);
         }
 
@@ -5061,11 +4765,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class ORFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int)iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
             setExecOrUserARegister((int)iw.getA() + 1, operand1 | operand2);
@@ -5080,11 +4780,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class PAIJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5101,11 +4797,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class RDCFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5131,11 +4823,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     private class RMDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 2) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5168,11 +4856,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class RTNFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getJumpOperand(false);
             new BankManipulator().bankManipulation(Instruction.RTN, operand);
         }
@@ -5181,20 +4865,70 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SA instruction f=001
+     */
+    private class SAFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            long value = getExecOrUserARegister((int) iw.getA()).getW();
+            storeOperand(true, true, true, true, value);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SA; }
+    }
+
+    /**
+     * Handles the SAQW instruction f=07 j=05
+     * Operates much like SA,[q1-q4], except that the quarter-word designation is taken from bits 4-5 of X(x).
+     * X-incrementation is not supported - results are undefined.
+     */
+    private class SAQWFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            int designator = (int) getExecOrUserXRegister((int) iw.getX()).getS1() & 03;
+            int jField = QW_J_FIELDS[designator];
+            long value = getGeneralRegister(getExecOrUserARegisterIndex((int) iw.getA())).getW();
+            storePartialOperand(value, jField, true);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SAQW; }
+    }
+
+    /**
+     * Handles the SAS instruction f=005 a=006
+     */
+    private class SASFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 0_040040_040040L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SAS; }
+    }
+
+    /**
+     * Handles the SAZ instruction f=005 a=007
+     */
+    private class SAZFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 0_060060_060060L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SAZ; }
+    }
+
+    /**
      * Handles the SBED instruction f=075 j=04
      */
     private class SBEDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
 
-            BaseRegister bReg = _baseRegisters[(int)iw.getA() + 16];
+            BaseRegister bReg = _baseRegisters[(int) iw.getA() + 16];
             storeConsecutiveOperands(false, bReg.getBaseRegisterWords());
         }
 
@@ -5206,11 +4940,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SBUFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5236,11 +4966,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SBUDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5257,11 +4983,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 1) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5277,11 +4999,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SDMFFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Extended mode only, PP==0 - SDMF is a NOP
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
@@ -5298,11 +5016,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SDMNFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Extended mode only, PP==0 - SDMN is a NOP
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
@@ -5319,11 +5033,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SDMSFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Extended mode only, PP==0 - SDMS is a NOP
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
@@ -5340,10 +5050,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SELLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord instructionWord
-        ) throws MachineInterrupt {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             boolean longModifier = _designatorRegister.getExecutive24BitIndexingEnabled();
             int ixReg = (int) _currentInstruction.getX();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
@@ -5371,15 +5078,35 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SFS instruction f=005 a=004
+     */
+    private class SFSFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 0_050505_050505L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SFS; }
+    }
+
+    /**
+     * Handles the SFZ instruction f=005 a=005
+     */
+    private class SFZFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 0_606060_606060L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SFZ; }
+    }
+
+    /**
      * Handles the SGNL instruction f=073 j=015 a=017
      */
     private class SGNLFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand = getImmediateOperand();
             throw new SignalInterrupt(SignalInterrupt.SignalType.Signal, (int) operand);
         }
@@ -5392,11 +5119,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SKQTFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 2) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5413,11 +5136,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SLJFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Increment PAR.PC, and store it in U, then update PAR.PC to reference U+1
             long returnPC = _programAddressRegister.getProgramCounter() + 1;
             storePartialOperand(returnPC, InstructionWord.H2, true);
@@ -5429,15 +5148,27 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SMA instruction f=003
+     */
+    private class SMAFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            long op = getExecOrUserARegister((int) iw.getA()).getW();
+            if (Word36.isNegative(op)) {
+                op = Word36.negate(op);
+            }
+            storeOperand(true, true, true, true, op);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SMA; }
+    }
+
+    /**
      * Handles the SMD instruction f=037 j=004 a=000
      */
     private class SMDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Extended mode only, PP==0 - SMD is a NOP
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
@@ -5450,15 +5181,60 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SN1 instruction f=005 a=003
+     */
+    private class SN1FunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, NEGATIVE_ONE_36);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SN1; }
+    }
+
+    /**
+     * Handles the SNA instruction f=002
+     */
+    private class SNAFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            long op = getExecOrUserARegister((int)iw.getA()).getW();
+            storeOperand(true, true, true, true, Word36.negate(op));
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SNA; }
+    }
+
+    /**
+     * Handles the SNZ instruction f=005 a=001
+     */
+    private class SNZFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, Word36.NEGATIVE_ZERO);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SNZ; }
+    }
+
+    /**
+     * Handles the SP1 instruction f=005 a=002
+     */
+    private class SP1FunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 1L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SP1; }
+    }
+
+    /**
      * Handles the SPD instruction f=07 j=015 a=not-used
      */
     private class SPDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 1) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5470,15 +5246,115 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SPID instruction f=073 j=015 a=005
+     */
+    private class SPIDFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            int procPriv = _designatorRegister.getProcessorPrivilege();
+            if (procPriv > 2) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            long[] operands = new long[2];
+            //  Operand 0:
+            //      MSBit is 1
+            //      T1/T2 contains feature bits (which we don't do)
+            //      T3 contains UPI number (but only for pp < 2)
+            operands[0] = (1L << 35) | ((procPriv < 2) ? _upiIndex : 0L);
+
+            //  Operand 1:
+            //      MSBit is 0
+            //      Q1 is Series (for M series, this is zero.  That's us.)
+            //      Q2 is Model - we use 3 (latest recognized - for Dorado)
+            //      H2 is reserved
+            operands[1] = (3L << 18);
+            storeConsecutiveOperands(true, operands);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SPID; }
+    }
+
+    /**
+     * Handles the SR instruction f=004
+     */
+    private class SRFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, getExecOrUserRRegister((int) iw.getA()).getW());
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SR; }
+    }
+
+    /**
+     * Handles the SRS instruction f=072 j=016
+     * This instruction stores one or two consecutive sets of values from GRS locations to a single buffer in memory.
+     * The two sets are contiguous in memory; they do not have to be contiguous in the GRS.
+     *
+     * A(a) contains a descriptor formatted as such:
+     *  Bit2-8:     count2
+     *  Bit11-17:   address2
+     *  Bit20-26:   count1
+     *  Bit29-35:   address1
+     *
+     * Effective u refers to the buffer in memory.  GRS access does not apply.
+     * Standard address resolution for consecutive memory addresses does apply.
+     * The size of the buffer must be at least count1 + count2 words in length.
+     *
+     * The first set of transfers begins with the destination set to effective U + 0, and the source is the GRS register
+     * at address 1.  {count1} words are transferred to consecutive locations in memory from consecutive GRS registers.
+     * If at any point the GRS index reaches 0200, it is reset to 0, and the process continues.
+     * The second set of transfers then begins with the destination set to effective U + {count1} (or an appropriate value if
+     * wraparound occurred at index 0200) and with the GRS register at address 2.  {count2} words are transferred just
+     * as they were in the first set.
+     *
+     * If count1 or count2 are zero, the corresponding register transfer is effectively a NOP.
+     */
+    private class SRSFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            //  Grab descriptor first
+            int descriptorRegisterIndex = getExecOrUserARegisterIndex((int) iw.getA());
+            long descriptor = getGeneralRegister(descriptorRegisterIndex).getW();
+
+            int address1 = (int)descriptor & 0177;
+            int count1 = (int)(descriptor >> 9) & 0177;
+            int address2 = (int)(descriptor >> 18) & 0177;
+            int count2 = (int)(descriptor >> 27) & 0177;
+
+            //  Create and populate an operands array from the indicated registers
+            long[] operands = new long[count1 + count2];
+            int ox = 0;
+            int grsx = address1;
+            for (int rx = 0; rx < count1; ++rx) {
+                operands[ox++] = getGeneralRegister(grsx++).getW();
+                if (grsx == 0200) {
+                    grsx = 0;
+                }
+            }
+
+            grsx = address2;
+            for (int rx = 0; rx < count2; ++rx) {
+                operands[ox++] = getGeneralRegister(grsx++).getW();
+                if (grsx == 0200) {
+                    grsx = 0;
+                }
+            }
+
+            //  Now store them
+            storeConsecutiveOperands(false, operands);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SRS; }
+    }
+
+    /**
      * Handles the SUB1 instruction f=005, a=016
      */
     private class SUB1FunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5498,11 +5374,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SUDFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             storeOperand(true, true, false, false, _designatorRegister.getW() & 0777777);
         }
 
@@ -5510,15 +5382,160 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Handles the SX instruction f=006
+     */
+    private class SXFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, getExecOrUserXRegister((int) iw.getA()).getW());
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SX; }
+    }
+
+    /**
+     * Handles the SYSC instruction f=073 j=017 a=012
+     */
+    private class SYSCFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            //  PP has to be 0
+            if (_designatorRegister.getProcessorPrivilege() > 0) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            //  Retrieve U.  This could be troublesome in the future, as we need to retrieve maybe more than one value
+            //  starting at U, but we don't know how many words until we know the subfunction, which is in U+0.
+            //  But... due to storage lock logic, we're not allowed to ask multiple times.  Not a problem yet, but it will be...
+            long operand = getOperand(false, false, false, false);
+
+            //  For now, we do not recognize any sub-functions, so we always throw a machine interrupt
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
+
+            //TODO
+            //  Subfunction 020: Create dynamic memory block
+            //      U+0,S1:     020
+            //      U+0,S2:     UPI of target MSP
+            //      U+0,S3:     Zeros
+            //      U+0,H2:     Zeros
+            //      U+1,W:      Zeros
+            //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+            //      Upon return U+1,W contains the assigned segment index
+
+            //TODO
+            //  Subfunction 021: Release dynamic memory block
+            //      U+0,S1:     021
+            //      U+0,S2:     UPI of target MSP
+            //      U+0,S3:     Zeros
+            //      U+0,H2:     Zeros
+            //      U+1,W:      Segment index of block to be released
+            //      U+2,W:      Zeros
+
+            //TODO
+            //  Subfunction 022: Resize dynamic memory block
+            //      U+0,S1:     022
+            //      U+0,S2:     UPI of target MSP
+            //      U+0,S3:     Zeros
+            //      U+0,H2:     Zeros
+            //      U+1,W:      Segment index of block to be resized
+            //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+
+            //TODO
+            //  Subfunction 030: Send system status console message
+            //  U+0,S1:         030
+            //  U+0,Bit6:       ASCII flag - message is in ASCII
+            //  U+0,S3:         Length of first message in words
+            //  U+0,S4:         Length of second message in words
+            //  U+1,2:          Absolute address of buffer containing first message
+            //  U+3,4:          Absolute address of buffer containing second message
+
+            //TODO
+            //  Subfunction 031: Send read-only console message
+            //  U+0,S1          031
+            //  U+0,Bit6:       ASCII flag - message is in ASCII
+            //  U+0,S3:         Length of message in words
+            //  U+1,2:          Absolute address of buffer containing message
+
+            //TODO
+            //  Subfunction 032: Send read-reply console message
+            //  U+0,S1          032
+            //  U+0,Bit6        send ASCII - message to be send is in ASCII
+            //  U+0,Bit7        read ASCII - message to be read should be in ASCII
+            //  U+0,S3          Length of message in words
+            //  U+0,S4          Maximum accepted length of response in characters
+            //  U+1,2:          Absolute address of buffer containing message
+            //  U+3,4:          Absolute address of buffer where response should be placed
+
+            //TODO
+            //  Subfunction 033: Poll for unsolicited input
+            //  U+0,S1          033
+            //  U+0,Bit7        read ASCII - message to be read (if any) should be in ASCII
+            //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
+            //  U+0,S4          Maximum accepted length of input in words (should allow for 80 characters)
+            //  U+0,S6          Number of words received if a message was read
+            //  U+2:            Absolute address of buffer to receive response
+
+            //TODO
+            //  Subfunction 040: Start IO
+            //  U+0,S1          040
+            //  U+0,S2          UPI of IOP to be used
+            //  U+0,S3          Channel Module index
+            //  U+0,S4          Device index
+            //  U+0,S6          Flags
+            //                      Bit30: IOP should send a UPI interrupt when IO is complete
+            //  U+1,S1          Operation
+            //                      000: Write
+            //                      001: Write EOF
+            //                      002: Read
+            //                      003: Skip
+            //                      004: Skip EOF
+            //                      005: Rewind
+            //                      006: Rewind with Interlock
+            //  U+1,Bits 6-7    Format: 0=type A, 1=type B, 2=type C, 3=type D
+            //                      A is qword mode, 4 8-bit bytes per word
+            //                      B is fd mode, 6 6-bit bytes per word
+            //                      C is packed mode, 9 bytes per 2 words
+            //                      D is similar to A, ignoring the stop bit
+            //  U+1 Bit 8       Direction: 0=forward, 1=backward
+            //  U+1,S3          Status of IO
+            //                      000: IO completed successfully
+            //                      001: IOP UPI does not correspond to an IOP
+            //                      002: Channel module does not exist
+            //                      003: Device does not exist
+            //                      004: Device is not ready
+            //                      005: Device is busy
+            //                      006: End of file mark
+            //                      007: End of tape mark
+            //                      010: Address out of range
+            //                      040: IO started successfully and is in progress
+            //  U+1,S4          Non-integral residue count
+            //  U+2,H1          Number of words to be transferred on output, buffer size on input
+            //  U+2,H2          Number of words transferred
+            //  U+3             Absolute address of IO buffer
+            //  U+5             Device-relative address if applicable
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SYSC; }
+    }
+
+    /**
+     * Handles the SZ instruction f=005 a=000
+     */
+    private class SZFunctionHandler extends InstructionHandler {
+
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
+            storeOperand(true, true, true, true, 0L);
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SZ; }
+    }
+
+    /**
      * Handles the TRA instruction f=072 j=015
      */
     private class TRAFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             int brIndex = getBasicModeBankRegisterIndex();
             long result = ((brIndex == 0) ? 0 : 0400000_000000L) | ((long) (brIndex & 03) << 33);
             setExecOrUserXRegister((int) iw.getA(), result);
@@ -5544,11 +5561,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class TRARSFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getProcessorPrivilege() > 0) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -5642,12 +5655,12 @@ public class InstructionProcessor extends Processor implements Worker {
      * For TVA below...
      */
     private interface TVAStepHandler {
-        void invoke(
-            final TVAScratchPad scratchPad
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException;
+        void invoke(TVAScratchPad scratchPad) throws MachineInterrupt, UnresolvedAddressException;
     }
 
+    /**
+     * Also for TVA
+     */
     private class TVAScratchPad {
         final InstructionWord _instructionWord;
         final int _processorPrivilege;
@@ -5689,9 +5702,7 @@ public class InstructionProcessor extends Processor implements Worker {
         boolean _skipNextInstruction = true;
         AbsoluteAddress _realAddress = null;
 
-        TVAScratchPad(
-            final InstructionWord iw
-        ) {
+        TVAScratchPad(InstructionWord iw) {
             _instructionWord = iw;
             _processorPrivilege = _designatorRegister.getProcessorPrivilege();
         }
@@ -5707,9 +5718,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step1Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 //  Get the virtual address to be checked from X(a) and the various flags and alternate key from X(a+1).
                 //  If a==15, then X(a) is A(3), and X(a+1) is A(4).
                 int aField = (int) scratchPad._instructionWord.getA();
@@ -5746,9 +5755,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step2Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 scratchPad._step = scratchPad._enterAccessRequired ? 5 : 3;
             }
         }
@@ -5818,9 +5825,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
             }
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) throws MachineInterrupt {
+            @Override public void invoke(final TVAScratchPad scratchPad) throws MachineInterrupt {
                 //  Go find the bank descriptor for the given level/BDI.
                 //  If we don't get one, we should move on to step 9.
                 BankDescriptor bd = findBankDescriptor(scratchPad);
@@ -5862,9 +5867,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step4Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 boolean accessAllowed = checkAccess(false, scratchPad._readAcccessRequired,
                                                     scratchPad._writeAccessRequired,
                                                     scratchPad._effectiveAccessKey,
@@ -5976,9 +5979,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 scratchPad._step = 9;
             }
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) throws MachineInterrupt {
+            @Override public void invoke(final TVAScratchPad scratchPad) throws MachineInterrupt {
                 //  Go find the bank descriptor for the given level/BDI.
                 //  If we don't get one, we should move on to step 9.
                 BankDescriptor bd = findBankDescriptor(scratchPad);
@@ -6037,9 +6038,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step7Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 BankDescriptor bd = scratchPad._targetBankDescriptor;
                 int offset = scratchPad._virtualAddress.getOffset();
                 boolean limitsBad = (offset < bd.getLowerLimitNormalized()) || (offset > bd.getUpperLimitNormalized());
@@ -6060,9 +6059,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step8Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 //  For PP > 1, the address is never returned, and thus does not need to be determined
                 if (scratchPad._addressTranslationRequested && (scratchPad._processorPrivilege < 2)) {
                     scratchPad._realAddress =
@@ -6080,9 +6077,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step9Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 if (scratchPad._processorPrivilege > 1) {
                     scratchPad._xReg1.setW(0);
                 } else {
@@ -6111,9 +6106,7 @@ public class InstructionProcessor extends Processor implements Worker {
          */
         private class Step10Handler implements TVAStepHandler {
 
-            @Override public void invoke(
-                final TVAScratchPad scratchPad
-            ) {
+            @Override public void invoke(final TVAScratchPad scratchPad) {
                 if (scratchPad._skipNextInstruction) {
                     long nextAddr = _programAddressRegister.getProgramCounter() + 1;
                     setProgramCounter(nextAddr, false);
@@ -6203,11 +6196,7 @@ public class InstructionProcessor extends Processor implements Worker {
             new Step10Handler(),
         };
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             //  Instructions like this are why CISC is a thing...
             TVAScratchPad sp = new TVAScratchPad(iw);
             if (_designatorRegister.getBasicModeEnabled() && (sp._processorPrivilege > 0)) {
@@ -6230,11 +6219,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class URFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             if (_designatorRegister.getBasicModeEnabled() && (_designatorRegister.getProcessorPrivilege() > 0)) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
@@ -6253,11 +6238,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class XORFunctionHandler extends InstructionHandler {
 
-        @Override
-        public void handle(
-            final InstructionWord iw
-        ) throws MachineInterrupt,
-                 UnresolvedAddressException {
+        @Override public void handle(final InstructionWord iw) throws MachineInterrupt, UnresolvedAddressException {
             long operand1 = getExecOrUserARegister((int) iw.getA()).getW();
             long operand2 = getOperand(true, true, true, true);
             setExecOrUserARegister((int) iw.getA() + 1, operand1 ^ operand2);
@@ -6279,6 +6260,10 @@ public class InstructionProcessor extends Processor implements Worker {
     public static final int RCS_INDEX_REGISTER      = GeneralRegisterSet.EX0;
     private static final long NEGATIVE_ONE_36       = 0_777777_777776L;
     private static final long NEGATIVE_TWO_36       = 0_777777_777775L;
+
+    //  Array of j-field values indexed by the quarter-word designator where
+    //  des==0 -> Q1, des==1 -> Q2, etc. - used by LAQW and SAQW instructions
+    private static final int[] QW_J_FIELDS = { 7, 4, 6, 5 };
 
     /**
      * Raise interrupt when this many new entries exist
