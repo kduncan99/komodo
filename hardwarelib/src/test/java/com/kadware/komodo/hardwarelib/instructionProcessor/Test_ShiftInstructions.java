@@ -317,9 +317,9 @@ public class Test_ShiftInstructions extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        assertEquals(0_400000_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0_000000_000000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(1, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(1, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
         assertEquals(0_377777_777777L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
         assertEquals(0_777777_777777L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
         assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());

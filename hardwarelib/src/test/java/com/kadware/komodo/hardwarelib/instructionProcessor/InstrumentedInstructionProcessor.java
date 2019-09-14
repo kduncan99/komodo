@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.hardwarelib.ActiveBaseTableEntry;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
@@ -13,7 +14,7 @@ import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
  */
 public class InstrumentedInstructionProcessor extends InstructionProcessor {
 
-    public InstrumentedInstructionProcessor(
+    InstrumentedInstructionProcessor(
         final String name,
         final int upi
     ) {
@@ -29,5 +30,16 @@ public class InstrumentedInstructionProcessor extends InstructionProcessor {
                                          getCurrentInstruction().interpret(!getDesignatorRegister().getBasicModeEnabled(),
                                                                            getDesignatorRegister().getExecRegisterSetSelected())));
         super.executeInstruction();
+    }
+
+    ActiveBaseTableEntry[] getActiveBaseTableEntries() {
+        return _activeBaseTableEntries;
+    }
+
+    void loadActiveBaseTableEntry(
+        final int baseRegisterIndex,
+        ActiveBaseTableEntry entry
+    ) {
+        _activeBaseTableEntries[baseRegisterIndex] = entry;
     }
 }

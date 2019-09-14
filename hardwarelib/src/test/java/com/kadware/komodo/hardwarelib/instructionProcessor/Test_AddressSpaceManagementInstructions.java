@@ -24,7 +24,6 @@ import com.kadware.komodo.minalib.Linker;
 import com.kadware.komodo.minalib.RelocatableModule;
 import org.junit.Assert;
 import org.junit.Test;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -57,6 +56,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         ActiveBaseTableEntry[] expectedValues = {
+            null,
             new ActiveBaseTableEntry(0_000004_001000L),
             new ActiveBaseTableEntry(0_000005_002000L),
             new ActiveBaseTableEntry(0_000006_001000L),
@@ -78,7 +78,9 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assert(absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
 
-        processors._instructionProcessor.loadActiveBaseTable(expectedValues);
+        for (int brx = 0; brx < 16; ++brx) {
+            processors._instructionProcessor.loadActiveBaseTableEntry(brx, expectedValues[brx]);
+        }
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
         startAndWait(processors._instructionProcessor);
 
@@ -2083,7 +2085,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         long[] data = getBank(processors._instructionProcessor, 2);
-        showDebugInfo(processors);//TODO
         assertEquals(0_600004_000000L, data[0]);
         assertEquals(0_600005_000000L, data[1]);
     }

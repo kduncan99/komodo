@@ -801,7 +801,7 @@ class BaseFunctions {
      * @throws AddressingExceptionInterrupt for an invalid MSP reference
      */
     private static void loadBanks(
-        final InstructionProcessor ip,
+        final InstrumentedInstructionProcessor ip,
         final InstrumentedMainStorageProcessor msp,
         final AbsoluteModule module
     ) throws AddressingExceptionInterrupt {
@@ -846,7 +846,7 @@ class BaseFunctions {
                     ActiveBaseTableEntry abte = new ActiveBaseTableEntry(loadableBank._bankLevel,
                                                                          loadableBank._bankDescriptorIndex,
                                                                          0);
-                    ip.loadActiveBaseTableEntry(brIndex - 1, abte);
+                    ip.loadActiveBaseTableEntry(brIndex, abte);
                 }
 
                 System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
