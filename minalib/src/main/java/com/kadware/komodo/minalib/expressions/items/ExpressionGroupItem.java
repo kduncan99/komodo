@@ -93,7 +93,7 @@ public class ExpressionGroupItem extends OperandItem {
      * the result is made up of one bitfield per expression, the sizes of which are the
      * dividend of 36 bits by the number of fields.
      * @param context assembler context
-     * @return the resulting value
+     * @return The offset and LC reference of the generated word containing the resulting composite values
      * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase2(

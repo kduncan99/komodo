@@ -27,8 +27,8 @@ public class InstrumentedInstructionProcessor extends InstructionProcessor {
              UnresolvedAddressException {
         System.out.println(String.format("Executing Instruction at %012o --> %s",
                                          getProgramAddressRegister().getProgramCounter(),
-                                         getCurrentInstruction().interpret(!getDesignatorRegister().getBasicModeEnabled(),
-                                                                           getDesignatorRegister().getExecRegisterSetSelected())));
+                                         _currentInstruction.interpret(!getDesignatorRegister().getBasicModeEnabled(),
+                                                                       getDesignatorRegister().getExecRegisterSetSelected())));
         super.executeInstruction();
     }
 

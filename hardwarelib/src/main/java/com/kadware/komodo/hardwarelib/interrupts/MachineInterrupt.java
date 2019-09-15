@@ -48,13 +48,7 @@ public abstract class MachineInterrupt extends Exception {
         UPINormal(037);
 
         private final short _code;
-
-        InterruptClass(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
+        InterruptClass(int code) { _code = (short) code; }
         public short getCode() { return _code; }
     }
 
@@ -64,13 +58,7 @@ public abstract class MachineInterrupt extends Exception {
         NonFault(2);
 
         public final short _code;
-
-        ConditionCategory(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
+        ConditionCategory(int code) { _code = (short) code; }
         public short getCode() { return _code; }
     }
 
@@ -80,13 +68,7 @@ public abstract class MachineInterrupt extends Exception {
         Exigent(2);
 
         private final short _code;
-
-        Deferrability(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
+        Deferrability(int code) { _code = (short)code; }
         public short getCode() { return _code; }
     }
 
@@ -97,13 +79,7 @@ public abstract class MachineInterrupt extends Exception {
         IndirectExecute(3);
 
         public final short _code;
-
-        InterruptPoint(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
+        InterruptPoint(int code) { _code = (short)code; }
         public short getCode() { return _code; }
     }
 
@@ -117,23 +93,15 @@ public abstract class MachineInterrupt extends Exception {
                             //      in which case this interrupt is dropped
 
         public final short _code;
-
-        Synchrony(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
+        Synchrony(int code) { _code = (short)code; }
         public short getCode() { return _code; }
     }
-
 
     private final ConditionCategory _conditionCategory;
     private final Deferrability     _deferrability;
     private final InterruptClass    _interruptClass;
     private final InterruptPoint    _interruptPoint;
     private final Synchrony         _synchrony;
-
 
     public MachineInterrupt(
         final InterruptClass interruptClass,
@@ -154,11 +122,11 @@ public abstract class MachineInterrupt extends Exception {
     //  Accessors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public final ConditionCategory getConditionCategory() { return _conditionCategory; }
-    public final Deferrability getDeferrability() { return _deferrability; }
-    public final InterruptClass getInterruptClass() { return _interruptClass; }
-    public final InterruptPoint getInterruptPoint() { return _interruptPoint; }
-    public final Synchrony getSynchrony() { return _synchrony; }
+    public final ConditionCategory getConditionCategory()   { return _conditionCategory; }
+    public final Deferrability getDeferrability()           { return _deferrability; }
+    public final InterruptClass getInterruptClass()         { return _interruptClass; }
+    public final InterruptPoint getInterruptPoint()         { return _interruptPoint; }
+    public final Synchrony getSynchrony()                   { return _synchrony; }
 
     /**
      * Get a displayable description of this interrupt

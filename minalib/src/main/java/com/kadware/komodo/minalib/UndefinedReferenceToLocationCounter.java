@@ -43,22 +43,13 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     ) {
         if (obj instanceof UndefinedReferenceToLocationCounter) {
             UndefinedReferenceToLocationCounter refObj = (UndefinedReferenceToLocationCounter) obj;
-            return (_isNegative == refObj._isNegative)
-                   && (_locationCounterIndex == refObj._locationCounterIndex);
+            return (_isNegative == refObj._isNegative) && (_locationCounterIndex == refObj._locationCounterIndex);
         }
         return false;
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return _locationCounterIndex;
     }
-
-    @Override
-    public String toString(
-    ) {
-        return String.format("%s$LC(%d)",
-                             _isNegative ? "-" : "+",
-                             _locationCounterIndex);
-    }
+    @Override public String toString() { return String.format("%s$LC(%d)", _isNegative ? "-" : "+", _locationCounterIndex); }
 }

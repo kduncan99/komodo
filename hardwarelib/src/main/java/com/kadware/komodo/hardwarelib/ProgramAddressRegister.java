@@ -13,7 +13,6 @@ public class ProgramAddressRegister {
 
     //TODO Need unit tests
     public ProgramAddressRegister()             {}
-    public ProgramAddressRegister(long value)   { _value = value & 0_777777_777777L; }
     public long get()                           { return _value; }
     public int getLBDI()                        { return (int) (_value >> 18); }
     public int getProgramCounter()              { return (int) _value & 0_777777; }

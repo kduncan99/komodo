@@ -25,6 +25,40 @@ public class Linker {
     //  Public enums, classes, etc
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    private enum SpecialLabel {
+        BDI("BDI$", 0),
+        BDICALL("BDICALL$", 1),
+        BDIREF("BDIREF$", 1),
+        LBDI("LBDI$", 0),
+        LBDICALL("LBDICALL$", 1),
+        LBDIREF("LBDIREF$", 1);
+
+        final String _text;
+        final int _parameterCount;
+
+        SpecialLabel(
+            String text,
+            int parameterCount
+        ) {
+            _text = text;
+            _parameterCount = parameterCount;
+        }
+
+        static SpecialLabel getFrom(
+            final String text
+        ) {
+            switch (text) {
+                case "BDI$":        return BDI;
+                case "BDICALL$":    return BDICALL;
+                case "BDIREF$":     return BDIREF;
+                case "LBDI$":       return LBDI;
+                case "LBDICALL$":   return LBDICALL;
+                case "LBDIREF$":    return LBDIREF;
+                default:            return null;
+            }
+        }
+    }
+
     public enum Option {
         OPTION_NO_ENTRY_POINT,
         OPTION_QUARTER_WORD_MODE,
@@ -635,7 +669,7 @@ public class Linker {
             }
         }
 
-        assert(false);//????
+        raise(String.format("Cannot find L,BDI for LC %d in module %s", locationCounterIndex, relocatableModule._name));
         return 0;
     }
 
@@ -660,57 +694,6 @@ public class Linker {
                             module._name,
                             lcIndex));
         return 0;
-    }
-
-    /**
-     * Handles special identifiers such as LBDICALL$ and it's ilk
-     * @param initialValue value into which we are integrating
-     * @param spRef UndefinedReferenceSpecial which contains the type and target label
-     * @param sourcePoolSpec source pool which contains the reference
-     * @return integrated value
-     */
-    private long handleSpecialIdentifier(
-        final long initialValue,
-        final UndefinedReferenceSpecial spRef,
-        final LCPoolSpecification sourcePoolSpec
-    ) {
-        long newValue = 0;
-        try {
-            switch (spRef._type) {
-                case LBDI:
-                    //TODO does not take a subject label, so we need to go back and do more work between this and the assembler
-                    break;
-
-                case LBDICALL: {
-                    //  We don't do absolute numbers, only label references
-                    //  We're not doing bank-implied (at least not yet), but we do check to see if the
-                    //  BDI for the label matches the BDI which contains the reference to it.
-                    LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(spRef._subjectLabel);
-                    if ((sourcePoolSpec._module != linkerValue._relocatableModule)
-                        || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
-                        newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
-                    }
-                    break;
-                }
-
-                case LBDIREF: {
-                    //  We don't do absolute numbers, only label references
-                    LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(spRef._subjectLabel);
-                    newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
-                    break;
-                }
-            }
-        } catch (NotFoundException ex) {
-            raise(String.format("Undefined reference for %s$ subject:%s",
-                                spRef._type.toString(),
-                                spRef._subjectLabel));
-        }
-
-        return integrateValue(initialValue,
-                              spRef._fieldDescriptor,
-                              newValue,
-                              sourcePoolSpec._module._name,
-                              sourcePoolSpec._lcIndex);
     }
 
     /**
@@ -755,6 +738,7 @@ public class Linker {
         } else {
             trunc = (tempValue | mask) != 0_777777_777777L;
         }
+
         if (trunc) {
             raise(String.format("Truncation resolving value in %s for module %s LC %d",
                                 fieldDescriptor.toString(),
@@ -770,62 +754,28 @@ public class Linker {
 
     /**
      * Loads a pool for createLoadableBank()
+     * @param bankDeclaration Describes the bank we are populating with actual values
+     * @param poolSpec Describes the LC pool from which we are pulling relocatable words
+     * @param bankStorage the ArraySlice containing the generated words for the bank
      */
     private void loadPool(
         final BankDeclaration bankDeclaration,
         final LCPoolSpecification poolSpec,
-        final ArraySlice slice
+        final ArraySlice bankStorage
     ) {
         //  For each source word in the relocatable element's location counter pool,
         //  get the discrete integer value, update it if appropriate, and move it
         //  to the Word36Array which eventually becomes the storage for the bank.
         LocationCounterPool lcp = poolSpec._module._storage.get(poolSpec._lcIndex);
-        for (int rwx = 0, wax = _locationCounterPoolMap._map.get(poolSpec) - bankDeclaration._startingAddress;
+        for (int rwx = 0,   //  index into the location counter pool to a particular RW36
+             bsx = _locationCounterPoolMap._map.get(poolSpec) - bankDeclaration._startingAddress;   //  index into bank storage
              rwx < lcp._storage.length;
-             ++rwx, ++wax) {
+             ++rwx, ++bsx) {
             RelocatableWord rw = lcp._storage[rwx];
 
             //  Check for null - that can happen due to $RES in the assembler
             if (rw != null) {
-                long discreteValue = rw.getW();
-
-                //  If there are any undefined references in the source word from the relocatable module,
-                //  iterate over them.  For each undefined reference, lookup the value for the reference,
-                //  slice out the particular field of the discrete value, add the reference value thereto,
-                //  check for truncation, and splice the resulting value back into the discrete value.
-                if (rw._references.length > 0) {
-                    for (UndefinedReference ur : rw._references) {
-                        if (ur instanceof UndefinedReferenceToLabel) {
-                            UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) ur;
-                            try {
-                                IntegerValue iv = (IntegerValue) _dictionary.getValue(lRef._label);
-                                discreteValue = integrateValue(discreteValue,
-                                                               ur._fieldDescriptor,
-                                                               iv._value.get().longValue(),
-                                                               poolSpec._module._name,
-                                                               poolSpec._lcIndex);
-                            } catch (NotFoundException ex) {
-                                raise(String.format("Undefined reference:%s", lRef._label));
-                            }
-                        } else if (ur instanceof UndefinedReferenceToLocationCounter) {
-                            //  This is a reference from a relocatable element to one of its own location counters.
-                            UndefinedReferenceToLocationCounter lcRef = (UndefinedReferenceToLocationCounter) ur;
-                            long addr = findLocationCounterAddress(poolSpec._module, lcRef._locationCounterIndex);
-                            discreteValue = integrateValue(discreteValue,
-                                                           ur._fieldDescriptor,
-                                                           addr,
-                                                           poolSpec._module._name,
-                                                           poolSpec._lcIndex);
-                        } else if (ur instanceof UndefinedReferenceSpecial) {
-                            UndefinedReferenceSpecial spRef = (UndefinedReferenceSpecial) ur;
-                            discreteValue = handleSpecialIdentifier(discreteValue, spRef, poolSpec);
-                        } else {
-                            raise("Internal error:Undefined reference of unknown type");
-                        }
-                    }
-                }
-
-                slice.set(wax, discreteValue);
+                bankStorage.set(bsx, resolveUndefinedReferences(poolSpec, rw, rw.getW()));
             }
         }
     }
@@ -839,6 +789,184 @@ public class Linker {
     ) {
         System.out.println("ERROR:" + message);
         _errors++;
+    }
+
+    private long resolveUndefinedReferenceToLabel(
+        final LCPoolSpecification poolSpec,
+        final long initialValue,
+        UndefinedReferenceToLabel reference
+    ) {
+        try {
+            IntegerValue iv = (IntegerValue) _dictionary.getValue(reference._label);
+            return integrateValue(initialValue,
+                                  reference._fieldDescriptor,
+                                  iv._value.get().longValue(),
+                                  poolSpec._module._name,
+                                  poolSpec._lcIndex);
+        } catch (NotFoundException ex) {
+            raise(String.format("Undefined reference:%s", reference._label));
+            return 0;
+        }
+    }
+
+    private long resolveUndefinedReferenceToLocationCounter(
+        final LCPoolSpecification poolSpec,
+        final long initialValue,
+        UndefinedReferenceToLocationCounter reference
+    ) {
+        //  This is a reference from a relocatable element to one of its own location counters.
+        long addr = findLocationCounterAddress(poolSpec._module, reference._locationCounterIndex);
+        return integrateValue(initialValue,
+                              reference._fieldDescriptor,
+                              addr,
+                              poolSpec._module._name,
+                              poolSpec._lcIndex);
+    }
+
+    /**
+     * Handles special identifiers such as LBDICALL$ and it's ilk
+     * @param sourcePoolSpec source pool which contains the reference
+     * @param initialValue value into which we are integrating
+     * @param labelType indicates what type of special label we are processing
+     * @param parameters one or more urefs which follow the special label - might be empty
+     * @return integrated value
+     */
+    private long resolveUndefinedReferenceToSpecialLabel(
+        final LCPoolSpecification sourcePoolSpec,
+        final long initialValue,
+        final UndefinedReferenceToLabel undefinedReference,
+        final SpecialLabel labelType,
+        final UndefinedReference[] parameters
+    ) {
+        long newValue = 0;
+        try {
+            switch (labelType) {
+                case BDI:
+                    //  Retrieve the BDI which contains the BDI$ reference
+                    //TODO
+                    break;
+
+                case BDICALL: {
+                    //  Resolve the next reference and find the BDI which contains it.
+                    //  If we are bank-implied, or if the BDI matches the BDI containing the reference,
+                    //  the result is zero.  We're not doing bank-implied collections, but we do check the BDIs.
+                    if (parameters[0] instanceof UndefinedReferenceToLabel) {
+                        UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
+                        LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
+                        if ((sourcePoolSpec._module != linkerValue._relocatableModule)
+                            || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
+                            newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex) & 077777;
+                        }
+                    } else {
+                        raise("Incorrect parameter for " + labelType._text);
+                    }
+                    break;
+                }
+
+                case BDIREF:
+                    //  Resolve the next reference and find the BDI which contains it.
+                    if (parameters[0] instanceof UndefinedReferenceToLabel) {
+                        UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
+                        LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
+                        newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex) & 077777;
+                    } else {
+                        raise("Incorrect parameter for " + labelType._text);
+                    }
+                    break;
+
+                case LBDI:
+                    //  Retrieve the L,BDI which contains the LBDI$ reference
+                    //TODO
+                    break;
+
+                case LBDICALL:
+                    //  Resolve the next reference and find the L,BDI which contains it.
+                    //  If we are bank-implied, or if the BDI matches the BDI containing the reference,
+                    //  the result is zero.  We're not doing bank-implied collections, but we do check the BDIs.
+                    if (parameters[0] instanceof UndefinedReferenceToLabel) {
+                        UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
+                        LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
+                        if ((sourcePoolSpec._module != linkerValue._relocatableModule)
+                            || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
+                            newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
+                        }
+                    } else {
+                        raise("Incorrect parameter for " + labelType._text);
+                    }
+                    break;
+
+                case LBDIREF: {
+                    //  Resolve the next reference and find the L,BDI which contains it.
+                    if (parameters[0] instanceof UndefinedReferenceToLabel) {
+                        UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
+                        LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
+                        newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
+                    } else {
+                        raise("Incorrect parameter for " + labelType._text);
+                    }
+                    break;
+                }
+
+                default:
+                    raise("Internal error - special reference value not handled");
+            }
+        } catch (NotFoundException ex) {
+            raise("Undefined reference for " + labelType._text);
+        }
+
+        return integrateValue(initialValue,
+                              undefinedReference._fieldDescriptor,
+                              newValue,
+                              sourcePoolSpec._module._name,
+                              sourcePoolSpec._lcIndex);
+    }
+
+    /**
+     * Resolves undefined references associated with a relocatable word
+     * If there are any undefined references in the source word from the relocatable module,
+     * iterate over them.  For each undefined reference, lookup the value for the reference,
+     * slice out the particular field of the discrete value, add the reference value thereto,
+     * check for truncation, and splice the resulting value back into the discrete value.
+     * @param poolSpec describes the LC pool from which the word came
+     * @param rw the actual Relocatable Word
+     * @param initialValue initial value of the relocatable word
+     * @return the final value to be generated for the word, given the resolution of the undefined references
+     */
+    private long resolveUndefinedReferences(
+        final LCPoolSpecification poolSpec,
+        final RelocatableWord rw,
+        final long initialValue
+    ) {
+        long discreteValue = initialValue;
+        for (int urx = 0; urx < rw._references.length; ++urx) {
+            UndefinedReference ur = rw._references[urx];
+            if (ur instanceof UndefinedReferenceToLabel) {
+                UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) ur;
+                SpecialLabel specialLabel = SpecialLabel.getFrom(urLabel._label);
+                if (specialLabel != null) {
+                    int remaining = rw._references.length - urx - 1;
+                    if (remaining < specialLabel._parameterCount) {
+                        raise(String.format("Insufficient parameters for %s label", specialLabel._text));
+                    } else {
+                        UndefinedReference[] parameters = new UndefinedReference[specialLabel._parameterCount];
+                        for (int urc = 0; urc < parameters.length; ++urc) {
+                            parameters[urc] = rw._references[++urx];
+                        }
+
+                        discreteValue = resolveUndefinedReferenceToSpecialLabel(poolSpec, initialValue, urLabel, specialLabel, parameters);
+                    }
+                } else {
+                    discreteValue = resolveUndefinedReferenceToLabel(poolSpec, initialValue, urLabel);
+                }
+            } else if (ur instanceof UndefinedReferenceToLocationCounter) {
+                UndefinedReferenceToLocationCounter urLoc = (UndefinedReferenceToLocationCounter) ur;
+                discreteValue = resolveUndefinedReferenceToLocationCounter(poolSpec, initialValue, urLoc);
+            } else {
+                raise("Internal error:Undefined reference of unknown type");
+            }
+        }
+
+        return discreteValue;
     }
 
 

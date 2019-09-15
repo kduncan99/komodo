@@ -47,16 +47,8 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
         return false;
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return _label.hashCode();
     }
-
-    @Override
-    public String toString(
-    ) {
-        return String.format("%s%s",
-                             _isNegative ? "-" : "+",
-                             _label);
-    }
+    @Override public String toString() { return String.format("%s%s", _isNegative ? "-" : "+", _label); }
 }

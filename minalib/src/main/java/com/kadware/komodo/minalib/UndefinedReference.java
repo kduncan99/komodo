@@ -24,22 +24,12 @@ public abstract class UndefinedReference {
         _isNegative = isNegative;
     }
 
-    public abstract UndefinedReference copy(
-        final boolean isNegative
-    );
+    public abstract UndefinedReference copy(boolean isNegative);
+    public abstract UndefinedReference copy(FieldDescriptor fieldDescriptor);
 
-    public abstract UndefinedReference copy(
-        final FieldDescriptor fieldDescriptor
-    );
-
-    @Override
-    public abstract boolean equals(final Object obj);
-
-    @Override
-    public abstract int hashCode();
-
-    @Override
-    public abstract String toString();
+    @Override public abstract boolean equals(final Object obj);
+    @Override public abstract int hashCode();
+    @Override public abstract String toString();
 
     /**
      * Coalesces an array of U'Rs based on collections of field- and id-equivalent U'Rs.

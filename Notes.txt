@@ -21,10 +21,10 @@ Jumps to indirect addresses (in BM) - does the return address reflect the origin
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
 Do we emit diagnostics at the point where 'S' is applied to a value larger than 36 bits? Or only when we generate code?
-
+assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
+Do all T diagnostics result in a rel module not being generated?
 
 -- TODO Thoughts
-Maybe move all the function handlers to the InstructionProcessor class...
 
 
 -- TODO implement

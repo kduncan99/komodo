@@ -85,17 +85,17 @@ public class Context {
         private boolean _quarterWordMode = false;
         private boolean _thirdWordMode = false;
         private final Diagnostics _diagnostics;
-        private final String _moduleName;
+//        private final String _moduleName;
 
         //  Map of LC indices to the various GeneratedPool objects...
         private final Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
 
         private Global(
             Diagnostics diagnostics,
-            String moduleName
+            String moduleName   //  TODO remove this
         ) {
             _diagnostics = diagnostics;
-            _moduleName = moduleName;
+//            _moduleName = moduleName;
         }
     }
 
@@ -238,9 +238,8 @@ public class Context {
      * @param lineSpecifier location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param value the integer/intrinsic value to be used
-     * @return value indicating the location which applies to the word which was just generated
      */
-    public IntegerValue generate(
+    void generate(
         final LineSpecifier lineSpecifier,
         final int lcIndex,
         final IntegerValue value
@@ -250,11 +249,6 @@ public class Context {
         GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, value);
         gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
-
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
-                                         .setReferences(refs)
-                                         .build();
     }
 
     /**
@@ -306,8 +300,8 @@ public class Context {
             }
 
             if (trunc) {
-                appendDiagnostic(new TruncationDiagnostic(locale,
-                                                          "Value exceeds size of field in form " + form.toString()));
+                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
+                appendDiagnostic(new TruncationDiagnostic(locale, msg));
             }
 
             genInt = genInt.or(values[fx]._value.get().and(mask));
@@ -339,9 +333,8 @@ public class Context {
      * @param lineSpecifier location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param values the values to be used
-     * @return value indicating the location which applies to the word which was just generated
      */
-    public IntegerValue generate(
+    void generate(
         final LineSpecifier lineSpecifier,
         final int lcIndex,
         final long[] values
@@ -359,27 +352,21 @@ public class Context {
             gp.store(gw);
             gw._topLevelTextLine._generatedWords.add(gw);
         }
-
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
-                                         .setReferences(refs)
-                                         .build();
     }
 
-    public boolean getArithmeticFaultCompatibilityMode() { return _globalData._arithmeticFaultCompatibilityMode; }
-    public boolean getArithmeticFaultNonInterruptMode() { return _globalData._arithmeticFaultNonInterruptMode; }
-    public CharacterMode getCharacterMode() { return _localData._characterMode; }
+    boolean getArithmeticFaultCompatibilityMode() { return _globalData._arithmeticFaultCompatibilityMode; }
+    boolean getArithmeticFaultNonInterruptMode() { return _globalData._arithmeticFaultNonInterruptMode; }
+    CharacterMode getCharacterMode() { return _localData._characterMode; }
     public CodeMode getCodeMode() { return _localData._codeMode; }
     public int getCurrentGenerationLCIndex() { return _localData._currentGenerationLCIndex; }
     public int getCurrentLitLCIndex() { return _localData._currentLitLCIndex; }
     public Diagnostics getDiagnostics() { return _globalData._diagnostics; }
     public Dictionary getDictionary() { return _localData._dictionary; }
-    public Set<Map.Entry<Integer, GeneratedPool>> getGeneratedPools() { return _globalData._generatedPools.entrySet(); }
-    public String getModuleName() { return _globalData._moduleName; }
-    public int getNestingLevel() { return (_parent == null) ? 0 : _parent.getNestingLevel() + 1; }
-    public TextLine[] getParsedCode() { return _localData._sourceObjects; }
-    public boolean getQuarterWordMode() { return _globalData._quarterWordMode; }
-    public boolean getThirdWordMode() { return _globalData._thirdWordMode; }
+    Set<Map.Entry<Integer, GeneratedPool>> getGeneratedPools() { return _globalData._generatedPools.entrySet(); }
+    private int getNestingLevel() { return (_parent == null) ? 0 : _parent.getNestingLevel() + 1; }
+    TextLine[] getParsedCode() { return _localData._sourceObjects; }
+    boolean getQuarterWordMode() { return _globalData._quarterWordMode; }
+    boolean getThirdWordMode() { return _globalData._thirdWordMode; }
 
     /**
      * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the

@@ -18,13 +18,12 @@ import com.kadware.komodo.minalib.expressions.ExpressionParser;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Assembler for minalib
@@ -187,24 +186,23 @@ public class Assembler {
                                              lcp._needsExtendedMode ? "$INFO 10" : ""));
         }
 
-        Set<UndefinedReference> references = new HashSet<>();
-        System.out.println("Undefined References:");
+        Set<String> references = new TreeSet<>();
         for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
             LocationCounterPool lcPool = poolEntry.getValue();
             for (RelocatableWord rw : lcPool._storage) {
                 if (rw != null) {
                     for (UndefinedReference ur : rw._references) {
-                        if ((ur instanceof UndefinedReferenceToLabel)
-                            || (ur instanceof  UndefinedReferenceSpecial)) {
-                            references.add(ur);
+                        if (ur instanceof UndefinedReferenceToLabel) {
+                            references.add(((UndefinedReferenceToLabel) ur)._label);
                         }
                     }
                 }
             }
         }
 
-        for (UndefinedReference ref : references) {
-            System.out.println("  " + ref.toString());
+        System.out.println("Undefined References:");
+        for (String ref : references) {
+            System.out.println("  " + ref);
         }
     }
 
@@ -238,9 +236,11 @@ public class Assembler {
                         System.out.println(gwBase);
                     } else {
                         for (int urx = 0; urx < rw._references.length; ++urx) {
-                            System.out.println(String.format("%s %s",
+                            UndefinedReference ur = rw._references[urx];
+                            System.out.println(String.format("%s %s %s",
                                                              urx == 0 ? gwBase : "                             ",
-                                                             rw._references[urx].toString()));
+                                                             ur._fieldDescriptor.toString(),
+                                                             ur.toString()));
                         }
                     }
                 }
@@ -496,7 +496,7 @@ public class Assembler {
             return true;
         }
 
-        //TODO move this to generateInteger() - later
+        //TODO move this to generateInteger() - later (it's not straight-forward how to do it)
         if (firstValue instanceof IntegerValue) {
             int valueCount = (operandField._subfields.size());
             if (valueCount > 36) {
@@ -1131,10 +1131,12 @@ public class Assembler {
                             context.appendDiagnostic(new ValueDiagnostic(locale, msg));
                         } else {
                             IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                            BigInteger addend = BigInteger.valueOf(lRef._isNegative ? -1 : 1);
-                            addend = addend.multiply(lookupIntegerValue._value.get());
+                            BigInteger addend = lookupIntegerValue._value.get();
+                            if (lRef._isNegative) { addend = addend.negate(); }
                             newDiscreteValue = newDiscreteValue.add(addend);
-                            newURefs.addAll(Arrays.asList(lookupIntegerValue._references));
+                            for (UndefinedReference urSub : lookupIntegerValue._references) {
+                                newURefs.add(urSub.copy(lRef._fieldDescriptor));
+                            }
                         }
                     } catch (NotFoundException ex) {
                         //  reference is still not found - propagate it

@@ -151,7 +151,7 @@ class BaseFunctions {
         "IH_35*    . Interrupt 29 Initial Program Load (IPL)",
         "          . Default action is to simply return from the interrupt.",
         "          . This happens every time the IP is started via start().",
-        "          UR        *0,EX1,B26 . ",
+        "          UR        *0,EX1,B26-16 . should be 0,EX1,B26 but assembler is broken",
         "",
         "IH_36*    . UPI Initial",
         "          HALT 01036",
@@ -474,9 +474,7 @@ class BaseFunctions {
         List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
         int bReg = 0;
         for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
-            if (bReg == 1) {
-                ++bReg;
-            }
+            if (bReg == 1) { ++bReg; }
 
             int bdi = entry.getKey();
             List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
@@ -573,8 +571,7 @@ class BaseFunctions {
     /**
      * Creates the banking environment absolute module
      */
-    static private void createBankingModule(
-    ) {
+    static private void createBankingModule() {
         //  Assemble banking source - there will be 8 location counter pools 0 through 7
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
         Assembler asm = new Assembler();
