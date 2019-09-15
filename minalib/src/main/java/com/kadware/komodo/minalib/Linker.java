@@ -791,6 +791,10 @@ public class Linker {
         _errors++;
     }
 
+    /**
+     * Resolves UR to label
+     * @return composite value after the label value has been integrated into the initial value
+     */
     private long resolveUndefinedReferenceToLabel(
         final LCPoolSpecification poolSpec,
         final long initialValue,
@@ -809,6 +813,10 @@ public class Linker {
         }
     }
 
+    /**
+     * Resolves UR to location counter
+     * @return composite value after the loc ctr info has been integrated into the initial value
+     */
     private long resolveUndefinedReferenceToLocationCounter(
         final LCPoolSpecification poolSpec,
         final long initialValue,
@@ -857,6 +865,10 @@ public class Linker {
                             || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
                             newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex) & 077777;
                         }
+                    } else if (parameters[0] instanceof UndefinedReferenceToLocationCounter){
+                        //  If we have only an LC ref, then the reference is satisfied in the assembler meaning
+                        //  we should return 0.
+                        return 0;
                     } else {
                         raise("Incorrect parameter for " + labelType._text);
                     }
@@ -869,6 +881,9 @@ public class Linker {
                         UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
                         LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
                         newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex) & 077777;
+                    } else if (parameters[0] instanceof UndefinedReferenceToLocationCounter){
+                        UndefinedReferenceToLocationCounter urLoc = (UndefinedReferenceToLocationCounter) parameters[0];
+                        newValue = findBankDescriptorIndex(sourcePoolSpec._module, urLoc._locationCounterIndex);
                     } else {
                         raise("Incorrect parameter for " + labelType._text);
                     }
@@ -890,6 +905,10 @@ public class Linker {
                             || (sourcePoolSpec._lcIndex != linkerValue._lcIndex)) {
                             newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
                         }
+                    } else if (parameters[0] instanceof UndefinedReferenceToLocationCounter){
+                        //  If we have only an LC ref, then the reference is satisfied in the assembler meaning
+                        //  we should return 0.
+                        return 0;
                     } else {
                         raise("Incorrect parameter for " + labelType._text);
                     }
@@ -901,6 +920,9 @@ public class Linker {
                         UndefinedReferenceToLabel urLabel = (UndefinedReferenceToLabel) parameters[0];
                         LinkerValue linkerValue = (LinkerValue) _dictionary.getValue(urLabel._label);
                         newValue = findBankDescriptorIndex(linkerValue._relocatableModule, linkerValue._lcIndex);
+                    } else if (parameters[0] instanceof UndefinedReferenceToLocationCounter){
+                        UndefinedReferenceToLocationCounter urLoc = (UndefinedReferenceToLocationCounter) parameters[0];
+                        newValue = findBankDescriptorIndex(sourcePoolSpec._module, urLoc._locationCounterIndex);
                     } else {
                         raise("Incorrect parameter for " + labelType._text);
                     }
@@ -953,14 +975,14 @@ public class Linker {
                             parameters[urc] = rw._references[++urx];
                         }
 
-                        discreteValue = resolveUndefinedReferenceToSpecialLabel(poolSpec, initialValue, urLabel, specialLabel, parameters);
+                        discreteValue = resolveUndefinedReferenceToSpecialLabel(poolSpec, discreteValue, urLabel, specialLabel, parameters);
                     }
                 } else {
-                    discreteValue = resolveUndefinedReferenceToLabel(poolSpec, initialValue, urLabel);
+                    discreteValue = resolveUndefinedReferenceToLabel(poolSpec, discreteValue, urLabel);
                 }
             } else if (ur instanceof UndefinedReferenceToLocationCounter) {
                 UndefinedReferenceToLocationCounter urLoc = (UndefinedReferenceToLocationCounter) ur;
-                discreteValue = resolveUndefinedReferenceToLocationCounter(poolSpec, initialValue, urLoc);
+                discreteValue = resolveUndefinedReferenceToLocationCounter(poolSpec, discreteValue, urLoc);
             } else {
                 raise("Internal error:Undefined reference of unknown type");
             }
