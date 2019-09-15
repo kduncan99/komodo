@@ -898,7 +898,8 @@ public class InstructionProcessor extends Processor implements Worker {
                     int offset = framePointer - rcsBReg._lowerLimitNormalized;
                     rcsBReg._storage.set(offset, rcsData[0]);
                     rcsBReg._storage.set(offset + 1, rcsData[1]);
-                    setExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER, IndexRegister.setXM(rcsXReg.getW(), framePointer));
+                    _generalRegisterSet.setRegister(InstructionProcessor.RCS_INDEX_REGISTER,
+                                                    IndexRegister.setXM(rcsXReg.getW(), framePointer));
                 }
 
                 bmInfo._nextStep++;
@@ -953,7 +954,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 if (bmInfo._callOperation) {
                     long value = _designatorRegister.getBasicModeEnabled() ? 0_400000_000000L : 0;
                     value |= _indicatorKeyRegister.getAccessKey();
-                    _generalRegisterSet.setRegister(GeneralRegisterSet.EX0, value);
+                    _generalRegisterSet.setRegister(GeneralRegisterSet.X0, value);
                 }
 
                 bmInfo._nextStep++;
@@ -2904,6 +2905,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(false, true, false, false);
+            System.out.println(String.format("CALL OPERAND %012o =============================================", operand));//TODO
             new InstructionProcessor.BankManipulator().bankManipulation(Instruction.CALL, operand);
         }
 
@@ -7808,7 +7810,7 @@ public class InstructionProcessor extends Processor implements Worker {
         IndexRegister rcsXReg = getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
         setExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER, IndexRegister.setXM(rcsXReg.getW(), framePointer));
 
-        int reentry = _programAddressRegister.getLBDI() << 18;
+        long reentry = (long) _programAddressRegister.getLBDI() << 18;
         reentry |= (_programAddressRegister.getProgramCounter() + 1) & 0777777;
 
         long state = (bField & 03) << 24;
@@ -7817,7 +7819,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
         int offset = framePointer - rcsBReg._lowerLimitNormalized;
 
-        //  ignore the null-dereference warning in the next line
         rcsBReg._storage.set(offset++, reentry);
         rcsBReg._storage.set(offset, state);
     }

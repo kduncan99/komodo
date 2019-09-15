@@ -30,27 +30,14 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
 
         private final short _code;
 
-        Reason(
-            final int code
-        ) {
-            _code = (short)code;
-        }
-
-        public short getCode(
-        ) {
-            return _code;
-        }
-    };
-
+        Reason(int code) { _code = (short)code; }
+        public short getCode() { return _code; }
+    }
 
     private final short _bankDescriptorIndex;   // 15 bits significant
     private final byte _bankLevel;              // 3 bits significant
     private final Reason _reason;
 
-
-    /**
-     * Constructor
-     */
     public AddressingExceptionInterrupt(
         final Reason reason,
         final int bankLevel,
@@ -75,9 +62,5 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
         return result;
     }
 
-    @Override
-    public byte getShortStatusField(
-    ) {
-        return (byte)_reason.getCode();
-    }
+    @Override public byte getShortStatusField() { return (byte)_reason.getCode(); }
 }

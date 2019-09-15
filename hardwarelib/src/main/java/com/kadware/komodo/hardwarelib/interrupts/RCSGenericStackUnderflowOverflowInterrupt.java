@@ -13,41 +13,20 @@ import com.kadware.komodo.baselib.Word36;
  */
 public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     public enum Reason {
         Overflow(0),
         Underflow(1);
 
         private final short _code;
 
-        Reason(
-            final int code
-        ) {
-            _code = (short)code;
-        }
+        Reason(int code) { _code = (short)code; }
 
-        public short getCode(
-        ) {
-            return _code;
-        }
-    };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+        public short getCode() { return _code; }
+    }
 
     private final byte _baseRegister;       //  5 bits significant
     private final Reason _reason;
     private final int _relativeAddress;     //  24 bits significant
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Constructor
@@ -70,11 +49,6 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
         _relativeAddress = relativeAddress & 077777777;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     public byte getBaseRegister() { return _baseRegister; }
     public Reason getReason() { return _reason; }
     public int getRelativeAddress() { return _relativeAddress; }
@@ -87,19 +61,5 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
         return result;
     }
 
-    @Override
-    public byte getShortStatusField(
-    ) {
-        return (byte)_reason.getCode();
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    @Override public byte getShortStatusField() { return (byte)_reason.getCode(); }
 }

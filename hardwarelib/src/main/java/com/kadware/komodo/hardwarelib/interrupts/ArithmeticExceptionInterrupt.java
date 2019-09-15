@@ -20,19 +20,12 @@ public class ArithmeticExceptionInterrupt extends MachineInterrupt {
 
         private final short _code;
 
-        Reason(
-            final int code
-        ) {
-            _code = (short)code;
-        }
+        Reason(int code) { _code = (short)code; }
 
-        public short getCode(
-        ) {
-            return _code;
-        }
-    };
+        public short getCode() { return _code; }
+    }
 
-    public final Reason _reason;
+    private final Reason _reason;
 
     /**
      * Constructor
@@ -49,13 +42,5 @@ public class ArithmeticExceptionInterrupt extends MachineInterrupt {
         _reason = reason;
     }
 
-    /**
-     * Getter
-     * @return value
-     */
-    @Override
-    public byte getShortStatusField(
-    ) {
-        return (byte)_reason.getCode();
-    }
+    @Override public byte getShortStatusField() { return (byte)_reason.getCode(); }
 }
