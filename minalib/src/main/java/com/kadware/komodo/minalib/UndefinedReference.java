@@ -5,15 +5,19 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
-
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for all undefined references
  */
 public abstract class UndefinedReference {
 
-    public final FieldDescriptor _fieldDescriptor;
+    final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
     UndefinedReference(
@@ -34,11 +38,13 @@ public abstract class UndefinedReference {
     /**
      * Coalesces an array of U'Rs based on collections of field- and id-equivalent U'Rs.
      * It is hoped, but not algorithmically necessary, that no two U'Rs have overlapping but non-equivalent field specs.
+     * We must use a LinkedHashMap so that the references retain their ordering, to the extend possible.
+     * This is required for things such as LBDIREF$ to work.
      */
     public static UndefinedReference[] coalesce(
         final UndefinedReference[] array
     ) {
-        Map<UndefinedReference, Integer> tallyMap = new HashMap<>();
+        Map<UndefinedReference, Integer> tallyMap = new LinkedHashMap<>();
         for (UndefinedReference ur : array) {
             int addend = ur._isNegative ? -1 : 1;
             Integer tally = tallyMap.get(ur);

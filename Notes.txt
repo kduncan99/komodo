@@ -1,5 +1,5 @@
 -- TODO InProgress
-Folding all the function code into the InstructionProcessor class
+Linker - do BDI and LBDI
 Working on post-fix operators - need some unit tests for them
 Working on supporting floating point (double/single)
 $FORM and generation using forms

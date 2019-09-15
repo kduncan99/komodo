@@ -975,6 +975,10 @@ public class Linker {
                             parameters[urc] = rw._references[++urx];
                         }
 
+                        System.out.println("For " + specialLabel.toString());
+                        for (UndefinedReference p : parameters) {
+                            System.out.println("  " + p.toString() + " in " + p._fieldDescriptor.toString());
+                        }
                         discreteValue = resolveUndefinedReferenceToSpecialLabel(poolSpec, discreteValue, urLabel, specialLabel, parameters);
                     }
                 } else {

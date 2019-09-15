@@ -53,7 +53,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      0   . should land here"
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtendedMultibank2(source, false);
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank2(source, true);//false);
         assert (absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);
@@ -98,7 +98,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      0   . should land here"
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtendedMultibank2(source, true);//TODO false
+        AbsoluteModule absoluteModule = buildCodeExtendedMultibank2(source, false);
         assert (absoluteModule != null);
         Processors processors = loadModule(absoluteModule);
         startAndWait(processors._instructionProcessor);

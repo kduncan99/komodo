@@ -951,13 +951,9 @@ public class InstructionProcessor extends Processor implements Worker {
                 final BankManipulationInfo bmInfo
             ) {
                 if (bmInfo._callOperation) {
-                    try {
-                        long value = _designatorRegister.getBasicModeEnabled() ? 0_400000_000000L : 0;
-                        value |= _indicatorKeyRegister.getAccessKey();
-                        setGeneralRegister(GeneralRegisterSet.EX0, value);
-                    } catch (MachineInterrupt ex) {
-                        //  cannot happen
-                    }
+                    long value = _designatorRegister.getBasicModeEnabled() ? 0_400000_000000L : 0;
+                    value |= _indicatorKeyRegister.getAccessKey();
+                    _generalRegisterSet.setRegister(GeneralRegisterSet.EX0, value);
                 }
 
                 bmInfo._nextStep++;
