@@ -391,6 +391,164 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     }
 
     @Test
+    public void jumpFloatingOverflow_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 22)",
+            "          AND       A5,(0777777757777)",
+            "          LD        A6",
+            "          JFO       BAD1               . should not jump",
+            "",
+            "          OR        A5,(020000)        . set characteristic overflow",
+            "          LD        A6",
+            "          JFO       DONE               . should jump",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0             . should finish here",
+            "",
+            "BAD1      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpFloatingOverflow_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 22)",
+            "          AND       A5,(0777777757777),,B2",
+            "          LD        A6",
+            "          JFO       BAD1               . should not jump",
+            "",
+            "          OR        A5,(020000),,B2    . set characteristic overflow",
+            "          LD        A6",
+            "          JFO       DONE               . should jump",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0             . should finish here",
+            "",
+            "BAD1      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpFloatingUnderflow_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic underflow (bit 21)",
+            "          AND       A5,(0777777737777)",
+            "          LD        A6",
+            "          JFU       BAD1               . should not jump",
+            "",
+            "          OR        A5,(040000)        . set characteristic underflow",
+            "          LD        A6",
+            "          JFU       DONE               . should jump",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0             . should finish here",
+            "",
+            "BAD1      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpFloatingUnderflow_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 21)",
+            "          AND       A5,(0777777737777),,B2",
+            "          LD        A6",
+            "          JFU       BAD1               . should not jump",
+            "",
+            "          OR        A5,(040000),,B2    . set characteristic underflow",
+            "          LD        A6",
+            "          JFU       DONE               . should jump",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0             . should finish here",
+            "",
+            "BAD1      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
     public void jumpGreaterAndDecrement_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
@@ -967,6 +1125,161 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         assertFalse(processors._instructionProcessor.getDesignatorRegister().getDivideCheck());
+    }
+
+    @Test
+    public void jumpNoFloatingOverflow_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 22)",
+            "          AND       A5,(0777777757777)",
+            "          LD        A6",
+            "          JNFO      OK                 . should jump",
+            "          HALT      077",
+            "",
+            "OK",
+            "          OR        A5,(020000)        . set characteristic overflow",
+            "          LD        A6",
+            "          JNFO      BAD2               . should not jump",
+            "          HALT      0",
+            "",
+            "BAD2      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpNoFloatingOverflow_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 22)",
+            "          AND       A5,(0777777757777),,B2",
+            "          LD        A6",
+            "          JNFO      OK                 . should jump",
+            "          HALT      077",
+            "",
+            "OK",
+            "          OR        A5,(020000),,B2    . set characteristic overflow",
+            "          LD        A6",
+            "          JNFO      BAD2               . should not jump",
+            "          HALT      0",
+            "",
+            "BAD2      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpNoFloatingUnderflow_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic underflow (bit 21)",
+            "          AND       A5,(0777777737777)",
+            "          LD        A6",
+            "          JNFU      OK                 . should jump",
+            "          HALT      077",
+            "",
+            "OK",
+            "          OR        A5,(040000)        . set characteristic underflow",
+            "          LD        A6",
+            "          JNFU      BAD2               . should not jump",
+            "          HALT      0",
+            "",
+            "BAD2      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jumpNoFloatingUnderflow_extended(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        //TODO
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1),START$*",
+            "          SD        A5                 . clear characteristic overflow (bit 21)",
+            "          AND       A5,(0777777737777),,B2",
+            "          LD        A6",
+            "          JNFU      OK                 . should jump",
+            "          HALT      077",
+            "",
+            "OK",
+            "          OR        A5,(040000),,B2    . set characteristic underflow",
+            "          LD        A6",
+            "          JNFU      BAD2               . should not jump",
+            "          HALT      0",
+            "",
+            "BAD2      HALT      077",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
     }
 
     @Test

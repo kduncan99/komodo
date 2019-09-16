@@ -42,7 +42,9 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
     ) {
         if (obj instanceof UndefinedReferenceToLabel) {
             UndefinedReferenceToLabel refObj = (UndefinedReferenceToLabel) obj;
-            return (_isNegative == refObj._isNegative) && (_label.equals( refObj._label));
+            return (_isNegative == refObj._isNegative)
+                   && (_fieldDescriptor.equals(refObj._fieldDescriptor))
+                   && (_label.equals( refObj._label));
         }
         return false;
     }

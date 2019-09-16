@@ -27,7 +27,7 @@ public class IntegerValue extends Value {
         public final IntegerValue _remainder;
         public final IntegerValue _coveredQuotient;
 
-        public DivisionResult(
+        DivisionResult(
             final IntegerValue quotient,
             final IntegerValue remainder,
             final IntegerValue coveredQuotient
@@ -167,6 +167,7 @@ public class IntegerValue extends Value {
                                 _value.toString()));
         for (UndefinedReference ur : _references) {
             sb.append(ur.toString());
+            sb.append(ur._fieldDescriptor.toString());
         }
 
         return sb.toString();

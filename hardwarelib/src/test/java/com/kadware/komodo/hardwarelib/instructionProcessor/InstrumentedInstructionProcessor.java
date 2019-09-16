@@ -5,6 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.ActiveBaseTableEntry;
+import com.kadware.komodo.hardwarelib.DesignatorRegister;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;

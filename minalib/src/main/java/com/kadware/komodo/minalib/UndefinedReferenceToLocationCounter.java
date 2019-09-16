@@ -43,7 +43,9 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     ) {
         if (obj instanceof UndefinedReferenceToLocationCounter) {
             UndefinedReferenceToLocationCounter refObj = (UndefinedReferenceToLocationCounter) obj;
-            return (_isNegative == refObj._isNegative) && (_locationCounterIndex == refObj._locationCounterIndex);
+            return (_isNegative == refObj._isNegative)
+                   && (_fieldDescriptor.equals(refObj._fieldDescriptor))
+                   && (_locationCounterIndex == refObj._locationCounterIndex);
         }
         return false;
     }

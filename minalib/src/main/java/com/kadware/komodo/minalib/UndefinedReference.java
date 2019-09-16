@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public abstract class UndefinedReference {
 
-    final FieldDescriptor _fieldDescriptor;
+    public final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
     UndefinedReference(
@@ -46,14 +46,15 @@ public abstract class UndefinedReference {
     ) {
         Map<UndefinedReference, Integer> tallyMap = new LinkedHashMap<>();
         for (UndefinedReference ur : array) {
+            UndefinedReference urAbs = ur.copy(false);
             int addend = ur._isNegative ? -1 : 1;
-            Integer tally = tallyMap.get(ur);
+            Integer tally = tallyMap.get(urAbs);
             if (tally == null) {
                 tally = addend;
             } else {
                 tally += addend;
             }
-            tallyMap.put(ur, tally);
+            tallyMap.put(urAbs, tally);
         }
 
         List<UndefinedReference> resultList = new LinkedList<>();
@@ -77,9 +78,10 @@ public abstract class UndefinedReference {
         final UndefinedReference[] array1,
         final UndefinedReference[] array2
     ) {
-        List<UndefinedReference> list1 = Arrays.asList(array1);
-        List<UndefinedReference> list2 = Arrays.asList(array2);
+        List<UndefinedReference> list1 = new LinkedList<>(Arrays.asList(array1));
+        List<UndefinedReference> list2 = new LinkedList<>(Arrays.asList(array2));
         Iterator<UndefinedReference> iter1 = list1.iterator();
+
         while (iter1.hasNext()) {
             UndefinedReference ref1 = iter1.next();
             Iterator<UndefinedReference> iter2 = list2.iterator();
