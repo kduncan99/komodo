@@ -40,7 +40,7 @@ public class Test_CASFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue("0123").setCharacterMode(CharacterMode.ASCII).build();
@@ -63,7 +63,7 @@ public class Test_CASFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue("01234567").setCharacterMode(CharacterMode.ASCII).build();

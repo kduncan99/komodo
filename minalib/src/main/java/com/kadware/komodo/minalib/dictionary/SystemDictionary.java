@@ -38,10 +38,12 @@ public class SystemDictionary extends Dictionary {
         }
 
         //  directives
+        _initialValues.put("$ASCII", new DirectiveValue.Builder().setClass(ASCIIDirective.class).build());
         _initialValues.put("$BASIC", new DirectiveValue.Builder().setClass(BASICDirective.class).build());
         _initialValues.put("$EQU", new DirectiveValue.Builder().setClass(EQUDirective.class).build());
         _initialValues.put("$EQUF", new DirectiveValue.Builder().setClass(EQUFDirective.class).build());
         _initialValues.put("$EXTEND", new DirectiveValue.Builder().setClass(EXTENDDirective.class).build());
+        _initialValues.put("$FDATA", new DirectiveValue.Builder().setClass(FDATADirective.class).build());
         _initialValues.put("$FORM", new DirectiveValue.Builder().setClass(FORMDirective.class).build());
         _initialValues.put("$GFORM", new DirectiveValue.Builder().setClass(GFORMDirective.class).build());
         _initialValues.put("$INFO", new DirectiveValue.Builder().setClass(INFODirective.class).build());

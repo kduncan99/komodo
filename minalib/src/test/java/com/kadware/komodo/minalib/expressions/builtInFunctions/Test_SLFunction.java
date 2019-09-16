@@ -42,7 +42,7 @@ public class Test_SLFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new SLFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Value result = bif.evaluate(context);
 
         IntegerValue expected = new IntegerValue.Builder().setValue(12).build();

@@ -41,7 +41,7 @@ public class Test_CFSFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue("012345").setCharacterMode(CharacterMode.Fieldata).build();
@@ -64,7 +64,7 @@ public class Test_CFSFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue(" ABCDE234567").setCharacterMode(CharacterMode.Fieldata).build();

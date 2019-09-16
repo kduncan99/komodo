@@ -1,6 +1,4 @@
 -- TODO InProgress
-Linker - do BDI and LBDI
-Working on post-fix operators - need some unit tests for them
 Working on supporting floating point (double/single)
 $FORM and generation using forms
 Support $EQUF

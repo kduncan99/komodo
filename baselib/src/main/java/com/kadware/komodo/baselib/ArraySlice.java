@@ -647,7 +647,7 @@ public class ArraySlice {
     public static ArraySlice stringToWord36Fieldata(
         final String source
     ) {
-        int words = source.length();
+        int words = source.length() / 6;
         if (source.length() % 6 > 0) {
             words++;
         }

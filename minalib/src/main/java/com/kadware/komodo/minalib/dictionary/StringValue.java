@@ -158,7 +158,7 @@ public class StringValue extends Value {
 
     public static class Builder {
 
-        CharacterMode _characterMode = CharacterMode.ASCII;
+        CharacterMode _characterMode = CharacterMode.Default;
         boolean _flagged = false;
         ValueJustification _justification = ValueJustification.Default;
         ValuePrecision _precision = ValuePrecision.Default;

@@ -85,18 +85,11 @@ public class Context {
         private boolean _quarterWordMode = false;
         private boolean _thirdWordMode = false;
         private final Diagnostics _diagnostics;
-//        private final String _moduleName;
 
         //  Map of LC indices to the various GeneratedPool objects...
         private final Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
 
-        private Global(
-            Diagnostics diagnostics,
-            String moduleName   //  TODO remove this
-        ) {
-            _diagnostics = diagnostics;
-//            _moduleName = moduleName;
-        }
+        private Global( Diagnostics diagnostics ) { _diagnostics = diagnostics; }
     }
 
     //  Class data which is local to a particular context object
@@ -160,10 +153,9 @@ public class Context {
      */
     public Context(
         final Dictionary upperLevelDictionary,
-        final String[] sourceText,
-        final String moduleName
+        final String[] sourceText
     ) {
-        _globalData = new Global(new Diagnostics(), moduleName);
+        _globalData = new Global(new Diagnostics());
         _localData = new Local(new Dictionary(upperLevelDictionary), sourceText);
         _parent = null;
     }

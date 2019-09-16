@@ -25,7 +25,7 @@ public class Test_AdditionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(25).setFlagged(true).build());
         valueStack.push(new IntegerValue.Builder().setValue(10098).setFlagged(true).build());
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -48,7 +48,7 @@ public class Test_AdditionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(25).setFlagged(true).build());
         valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(2003.125)).build());
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -103,7 +103,7 @@ public class Test_AdditionOperator {
         valueStack.push(addend1);
         valueStack.push(addend2);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -127,7 +127,7 @@ public class Test_AdditionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(003000331111L).setFlagged(true).build());
         IntegerValue expected = new IntegerValue.Builder().setValue(005000531131L).build();
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);

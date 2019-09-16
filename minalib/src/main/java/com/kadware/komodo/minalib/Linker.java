@@ -851,7 +851,7 @@ public class Linker {
             switch (labelType) {
                 case BDI:
                     //  Retrieve the BDI which contains the BDI$ reference
-                    //TODO
+                    newValue = findBankDescriptorIndex(sourcePoolSpec._module, sourcePoolSpec._lcIndex) & 077777;
                     break;
 
                 case BDICALL: {
@@ -891,7 +891,7 @@ public class Linker {
 
                 case LBDI:
                     //  Retrieve the L,BDI which contains the LBDI$ reference
-                    //TODO
+                    newValue = findBankDescriptorIndex(sourcePoolSpec._module, sourcePoolSpec._lcIndex);
                     break;
 
                 case LBDICALL:

@@ -224,7 +224,7 @@ public class Test_Assembler {
             "      + ((077000777) + 5)"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
+        Assembler.Option[] optionSet = { };
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 
@@ -244,5 +244,65 @@ public class Test_Assembler {
         assertEquals(0_017L, lcp1._storage[0].getW());
         assertEquals(0, lcp1._storage[1].getW());
         assertEquals(1, lcp1._storage[1]._references.length);
+    }
+
+    @Test
+    public void genASCIIStrings(
+    ) {
+        String[] source = {
+            "          $ASCII",
+            "$(0)      .",
+            "          'A'",
+            "          'A'L",
+            "          'A'R",
+            "          'A'DL",
+            "          'A'DR",
+        };
+
+        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
+        Assembler asm = new Assembler();
+        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+
+        assertTrue(asm.getDiagnostics().isEmpty());
+        LocationCounterPool lcp0 = module._storage.get(0);
+        assertNotEquals(null, lcp0);
+        assertEquals(7, lcp0._storage.length);
+        assertEquals(0_101040040040L, lcp0._storage[0].getW());
+        assertEquals(0_101040040040L, lcp0._storage[1].getW());
+        assertEquals(0_000000000101L, lcp0._storage[2].getW());
+        assertEquals(0_101040040040L, lcp0._storage[3].getW());
+        assertEquals(0_040040040040L, lcp0._storage[4].getW());
+        assertEquals(0_000000000000L, lcp0._storage[5].getW());
+        assertEquals(0_000000000101L, lcp0._storage[6].getW());
+    }
+
+    @Test
+    public void genFieldataStrings(
+    ) {
+        String[] source = {
+            "          $FDATA",
+            "$(0)      .",
+            "          'A'",
+            "          'A'L",
+            "          'A'R",
+            "          'A'DL",
+            "          'A'DR",
+        };
+
+        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
+        Assembler asm = new Assembler();
+        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+
+        assertTrue(asm.getDiagnostics().isEmpty());
+        LocationCounterPool lcp0 = module._storage.get(0);
+        assertNotEquals(null, lcp0);
+        assertEquals(7, lcp0._storage.length);
+        assertEquals(0_060505050505L, lcp0._storage[0].getW());
+        assertEquals(0_060505050505L, lcp0._storage[1].getW());
+        assertEquals(0_000000000006L, lcp0._storage[2].getW());
+        assertEquals(0_060505050505L, lcp0._storage[3].getW());
+        assertEquals(0_050505050505L, lcp0._storage[4].getW());
+        assertEquals(0_000000000000L, lcp0._storage[5].getW());
+        assertEquals(0_000000000006L, lcp0._storage[6].getW());
     }
 }

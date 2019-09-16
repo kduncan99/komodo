@@ -336,7 +336,8 @@ public class Assembler {
         final Context context,
         final Locale locale
     ) {
-        CharacterMode generateMode = sValue._characterMode == CharacterMode.Default ? context.getCharacterMode() : sValue._characterMode;
+        CharacterMode generateMode =
+            sValue._characterMode == CharacterMode.Default ? context.getCharacterMode() : sValue._characterMode;
         int charsPerWord = generateMode == CharacterMode.ASCII ? 4 : 6;
 
         int charsExpected;
@@ -361,6 +362,9 @@ public class Assembler {
             if (sValue._justification == ValueJustification.Right) {
                 String padString = generateMode == CharacterMode.ASCII ? "\0\0\0\0\0\0\0\0" : "@@@@@@@@@@@@";
                 effectiveString = padString.substring(0, padChars) + effectiveString;
+            } else {
+                String padString = "            ";
+                effectiveString += padString.substring(0, padChars);
             }
         }
 
@@ -1175,44 +1179,6 @@ public class Assembler {
                 if (newValue != originalValue) {
                     pool.put(wordEntry.getKey(), wordEntry.getValue().copy(newValue));
                 }
-
-//                GeneratedWord gWord = wordEntry.getValue();
-//                for (Map.Entry<FieldDescriptor, IntegerValue> entry : gWord.entrySet()) {
-//                    FieldDescriptor fd = entry.getKey();
-//                    IntegerValue originalIV = entry.getValue();
-//                    if (originalIV._undefinedReferences.length > 0) {
-//                        long newDiscreteValue = originalIV._value;
-//                        List<UndefinedReference> newURefs = new LinkedList<>();
-//                        for (UndefinedReference uRef : originalIV._undefinedReferences) {
-//                            if (uRef instanceof UndefinedReferenceToLabel) {
-//                                UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
-//                                try {
-//                                    Value lookupValue = context.getDictionary().getValue(lRef._label);
-//                                    if (lookupValue.getType() != ValueType.Integer) {
-//                                        String msg = String.format("Reference '%s' does not resolve to an integer",
-//                                                                   lRef._label);
-//                                        context.appendDiagnostic(new ValueDiagnostic(new Locale(gWord._lineSpecifier, 1),
-//                                                                                     msg));
-//                                    } else {
-//                                        IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-//                                        newDiscreteValue += (lRef._isNegative ? -1 : 1) * lookupIntegerValue._value;
-//                                        newURefs.addAll(Arrays.asList(lookupIntegerValue._undefinedReferences));
-//                                    }
-//                                } catch (NotFoundException ex) {
-//                                    //  reference is still not found - propagate it
-//                                    newURefs.add(uRef);
-//                                }
-//                            } else {
-//                                newURefs.add(uRef);
-//                            }
-//                        }
-//
-//                        IntegerValue newIV = new IntegerValue(originalIV._flagged,
-//                                                              newDiscreteValue,
-//                                                              newURefs.toArray(new UndefinedReference[0]));
-//                        gWord.put(fd, newIV);
-//                    }
-//                }
             }
         }
     }
@@ -1239,7 +1205,7 @@ public class Assembler {
 
         //  setup
         Dictionary globalDictionary = new Dictionary(new SystemDictionary());
-        Context context = new Context(globalDictionary, source, moduleName);
+        Context context = new Context(globalDictionary, source);
         _diagnostics = context.getDiagnostics();
         _parsedCode = context.getParsedCode();
 

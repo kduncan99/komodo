@@ -33,7 +33,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls, 1), val));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 
@@ -55,7 +55,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls10, 11), addend2));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 
@@ -81,7 +81,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls, 50), term3));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 

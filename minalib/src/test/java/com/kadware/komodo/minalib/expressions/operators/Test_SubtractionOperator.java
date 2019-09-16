@@ -27,7 +27,7 @@ public class Test_SubtractionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(10098).setFlagged(true).build());
         valueStack.push(new IntegerValue.Builder().setValue(512).setFlagged(true).build());
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -50,7 +50,7 @@ public class Test_SubtractionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(10000).setFlagged(true).build());
         valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(22.22222)).build());
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -105,7 +105,7 @@ public class Test_SubtractionOperator {
         valueStack.push(addend1);
         valueStack.push(addend2);
 
-        Context context = new Context(new Dictionary(), new String[0], "TEST");
+        Context context = new Context(new Dictionary(), new String[0]);
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);

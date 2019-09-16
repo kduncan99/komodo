@@ -21,7 +21,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("14458", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         Expression exp = parser.parse(context);
 
         assertEquals(1, exp._items.size());
@@ -40,7 +40,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("-14458", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         Expression exp = parser.parse(context);
 
         assertEquals(2, exp._items.size());
@@ -64,7 +64,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("'Hello'", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         Expression exp = parser.parse(context);
 
         assertEquals(1, exp._items.size());
@@ -83,7 +83,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("'Hello ':'Stupid ':'Moron'", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         Expression exp = parser.parse(context);
 
         assertEquals(5, exp._items.size());
@@ -97,7 +97,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("1+3", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         Expression exp = parser.parse(context);
 
         assertEquals(3, exp._items.size());
@@ -111,7 +111,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("$Label", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         String label = parser.parseLabel(context);
         assertEquals("$Label", label);
     }
@@ -124,7 +124,7 @@ public class Test_ExpressionParser {
         ExpressionParser parser = new ExpressionParser("$sl('Test')", locale);
 
         Dictionary system = new SystemDictionary();
-        Context context = new Context(new Dictionary(system), new String[0], "TEST");
+        Context context = new Context(new Dictionary(system), new String[0]);
         ReferenceItem ri = parser.parseReference(context);
         assertTrue(ri instanceof ReferenceItem);
     }
