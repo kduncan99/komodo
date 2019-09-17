@@ -601,6 +601,46 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     }
 
     @Test
+    public void storeLocationAndJump_indirect(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0),VECTOR  + SUBROUTINE",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          SLJ       *VECTOR",
+            "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          + 0                    . where return address is stored",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         *SUBROUTINE  . return to caller",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+        long[] result = getBank(processors._instructionProcessor, 12);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
     public void loadModifierAndJump_basic(
     ) throws MachineInterrupt,
              NodeNameConflictException,
@@ -613,6 +653,43 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
             "          LMJ       X11,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         0,X11        . return to caller",
+        };
+
+        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
+        assert(absoluteModule != null);
+        Processors processors = loadModule(absoluteModule);
+        startAndWait(processors._instructionProcessor);
+
+        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
+        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
+        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void loadModifierAndJump_indirect_basic(
+    ) throws MachineInterrupt,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(0),VECTOR  + SUBROUTINE",
+            "",
+            "$(1),START$*",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          LMJ       X11,*VECTOR",
             "          LA,U      A1,5         . change A1 value post-subroutine",
             "          HALT      0            . done",
             "",

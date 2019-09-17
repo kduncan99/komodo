@@ -1,5 +1,6 @@
 -- TODO InProgress
-Working on supporting floating point (double/single)
+Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
+Working on supporting floating point (double/single) - data generation - floats
 $FORM and generation using forms
 Support $EQUF
 
@@ -7,18 +8,13 @@ Support $EQUF
 -- TODO BUGS
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
-SLJ instruction - U < 0200 is GRS, U+1 is always storage (we don't do that)
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
   Consider abandoning breakpoints...
   Also, BreakpointRegister is broken
-Jumps to indirect addresses (in BM) - does the return address reflect the original jump-from,
-  or does it wrongly reflect the indirected-to location?
-  Applies to all jumps, as well as to LxJ
 
 * minalib
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
-Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
 Do all T diagnostics result in a rel module not being generated?
 
@@ -59,6 +55,7 @@ IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
 IP: unit tests
+  LIJ, LBJ, LDJ
   LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
   LRD, SMD, RMD, LMC, SDMN, SDMS, SDMF, RDC
 Catch throwables, and turn them into hardware fault machine interrupts
@@ -83,6 +80,7 @@ IP: string instructions (and unit tests)
   SS
   TES
   TNES
+IP: Queue banks
 IP: queuing instructions
   ENQ
   ENQF
@@ -141,8 +139,7 @@ IP: search and masked search instructions (and unit tests)
 
 * minalib
 more FloatingPointValue unit tests?
-Implement LBDI$ in Linker and Assembler, and maybe other such things
-unit tests for string value generation
+more unit tests for string value generation
 unit tests for node references - need to check results
 unit tests for more built-in functions - we're missing a lot of them
 support special form for JGD instruction
@@ -154,7 +151,6 @@ use DiagnosticDirective for stuff.. now I forgot what this means
 do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
 add test cases for interrupts (many of them already marked TODO)
-data generation - floats
 can we do implicit base register (and do it right)?  also with the $LIT directive...
 support user-defined functions
 allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
@@ -176,7 +172,6 @@ directives
   $IF / $ELSE / $ELSF / $ENDF
   $DO / $ENDD
   $REPEAT / $ENDR
-  $FORM
   $GEN
   $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement

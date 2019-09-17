@@ -4390,11 +4390,12 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             //  Increment PAR.PC and store it in X(a)Modifier, then set PAR.PC to U
+            long op = getJumpOperand(true);
             int ixReg = (int) _currentInstruction.getA();
             IndexRegister xReg = getExecOrUserXRegister(ixReg);
             setExecOrUserXRegister(ixReg, IndexRegister.setH2(xReg.getW(),
                                                               _programAddressRegister.getProgramCounter() + 1));
-            setProgramCounter(getJumpOperand(true), true);
+            setProgramCounter(op, true);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LMJ; }
@@ -5371,6 +5372,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the SLJ instruction basic mode f=072 j=001
+     * Per architecture, U < 0200 is GRS, U+1 is always storage
+     * In our implementation, U and U+1 are always storage.
      */
     private class SLJFunctionHandler extends InstructionHandler {
 
