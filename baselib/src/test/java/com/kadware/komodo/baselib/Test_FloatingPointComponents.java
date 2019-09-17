@@ -8,6 +8,7 @@ import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
 import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 import java.math.BigInteger;
+import java.util.Random;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -161,7 +162,6 @@ public class Test_FloatingPointComponents {
 
     //  divide ---------------------------------------------------------------------------------------------------------------------
 
-    //  TODO
     @Test
     public void divide_simple(
     ) throws CharacteristicOverflowException,
@@ -169,13 +169,14 @@ public class Test_FloatingPointComponents {
              DivideByZeroException {
         double value1 = 32.5;
         double value2 = 2.5;
-        double expectedValue = 13.0;
+        double expectedValue = value1 / value2;
 
         FloatingPointComponents operand1 = new FloatingPointComponents(value1);
         FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        FloatingPointComponents expected = new FloatingPointComponents(expectedValue).normalize();
 
         FloatingPointComponents result = operand1.divide(operand2);
-        assertEquals(expectedValue, result.toDouble(), 0.000001);
+        assertEquals(expected, result);
     }
 
     @Test
@@ -185,13 +186,31 @@ public class Test_FloatingPointComponents {
              DivideByZeroException {
         double value1 = -47166.560546875;
         double value2 = -11.515625;
-        double expectedValue = 4095.875;
+        double expectedValue = value1 / value2;
 
         FloatingPointComponents operand1 = new FloatingPointComponents(value1);
         FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        FloatingPointComponents expected = new FloatingPointComponents(expectedValue).normalize();
 
         FloatingPointComponents result = operand1.divide(operand2);
-        assertEquals(expectedValue, result.toDouble(), 0.000001);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void divide_one_by_one(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
+             DivideByZeroException {
+        double value1 = 1.0;
+        double value2 = 1.0;
+        double expectedValue = value1 / value2;
+
+        FloatingPointComponents operand1 = new FloatingPointComponents(value1);
+        FloatingPointComponents operand2 = new FloatingPointComponents(value2);
+        FloatingPointComponents expected = new FloatingPointComponents(expectedValue);
+
+        FloatingPointComponents result = operand1.divide(operand2);
+        assertEquals(expected, result);
     }
 
     @Test
@@ -201,14 +220,34 @@ public class Test_FloatingPointComponents {
              DivideByZeroException {
         double value1 = -1.0/128.0;
         double value2 = -1.0/4.0;
-        double expectedValue = 1.0/32.0;
+        double expectedValue = value1 / value2;
 
         FloatingPointComponents operand1 = new FloatingPointComponents(value1);
         FloatingPointComponents operand2 = new FloatingPointComponents(value2);
-        FloatingPointComponents exp = new FloatingPointComponents(expectedValue);//TODO
+        FloatingPointComponents expected = new FloatingPointComponents(expectedValue);
 
         FloatingPointComponents result = operand1.divide(operand2);
-        assertEquals(expectedValue, result.toDouble(), 0.000001);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void divide_randomExcercise(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
+             DivideByZeroException {
+        for (int c = 0; c < 100; ++c) {
+            Random r = new Random(System.currentTimeMillis());
+            double value1 = r.nextDouble();
+            double value2 = r.nextDouble();
+            double expectedValue = value1 / value2;
+
+            FloatingPointComponents operand1 = new FloatingPointComponents(value1).normalize();
+            FloatingPointComponents operand2 = new FloatingPointComponents(value2).normalize();
+            FloatingPointComponents expected = new FloatingPointComponents(expectedValue).normalize();
+
+            FloatingPointComponents result = operand1.divide(operand2).normalize();
+            assertEquals(expected.toDouble(), result.toDouble(), 0.000001);
+        }
     }
 
     @Test
@@ -264,6 +303,30 @@ public class Test_FloatingPointComponents {
     //  hashCode -------------------------------------------------------------------------------------------------------------------
 
     //  TODO
+
+    //  invert ---------------------------------------------------------------------------------------------------------------------
+
+    @Test(expected = DivideByZeroException.class)
+    public void invertZero(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
+             DivideByZeroException {
+        FloatingPointComponents fpZero = new FloatingPointComponents(false, 0, 0, 0);
+        fpZero.invert();
+    }
+
+    @Test
+    public void invertOne(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
+             DivideByZeroException {
+        FloatingPointComponents fpOne = new FloatingPointComponents(false, 0, 1, 0);
+        FloatingPointComponents expected =
+            new FloatingPointComponents(false, 0, 1, 0).normalizeNoThrow();
+
+        FloatingPointComponents result = fpOne.invert();
+        assertEquals(expected, result);
+    }
 
     //  is**** ---------------------------------------------------------------------------------------------------------------------
 
