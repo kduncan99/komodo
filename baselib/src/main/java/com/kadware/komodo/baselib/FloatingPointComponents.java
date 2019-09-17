@@ -91,7 +91,7 @@ public class FloatingPointComponents {
     /**
      * Creates a not-necessarily-normalized FloatingPointComponents object from the various components.
      */
-    FloatingPointComponents(
+    public FloatingPointComponents(
         final boolean isNegative,
         final int exponent,
         final long integral,

@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib.expressions;
 
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
@@ -12,6 +14,27 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class Test_ExpressionParser {
+
+    @Test
+    public void parseFloatingLiteral(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException,
+             ExpressionException {
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
+        ExpressionParser parser = new ExpressionParser("3.14159", locale);
+
+        Dictionary system = new SystemDictionary();
+        Context context = new Context(new Dictionary(system), new String[0]);
+        Expression exp = parser.parse(context);
+
+        assertEquals(1, exp._items.size());
+        IExpressionItem item = exp._items.get(0);
+        assertTrue(item instanceof ValueItem);
+        Value v = ((ValueItem)item)._value;
+        assertTrue(v instanceof FloatingPointValue);
+        assertEquals(3.14159, ((FloatingPointValue)v)._value.toDouble(), 0.00001);
+    }
 
     @Test
     public void parseIntegerLiteral(

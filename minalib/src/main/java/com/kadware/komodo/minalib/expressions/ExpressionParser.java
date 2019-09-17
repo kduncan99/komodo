@@ -4,6 +4,10 @@
 
 package com.kadware.komodo.minalib.expressions;
 
+import com.kadware.komodo.baselib.FloatingPointComponents;
+import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
+import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
+import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
 import com.kadware.komodo.minalib.dictionary.*;
@@ -254,13 +258,47 @@ public class ExpressionParser {
     }
 
     /**
-     * Parses a floating point literal value
-     * @return floating point value OperandItem
+     * Parses a floating point literal value.
+     * Format is:
+     *   [0-9]+ '.' [0-9]+
+     *   Which is to say, a decimal point with at least one digit on both sides
+     * @return floating point value OperandItem if found, else null
      */
     private OperandItem parseFloatingPointLiteral(
     ) {
-        //TODO parse the flpt thing
-        return null;
+        if (atEnd() || !Character.isDigit(nextChar())) {
+            return null;
+        }
+
+        int oldIndex = _index;
+        double value = 0.0;
+        while (!atEnd() && Character.isDigit(nextChar())) {
+            char ch = getNextChar();
+            value = (value * 10) + (ch - '0');
+        }
+
+        if (atEnd() || (getNextChar() != '.')) {
+            _index = oldIndex;
+            return null;
+        }
+
+        boolean hasFractionalDigits = false;
+        double divisor = 10.0;
+        while (!atEnd() && Character.isDigit(nextChar())) {
+            char ch = getNextChar();
+            value += ((double)(ch - '0') / divisor);
+            divisor *= 10;
+            hasFractionalDigits = true;
+        }
+
+        if (!hasFractionalDigits) {
+            _index = oldIndex;
+            return null;
+        }
+
+        FloatingPointComponents fpc = new FloatingPointComponents(value);
+        FloatingPointValue fpValue = new FloatingPointValue.Builder().setValue(fpc).build();
+        return new ValueItem(getLocale(), fpValue);
     }
 
     /**

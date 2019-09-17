@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 public class Test_Expression {
 
     @Test
-    public void parseSimpleValue(
+    public void evaluateSimpleValue(
     ) throws ExpressionException {
         Value val = new IntegerValue.Builder().setValue(42).build();
         List<IExpressionItem> items = new LinkedList<>();
@@ -42,7 +42,7 @@ public class Test_Expression {
     }
 
     @Test
-    public void parseSimpleMath(
+    public void evaluateSimpleMath(
     ) throws ExpressionException {
         Value addend1 = new IntegerValue.Builder().setValue(42).build();
         Value addend2 = new IntegerValue.Builder().setValue(112).build();
@@ -64,7 +64,7 @@ public class Test_Expression {
     }
 
     @Test
-    public void parseSimpleMathWithPrecedence(
+    public void evaluateSimpleMathWithPrecedence(
     ) throws ExpressionException {
         //  expression is 5 + 7 * 12...  it should be evaluated at 5 + (7 * 12) == 89
         Value term1 = new IntegerValue.Builder().setValue(5).build();
