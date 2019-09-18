@@ -37,7 +37,7 @@ public abstract class ChannelModule extends Node implements Worker {
         public final Processor _source;
         public final InputOutputProcessor _ioProcessor;
         public final ChannelProgram _channelProgram;
-        public DeviceIOInfo _ioInfo = null;
+        public Device.IOInfo _ioInfo = null;
         public boolean _started = false;
         public boolean _completed = false;
 

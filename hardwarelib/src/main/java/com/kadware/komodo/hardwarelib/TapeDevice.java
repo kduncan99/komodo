@@ -70,10 +70,10 @@ public abstract class TapeDevice extends Device {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     protected TapeDevice(
-        final DeviceModel deviceModel,
+        final Model deviceModel,
         final String name
     ) {
-        super(DeviceType.Tape, deviceModel, name);
+        super(Type.Tape, deviceModel, name);
     }
 
 
@@ -101,19 +101,19 @@ public abstract class TapeDevice extends Device {
     @Override
     public abstract void initialize();
 
-    abstract void ioGetInfo(final DeviceIOInfo ioInfo);
-    abstract void ioMoveBlock(final DeviceIOInfo ioInfo);
-    abstract void ioMoveBlockBackward(final DeviceIOInfo ioInfo);
-    abstract void ioMoveFile(final DeviceIOInfo ioInfo);
-    abstract void ioMoveFileBackward(final DeviceIOInfo ioInfo);
-    abstract void ioRead(final DeviceIOInfo ioInfo);
-    abstract void ioReadBackward(final DeviceIOInfo ioInfo);
-    abstract void ioReset(final DeviceIOInfo ioInfo);
-    abstract void ioRewind(final DeviceIOInfo ioInfo);
-    abstract void ioSetMode(final DeviceIOInfo ioInfo);
-    abstract void ioUnload(final DeviceIOInfo ioInfo);
-    abstract void ioWrite(final DeviceIOInfo ioInfo);
-    abstract void ioWriteEndOfFile(final DeviceIOInfo ioInfo);
+    abstract void ioGetInfo(final IOInfo ioInfo);
+    abstract void ioMoveBlock(final IOInfo ioInfo);
+    abstract void ioMoveBlockBackward(final IOInfo ioInfo);
+    abstract void ioMoveFile(final IOInfo ioInfo);
+    abstract void ioMoveFileBackward(final IOInfo ioInfo);
+    abstract void ioRead(final IOInfo ioInfo);
+    abstract void ioReadBackward(final IOInfo ioInfo);
+    abstract void ioReset(final IOInfo ioInfo);
+    abstract void ioRewind(final IOInfo ioInfo);
+    abstract void ioSetMode(final IOInfo ioInfo);
+    abstract void ioUnload(final IOInfo ioInfo);
+    abstract void ioWrite(final IOInfo ioInfo);
+    abstract void ioWriteEndOfFile(final IOInfo ioInfo);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -171,8 +171,8 @@ public abstract class TapeDevice extends Device {
      *      Bit 0:  device_ready
      *      Bit 3:  mounted
      *      Bit 4:  write_protected
-     * MODEL:       integer code for the DeviceModel
-     * TYPE:        integer code for the DeviceType
+     * MODEL:       integer code for the Model
+     * TYPE:        integer code for the Type
      * NOISE:       current noise constant
      * FLAGS2:
      *      Bit 30: load point
@@ -206,15 +206,15 @@ public abstract class TapeDevice extends Device {
      */
     @Override
     public boolean handleIo(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ioInfo._transferredCount = 0;
-        ioInfo._status = DeviceStatus.InProgress;
+        ioInfo._status = IOStatus.InProgress;
         synchronized(this) {
             ioStart(ioInfo);
             switch (ioInfo._ioFunction) {
                 case None:
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     ioEnd(ioInfo);
                     return false;
 
@@ -271,7 +271,7 @@ public abstract class TapeDevice extends Device {
                     break;
 
                 default:
-                    ioInfo._status = DeviceStatus.InvalidFunction;
+                    ioInfo._status = IOStatus.InvalidFunction;
                     return false;
             }
 
@@ -325,7 +325,7 @@ public abstract class TapeDevice extends Device {
      */
     @Override
     protected void writeBuffersToLog(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);

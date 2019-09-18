@@ -4,9 +4,6 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.hardwarelib.Device;
-import com.kadware.komodo.hardwarelib.Node;
-import java.nio.ByteBuffer;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -17,10 +14,10 @@ public class Test_Device {
 
     private static class TestDevice extends Device {
 
-        public TestDevice(
+        TestDevice(
             final String name
         ) {
-            super(DeviceType.Disk, DeviceModel.FileSystemDisk, name);
+            super(Type.Disk, Model.FileSystemDisk, name);
         }
 
         @Override
@@ -31,7 +28,7 @@ public class Test_Device {
         }
 
         @Override
-        public boolean handleIo(DeviceIOInfo ioInfo) { return true; }
+        public boolean handleIo(IOInfo ioInfo) { return true; }
 
         @Override
         public boolean hasByteInterface() { return true; }
@@ -46,7 +43,7 @@ public class Test_Device {
         public void terminate() {}
 
         @Override
-        public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+        public void writeBuffersToLog(IOInfo ioInfo) {}
     }
 
     @Test
@@ -55,10 +52,10 @@ public class Test_Device {
         Device device = new TestDevice("DISK01");
         assertEquals(NodeCategory.Device, device._category);
         assertEquals("DISK01", device._name);
-        assertEquals(DeviceType.Disk, device._deviceType);
-        assertEquals(DeviceModel.FileSystemDisk, device._deviceModel);
-        assertEquals(false, device._readyFlag);
-        assertEquals(false, device._unitAttentionFlag);
+        assertEquals(Device.Type.Disk, device._deviceType);
+        assertEquals(Device.Model.FileSystemDisk, device._deviceModel);
+        assertFalse(device._readyFlag);
+        assertFalse(device._unitAttentionFlag);
     }
 
     @Test

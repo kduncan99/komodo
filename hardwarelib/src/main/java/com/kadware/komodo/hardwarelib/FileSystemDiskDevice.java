@@ -50,7 +50,7 @@ import org.apache.logging.log4j.LogManager;
  * to the code here-in.
  */
 @SuppressWarnings("Duplicates")
-public class FileSystemDiskDevice extends DiskDevice implements CompletionHandler<Integer, DeviceIOInfo> {
+public class FileSystemDiskDevice extends DiskDevice implements CompletionHandler<Integer, Device.IOInfo> {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -121,7 +121,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             buffer.putInt(_blockSize);
             buffer.putLong(_blockCount);
         }
-    };
+    }
 
     private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
     private AsynchronousFileChannel _channel;
@@ -138,7 +138,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     FileSystemDiskDevice(
         final String name
     ) {
-        super(DeviceModel.FileSystemDisk, name);
+        super(Model.FileSystemDisk, name);
         _channel = null;
     }
 
@@ -147,9 +147,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     //  CompletionHandler implementation
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public void completed(Integer value, DeviceIOInfo attachment) {
+    public void completed(Integer value, IOInfo attachment) {
         attachment._transferredCount = value;
-        attachment._status = DeviceStatus.Successful;
+        attachment._status = IOStatus.Successful;
         attachment._source.signal();
         if (attachment._ioFunction.isReadFunction()) {
             _readBytes += value;
@@ -161,8 +161,8 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     /**
      * Async io failed
      */
-    public void failed(Throwable t, DeviceIOInfo attachment) {
-        attachment._status = DeviceStatus.SystemException;
+    public void failed(Throwable t, IOInfo attachment) {
+        attachment._status = IOStatus.SystemException;
         attachment._source.signal();
         LOGGER.error(String.format("Device %s IO failed:%s", _name, t.getMessage()));
     }
@@ -232,14 +232,14 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     @Override
     protected void ioGetInfo(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         ArraySlice as = getInfo();
         ioInfo._byteBuffer = new byte[128];
         as.pack(ioInfo._byteBuffer);
-        ioInfo._status = DeviceStatus.Successful;
+        ioInfo._status = IOStatus.Successful;
         _unitAttentionFlag = false;
         ioInfo._source.signal();
     }
@@ -249,18 +249,18 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     @Override
     protected void ioRead(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_readCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             ioInfo._source.signal();
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             ioInfo._source.signal();
             return;
         }
@@ -268,14 +268,14 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo._status = DeviceStatus.NotPrepped;
+            ioInfo._status = IOStatus.NotPrepped;
             ioInfo._source.signal();
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount % _blockSize) != 0) {
-            ioInfo._status = DeviceStatus.InvalidBlockSize;
+            ioInfo._status = IOStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
         }
@@ -284,18 +284,18 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         long reqBlockCount = reqByteCount / _blockSize;
 
         if (reqBlockId >= _blockCount) {
-            ioInfo._status = DeviceStatus.InvalidBlockId;
+            ioInfo._status = IOStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
         if (reqBlockId + reqBlockCount > _blockCount) {
-            ioInfo._status = DeviceStatus.InvalidBlockCount;
+            ioInfo._status = IOStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
         }
 
-        ioInfo._status = DeviceStatus.InProgress;
+        ioInfo._status = IOStatus.InProgress;
         ioInfo._byteBuffer = new byte[ioInfo._transferCount];
         long byteOffset = calculateByteOffset(reqBlockId);
         _channel.read(ByteBuffer.wrap(ioInfo._byteBuffer), byteOffset, ioInfo, this);
@@ -306,14 +306,14 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     @Override
     protected void ioReset(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
         } else {
-            ioInfo._status = DeviceStatus.Successful;
+            ioInfo._status = IOStatus.Successful;
         }
 
         ioInfo._source.signal();
@@ -324,15 +324,15 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     @Override
     protected void ioUnload(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
         } else {
             unmount();
-            ioInfo._status = DeviceStatus.Successful;
+            ioInfo._status = IOStatus.Successful;
         }
 
         ioInfo._source.signal();
@@ -343,18 +343,18 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
      */
     @Override
     protected void ioWrite(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_writeCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             ioInfo._source.signal();
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             ioInfo._source.signal();
             return;
         }
@@ -362,26 +362,26 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         //  We probably never need to check this.  We cannot mount a pack which doesn't have a ScratchPad,
         //  and if it has that, it is already hardware-prepped.
         if (!isPrepped()) {
-            ioInfo._status = DeviceStatus.NotPrepped;
+            ioInfo._status = IOStatus.NotPrepped;
             ioInfo._source.signal();
             return;
         }
 
         if (_isWriteProtected) {
-            ioInfo._status = DeviceStatus.WriteProtected;
+            ioInfo._status = IOStatus.WriteProtected;
             ioInfo._source.signal();
             return;
         }
 
         if (ioInfo._byteBuffer.length < ioInfo._transferCount) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
+            ioInfo._status = IOStatus.BufferTooSmall;
             ioInfo._source.signal();
             return;
         }
 
         long reqByteCount = ioInfo._transferCount;
         if ((reqByteCount % _blockSize) != 0) {
-            ioInfo._status = DeviceStatus.InvalidBlockSize;
+            ioInfo._status = IOStatus.InvalidBlockSize;
             ioInfo._source.signal();
             return;
         }
@@ -390,18 +390,18 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         long reqBlockCount = reqByteCount / _blockSize;
 
         if (reqBlockId >= _blockCount) {
-            ioInfo._status = DeviceStatus.InvalidBlockId;
+            ioInfo._status = IOStatus.InvalidBlockId;
             ioInfo._source.signal();
             return;
         }
 
         if (reqBlockId + reqBlockCount > _blockCount) {
-            ioInfo._status = DeviceStatus.InvalidBlockCount;
+            ioInfo._status = IOStatus.InvalidBlockCount;
             ioInfo._source.signal();
             return;
         }
 
-        ioInfo._status = DeviceStatus.InProgress;
+        ioInfo._status = IOStatus.InProgress;
         long byteOffset = calculateByteOffset(reqBlockId);
         _channel.write(ByteBuffer.wrap(ioInfo._byteBuffer), byteOffset, ioInfo, this);
     }

@@ -211,11 +211,11 @@ public class ByteChannelModule extends ChannelModule {
                         tracker._ioProcessor.finalizeIo(tracker._channelProgram, tracker._source);
                         iter.remove();
                         sleepFlag = false;
-                    } else if (tracker._ioInfo._status != DeviceStatus.InProgress) {
+                    } else if (tracker._ioInfo._status != Device.IOStatus.InProgress) {
                         //  Dev IO is done - need to possibly move some data around and set some status
-                        if (tracker._ioInfo._status == DeviceStatus.Successful) {
+                        if (tracker._ioInfo._status == Device.IOStatus.Successful) {
                             //  device io was successful.  Do we need to move input data into storage?
-                            IOFunction func = tracker._channelProgram.getFunction();
+                            Device.IOFunction func = tracker._channelProgram.getFunction();
                             boolean truncation = false;
                             if (func.isReadFunction() && func.requiresBuffer()) {
                                 truncation = unpackByteBuffer(tracker);
@@ -225,7 +225,7 @@ public class ByteChannelModule extends ChannelModule {
                             if (truncation) {
                                 tracker._channelProgram.setChannelStatus(ChannelStatus.InsufficientBuffers);
                             } else {
-                                tracker._channelProgram.setDeviceStatus(DeviceStatus.Successful);
+                                tracker._channelProgram.setDeviceStatus(Device.IOStatus.Successful);
                             }
                         } else {
                             //  device io was unsuccessful.
@@ -258,27 +258,27 @@ public class ByteChannelModule extends ChannelModule {
     ) {
         ChannelProgram cp = tracker._channelProgram;
 
-        IOFunction func = cp.getFunction();
+        Device.IOFunction func = cp.getFunction();
         if (func.isWriteFunction() && func.requiresBuffer()) {
             byte[] buffer = (tracker._compositeBuffer != null) ? packByteBuffer(tracker) : null;
             int bytes = (tracker._compositeBuffer != null) ? calculateByteCount(tracker) : 0;
-            tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
-                                                                    .setIOFunction(cp.getFunction())
-                                                                    .setBlockId(cp.getBlockId())
-                                                                    .setTransferCount(bytes)
-                                                                    .setBuffer(buffer)
-                                                                    .build();
+            tracker._ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(this)
+                                                                     .setIOFunction(cp.getFunction())
+                                                                     .setBlockId(cp.getBlockId())
+                                                                     .setTransferCount(bytes)
+                                                                     .setBuffer(buffer)
+                                                                     .build();
         } else if (func.isReadFunction() && func.requiresBuffer()) {
             int bytes = (tracker._compositeBuffer != null) ? calculateByteCount(tracker) : 0;
-            tracker._ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(this)
-                                                                    .setIOFunction(cp.getFunction())
-                                                                    .setBlockId(cp.getBlockId())
-                                                                    .setTransferCount(bytes)
-                                                                    .build();
+            tracker._ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(this)
+                                                                     .setIOFunction(cp.getFunction())
+                                                                     .setBlockId(cp.getBlockId())
+                                                                     .setTransferCount(bytes)
+                                                                     .build();
         } else {
-            tracker._ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(this)
-                                                                   .setIOFunction(cp.getFunction())
-                                                                   .build();
+            tracker._ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(this)
+                                                                    .setIOFunction(cp.getFunction())
+                                                                    .build();
         }
 
         Device device = (Device) _descendants.get(cp.getDeviceAddress());
@@ -302,7 +302,7 @@ public class ByteChannelModule extends ChannelModule {
                 int frames = tracker._compositeBuffer.unpackQuarterWords(tracker._ioInfo._byteBuffer,
                                                                          0,
                                                                          tracker._ioInfo._transferredCount,
-                                                                         cp.getFunction() == IOFunction.ReadBackward);
+                                                                         cp.getFunction() == Device.IOFunction.ReadBackward);
                 int fullWords = frames / 4;
                 int residualBytes = frames % 4;
                 cp.setResidualBytes(residualBytes);
@@ -315,7 +315,7 @@ public class ByteChannelModule extends ChannelModule {
                 int frames = tracker._compositeBuffer.unpackSixthWords(tracker._ioInfo._byteBuffer,
                                                                        0,
                                                                        tracker._ioInfo._transferredCount,
-                                                                       cp.getFunction() == IOFunction.ReadBackward);
+                                                                       cp.getFunction() == Device.IOFunction.ReadBackward);
                 int fullWords = frames / 6;
                 int residualBytes = frames % 6;
                 cp.setResidualBytes(residualBytes);
@@ -329,7 +329,7 @@ public class ByteChannelModule extends ChannelModule {
                 int wordsRequired = bytesRead * 2 / 9;
                 wordsRequired += (bytesRead * 2) % 9 == 0 ? 0 : 1;
                 int wordsRead = tracker._compositeBuffer.unpack(tracker._ioInfo._byteBuffer,
-                                                                cp.getFunction() == IOFunction.ReadBackward);
+                                                                cp.getFunction() == Device.IOFunction.ReadBackward);
                 if ((wordsRead & 01) != 0) {
                     //  Odd number of words read - we might need to do abnormal frame count stuff.
                     //  We only provide that if the number of words in the ACW buffers exceeds the number transferred.

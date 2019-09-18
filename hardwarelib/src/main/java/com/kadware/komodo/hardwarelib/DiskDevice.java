@@ -45,10 +45,10 @@ public abstract class DiskDevice extends Device {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     DiskDevice(
-        final DeviceModel deviceModel,
+        final Model deviceModel,
         final String name
     ) {
-        super(DeviceType.Disk, deviceModel, name);
+        super(Type.Disk, deviceModel, name);
     }
 
 
@@ -65,11 +65,11 @@ public abstract class DiskDevice extends Device {
     @Override
     public abstract void initialize();
 
-    abstract void ioGetInfo(DeviceIOInfo ioInfo);
-    abstract void ioRead(DeviceIOInfo ioInfo);
-    abstract void ioReset(DeviceIOInfo ioInfo);
-    abstract void ioUnload(DeviceIOInfo ioInfo);
-    abstract void ioWrite(DeviceIOInfo ioInfo);
+    abstract void ioGetInfo(IOInfo ioInfo);
+    abstract void ioRead(IOInfo ioInfo);
+    abstract void ioReset(IOInfo ioInfo);
+    abstract void ioUnload(IOInfo ioInfo);
+    abstract void ioWrite(IOInfo ioInfo);
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -123,8 +123,8 @@ public abstract class DiskDevice extends Device {
      *      Bit 0:  device_ready
      *      Bit 3:  mounted
      *      Bit 4:  write_protected
-     * MODEL:       integer code for the DeviceModel
-     * TYPE:        integer code for the DeviceType
+     * MODEL:       integer code for the Model
+     * TYPE:        integer code for the Type
      * PREP_FACTOR: indicates the block size in words, of a disk block
      * BLOCK_COUNT: number of blocks on the media
      */
@@ -146,16 +146,16 @@ public abstract class DiskDevice extends Device {
      */
     @Override
     public boolean handleIo(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ioInfo._transferredCount = 0;
-        ioInfo._status = DeviceStatus.InProgress;
+        ioInfo._status = IOStatus.InProgress;
         synchronized(this) {
             ioStart(ioInfo);
             switch (ioInfo._ioFunction) {
                 case None:
                     ++_miscCount;
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     ioEnd(ioInfo);
                     return false;
 
@@ -180,7 +180,7 @@ public abstract class DiskDevice extends Device {
                     break;
 
                 default:
-                    ioInfo._status = DeviceStatus.InvalidFunction;
+                    ioInfo._status = IOStatus.InvalidFunction;
                     ioEnd(ioInfo);
                     return false;
             }
@@ -244,7 +244,7 @@ public abstract class DiskDevice extends Device {
      */
     @Override
     protected void writeBuffersToLog(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         if (ioInfo._byteBuffer != null) {
             logBuffer(LOGGER, Level.INFO, "IO Buffer", ioInfo._byteBuffer);

@@ -133,7 +133,7 @@ public class Test_InputOutputProcessor {
 
         private TestDevice(
         ) {
-            super(DeviceType.Disk, DeviceModel.FileSystemDisk, "DEV0");
+            super(Type.Disk, Model.FileSystemDisk, "DEV0");
         }
 
         @Override
@@ -144,7 +144,7 @@ public class Test_InputOutputProcessor {
 
         @Override
         public boolean handleIo(
-            DeviceIOInfo ioInfo
+            IOInfo ioInfo
         ) {
             return false;
         }
@@ -162,7 +162,7 @@ public class Test_InputOutputProcessor {
         public void terminate() {}
 
         @Override
-        public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+        public void writeBuffersToLog(IOInfo ioInfo) {}
     }
 
 
@@ -278,7 +278,7 @@ public class Test_InputOutputProcessor {
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex + 1)
                                                         .setDeviceAddress(5)
-                                                        .setIOFunction(IOFunction.Reset)
+                                                        .setIOFunction(Device.IOFunction.Reset)
                                                         .build();
         boolean scheduled = _iop.startIO(_ip, cp);
         if (scheduled) {
@@ -320,7 +320,7 @@ public class Test_InputOutputProcessor {
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)
-                                                        .setIOFunction(IOFunction.Read)
+                                                        .setIOFunction(Device.IOFunction.Read)
                                                         .setBlockId(blockId)
                                                         .setAccessControlWords(acws)
                                                         .build();
@@ -368,7 +368,7 @@ public class Test_InputOutputProcessor {
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)
                                                         .setBlockId(blockId)
-                                                        .setIOFunction(IOFunction.Write)
+                                                        .setIOFunction(Device.IOFunction.Write)
                                                         .setAccessControlWords(acws)
                                                         .build();
         boolean scheduled = _iop.startIO(_ip, cp);
@@ -442,7 +442,7 @@ public class Test_InputOutputProcessor {
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_devIndex)
-                                                        .setIOFunction(IOFunction.Write)
+                                                        .setIOFunction(Device.IOFunction.Write)
                                                         .setAccessControlWords(acws)
                                                         .build();
         boolean scheduled = _iop.startIO(_ip, cp);

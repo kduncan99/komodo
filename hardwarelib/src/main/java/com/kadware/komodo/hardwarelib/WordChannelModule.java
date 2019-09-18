@@ -67,8 +67,7 @@ public class WordChannelModule extends ChannelModule {
      * Called during session startup - subclasses may override this if they have any specific work to do.
      * If they do override this, they *must* callback here before returning.
      */
-    @Override
-    public void clear() {
+    @Override public void clear() {
         super.clear();
     }
 
@@ -117,7 +116,7 @@ public class WordChannelModule extends ChannelModule {
                         sleepFlag = false;
                     } else {
                         //  tracker is started and not completed.  Is the device IO complete?
-                        if (tracker._ioInfo._status != DeviceStatus.InProgress) {
+                        if (tracker._ioInfo._status != Device.IOStatus.InProgress) {
                             //TODO
                             sleepFlag = false;
                         }
@@ -145,14 +144,15 @@ public class WordChannelModule extends ChannelModule {
     ) {
         ChannelProgram cp = tracker._channelProgram;
         if (tracker._workingBuffer == null) {
-            tracker._ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(this)
-                                                                   .setIOFunction(cp.getFunction())
-                                                                   .build();
+            tracker._ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(this)
+                                                                    .setIOFunction(cp.getFunction())
+                                                                    .build();
             Device device = (Device) _descendants.get(cp.getDeviceAddress());
             device.ioStart(tracker._ioInfo);
         } else {
+            //TODO what to do here?
 //            long blockId = cp.getBlockAddress() == null ? 0 : cp.getBlockAddress().getValue();
-//            tracker._ioInfo = new DeviceIOInfo.WordTransferBuilder().setSource(this)
+//            tracker._ioInfo = new IOInfo.WordTransferBuilder().setSource(this)
 //                                                                    .setIOFunction(cp.getFunction())
 //                                                                    .setTransferCount(cp.getWordsRequested())
 //                                                                    .setBuffer()

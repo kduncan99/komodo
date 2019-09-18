@@ -81,7 +81,7 @@ public class Test_ByteChannelModule {
         int _position = 0;      //  -1 is lost position
 
         TestTapeDevice() {
-            super(DeviceType.Tape, DeviceModel.None, "TAPE0");
+            super(Type.Tape, Model.None, "TAPE0");
             setReady(true);
         }
 
@@ -90,48 +90,48 @@ public class Test_ByteChannelModule {
 
         @Override
         public boolean handleIo(
-            final DeviceIOInfo ioInfo
+            final IOInfo ioInfo
         ) {
             ioInfo._transferredCount = 0;
             switch (ioInfo._ioFunction) {
                 case MoveBlock: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position == _stream.size()) {
                         _position = -1;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
 
                     if (_stream.get(_position++) instanceof FileMarkBlock) {
-                        ioInfo._status = DeviceStatus.FileMark;
+                        ioInfo._status = IOStatus.FileMark;
                     } else {
-                        ioInfo._status = DeviceStatus.Successful;
+                        ioInfo._status = IOStatus.Successful;
                     }
                     break;
                 }
 
                 case MoveFile: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     boolean done = false;
                     while (!done) {
                         if (_position < 0) {
-                            ioInfo._status = DeviceStatus.LostPosition;
+                            ioInfo._status = IOStatus.LostPosition;
                             done = true;
                         } else if (_position == _stream.size()) {
                             _position = -1;
-                            ioInfo._status = DeviceStatus.LostPosition;
+                            ioInfo._status = IOStatus.LostPosition;
                             done = true;
                         } else {
                             if (_stream.get(_position++) instanceof FileMarkBlock) {
-                                ioInfo._status = DeviceStatus.FileMark;
+                                ioInfo._status = IOStatus.FileMark;
                                 done = true;
                             }
                         }
@@ -141,42 +141,42 @@ public class Test_ByteChannelModule {
 
                 case MoveBlockBackward: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
                     if (_position == 0) {
-                        ioInfo._status = DeviceStatus.EndOfTape;
+                        ioInfo._status = IOStatus.EndOfTape;
                         break;
                     }
 
                     if (_stream.get(--_position) instanceof FileMarkBlock) {
-                        ioInfo._status = DeviceStatus.FileMark;
+                        ioInfo._status = IOStatus.FileMark;
                     } else {
-                        ioInfo._status = DeviceStatus.Successful;
+                        ioInfo._status = IOStatus.Successful;
                     }
                     break;
                 }
 
                 case MoveFileBackward: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     boolean done = false;
                     while (!done) {
                         if (_position < 0) {
-                            ioInfo._status = DeviceStatus.LostPosition;
+                            ioInfo._status = IOStatus.LostPosition;
                             done = true;
                         } else if (_position == 0) {
-                            ioInfo._status = DeviceStatus.EndOfTape;
+                            ioInfo._status = IOStatus.EndOfTape;
                             done = true;
                         } else {
                             if (_stream.get(--_position) instanceof FileMarkBlock) {
-                                ioInfo._status = DeviceStatus.FileMark;
+                                ioInfo._status = IOStatus.FileMark;
                                 done = true;
                             }
                         }
@@ -186,46 +186,46 @@ public class Test_ByteChannelModule {
 
                 case Read: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position == _stream.size()) {
                         _position = -1;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
 
                     Block block = _stream.get(_position++);
                     if (block instanceof FileMarkBlock) {
-                        ioInfo._status = DeviceStatus.FileMark;
+                        ioInfo._status = IOStatus.FileMark;
                         break;
                     }
 
                     ioInfo._byteBuffer = ((DataBlock) block)._data;
                     ioInfo._transferredCount = ioInfo._byteBuffer.length;
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 case ReadBackward: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
                     if (_position == 0) {
-                        ioInfo._status = DeviceStatus.EndOfTape;
+                        ioInfo._status = IOStatus.EndOfTape;
                         break;
                     }
 
                     Block block = _stream.get(--_position);
                     if (block instanceof FileMarkBlock) {
-                        ioInfo._status = DeviceStatus.FileMark;
+                        ioInfo._status = IOStatus.FileMark;
                         break;
                     }
 
@@ -236,72 +236,72 @@ public class Test_ByteChannelModule {
                         ioInfo._byteBuffer[dx] = dataBlock._data[--sx];
                         ++ioInfo._transferredCount;
                     }
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 case Reset: {
                     _stream.clear();
                     _position = 0;
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 case Rewind: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     _position = 0;
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 case RewindInterlock: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     _position = 0;
                     _readyFlag = false;
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 case Write: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
 
                     byte[] sourceArray = ioInfo._byteBuffer;
                     _stream.add(_position++, new DataBlock(Arrays.copyOf(sourceArray, sourceArray.length)));
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     ioInfo._transferredCount = sourceArray.length;
                     break;
                 }
 
                 case WriteEndOfFile: {
                     if (!_readyFlag) {
-                        ioInfo._status = DeviceStatus.NotReady;
+                        ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     if (_position < 0) {
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                         break;
                     }
 
                     _stream.add(_position++, new FileMarkBlock());
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 default:
-                    ioInfo._status = DeviceStatus.InvalidFunction;
+                    ioInfo._status = IOStatus.InvalidFunction;
             }
 
             //  We're always async, so we never 'schedule' an IO
@@ -323,7 +323,7 @@ public class Test_ByteChannelModule {
         public void terminate() {}
 
         @Override
-        public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+        public void writeBuffersToLog(IOInfo ioInfo) {}
     }
 
     public static class TestDiskDevice extends Device {
@@ -332,14 +332,14 @@ public class Test_ByteChannelModule {
         private final static int BLOCK_SIZE = 128;
         private final static int PREP_FACTOR = 28;
         private final Map<Long, byte[]> _dataStore = new HashMap<>();
-        TestDiskDevice() { super(DeviceType.Disk, DeviceModel.None, "DISK0"); }
+        TestDiskDevice() { super(Type.Disk, Model.None, "DISK0"); }
 
         @Override
         public boolean canConnect(Node ancestor) { return true; }
 
         @Override
         public boolean handleIo(
-            final DeviceIOInfo ioInfo
+            final IOInfo ioInfo
         ) {
             ioInfo._transferredCount = 0;
             switch (ioInfo._ioFunction) {
@@ -347,7 +347,7 @@ public class Test_ByteChannelModule {
                 {
                     Long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
-                        ioInfo._status = DeviceStatus.InvalidBlockId;
+                        ioInfo._status = IOStatus.InvalidBlockId;
                     }
 
                     ioInfo._byteBuffer = new byte[ioInfo._transferCount];
@@ -355,7 +355,7 @@ public class Test_ByteChannelModule {
                     int bytesLeft = ioInfo._transferCount;
                     while (bytesLeft > 0) {
                         if (blockId >= BLOCK_COUNT) {
-                            ioInfo._status = DeviceStatus.InvalidTransferSize;
+                            ioInfo._status = IOStatus.InvalidTransferSize;
                             return false;
                         }
 
@@ -375,7 +375,7 @@ public class Test_ByteChannelModule {
                         ++blockId;
                     }
 
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
@@ -384,13 +384,13 @@ public class Test_ByteChannelModule {
                     int bytesLeft = ioInfo._transferCount;
                     Long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
-                        ioInfo._status = DeviceStatus.InvalidBlockId;
+                        ioInfo._status = IOStatus.InvalidBlockId;
                     }
 
                     int sx = 0;
                     while (bytesLeft > 0) {
                         if (blockId >= BLOCK_COUNT) {
-                            ioInfo._status = DeviceStatus.InvalidTransferSize;
+                            ioInfo._status = IOStatus.InvalidTransferSize;
                             return false;
                         }
 
@@ -409,12 +409,12 @@ public class Test_ByteChannelModule {
                         ++blockId;
                     }
 
-                    ioInfo._status = DeviceStatus.Successful;
+                    ioInfo._status = IOStatus.Successful;
                     break;
                 }
 
                 default:
-                    ioInfo._status = DeviceStatus.InvalidFunction;
+                    ioInfo._status = IOStatus.InvalidFunction;
             }
 
             //  We're always async, so we never 'schedule' an IO
@@ -436,7 +436,7 @@ public class Test_ByteChannelModule {
         public void terminate() {}
 
         @Override
-        public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+        public void writeBuffersToLog(IOInfo ioInfo) {}
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -457,7 +457,7 @@ public class Test_ByteChannelModule {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private void setup(
-        final DeviceType deviceType
+        final Device.Type deviceType
     ) throws CannotConnectException,
              MaxNodesException {
         //  Create stub nodes and one real channel module
@@ -465,9 +465,9 @@ public class Test_ByteChannelModule {
         _iop = InventoryManager.getInstance().createInputOutputProcessor();
         _msp = InventoryManager.getInstance().createMainStorageProcessor();
         _cm = new ByteChannelModule("CM0-0");
-        if (deviceType == DeviceType.Disk) {
+        if (deviceType == Device.Type.Disk) {
             _device = new TestDiskDevice();
-        } else if (deviceType == DeviceType.Tape) {
+        } else if (deviceType == Device.Type.Tape) {
             _device = new TestTapeDevice();
 
         }
@@ -508,7 +508,7 @@ public class Test_ByteChannelModule {
     ) throws CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
         assertTrue(_cm.canConnect(_iop));
         teardown();
     }
@@ -518,7 +518,7 @@ public class Test_ByteChannelModule {
     ) throws CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
         ByteChannelModule cm = new ByteChannelModule("CM1-0");
         assertFalse(cm.canConnect(new FileSystemDiskDevice("DISK0")));
         assertFalse(cm.canConnect(new FileSystemTapeDevice("TAPE0")));
@@ -570,12 +570,12 @@ public class Test_ByteChannelModule {
     ) throws CannotConnectException,
              MaxNodesException,
              UPINotAssignedException {
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
 
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_deviceIndex + 1)
-                                                        .setIOFunction(IOFunction.Reset)
+                                                        .setIOFunction(Device.IOFunction.Reset)
                                                         .build();
         boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);
         if (scheduled) {
@@ -597,7 +597,7 @@ public class Test_ByteChannelModule {
              CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
-        setup(DeviceType.Tape);
+        setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
         long[][] sourceBuffers = new long[blockSizes.length][];
@@ -620,7 +620,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
-                                                            .setIOFunction(IOFunction.Write)
+                                                            .setIOFunction(Device.IOFunction.Write)
                                                             .setAccessControlWords(new AccessControlWord[0])
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
                                                             .build();
@@ -647,7 +647,7 @@ public class Test_ByteChannelModule {
         ChannelProgram eofcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                            .setChannelModuleIndex(_cmIndex)
                                                            .setDeviceAddress(_deviceIndex)
-                                                           .setIOFunction(IOFunction.WriteEndOfFile)
+                                                           .setIOFunction(Device.IOFunction.WriteEndOfFile)
                                                            .build();
         boolean started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
@@ -682,7 +682,7 @@ public class Test_ByteChannelModule {
         ChannelProgram rewcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                            .setChannelModuleIndex(_cmIndex)
                                                            .setDeviceAddress(_deviceIndex)
-                                                           .setIOFunction(IOFunction.Rewind)
+                                                           .setIOFunction(Device.IOFunction.Rewind)
                                                            .build();
         started = _cm.scheduleChannelProgram(_ip, _iop, rewcp, null);
         if (started) {
@@ -705,7 +705,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
-                                                            .setIOFunction(IOFunction.Read)
+                                                            .setIOFunction(Device.IOFunction.Read)
                                                             .setAccessControlWords(new AccessControlWord[0])
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
                                                             .build();
@@ -754,7 +754,7 @@ public class Test_ByteChannelModule {
              CannotConnectException,
              MaxNodesException,
              UPINotAssignedException {
-        setup(DeviceType.Tape);
+        setup(Device.Type.Tape);
 
         int blockSize = 1800;
         long[] sourceBuffer = new long[blockSize];
@@ -768,7 +768,7 @@ public class Test_ByteChannelModule {
         ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                         .setChannelModuleIndex(_cmIndex)
                                                         .setDeviceAddress(_deviceIndex)
-                                                        .setIOFunction(IOFunction.Write)
+                                                        .setIOFunction(Device.IOFunction.Write)
                                                         .setAccessControlWords(new AccessControlWord[0])
                                                         .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
                                                         .build();
@@ -794,7 +794,7 @@ public class Test_ByteChannelModule {
         cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                          .setChannelModuleIndex(_cmIndex)
                                          .setDeviceAddress(_deviceIndex)
-                                         .setIOFunction(IOFunction.ReadBackward)
+                                         .setIOFunction(Device.IOFunction.ReadBackward)
                                          .setAccessControlWords(new AccessControlWord[0])
                                          .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPerByte)
                                          .build();
@@ -832,7 +832,7 @@ public class Test_ByteChannelModule {
              CannotConnectException,
              MaxNodesException,
              UPINotAssignedException{
-        setup(DeviceType.Tape);
+        setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
         long[][] sourceBuffers = new long[blockSizes.length][];
@@ -855,7 +855,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                 .setChannelModuleIndex(_cmIndex)
                 .setDeviceAddress(_deviceIndex)
-                .setIOFunction(IOFunction.Write)
+                .setIOFunction(Device.IOFunction.Write)
                 .setAccessControlWords(new AccessControlWord[0])
                 .setByteTranslationFormat(ByteTranslationFormat.SixthWordByte)
                 .build();
@@ -882,7 +882,7 @@ public class Test_ByteChannelModule {
         ChannelProgram eofcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
             .setChannelModuleIndex(_cmIndex)
             .setDeviceAddress(_deviceIndex)
-            .setIOFunction(IOFunction.WriteEndOfFile)
+            .setIOFunction(Device.IOFunction.WriteEndOfFile)
             .build();
         boolean started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
@@ -917,7 +917,7 @@ public class Test_ByteChannelModule {
         ChannelProgram rewcp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
             .setChannelModuleIndex(_cmIndex)
             .setDeviceAddress(_deviceIndex)
-            .setIOFunction(IOFunction.Rewind)
+            .setIOFunction(Device.IOFunction.Rewind)
             .build();
         started = _cm.scheduleChannelProgram(_ip, _iop, rewcp, null);
         if (started) {
@@ -940,7 +940,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                 .setChannelModuleIndex(_cmIndex)
                 .setDeviceAddress(_deviceIndex)
-                .setIOFunction(IOFunction.Read)
+                .setIOFunction(Device.IOFunction.Read)
                 .setAccessControlWords(new AccessControlWord[0])
                 .setByteTranslationFormat(ByteTranslationFormat.SixthWordByte)
                 .build();
@@ -984,7 +984,7 @@ public class Test_ByteChannelModule {
                  CannotConnectException,
                  MaxNodesException,
                  UPINotAssignedException {
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
 
         //  Populate MSP storage
         Random r = new Random(System.currentTimeMillis());
@@ -1006,7 +1006,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
-                                                            .setIOFunction(IOFunction.Write)
+                                                            .setIOFunction(Device.IOFunction.Write)
                                                             .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
@@ -1032,7 +1032,7 @@ public class Test_ByteChannelModule {
             cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
-                                             .setIOFunction(IOFunction.Read)
+                                             .setIOFunction(Device.IOFunction.Read)
                                              .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
@@ -1069,7 +1069,7 @@ public class Test_ByteChannelModule {
              CannotConnectException,
              MaxNodesException,
              UPINotAssignedException {
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
 
         int maxBlocks = 16;
 
@@ -1098,7 +1098,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
-                                                            .setIOFunction(IOFunction.Write)
+                                                            .setIOFunction(Device.IOFunction.Write)
                                                             .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
@@ -1125,7 +1125,7 @@ public class Test_ByteChannelModule {
             cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
-                                             .setIOFunction(IOFunction.Read)
+                                             .setIOFunction(Device.IOFunction.Read)
                                              .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
@@ -1158,7 +1158,7 @@ public class Test_ByteChannelModule {
             CannotConnectException,
             MaxNodesException,
             UPINotAssignedException {
-        setup(DeviceType.Disk);
+        setup(Device.Type.Disk);
 
         int maxBlockSize = 8 * TestDiskDevice.PREP_FACTOR;
 
@@ -1191,7 +1191,7 @@ public class Test_ByteChannelModule {
             ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                             .setChannelModuleIndex(_cmIndex)
                                                             .setDeviceAddress(_deviceIndex)
-                                                            .setIOFunction(IOFunction.Write)
+                                                            .setIOFunction(Device.IOFunction.Write)
                                                             .setBlockId(blockId)
                                                             .setAccessControlWords(acws)
                                                             .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)
@@ -1223,7 +1223,7 @@ public class Test_ByteChannelModule {
             cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                              .setChannelModuleIndex(_cmIndex)
                                              .setDeviceAddress(_deviceIndex)
-                                             .setIOFunction(IOFunction.Read)
+                                             .setIOFunction(Device.IOFunction.Read)
                                              .setBlockId(blockId)
                                              .setAccessControlWords(acws)
                                              .setByteTranslationFormat(ByteTranslationFormat.QuarterWordPacked)

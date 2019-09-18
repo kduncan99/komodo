@@ -31,7 +31,7 @@ public class Test_FileSystemTapeDevice {
 
     public static class TestChannelModule extends ChannelModule {
 
-        private final List<DeviceIOInfo> _ioList = new LinkedList<>();
+        private final List<Device.IOInfo> _ioList = new LinkedList<>();
 
         private TestChannelModule() {
             super(ChannelModuleType.Byte, "TESTCM");
@@ -50,7 +50,7 @@ public class Test_FileSystemTapeDevice {
         //  This is the real thing
         void submitAndWait(
             final Device target,
-            final DeviceIOInfo deviceIoInfo
+            final Device.IOInfo deviceIoInfo
         ) {
             if (target.handleIo(deviceIoInfo)) {
                 synchronized (_ioList) {
@@ -58,7 +58,7 @@ public class Test_FileSystemTapeDevice {
                 }
 
                 synchronized (deviceIoInfo) {
-                    while (deviceIoInfo._status == DeviceStatus.InProgress) {
+                    while (deviceIoInfo._status == Device.IOStatus.InProgress) {
                         try {
                             deviceIoInfo.wait(1);
                         } catch (InterruptedException ex) {
@@ -80,10 +80,10 @@ public class Test_FileSystemTapeDevice {
                 }
 
                 synchronized (_ioList) {
-                    Iterator<DeviceIOInfo> iter = _ioList.iterator();
+                    Iterator<Device.IOInfo> iter = _ioList.iterator();
                     while (iter.hasNext()) {
-                        DeviceIOInfo ioInfo = iter.next();
-                        if (ioInfo._status != DeviceStatus.InProgress) {
+                        Device.IOInfo ioInfo = iter.next();
+                        if (ioInfo._status != Device.IOStatus.InProgress) {
                             iter.remove();
                             ioInfo._status.notify();
                         }
@@ -140,8 +140,8 @@ public class Test_FileSystemTapeDevice {
         FileSystemTapeDevice d = new FileSystemTapeDevice("TAPE0");
         assertEquals("TAPE0", d._name);
         assertEquals(NodeCategory.Device, d._category);
-        Assert.assertEquals(DeviceModel.FileSystemTape, d._deviceModel);
-        assertEquals(DeviceType.Tape, d._deviceType);
+        Assert.assertEquals(Device.Model.FileSystemTape, d._deviceModel);
+        assertEquals(Device.Type.Tape, d._deviceType);
     }
 
     @Test
@@ -206,12 +206,12 @@ public class Test_FileSystemTapeDevice {
         d.mount(fileName);
         assertTrue(d.setReady(true));
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                    .setIOFunction(IOFunction.GetInfo)
-                                                                    .setTransferCount(128)
-                                                                    .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                      .setIOFunction(Device.IOFunction.GetInfo)
+                                                                      .setTransferCount(128)
+                                                                      .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         ArraySlice as = new ArraySlice(new long[28]);
         as.unpack(ioInfo._byteBuffer, false);
 
@@ -219,14 +219,14 @@ public class Test_FileSystemTapeDevice {
         boolean resultIsReady = (flags & 040) != 0;
         boolean resultIsMounted = (flags & 004) != 0;
         boolean resultIsWriteProtected = (flags & 002) != 0;
-        DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
-        DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
+        Device.Model resultModel = Device.Model.getValue((int) Word36.getS2(as.get(0)));
+        Device.Type resultType = Device.Type.getValue((int) Word36.getS3(as.get(0)));
 
         assertTrue(resultIsReady);
         assertTrue(resultIsMounted);
         assertTrue(resultIsWriteProtected);
-        assertEquals(DeviceModel.FileSystemTape, resultModel);
-        assertEquals(DeviceType.Tape, resultType);
+        assertEquals(Device.Model.FileSystemTape, resultModel);
+        assertEquals(Device.Type.Tape, resultType);
         assertFalse(d._unitAttentionFlag);
 
         d.unmount();
@@ -241,14 +241,14 @@ public class Test_FileSystemTapeDevice {
 
         long blockId = 5;
         int blockSize = 128;
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockId)
-                                                                        .setTransferCount(blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockId)
+                                                                          .setTransferCount(blockSize)
+                                                                          .build();
 
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfoRead._status);
     }
 
     @Test
@@ -262,12 +262,12 @@ public class Test_FileSystemTapeDevice {
         assertTrue(d.mount(fileName));
         assertTrue(d.setReady(true));
 
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setTransferCount(1024)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setTransferCount(1024)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
+        assertEquals(Device.IOStatus.UnitAttention, ioInfoRead._status);
 
         d.unmount();
         deleteTestFile(fileName);
@@ -284,11 +284,11 @@ public class Test_FileSystemTapeDevice {
         d.mount(fileName);
         d.setReady(true);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Reset)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Reset)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
 
         d.unmount();
         deleteTestFile(fileName);
@@ -299,11 +299,11 @@ public class Test_FileSystemTapeDevice {
     ) {
         TestChannelModule cm = new TestChannelModule();
         FileSystemTapeDevice d = new FileSystemTapeDevice("TAPE0");
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Reset)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Reset)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.NotReady, ioInfo._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfo._status);
     }
 
     @Test
@@ -312,15 +312,15 @@ public class Test_FileSystemTapeDevice {
         TestChannelModule cm = new TestChannelModule();
         FileSystemTapeDevice d = new TestDevice();
 
-        DeviceIOInfo[] ioInfos = {
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.Close)
-                                                 .build(),
+        Device.IOInfo[] ioInfos = {
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.Close)
+                                                        .build(),
         };
 
-        for (DeviceIOInfo ioInfo : ioInfos) {
+        for (Device.IOInfo ioInfo : ioInfos) {
             cm.submitAndWait(d, ioInfo);
-            assertEquals(DeviceStatus.InvalidFunction, ioInfo._status);
+            assertEquals(Device.IOStatus.InvalidFunction, ioInfo._status);
         }
     }
 
@@ -329,11 +329,11 @@ public class Test_FileSystemTapeDevice {
     ) {
         TestChannelModule cm = new TestChannelModule();
         TestDevice d = new TestDevice();
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.None)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.None)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
     }
 
     @Test
@@ -347,11 +347,11 @@ public class Test_FileSystemTapeDevice {
         d.mount(fileName);
         d.setReady(true);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Unload)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Unload)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -367,11 +367,11 @@ public class Test_FileSystemTapeDevice {
         d.mount(fileName);
         d.setReady(false);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Unload)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Unload)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.NotReady, ioInfo._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfo._status);
 
         d.unmount();
         deleteTestFile(fileName);
@@ -390,31 +390,31 @@ public class Test_FileSystemTapeDevice {
         d.setReady(true);
         d.setIsWriteProtected(false);
 
-        DeviceIOInfo ioInfoGet = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                       .setIOFunction(IOFunction.GetInfo)
-                                                                       .setTransferCount(128)
-                                                                       .build();
+        Device.IOInfo ioInfoGet = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                         .setIOFunction(Device.IOFunction.GetInfo)
+                                                                         .setTransferCount(128)
+                                                                         .build();
         cm.submitAndWait(d, ioInfoGet);
-        assertEquals(DeviceStatus.Successful, ioInfoGet._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoGet._status);
 
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.WriteEndOfFile)
-                                                                        .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.WriteEndOfFile)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoWrite._status);
         assertFalse(d._loadPointFlag);
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoWrite._status);
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoWrite._status);
 
-        DeviceIOInfo ioInfoRewind = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Rewind)
-                                                                         .build();
+        Device.IOInfo ioInfoRewind = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Rewind)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoRewind);
-        assertEquals(DeviceStatus.Successful, ioInfoRewind._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoRewind._status);
         cm.submitAndWait(d, ioInfoRewind);
-        assertEquals(DeviceStatus.EndOfTape, ioInfoRewind._status);
+        assertEquals(Device.IOStatus.EndOfTape, ioInfoRewind._status);
         assertTrue(d._loadPointFlag);
 
         assertEquals(3, d._miscCount);  //  get info and 2x rewind
@@ -424,24 +424,24 @@ public class Test_FileSystemTapeDevice {
         assertEquals(0, d._writeBytes);
 
         //  Try 3 forward operations - move block, move file, read.
-        DeviceIOInfo ioInfoMoveBlock = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                            .setIOFunction(IOFunction.MoveBlock)
-                                                                            .build();
+        Device.IOInfo ioInfoMoveBlock = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                              .setIOFunction(Device.IOFunction.MoveBlock)
+                                                                              .build();
         cm.submitAndWait(d, ioInfoMoveBlock);
-        assertEquals(DeviceStatus.FileMark, ioInfoMoveBlock._status);
+        assertEquals(Device.IOStatus.FileMark, ioInfoMoveBlock._status);
 
-        DeviceIOInfo ioInfoMoveFile = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.MoveFile)
-                                                                           .build();
+        Device.IOInfo ioInfoMoveFile = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.MoveFile)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoMoveFile);
-        assertEquals(DeviceStatus.Successful, ioInfoMoveFile._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoMoveFile._status);
 
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setTransferCount(0)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setTransferCount(0)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.FileMark, ioInfoRead._status);
+        assertEquals(Device.IOStatus.FileMark, ioInfoRead._status);
 
         assertEquals(5, d._miscCount);      //  previous, plus 2 moves
         assertEquals(1, d._readCount);
@@ -451,31 +451,31 @@ public class Test_FileSystemTapeDevice {
 
         //  Try another forward operation - should get loss of position
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.LostPosition, ioInfoRead._status);
+        assertEquals(Device.IOStatus.LostPosition, ioInfoRead._status);
         assertEquals(2, d._readCount);
 
         //  Clear lost position state
         d._lostPositionFlag = false;
 
         //  Now try 3 backward operations - move block, move file, read.
-        ioInfoMoveBlock = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                               .setIOFunction(IOFunction.MoveBlockBackward)
-                                                               .build();
+        ioInfoMoveBlock = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                .setIOFunction(Device.IOFunction.MoveBlockBackward)
+                                                                .build();
         cm.submitAndWait(d, ioInfoMoveBlock);
-        assertEquals(DeviceStatus.FileMark, ioInfoMoveBlock._status);
+        assertEquals(Device.IOStatus.FileMark, ioInfoMoveBlock._status);
 
-        ioInfoMoveFile = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                              .setIOFunction(IOFunction.MoveFileBackward)
-                                                              .build();
+        ioInfoMoveFile = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                               .setIOFunction(Device.IOFunction.MoveFileBackward)
+                                                               .build();
         cm.submitAndWait(d, ioInfoMoveFile);
-        assertEquals(DeviceStatus.Successful, ioInfoMoveFile._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoMoveFile._status);
 
-        ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                           .setIOFunction(IOFunction.ReadBackward)
-                                                           .setTransferCount(0)
-                                                           .build();
+        ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                            .setIOFunction(Device.IOFunction.ReadBackward)
+                                                            .setTransferCount(0)
+                                                            .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.FileMark, ioInfoRead._status);
+        assertEquals(Device.IOStatus.FileMark, ioInfoRead._status);
         assertEquals(7, d._miscCount);      //  previous, plus 2 more moves
         assertEquals(3, d._readCount);      //  previous, plus another read
         assertEquals(0, d._readBytes);
@@ -484,7 +484,7 @@ public class Test_FileSystemTapeDevice {
 
         //  Try one more back operation - should get end-of-tape
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.EndOfTape, ioInfoRead._status);
+        assertEquals(Device.IOStatus.EndOfTape, ioInfoRead._status);
         assertEquals(4, d._readCount);
 
         d.unmount();
@@ -511,67 +511,67 @@ public class Test_FileSystemTapeDevice {
         _random.nextBytes(data);
 
         //  create IOInfo blocks
-        DeviceIOInfo ioInfoGet = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                       .setIOFunction(IOFunction.GetInfo)
-                                                                       .setTransferCount(128)
-                                                                       .build();
-
-        DeviceIOInfo ioInfoMoveBackward = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                                .setIOFunction(IOFunction.MoveFileBackward)
-                                                                                .setTransferCount(0)
-                                                                                .build();
-
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setTransferCount(0)
-                                                                        .build();
-
-        DeviceIOInfo ioInfoReadBackward = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                                .setIOFunction(IOFunction.ReadBackward)
-                                                                                .setTransferCount(0)
-                                                                                .build();
-
-        DeviceIOInfo ioInfoRewind = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Rewind)
+        Device.IOInfo ioInfoGet = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                         .setIOFunction(Device.IOFunction.GetInfo)
+                                                                         .setTransferCount(128)
                                                                          .build();
 
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBuffer(data)
-                                                                         .setTransferCount(blockSize)
-                                                                         .build();
+        Device.IOInfo ioInfoMoveBackward = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                                  .setIOFunction(Device.IOFunction.MoveFileBackward)
+                                                                                  .setTransferCount(0)
+                                                                                  .build();
 
-        DeviceIOInfo ioInfoWriteFileMark = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                                .setIOFunction(IOFunction.WriteEndOfFile)
-                                                                                .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setTransferCount(0)
+                                                                          .build();
+
+        Device.IOInfo ioInfoReadBackward = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                                  .setIOFunction(Device.IOFunction.ReadBackward)
+                                                                                  .setTransferCount(0)
+                                                                                  .build();
+
+        Device.IOInfo ioInfoRewind = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Rewind)
+                                                                           .build();
+
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBuffer(data)
+                                                                           .setTransferCount(blockSize)
+                                                                           .build();
+
+        Device.IOInfo ioInfoWriteFileMark = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                                  .setIOFunction(Device.IOFunction.WriteEndOfFile)
+                                                                                  .build();
 
         //  eat unit attention
         cm.submitAndWait(d, ioInfoGet);
-        assertEquals(DeviceStatus.Successful, ioInfoGet._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoGet._status);
 
         //  write some data blocks, followed by a file mark
         for (int bx = 0; bx < blockCount; ++bx) {
             cm.submitAndWait(d, ioInfoWrite);
-            assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
+            assertEquals(Device.IOStatus.Successful, ioInfoWrite._status);
         }
 
         cm.submitAndWait(d, ioInfoWriteFileMark);
-        assertEquals(DeviceStatus.Successful, ioInfoWriteFileMark._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoWriteFileMark._status);
         assertEquals(1, d._miscCount);
         assertEquals(blockCount + 1, d._writeCount);
         assertEquals(blockCount * blockSize, d._writeBytes);
 
         //  rewind, then read until we hit end of file
         cm.submitAndWait(d, ioInfoRewind);
-        assertEquals(DeviceStatus.Successful, ioInfoRewind._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoRewind._status);
         assertEquals(2, d._miscCount);
 
         boolean done = false;
         while (!done) {
             cm.submitAndWait(d, ioInfoRead);
-            assertTrue(ioInfoRead._status == DeviceStatus.Successful
-                       || ioInfoRead._status == DeviceStatus.FileMark);
-            if (ioInfoRead._status == DeviceStatus.FileMark) {
+            assertTrue(ioInfoRead._status == Device.IOStatus.Successful
+                       || ioInfoRead._status == Device.IOStatus.FileMark);
+            if (ioInfoRead._status == Device.IOStatus.FileMark) {
                 done = true;
             } else {
                 assertArrayEquals(data, ioInfoRead._byteBuffer);
@@ -584,7 +584,7 @@ public class Test_FileSystemTapeDevice {
 
         //  Move backward one file mark, then read backward until we hit end of tape
         cm.submitAndWait(d, ioInfoMoveBackward);
-        assertEquals(DeviceStatus.Successful, ioInfoMoveBackward._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoMoveBackward._status);
         assertEquals(3, d._miscCount);
         assertEquals(2, d._filesExtended);
 
@@ -597,9 +597,9 @@ public class Test_FileSystemTapeDevice {
         blockCount = 0;
         while (!done) {
             cm.submitAndWait(d, ioInfoRead);
-            assertTrue(ioInfoReadBackward._status == DeviceStatus.Successful
-                       || ioInfoRead._status == DeviceStatus.FileMark);
-            if (ioInfoRead._status == DeviceStatus.FileMark) {
+            assertTrue(ioInfoReadBackward._status == Device.IOStatus.Successful
+                       || ioInfoRead._status == Device.IOStatus.FileMark);
+            if (ioInfoRead._status == Device.IOStatus.FileMark) {
                 done = true;
             } else {
                 ++blockCount;
@@ -620,13 +620,13 @@ public class Test_FileSystemTapeDevice {
         int bufferSize = 128;
         byte[] writeBuffer = new byte[bufferSize];
 
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(writeBuffer.length)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(writeBuffer.length)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.NotReady, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfoWrite._status);
     }
 
     @Test
@@ -641,21 +641,21 @@ public class Test_FileSystemTapeDevice {
         d.setReady(true);
         d.setIsWriteProtected(false);
 
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
-        assertEquals(DeviceStatus.Successful, ioInfoGetInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoGetInfo._status);
 
         byte[] writeBuffer = new byte[d.getMaxBlockSize() + 1];
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Write)
-                                                                        .setBuffer(writeBuffer)
-                                                                        .setTransferCount(writeBuffer.length)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Write)
+                                                                          .setBuffer(writeBuffer)
+                                                                          .setTransferCount(writeBuffer.length)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockSize, ioInfoRead._status);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -672,21 +672,21 @@ public class Test_FileSystemTapeDevice {
         d.setReady(true);
         d.setIsWriteProtected(false);
 
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
-        assertEquals(DeviceStatus.Successful, ioInfoGetInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfoGetInfo._status);
 
         byte[] writeBuffer = new byte[1024];
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Write)
-                                                                        .setBuffer(writeBuffer)
-                                                                        .setTransferCount(2048)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Write)
+                                                                          .setBuffer(writeBuffer)
+                                                                          .setTransferCount(2048)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.BufferTooSmall, ioInfoRead._status);
+        assertEquals(Device.IOStatus.BufferTooSmall, ioInfoRead._status);
         d.unmount();
         deleteTestFile(fileName);
     }
@@ -704,14 +704,14 @@ public class Test_FileSystemTapeDevice {
 
         byte[] writeBuffer = new byte[1024];
         long blockId = 5;
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(writeBuffer.length)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(writeBuffer.length)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.UnitAttention, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.UnitAttention, ioInfoWrite._status);
 
         d.unmount();
         deleteTestFile(fileName);
@@ -730,22 +730,22 @@ public class Test_FileSystemTapeDevice {
         d.setIsWriteProtected(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] writeBuffer = new byte[1024];
         long blockId = 5;
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(1024)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(1024)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.WriteProtected, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.WriteProtected, ioInfoWrite._status);
 
         d.unmount();
         deleteTestFile(fileName);

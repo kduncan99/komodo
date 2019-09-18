@@ -222,7 +222,7 @@ public class FileSystemTapeDevice extends TapeDevice {
     FileSystemTapeDevice(
         final String name
     ) {
-        super(DeviceModel.FileSystemTape, name);
+        super(Model.FileSystemTape, name);
     }
 
 
@@ -357,14 +357,14 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioGetInfo(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         ArraySlice as = getInfo();
         ioInfo._byteBuffer = new byte[128];
         as.pack(ioInfo._byteBuffer);
-        ioInfo._status = DeviceStatus.Successful;
+        ioInfo._status = IOStatus.Successful;
         _unitAttentionFlag = false;
         ioInfo._source.signal();
     }
@@ -374,22 +374,22 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioMoveBlock(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -397,7 +397,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             int controlWord = readControlWord();
             _loadPointFlag = false;
             if (controlWord == FILE_MARK_CONTROL_WORD) {
-                ioInfo._status = DeviceStatus.FileMark;     //  over-rides EOT status
+                ioInfo._status = IOStatus.FileMark;     //  over-rides EOT status
                 _endOfTapeFlag = _position > _endOfTapeWarning;
                 _blocksExtended = 0;
                 ++_filesExtended;
@@ -408,16 +408,16 @@ public class FileSystemTapeDevice extends TapeDevice {
                 ioInfo._transferredCount = 0;
                 ++_blocksExtended;
                 _endOfTapeFlag = _position > _endOfTapeWarning;
-                ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+                ioInfo._status = _endOfTapeFlag ? IOStatus.EndOfTape : IOStatus.Successful;
             }
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -426,34 +426,34 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioMoveBlockBackward(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
         if (_loadPointFlag) {
-            ioInfo._status = DeviceStatus.EndOfTape;
+            ioInfo._status = IOStatus.EndOfTape;
             return;
         }
 
         try {
             int controlWord = readPreceedingControlWord();
             if (controlWord == FILE_MARK_CONTROL_WORD) {
-                ioInfo._status = DeviceStatus.FileMark;
+                ioInfo._status = IOStatus.FileMark;
                 _blocksExtended = 0;
                 ++_filesExtended;
             } else {
@@ -461,7 +461,7 @@ public class FileSystemTapeDevice extends TapeDevice {
                 if (_position < SCRATCH_PAD_BUFFER_SIZE) {
                     throw new OutOfDataException(_position);
                 }
-                ioInfo._status = DeviceStatus.Successful;
+                ioInfo._status = IOStatus.Successful;
                 ++_blocksExtended;
             }
 
@@ -471,11 +471,11 @@ public class FileSystemTapeDevice extends TapeDevice {
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -484,22 +484,22 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioMoveFile(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -518,15 +518,15 @@ public class FileSystemTapeDevice extends TapeDevice {
             _loadPointFlag = false;
             _blocksExtended = 0;
             ++_filesExtended;
-            ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+            ioInfo._status = _endOfTapeFlag ? IOStatus.EndOfTape : IOStatus.Successful;
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -535,27 +535,27 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioMoveFileBackward(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
         if (_loadPointFlag) {
-            ioInfo._status = DeviceStatus.EndOfTape;
+            ioInfo._status = IOStatus.EndOfTape;
             return;
         }
 
@@ -567,14 +567,14 @@ public class FileSystemTapeDevice extends TapeDevice {
                     throw new OutOfDataException(_position);
                 } else if (_position == SCRATCH_PAD_BUFFER_SIZE) {
                     _loadPointFlag = true;
-                    ioInfo._status = DeviceStatus.EndOfTape;
+                    ioInfo._status = IOStatus.EndOfTape;
                     done = true;
                 } else {
                     int controlWord = readPreceedingControlWord();
                     if (controlWord == FILE_MARK_CONTROL_WORD) {
                         _blocksExtended = 0;
                         ++_filesExtended;
-                        ioInfo._status = DeviceStatus.Successful;
+                        ioInfo._status = IOStatus.Successful;
                         done = true;
                     } else {
                         _position -= controlWord + 4;
@@ -588,11 +588,11 @@ public class FileSystemTapeDevice extends TapeDevice {
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -601,22 +601,22 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioRead(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_readCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -627,7 +627,7 @@ public class FileSystemTapeDevice extends TapeDevice {
                 int controlWord = readControlWord();
                 _loadPointFlag = false;
                 if (controlWord == FILE_MARK_CONTROL_WORD) {
-                    ioInfo._status = DeviceStatus.FileMark;
+                    ioInfo._status = IOStatus.FileMark;
                     _blocksExtended = 0;
                     ++_filesExtended;
                     done = true;
@@ -648,9 +648,9 @@ public class FileSystemTapeDevice extends TapeDevice {
                         //  We didn't read as many bytes as the control word indicated were available
                         ioInfo._byteBuffer = Arrays.copyOf(ioInfo._byteBuffer, ioInfo._transferCount);
                         _lostPositionFlag = true;
-                        ioInfo._status = DeviceStatus.LostPosition;
+                        ioInfo._status = IOStatus.LostPosition;
                     } else {
-                        ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+                        ioInfo._status = _endOfTapeFlag ? IOStatus.EndOfTape : IOStatus.Successful;
                     }
 
                     done = true;
@@ -659,11 +659,11 @@ public class FileSystemTapeDevice extends TapeDevice {
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -672,22 +672,22 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioReadBackward(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_readCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -699,12 +699,12 @@ public class FileSystemTapeDevice extends TapeDevice {
                     throw new OutOfDataException(_position);
                 } else if (_position == SCRATCH_PAD_BUFFER_SIZE) {
                     _loadPointFlag = true;
-                    ioInfo._status = DeviceStatus.EndOfTape;
+                    ioInfo._status = IOStatus.EndOfTape;
                     done = true;
                 } else {
                     int controlWord = readPreceedingControlWord();
                     if (controlWord == FILE_MARK_CONTROL_WORD) {
-                        ioInfo._status = DeviceStatus.FileMark;
+                        ioInfo._status = IOStatus.FileMark;
                         _blocksExtended = 0;
                         ++_filesExtended;
                         done = true;
@@ -735,7 +735,7 @@ public class FileSystemTapeDevice extends TapeDevice {
                         _position -= controlWord + 4;
                         _loadPointFlag = _position == SCRATCH_PAD_BUFFER_SIZE;
                         ioInfo._transferredCount = bytes;
-                        ioInfo._status = DeviceStatus.Successful;
+                        ioInfo._status = IOStatus.Successful;
                         done = true;
                     }
                 }
@@ -743,11 +743,11 @@ public class FileSystemTapeDevice extends TapeDevice {
         } catch (BadControlWordException | OutOfDataException ex) {
             LOGGER.error("Caught:" + ex.getMessage());
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
         }
     }
 
@@ -756,15 +756,15 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioReset(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
         } else {
             unmount();
-            ioInfo._status = DeviceStatus.Successful;
+            ioInfo._status = IOStatus.Successful;
         }
     }
 
@@ -773,22 +773,22 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioRewind(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_loadPointFlag) {
-            ioInfo._status = DeviceStatus.EndOfTape;
+            ioInfo._status = IOStatus.EndOfTape;
             return;
         }
 
@@ -798,7 +798,7 @@ public class FileSystemTapeDevice extends TapeDevice {
         _writeMarkFlag = false;
         _loadPointFlag = true;
         _blocksExtended = 0;
-        ioInfo._status = DeviceStatus.Successful;
+        ioInfo._status = IOStatus.Successful;
     }
 
     /**
@@ -806,11 +806,11 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioSetMode(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         //TODO implement this
         ++_miscCount;
-        ioInfo._status = DeviceStatus.InvalidFunction;
+        ioInfo._status = IOStatus.InvalidFunction;
     }
 
     /**
@@ -818,15 +818,15 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioUnload(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_miscCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
         } else {
             unmount();
-            ioInfo._status = DeviceStatus.Successful;
+            ioInfo._status = IOStatus.Successful;
         }
     }
 
@@ -835,38 +835,38 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioWrite(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_writeCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
         if (isWriteProtected()) {
-            ioInfo._status = DeviceStatus.WriteProtected;
+            ioInfo._status = IOStatus.WriteProtected;
             return;
         }
 
         if ((ioInfo._byteBuffer.length < ioInfo._transferCount)
             || (ioInfo._byteBuffer.length < _noiseConstant)) {
-            ioInfo._status = DeviceStatus.BufferTooSmall;
+            ioInfo._status = IOStatus.BufferTooSmall;
             return;
         }
 
         if (ioInfo._transferCount > getMaxBlockSize()) {
-            ioInfo._status = DeviceStatus.InvalidBlockSize;
+            ioInfo._status = IOStatus.InvalidBlockSize;
             return;
         }
 
@@ -876,7 +876,7 @@ public class FileSystemTapeDevice extends TapeDevice {
         //  We report this as a lost-position state.
         if ((_position + ioInfo._transferCount + 8) > _scratchPad._fileSizeLimit) {
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -904,10 +904,10 @@ public class FileSystemTapeDevice extends TapeDevice {
             _writeMarkFlag = false;
             ioInfo._transferredCount = (ioInfo._transferCount);
             _endOfTapeFlag = _position > _endOfTapeWarning;
-            ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+            ioInfo._status = _endOfTapeFlag ? IOStatus.EndOfTape : IOStatus.Successful;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
             _lostPositionFlag = true;
         }
     }
@@ -917,29 +917,29 @@ public class FileSystemTapeDevice extends TapeDevice {
      */
     @Override
     protected void ioWriteEndOfFile(
-        final DeviceIOInfo ioInfo
+        final IOInfo ioInfo
     ) {
         ++_writeCount;
 
         if (!_readyFlag) {
-            ioInfo._status = DeviceStatus.NotReady;
+            ioInfo._status = IOStatus.NotReady;
             ioInfo._source.signal();
             return;
         }
 
         if (_unitAttentionFlag) {
-            ioInfo._status = DeviceStatus.UnitAttention;
+            ioInfo._status = IOStatus.UnitAttention;
             ioInfo._source.signal();
             return;
         }
 
         if (_lostPositionFlag) {
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
         if (isWriteProtected()) {
-            ioInfo._status = DeviceStatus.WriteProtected;
+            ioInfo._status = IOStatus.WriteProtected;
             ioInfo._source.signal();
             return;
         }
@@ -950,7 +950,7 @@ public class FileSystemTapeDevice extends TapeDevice {
         //  We report this as a lost-position state.
         if ((_position + 4) > _scratchPad._fileSizeLimit) {
             _lostPositionFlag = true;
-            ioInfo._status = DeviceStatus.LostPosition;
+            ioInfo._status = IOStatus.LostPosition;
             return;
         }
 
@@ -966,10 +966,10 @@ public class FileSystemTapeDevice extends TapeDevice {
             _loadPointFlag = false;
             ioInfo._transferredCount = (0);
             _endOfTapeFlag = _position > _endOfTapeWarning;
-            ioInfo._status = _endOfTapeFlag ? DeviceStatus.EndOfTape : DeviceStatus.Successful;
+            ioInfo._status = _endOfTapeFlag ? IOStatus.EndOfTape : IOStatus.Successful;
         } catch (IOException ex) {
             LOGGER.error(String.format("Device %s IO failed:%s", _name, ex.getMessage()));
-            ioInfo._status = DeviceStatus.SystemException;
+            ioInfo._status = IOStatus.SystemException;
             _lostPositionFlag = true;
         }
     }

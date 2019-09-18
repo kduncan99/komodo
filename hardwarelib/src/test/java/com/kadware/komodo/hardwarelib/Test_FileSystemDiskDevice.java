@@ -30,7 +30,7 @@ public class Test_FileSystemDiskDevice {
 
     public static class TestChannelModule extends ChannelModule {
 
-        private final List<DeviceIOInfo> _ioList = new LinkedList<>();
+        private final List<Device.IOInfo> _ioList = new LinkedList<>();
 
         private TestChannelModule() {
             super(ChannelModuleType.Byte, "TESTCM");
@@ -49,7 +49,7 @@ public class Test_FileSystemDiskDevice {
         //  This is the real thing
         void submitAndWait(
             final Device target,
-            final DeviceIOInfo deviceIoInfo
+            final Device.IOInfo deviceIoInfo
         ) {
             if (target.handleIo(deviceIoInfo)) {
                 synchronized (_ioList) {
@@ -57,7 +57,7 @@ public class Test_FileSystemDiskDevice {
                 }
 
                 synchronized (deviceIoInfo) {
-                    while (deviceIoInfo._status == DeviceStatus.InProgress) {
+                    while (deviceIoInfo._status == Device.IOStatus.InProgress) {
                         try {
                             deviceIoInfo.wait(1);
                         } catch (InterruptedException ex) {
@@ -79,10 +79,10 @@ public class Test_FileSystemDiskDevice {
                 }
 
                 synchronized (_ioList) {
-                    Iterator<DeviceIOInfo> iter = _ioList.iterator();
+                    Iterator<Device.IOInfo> iter = _ioList.iterator();
                     while (iter.hasNext()) {
-                        DeviceIOInfo ioInfo = iter.next();
-                        if (ioInfo._status != DeviceStatus.InProgress) {
+                        Device.IOInfo ioInfo = iter.next();
+                        if (ioInfo._status != Device.IOStatus.InProgress) {
                             iter.remove();
                             ioInfo._status.notify();
                         }
@@ -150,8 +150,8 @@ public class Test_FileSystemDiskDevice {
         FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
         assertEquals("DISK0", d._name);
         assertEquals(NodeCategory.Device, d._category);
-        Assert.assertEquals(DeviceModel.FileSystemDisk, d._deviceModel);
-        assertEquals(DeviceType.Disk, d._deviceType);
+        Assert.assertEquals(Device.Model.FileSystemDisk, d._deviceModel);
+        assertEquals(Device.Type.Disk, d._deviceType);
     }
 
     @Test
@@ -274,12 +274,12 @@ public class Test_FileSystemDiskDevice {
         d.mount(fileName);
         d.setReady(true);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                    .setIOFunction(IOFunction.GetInfo)
-                                                                    .setTransferCount(128)
-                                                                    .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                      .setIOFunction(Device.IOFunction.GetInfo)
+                                                                      .setTransferCount(128)
+                                                                      .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         ArraySlice as = new ArraySlice(new long[28]);
         as.unpack(ioInfo._byteBuffer, false);
 
@@ -287,16 +287,16 @@ public class Test_FileSystemDiskDevice {
         boolean resultIsReady = (flags & 040) != 0;
         boolean resultIsMounted = (flags & 004) != 0;
         boolean resultIsWriteProtected = (flags & 002) != 0;
-        DeviceModel resultModel = DeviceModel.getValue((int) Word36.getS2(as.get(0)));
-        DeviceType resultType = DeviceType.getValue((int) Word36.getS3(as.get(0)));
+        Device.Model resultModel = Device.Model.getValue((int) Word36.getS2(as.get(0)));
+        Device.Type resultType = Device.Type.getValue((int) Word36.getS3(as.get(0)));
         int resultPrepFactor = (int) Word36.getH2(as.get(6));
         long resultBlockCount = as.get(7);
 
         assertTrue(resultIsReady);
         assertTrue(resultIsMounted);
         assertFalse(resultIsWriteProtected);
-        assertEquals(DeviceModel.FileSystemDisk, resultModel);
-        assertEquals(DeviceType.Disk, resultType);
+        assertEquals(Device.Model.FileSystemDisk, resultModel);
+        assertEquals(Device.Type.Disk, resultType);
         assertEquals(blockCount, resultBlockCount);
         assertEquals(PrepFactor.getPrepFactorFromBlockSize(blockSize), resultPrepFactor);
         assertFalse(d._unitAttentionFlag);
@@ -324,14 +324,14 @@ public class Test_FileSystemDiskDevice {
         d.setReady(false);
 
         long blockId = 5;
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockId)
-                                                                        .setTransferCount(blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockId)
+                                                                          .setTransferCount(blockSize)
+                                                                          .build();
 
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.NotReady, ioInfoRead._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfoRead._status);
         assertEquals(0, d._miscCount);
         assertEquals(1, d._readCount);
         assertEquals(0, d._writeCount);
@@ -356,19 +356,19 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
         long blockId = 5;
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockId)
-                                                                        .setTransferCount(blockSize - 1)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockId)
+                                                                          .setTransferCount(blockSize - 1)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockSize, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(1, d._readCount);
         assertEquals(0, d._writeCount);
@@ -393,19 +393,19 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockCount)
-                                                                        .setTransferCount(blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockCount)
+                                                                          .setTransferCount(blockSize)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockId, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(1, d._readCount);
         assertEquals(0, d._writeCount);
@@ -430,19 +430,19 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockCount - 1)
-                                                                        .setTransferCount(2 * blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockCount - 1)
+                                                                          .setTransferCount(2 * blockSize)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockCount, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(1, d._readCount);
         assertEquals(0, d._writeCount);
@@ -467,13 +467,13 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         long blockId = 5;
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Read)
-                                                                        .setBlockId(blockId)
-                                                                        .setTransferCount(blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Read)
+                                                                          .setBlockId(blockId)
+                                                                          .setTransferCount(blockSize)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.UnitAttention, ioInfoRead._status);
+        assertEquals(Device.IOStatus.UnitAttention, ioInfoRead._status);
         assertEquals(0, d._miscCount);
         assertEquals(1, d._readCount);
         assertEquals(0, d._writeCount);
@@ -496,11 +496,11 @@ public class Test_FileSystemDiskDevice {
         d.mount(fileName);
         d.setReady(true);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Reset)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Reset)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(0, d._writeCount);
@@ -523,11 +523,11 @@ public class Test_FileSystemDiskDevice {
         d.mount(fileName);
         d.setReady(false);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Reset)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Reset)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.NotReady, ioInfo._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfo._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(0, d._writeCount);
@@ -543,42 +543,42 @@ public class Test_FileSystemDiskDevice {
         TestChannelModule cm = new TestChannelModule();
         FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
 
-        DeviceIOInfo[] ioInfos = {
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.Close)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.MoveBlock)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.MoveBlockBackward)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.MoveFile)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.MoveFileBackward)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.Rewind)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.RewindInterlock)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.SetMode)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.ReadBackward)
-                                                 .build(),
-            new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                 .setIOFunction(IOFunction.WriteEndOfFile)
-                                                 .build(),
+        Device.IOInfo[] ioInfos = {
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.Close)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.MoveBlock)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.MoveBlockBackward)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.MoveFile)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.MoveFileBackward)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.Rewind)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.RewindInterlock)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.SetMode)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.ReadBackward)
+                                                        .build(),
+            new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                  .setIOFunction(Device.IOFunction.WriteEndOfFile)
+                                                        .build(),
         };
 
-        for (DeviceIOInfo ioInfo : ioInfos) {
+        for (Device.IOInfo ioInfo : ioInfos) {
             cm.submitAndWait(d, ioInfo);
-            assertEquals(DeviceStatus.InvalidFunction, ioInfo._status);
+            assertEquals(Device.IOStatus.InvalidFunction, ioInfo._status);
         }
 
         assertEquals(0, d._miscCount);
@@ -593,11 +593,11 @@ public class Test_FileSystemDiskDevice {
     ) {
         TestChannelModule cm = new TestChannelModule();
         FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.None)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.None)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(0, d._writeCount);
@@ -620,11 +620,11 @@ public class Test_FileSystemDiskDevice {
         TestDevice d = new TestDevice();
         d.mount(fileName);
         d.setReady(true);
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Unload)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Unload)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.Successful, ioInfo._status);
+        assertEquals(Device.IOStatus.Successful, ioInfo._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(0, d._writeCount);
@@ -649,11 +649,11 @@ public class Test_FileSystemDiskDevice {
         TestDevice d = new TestDevice();
         d.mount(fileName);
         d.setReady(false);
-        DeviceIOInfo ioInfo = new DeviceIOInfo.NonTransferBuilder().setSource(cm)
-                                                                   .setIOFunction(IOFunction.Unload)
-                                                                   .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.NonTransferBuilder().setSource(cm)
+                                                                     .setIOFunction(Device.IOFunction.Unload)
+                                                                     .build();
         cm.submitAndWait(d, ioInfo);
-        assertEquals(DeviceStatus.NotReady, ioInfo._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfo._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(0, d._writeCount);
@@ -680,10 +680,10 @@ public class Test_FileSystemDiskDevice {
             TestDevice d = new TestDevice();
             d.mount(fileName);
             d.setReady(true);
-            DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.GetInfo)
-                                                                        .setTransferCount(128)
-                                                                        .build();
+            Device.IOInfo ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.GetInfo)
+                                                                          .setTransferCount(128)
+                                                                          .build();
             cm.submitAndWait(d, ioInfo);
             long expBytes = 0;
             for (int x = 0; x < 16; ++x) {
@@ -703,23 +703,23 @@ public class Test_FileSystemDiskDevice {
                 byte[] writeBuffer = new byte[bufferSize];
                 r.nextBytes(writeBuffer);
 
-                DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                                 .setIOFunction(IOFunction.Write)
-                                                                                 .setBlockId(blockIdVal)
-                                                                                 .setBuffer(writeBuffer)
-                                                                                 .setTransferCount(bufferSize)
-                                                                                 .build();
+                Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                                   .setIOFunction(Device.IOFunction.Write)
+                                                                                   .setBlockId(blockIdVal)
+                                                                                   .setBuffer(writeBuffer)
+                                                                                   .setTransferCount(bufferSize)
+                                                                                   .build();
                 cm.submitAndWait(d, ioInfoWrite);
-                assertEquals(DeviceStatus.Successful, ioInfoWrite._status);
+                assertEquals(Device.IOStatus.Successful, ioInfoWrite._status);
                 assertEquals(bufferSize, ioInfoWrite._transferredCount);
 
-                DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                                .setIOFunction(IOFunction.Read)
-                                                                                .setBlockId(blockIdVal)
-                                                                                .setTransferCount(bufferSize)
-                                                                                .build();
+                Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                                  .setIOFunction(Device.IOFunction.Read)
+                                                                                  .setBlockId(blockIdVal)
+                                                                                  .setTransferCount(bufferSize)
+                                                                                  .build();
                 cm.submitAndWait(d, ioInfoRead);
-                assertEquals(DeviceStatus.Successful, ioInfoRead._status);
+                assertEquals(Device.IOStatus.Successful, ioInfoRead._status);
                 assertEquals(bufferSize, ioInfoRead._transferredCount);
                 assertArrayEquals(writeBuffer, ioInfoRead._byteBuffer);
             }
@@ -751,14 +751,14 @@ public class Test_FileSystemDiskDevice {
         int bufferSize = 128;
         long blockId = 5;
         byte[] writeBuffer = new byte[bufferSize];
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(writeBuffer.length)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(writeBuffer.length)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.NotReady, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.NotReady, ioInfoWrite._status);
         assertEquals(0, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -782,22 +782,22 @@ public class Test_FileSystemDiskDevice {
         d.mount(fileName);
         d.setReady(true);
 
-        DeviceIOInfo ioInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                    .setIOFunction(IOFunction.GetInfo)
-                                                                    .setTransferCount(128)
-                                                                    .build();
+        Device.IOInfo ioInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                      .setIOFunction(Device.IOFunction.GetInfo)
+                                                                      .setTransferCount(128)
+                                                                      .build();
         cm.submitAndWait(d, ioInfo);
 
         byte[] writeBuffer = new byte[10];
         long blockId = 5;
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(blockSize)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(blockSize)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.BufferTooSmall, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.BufferTooSmall, ioInfoWrite._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -822,23 +822,23 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] readBuffer = new byte[blockSize];
         long blockId = 5;
 
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Write)
-                                                                        .setBlockId(blockId)
-                                                                        .setBuffer(readBuffer)
-                                                                        .setTransferCount(blockSize - 1)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Write)
+                                                                          .setBlockId(blockId)
+                                                                          .setBuffer(readBuffer)
+                                                                          .setTransferCount(blockSize - 1)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockSize, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockSize, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -863,21 +863,21 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] readBuffer = new byte[blockSize];
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Write)
-                                                                        .setBlockId(blockCount)
-                                                                        .setBuffer(readBuffer)
-                                                                        .setTransferCount(blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Write)
+                                                                          .setBlockId(blockCount)
+                                                                          .setBuffer(readBuffer)
+                                                                          .setTransferCount(blockSize)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockId, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockId, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -902,21 +902,21 @@ public class Test_FileSystemDiskDevice {
         d.setReady(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] readBuffer = new byte[2 * blockSize];
-        DeviceIOInfo ioInfoRead = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                        .setIOFunction(IOFunction.Write)
-                                                                        .setBlockId(blockCount - 1)
-                                                                        .setBuffer(readBuffer)
-                                                                        .setTransferCount(2 * blockSize)
-                                                                        .build();
+        Device.IOInfo ioInfoRead = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                          .setIOFunction(Device.IOFunction.Write)
+                                                                          .setBlockId(blockCount - 1)
+                                                                          .setBuffer(readBuffer)
+                                                                          .setTransferCount(2 * blockSize)
+                                                                          .build();
         cm.submitAndWait(d, ioInfoRead);
-        assertEquals(DeviceStatus.InvalidBlockCount, ioInfoRead._status);
+        assertEquals(Device.IOStatus.InvalidBlockCount, ioInfoRead._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -942,14 +942,14 @@ public class Test_FileSystemDiskDevice {
 
         byte[] writeBuffer = new byte[blockSize];
         long blockId = 5;
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(blockSize)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(blockSize)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.UnitAttention, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.UnitAttention, ioInfoWrite._status);
         assertEquals(0, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);
@@ -975,22 +975,22 @@ public class Test_FileSystemDiskDevice {
         d.setIsWriteProtected(true);
 
         //  Clear unit attention
-        DeviceIOInfo ioInfoGetInfo = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                           .setIOFunction(IOFunction.GetInfo)
-                                                                           .setTransferCount(128)
-                                                                           .build();
+        Device.IOInfo ioInfoGetInfo = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                             .setIOFunction(Device.IOFunction.GetInfo)
+                                                                             .setTransferCount(128)
+                                                                             .build();
         cm.submitAndWait(d, ioInfoGetInfo);
 
         byte[] writeBuffer = new byte[blockSize];
         long blockId = 5;
-        DeviceIOInfo ioInfoWrite = new DeviceIOInfo.ByteTransferBuilder().setSource(cm)
-                                                                         .setIOFunction(IOFunction.Write)
-                                                                         .setBlockId(blockId)
-                                                                         .setBuffer(writeBuffer)
-                                                                         .setTransferCount(blockSize)
-                                                                         .build();
+        Device.IOInfo ioInfoWrite = new Device.IOInfo.ByteTransferBuilder().setSource(cm)
+                                                                           .setIOFunction(Device.IOFunction.Write)
+                                                                           .setBlockId(blockId)
+                                                                           .setBuffer(writeBuffer)
+                                                                           .setTransferCount(blockSize)
+                                                                           .build();
         cm.submitAndWait(d, ioInfoWrite);
-        assertEquals(DeviceStatus.WriteProtected, ioInfoWrite._status);
+        assertEquals(Device.IOStatus.WriteProtected, ioInfoWrite._status);
         assertEquals(1, d._miscCount);
         assertEquals(0, d._readCount);
         assertEquals(1, d._writeCount);

@@ -15,34 +15,34 @@ public class Test_IOFunction {
     @Test
     public void IOFunction_isRead(
     ) {
-        assertTrue(IOFunction.GetInfo.isReadFunction());
-        assertFalse(IOFunction.MoveBlock.isReadFunction());
-        assertFalse(IOFunction.MoveBlockBackward.isReadFunction());
-        assertFalse(IOFunction.MoveFile.isReadFunction());
-        assertFalse(IOFunction.MoveFileBackward.isReadFunction());
-        assertTrue(IOFunction.Read.isReadFunction());
-        assertTrue(IOFunction.ReadBackward.isReadFunction());
-        assertFalse(IOFunction.Reset.isReadFunction());
-        assertFalse(IOFunction.Rewind.isReadFunction());
-        assertFalse(IOFunction.RewindInterlock.isReadFunction());
-        assertFalse(IOFunction.Write.isReadFunction());
-        assertFalse(IOFunction.WriteEndOfFile.isReadFunction());
+        assertTrue(Device.IOFunction.GetInfo.isReadFunction());
+        assertFalse(Device.IOFunction.MoveBlock.isReadFunction());
+        assertFalse(Device.IOFunction.MoveBlockBackward.isReadFunction());
+        assertFalse(Device.IOFunction.MoveFile.isReadFunction());
+        assertFalse(Device.IOFunction.MoveFileBackward.isReadFunction());
+        assertTrue(Device.IOFunction.Read.isReadFunction());
+        assertTrue(Device.IOFunction.ReadBackward.isReadFunction());
+        assertFalse(Device.IOFunction.Reset.isReadFunction());
+        assertFalse(Device.IOFunction.Rewind.isReadFunction());
+        assertFalse(Device.IOFunction.RewindInterlock.isReadFunction());
+        assertFalse(Device.IOFunction.Write.isReadFunction());
+        assertFalse(Device.IOFunction.WriteEndOfFile.isReadFunction());
     }
 
     @Test
     public void IOFunction_isWrite(
     ) {
-        assertFalse(IOFunction.GetInfo.isWriteFunction());
-        assertFalse(IOFunction.MoveBlock.isWriteFunction());
-        assertFalse(IOFunction.MoveBlockBackward.isWriteFunction());
-        assertFalse(IOFunction.MoveFile.isWriteFunction());
-        assertFalse(IOFunction.MoveFileBackward.isWriteFunction());
-        assertFalse(IOFunction.Read.isWriteFunction());
-        assertFalse(IOFunction.ReadBackward.isWriteFunction());
-        assertFalse(IOFunction.Reset.isWriteFunction());
-        assertFalse(IOFunction.Rewind.isWriteFunction());
-        assertFalse(IOFunction.RewindInterlock.isWriteFunction());
-        assertTrue(IOFunction.Write.isWriteFunction());
-        assertTrue(IOFunction.WriteEndOfFile.isWriteFunction());
+        assertFalse(Device.IOFunction.GetInfo.isWriteFunction());
+        assertFalse(Device.IOFunction.MoveBlock.isWriteFunction());
+        assertFalse(Device.IOFunction.MoveBlockBackward.isWriteFunction());
+        assertFalse(Device.IOFunction.MoveFile.isWriteFunction());
+        assertFalse(Device.IOFunction.MoveFileBackward.isWriteFunction());
+        assertFalse(Device.IOFunction.Read.isWriteFunction());
+        assertFalse(Device.IOFunction.ReadBackward.isWriteFunction());
+        assertFalse(Device.IOFunction.Reset.isWriteFunction());
+        assertFalse(Device.IOFunction.Rewind.isWriteFunction());
+        assertFalse(Device.IOFunction.RewindInterlock.isWriteFunction());
+        assertTrue(Device.IOFunction.Write.isWriteFunction());
+        assertTrue(Device.IOFunction.WriteEndOfFile.isWriteFunction());
     }
 }

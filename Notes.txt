@@ -7,18 +7,20 @@ Do we emit diagnostics at the point where 'S' post-fix operator is applied to a 
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
-  Consider abandoning breakpoints...
+  Maybe enable/disable breakpoints via IP?  I don't know...
   Also, BreakpointRegister is broken
 
 * minalib
-Assembler isn't retuning null module when errors are detected... why?
+Assembler isn't returning null module when errors are detected... why?
+    Do all T diagnostics result in a rel module not being generated?
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
-Do all T diagnostics result in a rel module not being generated?
 
 -- TODO Thoughts
-
+* hardwarelib
+Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
+Can the various enumerators related to more general classes, become nested classes thereof?
 
 -- TODO implement
 * baselib

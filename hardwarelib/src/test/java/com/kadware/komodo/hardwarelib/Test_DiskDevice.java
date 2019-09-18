@@ -17,14 +17,14 @@ public class Test_DiskDevice {
         private TestDevice(
             final String name
         ) {
-            super(DeviceModel.FileSystemDisk, name);
+            super(Model.FileSystemDisk, name);
         }
 
         @Override
         public boolean canConnect(Node candidateAncestor) { return true; }
 
         @Override
-        public boolean handleIo(DeviceIOInfo ioInfo) { return true; }
+        public boolean handleIo(IOInfo ioInfo) { return true; }
 
         @Override
         public boolean hasByteInterface() { return true; }
@@ -39,25 +39,25 @@ public class Test_DiskDevice {
         public void initialize(){}
 
         @Override
-        public void ioGetInfo(DeviceIOInfo ioInfo) {}
+        public void ioGetInfo(IOInfo ioInfo) {}
 
         @Override
-        public void ioRead(DeviceIOInfo ioInfo) {}
+        public void ioRead(IOInfo ioInfo) {}
 
         @Override
-        public void ioReset(DeviceIOInfo ioInfo) {}
+        public void ioReset(IOInfo ioInfo) {}
 
         @Override
-        public void ioUnload(DeviceIOInfo ioInfo) {}
+        public void ioUnload(IOInfo ioInfo) {}
 
         @Override
-        public void ioWrite(DeviceIOInfo ioInfo) {}
+        public void ioWrite(IOInfo ioInfo) {}
 
         @Override
         public void terminate(){}
 
         @Override
-        public void writeBuffersToLog(DeviceIOInfo ioInfo) {}
+        public void writeBuffersToLog(IOInfo ioInfo) {}
     }
 
     @Test
@@ -66,10 +66,10 @@ public class Test_DiskDevice {
         TestDevice device = new TestDevice("DISK01");
         assertEquals(NodeCategory.Device, device._category);
         assertEquals("DISK01", device._name);
-        Assert.assertEquals(DeviceType.Disk, device._deviceType);
-        assertEquals(DeviceModel.FileSystemDisk, device._deviceModel);
-        assertEquals(false, device._readyFlag);
-        assertEquals(false, device._unitAttentionFlag);
+        Assert.assertEquals(Device.Type.Disk, device._deviceType);
+        assertEquals(Device.Model.FileSystemDisk, device._deviceModel);
+        assertFalse(device._readyFlag);
+        assertFalse(device._unitAttentionFlag);
     }
 
     @Test
