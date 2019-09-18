@@ -117,7 +117,11 @@ public class FloatingPointValue extends Value {
     @Override
     public String toString(
     ) {
-        return _value.toString();
+        String prec = "";
+        if (_precision == ValuePrecision.Single) { prec = "S"; }
+        else if (_precision == ValuePrecision.Double) { prec = "D"; }
+
+        return String.format("%s%s%s", _flagged ? "*" : "", _value.toString(), prec);
     }
 
 

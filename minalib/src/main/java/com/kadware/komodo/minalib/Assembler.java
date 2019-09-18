@@ -260,17 +260,17 @@ public class Assembler {
         final Locale locale
     ) {
         try {
-            if (fpValue._precision == ValuePrecision.Double) {
-                DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
-                Word36[] word36s = dw36.getWords();
-                long[] word36 = { word36s[0].getW(), word36s[1].getW() };
+            if (fpValue._precision == ValuePrecision.Single) {
+                Word36 w36 = fpValue._value.toWord36();
+                long[] word36 = { w36.getW() };
                 context.generate(locale.getLineSpecifier(),
                                  context.getCurrentGenerationLCIndex(),
                                  word36);
             } else {
-                //  single precision generation is the default...
-                Word36 w36 = fpValue._value.toWord36();
-                long[] word36 = { w36.getW() };
+                //  double precision generation is the default...
+                DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
+                Word36[] word36s = dw36.getWords();
+                long[] word36 = { word36s[0].getW(), word36s[1].getW() };
                 context.generate(locale.getLineSpecifier(),
                                  context.getCurrentGenerationLCIndex(),
                                  word36);

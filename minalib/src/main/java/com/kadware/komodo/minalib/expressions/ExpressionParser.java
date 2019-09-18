@@ -15,14 +15,19 @@ import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.expressions.items.*;
 import com.kadware.komodo.minalib.expressions.operators.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.RegularExpression;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Expression evaluator
  */
 @SuppressWarnings("Duplicates")
 public class ExpressionParser {
+
+    private static final Pattern FLOATING_POINT_PATTERN = Pattern.compile("\\d+\\.\\d+");
 
     private final String _text;
     private final Locale _textLocale;
@@ -265,40 +270,52 @@ public class ExpressionParser {
      * @return floating point value OperandItem if found, else null
      */
     private OperandItem parseFloatingPointLiteral(
-    ) {
+        final Context context
+    ) throws ExpressionException {
         if (atEnd() || !Character.isDigit(nextChar())) {
             return null;
         }
 
-        int oldIndex = _index;
-        double value = 0.0;
-        while (!atEnd() && Character.isDigit(nextChar())) {
-            char ch = getNextChar();
-            value = (value * 10) + (ch - '0');
-        }
-
-        if (atEnd() || (getNextChar() != '.')) {
-            _index = oldIndex;
+        Matcher m = FLOATING_POINT_PATTERN.matcher(_text.substring(_index));
+        if (!m.lookingAt()) {
             return null;
         }
 
-        boolean hasFractionalDigits = false;
-        double divisor = 10.0;
-        while (!atEnd() && Character.isDigit(nextChar())) {
-            char ch = getNextChar();
-            value += ((double)(ch - '0') / divisor);
-            divisor *= 10;
-            hasFractionalDigits = true;
+        try {
+            double value = Double.parseDouble(_text.substring(_index, _index + m.end()));
+            _index += m.end();
+            FloatingPointComponents fpc = new FloatingPointComponents(value);
+            FloatingPointValue fpValue = new FloatingPointValue.Builder().setValue(fpc).build();
+            return new ValueItem(getLocale(), fpValue);
+        } catch (NumberFormatException ex) {
+            context.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Invalid floating point literal"));
+            throw new ExpressionException();
         }
-
-        if (!hasFractionalDigits) {
-            _index = oldIndex;
-            return null;
-        }
-
-        FloatingPointComponents fpc = new FloatingPointComponents(value);
-        FloatingPointValue fpValue = new FloatingPointValue.Builder().setValue(fpc).build();
-        return new ValueItem(getLocale(), fpValue);
+//        int oldIndex = _index;
+//        double value = 0.0;
+//        while (!atEnd() && Character.isDigit(nextChar())) {
+//            char ch = getNextChar();
+//            value = (value * 10) + (ch - '0');
+//        }
+//
+//        if (atEnd() || (getNextChar() != '.')) {
+//            _index = oldIndex;
+//            return null;
+//        }
+//
+//        boolean hasFractionalDigits = false;
+//        double divisor = 10.0;
+//        while (!atEnd() && Character.isDigit(nextChar())) {
+//            char ch = getNextChar();
+//            value += ((double)(ch - '0') / divisor);
+//            divisor *= 10;
+//            hasFractionalDigits = true;
+//        }
+//
+//        if (!hasFractionalDigits) {
+//            _index = oldIndex;
+//            return null;
+//        }
     }
 
     /**
@@ -439,7 +456,7 @@ public class ExpressionParser {
     ) throws ExpressionException {
         OperandItem opItem = parseStringLiteral(context);
         if (opItem == null) {
-            opItem = parseFloatingPointLiteral();
+            opItem = parseFloatingPointLiteral(context);
         }
         if (opItem == null) {
             opItem = parseIntegerLiteral(context);

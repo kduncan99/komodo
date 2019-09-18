@@ -35,9 +35,12 @@ public class FloatingPointComponents {
     //  External floating point format information
     private static final int W36_CHARACTERISTIC_BITS = 8;
     private static final int W36_EXPONENT_BIAS = 128;
+    private static final int W36_EXPONENT_BITS = 8;
     private static final int W36_MANTISSA_BITS = 27;
     private static final long W36_CHARACTERISTIC_MASK = ((1L << W36_CHARACTERISTIC_BITS) - 1) << W36_MANTISSA_BITS;
     private static final long W36_MANTISSA_MASK = (1L << W36_MANTISSA_BITS) - 1;
+    private static final long W36_SIGN_BIT = 1L << (W36_MANTISSA_BITS + W36_EXPONENT_BITS);
+    private static final long W36_FULL_MASK = W36_CHARACTERISTIC_MASK | W36_MANTISSA_MASK | W36_SIGN_BIT;
     private static final int W36_LOWEST_EXPONENT = -128;
     private static final int W36_HIGHEST_EXPONENT = 127;
     private static final long W36_NEGATIVE_ZERO = 0_777777_777777L;
@@ -45,10 +48,12 @@ public class FloatingPointComponents {
     private static final int DW36_CHARACTERISTIC_BITS = 11;
     static final int DW36_EXPONENT_BIAS = 1024;
     private static final BigInteger DW36BI_EXPONENT_BIAS = BigInteger.valueOf(DW36_EXPONENT_BIAS);
+    private static final int DW36_EXPONENT_BITS = 11;
     private static final int DW36_MANTISSA_BITS = 60;
     private static final BigInteger DW36_CHARACTERISTIC_MASK = BigInteger.valueOf((1L << DW36_CHARACTERISTIC_BITS) - 1).shiftLeft(DW36_MANTISSA_BITS);
     private static final BigInteger DW36_MANTISSA_MASK = BigInteger.valueOf((1L << DW36_MANTISSA_BITS) - 1);
-    private static final BigInteger DW36_CHARACTERISTIC_MANTISSA_MASK = DW36_CHARACTERISTIC_MASK.or(DW36_MANTISSA_MASK);
+    private static final BigInteger DW36_SIGN_BIT = BigInteger.ONE.shiftLeft(DW36_MANTISSA_BITS + DW36_EXPONENT_BITS);
+    private static final BigInteger DW36_FULL_MASK = DW36_CHARACTERISTIC_MASK.or(DW36_MANTISSA_MASK).or(DW36_SIGN_BIT);
     private static final int DW36_LOWEST_EXPONENT = -1024;
     private static final int DW36_HIGHEST_EXPONENT = 1023;
     private static final BigInteger DW36_NEGATIVE_ZERO = BigInteger.valueOf(0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L));
@@ -78,10 +83,10 @@ public class FloatingPointComponents {
     //  Attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private final boolean _isNegative;
-    private final int _exponent;
-    private final long _integral;   //  integral portion (usually zero, esp if normalized) - absolute evalue
-    private final long _mantissa;   //  fractional portion if _integral is zero - absolute value
+    final boolean _isNegative;
+    final int _exponent;
+    final long _integral;    //  integral portion (usually zero, esp if normalized) - absolute evalue
+    final long _mantissa;    //  fractional portion if _integral is zero - absolute value
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -332,7 +337,7 @@ public class FloatingPointComponents {
 
             rawBits = BigInteger.valueOf(biasedExponent).shiftLeft(DW36_MANTISSA_BITS).or(sizedMantissa);
             if (normalized._isNegative) {
-                rawBits = rawBits.xor(DW36_CHARACTERISTIC_MANTISSA_MASK);
+                rawBits = rawBits.xor(DW36_FULL_MASK);
             }
         }
 
@@ -375,7 +380,7 @@ public class FloatingPointComponents {
 
             rawBits = biasedExponent << W36_MANTISSA_BITS | sizedMantissa;
             if (normalized._isNegative) {
-                rawBits ^= W36_CHARACTERISTIC_MASK | W36_MANTISSA_MASK;
+                rawBits ^= W36_FULL_MASK;
             }
         }
 

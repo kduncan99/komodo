@@ -247,6 +247,69 @@ public class Test_Assembler {
     }
 
     @Test
+    public void genFloating(
+    ) {
+        String[] source = {
+            "$(0)      . Explicit double precision",
+            "          + 1.0D",
+            "          + 1.875D",
+            "          + 0.25D",
+            "          - 1.875D",
+            "$(2)      . Explicit single precision",
+            "          + 1.0S",
+            "          + 1.875S",
+            "          + 0.25S",
+            "          - 1.875S",
+            "$(4)      . Default precision (should be double)",
+            "          + 1.0",
+            "          + 1.875",
+            "          + 0.25",
+            "          - 1.875",
+            "          + 256.9375 .  1000000001111 = 400740..0"
+        };
+
+        Assembler.Option[] optionSet = { };
+        Assembler asm = new Assembler();
+        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+
+        assertTrue(asm.getDiagnostics().isEmpty());
+
+        LocationCounterPool lcp0 = module._storage.get(0);
+        assertNotNull(lcp0);
+        assertEquals(8, lcp0._storage.length);
+        assertEquals(0_2001_40000000L, lcp0._storage[0].getW());
+        assertEquals(0_000000_000000L, lcp0._storage[1].getW());
+        assertEquals(0_2001_74000000L, lcp0._storage[2].getW());
+        assertEquals(0_000000_000000L, lcp0._storage[3].getW());
+        assertEquals(0_1777_40000000L, lcp0._storage[4].getW());
+        assertEquals(0_000000_000000L, lcp0._storage[5].getW());
+        assertEquals(0_5776_03777777L, lcp0._storage[6].getW());
+        assertEquals(0_777777_777777L, lcp0._storage[7].getW());
+
+        LocationCounterPool lcp2 = module._storage.get(2);
+        assertNotNull(lcp2);
+        assertEquals(4, lcp2._storage.length);
+        assertEquals(0_201_400000000L, lcp2._storage[0].getW());
+        assertEquals(0_201_740000000L, lcp2._storage[1].getW());
+        assertEquals(0_177_400000000L, lcp2._storage[2].getW());
+        assertEquals(0_576_037777777L, lcp2._storage[3].getW());
+
+        LocationCounterPool lcp4 = module._storage.get(4);
+        assertNotNull(lcp4);
+        assertEquals(10, lcp4._storage.length);
+        assertEquals(0_2001_40000000L, lcp4._storage[0].getW());
+        assertEquals(0_000000_000000L, lcp4._storage[1].getW());
+        assertEquals(0_2001_74000000L, lcp4._storage[2].getW());
+        assertEquals(0_000000_000000L, lcp4._storage[3].getW());
+        assertEquals(0_1777_40000000L, lcp4._storage[4].getW());
+        assertEquals(0_000000_000000L, lcp4._storage[5].getW());
+        assertEquals(0_5776_03777777L, lcp4._storage[6].getW());
+        assertEquals(0_777777_777777L, lcp4._storage[7].getW());
+        assertEquals(0_2011_40074000L, lcp4._storage[8].getW());
+        assertEquals(0_000000_000000L, lcp4._storage[9].getW());
+    }
+
+    @Test
     public void genASCIIStrings(
     ) {
         String[] source = {
@@ -259,7 +322,7 @@ public class Test_Assembler {
             "          'A'DR",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
+        Assembler.Option[] optionSet = { };
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 
@@ -289,7 +352,7 @@ public class Test_Assembler {
             "          'A'DR",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY, Assembler.Option.EMIT_GENERATED_CODE };//TODO simple output
+        Assembler.Option[] optionSet = { };
         Assembler asm = new Assembler();
         RelocatableModule module = asm.assemble("TEST", source, optionSet);
 
