@@ -6,10 +6,10 @@ package com.kadware.komodo.minalib;
 /**
  * Represents the storage controlled by a particular LocationCounterPool, within a particular Module
  */
-class LocationCounterPool {
+public class LocationCounterPool {
 
-    final boolean _needsExtendedMode;
-    final RelocatableWord[] _storage;
+    public final boolean _needsExtendedMode;
+    public final RelocatableWord[] _storage;
 
     LocationCounterPool(
         final RelocatableWord[] storage,

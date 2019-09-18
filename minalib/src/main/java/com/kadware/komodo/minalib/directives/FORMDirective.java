@@ -13,7 +13,6 @@ import com.kadware.komodo.minalib.dictionary.FormValue;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.ExpressionParser;
 import java.math.BigInteger;

@@ -288,6 +288,17 @@ public class IntegerValue extends Value {
     }
 
     /**
+     * Create a new copy of this object, with the given form
+     * @param newForm new form value
+     * @return new value
+     */
+    public IntegerValue copy(
+        final Form newForm
+    ) {
+        return new IntegerValue(_flagged, _value, _precision, newForm, _references);
+    }
+
+    /**
      * Perform a division of two IntegerValue objects, observing attached forms and relocation information (if any)
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand

@@ -1,8 +1,6 @@
 -- TODO InProgress
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
-Working on supporting floating point (double/single) - data generation - floats
-$FORM and generation using forms
-Support $EQUF
 
 
 -- TODO BUGS
@@ -13,6 +11,7 @@ We've broken breakpoint on fetch due to not developing absolute addresses anymor
   Also, BreakpointRegister is broken
 
 * minalib
+Assembler isn't retuning null module when errors are detected... why?
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
@@ -138,7 +137,7 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
-more FloatingPointValue unit tests?
+more FloatingPointValue unit tests
 more unit tests for string value generation
 unit tests for node references - need to check results
 unit tests for more built-in functions - we're missing a lot of them
