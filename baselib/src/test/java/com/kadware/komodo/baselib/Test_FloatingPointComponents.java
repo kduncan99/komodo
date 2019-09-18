@@ -337,7 +337,30 @@ public class Test_FloatingPointComponents {
         assertFalse(new FloatingPointComponents(0.5).isNegativeZero());
     }
 
-    //  TODO isNormalized
+    @Test
+    public void isNormalized() {
+        assertTrue(FloatingPointComponents.COMP_POSITIVE_ZERO.isNormalized());
+        assertTrue(FloatingPointComponents.COMP_NEGATIVE_ZERO.isNormalized());
+
+        FloatingPointComponents not_1 = new FloatingPointComponents(false, 5, 128, 0);
+        FloatingPointComponents not_2 = new FloatingPointComponents(false,
+                                                                    5,
+                                                                    128,
+                                                                    0_77000_00000_00000_00000L);
+        FloatingPointComponents not_3 = new FloatingPointComponents(true,
+                                                                    3,
+                                                                    0,
+                                                                    0_37777_00000_00000_00000L);
+        FloatingPointComponents is = new FloatingPointComponents(true,
+                                                                 12,
+                                                                 0,
+                                                                 0_40000_00000_00000_00000L);
+
+        assertFalse(not_1.isNormalized());
+        assertFalse(not_2.isNormalized());
+        assertFalse(not_3.isNormalized());
+        assertTrue(is.isNormalized());
+    }
 
     @Test
     public void isPositiveZero() {
@@ -355,7 +378,7 @@ public class Test_FloatingPointComponents {
 
     //  multiply -------------------------------------------------------------------------------------------------------------------
 
-    //  TODO
+    //  TODO more? some overflows maybe
     @Test
     public void multiply_zero(
     ) throws CharacteristicOverflowException,
@@ -457,6 +480,25 @@ public class Test_FloatingPointComponents {
         assertEquals(expected, result);
     }
 
+    @Test
+    public void normalize_more(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      2,
+                                                                      01010L,
+                                                                      0_7000_0000_0000_0000_0000L);
+        //  actual value in binary is 100000100011.1
+        //  result mantissa in binary is 10000010001110...0 - in octal is 404340...0
+        //  real exponent in decimal is 12
+        FloatingPointComponents expected = new FloatingPointComponents(false,
+                                                                       12,
+                                                                       0,
+                                                                       0_40434_00000_00000_00000L);
+
+        assertEquals(expected, operand.normalize());
+    }
+
     @Test(expected = CharacteristicUnderflowException.class)
     public void normalize_Underflow(
     ) throws CharacteristicOverflowException,
@@ -507,7 +549,24 @@ public class Test_FloatingPointComponents {
 
     //  toDoubleWord36 -------------------------------------------------------------------------------------------------------------
 
-    //TODO
+    @Test
+    public void toDoubleWord36_1(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      2,
+                                                                      01010L,
+                                                                      0_7000_0000_0000_0000_0000L);
+        //  actual value in binary is 100000100011.1
+        //  result mantissa in binary is 10000010001110...0 - in octal is 404340...0
+        //  real exponent in decimal is 12, biased in octal is 2014
+        Word36[] expected = {
+            new Word36(0_2014_40434000L),
+            new Word36(0L),
+        };
+
+        assertArrayEquals(expected, operand.toDoubleWord36().getWords());
+    }
 
     //  toFloat --------------------------------------------------------------------------------------------------------------------
 
@@ -535,7 +594,21 @@ public class Test_FloatingPointComponents {
 
     //  toWord36 -------------------------------------------------------------------------------------------------------------------
 
-    //TODO
+    @Test
+    public void toWord36_1(
+    ) throws CharacteristicOverflowException,
+             CharacteristicUnderflowException {
+        FloatingPointComponents operand = new FloatingPointComponents(false,
+                                                                      2,
+                                                                      01010L,
+                                                                      0_7000_0000_0000_0000_0000L);
+        //  actual value in binary is 100000100011.1
+        //  result mantissa in binary is 10000010001110...0 - in octal is 404340...0
+        //  real exponent in decimal is 12, biased in octal is 214
+        Word36 expected = new Word36(0_214_404340000L);
+
+        assertEquals(expected, operand.toWord36());
+    }
 
     //  toString -------------------------------------------------------------------------------------------------------------------
 

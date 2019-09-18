@@ -321,8 +321,16 @@ public class FloatingPointComponents {
                 throw new CharacteristicOverflowException();
             }
 
-            rawBits = BigInteger.valueOf(normalized._exponent).add(DW36BI_EXPONENT_BIAS).shiftLeft(DW36_MANTISSA_BITS);
-            rawBits = rawBits.or(BigInteger.valueOf(normalized._mantissa).and(DW36_MANTISSA_MASK));
+            long biasedExponent = normalized._exponent + DW36_EXPONENT_BIAS;
+            BigInteger sizedMantissa = BigInteger.valueOf(normalized._mantissa);
+            int shift = MANTISSA_BITS - DW36_MANTISSA_BITS;
+            if (shift < 0) {
+                sizedMantissa = sizedMantissa.shiftLeft(-shift);
+            } else if (shift > 0){
+                sizedMantissa = sizedMantissa.shiftRight(shift);
+            }
+
+            rawBits = BigInteger.valueOf(biasedExponent).shiftLeft(DW36_MANTISSA_BITS).or(sizedMantissa);
             if (normalized._isNegative) {
                 rawBits = rawBits.xor(DW36_CHARACTERISTIC_MANTISSA_MASK);
             }
@@ -355,8 +363,17 @@ public class FloatingPointComponents {
                 throw new CharacteristicOverflowException();
             }
 
-            rawBits = (normalized._exponent + W36_EXPONENT_BIAS) << W36_MANTISSA_BITS;
-            rawBits |= normalized._mantissa & W36_MANTISSA_MASK;
+            long biasedExponent = normalized._exponent + W36_EXPONENT_BIAS;
+            long sizedMantissa = normalized._mantissa;
+            int shift = MANTISSA_BITS - W36_MANTISSA_BITS;
+            if (shift < 0) {
+                sizedMantissa <<= (-shift);
+            } else if (shift > 0){
+                sizedMantissa >>>= shift;
+            }
+
+
+            rawBits = biasedExponent << W36_MANTISSA_BITS | sizedMantissa;
             if (normalized._isNegative) {
                 rawBits ^= W36_CHARACTERISTIC_MASK | W36_MANTISSA_MASK;
             }
