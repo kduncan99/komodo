@@ -64,7 +64,7 @@ public class Test_DiskDevice {
     public void create(
     ) {
         TestDevice device = new TestDevice("DISK01");
-        assertEquals(NodeCategory.Device, device._category);
+        assertEquals(Node.NodeCategory.Device, device._category);
         assertEquals("DISK01", device._name);
         Assert.assertEquals(Device.Type.Disk, device._deviceType);
         assertEquals(Device.Model.FileSystemDisk, device._deviceModel);

@@ -1,4 +1,6 @@
 -- TODO InProgress
+* hardwarelib
+Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
@@ -17,10 +19,9 @@ Assembler isn't returning null module when errors are detected... why?
 String concatenation does not honor precision per MASM 5.3.1
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
 
+
 -- TODO Thoughts
-* hardwarelib
-Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
-Can the various enumerators related to more general classes, become nested classes thereof?
+
 
 -- TODO implement
 * baselib

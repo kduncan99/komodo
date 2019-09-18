@@ -139,7 +139,7 @@ public class Test_FileSystemTapeDevice {
     ) {
         FileSystemTapeDevice d = new FileSystemTapeDevice("TAPE0");
         assertEquals("TAPE0", d._name);
-        assertEquals(NodeCategory.Device, d._category);
+        assertEquals(Node.NodeCategory.Device, d._category);
         Assert.assertEquals(Device.Model.FileSystemTape, d._deviceModel);
         assertEquals(Device.Type.Tape, d._deviceType);
     }

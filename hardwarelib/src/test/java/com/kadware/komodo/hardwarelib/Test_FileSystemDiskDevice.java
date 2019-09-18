@@ -149,7 +149,7 @@ public class Test_FileSystemDiskDevice {
     ) {
         FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
         assertEquals("DISK0", d._name);
-        assertEquals(NodeCategory.Device, d._category);
+        assertEquals(Node.NodeCategory.Device, d._category);
         Assert.assertEquals(Device.Model.FileSystemDisk, d._deviceModel);
         assertEquals(Device.Type.Disk, d._deviceType);
     }

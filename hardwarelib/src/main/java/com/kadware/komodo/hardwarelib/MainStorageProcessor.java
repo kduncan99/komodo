@@ -45,7 +45,7 @@ public class MainStorageProcessor extends Processor {
         final int upi,
         final int fixedStorageSize
     ) {
-        super(ProcessorType.MainStorageProcessor, name, upi);
+        super(Type.MainStorageProcessor, name, upi);
         if (fixedStorageSize < 256 * 1024) {
             throw new RuntimeException(String.format("Bad size for MSP:%d words", fixedStorageSize));
         }

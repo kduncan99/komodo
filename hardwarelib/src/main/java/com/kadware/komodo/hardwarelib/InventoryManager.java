@@ -5,8 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.hardwarelib.exceptions.*;
-import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
-import com.kadware.komodo.baselib.Word36;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -277,7 +276,7 @@ public class InventoryManager {
         int sps = 0;
 
         for (Processor processor : _processors.values()) {
-            switch (processor._processorType) {
+            switch (processor._Type) {
                 case InputOutputProcessor:
                     iops++;
                     break;
@@ -321,7 +320,7 @@ public class InventoryManager {
     List<InputOutputProcessor> getInputOutputProcessors() {
         List<InputOutputProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._processorType == ProcessorType.InputOutputProcessor) {
+            if (processor._Type == Processor.Type.InputOutputProcessor) {
                 result.add((InputOutputProcessor) processor);
             }
         }
@@ -353,7 +352,7 @@ public class InventoryManager {
     List<InstructionProcessor> getInstructionProcessors() {
         List<InstructionProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._processorType == ProcessorType.InstructionProcessor) {
+            if (processor._Type == Processor.Type.InstructionProcessor) {
                 result.add((InstructionProcessor) processor);
             }
         }
@@ -385,7 +384,7 @@ public class InventoryManager {
     List<MainStorageProcessor> getMainStorageProcessors() {
         List<MainStorageProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._processorType == ProcessorType.MainStorageProcessor) {
+            if (processor._Type == Processor.Type.MainStorageProcessor) {
                 result.add((MainStorageProcessor) processor);
             }
         }
@@ -440,7 +439,7 @@ public class InventoryManager {
     List<SystemProcessor> getSystemProcessors() {
         List<SystemProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._processorType == ProcessorType.SystemProcessor) {
+            if (processor._Type == Processor.Type.SystemProcessor) {
                 result.add((SystemProcessor) processor);
             }
         }

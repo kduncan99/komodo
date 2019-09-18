@@ -76,7 +76,7 @@ public class SystemProcessor extends Processor {
         final String name,
         final int upi
     ) {
-        super(ProcessorType.SystemProcessor, name, upi);
+        super(Type.SystemProcessor, name, upi);
     }
 
     //  ------------------------------------------------------------------------
@@ -122,7 +122,7 @@ public class SystemProcessor extends Processor {
         int spCount = 0;
 
         for (Processor processor : processors) {
-            switch (processor._processorType) {
+            switch (processor._Type) {
                 case InputOutputProcessor:
                     iopCount++;
                     break;
@@ -149,10 +149,10 @@ public class SystemProcessor extends Processor {
         int ax = 1;
 
         for (Processor source : processors) {
-            if ((source._processorType == ProcessorType.InstructionProcessor)
-                || (source._processorType == ProcessorType.SystemProcessor)) {
+            if ((source._Type == Type.InstructionProcessor)
+                || (source._Type == Type.SystemProcessor)) {
                 for (Processor destination : processors) {
-                    if (destination._processorType == ProcessorType.InputOutputProcessor) {
+                    if (destination._Type == Type.InputOutputProcessor) {
                         Word36 w = new Word36();
                         w.setS1(source._upiIndex);
                         w.setS2(destination._upiIndex);
@@ -163,8 +163,8 @@ public class SystemProcessor extends Processor {
                         w.setS2(source._upiIndex);
                         commsArea.set(ax, w.getW());
                         ax += 3;
-                    } else if ((source._processorType == ProcessorType.SystemProcessor)
-                               && (destination._processorType == ProcessorType.InstructionProcessor)) {
+                    } else if ((source._Type == Type.SystemProcessor)
+                               && (destination._Type == Type.InstructionProcessor)) {
                         Word36 w = new Word36();
                         w.setS1(source._upiIndex);
                         w.setS2(destination._upiIndex);

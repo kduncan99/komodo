@@ -227,7 +227,7 @@ public class Test_InputOutputProcessor {
     @Test
     public void create() {
         InputOutputProcessor iop = new InputOutputProcessor("IOP0", 2);
-        assertEquals(NodeCategory.Processor, iop._category);
+        assertEquals(Node.NodeCategory.Processor, iop._category);
         assertEquals(2, iop._upiIndex);
         assertEquals("IOP0", iop._name);
     }
@@ -275,14 +275,14 @@ public class Test_InputOutputProcessor {
              UPINotAssignedException {
         setup();
 
-        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
-                                                        .setChannelModuleIndex(_cmIndex + 1)
-                                                        .setDeviceAddress(5)
-                                                        .setIOFunction(Device.IOFunction.Reset)
-                                                        .build();
+        ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                                                    .setChannelModuleIndex(_cmIndex + 1)
+                                                                                    .setDeviceAddress(5)
+                                                                                    .setIOFunction(Device.IOFunction.Reset)
+                                                                                    .build();
         boolean scheduled = _iop.startIO(_ip, cp);
         if (scheduled) {
-            while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+            while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException ex) {
@@ -290,7 +290,7 @@ public class Test_InputOutputProcessor {
                 }
             }
         }
-        assertEquals(ChannelStatus.UnconfiguredChannelModule, cp.getChannelStatus());
+        assertEquals(ChannelModule.ChannelStatus.UnconfiguredChannelModule, cp.getChannelStatus());
         teardown();
     }
 
@@ -317,16 +317,16 @@ public class Test_InputOutputProcessor {
         AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
 
         long blockId = 0;
-        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
-                                                        .setChannelModuleIndex(_cmIndex)
-                                                        .setDeviceAddress(_devIndex)
-                                                        .setIOFunction(Device.IOFunction.Read)
-                                                        .setBlockId(blockId)
-                                                        .setAccessControlWords(acws)
-                                                        .build();
+        ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                                                    .setChannelModuleIndex(_cmIndex)
+                                                                                    .setDeviceAddress(_devIndex)
+                                                                                    .setIOFunction(Device.IOFunction.Read)
+                                                                                    .setBlockId(blockId)
+                                                                                    .setAccessControlWords(acws)
+                                                                                    .build();
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
-        while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+        while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException ex) {
@@ -334,7 +334,7 @@ public class Test_InputOutputProcessor {
             }
         }
 
-        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertArrayEquals(_cm._lastBuffer._array, dataStorage._array);
 
         teardown();
@@ -364,23 +364,23 @@ public class Test_InputOutputProcessor {
         AccessControlWord[] acws = { new AccessControlWord(acwStorage, 0) };
 
         long blockId = 0;
-        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
-                                                        .setChannelModuleIndex(_cmIndex)
-                                                        .setDeviceAddress(_devIndex)
-                                                        .setBlockId(blockId)
-                                                        .setIOFunction(Device.IOFunction.Write)
-                                                        .setAccessControlWords(acws)
-                                                        .build();
+        ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                                                    .setChannelModuleIndex(_cmIndex)
+                                                                                    .setDeviceAddress(_devIndex)
+                                                                                    .setBlockId(blockId)
+                                                                                    .setIOFunction(Device.IOFunction.Write)
+                                                                                    .setAccessControlWords(acws)
+                                                                                    .build();
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
-        while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+        while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException ex) {
                 System.out.println("Caught " + ex.getMessage());
             }
         }
-        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertArrayEquals(baseData, _cm._lastBuffer._array);
 
         teardown();
@@ -439,15 +439,15 @@ public class Test_InputOutputProcessor {
             new AccessControlWord(acwStorage, 6)
         };
 
-        ChannelProgram cp = new ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
-                                                        .setChannelModuleIndex(_cmIndex)
-                                                        .setDeviceAddress(_devIndex)
-                                                        .setIOFunction(Device.IOFunction.Write)
-                                                        .setAccessControlWords(acws)
-                                                        .build();
+        ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
+                                                                                    .setChannelModuleIndex(_cmIndex)
+                                                                                    .setDeviceAddress(_devIndex)
+                                                                                    .setIOFunction(Device.IOFunction.Write)
+                                                                                    .setAccessControlWords(acws)
+                                                                                    .build();
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
-        while (cp.getChannelStatus() == ChannelStatus.InProgress) {
+        while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException ex) {
@@ -455,7 +455,7 @@ public class Test_InputOutputProcessor {
             }
         }
 
-        assertEquals(ChannelStatus.Successful, cp.getChannelStatus());
+        assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertEquals(baseData0.length + baseData1.length + baseData2.length, _cm._lastBuffer._array.length);
         assertArrayEquals(baseData0, Arrays.copyOfRange(_cm._lastBuffer._array,
                                                         0,

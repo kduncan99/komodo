@@ -7132,7 +7132,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final String name,
         final int upiIndex
     ) {
-        super(ProcessorType.InstructionProcessor, name, upiIndex);
+        super(Type.InstructionProcessor, name, upiIndex);
 
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 
@@ -8099,7 +8099,7 @@ public class InstructionProcessor extends Processor implements Worker {
         synchronized (_upiPendingInterrupts) {
             if (!_upiPendingInterrupts.isEmpty()) {
                 for (Processor sendSource : _upiPendingInterrupts) {
-                    switch (sendSource._processorType) {
+                    switch (sendSource._Type) {
                         case InputOutputProcessor:
                             //  UPI Normal (IO completed)
                             //  Ensure we are running, and raise a class 31 interrupt.

@@ -42,7 +42,7 @@ public class InputOutputProcessor extends Processor {
         final String name,
         final int upi
     ) {
-        super(ProcessorType.InputOutputProcessor, name, upi);
+        super(Type.InputOutputProcessor, name, upi);
     }
 
     /**
@@ -74,7 +74,7 @@ public class InputOutputProcessor extends Processor {
      * @param source the Processor which initiated the channel program (an IP or an SP)
      */
     public void finalizeIo(
-        final ChannelProgram channelProgram,
+        final ChannelModule.ChannelProgram channelProgram,
         final Processor source
     ) {
         if (channelProgram.getFunction().isReadFunction()) {
@@ -95,7 +95,7 @@ public class InputOutputProcessor extends Processor {
             }
         }
 
-        switch (source._processorType) {
+        switch (source._Type) {
             case InstructionProcessor:
                 //  The IO was initiated by an IP - send a broadcast.
                 //  An available IP will pick it up, will know it is a signal of a completed IO,
@@ -155,10 +155,10 @@ public class InputOutputProcessor extends Processor {
                         AbsoluteAddress addr = _upiCommunicationLookup.get(new UPIIndexPair(source._upiIndex, this._upiIndex));
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
                         ArraySlice mspStorage = msp.getStorage(addr._segment);
-                        ChannelProgram channelProgram = ChannelProgram.create(mspStorage, addr._offset);
+                        ChannelModule.ChannelProgram channelProgram = ChannelModule.ChannelProgram.create(mspStorage, addr._offset);
                         boolean started = startIO(source, channelProgram);
                         if (!started) {
-                            if (source._processorType == ProcessorType.SystemProcessor) {
+                            if (source._Type == Type.SystemProcessor) {
                                 sendList.add(source);
                             } else {
                                 ++broadcastCount;
@@ -243,12 +243,12 @@ public class InputOutputProcessor extends Processor {
      */
     public boolean startIO(
         final Processor source,
-        final ChannelProgram channelProgram
+        final ChannelModule.ChannelProgram channelProgram
     ) {
         int cmIndex = channelProgram.getChannelModuleIndex();
         ChannelModule channelModule = (ChannelModule) _descendants.get(cmIndex);
         if (channelModule == null) {
-            channelProgram.setChannelStatus(ChannelStatus.UnconfiguredChannelModule);
+            channelProgram.setChannelStatus(ChannelModule.ChannelStatus.UnconfiguredChannelModule);
             return false;
         }
 
@@ -304,7 +304,7 @@ public class InputOutputProcessor extends Processor {
         } catch (AddressingExceptionInterrupt
             | UPINotAssignedException
             | UPIProcessorTypeException ex) {
-            channelProgram.setChannelStatus(ChannelStatus.InvalidAddress);
+            channelProgram.setChannelStatus(ChannelModule.ChannelStatus.InvalidAddress);
             return false;
         }
     }

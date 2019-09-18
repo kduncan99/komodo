@@ -24,8 +24,32 @@ import org.apache.logging.log4j.Logger;
 public abstract class Processor extends Node implements Worker {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested class
+    //  Nested things
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    public enum Type {
+        SystemProcessor(0),
+        InstructionProcessor(1),
+        InputOutputProcessor(2),
+        MainStorageProcessor(3);
+
+        private final int _code;
+        Type(int code) { _code = code; }
+        public int getCode() { return _code; }
+
+        public static Type getValue(
+            final int code
+        ) {
+            switch (code) {
+                case 0:     return SystemProcessor;
+                case 1:     return InstructionProcessor;
+                case 2:     return InputOutputProcessor;
+                case 3:     return MainStorageProcessor;
+            }
+
+            throw new RuntimeException("Invalid code for Type.getValue()");
+        }
+    }
 
     static class UPIIndexPair {
         final int _sourceIndex;
@@ -61,7 +85,7 @@ public abstract class Processor extends Node implements Worker {
 
     private static final Logger LOGGER = LogManager.getLogger(Processor.class);
 
-    final ProcessorType _processorType;
+    final Type _Type;
 
     /**
      * Uniquely identifies each processor in the configuration, in a manner transparent to the configurating entity.
@@ -109,7 +133,7 @@ public abstract class Processor extends Node implements Worker {
      * IPs, IOPs, and SPs will all have something useful to do.
      * MSPs will probably not.
      */
-    protected boolean _workerTerminate = false; //  worker thread must monitor this, and shut down when it goes true
+    protected boolean _workerTerminate;         //  worker thread must monitor this, and shut down when it goes true
     protected final Thread _workerThread;       //  reference to worker thread.
 
 
@@ -118,12 +142,12 @@ public abstract class Processor extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     public Processor(
-        final ProcessorType processorType,
+        final Type processorType,
         final String name,
         final int upiIndex
     ) {
         super(NodeCategory.Processor, name);
-        _processorType = processorType;
+        _Type = processorType;
         _upiIndex = upiIndex;
 
         //  Start the processor thread
@@ -164,7 +188,7 @@ public abstract class Processor extends Node implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Type:%s\n", _processorType.toString()));
+            writer.write(String.format("  Type:%s\n", _Type.toString()));
 
             StringBuilder sb = new StringBuilder();
             sb.append("  Pending SENDs from: ");
@@ -204,6 +228,7 @@ public abstract class Processor extends Node implements Worker {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
+                LOGGER.catching(ex);
             }
         }
     }
