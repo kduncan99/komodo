@@ -1,6 +1,6 @@
 -- TODO InProgress
 * hardwarelib
-Implementing some SYSC stuff, reworking storage locks in the process
+Need unit tests for SYSC memory subfunctions
 Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
@@ -29,7 +29,6 @@ assembler needs to be smart enough to do the right thing with B16-B31 (move msbi
 more FloatingPointComponent tests
 
 * hardwarelib
-Reworking the entire IO stack
 Redo all the node and subclasses tests, many of which are commented out
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
 SystemProcessor: For starting/monitoring/stopping system, and for console communication
@@ -40,20 +39,8 @@ RAMTapeDevice byte interface, optional compression, optional backing store
 PrinterDevice
 CardReaderDevice
 CardPunchDevice
-IP: SYSC instruction for dynamic bank allocation
-IP: SYSC instruction for console communication
-IP: SYSC instruction for IO
-Need to reimplement/implement serialize/deserialize for all the node classes/subclasses
-IP: operations control instructions (and unit tests)
-  SEND
-  ACK
-IP: BT instruction and unit tests
-IP: UNLK instruction
-IP: SPID see new info
-IP: special instructions (and unit tests)
-  EX
-  EXR
-  DCB
+IP: SYSC subfunctions for console communication
+IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
@@ -61,12 +48,21 @@ IP: unit tests
   LIJ, LBJ, LDJ
   LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
   LRD, SMD, RMD, LMC, SDMN, SDMS, SDMF, RDC
-Catch throwables, and turn them into hardware fault machine interrupts
-Change extended mode dbanks to start at lower-limit 0 - this *should* work...
+Change unit test extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
   what to do when we run off the end of the bank?
 need some conditional jump tests which would incur reference violation if they jumped
     both jumping (ref violation) and not jumping (no ref violation)
+IP: BT instruction and unit tests
+IP: UNLK instruction
+IP: SPID see new info in newest PRM
+IP: operations control instructions (and unit tests)
+  SEND
+  ACK
+IP: special instructions (and unit tests)
+  EX
+  EXR
+  DCB
 IP: storage-to-storage instructions (and unit tests) other than BT
   BIM
   BIC

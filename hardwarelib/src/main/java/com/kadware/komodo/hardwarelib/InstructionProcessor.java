@@ -63,6 +63,32 @@ public class InstructionProcessor extends Processor implements Worker {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Nested classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Contains developed absolute addresses and other information necessary for preserving values which are
+     * time-consuming to calculate, and which must be used more than once in disparate locations.
+     * The precipitating use case is SYSC which needs to read consecutive addresses, then write them back out.
+     */
+    private static class DevelopedAddresses {
+        private final BaseRegister _baseRegister;
+        private final int _offset;
+        private final AbsoluteAddress[] _addresses;
+
+        public DevelopedAddresses(
+            final BaseRegister baseRegister,
+            final int offset,
+            final AbsoluteAddress[] addresses
+        ) {
+            _baseRegister = baseRegister;
+            _offset = offset;
+            _addresses = addresses;
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Bank Manipulation
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -2553,7 +2579,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             long[] ops = new long[48];
-            getConsecutiveOperands(false, ops);
+            getConsecutiveOperands(false, ops, false);
             int opx = 0;
 
             for (int grsx = GeneralRegisterSet.X0; grsx <= GeneralRegisterSet.X11; ++grsx) {
@@ -2975,7 +3001,7 @@ public class InstructionProcessor extends Processor implements Worker {
             DoubleWord36 dwOperand1 = new DoubleWord36(operand1[0], operand1[1]);
 
             long[] operand2 = new long[2];
-            getConsecutiveOperands(true, operand2);
+            getConsecutiveOperands(true, operand2, false);
             DoubleWord36 dwOperand2 = new DoubleWord36(operand2[0], operand2[1]);
 
             DoubleWord36.AdditionResult ar = dwOperand1.add(dwOperand2);
@@ -3033,7 +3059,7 @@ public class InstructionProcessor extends Processor implements Worker {
             DoubleWord36 dwOperand1 = new DoubleWord36(operand1[0], operand1[1]);
 
             long[] operand2 = new long[2];
-            getConsecutiveOperands(true, operand2);
+            getConsecutiveOperands(true, operand2, false);
             DoubleWord36 dwOperand2 = new DoubleWord36(operand2[0], operand2[1]).negate();
 
             DoubleWord36.AdditionResult ar = dwOperand1.add(dwOperand2);
@@ -3235,7 +3261,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
-            getConsecutiveOperands(true, operands);
+            getConsecutiveOperands(true, operands, false);
 
             int grsIndex = getExecOrUserARegisterIndex((int) _currentInstruction.getA());
             setGeneralRegister(grsIndex, operands[0]);
@@ -3252,7 +3278,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
-            getConsecutiveOperands(true, operands);
+            getConsecutiveOperands(true, operands, false);
             if (Word36.isNegative(operands[0])) {
                 operands[0] = (~operands[0]) & Word36.BIT_MASK;
                 operands[1] = (~operands[1]) & Word36.BIT_MASK;
@@ -3273,7 +3299,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             long[] operands = new long[2];
-            getConsecutiveOperands(true, operands);
+            getConsecutiveOperands(true, operands, false);
             operands[0] = (~operands[0]) & Word36.BIT_MASK;
             operands[1] = (~operands[1]) & Word36.BIT_MASK;
 
@@ -3297,7 +3323,7 @@ public class InstructionProcessor extends Processor implements Worker {
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
 
             long[] operand = new long[2];
-            getConsecutiveOperands(true, operand);
+            getConsecutiveOperands(true, operand, false);
             DoubleWord36 dwOperand = new DoubleWord36(operand[0], operand[1]);
 
             int baseIndex = (int) _currentInstruction.getA();
@@ -3456,7 +3482,7 @@ public class InstructionProcessor extends Processor implements Worker {
             long[] aOperand = new long[2];
             aOperand[0] = getExecOrUserARegister((int) _currentInstruction.getA()).getW();
             aOperand[1] = getExecOrUserARegister((int) _currentInstruction.getA() + 1).getW();
-            getConsecutiveOperands(true, uOperand);
+            getConsecutiveOperands(true, uOperand, false);
             if ((uOperand[0] == aOperand[0]) && (uOperand[1] == aOperand[1])) {
                 skipNextInstruction();
             }
@@ -3474,7 +3500,7 @@ public class InstructionProcessor extends Processor implements Worker {
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
 
             long[] uValue = new long[2];
-            getConsecutiveOperands(true, uValue);
+            getConsecutiveOperands(true, uValue, false);
             DoubleWord36 dwu = new DoubleWord36(uValue[0], uValue[1]);
             if (dwu.isNegative()) { dwu = dwu.negate(); }
 
@@ -4084,7 +4110,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             long[] operands = new long[15];
-            getConsecutiveOperands(false, operands);
+            getConsecutiveOperands(false, operands, false);
 
             BankManipulator bm = new BankManipulator();
             for (int opx = 0, brx = 1; opx < 15; ++opx, ++brx) {
@@ -4141,7 +4167,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
             int brIndex = (int) _currentInstruction.getA() + 16;
             long[] data = new long[4];
-            getConsecutiveOperands(false, data);
+            getConsecutiveOperands(false, data, false);
             _baseRegisters[brIndex] = new BaseRegister(data);
 
             //  Clear any active base table entries which have a level value corresponding
@@ -4256,7 +4282,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             long[] data = new long[4];
-            getConsecutiveOperands(false, data);
+            getConsecutiveOperands(false, data, false);
             _baseRegisters[brIndex] = new BaseRegister(data);
             _activeBaseTableEntries[brIndex] = new ActiveBaseTableEntry(0);
         }
@@ -4543,7 +4569,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
             //  Go get all the operands we need for both areas
             long[] operands = new long[count1 + count2];
-            getConsecutiveOperands(false, operands);
+            getConsecutiveOperands(false, operands, false);
 
             //  If we got this far, we can start populating the GRS
             int ox = 0;
@@ -5705,7 +5731,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             long[] operands = new long[8];
-            getConsecutiveOperands(false, operands);
+            DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
             switch ((int) Word36.getS1(operands[0])) {
                 case 020: {
                     //  Subfunction 020: Create dynamic memory block
@@ -5731,7 +5757,6 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
-                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
                     break;
                 }
 
@@ -5756,7 +5781,6 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
-                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
                     break;
                 }
 
@@ -5788,7 +5812,6 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
-                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
                     break;
                 }
 
@@ -5887,6 +5910,8 @@ public class InstructionProcessor extends Processor implements Worker {
                 default:
                     throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
             }
+
+            storeConsecutiveOperands(devAddr, operands);
         }
 
         @Override public Instruction getInstruction() { return Instruction.SYSC; }
@@ -6374,7 +6399,7 @@ public class InstructionProcessor extends Processor implements Worker {
             //      +5:     ISW0 (Interrupt Status Word)
             //      +6:     ISW1 (Interrupt Status Word)
             long[] operands = new long[23];
-            getConsecutiveOperands(false, operands);
+            getConsecutiveOperands(false, operands, false);
 
             int abtx = 1;   //  index of first ABT word in the packet
             int aspx = 16;  //  index of first ASP word in the packet
@@ -7099,7 +7124,7 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             long[] operands = new long[7];
-            getConsecutiveOperands(false, operands);
+            getConsecutiveOperands(false, operands, false);
             new BankManipulator().bankManipulation(Instruction.UR, operands);
             _preventProgramCounterIncrement = true;
         }
@@ -7880,14 +7905,17 @@ public class InstructionProcessor extends Processor implements Worker {
      * Also, we presume that we are doing full-word transfers - not partial word.
      * @param grsCheck true if we should check U to see if it is a GRS location
      * @param operands Where we store the resulting operands - the length of this array defines how many operands we retrieve
-     * @return array of AbsoluteAddresses corresponding to the operators we retrieve - this can be used for subsequently storing.
+     * @param forUpdate if true, we do access checks for read and write - otherwise, only for read.
+     *                  This helps us shortcut the process of reading operands, then writing them back out.
+     * @return DevelopedAddresses object corresponding to the operators we retrieve - this can be used for subsequently storing.
      *              If we return null, then we've retrieved operands from GRS and no absolute addresses apply.
      * @throws MachineInterrupt if an interrupt needs to be raised
      * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
      */
-    private AbsoluteAddress[] getConsecutiveOperands(
+    private DevelopedAddresses getConsecutiveOperands(
         final boolean grsCheck,
-        final long[] operands
+        final long[] operands,
+        final boolean forUpdate
     ) throws MachineInterrupt,
              UnresolvedAddressException {
         //  Get the relative address so we can do a grsCheck
@@ -7917,7 +7945,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //  Get base register and check storage and access limits
         int brIndex = findBaseRegisterIndex(relAddress, false);
         BaseRegister bReg = _baseRegisters[brIndex];
-        bReg.checkAccessLimits(relAddress, operands.length, true, false, _indicatorKeyRegister.getAccessInfo());
+        bReg.checkAccessLimits(relAddress, operands.length, true, forUpdate, _indicatorKeyRegister.getAccessInfo());
 
         //  Generate abs addresses
         AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
@@ -7927,12 +7955,13 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         //  Retrieve the operands
-        int offset = relAddress - bReg._lowerLimitNormalized;
+        int initialOffset = relAddress - bReg._lowerLimitNormalized;
+        int offset = initialOffset;
         for (int ox = 0; ox < operands.length; ++ox) {
             operands[ox] = bReg._storage.get(offset++);
         }
 
-        return absAddresses;
+        return new DevelopedAddresses(bReg, initialOffset, absAddresses);
     }
 
     /**
@@ -8875,6 +8904,31 @@ public class InstructionProcessor extends Processor implements Worker {
             }
 
             incrementIndexRegisterInF0();
+        }
+    }
+
+    /**
+     * As above, but for the case where the caller already has absolute addresses which have been access-checked.
+     * Not for GRS storage.
+     * @param addresses The absolute addresses, corresponding index-for-index with the values in the operands parameter
+     * @param operands The operands to be stored
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private void storeConsecutiveOperands(
+        final DevelopedAddresses addresses,
+        final long[] operands
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        assert(addresses._addresses.length == operands.length);
+        int offset = addresses._offset;
+        for (int ix = 0; ix < operands.length; ++ix) {
+            AbsoluteAddress addr = addresses._addresses[ix];
+            checkBreakpoint(BreakpointComparison.Write, addr);
+            addresses._baseRegister._storage.set(offset++, operands[ix]);
         }
     }
 
