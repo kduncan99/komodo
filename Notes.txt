@@ -1,5 +1,6 @@
 -- TODO InProgress
 * hardwarelib
+Implementing some SYSC stuff, reworking storage locks in the process
 Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
@@ -9,7 +10,7 @@ Do we emit diagnostics at the point where 'S' post-fix operator is applied to a 
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
-  Maybe enable/disable breakpoints via IP?  I don't know...
+  Actually, we *do* develop abs address on get/store operands... leverage that.
   Also, BreakpointRegister is broken
 
 * minalib

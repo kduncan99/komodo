@@ -2543,6 +2543,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the ACEL instruction f=073 j=015 a=003
+     * Loads the X, A, and R registers from the 48-word operand packet.
      */
     private class ACELFunctionHandler extends InstructionHandler {
 
@@ -2915,6 +2916,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Handles the CR instruction f=075 j=015
      * If A(a) matches the contents of U, then A(a+1) is written to U
+     * Requires storage lock
      */
     private class CRFunctionHandler extends InstructionHandler {
 
@@ -3084,6 +3086,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the DEC instruction f=005, a=011
+     * Requires storage lock
      */
     private class DECFunctionHandler extends InstructionHandler {
 
@@ -3103,6 +3106,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the DEC2 instruction f=005, a=013
+     * Requires storage lock
      */
     private class DEC2FunctionHandler extends InstructionHandler {
 
@@ -3487,6 +3491,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the ENZ instruction f=005, a=014
+     * Requires storage lock
      */
     private class ENZFunctionHandler extends InstructionHandler {
 
@@ -3597,6 +3602,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the INC instruction f=005, a=010
+     * Requires storage lock
      */
     private class INCFunctionHandler extends InstructionHandler {
 
@@ -3616,6 +3622,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the INC2 instruction f=005, a=012
+     * Requires storage lock
      */
     private class INC2FunctionHandler extends InstructionHandler {
 
@@ -5684,6 +5691,10 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the SYSC instruction f=073 j=017 a=012
+     * Architecture indicates that the packet size is determined by the subfunction code.
+     * This causes trouble for our storage lock mechanism, so we depart from the architecture and simply
+     * require that all SYSC packets be comprised of eight words.
+     * All words which are not used by the requested subfunction are reserved, and should be initialized to zero.
      */
     private class SYSCFunctionHandler extends InstructionHandler {
 
@@ -5693,115 +5704,189 @@ public class InstructionProcessor extends Processor implements Worker {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
 
-            //  Retrieve U.  This could be troublesome in the future, as we need to retrieve maybe more than one value
-            //  starting at U, but we don't know how many words until we know the subfunction, which is in U+0.
-            //  But... due to storage lock logic, we're not allowed to ask multiple times.  Not a problem yet, but it will be...
-            long operand = getOperand(false, false, false, false);
+            long[] operands = new long[8];
+            getConsecutiveOperands(false, operands);
+            switch ((int) Word36.getS1(operands[0])) {
+                case 020: {
+                    //  Subfunction 020: Create dynamic memory block
+                    //      U+0,S1:     020
+                    //      U+0,S2:     Upon completion, this will contain
+                    //                      00: operation completed successfully
+                    //                      01: given UPI does not correspond to an MSP
+                    //                      03: requested block length is invalid
+                    //      U+0,S3:     UPI of target MSP
+                    //      U+1,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    //      U+2,W:      Newly-assigned segment index if status is zero
+                    int status = 0;
+                    try {
+                        int upi = (int) Word36.getS2(operands[0]);
+                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
+                        long words = operands[1] & 0_17777_777777;
+                        if (words != operands[1]) {
+                            status = 3;
+                        } else {
+                            operands[2] = msp.createSegment((int) words);
+                        }
+                    } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+                        status = 1;
+                    }
+                    operands[0] = Word36.setS2(operands[0], status);
+                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
+                    break;
+                }
 
-            //  For now, we do not recognize any sub-functions, so we always throw a machine interrupt
-            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
+                case 021: {
+                    //  Subfunction 021: Release dynamic memory block
+                    //      U+0,S1:     021
+                    //      U+0,S2:     Upon completion, this will contain
+                    //                      00: operation completed successfully
+                    //                      01: given UPI does not correspond to an MSP
+                    //                      02: given segment index is not assigned by the MSP
+                    //      U+0,S3:     UPI of target MSP
+                    //      U+1,W:      Segment index of block to be released
+                    int status = 0;
+                    try {
+                        int upi = (int) Word36.getS2(operands[0]);
+                        int segIndex = (int) (operands[1] & 0_37777_777777L);
+                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
+                        msp.deleteSegment(segIndex);
+                    } catch (AddressingExceptionInterrupt ex) {
+                        status = 2;
+                    } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+                        status = 1;
+                    }
+                    operands[0] = Word36.setS2(operands[0], status);
+                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
+                    break;
+                }
 
-            //TODO
-            //  Subfunction 020: Create dynamic memory block
-            //      U+0,S1:     020
-            //      U+0,S2:     UPI of target MSP
-            //      U+0,S3:     Zeros
-            //      U+0,H2:     Zeros
-            //      U+1,W:      Zeros
-            //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
-            //      Upon return U+1,W contains the assigned segment index
+                case 022: {
+                    //  Subfunction 022: Resize dynamic memory block
+                    //      U+0,S1:     022
+                    //      U+0,S2:     Upon completion, this will contain
+                    //                      00: operation completed successfully
+                    //                      01: given UPI does not correspond to an MSP
+                    //                      02: given segment index is not assigned by the MSP
+                    //                      03: requested block length is invalid
+                    //      U+0,S3:     UPI of target MSP
+                    //      U+1,W:      Segment index of block to be resized
+                    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    int status = 0;
+                    try {
+                        int upi = (int) Word36.getS2(operands[0]);
+                        int segIndex = (int) (operands[1] & 0_37777_777777L);
+                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
+                        long words = operands[2] & 0_17777_777777;
+                        if (words != operands[2]) {
+                            status = 3;
+                        } else {
+                            msp.resizeSegment(segIndex, (int) words);
+                        }
+                    } catch (AddressingExceptionInterrupt ex) {
+                        status = 2;
+                    } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+                        status = 1;
+                    }
+                    operands[0] = Word36.setS2(operands[0], status);
+                    storeConsecutiveOperands(false, operands);//TODO Very inefficient - can we preserve the generated abs addr adn reuse it?
+                    break;
+                }
 
-            //TODO
-            //  Subfunction 021: Release dynamic memory block
-            //      U+0,S1:     021
-            //      U+0,S2:     UPI of target MSP
-            //      U+0,S3:     Zeros
-            //      U+0,H2:     Zeros
-            //      U+1,W:      Segment index of block to be released
-            //      U+2,W:      Zeros
+                case 030:
+                    //TODO
+                    //  Subfunction 030: Send system status console message
+                    //  U+0,S1:         030
+                    //  U+0,S3:         Length of first message in words
+                    //  U+0,S4:         Length of second message in words
+                    //  U+1,2:          Absolute address of buffer containing first message
+                    //  U+3,4:          Absolute address of buffer containing second message
+                    break;
 
-            //TODO
-            //  Subfunction 022: Resize dynamic memory block
-            //      U+0,S1:     022
-            //      U+0,S2:     UPI of target MSP
-            //      U+0,S3:     Zeros
-            //      U+0,H2:     Zeros
-            //      U+1,W:      Segment index of block to be resized
-            //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                case 031:
+                    //TODO
+                    //  Subfunction 031: Send read-only console message
+                    //  U+0,S1          031
+                    //  U+0,S3:         Length of message in words
+                    //  U+1,2:          Absolute address of buffer containing message
+                    break;
 
-            //TODO
-            //  Subfunction 030: Send system status console message
-            //  U+0,S1:         030
-            //  U+0,Bit6:       ASCII flag - message is in ASCII
-            //  U+0,S3:         Length of first message in words
-            //  U+0,S4:         Length of second message in words
-            //  U+1,2:          Absolute address of buffer containing first message
-            //  U+3,4:          Absolute address of buffer containing second message
+                case 032:
+                    //TODO
+                    //  Subfunction 032: Send read-reply console message
+                    //  U+0,S1          032
+                    //  U+0,S2          Maximum accepted length of response in characters
+                    //  U+0,S3          Length of message in words
+                    //  U+0,H2          Unique identifier to be returned on response to this message
+                    //  U+1,2:          Absolute address of buffer containing message
+                    //  U+3,4:          Absolute address of buffer where response should be placed
+                    break;
 
-            //TODO
-            //  Subfunction 031: Send read-only console message
-            //  U+0,S1          031
-            //  U+0,Bit6:       ASCII flag - message is in ASCII
-            //  U+0,S3:         Length of message in words
-            //  U+1,2:          Absolute address of buffer containing message
+                case 033:
+                    //TODO
+                    //  Subfunction 033: Poll for response to a particular read-reply message
+                    //  U+0,S1          033
+                    //  U+0,Bit10       if set, SystemProcessor has no knowledge of the message in question
+                    //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
+                    //  U+0,S2          length of buffer in words
+                    //  U+0,S3          Number of words received if a message was read
+                    //  U+0,H2          Unique identifier of the read-reply message we are asking about
+                    //  U+2:            Absolute address of buffer to receive input
+                    break;
 
-            //TODO
-            //  Subfunction 032: Send read-reply console message
-            //  U+0,S1          032
-            //  U+0,Bit6        send ASCII - message to be send is in ASCII
-            //  U+0,Bit7        read ASCII - message to be read should be in ASCII
-            //  U+0,S3          Length of message in words
-            //  U+0,S4          Maximum accepted length of response in characters
-            //  U+1,2:          Absolute address of buffer containing message
-            //  U+3,4:          Absolute address of buffer where response should be placed
+                case 034:
+                    //TODO
+                    //  Subfunction 033: Poll for unsolicited input
+                    //  U+0,S1          033
+                    //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
+                    //  U+0,S2          length of buffer in words
+                    //  U+0,S3          Number of words received if a message was read
+                    //  U+2:            Absolute address of buffer to receive input
+                    break;
 
-            //TODO
-            //  Subfunction 033: Poll for unsolicited input
-            //  U+0,S1          033
-            //  U+0,Bit7        read ASCII - message to be read (if any) should be in ASCII
-            //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
-            //  U+0,S4          Maximum accepted length of input in words (should allow for 80 characters)
-            //  U+0,S6          Number of words received if a message was read
-            //  U+2:            Absolute address of buffer to receive response
+                case 040:
+                    //TODO
+                    //  Subfunction 040: Start IO
+                    //  U+0,S1          040
+                    //  U+0,S2          UPI of IOP to be used
+                    //  U+0,S3          Channel Module index
+                    //  U+0,S4          Device index
+                    //  U+0,S6          Flags
+                    //                      Bit30: IOP should send a UPI interrupt when IO is complete
+                    //  U+1,S1          Operation
+                    //                      000: Write
+                    //                      001: Write EOF
+                    //                      002: Read
+                    //                      003: Skip
+                    //                      004: Skip EOF
+                    //                      005: Rewind
+                    //                      006: Rewind with Interlock
+                    //  U+1,Bits 6-7    Format: 0=type A, 1=type B, 2=type C, 3=type D
+                    //                      A is qword mode, 4 8-bit bytes per word
+                    //                      B is fd mode, 6 6-bit bytes per word
+                    //                      C is packed mode, 9 bytes per 2 words
+                    //                      D is similar to A, ignoring the stop bit
+                    //  U+1 Bit 8       Direction: 0=forward, 1=backward
+                    //  U+1,S3          Status of IO
+                    //                      000: IO completed successfully
+                    //                      001: IOP UPI does not correspond to an IOP
+                    //                      002: Channel module does not exist
+                    //                      003: Device does not exist
+                    //                      004: Device is not ready
+                    //                      005: Device is busy
+                    //                      006: End of file mark
+                    //                      007: End of tape mark
+                    //                      010: Address out of range
+                    //                      040: IO started successfully and is in progress
+                    //  U+1,S4          Non-integral residue count
+                    //  U+2,H1          Number of words to be transferred on output, buffer size on input
+                    //  U+2,H2          Number of words transferred
+                    //  U+3             Absolute address of IO buffer
+                    //  U+5             Device-relative address if applicable
+                    break;
 
-            //TODO
-            //  Subfunction 040: Start IO
-            //  U+0,S1          040
-            //  U+0,S2          UPI of IOP to be used
-            //  U+0,S3          Channel Module index
-            //  U+0,S4          Device index
-            //  U+0,S6          Flags
-            //                      Bit30: IOP should send a UPI interrupt when IO is complete
-            //  U+1,S1          Operation
-            //                      000: Write
-            //                      001: Write EOF
-            //                      002: Read
-            //                      003: Skip
-            //                      004: Skip EOF
-            //                      005: Rewind
-            //                      006: Rewind with Interlock
-            //  U+1,Bits 6-7    Format: 0=type A, 1=type B, 2=type C, 3=type D
-            //                      A is qword mode, 4 8-bit bytes per word
-            //                      B is fd mode, 6 6-bit bytes per word
-            //                      C is packed mode, 9 bytes per 2 words
-            //                      D is similar to A, ignoring the stop bit
-            //  U+1 Bit 8       Direction: 0=forward, 1=backward
-            //  U+1,S3          Status of IO
-            //                      000: IO completed successfully
-            //                      001: IOP UPI does not correspond to an IOP
-            //                      002: Channel module does not exist
-            //                      003: Device does not exist
-            //                      004: Device is not ready
-            //                      005: Device is busy
-            //                      006: End of file mark
-            //                      007: End of tape mark
-            //                      010: Address out of range
-            //                      040: IO started successfully and is in progress
-            //  U+1,S4          Non-integral residue count
-            //  U+2,H1          Number of words to be transferred on output, buffer size on input
-            //  U+2,H2          Number of words transferred
-            //  U+3             Absolute address of IO buffer
-            //  U+5             Device-relative address if applicable
+                default:
+                    throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
+            }
         }
 
         @Override public Instruction getInstruction() { return Instruction.SYSC; }
@@ -5821,6 +5906,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the TCS instruction f=073 j=017 a=02
+     * Requires storage lock
      */
     private class TCSFunctionHandler extends InstructionHandler {
 
@@ -6361,6 +6447,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the TS instruction f=073 j=017 a=00
+     * Requires storage lock
      */
     private class TSFunctionHandler extends InstructionHandler {
 
@@ -6388,6 +6475,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the TSS instruction f=073 j=017 a=01
+     * Requires storage lock
      */
     private class TSSFunctionHandler extends InstructionHandler {
 
@@ -7437,6 +7525,60 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Takes a 36-bit value as input, and returns a partial-word value depending upon
+     * the partialWordIndicator (presumably taken from the j-field of an instruction)
+     * and the quarterWordMode flag (presumably taken from the designator register).
+     * @param source 36-bit source word
+     * @param partialWordIndicator indicator of the desired partial word
+     * @param quarterWordMode true if we're in quarter word mode, else false
+     * @return partial word
+     */
+    private static long extractPartialWord(
+        final long source,
+        final int partialWordIndicator,
+        final boolean quarterWordMode
+    ) {
+        switch (partialWordIndicator) {
+            case InstructionWord.W:     return source & Word36.BIT_MASK;
+            case InstructionWord.H2:    return Word36.getH2(source);
+            case InstructionWord.H1:    return Word36.getH1(source);
+            case InstructionWord.XH2:   return Word36.getXH2(source);
+            case InstructionWord.XH1:   // XH1 or Q2
+                if (quarterWordMode) {
+                    return Word36.getQ2(source);
+                } else {
+                    return Word36.getXH1(source);
+                }
+            case InstructionWord.T3:    // T3 or Q4
+                if (quarterWordMode) {
+                    return Word36.getQ4(source);
+                } else {
+                    return Word36.getXT3(source);
+                }
+            case InstructionWord.T2:    // T2 or Q3
+                if (quarterWordMode) {
+                    return Word36.getQ3(source);
+                } else {
+                    return Word36.getXT2(source);
+                }
+            case InstructionWord.T1:    // T1 or Q1
+                if (quarterWordMode) {
+                    return Word36.getQ1(source);
+                } else {
+                    return Word36.getXT1(source);
+                }
+            case InstructionWord.S6:    return Word36.getS6(source);
+            case InstructionWord.S5:    return Word36.getS5(source);
+            case InstructionWord.S4:    return Word36.getS4(source);
+            case InstructionWord.S3:    return Word36.getS3(source);
+            case InstructionWord.S2:    return Word36.getS2(source);
+            case InstructionWord.S1:    return Word36.getS1(source);
+        }
+
+        return source;
+    }
+
+    /**
      * Fetches the next instruction based on the current program address register, placing it in the current instruction register.
      * At this point we also copy the program address register to the preserved program address register so that, even when the
      * PC gets incremented, we still know the initial PC for this instruction.
@@ -7483,6 +7625,41 @@ public class InstructionProcessor extends Processor implements Worker {
         _currentInstruction = new InstructionWord(bReg._storage.get((int) pcOffset));
         _indicatorKeyRegister.setInstructionInF0(true);
         _preservedProgramAddressRegister.set(_programAddressRegister.get());
+    }
+
+    /**
+     * Retrieves a BankDescriptor to describe the given named bank.  This is for interrupt handling.
+     * The bank name is in L,BDI format.
+     * @param bankLevel level of the bank, 0:7
+     * @param bankDescriptorIndex BDI of the bank 0:077777
+     * @return BankDescriptor object unless l,bdi is 0,0, in which case we return null
+     */
+    private BankDescriptor findBankDescriptor(
+        final int bankLevel,
+        final int bankDescriptorIndex
+    ) throws AddressingExceptionInterrupt {
+        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
+        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
+        // where {n} is the bank descriptor index.
+        int bdRegIndex = bankLevel + 16;
+        if (_baseRegisters[bdRegIndex]._voidFlag) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  bdStorage contains the BDT for the given bank_name level
+        //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
+        ArraySlice bdStorage = _baseRegisters[bdRegIndex]._storage;
+        int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
+        if (bdTableOffset + 8 > bdStorage.getSize()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                   bankLevel,
+                                                   bankDescriptorIndex);
+        }
+
+        //  Create and return a BankDescriptor object
+        return new BankDescriptor(bdStorage, bdTableOffset);
     }
 
     /**
@@ -7539,6 +7716,57 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
+     * are to be selected for that address.
+     * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
+     * @param relativeAddress relative address for which we search for a containing bank
+     * @param updateDB31 set true to update DB31 if we cross primary/secondary bank pairs
+     * @return the bank register index for the bank which contains the given relative address if found,
+     *          else zero if the address is not within any based bank limits.
+     */
+    private int findBasicModeBank(
+        final long relativeAddress,
+        final boolean updateDB31
+    ) {
+        boolean db31Flag = _designatorRegister.getBasicModeBaseRegisterSelection();
+        int[] table = db31Flag ? BASE_REGISTER_CANDIDATES_TRUE : BASE_REGISTER_CANDIDATES_FALSE;
+
+        for (int tx = 0; tx < 4; ++tx) {
+            //  See IP PRM 4.4.5 - select the base register from the selection table.
+            //  If the bank is void, skip it.
+            //  If the program counter is outside of the bank limits, skip it.
+            //  Otherwise, we found the BDR we want to use.
+            BaseRegister bReg = _baseRegisters[table[tx]];
+            if (isWithinLimits(bReg, relativeAddress)) {
+                if (updateDB31 && (tx >= 2)) {
+                    //  address is found in a secondary bank, so we need to flip DB31
+                    _designatorRegister.setBasicModeBaseRegisterSelection(!db31Flag);
+                }
+
+                return table[tx];
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Converts a relative address to an absolute address.
+     * @param baseRegister base register associated with the relative address
+     * @param relativeAddress address to be converted
+     * @return absolute address object
+     */
+    private static AbsoluteAddress getAbsoluteAddress(
+        final BaseRegister baseRegister,
+        final int relativeAddress
+    ) {
+        int upi = baseRegister._baseAddress._upiIndex;
+        int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
+        int offset = baseRegister._baseAddress._offset + actualOffset;
+        return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
+    }
+
+    /**
      * Retrieves a BankDescriptor object representing the BD entry in a particular BDT.
      * @param bankLevel level of the bank of interest (0:7)
      * @param bankDescriptorIndex BDI of the bank of interest (0:077777)
@@ -7570,6 +7798,141 @@ public class InstructionProcessor extends Processor implements Worker {
 
         //  Create a BankDescriptor object
         return new BankDescriptor(bdStorage, bdTableOffset);
+    }
+
+    /**
+     * Calculates the raw relative address (the U) for the current instruction presuming basic mode (even if it isn't set),
+     * honors any indirect addressing, and returns the index of the basic mode bank (12-15) which corresponds to the
+     * final address, increment the X registers if/as appropriate, but not updating the designator register.
+     * Mainly for TRA instruction...
+     * @return relative address for the current instruction
+     */
+    private int getBasicModeBankRegisterIndex(
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int xx = (int) _currentInstruction.getX();
+        IndexRegister xReg = (xx != 0) ? getExecOrUserXRegister(xx) : null;
+
+        long addend1;
+        long addend2 = 0;
+        if (_designatorRegister.getBasicModeEnabled()) {
+            addend1 = _currentInstruction.getU();
+            if (xReg != null) {
+                addend2 = xReg.getSignedXM();
+            }
+
+            long relativeAddress = Word36.addSimple(addend1, addend2);
+            if (relativeAddress == 0777777) { relativeAddress = 0; }
+            int brIndex = findBasicModeBank((int) relativeAddress, false);
+
+            //  Did we find a bank, and are we doing indirect addressing?
+            if ((brIndex > 0) && (_currentInstruction.getI() != 0)) {
+                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
+                incrementIndexRegisterInF0();
+                BaseRegister br = _baseRegisters[brIndex];
+
+                //  Ensure we can read from the selected bank
+                if (!isReadAllowed(br)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+                br.checkAccessLimits((int) relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
+                //  then throw UnresolvedAddressException so the caller knows we're not done here.
+                int wx = (int) relativeAddress - br._lowerLimitNormalized;
+                _currentInstruction = _currentInstruction.setXHIU(br._storage.get(wx));
+                throw new UnresolvedAddressException();
+            }
+
+            //  We're at our final destination
+            return brIndex;
+        } else {
+            //  We have an explicit base register - check limits
+            addend1 = _currentInstruction.getD();
+            if (xReg != null) {
+                if (_designatorRegister.getExecutive24BitIndexingEnabled()
+                    && (_designatorRegister.getProcessorPrivilege() < 2)) {
+                    //  Exec 24-bit indexing is requested
+                    addend2 = xReg.getSignedXM24();
+                } else {
+                    addend2 = xReg.getSignedXM();
+                }
+            }
+
+            long relativeAddress = Word36.addSimple(addend1, addend2);
+            if (relativeAddress == 0777777) { relativeAddress = 0; }
+            int brIndex = (int) _currentInstruction.getB();
+            BaseRegister br = _baseRegisters[brIndex];
+            try {
+                br.checkAccessLimits((int) relativeAddress, false);
+            } catch (ReferenceViolationInterrupt ex) {
+                brIndex = 0;
+            }
+            return brIndex;
+        }
+    }
+
+    /**
+     * Retrieves consecutive word values for double or multiple-word transfer operations (e.g., DL, LRS, etc).
+     * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
+     * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
+     * We presume we are retrieving from GRS or from storage - i.e., NOT allowing immediate addressing.
+     * Also, we presume that we are doing full-word transfers - not partial word.
+     * @param grsCheck true if we should check U to see if it is a GRS location
+     * @param operands Where we store the resulting operands - the length of this array defines how many operands we retrieve
+     * @return array of AbsoluteAddresses corresponding to the operators we retrieve - this can be used for subsequently storing.
+     *              If we return null, then we've retrieved operands from GRS and no absolute addresses apply.
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
+     */
+    private AbsoluteAddress[] getConsecutiveOperands(
+        final boolean grsCheck,
+        final long[] operands
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        //  Get the relative address so we can do a grsCheck
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+        incrementIndexRegisterInF0();
+
+        //  If this is a GRS reference - we do not need to look for containing banks or validate storage limits.
+        if ((grsCheck)
+            && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
+            && (relAddress < 0200)) {
+            //  For multiple accesses, advancing beyond GRS 0177 wraps back to zero.
+            //  Do accessibility checks for each GRS access
+            int grsIndex = relAddress;
+            for (int ox = 0; ox < operands.length; ++ox, ++grsIndex) {
+                if (grsIndex == 0200) { grsIndex = 0; }
+
+                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _designatorRegister.getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+
+                operands[ox] = _generalRegisterSet.getRegister(grsIndex).getW();
+            }
+
+            return null;
+        }
+
+        //  Get base register and check storage and access limits
+        int brIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister bReg = _baseRegisters[brIndex];
+        bReg.checkAccessLimits(relAddress, operands.length, true, false, _indicatorKeyRegister.getAccessInfo());
+
+        //  Generate abs addresses
+        AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
+        for (int ax = 0; ax < operands.length; ++ax ) {
+            absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
+            checkBreakpoint(BreakpointComparison.Read, absAddresses[ax]);
+        }
+
+        //  Retrieve the operands
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        for (int ox = 0; ox < operands.length; ++ox) {
+            operands[ox] = bReg._storage.get(offset++);
+        }
+
+        return absAddresses;
     }
 
     /**
@@ -7616,6 +7979,42 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Retrieves a reference to the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
+     * @param registerIndex A register index of interest
+     * @return GRS register
+     */
+    public GeneralRegister getExecOrUserARegister(
+        final int registerIndex
+    ) {
+        return _generalRegisterSet.getRegister(getExecOrUserARegisterIndex(registerIndex));
+    }
+
+    /**
+     * Retrieves the GRS index of the exec or user register indicated by the register index...
+     * i.e., registerIndex == 0 returns the GRS index for either A0 or EA0, depending on the designator register.
+     * @param registerIndex A register index of interest
+     * @return GRS register index
+     */
+    private int getExecOrUserARegisterIndex(
+        final int registerIndex
+    ) {
+        return registerIndex + (_designatorRegister.getExecRegisterSetSelected() ? GeneralRegisterSet.EA0 : GeneralRegisterSet.A0);
+    }
+
+    /**
+     * Retrieves a reference to the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
+     * @param registerIndex R register index of interest
+     * @return GRS register
+     */
+    private GeneralRegister getExecOrUserRRegister(
+        final int registerIndex
+    ) {
+        return _generalRegisterSet.getRegister(getExecOrUserRRegisterIndex(registerIndex));
+    }
+
+    /**
      * Retrieves the GRS index of the exec or user register indicated by the register index...
      * e.g., registerIndex == 0 returns the GRS index for either R0 or ER0, depending on the designator register.
      * @param registerIndex R register index of interest
@@ -7628,6 +8027,18 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
+     * Retrieves a reference to the IndexRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
+     * @param registerIndex X register index of interest
+     * @return GRS register
+     */
+    public IndexRegister getExecOrUserXRegister(
+        final int registerIndex
+    ) {
+        return (IndexRegister)_generalRegisterSet.getRegister(getExecOrUserXRegisterIndex(registerIndex));
+    }
+
+    /**
      * Retrieves the GRS index of the exec or user register indicated by the register index...
      * e.g., registerIndex == 0 returns the GRS index for either X0 or EX0, depending on the designator register.
      * @param registerIndex X register index of interest
@@ -7637,6 +8048,217 @@ public class InstructionProcessor extends Processor implements Worker {
         final int registerIndex
     ) {
         return registerIndex + (_designatorRegister.getExecRegisterSetSelected() ? GeneralRegisterSet.EX0 : GeneralRegisterSet.X0);
+    }
+
+    /**
+     * It has been determined that the u (and possibly h and i) fields comprise requested data.
+     * Load the value indicated in F0 (_currentInstruction) as follows:
+     *      For Processor Privilege 0,1
+     *          value is 24 bits for DR.11 (exec 24bit indexing enabled) true, else 18 bits
+     *      For Processor Privilege 2,3
+     *          value is 24 bits for FO.i set, else 18 bits
+     * If F0.x is zero, the immediate value is taken from the h,i, and u fields (unsigned), and negative zero is eliminated.
+     * For F0.x nonzero, the immediate value is the sum of the u field (unsigned) with the F0.x(mod) signed field.
+     *      For Extended Mode, with Processor Privilege 0,1 and DR.11 set, index modifiers are 24 bits; otherwise, they are 18 bits.
+     *      For Basic Mode, index modifiers are always 18 bits.
+     * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
+     * @return immediate operand value
+     */
+    private long getImmediateOperand(
+    ) {
+        boolean exec24Index = _designatorRegister.getExecutive24BitIndexingEnabled();
+        int privilege = _designatorRegister.getProcessorPrivilege();
+        boolean valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (_currentInstruction.getI() != 0));
+        long value;
+
+        if (_currentInstruction.getX() == 0) {
+            //  No indexing (x-field is zero).  Value is derived from h, i, and u fields.
+            //  Get the value from h,i,u, and eliminate negative zero.
+            value = _currentInstruction.getHIU();
+            if (value == 0777777) {
+                value = 0;
+            }
+
+            if ((_currentInstruction.getJ() == 017) && ((value & 0400000) != 0)) {
+                value |= 0_777777_000000L;
+            }
+
+        } else {
+            //  Value is taken only from the u field, and we eliminate negative zero at this point.
+            value = _currentInstruction.getU();
+            if ( value == 0177777 )
+                value = 0;
+
+            //  Add the contents of Xx(m), and do index register incrementation if appropriate.
+            IndexRegister xReg = getExecOrUserXRegister((int) _currentInstruction.getX());
+
+            //  24-bit indexing?
+            if (!_designatorRegister.getBasicModeEnabled() && (privilege < 2) && exec24Index) {
+                //  Add the 24-bit modifier
+                value = Word36.addSimple(value, xReg.getXM24());
+                if (_currentInstruction.getH() != 0) {
+                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(xReg.getW()));
+                }
+            } else {
+                //  Add the 18-bit modifier
+                value = Word36.addSimple(value, xReg.getXM());
+                if (_currentInstruction.getH() != 0) {
+                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(xReg.getW()));
+                }
+            }
+        }
+
+        //  Truncate the result to the proper size, then sign-extend if appropriate to do so.
+        boolean extend = _currentInstruction.getJ() == 017;
+        if (valueIs24Bits) {
+            value &= 077_777777L;
+            if (extend && (value & 040_000000L) != 0) {
+                value |= 0_777700_000000L;
+            }
+        } else {
+            value &= 0_777777L;
+            if (extend && (value & 0_400000) != 0) {
+                value |= 0_777777_000000L;
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * See getImmediateOperand() above.
+     * This is similar, however the calculated U field is only ever 16 or 18 bits, and is never sign-extended.
+     * Also, we do not rely upon j-field for anything, as that has no meaning for conditionalJump instructions.
+     * @param updateDesignatorRegister if true and if we are in basic mode, we update the basic mode bank selection bit
+     *                                 in the designator register if necessary
+     * @return conditionalJump operand value
+     * @throws MachineInterrupt if an interrupt needs to be raised
+     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
+     */
+    private int getJumpOperand(
+        final boolean updateDesignatorRegister
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int relAddress = calculateRelativeAddressForJump();
+
+        //  The following bit is how we deal with indirect addressing for basic mode.
+        //  If we are doing that, it will update the U portion of the current instruction with new address information,
+        //  then throw UnresolvedAddressException which will eventually route us back through here again, but this
+        //  time with new address info (in reladdress), and we keep doing this until we're not doing indirect addressing.
+        if (_designatorRegister.getBasicModeEnabled() && (_currentInstruction.getI() != 0)) {
+            findBaseRegisterIndex(relAddress, updateDesignatorRegister);
+        } else {
+            incrementIndexRegisterInF0();
+        }
+
+        return relAddress;
+    }
+
+    /**
+     * The general case of retrieving an operand, including all forms of addressing and partial word access.
+     * Instructions which use the j-field as part of the function code will likely set allowImmediate and
+     * allowPartial false.
+     * @param grsDestination true if we are going to put this value into a GRS location
+     * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
+     * @param allowImmediate true if we should allow immediate addressing
+     * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
+     * @return operand value
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private long getOperand(
+        final boolean grsDestination,
+        final boolean grsCheck,
+        final boolean allowImmediate,
+        final boolean allowPartial
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int jField = (int)_currentInstruction.getJ();
+        if (allowImmediate) {
+            //  j-field is U or XU? If so, get the value from the instruction itself (immediate addressing)
+            if (jField >= 016) {
+                return getImmediateOperand();
+            }
+        }
+
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+
+        //  Loading from GRS?  If so, go get the value.
+        //  If grsDestination is true, get the full value. Otherwise, honor j-field for partial-word transfer.
+        //  See hardware guide section 4.3.2 - any GRS-to-GRS transfer is full-word, regardless of j-field.
+        if ((grsCheck)
+            && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
+            && (relAddress < 0200)) {
+            incrementIndexRegisterInF0();
+
+            //  First, do accessibility checks
+            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), false)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+            }
+
+            //  If we are GRS or not allowing partial word transfers, do a full word.
+            //  Otherwise, honor partial word transfering.
+            if (grsDestination || !allowPartial) {
+                return _generalRegisterSet.getRegister(relAddress).getW();
+            } else {
+                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+                return extractPartialWord(_generalRegisterSet.getRegister(relAddress).getW(), jField, qWordMode);
+            }
+        }
+
+        //  Loading from storage.  Do so, then (maybe) honor partial word handling.
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+        incrementIndexRegisterInF0();
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        checkBreakpoint(BreakpointComparison.Read, absAddress);
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long value = baseRegister._storage.get(readOffset);
+        if (allowPartial) {
+            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+            value = extractPartialWord(value, jField, qWordMode);
+        }
+
+        return value;
+    }
+
+    /**
+     * Retrieves a partial-word operand from storage, depending upon the values of jField and quarterWordMode.
+     * This is never a GRS reference, nor immediate (nor a conditionalJump or shift, for that matter).
+     * @param jField not necessarily from j-field, this indicates the partial word to be stored
+     * @param quarterWordMode needs to be set true for storing quarter words
+     * @return operand value
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private long getPartialOperand(
+        final int jField,
+        final boolean quarterWordMode
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        incrementIndexRegisterInF0();
+
+        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        setStorageLock(absAddress);
+        checkBreakpoint(BreakpointComparison.Read, absAddress);
+
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long value = baseRegister._storage.get(readOffset);
+        return extractPartialWord(value, jField, quarterWordMode);
     }
 
     /**
@@ -7712,6 +8334,195 @@ public class InstructionProcessor extends Processor implements Worker {
         // Create conditionalJump history table entry
         createJumpHistoryTableEntry(_preservedProgramAddressRegister.get());
         new BankManipulator().bankManipulation(interrupt);
+    }
+
+    /**
+     * Increments the register indicated by the current instruction (F0) appropriately.
+     * Only effective if f.x is non-zero.
+     */
+    private void incrementIndexRegisterInF0(
+    ) {
+        if ((_currentInstruction.getX() != 0) && (_currentInstruction.getH() != 0)) {
+            IndexRegister iReg = getExecOrUserXRegister((int) _currentInstruction.getX());
+            if (!_designatorRegister.getBasicModeEnabled()
+                && (_designatorRegister.getExecutive24BitIndexingEnabled())
+                && (_designatorRegister.getProcessorPrivilege() < 2)) {
+                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(iReg.getW()));
+            } else {
+                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(iReg.getW()));            }
+        }
+    }
+
+    /**
+     * The general case of incrementing an operand by some value, including all forms of addressing and partial word access.
+     * Instructions which use the j-field as part of the function code will likely set allowPartial false.
+     * Sets carry and overflow designators if appropriate.
+     * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
+     * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
+     * @param incrementValue how much we increment storage by - positive or negative, but always ones-complement
+     * @param twosComplement true to use twos-complement arithmetic - otherwise use ones-complement
+     * @return true if either the starting or ending value of the operand is +/- zero
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private boolean incrementOperand(
+        final boolean grsCheck,     //TODO do we need this?
+        final boolean allowPartial, //TODO do we need this?
+        final long incrementValue,
+        final boolean twosComplement
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int jField = (int)_currentInstruction.getJ();
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+
+        //  Loading from GRS?  If so, go get the value.
+        //  If grsDestination is true, get the full value. Otherwise, honor j-field for partial-word transfer.
+        //  See hardware guide section 4.3.2 - any GRS-to-GRS transfer is full-word, regardless of j-field.
+        boolean result = false;
+        if ((grsCheck)
+            && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
+            && (relAddress < 0200)) {
+            incrementIndexRegisterInF0();
+
+            //  This is a GRS address.  Do accessibility checks
+            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), false)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+            }
+
+            //  Ignore partial-word transfers.
+            GeneralRegister reg = _generalRegisterSet.getRegister(relAddress);
+            if (twosComplement) {
+                long sum = reg.getW();
+                if (sum == 0) {
+                    result = true;
+                }
+                sum += Word36.getTwosComplement(incrementValue);
+                if (sum == 0) {
+                    result = true;
+                }
+
+                _generalRegisterSet.setRegister(relAddress, sum);
+                _designatorRegister.setCarry(false);
+                _designatorRegister.setOverflow(false);
+            } else {
+                long sum = reg.getW();
+                result = Word36.isZero(sum);
+                Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
+                if (Word36.isZero(sar._value)) {
+                    result = true;
+                }
+
+                _generalRegisterSet.setRegister(relAddress, sar._value);
+                _designatorRegister.setCarry(sar._flags._carry);
+                _designatorRegister.setOverflow(sar._flags._overflow);
+            }
+
+            return result;
+        }
+
+        //  Storage operand.  Maybe do partial-word addressing
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        incrementIndexRegisterInF0();
+
+        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
+        baseRegister.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
+        setStorageLock(absAddress);
+        checkBreakpoint(BreakpointComparison.Read, absAddress);
+
+        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
+        long storageValue = baseRegister._storage.get(readOffset);
+        boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+        long sum = allowPartial ? extractPartialWord(storageValue, jField, qWordMode) : storageValue;
+
+        if (twosComplement) {
+            if (sum == 0) {
+                result = true;
+            }
+            sum += Word36.getTwosComplement(incrementValue);
+            if (sum == 0) {
+                result = true;
+            }
+
+            _designatorRegister.setCarry(false);
+            _designatorRegister.setOverflow(false);
+        } else {
+            if (Word36.isZero(sum)) {
+                result = true;
+            }
+            Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
+            if (Word36.isZero(sar._value)) {
+                result = true;
+            }
+
+            _designatorRegister.setCarry(sar._flags._carry);
+            _designatorRegister.setOverflow(sar._flags._overflow);
+            sum = sar._value;
+        }
+
+        long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
+        baseRegister._storage.set(readOffset, storageResult);
+        return result;
+    }
+
+    /**
+     * Takes 36-bit values as original and new values, and injects the new value as a partial word of the original value
+     * depending upon the partialWordIndicator (presumably taken from the j-field of an instruction).
+     * @param originalValue original value 36-bits significant
+     * @param newValue new value right-aligned in a 6, 9, 12, 18, or 36-bit significant field
+     * @param partialWordIndicator corresponds to the j-field of an instruction word
+     * @param quarterWordMode true to do quarter-word mode transfers, false for third-word mode
+     * @return composite value with right-most significant bits of newValue replacing a partial word portion of the
+     *          original value
+     */
+    private static long injectPartialWord(
+        final long originalValue,
+        final long newValue,
+        final int partialWordIndicator,
+        final boolean quarterWordMode
+    ) {
+        switch (partialWordIndicator) {
+            case InstructionWord.W:     return newValue;
+            case InstructionWord.H2:    return Word36.setH2(originalValue, newValue);
+            case InstructionWord.H1:    return Word36.setH1(originalValue, newValue);
+            case InstructionWord.XH2:   return Word36.setH2(originalValue, newValue);
+            case InstructionWord.XH1:   // XH1 or Q2
+                if (quarterWordMode) {
+                    return Word36.setQ2(originalValue, newValue);
+                } else {
+                    return Word36.setH1(originalValue, newValue);
+                }
+            case InstructionWord.T3:    // T3 or Q4
+                if (quarterWordMode) {
+                    return Word36.setQ4(originalValue, newValue);
+                } else {
+                    return Word36.setT3(originalValue, newValue);
+                }
+            case InstructionWord.T2:    // T2 or Q3
+                if (quarterWordMode) {
+                    return Word36.setQ3(originalValue, newValue);
+                } else {
+                    return Word36.setT2(originalValue, newValue);
+                }
+            case InstructionWord.T1:    // T1 or Q1
+                if (quarterWordMode) {
+                    return Word36.setQ1(originalValue, newValue);
+                } else {
+                    return Word36.setT1(originalValue, newValue);
+                }
+            case InstructionWord.S6:    return Word36.setS6(originalValue, newValue);
+            case InstructionWord.S5:    return Word36.setS5(originalValue, newValue);
+            case InstructionWord.S4:    return Word36.setS4(originalValue, newValue);
+            case InstructionWord.S3:    return Word36.setS3(originalValue, newValue);
+            case InstructionWord.S2:    return Word36.setS2(originalValue, newValue);
+            case InstructionWord.S1:    return Word36.setS1(originalValue, newValue);
+        }
+
+        return originalValue;
     }
 
     /**
@@ -7877,61 +8688,93 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Set a storage lock for the given absolute address.
-     * If this IP already has locks, we die horribly - this is how we avoid internal deadlocks
-     * If the address is already locked by any other IP, then we wait until it is not.
-     * Then we lock it to this IP.
-     * NOTE: All storage locks are cleared automatically at the conclusion of processing an instruction.
+     * Sets a new value for the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
+     * @param registerIndex A register index of interest
+     * @param value new value
+     */
+    private void setExecOrUserARegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserARegisterIndex(registerIndex), value);
+    }
+
+    /**
+     * Sets a new value for the GeneralRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
+     * @param registerIndex R register index of interest
+     * @param value new value
+     */
+    private void setExecOrUserRRegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserRRegisterIndex(registerIndex), value);
+    }
+
+    /**
+     * Sets a new value for the IndexRegister indicated by the register index...
+     * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
+     * @param registerIndex X register index of interest
+     * @param value new value
+     */
+    private void setExecOrUserXRegister(
+        final int registerIndex,
+        final long value
+    ) {
+        _generalRegisterSet.setRegister(getExecOrUserXRegisterIndex(registerIndex), value);
+    }
+
+    /**
+     * Updates PAR.PC and sets the prevent-increment flag according to the given parameters.
+     * Used for simple conditionalJump instructions.
+     * @param counter program counter value
+     * @param preventIncrement true to set the prevent-increment flag
+     */
+    private void setProgramCounter(
+        final long counter,
+        final boolean preventIncrement
+    ) {
+        _programAddressRegister.setProgramCounter(counter);
+        _preventProgramCounterIncrement = preventIncrement;
+    }
+
+    /**
+     * Convenience wrapper around the following method, for locking a single address
      * @param absAddress absolute address of interest
      */
     private void setStorageLock(
         final AbsoluteAddress absAddress
     ) {
-        synchronized(_storageLocks) {
-            assert(_storageLocks.get(this).isEmpty());
-        }
-
-        boolean done = false;
-        while (!done) {
-            synchronized(_storageLocks) {
-                boolean okay = true;
-                Iterator<Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>>> it = _storageLocks.entrySet().iterator();
-                while (okay && it.hasNext()) {
-                    Map.Entry<InstructionProcessor, HashSet<AbsoluteAddress>> pair = it.next();
-                    InstructionProcessor ip = pair.getKey();
-                    HashSet<AbsoluteAddress> lockedAddresses = pair.getValue();
-                    if (ip != this) {
-                        if (lockedAddresses.contains(absAddress)) {
-                            okay = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (okay) {
-                    _storageLocks.get(this).add(absAddress);
-                    done = true;
-                }
-            }
-
-            if (!done) {
-                Thread.yield();
-            }
-        }
+        AbsoluteAddress[] array = { absAddress };
+        setStorageLocks(array);
     }
 
     /**
-     * As above, but for multiple addresses.
+     * Set a storage lock for the given absolute address.
+     * We must not enter a situation where IP0 holds A and is requesting B, while IP1 holds B and is requesting A.
+     * To prevent this situation, we take care to write all code such that we never attempt to do the above.
+     * To protect ourselves in case of logic errors, we check to see if the requestor already holds at least one
+     * lock, and is requesting a lock on something else that is locked by another IP - if we detect that situation
+     * we take a debug stop.
+     * Otherwise, if the lock we are requesting is held by another IP, we wait until it is not.
+     * When we can proceed, we lock the storage and return.
      * NOTE: All storage locks are cleared automatically at the conclusion of processing an instruction.
      * @param absAddresses array of addresses
      */
     private void setStorageLocks(
         final AbsoluteAddress[] absAddresses
     ) {
+        boolean weHaveLocks = false;
         synchronized(_storageLocks) {
-            assert(_storageLocks.get(this).isEmpty());
+            weHaveLocks = !_storageLocks.get(this).isEmpty();
         }
 
+        //  Grab the storage lock, and compare the requested absolute addresses against those which are locked.
+        //  If any of them are locked, and not by us, bail out, yield control, then try again.
+        //  If we need to bail out and we've already got at least one lock, die horribly - this situation should never occur.
+        //  Otherwise, lock all the ones not already locked by us and we're done.
         boolean done = false;
         while (!done) {
             synchronized(_storageLocks) {
@@ -7944,6 +8787,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     if (ip != this) {
                         for (AbsoluteAddress checkAddress : absAddresses) {
                             if (lockedAddresses.contains(checkAddress)) {
+                                assert(!weHaveLocks);
                                 okay = false;
                                 break;
                             }
@@ -7970,6 +8814,222 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private void skipNextInstruction() {
         setProgramCounter(_programAddressRegister.getProgramCounter() + 1, false);
+    }
+
+    /**
+     * Stores consecutive word values for double or multiple-word transfer operations (e.g., DS, SRS, etc).
+     * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
+     * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
+     * We presume that we are doing full-word transfers - no partial word.
+     * @param grsCheck true if we should check U to see if it is a GRS location
+     * @param operands The operands to be stored
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private void storeConsecutiveOperands(
+        final boolean grsCheck,
+        long[] operands
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        //  Get the first relative address so we can do a grsCheck
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+
+        if ((grsCheck)
+            && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
+            && (relAddress < 0200)) {
+            //  For multiple accesses, advancing beyond GRS 0177 wraps back to zero.
+            //  Do accessibility checks for each GRS access
+            int grsIndex = relAddress;
+            for (int ox = 0; ox < operands.length; ++ox, ++grsIndex) {
+                if (grsIndex == 0200) {
+                    grsIndex = 0;
+                }
+
+                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _designatorRegister.getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                }
+
+                _generalRegisterSet.setRegister(grsIndex, operands[ox]);
+            }
+
+            incrementIndexRegisterInF0();
+        } else {
+            //  Get base register and check storage and access limits
+            int brIndex = findBaseRegisterIndex(relAddress, false);
+            BaseRegister bReg = _baseRegisters[brIndex];
+            bReg.checkAccessLimits(relAddress, operands.length, false, true, _indicatorKeyRegister.getAccessInfo());
+
+            AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
+            for (int ax = 0; ax < operands.length; ++ax ) {
+                absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
+                checkBreakpoint(BreakpointComparison.Write, absAddresses[ax]);
+            }
+
+            //  Store the operands
+            int offset = relAddress - bReg._lowerLimitNormalized;
+            for (int ox = 0; ox < operands.length; ++ox) {
+                bReg._storage.set(offset++, operands[ox]);
+            }
+
+            incrementIndexRegisterInF0();
+        }
+    }
+
+    /**
+     * General case of storing an operand either to storage or to a GRS location
+     * @param grsSource true if the value came from a register, so we know whether we need to ignore partial-word transfers
+     * @param grsCheck true if relative addresses < 0200 should be considered GRS locations
+     * @param checkImmediate true if we should consider j-fields 016 and 017 as immediate addressing (and throw away the operand)
+     * @param allowPartial true if we should allow partial-word transfers (subject to GRS-GRS transfers)
+     * @param operand value to be stored (36 bits significant)
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private void storeOperand(
+        final boolean grsSource,
+        final boolean grsCheck,
+        final boolean checkImmediate,
+        final boolean allowPartial,
+        final long operand
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        //  If we allow immediate addressing mode and j-field is U or XU... we do nothing.
+        int jField = (int)_currentInstruction.getJ();
+        if ((checkImmediate) && (jField >= 016)) {
+            return;
+        }
+
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+
+        if ((grsCheck)
+            && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
+            && (relAddress < 0200)) {
+            incrementIndexRegisterInF0();
+
+            //  First, do accessibility checks
+            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), true)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
+            }
+
+            //  If we are GRS or not allowing partial word transfers, do a full word.
+            //  Otherwise, honor partial word transfer.
+            if (!grsSource && allowPartial) {
+                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+                long originalValue = _generalRegisterSet.getRegister(relAddress).getW();
+                long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
+                _generalRegisterSet.setRegister(relAddress, newValue);
+            } else {
+                _generalRegisterSet.setRegister(relAddress, operand);
+            }
+
+            return;
+        }
+
+        //  This is going to be a storage thing...
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
+
+        incrementIndexRegisterInF0();
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
+        checkBreakpoint(BreakpointComparison.Write, absAddress);
+
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        if (allowPartial) {
+            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
+            long originalValue = bReg._storage.get(offset);
+            long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
+            bReg._storage.set(offset, newValue);
+        } else {
+            bReg._storage.set(offset, operand);
+        }
+    }
+
+    /**
+     * Stores the right-most bits of an operand to a partial word in storage.
+     * @param operand value to be stored (up to 36 bits significant)
+     * @param jField not necessarily from j-field, this indicates the partial word to be stored
+     * @param quarterWordMode needs to be set true for storing quarter words
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private void storePartialOperand(
+        final long operand,
+        final int jField,
+        final boolean quarterWordMode
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
+
+        incrementIndexRegisterInF0();
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
+        setStorageLock(absAddress);
+        checkBreakpoint(BreakpointComparison.Write, absAddress);
+
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        long originalValue = bReg._storage.get(offset);
+        long newValue = injectPartialWord(originalValue, operand, jField, quarterWordMode);
+        bReg._storage.set(offset, newValue);
+    }
+
+    /**
+     * Updates S1 of a lock word under storage lock.
+     * Does *NOT* increment the x-register in F0 (if specified), even if the h-bit is set.
+     * @param flag if true, we expect the lock to be clear, and we set it.
+     *              if false, we expect the lock to be set, and we clear it.
+     * @throws MachineInterrupt if any interrupt needs to be raised.
+     *                          In this case, the instruction is incomplete and should be retried if appropriate.
+     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
+     *                                    Indirect Addressing).  In this case, caller should call back here again after
+     *                                    checking for any pending interrupts.
+     */
+    private void testAndStore(
+        final boolean flag
+    ) throws MachineInterrupt,
+             UnresolvedAddressException {
+        int relAddress = calculateRelativeAddressForGRSOrStorage();
+        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
+        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
+        bReg.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
+
+        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
+        setStorageLock(absAddress);
+        checkBreakpoint(BreakpointComparison.Read, absAddress);
+
+        int offset = relAddress - bReg._lowerLimitNormalized;
+        long value = bReg._storage.get(offset);
+        if (flag) {
+            //  we want to set the lock, so it needs to be clear
+            if ((value & 0_010000_000000) != 0) {
+                throw new TestAndSetInterrupt(baseRegisterIndex, relAddress);
+            }
+
+            value = injectPartialWord(value, 01, InstructionWord.S1, false);
+        } else {
+            //  We want to clear the lock, so it needs to be set
+            if ((value & 0_010000_000000) == 0) {
+                throw new TestAndSetInterrupt(baseRegisterIndex, relAddress);
+            }
+
+            value = injectPartialWord(value, 0, InstructionWord.S1, false);
+        }
+
+        checkBreakpoint(BreakpointComparison.Write, absAddress);
+        bReg._storage.set(offset, value);
     }
 
 
@@ -8201,890 +9261,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public instance methods (only for consumption by FunctionHandlers)
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Retrieves a BankDescriptor to describe the given named bank.  This is for interrupt handling.
-     * The bank name is in L,BDI format.
-     * @param bankLevel level of the bank, 0:7
-     * @param bankDescriptorIndex BDI of the bank 0:077777
-     * @return BankDescriptor object unless l,bdi is 0,0, in which case we return null
-     */
-    private BankDescriptor findBankDescriptor(
-        final int bankLevel,
-        final int bankDescriptorIndex
-    ) throws AddressingExceptionInterrupt {
-        // The bank descriptor tables for bank levels 0 through 7 are described by the banks based on B16 through B23.
-        // The bank descriptor will be the {n}th bank descriptor in the particular bank descriptor table,
-        // where {n} is the bank descriptor index.
-        int bdRegIndex = bankLevel + 16;
-        if (_baseRegisters[bdRegIndex]._voidFlag) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
-        }
-
-        //  bdStorage contains the BDT for the given bank_name level
-        //  bdTableOffset indicates the offset into the BDT, where the bank descriptor is to be found.
-        ArraySlice bdStorage = _baseRegisters[bdRegIndex]._storage;
-        int bdTableOffset = bankDescriptorIndex * 8;    // 8 being the size of a BD in words
-        if (bdTableOffset + 8 > bdStorage.getSize()) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
-                                                   bankLevel,
-                                                   bankDescriptorIndex);
-        }
-
-        //  Create and return a BankDescriptor object
-        return new BankDescriptor(bdStorage, bdTableOffset);
-    }
-
-    /**
-     * Given a relative address, we determine which (if any) of the basic mode banks based on BDR12-15
-     * are to be selected for that address.
-     * We do NOT evaluate whether the bank has any particular permissions, or whether we have any access thereto.
-     * @param relativeAddress relative address for which we search for a containing bank
-     * @param updateDB31 set true to update DB31 if we cross primary/secondary bank pairs
-     * @return the bank register index for the bank which contains the given relative address if found,
-     *          else zero if the address is not within any based bank limits.
-     */
-    private int findBasicModeBank(
-        final long relativeAddress,
-        final boolean updateDB31
-    ) {
-        boolean db31Flag = _designatorRegister.getBasicModeBaseRegisterSelection();
-        int[] table = db31Flag ? BASE_REGISTER_CANDIDATES_TRUE : BASE_REGISTER_CANDIDATES_FALSE;
-
-        for (int tx = 0; tx < 4; ++tx) {
-            //  See IP PRM 4.4.5 - select the base register from the selection table.
-            //  If the bank is void, skip it.
-            //  If the program counter is outside of the bank limits, skip it.
-            //  Otherwise, we found the BDR we want to use.
-            BaseRegister bReg = _baseRegisters[table[tx]];
-            if (isWithinLimits(bReg, relativeAddress)) {
-                if (updateDB31 && (tx >= 2)) {
-                    //  address is found in a secondary bank, so we need to flip DB31
-                    _designatorRegister.setBasicModeBaseRegisterSelection(!db31Flag);
-                }
-
-                return table[tx];
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Calculates the raw relative address (the U) for the current instruction presuming basic mode (even if it isn't set),
-     * honors any indirect addressing, and returns the index of the basic mode bank (12-15) which corresponds to the
-     * final address, increment the X registers if/as appropriate, but not updating the designator register.
-     * Mainly for TRA instruction...
-     * @return relative address for the current instruction
-     */
-    private int getBasicModeBankRegisterIndex(
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        IndexRegister xReg = null;
-        int xx = (int) _currentInstruction.getX();
-        if (xx != 0) {
-            xReg = getExecOrUserXRegister(xx);
-        }
-
-        long addend1;
-        long addend2 = 0;
-        if (_designatorRegister.getBasicModeEnabled()) {
-            addend1 = _currentInstruction.getU();
-            if (xReg != null) {
-                addend2 = xReg.getSignedXM();
-            }
-
-            long relativeAddress = Word36.addSimple(addend1, addend2);
-            if (relativeAddress == 0777777) {
-                relativeAddress = 0;
-            }
-
-            int brIndex = findBasicModeBank((int) relativeAddress, false);
-
-            //  Did we find a bank, and are we doing indirect addressing?
-            if ((brIndex > 0) && (_currentInstruction.getI() != 0)) {
-                //  Increment the X register (if any) indicated by F0 (if H bit is set, of course)
-                incrementIndexRegisterInF0();
-                BaseRegister br = _baseRegisters[brIndex];
-
-                //  Ensure we can read from the selected bank
-                if (!isReadAllowed(br)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-                }
-                br.checkAccessLimits((int) relativeAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
-
-                //  Get xhiu fields from the referenced word, and place them into _currentInstruction,
-                //  then throw UnresolvedAddressException so the caller knows we're not done here.
-                int wx = (int) relativeAddress - br._lowerLimitNormalized;
-                _currentInstruction = _currentInstruction.setXHIU(br._storage.get(wx));
-                throw new UnresolvedAddressException();
-            }
-
-            //  We're at our final destination
-            return brIndex;
-        } else {
-            //  We have an explicit base register - check limits
-            addend1 = _currentInstruction.getD();
-            if (xReg != null) {
-                if (_designatorRegister.getExecutive24BitIndexingEnabled()
-                    && (_designatorRegister.getProcessorPrivilege() < 2)) {
-                    //  Exec 24-bit indexing is requested
-                    addend2 = xReg.getSignedXM24();
-                } else {
-                    addend2 = xReg.getSignedXM();
-                }
-            }
-
-            long relativeAddress = Word36.addSimple(addend1, addend2);
-            if (relativeAddress == 0777777) {
-                relativeAddress = 0;
-            }
-
-            int brIndex = (int) _currentInstruction.getB();
-            BaseRegister br = _baseRegisters[brIndex];
-            try {
-                br.checkAccessLimits((int) relativeAddress, false);
-            } catch (ReferenceViolationInterrupt ex) {
-                brIndex = 0;
-            }
-            return brIndex;
-        }
-    }
-
-    /**
-     * Retrieves consecutive word values for double or multiple-word transfer operations (e.g., DL, LRS, etc).
-     * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
-     * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
-     * We presume we are retrieving from GRS or from storage - i.e., NOT allowing immediate addressing.
-     * Also, we presume that we are doing full-word transfers - no partial word.
-     * @param grsCheck true if we should check U to see if it is a GRS location
-     * @param operands Where we store the resulting operands - the length of this array defines how many operands we retrieve
-     * @throws MachineInterrupt if an interrupt needs to be raised
-     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
-     */
-    private void getConsecutiveOperands(
-        final boolean grsCheck,
-        long[] operands
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        //  Get the relative address so we can do a grsCheck
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-        incrementIndexRegisterInF0();
-
-        //  If this is a GRS reference - we do not need to look for containing banks or validate storage limits.
-        if ((grsCheck)
-                && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
-                && (relAddress < 0200)) {
-            //  For multiple accesses, advancing beyond GRS 0177 wraps back to zero.
-            //  Do accessibility checks for each GRS access
-            int grsIndex = relAddress;
-            for (int ox = 0; ox < operands.length; ++ox, ++grsIndex) {
-                if (grsIndex == 0200) {
-                    grsIndex = 0;
-                }
-
-                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _designatorRegister.getProcessorPrivilege(), false)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-                }
-
-                operands[ox] = _generalRegisterSet.getRegister(grsIndex).getW();
-            }
-
-            return;
-        }
-
-        //  Get base register and check storage and access limits
-        int brIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister bReg = _baseRegisters[brIndex];
-        bReg.checkAccessLimits(relAddress, operands.length, true, false, _indicatorKeyRegister.getAccessInfo());
-
-        //  Lock the storage
-        AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
-        for (int ax = 0; ax < operands.length; ++ax ) {
-            absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
-        }
-        setStorageLocks(absAddresses);
-
-        //  Retrieve the operands
-        int offset = relAddress - bReg._lowerLimitNormalized;
-        for (int ox = 0; ox < operands.length; ++ox) {
-            checkBreakpoint(BreakpointComparison.Read, absAddresses[ox]);
-            operands[ox] = bReg._storage.get(offset++);
-        }
-    }
-
-    /**
-     * Retrieves a reference to the GeneralRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
-     * @param registerIndex A register index of interest
-     * @return GRS register
-     */
-    public GeneralRegister getExecOrUserARegister(
-        final int registerIndex
-    ) {
-        return _generalRegisterSet.getRegister(getExecOrUserARegisterIndex(registerIndex));
-    }
-
-    /**
-     * Retrieves the GRS index of the exec or user register indicated by the register index...
-     * i.e., registerIndex == 0 returns the GRS index for either A0 or EA0, depending on the designator register.
-     * @param registerIndex A register index of interest
-     * @return GRS register index
-     */
-    private int getExecOrUserARegisterIndex(
-        final int registerIndex
-    ) {
-        return registerIndex + (_designatorRegister.getExecRegisterSetSelected() ? GeneralRegisterSet.EA0 : GeneralRegisterSet.A0);
-    }
-
-    /**
-     * Retrieves a reference to the GeneralRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
-     * @param registerIndex R register index of interest
-     * @return GRS register
-     */
-    private GeneralRegister getExecOrUserRRegister(
-        final int registerIndex
-    ) {
-        return _generalRegisterSet.getRegister(getExecOrUserRRegisterIndex(registerIndex));
-    }
-
-    /**
-     * Retrieves a reference to the IndexRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
-     * @param registerIndex X register index of interest
-     * @return GRS register
-     */
-    public IndexRegister getExecOrUserXRegister(
-        final int registerIndex
-    ) {
-        return (IndexRegister)_generalRegisterSet.getRegister(getExecOrUserXRegisterIndex(registerIndex));
-    }
-
-    /**
-     * It has been determined that the u (and possibly h and i) fields comprise requested data.
-     * Load the value indicated in F0 (_currentInstruction) as follows:
-     *      For Processor Privilege 0,1
-     *          value is 24 bits for DR.11 (exec 24bit indexing enabled) true, else 18 bits
-     *      For Processor Privilege 2,3
-     *          value is 24 bits for FO.i set, else 18 bits
-     * If F0.x is zero, the immediate value is taken from the h,i, and u fields (unsigned), and negative zero is eliminated.
-     * For F0.x nonzero, the immediate value is the sum of the u field (unsigned) with the F0.x(mod) signed field.
-     *      For Extended Mode, with Processor Privilege 0,1 and DR.11 set, index modifiers are 24 bits; otherwise, they are 18 bits.
-     *      For Basic Mode, index modifiers are always 18 bits.
-     * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
-     * @return immediate operand value
-     */
-    private long getImmediateOperand(
-    ) {
-        boolean exec24Index = _designatorRegister.getExecutive24BitIndexingEnabled();
-        int privilege = _designatorRegister.getProcessorPrivilege();
-        boolean valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (_currentInstruction.getI() != 0));
-        long value;
-
-        if (_currentInstruction.getX() == 0) {
-            //  No indexing (x-field is zero).  Value is derived from h, i, and u fields.
-            //  Get the value from h,i,u, and eliminate negative zero.
-            value = _currentInstruction.getHIU();
-            if (value == 0777777) {
-                value = 0;
-            }
-
-            if ((_currentInstruction.getJ() == 017) && ((value & 0400000) != 0)) {
-                value |= 0_777777_000000L;
-            }
-
-        } else {
-            //  Value is taken only from the u field, and we eliminate negative zero at this point.
-            value = _currentInstruction.getU();
-            if ( value == 0177777 )
-                value = 0;
-
-            //  Add the contents of Xx(m), and do index register incrementation if appropriate.
-            IndexRegister xReg = getExecOrUserXRegister((int) _currentInstruction.getX());
-
-            //  24-bit indexing?
-           if (!_designatorRegister.getBasicModeEnabled() && (privilege < 2) && exec24Index) {
-                //  Add the 24-bit modifier
-                value = Word36.addSimple(value, xReg.getXM24());
-                if (_currentInstruction.getH() != 0) {
-                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(xReg.getW()));
-                }
-            } else {
-                //  Add the 18-bit modifier
-                value = Word36.addSimple(value, xReg.getXM());
-                if (_currentInstruction.getH() != 0) {
-                    setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(xReg.getW()));
-                }
-            }
-        }
-
-        //  Truncate the result to the proper size, then sign-extend if appropriate to do so.
-        boolean extend = _currentInstruction.getJ() == 017;
-        if (valueIs24Bits) {
-            value &= 077_777777L;
-            if (extend && (value & 040_000000L) != 0) {
-                value |= 0_777700_000000L;
-            }
-        } else {
-            value &= 0_777777L;
-            if (extend && (value & 0_400000) != 0) {
-                value |= 0_777777_000000L;
-            }
-        }
-
-        return value;
-    }
-
-    /**
-     * See getImmediateOperand() above.
-     * This is similar, however the calculated U field is only ever 16 or 18 bits, and is never sign-extended.
-     * Also, we do not rely upon j-field for anything, as that has no meaning for conditionalJump instructions.
-     * @param updateDesignatorRegister if true and if we are in basic mode, we update the basic mode bank selection bit
-     *                                 in the designator register if necessary
-     * @return conditionalJump operand value
-     * @throws MachineInterrupt if an interrupt needs to be raised
-     * @throws UnresolvedAddressException if an address is not fully resolved (basic mode indirect address only)
-     */
-    private int getJumpOperand(
-        final boolean updateDesignatorRegister
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForJump();
-
-        //  The following bit is how we deal with indirect addressing for basic mode.
-        //  If we are doing that, it will update the U portion of the current instruction with new address information,
-        //  then throw UnresolvedAddressException which will eventually route us back through here again, but this
-        //  time with new address info (in reladdress), and we keep doing this until we're not doing indirect addressing.
-        if (_designatorRegister.getBasicModeEnabled() && (_currentInstruction.getI() != 0)) {
-            findBaseRegisterIndex(relAddress, updateDesignatorRegister);
-        } else {
-            incrementIndexRegisterInF0();
-        }
-
-        return relAddress;
-    }
-
-    /**
-     * The general case of retrieving an operand, including all forms of addressing and partial word access.
-     * Instructions which use the j-field as part of the function code will likely set allowImmediate and
-     * allowPartial false.
-     * @param grsDestination true if we are going to put this value into a GRS location
-     * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
-     * @param allowImmediate true if we should allow immediate addressing
-     * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
-     * @return operand value
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private long getOperand(
-        final boolean grsDestination,
-        final boolean grsCheck,
-        final boolean allowImmediate,
-        final boolean allowPartial
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int jField = (int)_currentInstruction.getJ();
-        if (allowImmediate) {
-            //  j-field is U or XU? If so, get the value from the instruction itself (immediate addressing)
-            if (jField >= 016) {
-                return getImmediateOperand();
-            }
-        }
-
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-
-        //  Loading from GRS?  If so, go get the value.
-        //  If grsDestination is true, get the full value. Otherwise, honor j-field for partial-word transfer.
-        //  See hardware guide section 4.3.2 - any GRS-to-GRS transfer is full-word, regardless of j-field.
-        if ((grsCheck)
-                && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
-                && (relAddress < 0200)) {
-            incrementIndexRegisterInF0();
-
-            //  First, do accessibility checks
-            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), false)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
-            }
-
-            //  If we are GRS or not allowing partial word transfers, do a full word.
-            //  Otherwise, honor partial word transfering.
-            if (grsDestination || !allowPartial) {
-                return _generalRegisterSet.getRegister(relAddress).getW();
-            } else {
-                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-                return extractPartialWord(_generalRegisterSet.getRegister(relAddress).getW(), jField, qWordMode);
-            }
-        }
-
-        //  Loading from storage.  Do so, then (maybe) honor partial word handling.
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
-
-        incrementIndexRegisterInF0();
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Read, absAddress);
-
-        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long value = baseRegister._storage.get(readOffset);
-        if (allowPartial) {
-            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-            value = extractPartialWord(value, jField, qWordMode);
-        }
-
-        return value;
-    }
-
-    /**
-     * Retrieves a partial-word operand from storage, depending upon the values of jField and quarterWordMode.
-     * This is never a GRS reference, nor immediate (nor a conditionalJump or shift, for that matter).
-     * @param jField not necessarily from j-field, this indicates the partial word to be stored
-     * @param quarterWordMode needs to be set true for storing quarter words
-     * @return operand value
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private long getPartialOperand(
-        final int jField,
-        final boolean quarterWordMode
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        incrementIndexRegisterInF0();
-
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        baseRegister.checkAccessLimits(relAddress, false, true, false, _indicatorKeyRegister.getAccessInfo());
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Read, absAddress);
-
-        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long value = baseRegister._storage.get(readOffset);
-        return extractPartialWord(value, jField, quarterWordMode);
-    }
-
-    /**
-     * Increments the register indicated by the current instruction (F0) appropriately.
-     * Only effective if f.x is non-zero.
-     */
-    private void incrementIndexRegisterInF0(
-    ) {
-        if ((_currentInstruction.getX() != 0) && (_currentInstruction.getH() != 0)) {
-            IndexRegister iReg = getExecOrUserXRegister((int) _currentInstruction.getX());
-            if (!_designatorRegister.getBasicModeEnabled()
-                    && (_designatorRegister.getExecutive24BitIndexingEnabled())
-                    && (_designatorRegister.getProcessorPrivilege() < 2)) {
-                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier24(iReg.getW()));
-            } else {
-                setExecOrUserXRegister((int) _currentInstruction.getX(), IndexRegister.incrementModifier18(iReg.getW()));            }
-        }
-    }
-
-    /**
-     * The general case of incrementing an operand by some value, including all forms of addressing and partial word access.
-     * Instructions which use the j-field as part of the function code will likely set allowPartial false.
-     * Sets carry and overflow designators if appropriate.
-     * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
-     * @param allowPartial true if we should do partial word transfers (presuming we are not in a GRS address)
-     * @param incrementValue how much we increment storage by - positive or negative, but always ones-complement
-     * @param twosComplement true to use twos-complement arithmetic - otherwise use ones-complement
-     * @return true if either the starting or ending value of the operand is +/- zero
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private boolean incrementOperand(
-        final boolean grsCheck,
-        final boolean allowPartial,
-        final long incrementValue,
-        final boolean twosComplement
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int jField = (int)_currentInstruction.getJ();
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-
-        //  Loading from GRS?  If so, go get the value.
-        //  If grsDestination is true, get the full value. Otherwise, honor j-field for partial-word transfer.
-        //  See hardware guide section 4.3.2 - any GRS-to-GRS transfer is full-word, regardless of j-field.
-        boolean result = false;
-        if ((grsCheck)
-                && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
-                && (relAddress < 0200)) {
-            incrementIndexRegisterInF0();
-
-            //  This is a GRS address.  Do accessibility checks
-            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), false)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
-            }
-
-            //  Ignore partial-word transfers.
-            GeneralRegister reg = _generalRegisterSet.getRegister(relAddress);
-            if (twosComplement) {
-                long sum = reg.getW();
-                if (sum == 0) {
-                    result = true;
-                }
-                sum += Word36.getTwosComplement(incrementValue);
-                if (sum == 0) {
-                    result = true;
-                }
-
-                _generalRegisterSet.setRegister(relAddress, sum);
-                _designatorRegister.setCarry(false);
-                _designatorRegister.setOverflow(false);
-            } else {
-                long sum = reg.getW();
-                result = Word36.isZero(sum);
-                Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
-                if (Word36.isZero(sar._value)) {
-                    result = true;
-                }
-
-                _generalRegisterSet.setRegister(relAddress, sar._value);
-                _designatorRegister.setCarry(sar._flags._carry);
-                _designatorRegister.setOverflow(sar._flags._overflow);
-            }
-
-            return result;
-        }
-
-        //  Storage operand.  Maybe do partial-word addressing
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        incrementIndexRegisterInF0();
-
-        BaseRegister baseRegister = _baseRegisters[baseRegisterIndex];
-        baseRegister.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(baseRegister, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Read, absAddress);
-
-        int readOffset = relAddress - baseRegister._lowerLimitNormalized;
-        long storageValue = baseRegister._storage.get(readOffset);
-        boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-        long sum = allowPartial ? extractPartialWord(storageValue, jField, qWordMode) : storageValue;
-
-        if (twosComplement) {
-            if (sum == 0) {
-                result = true;
-            }
-            sum += Word36.getTwosComplement(incrementValue);
-            if (sum == 0) {
-                result = true;
-            }
-
-            _designatorRegister.setCarry(false);
-            _designatorRegister.setOverflow(false);
-        } else {
-            if (Word36.isZero(sum)) {
-                result = true;
-            }
-            Word36.StaticAdditionResult sar = Word36.add(sum, incrementValue);
-            if (Word36.isZero(sar._value)) {
-                result = true;
-            }
-
-            _designatorRegister.setCarry(sar._flags._carry);
-            _designatorRegister.setOverflow(sar._flags._overflow);
-            sum = sar._value;
-        }
-
-        long storageResult = allowPartial ? injectPartialWord(storageValue, sum, jField, qWordMode) : sum;
-        baseRegister._storage.set(readOffset, storageResult);
-        return result;
-    }
-
-    /**
-     * Sets a new value for the GeneralRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either A0 or EA0, depending on the designator register.
-     * @param registerIndex A register index of interest
-     * @param value new value
-     */
-    private void setExecOrUserARegister(
-        final int registerIndex,
-        final long value
-    ) {
-        _generalRegisterSet.setRegister(getExecOrUserARegisterIndex(registerIndex), value);
-    }
-
-    /**
-     * Sets a new value for the GeneralRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either R0 or ER0, depending on the designator register.
-     * @param registerIndex R register index of interest
-     * @param value new value
-     */
-    private void setExecOrUserRRegister(
-        final int registerIndex,
-        final long value
-    ) {
-        _generalRegisterSet.setRegister(getExecOrUserRRegisterIndex(registerIndex), value);
-    }
-
-    /**
-     * Sets a new value for the IndexRegister indicated by the register index...
-     * i.e., registerIndex == 0 returns either X0 or EX0, depending on the designator register.
-     * @param registerIndex X register index of interest
-     * @param value new value
-     */
-    private void setExecOrUserXRegister(
-        final int registerIndex,
-        final long value
-    ) {
-        _generalRegisterSet.setRegister(getExecOrUserXRegisterIndex(registerIndex), value);
-    }
-
-    /**
-     * Updates PAR.PC and sets the prevent-increment flag according to the given parameters.
-     * Used for simple conditionalJump instructions.
-     * @param counter program counter value
-     * @param preventIncrement true to set the prevent-increment flag
-     */
-    private void setProgramCounter(
-        final long counter,
-        final boolean preventIncrement
-    ) {
-        _programAddressRegister.setProgramCounter(counter);
-        _preventProgramCounterIncrement = preventIncrement;
-    }
-
-    /**
-     * Stores consecutive word values for double or multiple-word transfer operations (e.g., DS, SRS, etc).
-     * The assumption is that this call is made for a single iteration of an instruction.  Per doc 9.2, effective
-     * relative address (U) will be calculated only once; however, access checks must succeed for all accesses.
-     * We presume that we are doing full-word transfers - no partial word.
-     * @param grsCheck true if we should check U to see if it is a GRS location
-     * @param operands The operands to be stored
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private void storeConsecutiveOperands(
-        final boolean grsCheck,
-        long[] operands
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        //  Get the first relative address so we can do a grsCheck
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-
-        if ((grsCheck)
-                && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
-                && (relAddress < 0200)) {
-            //  For multiple accesses, advancing beyond GRS 0177 wraps back to zero.
-            //  Do accessibility checks for each GRS access
-            int grsIndex = relAddress;
-            for (int ox = 0; ox < operands.length; ++ox, ++grsIndex) {
-                if (grsIndex == 0200) {
-                    grsIndex = 0;
-                }
-
-                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _designatorRegister.getProcessorPrivilege(), false)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
-                }
-
-                _generalRegisterSet.setRegister(grsIndex, operands[ox]);
-            }
-
-            incrementIndexRegisterInF0();
-        } else {
-            //  Get base register and check storage and access limits
-            int brIndex = findBaseRegisterIndex(relAddress, false);
-            BaseRegister bReg = _baseRegisters[brIndex];
-            bReg.checkAccessLimits(relAddress, operands.length, false, true, _indicatorKeyRegister.getAccessInfo());
-
-            //  Lock the storage
-            AbsoluteAddress[] absAddresses = new AbsoluteAddress[operands.length];
-            for (int ax = 0; ax < operands.length; ++ax ) {
-                absAddresses[ax] = getAbsoluteAddress(bReg, relAddress + ax);
-            }
-            setStorageLocks(absAddresses);
-
-            //  Store the operands
-            int offset = relAddress - bReg._lowerLimitNormalized;
-            for (int ox = 0; ox < operands.length; ++ox) {
-                checkBreakpoint(BreakpointComparison.Write, absAddresses[ox]);
-                bReg._storage.set(offset++, operands[ox]);
-            }
-
-            incrementIndexRegisterInF0();
-        }
-    }
-
-    /**
-     * General case of storing an operand either to storage or to a GRS location
-     * @param grsSource true if the value came from a register, so we know whether we need to ignore partial-word transfers
-     * @param grsCheck true if relative addresses < 0200 should be considered GRS locations
-     * @param checkImmediate true if we should consider j-fields 016 and 017 as immediate addressing (and throw away the operand)
-     * @param allowPartial true if we should allow partial-word transfers (subject to GRS-GRS transfers)
-     * @param operand value to be stored (36 bits significant)
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private void storeOperand(
-        final boolean grsSource,
-        final boolean grsCheck,
-        final boolean checkImmediate,
-        final boolean allowPartial,
-        final long operand
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        //  If we allow immediate addressing mode and j-field is U or XU... we do nothing.
-        int jField = (int)_currentInstruction.getJ();
-        if ((checkImmediate) && (jField >= 016)) {
-            return;
-        }
-
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-
-        if ((grsCheck)
-                && ((_designatorRegister.getBasicModeEnabled()) || (_currentInstruction.getB() == 0))
-                && (relAddress < 0200)) {
-            incrementIndexRegisterInF0();
-
-            //  First, do accessibility checks
-            if (!GeneralRegisterSet.isAccessAllowed(relAddress, _designatorRegister.getProcessorPrivilege(), true)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
-            }
-
-            //  If we are GRS or not allowing partial word transfers, do a full word.
-            //  Otherwise, honor partial word transfer.
-            if (!grsSource && allowPartial) {
-                boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-                long originalValue = _generalRegisterSet.getRegister(relAddress).getW();
-                long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
-                _generalRegisterSet.setRegister(relAddress, newValue);
-            } else {
-                _generalRegisterSet.setRegister(relAddress, operand);
-            }
-
-            return;
-        }
-
-        //  This is going to be a storage thing...
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
-        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
-
-        incrementIndexRegisterInF0();
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Write, absAddress);
-
-        int offset = relAddress - bReg._lowerLimitNormalized;
-        if (allowPartial) {
-            boolean qWordMode = _designatorRegister.getQuarterWordModeEnabled();
-            long originalValue = bReg._storage.get(offset);
-            long newValue = injectPartialWord(originalValue, operand, jField, qWordMode);
-            bReg._storage.set(offset, newValue);
-        } else {
-            bReg._storage.set(offset, operand);
-        }
-    }
-
-    /**
-     * Stores the right-most bits of an operand to a partial word in storage.
-     * @param operand value to be stored (up to 36 bits significant)
-     * @param jField not necessarily from j-field, this indicates the partial word to be stored
-     * @param quarterWordMode needs to be set true for storing quarter words
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private void storePartialOperand(
-        final long operand,
-        final int jField,
-        final boolean quarterWordMode
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
-        bReg.checkAccessLimits(relAddress, false, false, true, _indicatorKeyRegister.getAccessInfo());
-
-        incrementIndexRegisterInF0();
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Write, absAddress);
-
-        int offset = relAddress - bReg._lowerLimitNormalized;
-        long originalValue = bReg._storage.get(offset);
-        long newValue = injectPartialWord(originalValue, operand, jField, quarterWordMode);
-        bReg._storage.set(offset, newValue);
-    }
-
-    /**
-     * Updates S1 of a lock word under storage lock.
-     * Does *NOT* increment the x-register in F0 (if specified), even if the h-bit is set.
-     * @param flag if true, we expect the lock to be clear, and we set it.
-     *              if false, we expect the lock to be set, and we clear it.
-     * @throws MachineInterrupt if any interrupt needs to be raised.
-     *                          In this case, the instruction is incomplete and should be retried if appropriate.
-     * @throws UnresolvedAddressException if address resolution is unfinished (such as can happen in Basic Mode with
-     *                                    Indirect Addressing).  In this case, caller should call back here again after
-     *                                    checking for any pending interrupts.
-     */
-    private void testAndStore(
-        final boolean flag
-    ) throws MachineInterrupt,
-             UnresolvedAddressException {
-        int relAddress = calculateRelativeAddressForGRSOrStorage();
-        int baseRegisterIndex = findBaseRegisterIndex(relAddress, false);
-        BaseRegister bReg = _baseRegisters[baseRegisterIndex];
-        bReg.checkAccessLimits(relAddress, false, true, true, _indicatorKeyRegister.getAccessInfo());
-
-        AbsoluteAddress absAddress = getAbsoluteAddress(bReg, relAddress);
-        setStorageLock(absAddress);
-        checkBreakpoint(BreakpointComparison.Read, absAddress);
-
-        int offset = relAddress - bReg._lowerLimitNormalized;
-        long value = bReg._storage.get(offset);
-        if (flag) {
-            //  we want to set the lock, so it needs to be clear
-            if ((value & 0_010000_000000) != 0) {
-                throw new TestAndSetInterrupt(baseRegisterIndex, relAddress);
-            }
-
-            value = injectPartialWord(value, 01, InstructionWord.S1, false);
-        } else {
-            //  We want to clear the lock, so it needs to be set
-            if ((value & 0_010000_000000) == 0) {
-                throw new TestAndSetInterrupt(baseRegisterIndex, relAddress);
-            }
-
-            value = injectPartialWord(value, 0, InstructionWord.S1, false);
-        }
-
-        checkBreakpoint(BreakpointComparison.Write, absAddress);
-        bReg._storage.set(offset, value);
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Public instance methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -9188,138 +9364,5 @@ public class InstructionProcessor extends Processor implements Worker {
                 this.notify();
             }
         }
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Takes a 36-bit value as input, and returns a partial-word value depending upon
-     * the partialWordIndicator (presumably taken from the j-field of an instruction)
-     * and the quarterWordMode flag (presumably taken from the designator register).
-     * @param source 36-bit source word
-     * @param partialWordIndicator indicator of the desired partial word
-     * @param quarterWordMode true if we're in quarter word mode, else false
-     * @return partial word
-     */
-    //TODO used only in functions?  If so, move to InstructionHandler
-    private static long extractPartialWord(
-        final long source,
-        final int partialWordIndicator,
-        final boolean quarterWordMode
-    ) {
-        switch (partialWordIndicator) {
-            case InstructionWord.W:     return source & Word36.BIT_MASK;
-            case InstructionWord.H2:    return Word36.getH2(source);
-            case InstructionWord.H1:    return Word36.getH1(source);
-            case InstructionWord.XH2:   return Word36.getXH2(source);
-            case InstructionWord.XH1:   // XH1 or Q2
-                if (quarterWordMode) {
-                    return Word36.getQ2(source);
-                } else {
-                    return Word36.getXH1(source);
-                }
-            case InstructionWord.T3:    // T3 or Q4
-                if (quarterWordMode) {
-                    return Word36.getQ4(source);
-                } else {
-                    return Word36.getXT3(source);
-                }
-            case InstructionWord.T2:    // T2 or Q3
-                if (quarterWordMode) {
-                    return Word36.getQ3(source);
-                } else {
-                    return Word36.getXT2(source);
-                }
-            case InstructionWord.T1:    // T1 or Q1
-                if (quarterWordMode) {
-                    return Word36.getQ1(source);
-                } else {
-                    return Word36.getXT1(source);
-                }
-            case InstructionWord.S6:    return Word36.getS6(source);
-            case InstructionWord.S5:    return Word36.getS5(source);
-            case InstructionWord.S4:    return Word36.getS4(source);
-            case InstructionWord.S3:    return Word36.getS3(source);
-            case InstructionWord.S2:    return Word36.getS2(source);
-            case InstructionWord.S1:    return Word36.getS1(source);
-        }
-
-        return source;
-    }
-
-    /**
-     * Converts a relative address to an absolute address.
-     * @param baseRegister base register associated with the relative address
-     * @param relativeAddress address to be converted
-     * @return absolute address object
-     */
-    private static AbsoluteAddress getAbsoluteAddress(
-        final BaseRegister baseRegister,
-        final int relativeAddress
-    ) {
-        int upi = baseRegister._baseAddress._upiIndex;
-        int actualOffset = relativeAddress - baseRegister._lowerLimitNormalized;
-        int offset = baseRegister._baseAddress._offset + actualOffset;
-        return new AbsoluteAddress(upi, baseRegister._baseAddress._segment, offset);
-    }
-
-    /**
-     * Takes 36-bit values as original and new values, and injects the new value as a partial word of the original value
-     * depending upon the partialWordIndicator (presumably taken from the j-field of an instruction).
-     * @param originalValue original value 36-bits significant
-     * @param newValue new value right-aligned in a 6, 9, 12, 18, or 36-bit significant field
-     * @param partialWordIndicator corresponds to the j-field of an instruction word
-     * @param quarterWordMode true to do quarter-word mode transfers, false for third-word mode
-     * @return composite value with right-most significant bits of newValue replacing a partial word portion of the
-     *          original value
-     */
-    //TODO used only in functions?  If so, move to InstructionHandler
-    private static long injectPartialWord(
-        final long originalValue,
-        final long newValue,
-        final int partialWordIndicator,
-        final boolean quarterWordMode
-    ) {
-        switch (partialWordIndicator) {
-            case InstructionWord.W:     return newValue;
-            case InstructionWord.H2:    return Word36.setH2(originalValue, newValue);
-            case InstructionWord.H1:    return Word36.setH1(originalValue, newValue);
-            case InstructionWord.XH2:   return Word36.setH2(originalValue, newValue);
-            case InstructionWord.XH1:   // XH1 or Q2
-                if (quarterWordMode) {
-                    return Word36.setQ2(originalValue, newValue);
-                } else {
-                    return Word36.setH1(originalValue, newValue);
-                }
-            case InstructionWord.T3:    // T3 or Q4
-                if (quarterWordMode) {
-                    return Word36.setQ4(originalValue, newValue);
-                } else {
-                    return Word36.setT3(originalValue, newValue);
-                }
-            case InstructionWord.T2:    // T2 or Q3
-                if (quarterWordMode) {
-                    return Word36.setQ3(originalValue, newValue);
-                } else {
-                    return Word36.setT2(originalValue, newValue);
-                }
-            case InstructionWord.T1:    // T1 or Q1
-                if (quarterWordMode) {
-                    return Word36.setQ1(originalValue, newValue);
-                } else {
-                    return Word36.setT1(originalValue, newValue);
-                }
-            case InstructionWord.S6:    return Word36.setS6(originalValue, newValue);
-            case InstructionWord.S5:    return Word36.setS5(originalValue, newValue);
-            case InstructionWord.S4:    return Word36.setS4(originalValue, newValue);
-            case InstructionWord.S3:    return Word36.setS3(originalValue, newValue);
-            case InstructionWord.S2:    return Word36.setS2(originalValue, newValue);
-            case InstructionWord.S1:    return Word36.setS1(originalValue, newValue);
-        }
-
-        return originalValue;
     }
 }

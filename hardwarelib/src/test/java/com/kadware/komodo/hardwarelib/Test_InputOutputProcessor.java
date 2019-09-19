@@ -26,7 +26,7 @@ public class Test_InputOutputProcessor {
     private static class TestSystemProcessor extends SystemProcessor {
 
         TestSystemProcessor() {
-            super("SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+            super();
         }
 
         @Override
@@ -188,10 +188,11 @@ public class Test_InputOutputProcessor {
     private void setup(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException {
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
         _sp = new TestSystemProcessor();
-        _sp.initialize();
-
+        InventoryManager.getInstance().addSystemProcessor(_sp);
         _ip = InventoryManager.getInstance().createInstructionProcessor();
         _iop = InventoryManager.getInstance().createInputOutputProcessor();
         _msp = InventoryManager.getInstance().createMainStorageProcessor();
@@ -214,10 +215,11 @@ public class Test_InputOutputProcessor {
         _dev = null;
         _cm.terminate();
         _cm = null;
+        _sp.terminate();
         InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
         InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
-        _sp.terminate();
+        InventoryManager.getInstance().deleteProcessor(_sp._upiIndex);
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -237,7 +239,9 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
-             UPINotAssignedException{
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
         setup();
         InputOutputProcessor iop = new InputOutputProcessor("IOP0", 2);
         assertFalse(iop.canConnect(new FileSystemDiskDevice("DISK0")));
@@ -254,7 +258,9 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
-             UPINotAssignedException{
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException {
         setup();
 
         try {
@@ -272,6 +278,8 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
              UPINotAssignedException {
         setup();
 
@@ -299,6 +307,8 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
              UPINotAssignedException {
         setup();
 
@@ -345,6 +355,8 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
              UPINotAssignedException {
         setup();
 
@@ -395,6 +407,8 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
              UPINotAssignedException {
         setup();
 
@@ -475,9 +489,11 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
              UPINotAssignedException {
         setup();
-
+        //TODO
         teardown();
     }
 }

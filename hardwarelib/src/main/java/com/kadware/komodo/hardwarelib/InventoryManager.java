@@ -19,12 +19,12 @@ import java.util.Map;
 public class InventoryManager {
 
     public static class Counters {
-        public final int _inputOutputProcessors;
-        public final int _instructionProcessors;
-        public final int _mainStorageProcessors;
-        public final int _systemProcessors;
+        final int _inputOutputProcessors;
+        final int _instructionProcessors;
+        final int _mainStorageProcessors;
+        final int _systemProcessors;
 
-        public Counters(
+        Counters(
             final int inputOutputProcessors,
             final int instructionProcessors,
             final int mainStorageProcessors,
@@ -40,17 +40,17 @@ public class InventoryManager {
     //  The following are only useful for the create* routines.
     //  It is highly recommended that these be used for creation of processors, however that is not enforced.
     //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
-    public final static int MAX_INPUT_OUTPUT_PROCESSORS = 2;
-    public final static int MAX_INSTRUCTION_PROCESSORS = 8;
-    public final static int MAX_MAIN_STORAGE_PROCESSORS = 2;
-    public final static int MAX_SYSTEM_PROCESSORS = 1;
+    private final static int MAX_INPUT_OUTPUT_PROCESSORS = 2;
+    private final static int MAX_INSTRUCTION_PROCESSORS = 8;
+    private final static int MAX_MAIN_STORAGE_PROCESSORS = 2;
+    private final static int MAX_SYSTEM_PROCESSORS = 1;
 
-    public final static int FIRST_SYSTEM_PROCESSOR_UPI_INDEX = 0;
-    public final static int FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX = FIRST_SYSTEM_PROCESSOR_UPI_INDEX + MAX_SYSTEM_PROCESSORS;
-    public final static int FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX + MAX_MAIN_STORAGE_PROCESSORS;
+    final static int FIRST_SYSTEM_PROCESSOR_UPI_INDEX = 0;
+    final static int FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX = FIRST_SYSTEM_PROCESSOR_UPI_INDEX + MAX_SYSTEM_PROCESSORS;
+    final static int FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX + MAX_MAIN_STORAGE_PROCESSORS;
     public final static int FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX + MAX_INPUT_OUTPUT_PROCESSORS;
 
-    public final static int MAIN_STORAGE_PROCESSOR_SIZE = 1024 * 1024;  //  One MWord should be enough static storage
+    final static int MAIN_STORAGE_PROCESSOR_SIZE = 1024 * 1024;  //  One MWord should be enough static storage
 
     private final Map<Integer, Processor> _processors = new HashMap<>();
 
@@ -163,6 +163,32 @@ public class InventoryManager {
     }
 
     /**
+     * Adds an existing SystemProcessor to our inventory.
+     * The existing SP should not yet have been initialized.
+     * Only for unit tests.
+     * @param sp object to be added
+     * @throws NodeNameConflictException if there is a conflict in node names
+     * @throws UPIConflictException if there is a conflict in UPI
+     */
+    public void addSystemProcessor(
+        final SystemProcessor sp
+    ) throws NodeNameConflictException,
+             UPIConflictException {
+        if (_processors.get(sp._upiIndex) != null) {
+            throw new UPIConflictException(sp._upiIndex);
+        }
+
+        for (Processor processor : _processors.values()) {
+            if (sp._name.equalsIgnoreCase(processor._name)) {
+                throw new NodeNameConflictException(sp._name);
+            }
+        }
+
+        _processors.put(sp._upiIndex, sp);
+        sp.initialize();
+    }
+
+    /**
      * Creates a new MainStorageProcessor with a unique name and UPI.
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
@@ -236,7 +262,7 @@ public class InventoryManager {
         for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 String name = String.format("IP%d", px);
-                SystemProcessor sp = new SystemProcessor(name, upiIndex);
+                SystemProcessor sp = new SystemProcessor(name);
                 _processors.put(upiIndex, sp);
                 sp.initialize();
                 return sp;

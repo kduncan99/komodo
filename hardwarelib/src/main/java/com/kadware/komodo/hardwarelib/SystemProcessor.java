@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Class which implements the functionality necessary for an architecturally defined system control facility.
  * Our design stipulates the existence of exactly one of these in a proper configuration.
+ * This object manages all console communication, and implements the system-wide dayclock.
+ * It is also responsible for creating and managing the partition data bank which is used by the operating system.
  */
 @SuppressWarnings("Duplicates")
 public class SystemProcessor extends Processor {
@@ -63,6 +65,8 @@ public class SystemProcessor extends Processor {
     //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
     //          register accordingly before raising the Initial (class 30) interrupt.
 
+    static SystemProcessor _instance = null;
+
     //  ------------------------------------------------------------------------
     //  Constructor
     //  ------------------------------------------------------------------------
@@ -70,14 +74,26 @@ public class SystemProcessor extends Processor {
     /**
      * constructor
      * @param name node name of the SP
-     * @param upi UPI for the SP
      */
     SystemProcessor(
-        final String name,
-        final int upi
+        final String name
     ) {
-        super(Type.SystemProcessor, name, upi);
+        super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        synchronized (SystemProcessor.class) {
+            LOGGER.error("Attempted to instantiate more than one SystemProcessor");
+            assert(_instance == null);
+            _instance = this;
+        }
     }
+
+    /**
+     * constructor for testing
+     */
+    protected SystemProcessor() {
+        super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        _instance = this;
+    }
+
 
     //  ------------------------------------------------------------------------
     //  Private methods
@@ -189,16 +205,14 @@ public class SystemProcessor extends Processor {
     /**
      * Clears the processor - actually, we never get cleared
      */
-    @Override
-    public void clear() {}
+    @Override public void clear() {}
 
     /**
      * SPs have no ancestors
      * @param ancestor candidate ancestor
      * @return always false
      */
-    @Override
-    public final boolean canConnect(Node ancestor) { return false; }
+    @Override public final boolean canConnect(Node ancestor) { return false; }
 
     /**
      * For debugging
@@ -243,5 +257,61 @@ public class SystemProcessor extends Processor {
         }
 
         LOGGER.info(_name + " worker thread terminating");
+    }
+
+    //  ------------------------------------------------------------------------
+    //  Public methods
+    //  ------------------------------------------------------------------------
+
+    /**
+     * Represents console input
+     */
+    static class ConsoleInput {
+        public final int _identifier;   //  zero for unsolicited input, messageIdentifier from SendReadReply if response
+        public final String _message;
+
+        ConsoleInput(
+            final int identifier,
+            final String message
+        ) {
+            _identifier = identifier;
+            _message = message;
+        }
+
+        ConsoleInput(
+            final String message
+        ) {
+            _identifier = 0;
+            _message = message;
+        }
+    }
+
+    ConsoleInput consolePoll() {
+        return null;//TODO
+    }
+
+    void consoleReset() {
+        //TODO
+    }
+
+    void consoleSendReadOnlyMessage(
+        final String message
+    ) {
+        //TODO
+    }
+
+    void consoleSendReadReplyMessage(
+        final long messageIdentifier,
+        final String message,
+        final int replyMaxCharacters
+    ) {
+        //TODO
+    }
+
+    void consoleSendSystemMessage(
+        final String message1,
+        final String message2
+    ) {
+        //TODO
     }
 }
