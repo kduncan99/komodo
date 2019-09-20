@@ -5741,17 +5741,17 @@ public class InstructionProcessor extends Processor implements Worker {
                     //                      01: given UPI does not correspond to an MSP
                     //                      03: requested block length is invalid
                     //      U+0,S3:     UPI of target MSP
-                    //      U+1,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
-                    //      U+2,W:      Newly-assigned segment index if status is zero
+                    //      U+1,W:      Newly-assigned segment index if status is zero
+                    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     int status = 0;
                     try {
-                        int upi = (int) Word36.getS2(operands[0]);
+                        int upi = (int) Word36.getS3(operands[0]);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
-                        long words = operands[1] & 0_17777_777777;
-                        if (words != operands[1]) {
+                        long words = operands[2] & 0_17777_777777;
+                        if (words != operands[2]) {
                             status = 3;
                         } else {
-                            operands[2] = msp.createSegment((int) words);
+                            operands[1] = msp.createSegment((int) words);
                         }
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
                         status = 1;
@@ -5771,7 +5771,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+1,W:      Segment index of block to be released
                     int status = 0;
                     try {
-                        int upi = (int) Word36.getS2(operands[0]);
+                        int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         msp.deleteSegment(segIndex);
@@ -5797,7 +5797,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     int status = 0;
                     try {
-                        int upi = (int) Word36.getS2(operands[0]);
+                        int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         long words = operands[2] & 0_17777_777777;

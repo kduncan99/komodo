@@ -181,7 +181,9 @@ public class MainStorageProcessor extends Processor {
             if (storageSize == originalSlice.getSize()) {
                 return originalSlice;
             } else {
-                return originalSlice.copyOf(storageSize);
+                ArraySlice newSlice = originalSlice.copyOf(storageSize);
+                _dynamicStorage.put(segmentIndex, newSlice);
+                return newSlice;
             }
         }
     }
