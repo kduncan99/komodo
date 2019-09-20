@@ -5732,10 +5732,71 @@ public class InstructionProcessor extends Processor implements Worker {
         private static final int SF_CONSOLE_POLL = 033;
         private static final int SF_CONSOLE_RESET = 034;
 
-        private static final int SF_STATUS_SUCCESSFUL = 0;
-        private static final int SF_STATUS_BAD_UPI = 01;
-        private static final int SF_STATUS_BAD_SEGMENT = 02;
-        private static final int SF_STATUS_INVALID_SIZE = 04;
+        private static final int SS_SUCCESSFUL = 0;
+        private static final int SS_BAD_UPI = 01;
+        private static final int SS_BAD_SEGMENT = 02;
+        private static final int SS_INVALID_ADDRESS = 03;
+        private static final int SS_INVALID_SIZE = 04;
+        private static final int SS_ACCESS_DENIED = 05;
+        private static final int SS_NO_DATA = 010;
+
+        private class VirtualAddressInfo {
+            final VirtualAddress _virtualAddress;
+            final BankDescriptor _bankDescriptor;
+            final AccessPermissions _effectivePermissions;
+            final int _status;
+
+            private VirtualAddressInfo(
+                final VirtualAddress virtualAddress,
+                final BankDescriptor bankDescriptor,
+                final AccessPermissions effectivePermissions,
+                final int status
+            ) {
+                _virtualAddress = virtualAddress;
+                _bankDescriptor = bankDescriptor;
+                _effectivePermissions = effectivePermissions;
+                _status = status;
+            }
+        }
+
+        //TODO can this be used elsewhere, effectively?
+        private VirtualAddressInfo verifyVirtualAddress(
+            final VirtualAddress virtualAddress,
+            final boolean readRequested,
+            final boolean writeRequested,
+            final int extent
+        ) {
+            int status = SS_SUCCESSFUL;
+            BankDescriptor bd = null;
+            AccessPermissions effective = null;
+            try {
+                bd = findBankDescriptor(virtualAddress.getLevel(), virtualAddress.getBankDescriptorIndex());
+                AccessInfo accessLock = bd.getAccessLock();
+                AccessPermissions bankGAP = bd.getGeneraAccessPermissions();
+                AccessPermissions bankSAP = bd.getSpecialAccessPermissions();
+                AccessInfo accessKey = _indicatorKeyRegister.getAccessInfo();
+
+                if ((accessKey._ring < accessLock._ring) || (accessKey.equals(accessLock))) {
+                    effective = bankSAP;
+                } else {
+                    effective = bankGAP;
+                }
+
+                if ((readRequested && !effective._read) || (writeRequested && !effective._write)) {
+                    status = SS_ACCESS_DENIED;
+                } else {
+                    if (virtualAddress.getOffset() >= bd.getSize()) {
+                        status = SS_INVALID_ADDRESS;
+                    } else if (virtualAddress.getOffset() + extent > bd.getSize()) {
+                        status = SS_INVALID_SIZE;
+                    }
+                }
+            } catch (AddressingExceptionInterrupt ex) {
+                status = SS_INVALID_ADDRESS;
+            }
+
+            return new VirtualAddressInfo(virtualAddress, bd, effective, status);
+        }
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             //  PP has to be 0
@@ -5755,18 +5816,18 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = SF_STATUS_SUCCESSFUL;
+                    int status = SS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         long words = operands[2] & 0_17777_777777;
                         if (words != operands[2]) {
-                            status = SF_STATUS_INVALID_SIZE;
+                            status = SS_INVALID_SIZE;
                         } else {
                             operands[1] = msp.createSegment((int) words);
                         }
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = SF_STATUS_BAD_UPI;
+                        status = SS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5782,16 +5843,16 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+1,W:      Segment index of block to be released
                     long[] operands = new long[2];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = SF_STATUS_SUCCESSFUL;
+                    int status = SS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         msp.deleteSegment(segIndex);
                     } catch (AddressingExceptionInterrupt ex) {
-                        status = SF_STATUS_BAD_SEGMENT;
+                        status = SS_BAD_SEGMENT;
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = SF_STATUS_BAD_UPI;
+                        status = SS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5808,21 +5869,21 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = SF_STATUS_SUCCESSFUL;
+                    int status = SS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         long words = operands[2] & 0_17777_777777;
                         if (words != operands[2]) {
-                            status = SF_STATUS_INVALID_SIZE;
+                            status = SS_INVALID_SIZE;
                         } else {
                             msp.resizeSegment(segIndex, (int) words);
                         }
                     } catch (AddressingExceptionInterrupt ex) {
-                        status = SF_STATUS_BAD_SEGMENT;
+                        status = SS_BAD_SEGMENT;
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = SF_STATUS_BAD_UPI;
+                        status = SS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5831,8 +5892,6 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_SEND_STATUS: {
-                    //TODO
-                    //  Subfunction 030: Send system status console message
                     //  Packet size is 4 words
                     //  U+0,S1:         030
                     //  U+0,S2:         Status
@@ -5841,22 +5900,61 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing first message in ASCII
                     //  U+3:            Virtual address of buffer containing second message in ASCII
+                    long[] operands = new long[4];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int status = SS_SUCCESSFUL;
+                    int msg1Chars = (int) Word36.getQ3(operands[0]);
+                    int msg2Chars = (int) Word36.getQ4(operands[0]);
+                    int msg1Words = (msg1Chars / 4) + ((msg1Chars % 4 == 0) ? 0 : 1);
+                    int msg2Words = (msg2Chars / 4) + ((msg2Chars % 4 == 0) ? 0 : 1);
+                    long msgId = operands[1];
+
+                    VirtualAddressInfo vaInfo1 = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, msg1Words);
+                    VirtualAddressInfo vaInfo2 = verifyVirtualAddress(new VirtualAddress(operands[3]), true, false, msg2Words);
+
+                    if (vaInfo1._status != SS_SUCCESSFUL) {
+                        status = vaInfo1._status;
+                    } else if (vaInfo2._status != SS_SUCCESSFUL) {
+                        status = vaInfo2._status;
+                    } else {
+                        String msg1 = vaInfo1._bankDescriptor.toASCII(vaInfo1._virtualAddress.getOffset(), msg1Words).substring(0, msg1Chars);
+                        String msg2 = vaInfo2._bankDescriptor.toASCII(vaInfo2._virtualAddress.getOffset(), msg2Words).substring(0, msg2Chars);
+                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msgId, msg2);
+                    }
+
+                    operands[0] = Word36.setS2(operands[0], status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case SF_CONSOLE_SEND_READ_ONLY: {
-                    //TODO
                     //  Packet size is 3 words
                     //  U+0,S1          031
                     //  U+0,S2:         Status
                     //  U+0,Q3:         Length of message in characters
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing message in ASCII
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int chars = (int) Word36.getQ3(operands[0]);
+                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
+                    long msgId = operands[1];
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
+                    if (vaInfo._status == SS_SUCCESSFUL) {
+                        String msg = vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msgId, msg);
+                    }
+
+                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case SF_CONSOLE_SEND_READ_REPLY: {
-                    //TODO
                     //  Packet size is 3 words
                     //  U+0,S1          032
                     //  U+0,S2:         Status
@@ -5864,17 +5962,59 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+0,Q4          Maximum accepted length of response in characters
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing message in ASCII
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int chars = (int) Word36.getQ3(operands[0]);
+                    int replyChars = (int) Word36.getQ4(operands[0]);
+                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
+                    long msgId = operands[1];
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
+                    if (vaInfo._status == SS_SUCCESSFUL) {
+                        String msg = vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                        SystemProcessor.getInstance().consoleSendReadReplyMessage(msgId, msg, replyChars);
+                    }
+
+                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case SF_CONSOLE_POLL: {
-                    //TODO
                     //  Packet size is 3 words
                     //  U+0,S1          033
                     //  U+0,S2:         Status
-                    //  U+0,Q3          Number of words received if a message was read
+                    //  U+0,Q3          Size of reply buffer in words
+                    //  U+0,Q4          Number of characters received if a message was read
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing message in ASCII
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int status = SS_SUCCESSFUL;
+                    int words = (int) Word36.getQ3(operands[0]);
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), false, true, words);
+                    if (vaInfo._status == SS_SUCCESSFUL) {
+                        SystemProcessor.ConsoleInput consInput = SystemProcessor.getInstance().consolePoll();
+                        if (consInput != null) {
+                            operands[0] = Word36.setQ4(operands[0], consInput._message.length());
+                            operands[1] = consInput._identifier;
+                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
+                                 wx < words && ssx < consInput._message.length();
+                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
+                                vaInfo._bankDescriptor.set(bdx, Word36.stringToWordASCII(consInput._message.substring(ssx, ssy)).getW());
+                            }
+                        } else {
+                            status = SS_NO_DATA;
+                        }
+                    } else {
+                        status = vaInfo._status;
+                    }
+
+                    operands[0] = Word36.setS2(operands[0], status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
@@ -5883,7 +6023,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+0,S1          033
                     //  U+0,S2:         Status
                     SystemProcessor.getInstance().consoleReset();
-                    operand = Word36.setS2(operand, SF_STATUS_SUCCESSFUL);
+                    operand = Word36.setS2(operand, SS_SUCCESSFUL);
                     storeOperand(false,false,false,false, operand);
                     break;
                 }
@@ -7289,7 +7429,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
     public BaseRegister getBaseRegister(final int index) { return _baseRegisters[index]; }
     boolean getBroadcastInterruptEligibility() { return _broadcastInterruptEligibility; }
-    InstructionWord getCurrentInstruction() { return _currentInstruction; }
     public DesignatorRegister getDesignatorRegister() { return _designatorRegister; }
 
     public GeneralRegister getGeneralRegister(

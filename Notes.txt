@@ -1,5 +1,6 @@
 -- TODO InProgress
 * hardwarelib
+IP: SYSC subfunctions for console communication need unit tests
 Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
@@ -38,7 +39,6 @@ RAMTapeDevice byte interface, optional compression, optional backing store
 PrinterDevice
 CardReaderDevice
 CardPunchDevice
-IP: SYSC subfunctions for console communication
 IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks

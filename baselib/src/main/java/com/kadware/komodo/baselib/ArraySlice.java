@@ -676,6 +676,28 @@ public class ArraySlice {
             if (delimitFlag && (wx != 0)) {
                 builder.append(" ");
             }
+
+            builder.append(Word36.toStringFromASCII(get(wx)));
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Creates a string containing the representation of this buffer in consecutive 4-character strings,
+     * possibly delimited by spaces.
+     * @param offset how far into the visible portion of this slice we should begin
+     * @param words how many words we should process
+     * @return display string
+     */
+    public String toASCII(
+        final int offset,
+        final int words
+    ) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int wx = offset; wx < offset + words; ++wx) {
+            if (wx > getSize()) { break; }
             builder.append(Word36.toStringFromASCII(get(wx)));
         }
 

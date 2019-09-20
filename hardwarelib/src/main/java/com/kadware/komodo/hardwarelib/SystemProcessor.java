@@ -274,11 +274,11 @@ public class SystemProcessor extends Processor {
      * Represents console input
      */
     static class ConsoleInput {
-        public final int _identifier;   //  zero for unsolicited input, messageIdentifier from SendReadReply if response
+        public final long _identifier;  //  zero for unsolicited input, messageIdentifier from SendReadReply if response
         public final String _message;
 
         ConsoleInput(
-            final int identifier,
+            final long identifier,
             final String message
         ) {
             _identifier = identifier;
@@ -302,6 +302,7 @@ public class SystemProcessor extends Processor {
     }
 
     void consoleSendReadOnlyMessage(
+        final long messageIdentifier,
         final String message
     ) {
         //TODO
