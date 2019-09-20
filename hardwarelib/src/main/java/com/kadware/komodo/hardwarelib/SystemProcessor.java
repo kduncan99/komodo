@@ -65,7 +65,7 @@ public class SystemProcessor extends Processor {
     //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
     //          register accordingly before raising the Initial (class 30) interrupt.
 
-    static SystemProcessor _instance = null;
+    private static SystemProcessor _instance = null;
 
     //  ------------------------------------------------------------------------
     //  Constructor
@@ -89,9 +89,16 @@ public class SystemProcessor extends Processor {
     /**
      * constructor for testing
      */
-    protected SystemProcessor() {
+    SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _instance = this;
+    }
+
+    /**
+     * Retrieve singleton instance
+     */
+    public static SystemProcessor getInstance() {
+        return _instance;
     }
 
 

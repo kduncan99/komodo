@@ -136,6 +136,7 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
+We really need to support identifiers > 12 characters
 more FloatingPointValue unit tests
 more unit tests for string value generation
 unit tests for node references - need to check results

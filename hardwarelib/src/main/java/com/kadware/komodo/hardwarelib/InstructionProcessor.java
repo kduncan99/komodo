@@ -5722,6 +5722,21 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SYSCFunctionHandler extends InstructionHandler {
 
+        private static final int SF_MEMORY_ALLOC = 020;
+        private static final int SF_MEMORY_FREE = 021;
+        private static final int SF_MEMORY_REALLOC = 022;
+
+        private static final int SF_CONSOLE_SEND_STATUS = 030;
+        private static final int SF_CONSOLE_SEND_READ_ONLY = 031;
+        private static final int SF_CONSOLE_SEND_READ_REPLY = 032;
+        private static final int SF_CONSOLE_POLL = 033;
+        private static final int SF_CONSOLE_RESET = 034;
+
+        private static final int SF_STATUS_SUCCESSFUL = 0;
+        private static final int SF_STATUS_BAD_UPI = 01;
+        private static final int SF_STATUS_BAD_SEGMENT = 02;
+        private static final int SF_STATUS_INVALID_SIZE = 04;
+
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             //  PP has to be 0
             if (_designatorRegister.getProcessorPrivilege() > 0) {
@@ -5731,31 +5746,27 @@ public class InstructionProcessor extends Processor implements Worker {
             long operand = getOperand(false, false, false,false);
             int subfunction = (int) Word36.getS1(operand);
             switch (subfunction) {
-                case 020: {
-                    //  Subfunction 020: Create dynamic memory block
+                case SF_MEMORY_ALLOC: {
                     //  Packet size is 3 words
                     //      U+0,S1:     020
-                    //      U+0,S2:     Upon completion, this will contain
-                    //                      00: operation completed successfully
-                    //                      01: given UPI does not correspond to an MSP
-                    //                      03: requested block length is invalid
+                    //      U+0,S2:     Status
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Newly-assigned segment index if status is zero
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = 0;
+                    int status = SF_STATUS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         long words = operands[2] & 0_17777_777777;
                         if (words != operands[2]) {
-                            status = 3;
+                            status = SF_STATUS_INVALID_SIZE;
                         } else {
                             operands[1] = msp.createSegment((int) words);
                         }
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = 1;
+                        status = SF_STATUS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5763,28 +5774,24 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                case 021: {
-                    //  Subfunction 021: Release dynamic memory block
+                case SF_MEMORY_FREE: {
                     //  Packet size is 2 words
                     //      U+0,S1:     021
-                    //      U+0,S2:     Upon completion, this will contain
-                    //                      00: operation completed successfully
-                    //                      01: given UPI does not correspond to an MSP
-                    //                      02: given segment index is not assigned by the MSP
+                    //      U+0,S2:     Status
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Segment index of block to be released
                     long[] operands = new long[2];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = 0;
+                    int status = SF_STATUS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         msp.deleteSegment(segIndex);
                     } catch (AddressingExceptionInterrupt ex) {
-                        status = 2;
+                        status = SF_STATUS_BAD_SEGMENT;
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = 1;
+                        status = SF_STATUS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5792,35 +5799,30 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                case 022: {
-                    //  Subfunction 022: Resize dynamic memory block
+                case SF_MEMORY_REALLOC: {
                     //  Packet size is 3 words
                     //      U+0,S1:     022
-                    //      U+0,S2:     Upon completion, this will contain
-                    //                      00: operation completed successfully
-                    //                      01: given UPI does not correspond to an MSP
-                    //                      02: given segment index is not assigned by the MSP
-                    //                      03: requested block length is invalid
+                    //      U+0,S2:     Status
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Segment index of block to be resized
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    int status = 0;
+                    int status = SF_STATUS_SUCCESSFUL;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
                         int segIndex = (int) (operands[1] & 0_37777_777777L);
                         MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(upi);
                         long words = operands[2] & 0_17777_777777;
                         if (words != operands[2]) {
-                            status = 3;
+                            status = SF_STATUS_INVALID_SIZE;
                         } else {
                             msp.resizeSegment(segIndex, (int) words);
                         }
                     } catch (AddressingExceptionInterrupt ex) {
-                        status = 2;
+                        status = SF_STATUS_BAD_SEGMENT;
                     } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
-                        status = 1;
+                        status = SF_STATUS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
@@ -5828,56 +5830,63 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                case 030:
+                case SF_CONSOLE_SEND_STATUS: {
                     //TODO
                     //  Subfunction 030: Send system status console message
+                    //  Packet size is 4 words
                     //  U+0,S1:         030
-                    //  U+0,S3:         Length of first message in words
-                    //  U+0,S4:         Length of second message in words
-                    //  U+1,2:          Absolute address of buffer containing first message
-                    //  U+3,4:          Absolute address of buffer containing second message
+                    //  U+0,S2:         Status
+                    //  U+0,Q3:         Length of first message in characters
+                    //  U+0,Q4:         Length of second message in characters
+                    //  U+1,W:          Unique message identifier
+                    //  U+2:            Virtual address of buffer containing first message in ASCII
+                    //  U+3:            Virtual address of buffer containing second message in ASCII
                     break;
+                }
 
-                case 031:
+                case SF_CONSOLE_SEND_READ_ONLY: {
                     //TODO
-                    //  Subfunction 031: Send read-only console message
+                    //  Packet size is 3 words
                     //  U+0,S1          031
-                    //  U+0,S3:         Length of message in words
-                    //  U+1,2:          Absolute address of buffer containing message
+                    //  U+0,S2:         Status
+                    //  U+0,Q3:         Length of message in characters
+                    //  U+1,W:          Unique message identifier
+                    //  U+2:            Virtual address of buffer containing message in ASCII
                     break;
+                }
 
-                case 032:
+                case SF_CONSOLE_SEND_READ_REPLY: {
                     //TODO
-                    //  Subfunction 032: Send read-reply console message
+                    //  Packet size is 3 words
                     //  U+0,S1          032
-                    //  U+0,S2          Maximum accepted length of response in characters
-                    //  U+0,S3          Length of message in words
-                    //  U+0,H2          Unique identifier to be returned on response to this message
-                    //  U+1,2:          Absolute address of buffer containing message
-                    //  U+3,4:          Absolute address of buffer where response should be placed
+                    //  U+0,S2:         Status
+                    //  U+0,Q3          Length of message in characters
+                    //  U+0,Q4          Maximum accepted length of response in characters
+                    //  U+1,W:          Unique message identifier
+                    //  U+2:            Virtual address of buffer containing message in ASCII
                     break;
+                }
 
-                case 033:
+                case SF_CONSOLE_POLL: {
                     //TODO
-                    //  Subfunction 033: Poll for response to a particular read-reply message
+                    //  Packet size is 3 words
                     //  U+0,S1          033
-                    //  U+0,Bit10       if set, SystemProcessor has no knowledge of the message in question
-                    //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
-                    //  U+0,S2          length of buffer in words
-                    //  U+0,S3          Number of words received if a message was read
-                    //  U+0,H2          Unique identifier of the read-reply message we are asking about
-                    //  U+2:            Absolute address of buffer to receive input
+                    //  U+0,S2:         Status
+                    //  U+0,Q3          Number of words received if a message was read
+                    //  U+1,W:          Unique message identifier
+                    //  U+2:            Virtual address of buffer containing message in ASCII
                     break;
+                }
 
-                case 034:
-                    //TODO
-                    //  Subfunction 033: Poll for unsolicited input
+                case SF_CONSOLE_RESET: {
+                    //  Packet size is 1 word
                     //  U+0,S1          033
-                    //  U+0,Bit11       if set on return, a message was read - otherwise, this is clear
-                    //  U+0,S2          length of buffer in words
-                    //  U+0,S3          Number of words received if a message was read
-                    //  U+2:            Absolute address of buffer to receive input
+                    //  U+0,S2:         Status
+                    SystemProcessor.getInstance().consoleReset();
+                    operand = Word36.setS2(operand, SF_STATUS_SUCCESSFUL);
+                    storeOperand(false,false,false,false, operand);
                     break;
+                }
 
                 case 040:
                     //TODO

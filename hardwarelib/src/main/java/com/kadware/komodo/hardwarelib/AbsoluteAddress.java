@@ -56,7 +56,7 @@ public class AbsoluteAddress {
 
     /**
      * Constructor given an absolute address layout in memory
-     * @param baseArray ArraySlice containing the 2-word absolute address
+     * @param baseArray ArraySlice containing the 2-word absolute address (possibly as a proper subset of the array)
      * @param offset offset from the start of baseArray where the absolute address is located
      */
     public AbsoluteAddress(
