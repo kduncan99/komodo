@@ -5717,10 +5717,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Handles the SYSC instruction f=073 j=017 a=012
-     * Architecture indicates that the packet size is determined by the subfunction code.
-     * This causes trouble for our storage lock mechanism, so we depart from the architecture and simply
-     * require that all SYSC packets be comprised of eight words.
-     * All words which are not used by the requested subfunction are reserved, and should be initialized to zero.
+     * Architecture indicates that the packet size is determined by the subfunction code,
+     * so we goof around a little bit here to account for that
      */
     private class SYSCFunctionHandler extends InstructionHandler {
 
@@ -5730,11 +5728,12 @@ public class InstructionProcessor extends Processor implements Worker {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
             }
 
-            long[] operands = new long[8];
-            DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-            switch ((int) Word36.getS1(operands[0])) {
+            long operand = getOperand(false, false, false,false);
+            int subfunction = (int) Word36.getS1(operand);
+            switch (subfunction) {
                 case 020: {
                     //  Subfunction 020: Create dynamic memory block
+                    //  Packet size is 3 words
                     //      U+0,S1:     020
                     //      U+0,S2:     Upon completion, this will contain
                     //                      00: operation completed successfully
@@ -5743,6 +5742,8 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Newly-assigned segment index if status is zero
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = 0;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
@@ -5757,11 +5758,14 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case 021: {
                     //  Subfunction 021: Release dynamic memory block
+                    //  Packet size is 2 words
                     //      U+0,S1:     021
                     //      U+0,S2:     Upon completion, this will contain
                     //                      00: operation completed successfully
@@ -5769,6 +5773,8 @@ public class InstructionProcessor extends Processor implements Worker {
                     //                      02: given segment index is not assigned by the MSP
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Segment index of block to be released
+                    long[] operands = new long[2];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = 0;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
@@ -5781,11 +5787,14 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case 022: {
                     //  Subfunction 022: Resize dynamic memory block
+                    //  Packet size is 3 words
                     //      U+0,S1:     022
                     //      U+0,S2:     Upon completion, this will contain
                     //                      00: operation completed successfully
@@ -5795,6 +5804,8 @@ public class InstructionProcessor extends Processor implements Worker {
                     //      U+0,S3:     UPI of target MSP
                     //      U+1,W:      Segment index of block to be resized
                     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = 0;
                     try {
                         int upi = (int) Word36.getS3(operands[0]);
@@ -5812,6 +5823,8 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = 1;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
+                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
@@ -5910,8 +5923,6 @@ public class InstructionProcessor extends Processor implements Worker {
                 default:
                     throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
             }
-
-            storeConsecutiveOperands(devAddr, operands);
         }
 
         @Override public Instruction getInstruction() { return Instruction.SYSC; }
