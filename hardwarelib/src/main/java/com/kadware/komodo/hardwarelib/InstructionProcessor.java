@@ -5732,6 +5732,11 @@ public class InstructionProcessor extends Processor implements Worker {
         private static final int SF_CONSOLE_POLL = 033;
         private static final int SF_CONSOLE_RESET = 034;
 
+        private static final int SF_JUMPKEYS_GET = 040;
+        private static final int SF_JUMPKEYS_SET = 041;
+        private static final int SF_DAYCLOCK_READ = 042;    //TODO more dayclock functions?
+        private static final int SF_IO_START = 050;
+
         private static final int SS_SUCCESSFUL = 0;
         private static final int SS_BAD_UPI = 01;
         private static final int SS_BAD_SEGMENT = 02;
@@ -6028,9 +6033,11 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                case 040:
+                //TODO jump key and dayclock functions
+
+                case SF_IO_START:
                     //TODO
-                    //  Subfunction 040: Start IO
+                    //  Subfunction 050: Start IO
                     //  U+0,S1          040
                     //  U+0,S2          UPI of IOP to be used
                     //  U+0,S3          Channel Module index

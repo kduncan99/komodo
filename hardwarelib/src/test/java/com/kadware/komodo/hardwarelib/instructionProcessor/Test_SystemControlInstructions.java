@@ -5,9 +5,10 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.SystemProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;

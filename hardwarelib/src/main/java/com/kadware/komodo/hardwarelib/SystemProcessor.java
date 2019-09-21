@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
  * It is also responsible for creating and managing the partition data bank which is used by the operating system.
  */
 @SuppressWarnings("Duplicates")
-public class SystemProcessor extends Processor {
+public class SystemProcessor extends Processor implements SystemConsole.Client {
 
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
 
@@ -67,6 +67,7 @@ public class SystemProcessor extends Processor {
 
     private static SystemProcessor _instance = null;
 
+
     //  ------------------------------------------------------------------------
     //  Constructor
     //  ------------------------------------------------------------------------
@@ -89,7 +90,7 @@ public class SystemProcessor extends Processor {
     /**
      * constructor for testing
      */
-    SystemProcessor() {
+    public SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _instance = this;
     }
@@ -240,31 +241,58 @@ public class SystemProcessor extends Processor {
         LOGGER.info(_name + " worker thread starting");
 
         while (!_workerTerminate) {
-            //TODO ACKs mean we can send another IO
+            boolean wait = true;
+
+            //  Check UPI ACKs and SENDs
+            //  ACKs mean we can send another IO
             synchronized (_upiPendingAcknowledgements) {
                 for (Processor source : _upiPendingAcknowledgements) {
+                    //TODO
                     LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
+                    wait = false;
                 }
                 _upiPendingAcknowledgements.clear();
             }
 
-            //TODO SENDs mean an IO is completed
+            //  SENDs mean an IO is completed
             synchronized (_upiPendingInterrupts) {
                 for (Processor source : _upiPendingInterrupts) {
+                    //TODO
                     LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
+                    wait = false;
                 }
                 _upiPendingInterrupts.clear();
             }
 
-            try {
-                synchronized (this) { wait(100); }
-            } catch (InterruptedException ex) {
-                LOGGER.catching(ex);
+            if (wait) {
+                try {
+                    synchronized (this) {
+                        wait(25);
+                    }
+                } catch (InterruptedException ex) {
+                    LOGGER.catching(ex);
+                }
             }
         }
 
         LOGGER.info(_name + " worker thread terminating");
     }
+
+
+    //  ------------------------------------------------------------------------
+    //  Public methods
+    //  ------------------------------------------------------------------------
+
+    /**
+     * SystemConsole calls here whenever it has input for us - we hold onto it until the OS asks for it
+     */
+    @Override
+    public void notify(
+        final String inputText
+    ) {
+
+    }
+
 
     //  ------------------------------------------------------------------------
     //  Public methods
