@@ -6,11 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="hardwarelib" />
-        <module name="baselib" />
+        <module name="kts" />
         <module name="kos" />
         <module name="sandbox" />
         <module name="minalib" />
+        <module name="hardwarelib" />
+        <module name="baselib" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8" />

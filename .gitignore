@@ -2,5 +2,6 @@
 /minalib/target
 /hardwarelib/target
 /kos/target
+/kts/target
 /sandbox/target
 .idea/workspace.xml
