@@ -4,15 +4,6 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.BufferedWriter;
-import java.util.List;
-
 /**
  * Class which implements the functionality necessary for a rudimentary system console as a web page.
  * The console will have a 24x80 output screen, and a separate 1x80 input area.
@@ -35,7 +26,7 @@ public class SystemConsole {
         White,
     }
 
-    SystemConsole(
+    private SystemConsole(
         final int port,
         final Color defaultColor,
         final Client client
