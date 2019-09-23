@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import static org.junit.Assert.*;
 
-import com.kadware.komodo.hardwarelib.IndicatorKeyRegister;
 import org.junit.Assert;
 import org.junit.Test;
 

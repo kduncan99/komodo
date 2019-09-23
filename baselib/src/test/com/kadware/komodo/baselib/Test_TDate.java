@@ -7,8 +7,6 @@ package com.kadware.komodo.baselib;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.kadware.komodo.baselib.TDate;
-
 /**
  * Unit tests for TDate class
  */

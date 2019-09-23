@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.AccessInfo;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import static org.junit.Assert.*;
 
-import com.kadware.komodo.hardwarelib.AbsoluteAddress;
 import org.junit.*;
 
 import java.util.HashSet;

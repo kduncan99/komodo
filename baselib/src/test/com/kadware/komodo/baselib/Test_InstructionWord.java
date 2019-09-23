@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.baselib;
 
-import com.kadware.komodo.baselib.InstructionWord;
-
 import static org.junit.Assert.*;
 import org.junit.Test;
 

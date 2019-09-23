@@ -7,8 +7,6 @@ package com.kadware.komodo.baselib;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.kadware.komodo.baselib.IndexRegister;
-
 /**
  * Unit tests for IndexRegister class
  */

@@ -4,9 +4,6 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import java.util.Map;
-import java.util.Set;
 import static org.junit.Assert.*;
 import org.junit.rules.*;
 import org.junit.*;

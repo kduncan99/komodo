@@ -5,9 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.*;
-import com.kadware.komodo.hardwarelib.InstrumentedMainStorageProcessor;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 
 import java.util.Random;
