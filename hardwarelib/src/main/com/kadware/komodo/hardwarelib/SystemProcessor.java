@@ -8,7 +8,11 @@ import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,9 +23,7 @@ import org.apache.logging.log4j.Logger;
  * It is also responsible for creating and managing the partition data bank which is used by the operating system.
  */
 @SuppressWarnings("Duplicates")
-public class SystemProcessor extends Processor implements SystemConsole.Client {
-
-    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
+public class SystemProcessor extends Processor {
 
     //  Tape Boot Procedure:
     //      A starting IP is specified, along with the device upon which the boot tape is mounted,
@@ -65,21 +67,62 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
     //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
     //          register accordingly before raising the Initial (class 30) interrupt.
 
+    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
     private static SystemProcessor _instance = null;
 
+    private int _port;
+    private SSLServerSocket _serverSocket = null;
+    private Thread _serverThread = null;
 
-    //  ------------------------------------------------------------------------
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Internal class for server async thread - started by the main async worker thread
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private class Server implements Runnable {
+
+        @Override
+        public void run() {
+            //  Set up secure socket
+            System.out.println("Starting SystemProcessor secure server");
+            try {
+                _serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(_port);
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                System.out.println("Caught " + ex.getMessage());
+                System.out.println("Cannot start SystemProcessor secure server");
+                return;
+            }
+
+            try {
+                while (!_workerTerminate) {
+                    Socket socket = _serverSocket.accept();
+                    System.out.println("Connected " + socket.getRemoteSocketAddress().toString());
+                    socket.close();
+                }
+            } catch (IOException ex) {
+                //  thrown by accept() - means we are shutting down
+            }
+
+            LOGGER.info("SystemProcessor secure server shutting down");
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructor
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * constructor
      * @param name node name of the SP
      */
     SystemProcessor(
-        final String name
+        final String name,
+        final int port
     ) {
         super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        _port = port;
         synchronized (SystemProcessor.class) {
             LOGGER.error("Attempted to instantiate more than one SystemProcessor");
             assert(_instance == null);
@@ -103,9 +146,9 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
     }
 
 
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Establishes and populates a communications area in one of the configured MSPs.
@@ -206,9 +249,9 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
     }
 
 
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Implementations / overrides of abstract base methods
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Clears the processor - actually, we never get cleared
@@ -233,38 +276,18 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
         super.dump(writer);
     }
 
-    /**
-     * This is the running thread
-     */
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Async worker thread and its sub methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     @Override
     public void run() {
         LOGGER.info(_name + " worker thread starting");
+        runInit();
 
         while (!_workerTerminate) {
-            boolean wait = true;
-
-            //  Check UPI ACKs and SENDs
-            //  ACKs mean we can send another IO
-            synchronized (_upiPendingAcknowledgements) {
-                for (Processor source : _upiPendingAcknowledgements) {
-                    //TODO
-                    LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
-                    wait = false;
-                }
-                _upiPendingAcknowledgements.clear();
-            }
-
-            //  SENDs mean an IO is completed
-            synchronized (_upiPendingInterrupts) {
-                for (Processor source : _upiPendingInterrupts) {
-                    //TODO
-                    LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
-                    wait = false;
-                }
-                _upiPendingInterrupts.clear();
-            }
-
-            if (wait) {
+            if (!runLoop()) {
                 try {
                     synchronized (this) {
                         wait(25);
@@ -275,27 +298,68 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
             }
         }
 
+        runTerm();
         LOGGER.info(_name + " worker thread terminating");
     }
 
-
-    //  ------------------------------------------------------------------------
-    //  Public methods
-    //  ------------------------------------------------------------------------
+    /**
+     * Any one-time things needing done by the async worker on startup
+     */
+    private void runInit() {
+        _serverThread = new Thread(new Server());
+        _serverThread.start();
+    }
 
     /**
-     * SystemConsole calls here whenever it has input for us - we hold onto it until the OS asks for it
+     * Performs one iteration of the worker's work.
+     * @return true if we did something, indicating we should be invoked again without delay
      */
-    @Override
-    public void notify(
-        final String inputText
-    ) {
+    private boolean runLoop() {
+        boolean didSomething = false;
 
+        //  Check UPI ACKs and SENDs
+        //  ACKs mean we can send another IO
+        synchronized (_upiPendingAcknowledgements) {
+            for (Processor source : _upiPendingAcknowledgements) {
+                //TODO
+                LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
+                didSomething = true;
+            }
+            _upiPendingAcknowledgements.clear();
+        }
+
+        //  SENDs mean an IO is completed
+        synchronized (_upiPendingInterrupts) {
+            for (Processor source : _upiPendingInterrupts) {
+                //TODO
+                LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
+                didSomething = true;
+            }
+            _upiPendingInterrupts.clear();
+        }
+
+        return didSomething;
+    }
+
+    /**
+     * Any one-time things needing done by the async worker on termination
+     */
+    private void runTerm() {
+        if (_serverSocket != null) {
+            try {
+                _serverSocket.close();
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+            }
+
+            _serverSocket = null;
+        }
     }
 
 
     //  ------------------------------------------------------------------------
-    //  Public methods
+    //  Public methods - for other processors to invoke
+    //  Mostly for InstructionProcessor's SYSC instruction
     //  ------------------------------------------------------------------------
 
     /**

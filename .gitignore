@@ -2,16 +2,10 @@
 .idea/workspace.xml
 .DS_Store
 baselib/.DS_Store
-baselib/target
 hardwarelib/.DS_Store
-hardwarelib/target
 kconsole/.DS_Store
-kconsole/target
 kos/.DS_Store
-kos/target
 kts/.DS_Store
-kts/target
 minalib/.DS_Store
-minalib/target
 sandbox/.DS_Store
-sandbox/target
+out/
