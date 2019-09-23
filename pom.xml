@@ -12,9 +12,10 @@
         <module>baselib</module>
         <module>minalib</module>
         <module>hardwarelib</module>
-        <module>sandbox</module>
         <module>kos</module>
+        <module>sandbox</module>
         <module>kts</module>
+        <module>kconsole</module>
     </modules>
 
 
