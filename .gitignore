@@ -1,7 +1,6 @@
 /baselib/target
 /minalib/target
 /hardwarelib/target
-/kconsole/target
 /kos/target
 /kts/target
 /sandbox/target

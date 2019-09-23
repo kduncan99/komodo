@@ -9,7 +9,6 @@
         <module name="kts" />
         <module name="kos" />
         <module name="sandbox" />
-        <module name="kconsole" />
         <module name="minalib" />
         <module name="hardwarelib" />
         <module name="baselib" />
