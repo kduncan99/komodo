@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="baselib">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/baselib" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/baselib/src/main/java" />
+      <root url="file://$PROJECT_DIR$/baselib/src/test/java" />
+    </SOURCES>
+  </library>
+</component>

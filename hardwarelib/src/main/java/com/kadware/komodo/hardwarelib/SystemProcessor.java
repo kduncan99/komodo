@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
  * It is also responsible for creating and managing the partition data bank which is used by the operating system.
  */
 @SuppressWarnings("Duplicates")
-public class SystemProcessor extends Processor implements SystemConsole.Client {
+public class SystemProcessor extends Processor {
 
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
 
@@ -282,16 +282,6 @@ public class SystemProcessor extends Processor implements SystemConsole.Client {
     //  ------------------------------------------------------------------------
     //  Public methods
     //  ------------------------------------------------------------------------
-
-    /**
-     * SystemConsole calls here whenever it has input for us - we hold onto it until the OS asks for it
-     */
-    @Override
-    public void notify(
-        final String inputText
-    ) {
-
-    }
 
 
     //  ------------------------------------------------------------------------

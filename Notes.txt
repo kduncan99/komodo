@@ -180,7 +180,7 @@ directives
 * Exec - using Mina (or minalib, but hopefully mina)
 Subsystems:
   Init
-  Console (can we farm this out to SCP?)
+  com.kadware.komodo.kconsole.Console (can we farm this out to SCP?)
   CoreScheduler
   JobScheduler
   IO

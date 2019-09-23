@@ -15,6 +15,7 @@
         <module>sandbox</module>
         <module>kos</module>
         <module>kts</module>
+        <module>kconsole</module>
     </modules>
 
 
