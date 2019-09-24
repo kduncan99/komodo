@@ -9,7 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="baselib" />
-    <orderEntry type="library" scope="TEST" name="junit-4.12" level="project" />
-    <orderEntry type="library" name="log4j-api-2.12.1" level="project" />
+    <orderEntry type="library" name="lib" level="application" />
   </component>
 </module>
