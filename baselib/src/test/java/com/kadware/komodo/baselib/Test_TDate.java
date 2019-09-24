@@ -16,7 +16,7 @@ public class Test_TDate {
     public void ctor(
     ) {
         TDate tdate = new TDate(12, 31, 12, 3600);  //  Dec 31, 1976 at 6:00AM (Happy Birthday Tu)
-        assertEquals(0_14_37_14_007020l, tdate.getW());
+        assertEquals(0_14_37_14_007020L, tdate.getW());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class Test_TDate {
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
         TDate result = tdate.setDay(31);
-        assertEquals(0_00_37_00_000000l, result.getW());
+        assertEquals(0_00_37_00_000000L, result.getW());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class Test_TDate {
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
         TDate result = tdate.setMonth(12);
-        assertEquals(0_14_00_00_000000l, result.getW());
+        assertEquals(0_14_00_00_000000L, result.getW());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class Test_TDate {
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
         TDate result = tdate.setSeconds(3600);
-        assertEquals(0_00_00_00_007020l, result.getW());
+        assertEquals(0_00_00_00_007020L, result.getW());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class Test_TDate {
     ) {
         TDate tdate = new TDate(0, 0, 0, 0);
         TDate result = tdate.setYear(12);
-        assertEquals(0_00_00_14_000000l, result.getW());
+        assertEquals(0_00_00_14_000000L, result.getW());
     }
 
 }
