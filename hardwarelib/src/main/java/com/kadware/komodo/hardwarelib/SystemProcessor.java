@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
@@ -15,9 +17,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+
+import com.sun.xml.internal.bind.v2.model.core.TypeRef;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.net.www.protocol.http.HttpURLConnection;
@@ -100,7 +105,7 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Not Ready.";
+            String response = "Not Ready.\n";
             exchange.sendResponseHeaders(404, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
@@ -116,7 +121,7 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Nothing around here is what you are looking for.";
+            String response = "Nothing around here is what you are looking for.\n";
             exchange.sendResponseHeaders(404, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
@@ -127,9 +132,10 @@ public class SystemProcessor extends Processor {
     /**
      * Handles requests against the jumpkeys path
      * GET /jumpkeys
-     *      Produces a 12-digit octal value representing the current state of the jump keys
-     * PUT /jumpkeys/{n}   [ true | false ]
-     *      Sets the indicated jump key (1 to 36) if true, clears if false
+     *      Produces a JSON string containing a 12-digit octal value representing the current state of the jump keys
+     * PUT /jumpkeys {restObject}
+     *      For the rest object, the key is a string representation of an integer from 1 to 36,
+     *      and the value is a boolean indicating whether the corresponding jump key should be on (true) or off (false)
      */
     private class JumpKeysRequestHandler implements HttpHandler {
         @Override
@@ -140,15 +146,49 @@ public class SystemProcessor extends Processor {
                 return;
             }
 
+            String[] pathSplit = exchange.getRequestURI().getPath().split("/");
             int code = HttpURLConnection.HTTP_OK;
-            String response = "";
+            String response = "Done\n";
             switch (exchange.getRequestMethod()) {
                 case "GET":
-                    response = String.format("%012o", _jumpKeys);
+                    response = String.format("\"%012o\"\n", _jumpKeys);
                     break;
 
                 case "PUT": {
-                    //TODO
+                    try {
+                        long workingValue = _jumpKeys;
+                        Map<String, Object> jsonObject = parseBody(exchange);
+                        for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
+                            int jk = Integer.parseInt(entry.getKey());
+                            if ((jk < 1) || (jk > 36)) {
+                                throw new NumberFormatException();
+                            }
+
+                            if (!(entry.getValue() instanceof Boolean)) {
+                                response = "Invalid value\n";
+                                code = HttpURLConnection.HTTP_BAD_REQUEST;
+                                break;
+                            }
+
+                            boolean setting = (Boolean) entry.getValue();
+                            long mask = 1L << (36 - jk);
+                            if (setting) {
+                                workingValue |= mask;
+                            } else {
+                                workingValue &= (mask ^ 0_777777_777777L);
+                            }
+                        }
+
+                        if (code == HttpURLConnection.HTTP_OK) {
+                            _jumpKeys = workingValue;
+                        }
+                    } catch (NumberFormatException ex) {
+                        response = "Invalid jump key";
+                        code = HttpURLConnection.HTTP_BAD_REQUEST;
+                    } catch (IOException ex) {
+                        response = ex.getMessage() + "\n";
+                        code = HttpURLConnection.HTTP_INTERNAL_ERROR;
+                    }
                     break;
                 }
 
@@ -169,7 +209,7 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Throwing another log on the fire.";
+            String response = "Throwing another log on the fire.\n";
             exchange.sendResponseHeaders(404, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
@@ -182,7 +222,7 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Not Ready.";
+            String response = "Not Ready.\n";
             exchange.sendResponseHeaders(404, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
@@ -331,6 +371,15 @@ public class SystemProcessor extends Processor {
     }
 
     /**
+     * Quick wrapper to convert input stream representing a JSON object into a generic Map
+     */
+    private Map<String, Object> parseBody(
+        final HttpExchange exchange
+    ) throws IOException {
+        return new ObjectMapper().readValue(exchange.getRequestBody(), new TypeReference<Map<String, Object>>(){ });
+    }
+
+    /**
      * Validate the credentials in the header of the given exchange object.
      * If okay, return true.  If not, send back the appropriate response and return false.
      */
@@ -346,7 +395,7 @@ public class SystemProcessor extends Processor {
             }
         }
 
-        String msg = "Please enter credentials:";
+        String msg = "Please enter credentials:\n";
         exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, 0);
         OutputStream os = exchange.getResponseBody();
         os.write(msg.getBytes());
@@ -527,17 +576,6 @@ public class SystemProcessor extends Processor {
 
     long jumpKeysGet() {
         return _jumpKeys;
-    }
-
-    void jumpKeySet(
-        final int key,          //  1-biased
-        final boolean value
-    ) {
-        if (value) {
-            _jumpKeys |= 1L << (36 - key);
-        } else {
-            _jumpKeys &= (1L << (36 - key)) ^ 0_777777_777777L;
-        }
     }
 
     void jumpKeysSet(

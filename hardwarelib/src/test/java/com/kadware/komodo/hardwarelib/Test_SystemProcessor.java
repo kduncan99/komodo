@@ -18,7 +18,7 @@ public class Test_SystemProcessor {
     ) throws MaxNodesException  {
         SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);
         try {
-            Thread.sleep(120000);
+            Thread.sleep(600000);
         } catch (InterruptedException ex) {
         }
     }
