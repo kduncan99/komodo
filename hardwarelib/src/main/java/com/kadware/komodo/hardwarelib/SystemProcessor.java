@@ -7,28 +7,20 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sun.net.www.protocol.http.HttpURLConnection;
 
 /**
  * Class which implements the functionality necessary for an architecturally defined system control facility.
@@ -85,10 +77,25 @@ public class SystemProcessor extends Processor {
     private static SystemProcessor _instance = null;
 
     private int _port;
-    private long _jumpKeys = 0;
     private HttpServer _httpServer = null;
+    private long _jumpKeys = 0;
+    private String _credentials = "YWRtaW46YWRtaW4="; //  TODO for now, it's admin/admin
 
-    private static class ConsoleRequestHandler implements HttpHandler {
+    /**
+     * Handles requests against the console path
+     * GET /console
+     *      provides 24 lines of text to be displayed upon the console
+     *          First two lines are always status (but may be blank)
+     *          {digit} '-' {message}  is read-reply
+     *          {sp} {sp} {message} is read-only
+     *          {sp} {message} is input
+     *      We can use the above pattens to choose the color for the various displays, if we wish to do so
+     * POST /console
+     *      Sends input to the console as such:
+     *        {message}
+     *        {digit} {sp} {message}
+     */
+    private class ConsoleRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
@@ -101,7 +108,10 @@ public class SystemProcessor extends Processor {
         }
     }
 
-    private static class DefaultRequestHandler implements HttpHandler {
+    /**
+     * Handles everything which isn't one of the accepted paths
+     */
+    private class DefaultRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
@@ -114,13 +124,40 @@ public class SystemProcessor extends Processor {
         }
     }
 
-    private static class JumpKeysRequestHandler implements HttpHandler {
+    /**
+     * Handles requests against the jumpkeys path
+     * GET /jumpkeys
+     *      Produces a 12-digit octal value representing the current state of the jump keys
+     * PUT /jumpkeys/{n}   [ true | false ]
+     *      Sets the indicated jump key (1 to 36) if true, clears if false
+     */
+    private class JumpKeysRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Not Ready.";
-            exchange.sendResponseHeaders(404, response.length());
+            if (!validateCredentials(exchange)) {
+                return;
+            }
+
+            int code = HttpURLConnection.HTTP_OK;
+            String response = "";
+            switch (exchange.getRequestMethod()) {
+                case "GET":
+                    response = String.format("%012o", _jumpKeys);
+                    break;
+
+                case "PUT": {
+                    //TODO
+                    break;
+                }
+
+                default:
+                    response = "Not Allowed";
+                    code = HttpURLConnection.HTTP_BAD_REQUEST;
+            }
+
+            exchange.sendResponseHeaders(code, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
             os.close();
@@ -140,7 +177,7 @@ public class SystemProcessor extends Processor {
         }
     }
 
-    private static class SystemRequestHandler implements HttpHandler {
+    private class SystemRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
@@ -291,6 +328,31 @@ public class SystemProcessor extends Processor {
                 }
             }
         }
+    }
+
+    /**
+     * Validate the credentials in the header of the given exchange object.
+     * If okay, return true.  If not, send back the appropriate response and return false.
+     */
+    private boolean validateCredentials(
+        final HttpExchange exchange
+    ) throws IOException {
+        Headers headers = exchange.getRequestHeaders();
+        List<String> values = headers.get("Authorization");
+        if ((values != null) && (values.size() > 0)) {
+            String[] split = values.get(0).split(" ");
+            if ((split.length >= 2) && (_credentials.equals(split[1]))) {
+                return true;
+            }
+        }
+
+        String msg = "Please enter credentials:";
+        exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, 0);
+        OutputStream os = exchange.getResponseBody();
+        os.write(msg.getBytes());
+        os.close();
+
+        return false;
     }
 
 
