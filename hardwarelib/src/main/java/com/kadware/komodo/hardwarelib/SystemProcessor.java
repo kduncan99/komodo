@@ -12,20 +12,14 @@ import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.util.HashMap;
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-
-import com.sun.xml.internal.bind.v2.model.core.TypeRef;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 /**
  * Class which implements the functionality necessary for an architecturally defined system control facility.
@@ -81,10 +75,10 @@ public class SystemProcessor extends Processor {
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
     private static SystemProcessor _instance = null;
 
-    private int _port;
-    private HttpServer _httpServer = null;
+    private SecureServer _httpServer = null;
     private long _jumpKeys = 0;
-    private String _credentials = "YWRtaW46YWRtaW4="; //  TODO for now, it's admin/admin
+    private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
+    private String _systemIdentifier = "TEST";          //  TODO pull from configuration
 
     /**
      * Handles requests against the console path
@@ -121,8 +115,11 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Nothing around here is what you are looking for.\n";
-            exchange.sendResponseHeaders(404, response.length());
+            String response = "Komodo System Processor Interface\n"
+                              + "Copyright (c) 2019 by Kurt Duncan All Rights Reserved\n"
+                              + "1.0.0\n"
+                              + _systemIdentifier + "\n";
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
             os.close();
@@ -244,10 +241,12 @@ public class SystemProcessor extends Processor {
         final int port
     ) {
         super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
-        _port = port;
+        _httpServer = new SecureServer(name, port);
         synchronized (SystemProcessor.class) {
-            LOGGER.error("Attempted to instantiate more than one SystemProcessor");
-            assert(_instance == null);
+            if (_instance != null) {
+                LOGGER.error("Attempted to instantiate more than one SystemProcessor");
+                assert (false);
+            }
             _instance = this;
         }
     }
@@ -463,18 +462,19 @@ public class SystemProcessor extends Processor {
      */
     private void runInit() {
         try {
-            _httpServer = HttpServer.create(new InetSocketAddress(_port), 0);
-            _httpServer.createContext("/console", new ConsoleRequestHandler());
-            _httpServer.createContext("/jumpkeys", new JumpKeysRequestHandler());
-            _httpServer.createContext("/logs", new LogsRequestHandler());
-            _httpServer.createContext("/system", new SystemRequestHandler());
-            _httpServer.createContext("/", new DefaultRequestHandler());
-            _httpServer.setExecutor(Executors.newCachedThreadPool());
+            _httpServer.setup();
+            _httpServer.appendHandler("/console", new ConsoleRequestHandler());
+            _httpServer.appendHandler("/jumpkeys", new JumpKeysRequestHandler());
+            _httpServer.appendHandler("/logs", new LogsRequestHandler());
+            _httpServer.appendHandler("/system", new SystemRequestHandler());
+            _httpServer.appendHandler("/", new DefaultRequestHandler());
             _httpServer.start();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             LOGGER.catching(ex);
             System.out.println("Caught " + ex.getMessage());
             System.out.println("Cannot start SystemProcessor secure server");
+        } catch (Throwable t) {
+            System.out.println("Caught " + t.getMessage());
         }
     }
 
@@ -513,6 +513,7 @@ public class SystemProcessor extends Processor {
      * Any one-time things needing done by the async worker on termination
      */
     private void runTerm() {
+        _httpServer.stop();
     }
 
 
@@ -574,10 +575,18 @@ public class SystemProcessor extends Processor {
         //TODO
     }
 
+    /**
+     * Retrieve 36-bit word representing the jump keys.
+     * JK1 is in the MSBit of 36 bits, JK36 is in the LSbit
+     */
     long jumpKeysGet() {
         return _jumpKeys;
     }
 
+    /**
+     * Sets the set of jump keys.
+     * @param value JK1 is in the MSBit of 36 bits, JK36 is in the LSbit
+     */
     void jumpKeysSet(
         final long value
     ) {

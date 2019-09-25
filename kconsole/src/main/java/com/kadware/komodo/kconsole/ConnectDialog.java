@@ -39,20 +39,24 @@ class ConnectDialog {
         }
     }
 
+    /**
+     * Handles the Connect button
+     */
     private class ConnectPressed implements EventHandler<ActionEvent> {
 
+        /**
+         * Open a connection as directed, and see whether the target is responsive, and an actual SystemProcessor interface
+         * If everything looks okay, transition to the main window.
+         */
         public void handle(
             final ActionEvent event
         ) {
 //            try {
-                //  open a client socket to the indicated server
+//                _socket = new Socket(InetAddress.getByName(_hostNameField.getText(), _portNumberField));
 //                System.out.println("FOO");
-//                _socket = new Socket(InetAddress.getByName(_hostNameField.getText()), 20);
-//                System.out.println("FOO");
-                _console._primaryStage.setScene(_console._mainWindow.createScene());
+//                _console._primaryStage.setScene(_console._mainWindow.createScene());
 //                System.out.println("FOO");
 //            } catch (IOException ex) {
-//                //TODO
 //            }
         }
     }
