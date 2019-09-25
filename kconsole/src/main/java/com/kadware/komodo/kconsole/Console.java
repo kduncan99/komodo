@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kconsole;
 
+import com.kadware.komodo.baselib.SecureClient;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -13,6 +14,9 @@ public class Console extends Application {
     Stage _primaryStage = null;
     ConnectDialog _connectDialog = null;
     MainWindow _mainWindow = null;
+    SecureClient _secureClient = null;
+    String _systemIdent = "";
+    String _systemVersion = "";
 
     public static void main(String[] args) {
         launch(args);

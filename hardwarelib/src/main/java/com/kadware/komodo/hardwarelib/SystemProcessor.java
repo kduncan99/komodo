@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.SecureServer;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.sun.net.httpserver.Headers;
@@ -16,6 +17,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -115,13 +117,25 @@ public class SystemProcessor extends Processor {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Komodo System Processor Interface\n"
-                              + "Copyright (c) 2019 by Kurt Duncan All Rights Reserved\n"
-                              + "1.0.0\n"
-                              + _systemIdentifier + "\n";
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
+            if (!validateCredentials(exchange)) {
+                return;
+            }
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("Identifier", "Komodo System Processor Interface");
+            response.put("Copyright", "Copyright (c) 2019 by Kurt Duncan All Rights Reserved");
+            response.put("MajorVersion", new Integer(1));
+            response.put("MinorVersion", new Integer(0));
+            response.put("Patch", new Integer(0));
+            response.put("Build", new Integer(0));
+            response.put("VersionString", "1.0.0.0");
+            response.put("SystemIdentifier", _systemIdentifier);
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(response);
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length());
             OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
+            os.write(json.getBytes());
             os.close();
         }
     }

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.kadware.komodo.kconsole;
 
 import javafx.application.Platform;
@@ -29,22 +33,21 @@ class MainWindow {
     MainWindow(Console console) { _console = console; }
 
     Scene createScene() {
+        String headerStr = String.format("System Identifier: %s - System Version: %s",
+                                      _console._systemIdent,
+                                      _console._systemVersion);
+        Label header = new Label(headerStr);
+
         //  We're going to put a tab pane inside a border pane.
         //  Mainly... so we can add more above and below if we decide to do so.
         //  I fully expect that we'll have a status line or something, at a minimum.
-        BorderPane border = new BorderPane();
-
         TabPane tabPane = new TabPane();
-
         Tab overviewTab = new Tab("Overview", new Label("Hardware overview"));
         overviewTab.setClosable(false);
-
         Tab consoleTab = new Tab("Console", new Label("Operating system console"));
         consoleTab.setClosable(false);
-
         Tab iplTab = new Tab("IPL", new Label("Initial Program Load"));
         iplTab.setClosable(false);
-
         Tab logTab = new Tab("Log", new Label("Hardware log"));
         logTab.setClosable(false);
 
@@ -52,6 +55,9 @@ class MainWindow {
         tabPane.getTabs().add(consoleTab);
         tabPane.getTabs().add(iplTab);
         tabPane.getTabs().add(logTab);
+
+        BorderPane border = new BorderPane();
+        border.setTop(header);
         border.setCenter(tabPane);
 
         return new Scene(border, 700, 350);

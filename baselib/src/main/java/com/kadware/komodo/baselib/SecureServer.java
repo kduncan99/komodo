@@ -2,12 +2,18 @@
  * Copyright (c) 2019 by Kurt Duncan
  */
 
-package com.kadware.komodo.hardwarelib;
+package com.kadware.komodo.baselib;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import sun.security.tools.keytool.CertAndKeyGen;
+import sun.security.x509.*;
+
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -18,21 +24,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedKeyManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-import sun.security.tools.keytool.CertAndKeyGen;
-import sun.security.x509.CertificateExtensions;
-import sun.security.x509.Extension;
-import sun.security.x509.KeyIdentifier;
-import sun.security.x509.KeyUsageExtension;
-import sun.security.x509.SubjectKeyIdentifierExtension;
-import sun.security.x509.X500Name;
 
 public class SecureServer {
 
@@ -214,7 +205,7 @@ public class SecureServer {
     //  Data items
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(SecureServer.class);
 
     private static final int CONNECTION_BACKLOG             = 32;
     private static final String KEY_ENTRY_PASSWORD          = "horsehammerballmachine";

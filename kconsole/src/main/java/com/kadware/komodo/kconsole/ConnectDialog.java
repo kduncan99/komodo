@@ -1,36 +1,44 @@
+/*
+ * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.kadware.komodo.kconsole;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kadware.komodo.baselib.SecureClient;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("Duplicates")
 class ConnectDialog {
 
     private final Console _console;
-    private Socket _socket = null;
 
     private TextField _hostNameField = null;
-    private NumberField _portNumberField = null;
+    private TextField _portNumberField = null;
     private TextField _userNameField = null;
     private TextField _passwordField = null;
 
-    private class CancelPressed implements EventHandler<ActionEvent> {
+    /**
+     * Handles the Cancel button
+     */
+    private static class CancelPressed implements EventHandler<ActionEvent> {
 
         public void handle(
             final ActionEvent event
@@ -51,37 +59,61 @@ class ConnectDialog {
         public void handle(
             final ActionEvent event
         ) {
-//            try {
-//                _socket = new Socket(InetAddress.getByName(_hostNameField.getText(), _portNumberField));
-//                System.out.println("FOO");
-//                _console._primaryStage.setScene(_console._mainWindow.createScene());
-//                System.out.println("FOO");
-//            } catch (IOException ex) {
-//            }
-        }
-    }
+            try {
+                //  validate input fields....ish
+                if (_hostNameField.getText().isEmpty()) {
+                    new Alert(Alert.AlertType.ERROR, "Host name must be specified").showAndWait();
+                    return;
+                }
 
-    private class NumberField extends TextField {
+                if (_portNumberField.getText().isEmpty()) {
+                    new Alert(Alert.AlertType.ERROR, "Port number must be specified").showAndWait();
+                    return;
+                }
 
-        @Override
-        public void replaceText(
-            int start,
-            int end,
-            String text
-        ) {
-            // If the replaced text would end up being invalid, then simply
-            // ignore this call!
-            if (text.matches("[0-9]")) {
-                super.replaceText(start, end, text);
-            }
-        }
+                int portNumber = Integer.parseInt(_portNumberField.getText());
+                if ((portNumber <= 0) || (portNumber > 65535)) {
+                    throw new NumberFormatException();
+                }
 
-        @Override
-        public void replaceSelection(
-            String text
-        ) {
-            if (text.matches("[0-9]")) {
-                super.replaceSelection(text);
+                if (_userNameField.getText().isEmpty()) {
+                    new Alert(Alert.AlertType.ERROR, "User name must be specified").showAndWait();
+                    return;
+                }
+
+                //  attempt a connection
+                SecureClient client = new SecureClient(_hostNameField.getText(), portNumber);
+                String composition = _userNameField.getText() + ":" + _passwordField.getText();
+                String hash = Base64.getEncoder().encodeToString(composition.getBytes());
+                client.addProperty("Authorization", "Basic " + hash);
+
+                SecureClient.SendResult result = client.sendGet("/");
+                if (result._responseCode == 401) {
+                    new Alert(Alert.AlertType.ERROR, "Credentials invalid").showAndWait();
+                    return;
+                } else if (result._responseCode > 299) {
+                    new Alert(Alert.AlertType.ERROR,
+                              String.format("Code:%d (%s)", result._responseCode, result._responseMessage)).showAndWait();
+                    return;
+                }
+
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> data = mapper.readValue(result._responseStream, new TypeReference<Map<String, Object>>(){ });
+                _console._systemIdent = "unknown";
+                Object obj = data.get("SystemIdentifier");
+                if (obj instanceof String) { _console._systemIdent = (String) obj; }
+
+                _console._systemVersion = "unknown";
+                obj = data.get("VersionString");
+                if (obj instanceof String) { _console._systemVersion = (String) obj; }
+
+                //  good to go - spin up the main window
+                _console._secureClient = client;
+                _console._primaryStage.setScene(_console._mainWindow.createScene());
+            } catch (NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid port number").showAndWait();
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR, ex.getMessage()).showAndWait();
             }
         }
     }
@@ -103,12 +135,14 @@ class ConnectDialog {
         grid.add(hostName, 0, 1);
 
         _hostNameField = new TextField();
+        _hostNameField.setText("localhost");
         grid.add(_hostNameField, 1, 1);
 
         Label portNumber = new Label("Port:");
         grid.add(portNumber, 0, 2);
 
-        _portNumberField = new NumberField();
+        _portNumberField = new TextField();
+        _portNumberField.setText("2200");
         grid.add(_portNumberField, 1, 2);
 
         Label userName = new Label("User Name:");

@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: Console
+Class-Path: log4j-api-2.12.1.jar log4j-core-2.12.1.jar jackson-databind-
+ 2.9.10.jar jackson-core-2.9.10.jar jackson-annotations-2.9.10.jar
+
