@@ -7,8 +7,9 @@ package com.kadware.komodo.hardwarelib;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.SecureServer;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.commlib.SecureServer;
+import com.kadware.komodo.commlib.SystemProcessorIdentifiers;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -17,7 +18,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -121,18 +121,17 @@ public class SystemProcessor extends Processor {
                 return;
             }
 
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("Identifier", "Komodo System Processor Interface");
-            response.put("Copyright", "Copyright (c) 2019 by Kurt Duncan All Rights Reserved");
-            response.put("MajorVersion", new Integer(1));
-            response.put("MinorVersion", new Integer(0));
-            response.put("Patch", new Integer(0));
-            response.put("Build", new Integer(0));
-            response.put("VersionString", "1.0.0.0");
-            response.put("SystemIdentifier", _systemIdentifier);
+            SystemProcessorIdentifiers content = new SystemProcessorIdentifiers();
+            content._identifier = "Komodo System Processor Interface";
+            content._copyright = "Copyright (c) 2019 by Kurt Duncan All Rights Reserved";
+            content._majorVersion = 1;
+            content._minorVersion = 0;
+            content._patch = 0;
+            content._buildNumber = 0;
+            content._versionString = String.format("%d.%d.%d.%d", 1, 0, 0, 0);  //  TODO clean up versioning
 
             ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(response);
+            String json = mapper.writeValueAsString(content);
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length());
             OutputStream os = exchange.getResponseBody();
             os.write(json.getBytes());

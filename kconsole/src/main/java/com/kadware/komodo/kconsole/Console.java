@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kconsole;
 
-import com.kadware.komodo.baselib.SecureClient;
+import com.kadware.komodo.commlib.SecureClient;
 import javafx.application.Application;
 import javafx.stage.Stage;
 

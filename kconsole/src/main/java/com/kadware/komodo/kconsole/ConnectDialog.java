@@ -6,7 +6,8 @@ package com.kadware.komodo.kconsole;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kadware.komodo.baselib.SecureClient;
+import com.kadware.komodo.commlib.SecureClient;
+import com.kadware.komodo.commlib.SystemProcessorIdentifiers;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -20,9 +21,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings("Duplicates")
@@ -98,14 +97,10 @@ class ConnectDialog {
                 }
 
                 ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> data = mapper.readValue(result._responseStream, new TypeReference<Map<String, Object>>(){ });
-                _console._systemIdent = "unknown";
-                Object obj = data.get("SystemIdentifier");
-                if (obj instanceof String) { _console._systemIdent = (String) obj; }
-
-                _console._systemVersion = "unknown";
-                obj = data.get("VersionString");
-                if (obj instanceof String) { _console._systemVersion = (String) obj; }
+                SystemProcessorIdentifiers content = mapper.readValue(result._responseStream,
+                                                                      new TypeReference<SystemProcessorIdentifiers>(){ });
+                _console._systemIdent = content._systemIdentifier;
+                _console._systemVersion = content._versionString;
 
                 //  good to go - spin up the main window
                 _console._secureClient = client;

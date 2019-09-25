@@ -16,6 +16,7 @@
         <module>kos</module>
         <module>kts</module>
         <module>sandbox</module>
+        <module>commlib</module>
     </modules>
 
     <build>

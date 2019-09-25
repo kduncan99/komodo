@@ -2,7 +2,7 @@
  * Copyright (c) 2019 by Kurt Duncan
  */
 
-package com.kadware.komodo.baselib;
+package com.kadware.komodo.commlib;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
