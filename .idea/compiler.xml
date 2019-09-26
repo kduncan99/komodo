@@ -8,12 +8,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="kts" />
+        <module name="baselib" />
         <module name="kos" />
-        <module name="sandbox" />
         <module name="kconsole" />
         <module name="minalib" />
         <module name="hardwarelib" />
-        <module name="baselib" />
+        <module name="sandbox" />
         <module name="commlib" />
       </profile>
     </annotationProcessing>
