@@ -7,7 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.LogAppender;
+import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.commlib.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
@@ -26,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 
 /**
@@ -263,8 +264,13 @@ public class SystemProcessor extends Processor {
                 SystemProcessorLogs content = mapper.readValue(exchange.getRequestBody(),
                                                                new TypeReference<SystemProcessorLogs>() { });
                 long firstIdentifier = content._firstEntryIdentifier == null ? 0 : content._firstEntryIdentifier;
+                KomodoAppender.LogEntry[] logEntries = _appender.retrieveFrom(firstIdentifier);
 
                 content = new SystemProcessorLogs();
+                content._firstEntryIdentifier = firstIdentifier;
+                for (KomodoAppender.LogEntry logEntry : logEntries) {
+                    //TODO
+                }
                 //TODO
                 response = mapper.writeValueAsString(content);
             } else {
@@ -298,7 +304,7 @@ public class SystemProcessor extends Processor {
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
     private static SystemProcessor _instance = null;
 
-    private LogAppender _appender;
+    private KomodoAppender _appender;
     private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
     private SecureServer _httpServer = null;
     private long _jumpKeys = 0;
@@ -328,18 +334,10 @@ public class SystemProcessor extends Processor {
 
         _httpServer = new SecureServer(name, port);
 
-        _appender = new LogAppender();
-        _appender.initialize();
-        _appender.start();
+        _appender = KomodoAppender.create();
         LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
-        Configuration contextConfig = logContext.getConfiguration();
-        LoggerConfig loggerConfig = contextConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
-        loggerConfig.setLevel(Level.ALL);
-        contextConfig.addAppender(_appender);
+        Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
         logContext.updateLoggers();
-
-        LOGGER.error("This is an ERROR test");
-        LOGGER.info("This is an INFO test");
     }
 
     /**

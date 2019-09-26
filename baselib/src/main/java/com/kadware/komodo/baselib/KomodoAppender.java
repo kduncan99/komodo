@@ -4,14 +4,19 @@
 
 package com.kadware.komodo.baselib;
 
-import org.apache.logging.log4j.core.*;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import org.apache.logging.log4j.core.*;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
-public class LogAppender implements Appender {
+public class KomodoAppender extends AbstractAppender {
 
     public static class LogEntry {
         final Long _identifier;
@@ -44,6 +49,34 @@ public class LogAppender implements Appender {
     private static final int MAX_LOG_ENTRIES = 1000;
     private final TreeMap<Long, LogEntry> _logEntries = new TreeMap<>();
 
+    /**
+     * Constructor
+     */
+    private KomodoAppender(
+        PatternLayout layout
+    ) {
+        super("KomodoAppender", null, layout, true, null);
+    }
+
+    public static KomodoAppender create() {
+        LoggerContext context = LoggerContext.getContext(false);
+        Configuration config = context.getConfiguration();
+        PatternLayout layout = PatternLayout.createDefaultLayout(config);
+        KomodoAppender appender = new KomodoAppender(layout);
+        appender.start();
+
+        config.addAppender(appender);
+        for (final LoggerConfig loggerConfig : config.getLoggers().values()) {
+            loggerConfig.addAppender(appender, null, null);
+        }
+        config.getRootLogger().addAppender(appender, null, null);
+
+        return appender;
+    }
+
+    /**
+     * append method
+     */
     @Override
     public void append(
         final LogEvent event
