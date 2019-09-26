@@ -7,9 +7,9 @@ package com.kadware.komodo.hardwarelib;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.LogAppender;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.commlib.SecureServer;
-import com.kadware.komodo.commlib.SystemProcessorIdentifiers;
+import com.kadware.komodo.commlib.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -20,8 +20,13 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 /**
  * Class which implements the functionality necessary for an architecturally defined system control facility.
@@ -74,14 +79,6 @@ public class SystemProcessor extends Processor {
     //          for the various IPs, and the UPI handler code in the IP reads that, and sets the Level 0 BDT
     //          register accordingly before raising the Initial (class 30) interrupt.
 
-    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
-    private static SystemProcessor _instance = null;
-
-    private SecureServer _httpServer = null;
-    private long _jumpKeys = 0;
-    private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
-    private String _systemIdentifier = "TEST";          //  TODO pull from configuration
-
     /**
      * Handles requests against the console path
      * GET /console
@@ -110,9 +107,28 @@ public class SystemProcessor extends Processor {
     }
 
     /**
-     * Handles everything which isn't one of the accepted paths
+     * Invalid path
      */
-    private class DefaultRequestHandler implements HttpHandler {
+    public class DefaultRequestHandler implements HttpHandler {
+        @Override
+        public void handle(
+            final HttpExchange exchange
+        ) throws IOException {
+            if (!validateCredentials(exchange)) {
+                return;
+            }
+            String response = "Path or object does not exist";
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+    }
+
+    /**
+     * Handles requests against the identifiers path
+     */
+    private class IdentifiersRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
@@ -121,31 +137,40 @@ public class SystemProcessor extends Processor {
                 return;
             }
 
-            SystemProcessorIdentifiers content = new SystemProcessorIdentifiers();
-            content._identifier = "Komodo System Processor Interface";
-            content._copyright = "Copyright (c) 2019 by Kurt Duncan All Rights Reserved";
-            content._majorVersion = 1;
-            content._minorVersion = 0;
-            content._patch = 0;
-            content._buildNumber = 0;
-            content._versionString = String.format("%d.%d.%d.%d", 1, 0, 0, 0);  //  TODO clean up versioning
+            int code = HttpURLConnection.HTTP_OK;
+            String response = "";
+            if (exchange.getRequestMethod().equals(HttpMethod.GET._value)) {
+                SystemProcessorIdentifiers content = new SystemProcessorIdentifiers();
+                content._identifier = "Komodo System Processor Interface";
+                content._copyright = "Copyright (c) 2019 by Kurt Duncan All Rights Reserved";
+                content._majorVersion = 1;
+                content._minorVersion = 0;
+                content._patch = 0;
+                content._buildNumber = 0;
+                content._versionString = String.format("%d.%d.%d.%d", 1, 0, 0, 0);  //  TODO clean up versioning
 
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(content);
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length());
+                ObjectMapper mapper = new ObjectMapper();
+                response = mapper.writeValueAsString(content);
+            } else if (exchange.getRequestMethod().equals(HttpMethod.PUT._value)) {
+                ObjectMapper mapper = new ObjectMapper();
+                SystemProcessorIdentifiers content = mapper.readValue(exchange.getRequestBody(),
+                                                                      new TypeReference<SystemProcessorIdentifiers>(){ });
+                if ((content._systemIdentifier != null) && !content._systemIdentifier.isEmpty()) {
+                    _systemIdentifier = content._systemIdentifier;
+                }
+            } else {
+                code = HttpURLConnection.HTTP_BAD_METHOD;
+            }
+
+            exchange.sendResponseHeaders(code, response.length());
             OutputStream os = exchange.getResponseBody();
-            os.write(json.getBytes());
+            os.write(response.getBytes());
             os.close();
         }
     }
 
     /**
      * Handles requests against the jumpkeys path
-     * GET /jumpkeys
-     *      Produces a JSON string containing a 12-digit octal value representing the current state of the jump keys
-     * PUT /jumpkeys {restObject}
-     *      For the rest object, the key is a string representation of an integer from 1 to 36,
-     *      and the value is a boolean indicating whether the corresponding jump key should be on (true) or off (false)
      */
     private class JumpKeysRequestHandler implements HttpHandler {
         @Override
@@ -156,55 +181,60 @@ public class SystemProcessor extends Processor {
                 return;
             }
 
-            String[] pathSplit = exchange.getRequestURI().getPath().split("/");
             int code = HttpURLConnection.HTTP_OK;
-            String response = "Done\n";
-            switch (exchange.getRequestMethod()) {
-                case "GET":
-                    response = String.format("\"%012o\"\n", _jumpKeys);
-                    break;
+            String response = "";
+            if (exchange.getRequestMethod().equals(HttpMethod.GET._value)) {
+                SystemProcessorJumpKeys content = new SystemProcessorJumpKeys();
+                content._compositeValue = _jumpKeys;
+                long mask = 0_400000_000000L;
+                for (int jk = 1; jk <= 36; ++jk) {
+                    String key = String.format("%d", jk);
+                    boolean value = (_jumpKeys & mask) != 0;
+                    content._componentValues.put(key, value);
+                }
 
-                case "PUT": {
-                    try {
-                        long workingValue = _jumpKeys;
-                        Map<String, Object> jsonObject = parseBody(exchange);
-                        for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
+                ObjectMapper mapper = new ObjectMapper();
+                response = mapper.writeValueAsString(content);
+            } else if (exchange.getRequestMethod().equals(HttpMethod.PUT._value)) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    SystemProcessorJumpKeys content = mapper.readValue(exchange.getRequestBody(),
+                                                                       new TypeReference<SystemProcessorJumpKeys>() { });
+                    long workingValue = _jumpKeys;
+                    if (content._compositeValue != null) {
+                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
+                            throw new Exception("Invalid composite value");
+                        }
+
+                        workingValue = content._compositeValue;
+                    }
+
+                    if (content._componentValues != null) {
+                        for (Map.Entry<String, Boolean> entry : content._componentValues.entrySet()) {
                             int jk = Integer.parseInt(entry.getKey());
                             if ((jk < 1) || (jk > 36)) {
-                                throw new NumberFormatException();
+                                throw new Exception("Jump key out of range");
+                            } else if (entry.getValue() == null) {
+                                throw new Exception("Value for jump key was unspecified");
                             }
 
-                            if (!(entry.getValue() instanceof Boolean)) {
-                                response = "Invalid value\n";
-                                code = HttpURLConnection.HTTP_BAD_REQUEST;
-                                break;
-                            }
-
-                            boolean setting = (Boolean) entry.getValue();
                             long mask = 1L << (36 - jk);
-                            if (setting) {
+                            if (entry.getValue()) {
                                 workingValue |= mask;
                             } else {
                                 workingValue &= (mask ^ 0_777777_777777L);
                             }
                         }
-
-                        if (code == HttpURLConnection.HTTP_OK) {
-                            _jumpKeys = workingValue;
-                        }
-                    } catch (NumberFormatException ex) {
-                        response = "Invalid jump key";
-                        code = HttpURLConnection.HTTP_BAD_REQUEST;
-                    } catch (IOException ex) {
-                        response = ex.getMessage() + "\n";
-                        code = HttpURLConnection.HTTP_INTERNAL_ERROR;
                     }
-                    break;
-                }
-
-                default:
-                    response = "Not Allowed";
+                } catch (NumberFormatException ex) {
                     code = HttpURLConnection.HTTP_BAD_REQUEST;
+                    response = "Jump key was not an integer";
+                } catch (Exception ex) {
+                    code = HttpURLConnection.HTTP_BAD_REQUEST;
+                    response = ex.getMessage();
+                }
+            } else {
+                code = HttpURLConnection.HTTP_BAD_METHOD;
             }
 
             exchange.sendResponseHeaders(code, response.length());
@@ -214,19 +244,43 @@ public class SystemProcessor extends Processor {
         }
     }
 
-    private static class LogsRequestHandler implements HttpHandler {
+    /**
+     * Handles requests against the logs path
+     */
+    private class LogsRequestHandler implements HttpHandler {
         @Override
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            String response = "Throwing another log on the fire.\n";
-            exchange.sendResponseHeaders(404, response.length());
+            if (!validateCredentials(exchange)) {
+                return;
+            }
+
+            int code = HttpURLConnection.HTTP_OK;
+            String response = "";
+            if (exchange.getRequestMethod().equals(HttpMethod.GET._value)) {
+                ObjectMapper mapper = new ObjectMapper();
+                SystemProcessorLogs content = mapper.readValue(exchange.getRequestBody(),
+                                                               new TypeReference<SystemProcessorLogs>() { });
+                long firstIdentifier = content._firstEntryIdentifier == null ? 0 : content._firstEntryIdentifier;
+
+                content = new SystemProcessorLogs();
+                //TODO
+                response = mapper.writeValueAsString(content);
+            } else {
+                code = HttpURLConnection.HTTP_BAD_METHOD;
+            }
+
+            exchange.sendResponseHeaders(code, response.length());
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
             os.close();
         }
     }
 
+    /**
+     * Handles requests against the system path
+     */
     private class SystemRequestHandler implements HttpHandler {
         @Override
         public void handle(
@@ -239,6 +293,16 @@ public class SystemProcessor extends Processor {
             os.close();
         }
     }
+
+
+    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
+    private static SystemProcessor _instance = null;
+
+    private LogAppender _appender;
+    private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
+    private SecureServer _httpServer = null;
+    private long _jumpKeys = 0;
+    private String _systemIdentifier = "TEST";          //  TODO pull from configuration
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -254,7 +318,6 @@ public class SystemProcessor extends Processor {
         final int port
     ) {
         super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
-        _httpServer = new SecureServer(name, port);
         synchronized (SystemProcessor.class) {
             if (_instance != null) {
                 LOGGER.error("Attempted to instantiate more than one SystemProcessor");
@@ -262,6 +325,21 @@ public class SystemProcessor extends Processor {
             }
             _instance = this;
         }
+
+        _httpServer = new SecureServer(name, port);
+
+        _appender = new LogAppender();
+        _appender.initialize();
+        _appender.start();
+        LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
+        Configuration contextConfig = logContext.getConfiguration();
+        LoggerConfig loggerConfig = contextConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+        loggerConfig.setLevel(Level.ALL);
+        contextConfig.addAppender(_appender);
+        logContext.updateLoggers();
+
+        LOGGER.error("This is an ERROR test");
+        LOGGER.info("This is an INFO test");
     }
 
     /**
@@ -477,6 +555,7 @@ public class SystemProcessor extends Processor {
         try {
             _httpServer.setup();
             _httpServer.appendHandler("/console", new ConsoleRequestHandler());
+            _httpServer.appendHandler("/identifiers", new ConsoleRequestHandler());
             _httpServer.appendHandler("/jumpkeys", new JumpKeysRequestHandler());
             _httpServer.appendHandler("/logs", new LogsRequestHandler());
             _httpServer.appendHandler("/system", new SystemRequestHandler());

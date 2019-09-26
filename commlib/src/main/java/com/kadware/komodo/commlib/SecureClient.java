@@ -27,19 +27,6 @@ import org.apache.logging.log4j.Logger;
 public class SecureClient {
 
     /**
-     * Describes a particular REST operation
-     */
-    public enum HttpOperation {
-        DELETE("DELETE"),
-        GET("GET"),
-        POST("POST"),
-        PUT("PUT");
-
-        final String _value;
-        HttpOperation(String value) { _value = value; }
-    }
-
-    /**
      * Provides useful information resulting from the send() request
      */
     public static class SendResult {
@@ -208,7 +195,7 @@ public class SecureClient {
      * @return resulting traffic from the requested action (applies only to "GET")
      */
     public SendResult send(
-        final HttpOperation operation,
+        final HttpMethod operation,
         final String path,
         final byte[] content
     ) throws IOException,
@@ -261,7 +248,7 @@ public class SecureClient {
     ) throws IOException,
              KeyManagementException,
              NoSuchAlgorithmException {
-        return send(HttpOperation.DELETE, path, null);
+        return send(HttpMethod.DELETE, path, null);
     }
 
     /**
@@ -273,7 +260,7 @@ public class SecureClient {
     ) throws IOException,
              KeyManagementException,
              NoSuchAlgorithmException {
-        return send(HttpOperation.GET, path, null);
+        return send(HttpMethod.GET, path, null);
     }
 
     /**
@@ -287,7 +274,7 @@ public class SecureClient {
     ) throws IOException,
              KeyManagementException,
              NoSuchAlgorithmException {
-        return send(HttpOperation.POST, path, content);
+        return send(HttpMethod.POST, path, content);
     }
 
     /**
@@ -301,6 +288,6 @@ public class SecureClient {
     ) throws IOException,
              KeyManagementException,
              NoSuchAlgorithmException {
-        return send(HttpOperation.PUT, path, content);
+        return send(HttpMethod.PUT, path, content);
     }
 }

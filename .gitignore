@@ -3,6 +3,8 @@
 .DS_Store
 baselib/.DS_Store
 baselib/target
+commlib/.DS_Store
+commlib/target
 hardwarelib/.DS_Store
 hardwarelib/target
 kconsole/.DS_Store

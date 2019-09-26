@@ -3,13 +3,16 @@ package com.kadware.komodo.commlib;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Object describing identification, version, and other stuffs for an SP
+ * Object describing identification, version, and other stuffs for an SP.
+ * For GET to /identifiers, this is returned fully-populated by the SystemProcessor.
+ * For PUT to /identifiers, those entities which can be updated, will be.
  */
 public class SystemProcessorIdentifiers {
     //  Identifies the server - expected value is "Komodo System Processor Interface"
     @JsonProperty("Identifier") public String _identifier;
 
     //  User-specified system identifier - expected to be 1 to 12 alphanumeric characters
+    //  Updateable
     @JsonProperty("SystemIdentifier") public String _systemIdentifier;
 
     //  Copyright notice, just because
