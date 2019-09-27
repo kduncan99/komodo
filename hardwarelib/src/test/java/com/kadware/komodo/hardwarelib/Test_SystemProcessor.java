@@ -6,6 +6,9 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import org.junit.Test;
+
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -17,9 +20,13 @@ public class Test_SystemProcessor {
     public void create(
     ) throws MaxNodesException  {
         SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);
-        try {
-            Thread.sleep(600000);
-        } catch (InterruptedException ex) {
+        Random r = new Random(System.currentTimeMillis());
+        while (true) {
+            p.jumpKeysSet(r.nextLong() & 0_777777_777777L);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+            }
         }
     }
 }

@@ -31,26 +31,29 @@ class MainWindow {
     private BorderPane _borderPane;
     private final ConsoleInfo _consoleInfo;
 
-    MainWindow(
-        final ConsoleInfo consoleInfo
-    ) {
-        _consoleInfo = consoleInfo;
-    }
+    MainWindow(ConsoleInfo consoleInfo) { _consoleInfo = consoleInfo; }
 
     /**
      * Creates the scene for this window
      */
     Scene createScene() {
-        TabPane tabPane = new TabPane();
+        _consoleInfo._jumpKeyPane = JumpKeyPane.create(_consoleInfo);
+
         Tab overviewTab = new Tab("Overview", new Label("Hardware overview"));
         overviewTab.setClosable(false);
+
         Tab consoleTab = new Tab("Console", new Label("Operating system console"));
         consoleTab.setClosable(false);
+
         Tab iplTab = new Tab("IPL", new Label("Initial Program Load"));
         iplTab.setClosable(false);
+        //TODO for now, just put the JK's on the pane, we'll add more stuff later, in some kind of other pane
+        iplTab.setContent(_consoleInfo._jumpKeyPane);
+
         Tab logTab = new Tab("Log", new Label("Hardware log"));
         logTab.setClosable(false);
 
+        TabPane tabPane = new TabPane();
         tabPane.getTabs().add(overviewTab);
         tabPane.getTabs().add(consoleTab);
         tabPane.getTabs().add(iplTab);
@@ -70,20 +73,18 @@ class MainWindow {
     private void poll() {
         try {
             SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
-            System.out.println("FOO");//TODO
             ObjectMapper mapper = new ObjectMapper();
-            System.out.println(new String(sendResult._responseStream));//TODO
             SystemProcessorPoll spp = mapper.readValue(sendResult._responseStream, new TypeReference<SystemProcessorPoll>() {});
-            System.out.println("FEE");//TODO
 
             String headerMsg = String.format("Remote System:%s Version:%s",
                                              spp._identifiers._systemIdentifier,
                                              spp._identifiers._versionString);
-            System.out.println("FEI " + headerMsg);//TODO
             _borderPane.setTop(new Label(headerMsg));
-            System.out.println("FISH");//TODO
 
-            //TODO jumpkey traffic
+            if (spp._jumpKeys != null) {
+                _consoleInfo._jumpKeyPane.update(spp._jumpKeys);
+            }
+
             //TODO console traffic
             //TODO log traffic
             //TODO system hardware

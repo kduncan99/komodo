@@ -23,4 +23,6 @@ public class ConsoleInfo {
 
     //  SecureClient object through which we communicate with the SystemProcessor
     SecureClient _secureClient = null;
+
+    JumpKeyPane _jumpKeyPane = null;
 }
