@@ -4,18 +4,18 @@
 
 package com.kadware.komodo.kconsole;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kadware.komodo.commlib.HttpMethod;
+import com.kadware.komodo.commlib.SecureClient;
+import com.kadware.komodo.commlib.SystemProcessorPoll;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
@@ -28,19 +28,19 @@ import java.net.Socket;
 @SuppressWarnings("Duplicates")
 class MainWindow {
 
-    final Console _console;
+    private BorderPane _borderPane;
+    private final ConsoleInfo _consoleInfo;
 
-    MainWindow(Console console) { _console = console; }
+    MainWindow(
+        final ConsoleInfo consoleInfo
+    ) {
+        _consoleInfo = consoleInfo;
+    }
 
+    /**
+     * Creates the scene for this window
+     */
     Scene createScene() {
-        String headerStr = String.format("System Identifier: %s - System Version: %s",
-                                      _console._systemIdent,
-                                      _console._systemVersion);
-        Label header = new Label(headerStr);
-
-        //  We're going to put a tab pane inside a border pane.
-        //  Mainly... so we can add more above and below if we decide to do so.
-        //  I fully expect that we'll have a status line or something, at a minimum.
         TabPane tabPane = new TabPane();
         Tab overviewTab = new Tab("Overview", new Label("Hardware overview"));
         overviewTab.setClosable(false);
@@ -56,10 +56,40 @@ class MainWindow {
         tabPane.getTabs().add(iplTab);
         tabPane.getTabs().add(logTab);
 
-        BorderPane border = new BorderPane();
-        border.setTop(header);
-        border.setCenter(tabPane);
+        _borderPane = new BorderPane();
+        _borderPane.setTop(new Label(""));
+        _borderPane.setCenter(tabPane);
 
-        return new Scene(border, 700, 350);
+        poll();//TODO wedge this in for now, do it appropriately later
+        return new Scene(_borderPane, 700, 350);
+    }
+
+    /**
+     * Polls the remote system for any updates it might have for us
+     */
+    private void poll() {
+        try {
+            SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
+            System.out.println("FOO");//TODO
+            ObjectMapper mapper = new ObjectMapper();
+            System.out.println(new String(sendResult._responseStream));//TODO
+            SystemProcessorPoll spp = mapper.readValue(sendResult._responseStream, new TypeReference<SystemProcessorPoll>() {});
+            System.out.println("FEE");//TODO
+
+            String headerMsg = String.format("Remote System:%s Version:%s",
+                                             spp._identifiers._systemIdentifier,
+                                             spp._identifiers._versionString);
+            System.out.println("FEI " + headerMsg);//TODO
+            _borderPane.setTop(new Label(headerMsg));
+            System.out.println("FISH");//TODO
+
+            //TODO jumpkey traffic
+            //TODO console traffic
+            //TODO log traffic
+            //TODO system hardware
+        } catch (Exception ex) {
+            ex.printStackTrace();//TODO
+            new Alert(Alert.AlertType.ERROR, String.format("Cannot poll remote system:%s", ex.getMessage())).showAndWait();
+        }
     }
 }

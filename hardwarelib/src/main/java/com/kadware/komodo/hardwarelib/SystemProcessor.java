@@ -16,13 +16,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,6 +81,7 @@ public class SystemProcessor extends Processor {
     //  All requests must include a (supposedly) unique UUID as a client identifier in the headers "Client={uuid}"
     //  This unique UUID must be used for every message sent by a given instance of a client.
     //  ----------------------------------------------------------------------------------------------------------------------------
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private class Listener extends SecureServer {
 
         private static final long AGE_OUT_MSECS = 10 * 60 * 1000;   //  10 minutes of no polling ages out a client
@@ -108,19 +104,25 @@ public class SystemProcessor extends Processor {
             public void handle(
                 final HttpExchange exchange
             ) throws IOException {
-                ClientInfo clientInfo = validateCredentials(exchange);
-                if (clientInfo != null) {
-                    String response = "Path or object does not exist";
-                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
-                    os.close();
+                if (!validateCredentials(exchange)) {
+                    return;
                 }
+
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    return;
+                }
+
+                String response = "Path or object does not exist";
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
             }
         }
 
         /**
-         * Handle a poll request.
+         * Handle a poll request (a GET to /poll).
          * If we have a client ClientInfo record, send everything we have.
          * Otherwise check to see if there is anything new.  If so, send it.
          * Other-otherwise, wait for some period of time to see whether anything new pops up.
@@ -130,8 +132,24 @@ public class SystemProcessor extends Processor {
             public void handle(
                 final HttpExchange exchange
             ) throws IOException {
-                ClientInfo clientInfo = validateCredentials(exchange);
-                if (clientInfo == null) { return; }
+                if (!validateCredentials(exchange)) {
+                    return;
+                }
+
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    return;
+                }
+
+                String method = exchange.getRequestMethod();
+                if (!method.equals(HttpMethod.GET._value)) {
+                    String content = method + " not allowed";
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, content.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(content.getBytes());
+                    os.close();
+                    return;
+                }
 
                 clientInfo._lastPoll = System.currentTimeMillis();
                 if (!clientInfo._updatesReady) {
@@ -149,6 +167,7 @@ public class SystemProcessor extends Processor {
                     clientInfo._updatesReady = false;
 
                     //TODO pull version information from somewhere reliable
+                    content._identifiers = new SystemProcessorPoll.Identifiers();
                     content._identifiers._identifier = "Komodo System Processor Interface";
                     content._identifiers._copyright = "Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved";
                     content._identifiers._majorVersion = 1;
@@ -182,6 +201,41 @@ public class SystemProcessor extends Processor {
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
                 OutputStream os = exchange.getResponseBody();
                 os.write(response.getBytes());
+                os.close();
+            }
+        }
+
+        /**
+         * Handle puts and posts to /session
+         */
+        private class SessionRequestHandler implements HttpHandler {
+            @Override
+            public void handle(
+                final HttpExchange exchange
+            ) throws IOException {
+                if (!validateCredentials(exchange)) {
+                    return;
+                }
+
+                String method = exchange.getRequestMethod();
+                if (!method.equals(HttpMethod.POST._value) && !method.equals(HttpMethod.PUT._value)) {
+                    String content = method + " not allowed";
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, content.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(content.getBytes());
+                    os.close();
+                    return;
+                }
+
+                String clientId = UUID.randomUUID().toString();
+                synchronized (_clientInfos) {
+                    _clientInfos.put(clientId, new ClientInfo());
+                }
+
+                String content = new ObjectMapper().writeValueAsString(clientId);
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, content.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(content.getBytes());
                 os.close();
             }
         }
@@ -232,6 +286,7 @@ public class SystemProcessor extends Processor {
                  SignatureException {
             super.setup();
             appendHandler("/", new DefaultRequestHandler());
+            appendHandler("/session", new SessionRequestHandler());
             appendHandler("/poll", new PollRequestHandler());
             start();
         }
@@ -275,56 +330,57 @@ public class SystemProcessor extends Processor {
         }
 
         /**
-         * Validate the credentials in the header of the given exchange object.
-         * Also check for the client identifier - if it doesn't exist, complain.
-         * If it is new, set up a client info object to keep track of the client.
-         * If something is wrong, send the response and return null.
-         * Otherwise, return the newly-created or located ClientInfo object
+         * Checks the headers for a client id, then locates the corresponding ClientInfo object.
+         * Returns null if ClientInfo object is not found or unspecified, in which case the response
+         * is already filled in and closed - caller needs only return.
          */
-        private ClientInfo validateCredentials(
+        private ClientInfo findClient(
+            final HttpExchange exchange
+        ) throws IOException {
+            List<String> values = exchange.getRequestHeaders().get("Client");
+            if ((values != null) && (values.size() == 1)) {
+                String clientId = values.get(0);
+                synchronized (this) {
+                    ClientInfo clientInfo = _clientInfos.get(clientId);
+                    if (clientInfo != null) {
+                        return clientInfo;
+                    }
+                }
+            }
+
+            String msg = "Missing or invalid client identifier\n";
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
+            OutputStream os = exchange.getResponseBody();
+            os.write(msg.getBytes());
+            os.close();
+            return null;
+        }
+
+        /**
+         * Validate the credentials in the header of the given exchange object.
+         * On failure, error status is posted to the HttpExchange which is then closed.
+         * In this case, the client simply returns - all the work is done.
+         * @return true if credentials are valid, else false
+         */
+        private boolean validateCredentials(
             final HttpExchange exchange
         ) throws IOException {
             Headers headers = exchange.getRequestHeaders();
 
-            boolean credentials = false;
             List<String> values = headers.get("Authorization");
             if ((values != null) && (values.size() == 1)) {
                 String[] split = values.get(0).split(" ");
                 if ((split.length >= 2) && (_credentials.equals(split[1]))) {
-                    credentials = true;
+                    return true;
                 }
             }
 
-            if (!credentials) {
-                String msg = "Please enter credentials\n";
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, 0);
-                OutputStream os = exchange.getResponseBody();
-                os.write(msg.getBytes());
-                os.close();
-                return null;
-            }
-
-            values = headers.get("Client");
-            if ((values == null) || (values.size() != 1)) {
-                String msg = "Missing client identifier\n";
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
-                OutputStream os = exchange.getResponseBody();
-                os.write(msg.getBytes());
-                os.close();
-                return null;
-            }
-
-            String clientId = values.get(0);
-            ClientInfo clientInfo;
-            synchronized (this) {
-                clientInfo = _clientInfos.get(clientId);
-                if (clientInfo == null) {
-                    clientInfo = new ClientInfo();
-                    _clientInfos.put(clientId, clientInfo);
-                }
-            }
-
-            return clientInfo;
+            String msg = "Please enter credentials\n";
+            exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, 0);
+            OutputStream os = exchange.getResponseBody();
+            os.write(msg.getBytes());
+            os.close();
+            return false;
         }
     }
 

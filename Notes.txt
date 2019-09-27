@@ -8,6 +8,7 @@ Do we emit diagnostics at the point where 'S' post-fix operator is applied to a 
 
 -- TODO BUGS
 * hardwarelib
+Working on console communications for SystemProcessor
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 We've broken breakpoint on fetch due to not developing absolute addresses anymore.
   Actually, we *do* develop abs address on get/store operands... leverage that.
