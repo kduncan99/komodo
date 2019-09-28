@@ -224,11 +224,35 @@ public class SystemProcessor extends Processor {
                     return;
                 }
 
-                clientInfo._lastPoll = System.currentTimeMillis();
-                if (!clientInfo._updatesReady) {
-                    synchronized (clientInfo) {
+                PollThread pthread = new PollThread(exchange,clientInfo);
+                pthread.start();
+            }
+        }
+
+        /**
+         * Async thread for special handling for the /poll endpoint...
+         * Needed so we can go back and service other requests while we're waiting on anything
+         * noteworthy to occur.
+         */
+        private class PollThread extends Thread {
+
+            private final ClientInfo _clientInfo;
+            private final HttpExchange _exchange;
+
+            private PollThread(
+                final HttpExchange exchange,
+                final ClientInfo clientInfo
+            ) {
+                _clientInfo = clientInfo;
+                _exchange = exchange;
+            }
+
+            public void run() {
+                _clientInfo._lastPoll = System.currentTimeMillis();
+                synchronized (_clientInfo) {
+                    if (!_clientInfo._updatesReady) {
                         try {
-                            clientInfo.wait(POLL_WAIT_MSECS);
+                            _clientInfo.wait(POLL_WAIT_MSECS);
                         } catch (InterruptedException ex) {
                             LOGGER.catching(ex);
                         }
@@ -236,8 +260,8 @@ public class SystemProcessor extends Processor {
                 }
 
                 SystemProcessorPoll content = new SystemProcessorPoll();
-                if (clientInfo._updatesReady) {
-                    clientInfo._updatesReady = false;
+                if (_clientInfo._updatesReady) {
+                    _clientInfo._updatesReady = false;
 
                     //TODO pull version information from somewhere reliable
                     content._identifiers = new SystemProcessorPoll.Identifiers();
@@ -253,13 +277,13 @@ public class SystemProcessor extends Processor {
                     content._jumpKeys = _jumpKeys;
 
                     List<SystemProcessorPoll.HardwareLogEntry> logList = new LinkedList<>();
-                    KomodoAppender.LogEntry[] logEntries = _appender.retrieveFrom(clientInfo._lastLogIdentifier + 1);
+                    KomodoAppender.LogEntry[] logEntries = _appender.retrieveFrom(_clientInfo._lastLogIdentifier + 1);
                     for (KomodoAppender.LogEntry appenderEntry : logEntries) {
                         SystemProcessorPoll.HardwareLogEntry hlEntry = new SystemProcessorPoll.HardwareLogEntry();
                         hlEntry._timestamp = appenderEntry._timeMillis;
                         hlEntry._entity = appenderEntry._source;
                         hlEntry._message = appenderEntry._message;
-                        clientInfo._lastLogIdentifier = appenderEntry._identifier;
+                        _clientInfo._lastLogIdentifier = appenderEntry._identifier;
                         logList.add(hlEntry);
                     }
                     content._logEntries = logList.toArray(new SystemProcessorPoll.HardwareLogEntry[0]);
@@ -269,12 +293,16 @@ public class SystemProcessor extends Processor {
                     //TODO system configuration info
                 }
 
-                ObjectMapper mapper = new ObjectMapper();
-                String response = mapper.writeValueAsString(content);
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-                OutputStream os = exchange.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String response = mapper.writeValueAsString(content);
+                    _exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
+                    OutputStream os = _exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                } catch (IOException ex) {
+                    LOGGER.catching(ex);
+                }
             }
         }
 

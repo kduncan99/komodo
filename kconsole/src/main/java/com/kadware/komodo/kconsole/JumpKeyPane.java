@@ -16,6 +16,44 @@ import java.util.HashMap;
 @SuppressWarnings("Duplicates")
 class JumpKeyPane extends GridPane {
 
+    //TODO
+    /*
+import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.scene.*;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.image.*;
+import javafx.scene.layout.StackPaneBuilder;
+import javafx.stage.Stage;
+
+public class ToggleButtonImageViaGraphic extends Application {
+  public static void main(String[] args) throws Exception { launch(args); }
+  @Override public void start(final Stage stage) throws Exception {
+    final ToggleButton toggle      = new ToggleButton();
+    final Image        unselected  = new Image(
+      "http://icons.iconarchive.com/icons/aha-soft/desktop-buffet/128/Pizza-icon.png"
+    );
+    final Image        selected    = new Image(
+      "http://icons.iconarchive.com/icons/aha-soft/desktop-buffet/128/Piece-of-cake-icon.png"
+    );
+    final ImageView    toggleImage = new ImageView();
+    toggle.setGraphic(toggleImage);
+    toggleImage.imageProperty().bind(Bindings
+      .when(toggle.selectedProperty())
+        .then(selected)
+        .otherwise(unselected)
+    );
+
+    stage.setScene(new Scene(
+      StackPaneBuilder.create()
+        .children(toggle)
+        .style("-fx-padding:10; -fx-background-color: cornsilk;")
+        .build()
+    ));
+    stage.show();
+  }
+}
+     */
     private static class ButtonHandler implements EventHandler<ActionEvent> {
 
         private final ConsoleInfo _consoleInfo;
