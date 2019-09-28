@@ -20,9 +20,7 @@ public class Test_SystemProcessor {
     public void create(
     ) throws MaxNodesException  {
         SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);
-        Random r = new Random(System.currentTimeMillis());
         while (true) {
-            p.jumpKeysSet(r.nextLong() & 0_777777_777777L);
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {

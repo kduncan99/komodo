@@ -6,32 +6,75 @@ package com.kadware.komodo.kconsole;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kadware.komodo.commlib.HttpMethod;
 import com.kadware.komodo.commlib.SecureClient;
 import com.kadware.komodo.commlib.SystemProcessorPoll;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
 
 @SuppressWarnings("Duplicates")
 class MainWindow {
 
+    private class PollThread extends Thread {
+        private boolean _terminate = false;
+
+        public void run() {
+            while (!_terminate) {
+                try {
+                    SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
+                    ObjectMapper mapper = new ObjectMapper();
+                    SystemProcessorPoll spp =
+                        mapper.readValue(sendResult._responseStream, new TypeReference<SystemProcessorPoll>() {});
+                    if (spp != null) {
+                        _pollResult = spp;
+                        Platform.runLater(_refreshTask);
+                    }
+                } catch (Exception ex) {
+                    new Alert(Alert.AlertType.ERROR,
+                              "Communications with remote lost:" + ex.getMessage()).showAndWait();
+                    Platform.exit();
+                }
+            }
+        }
+
+        public void terminate() { _terminate = true; }
+    }
+
+    //  Refreshes the GUI elements
+    private class RefreshTask implements Runnable {
+
+        public void run() {
+            if (_pollResult != null) {
+                if (_pollResult._identifiers != null) {
+                    String headerMsg = String.format("Remote System:%s Version:%s",
+                                                     _pollResult._identifiers._systemIdentifier,
+                                                     _pollResult._identifiers._versionString);
+                    _borderPane.setTop(new Label(headerMsg));
+                }
+
+                if (_pollResult._jumpKeys != null) {
+                    _consoleInfo._jumpKeyPane.update(_pollResult._jumpKeys);
+                }
+
+                //TODO  Check other elements of the poll result
+            }
+        }
+    }
+
+
     private BorderPane _borderPane;
     private final ConsoleInfo _consoleInfo;
+    private final PollThread _pollThread = new PollThread();
+    private SystemProcessorPoll _pollResult = null;
+    private final RefreshTask _refreshTask = new RefreshTask();
+
 
     MainWindow(ConsoleInfo consoleInfo) { _consoleInfo = consoleInfo; }
+
 
     /**
      * Creates the scene for this window
@@ -63,34 +106,21 @@ class MainWindow {
         _borderPane.setTop(new Label(""));
         _borderPane.setCenter(tabPane);
 
-        poll();//TODO wedge this in for now, do it appropriately later
+        _pollThread.start();
         return new Scene(_borderPane, 700, 350);
     }
 
     /**
-     * Polls the remote system for any updates it might have for us
+     * Notification that the application is shutting down
      */
-    private void poll() {
-        try {
-            SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
-            ObjectMapper mapper = new ObjectMapper();
-            SystemProcessorPoll spp = mapper.readValue(sendResult._responseStream, new TypeReference<SystemProcessorPoll>() {});
-
-            String headerMsg = String.format("Remote System:%s Version:%s",
-                                             spp._identifiers._systemIdentifier,
-                                             spp._identifiers._versionString);
-            _borderPane.setTop(new Label(headerMsg));
-
-            if (spp._jumpKeys != null) {
-                _consoleInfo._jumpKeyPane.update(spp._jumpKeys);
+    void terminate() {
+        _pollThread.terminate();
+        while (_pollThread.isAlive()) {
+            try {
+                Thread.sleep(25);
+            } catch (InterruptedException ex) {
+                //  do nothing
             }
-
-            //TODO console traffic
-            //TODO log traffic
-            //TODO system hardware
-        } catch (Exception ex) {
-            ex.printStackTrace();//TODO
-            new Alert(Alert.AlertType.ERROR, String.format("Cannot poll remote system:%s", ex.getMessage())).showAndWait();
         }
     }
 }

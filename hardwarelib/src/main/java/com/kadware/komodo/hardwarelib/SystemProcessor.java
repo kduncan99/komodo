@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.commlib.*;
@@ -115,6 +116,78 @@ public class SystemProcessor extends Processor {
 
                 String response = "Path or object does not exist";
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }
+        }
+
+        /**
+         * Handles requests against the /jumpkeys path
+         */
+        private class JumpKeysRequestHandler implements HttpHandler {
+            @Override
+            public void handle(
+                final HttpExchange exchange
+            ) throws IOException {
+                if (!validateCredentials(exchange)) {
+                    return;
+                }
+
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    return;
+                }
+
+                int code = HttpURLConnection.HTTP_OK;
+                String response = "";
+                if (exchange.getRequestMethod().equals(HttpMethod.PUT._value)
+                    || exchange.getRequestMethod().equals(HttpMethod.PUT._value)) {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        SystemProcessorJumpKeys content = mapper.readValue(exchange.getRequestBody(),
+                                                                           new TypeReference<SystemProcessorJumpKeys>() { });
+                        long workingValue = _jumpKeys;
+                        if (content._compositeValue != null) {
+                            if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
+                                throw new Exception("Invalid composite value");
+                            }
+
+                            workingValue = content._compositeValue;
+                        }
+
+                        if (content._componentValues != null) {
+                            for (Map.Entry<String, Boolean> entry : content._componentValues.entrySet()) {
+                                int jk = Integer.parseInt(entry.getKey());
+                                if ((jk < 1) || (jk > 36)) {
+                                    throw new Exception("Jump key out of range");
+                                } else if (entry.getValue() == null) {
+                                    throw new Exception("Value for jump key was unspecified");
+                                }
+
+                                long mask = 1L << (36 - jk);
+                                if (entry.getValue()) {
+                                    workingValue |= mask;
+                                } else {
+                                    workingValue &= (mask ^ 0_777777_777777L);
+                                }
+                            }
+                        }
+
+                        _jumpKeys = workingValue;
+                        _listener.updatePendingClients();
+                    } catch (NumberFormatException ex) {
+                        code = HttpURLConnection.HTTP_BAD_REQUEST;
+                        response = "Jump key was not an integer";
+                    } catch (Exception ex) {
+                        code = HttpURLConnection.HTTP_BAD_REQUEST;
+                        response = ex.getMessage();
+                    }
+                } else {
+                    code = HttpURLConnection.HTTP_BAD_METHOD;
+                }
+
+                exchange.sendResponseHeaders(code, response.length());
                 OutputStream os = exchange.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
@@ -286,6 +359,7 @@ public class SystemProcessor extends Processor {
                  SignatureException {
             super.setup();
             appendHandler("/", new DefaultRequestHandler());
+            appendHandler("/jumpkeys", new JumpKeysRequestHandler());
             appendHandler("/session", new SessionRequestHandler());
             appendHandler("/poll", new PollRequestHandler());
             start();
@@ -360,6 +434,7 @@ public class SystemProcessor extends Processor {
          * Validate the credentials in the header of the given exchange object.
          * On failure, error status is posted to the HttpExchange which is then closed.
          * In this case, the client simply returns - all the work is done.
+         *
          * @return true if credentials are valid, else false
          */
         private boolean validateCredentials(
@@ -383,81 +458,6 @@ public class SystemProcessor extends Processor {
             return false;
         }
     }
-
-//    /**
-//     * Handles requests against the jumpkeys path
-//     */
-//    private class JumpKeysRequestHandler implements HttpHandler {
-//        @Override
-//        public void handle(
-//            final HttpExchange exchange
-//        ) throws IOException {
-//            if (!validateCredentials(exchange)) {
-//                return;
-//            }
-//
-//            int code = HttpURLConnection.HTTP_OK;
-//            String response = "";
-//            if (exchange.getRequestMethod().equals(HttpMethod.GET._value)) {
-//                SystemProcessorJumpKeys content = new SystemProcessorJumpKeys();
-//                content._compositeValue = _jumpKeys;
-//                long mask = 0_400000_000000L;
-//                for (int jk = 1; jk <= 36; ++jk) {
-//                    String key = String.format("%d", jk);
-//                    boolean value = (_jumpKeys & mask) != 0;
-//                    content._componentValues.put(key, value);
-//                }
-//
-//                ObjectMapper mapper = new ObjectMapper();
-//                response = mapper.writeValueAsString(content);
-//            } else if (exchange.getRequestMethod().equals(HttpMethod.PUT._value)) {
-//                try {
-//                    ObjectMapper mapper = new ObjectMapper();
-//                    SystemProcessorJumpKeys content = mapper.readValue(exchange.getRequestBody(),
-//                                                                       new TypeReference<SystemProcessorJumpKeys>() { });
-//                    long workingValue = _jumpKeys;
-//                    if (content._compositeValue != null) {
-//                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
-//                            throw new Exception("Invalid composite value");
-//                        }
-//
-//                        workingValue = content._compositeValue;
-//                    }
-//
-//                    if (content._componentValues != null) {
-//                        for (Map.Entry<String, Boolean> entry : content._componentValues.entrySet()) {
-//                            int jk = Integer.parseInt(entry.getKey());
-//                            if ((jk < 1) || (jk > 36)) {
-//                                throw new Exception("Jump key out of range");
-//                            } else if (entry.getValue() == null) {
-//                                throw new Exception("Value for jump key was unspecified");
-//                            }
-//
-//                            long mask = 1L << (36 - jk);
-//                            if (entry.getValue()) {
-//                                workingValue |= mask;
-//                            } else {
-//                                workingValue &= (mask ^ 0_777777_777777L);
-//                            }
-//                        }
-//                    }
-//                } catch (NumberFormatException ex) {
-//                    code = HttpURLConnection.HTTP_BAD_REQUEST;
-//                    response = "Jump key was not an integer";
-//                } catch (Exception ex) {
-//                    code = HttpURLConnection.HTTP_BAD_REQUEST;
-//                    response = ex.getMessage();
-//                }
-//            } else {
-//                code = HttpURLConnection.HTTP_BAD_METHOD;
-//            }
-//
-//            exchange.sendResponseHeaders(code, response.length());
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(response.getBytes());
-//            os.close();
-//        }
-//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

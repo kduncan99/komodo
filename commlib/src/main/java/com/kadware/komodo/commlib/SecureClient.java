@@ -34,7 +34,7 @@ public class SecureClient {
         public final String _responseMessage;
         public final byte[] _responseStream;
 
-        public SendResult(
+        SendResult(
             final int responseCode,
             final String responseMessage,
             final byte[] responseStream

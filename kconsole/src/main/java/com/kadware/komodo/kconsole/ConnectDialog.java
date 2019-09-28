@@ -105,6 +105,7 @@ class ConnectDialog {
             } catch (NumberFormatException ex) {
                 new Alert(Alert.AlertType.ERROR, "Invalid port number").showAndWait();
             } catch (Exception ex) {
+                ex.printStackTrace();//TODO remove later
                 new Alert(Alert.AlertType.ERROR, ex.getMessage()).showAndWait();
             }
         }

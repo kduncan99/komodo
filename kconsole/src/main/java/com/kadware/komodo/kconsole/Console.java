@@ -34,4 +34,15 @@ public class Console extends Application {
         _consoleInfo._primaryStage.show();
         primaryStage.setScene(_consoleInfo._connectDialog.createScene());
     }
+
+    /**
+     * Called when the application goes away.
+     * If there's a main window, tell it we're going away.
+     */
+    @Override
+    public void stop() {
+        if (_consoleInfo._mainWindow != null) {
+            _consoleInfo._mainWindow.terminate();
+        }
+    }
 }
