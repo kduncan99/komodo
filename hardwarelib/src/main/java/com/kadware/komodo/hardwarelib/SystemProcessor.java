@@ -82,7 +82,6 @@ public class SystemProcessor extends Processor {
     //  All requests must include a (supposedly) unique UUID as a client identifier in the headers "Client={uuid}"
     //  This unique UUID must be used for every message sent by a given instance of a client.
     //  ----------------------------------------------------------------------------------------------------------------------------
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private class Listener extends SecureServer {
 
         private static final long AGE_OUT_MSECS = 10 * 60 * 1000;   //  10 minutes of no polling ages out a client
@@ -807,7 +806,7 @@ public class SystemProcessor extends Processor {
         //TODO
     }
 
-    void consoleSendSystemMessage(
+    void consoleSendStatusMessage(
         final String message1,
         final String message2
     ) {
