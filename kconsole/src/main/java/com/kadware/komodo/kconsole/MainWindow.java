@@ -41,7 +41,7 @@ class MainWindow {
             }
         }
 
-        public void terminate() { _terminate = true; }
+        void terminate() { _terminate = true; }
     }
 
     //  Refreshes the GUI elements
@@ -58,6 +58,10 @@ class MainWindow {
 
                 if (_pollResult._jumpKeys != null) {
                     _consoleInfo._jumpKeyPane.update(_pollResult._jumpKeys);
+                }
+
+                if (_pollResult._logEntries != null) {
+                    _consoleInfo._logPane.update(_pollResult._logEntries);
                 }
 
                 //TODO  Check other elements of the poll result
@@ -81,6 +85,7 @@ class MainWindow {
      */
     Scene createScene() {
         _consoleInfo._jumpKeyPane = JumpKeyPane.create(_consoleInfo);
+        _consoleInfo._logPane = LogPane.create(_consoleInfo);
 
         Tab overviewTab = new Tab("Overview", new Label("Hardware overview"));
         overviewTab.setClosable(false);
@@ -95,6 +100,7 @@ class MainWindow {
 
         Tab logTab = new Tab("Log", new Label("Hardware log"));
         logTab.setClosable(false);
+        logTab.setContent(_consoleInfo._logPane);
 
         TabPane tabPane = new TabPane();
         tabPane.getTabs().add(overviewTab);

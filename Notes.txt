@@ -1,5 +1,6 @@
 -- TODO InProgress
 * hardwarelib
+Working on primitive kconsole
 IP: SYSC subfunctions for console communication need unit tests
 Can some of the primitive POJOs which relate to the IP only, become nested classes thereof?
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation

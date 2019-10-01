@@ -168,8 +168,10 @@ public class SystemProcessor extends Processor {
                                 long mask = 1L << (36 - jk);
                                 if (entry.getValue()) {
                                     workingValue |= mask;
+                                    LOGGER.info(String.format("Setting JK %d", jk));//TODO
                                 } else {
                                     workingValue &= (mask ^ 0_777777_777777L);
+                                    LOGGER.info(String.format("Clearing JK %d", jk));//TODO
                                 }
                             }
                         }
