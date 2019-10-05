@@ -1491,7 +1491,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Base class for a function handler (includes instruction handlers and sub function handlers)
      */
-    private abstract class FunctionHandler {
+    private static abstract class FunctionHandler {
 
         /**
          * Handles a function (i.e., the instruction in _currentInstruction
@@ -1502,7 +1502,7 @@ public class InstructionProcessor extends Processor implements Worker {
     /**
      * Base class for all the instruction handlers
      */
-    private abstract class InstructionHandler extends FunctionHandler {
+    private static abstract class InstructionHandler extends FunctionHandler {
 
         /**
          * Retrieve the Instruction enumeration for this instruction
@@ -5835,7 +5835,7 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = SS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -5925,11 +5925,11 @@ public class InstructionProcessor extends Processor implements Worker {
                     } else {
                         String msg1 = vaInfo1._bankDescriptor.toASCII(vaInfo1._virtualAddress.getOffset(), msg1Words).substring(0, msg1Chars);
                         String msg2 = vaInfo2._bankDescriptor.toASCII(vaInfo2._virtualAddress.getOffset(), msg2Words).substring(0, msg2Chars);
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msgId, msg2);
+                        SystemProcessor.getInstance().consoleSendStatusMessage(msg1, msg2);
                     }
 
                     operands[0] = Word36.setS2(operands[0], status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -5954,7 +5954,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -5981,7 +5981,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -6018,7 +6018,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
 
                     operands[0] = Word36.setS2(operands[0], status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -6033,7 +6033,15 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                //TODO jump key and dayclock functions
+                //TODO dayclock functions
+
+                case SF_JUMPKEYS_GET:
+                    //TODO
+                    break;
+
+                case SF_JUMPKEYS_SET:
+                    //TODO
+                    break;
 
                 case SF_IO_START:
                     //TODO

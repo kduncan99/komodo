@@ -7,7 +7,7 @@ package com.kadware.komodo.kconsole;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.commlib.SecureClient;
-import com.kadware.komodo.commlib.SystemProcessorIdentifiers;
+import java.util.Base64;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -21,13 +21,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-import java.util.Base64;
-import java.util.Map;
-
 @SuppressWarnings("Duplicates")
 class ConnectDialog {
 
-    private final Console _console;
+    private final ConsoleInfo _consoleInfo;
 
     private TextField _hostNameField = null;
     private TextField _portNumberField = null;
@@ -86,7 +83,7 @@ class ConnectDialog {
                 String hash = Base64.getEncoder().encodeToString(composition.getBytes());
                 client.addProperty("Authorization", "Basic " + hash);
 
-                SecureClient.SendResult result = client.sendGet("/");
+                SecureClient.SendResult result = client.sendPut("/session", new byte[0]);
                 if (result._responseCode == 401) {
                     new Alert(Alert.AlertType.ERROR, "Credentials invalid").showAndWait();
                     return;
@@ -97,24 +94,34 @@ class ConnectDialog {
                 }
 
                 ObjectMapper mapper = new ObjectMapper();
-                SystemProcessorIdentifiers content = mapper.readValue(result._responseStream,
-                                                                      new TypeReference<SystemProcessorIdentifiers>(){ });
-                _console._systemIdent = content._systemIdentifier;
-                _console._systemVersion = content._versionString;
+                String clientIdentifier = mapper.readValue(result._responseStream, new TypeReference<String>(){ });
 
                 //  good to go - spin up the main window
-                _console._secureClient = client;
-                _console._primaryStage.setScene(_console._mainWindow.createScene());
+                _consoleInfo._secureClient = client;
+                _consoleInfo._secureClient.addProperty("Client", clientIdentifier);
+                _consoleInfo._mainWindow = new MainWindow(_consoleInfo);
+                _consoleInfo._primaryStage.setScene(_consoleInfo._mainWindow.createScene());
+                _consoleInfo._connectDialog = null;
             } catch (NumberFormatException ex) {
                 new Alert(Alert.AlertType.ERROR, "Invalid port number").showAndWait();
             } catch (Exception ex) {
+                ex.printStackTrace();//TODO remove later
                 new Alert(Alert.AlertType.ERROR, ex.getMessage()).showAndWait();
             }
         }
     }
 
-    ConnectDialog(Console console) { _console = console; }
+    /**
+     * constructor
+     */
+    ConnectDialog(
+        final ConsoleInfo consoleInfo) {
+        _consoleInfo = consoleInfo;
+    }
 
+    /**
+     * Creates the Scene for this window
+     */
     Scene createScene() {
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);

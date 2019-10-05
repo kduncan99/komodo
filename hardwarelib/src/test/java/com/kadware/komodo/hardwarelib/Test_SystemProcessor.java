@@ -5,7 +5,10 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+import java.util.Random;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -13,13 +16,23 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_SystemProcessor {
 
+    private static final Logger LOGGER = LogManager.getLogger("TESTER");
+
     @Test
     public void create(
     ) throws MaxNodesException  {
         SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);
-        try {
-            Thread.sleep(10000);//600000);
-        } catch (InterruptedException ex) {
+        InstructionProcessor ip0 = InventoryManager.getInstance().createInstructionProcessor();
+        InstructionProcessor ip1 = InventoryManager.getInstance().createInstructionProcessor();
+        InputOutputProcessor iop = InventoryManager.getInstance().createInputOutputProcessor();
+        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+        Random r = new Random(System.currentTimeMillis());
+        while (true) {
+            LOGGER.trace(String.format("%d", System.currentTimeMillis()));
+            try {
+                Thread.sleep(Math.abs(r.nextInt() % 10) * 1000);
+            } catch (InterruptedException ex) {
+            }
         }
     }
 }

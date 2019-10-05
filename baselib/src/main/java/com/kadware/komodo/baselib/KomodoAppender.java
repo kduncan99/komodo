@@ -19,10 +19,10 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 public class KomodoAppender extends AbstractAppender {
 
     public static class LogEntry {
-        final Long _identifier;
-        final String _message;
-        final String _source;
-        final long _timeMillis;
+        public final Long _identifier;
+        public final String _message;
+        public final String _source;
+        public final long _timeMillis;
 
         private LogEntry(
             final LogEvent event,
@@ -88,7 +88,6 @@ public class KomodoAppender extends AbstractAppender {
                 if (_logEntries.size() > MAX_LOG_ENTRIES) {
                     _logEntries.remove(_logEntries.firstKey());
                 }
-                System.out.println("======>" + entry._message);//????TODO
             }
         }
     }
@@ -112,6 +111,13 @@ public class KomodoAppender extends AbstractAppender {
     @Override public boolean isStopped() { return _state == State.STOPPED; }
     @Override public void start() { _state = State.STARTED; }
     @Override public void stop() { _state = State.STOPPED; }
+
+    /**
+     * Allows the client to ask for the latest used identifier, so it knows whether to call retrieveFrom()
+     */
+    public long getMostRecentIdentifier() {
+        return _nextIdentifier - 1;
+    }
 
     /**
      * Retrieves all the entries with an identifier equal to or greater than the given identifier

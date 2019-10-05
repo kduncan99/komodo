@@ -5,8 +5,7 @@ import java.util.HashMap;
 
 /**
  * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
- * For GET to /identifiers this is returned fully-populated by the SystemProcessor.
- * For PUT to /identifiers the following algorithm is employed:
+ * For PUT or POST to /identifiers the following algorithm is employed:
  *      load working value from current settings
  *      overlay working value with the given composite value if provided
  *      set or clear the individual working value bits with any values specified in the component values
