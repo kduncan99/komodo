@@ -17,6 +17,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.time.temporal.ChronoField;
 import java.util.*;
 
 import org.apache.logging.log4j.Level;
@@ -501,6 +503,8 @@ public class SystemProcessor extends Processor {
 
     private KomodoAppender _appender;
     private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
+    private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
+    private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
     private Listener _listener = null;
     private long _mostRecentLogIdentifier = 0;
     private long _jumpKeys = 0;
@@ -787,10 +791,19 @@ public class SystemProcessor extends Processor {
         return null;//TODO
     }
 
+    /**
+     * Resets the conceptual system console
+     */
     void consoleReset() {
         //TODO
     }
 
+    /**
+     * Sends a read-only message to the conceptual system console.
+     * The message may be padded or truncated to an appropriate size.
+     * @param messageIdentifier unique identifier of this message among all messages
+     * @param message actual message to be sent
+     */
     void consoleSendReadOnlyMessage(
         final long messageIdentifier,
         final String message
@@ -798,19 +811,71 @@ public class SystemProcessor extends Processor {
         //TODO
     }
 
-    void consoleSendReadReplyMessage(
+    /**
+     * Sends a read-reply message to the conceptual system console.
+     * The message may be padded or truncated to an appropriate size.
+     * The eventual reply is guaranteed not to exceed the indicated max characters size.
+     * The message will be identified with a console message index, which is returned from this call.
+     * @param messageIdentifier unique identifier of this message among all messages
+     * @param message actual message to be sent
+     * @param replyMaxCharacters max characters allowed in the response
+     */
+    int consoleSendReadReplyMessage(
         final long messageIdentifier,
         final String message,
         final int replyMaxCharacters
     ) {
-        //TODO
+        return 0;//TODO
     }
 
+    /**
+     * Sends a pair of status messages to the conceptual system console.
+     * The messages may be padded or truncated to an appropriate size.
+     */
     void consoleSendStatusMessage(
         final String message1,
         final String message2
     ) {
         //TODO
+    }
+
+    /**
+     * Retrieves the master dayclock time in microseconds since epoch.
+     * This time is based on the host system time, offset by a value to allow the emulated system time
+     * to differ from the host system.
+     */
+    long dayclockGetMicros() {
+        Instant i = Instant.now();
+        long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
+        long microOfSecond = i.getLong(ChronoField.MICRO_OF_SECOND);
+        long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
+        return systemMicros + _dayclockOffsetMicros;
+    }
+
+    /**
+     * Sets the system comparator value which drives dayclock interrupts when they're enabled.
+     * This value should always be compared against the value returned by dayclockGetMicros() which
+     * applies the system offset - the comparator value is always assumed to be offset by the same amount.
+     * BTW: We don't actually do any interrupt instigation, nor care if they're enabled - that is handled by the IPs.
+     */
+    void dayclockSetComparatorMicros(
+        final long value
+    ) {
+        _dayclockComparatorMicros = value;
+    }
+
+    /**
+     * Stores the difference between the requested dayclock time in microseconds, and the actual host system time
+     * converted to dayclock microseconds.  Subsequent dayclock reads must apply this offset.
+     */
+    void dayclockSetMicros(
+        final long value
+    ) {
+        Instant i = Instant.now();
+        long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
+        long microOfSecond = i.getLong(ChronoField.MICRO_OF_SECOND);
+        long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
+        _dayclockOffsetMicros = value - systemMicros;
     }
 
     /**

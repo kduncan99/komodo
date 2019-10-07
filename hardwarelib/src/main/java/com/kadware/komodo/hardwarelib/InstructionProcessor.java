@@ -4410,7 +4410,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);  //  Get U, and throw it
             int regx = (int) _currentInstruction.getA();
             long micros = (getExecOrUserARegister(regx).getH2() << 36) | getExecOrUserARegister(regx + 1).getW();
-            setDayclockComparator(micros);
+            SystemProcessor.getInstance().dayclockSetComparatorMicros(micros);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LMC; }
@@ -4522,7 +4522,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);
             int regx = (int) _currentInstruction.getA();
             long micros = (getExecOrUserARegister(regx).getH2() << 36) | getExecOrUserARegister(regx + 1).getW();
-            Dayclock.setDayclockMicros(micros);
+            SystemProcessor.getInstance().dayclockSetMicros(micros);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LRD; }
@@ -5076,7 +5076,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
             getJumpOperand(false);
 
-            long micros = Dayclock.getDayclockMicros();
+            long micros = SystemProcessor.getInstance().dayclockGetMicros();
             int regx = (int) _currentInstruction.getA();
             setExecOrUserARegister(regx, micros >> 36);
             setExecOrUserARegister(regx + 1, micros);
@@ -5103,7 +5103,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);
 
             long result;
-            long currentMicros = Dayclock.getDayclockMicros();
+            long currentMicros = SystemProcessor.getInstance().dayclockGetMicros();
             synchronized (RMDFunctionHandler.class) {
                 if (currentMicros != _RMDLastReportedMicros) {
                     _RMDLastReportedMicros = currentMicros;
@@ -5722,20 +5722,22 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private class SYSCFunctionHandler extends InstructionHandler {
 
-        private static final int SF_MEMORY_ALLOC = 020;
-        private static final int SF_MEMORY_FREE = 021;
-        private static final int SF_MEMORY_REALLOC = 022;
-
         private static final int SF_CONSOLE_SEND_STATUS = 030;
         private static final int SF_CONSOLE_SEND_READ_ONLY = 031;
         private static final int SF_CONSOLE_SEND_READ_REPLY = 032;
         private static final int SF_CONSOLE_POLL = 033;
         private static final int SF_CONSOLE_RESET = 034;
 
+        private static final int SF_DAYCLOCK_READ = 042;
+        private static final int SF_DAYCLOCK_WRITE = 043;
+        private static final int SF_DAYCLOCK_WRITE_COMPARATOR = 044;
+
         private static final int SF_JUMPKEYS_GET = 040;
         private static final int SF_JUMPKEYS_SET = 041;
-        private static final int SF_DAYCLOCK_READ = 042;    //TODO more dayclock functions?
-        private static final int SF_IO_START = 050;
+
+        private static final int SF_MEMORY_ALLOC = 020;
+        private static final int SF_MEMORY_FREE = 021;
+        private static final int SF_MEMORY_REALLOC = 022;
 
         private static final int SS_SUCCESSFUL = 0;
         private static final int SS_BAD_UPI = 01;
@@ -5814,11 +5816,11 @@ public class InstructionProcessor extends Processor implements Worker {
             switch (subfunction) {
                 case SF_MEMORY_ALLOC: {
                     //  Packet size is 3 words
-                    //      U+0,S1:     020
-                    //      U+0,S2:     Status
-                    //      U+0,S3:     UPI of target MSP
-                    //      U+1,W:      Newly-assigned segment index if status is zero
-                    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    //  U+0,S1          Subfunction
+                    //  U+0,S2:         Status
+                    //  U+0,S3:         UPI of target MSP
+                    //  U+1,W:          Newly-assigned segment index if status is zero
+                    //  U+2,W:          Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = SS_SUCCESSFUL;
@@ -5842,10 +5844,10 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_MEMORY_FREE: {
                     //  Packet size is 2 words
-                    //      U+0,S1:     021
-                    //      U+0,S2:     Status
-                    //      U+0,S3:     UPI of target MSP
-                    //      U+1,W:      Segment index of block to be released
+                    //  U+0,S1          Subfunction
+                    //  U+0,S2:         Status
+                    //  U+0,S3:         UPI of target MSP
+                    //  U+1,W:          Segment index of block to be released
                     long[] operands = new long[2];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = SS_SUCCESSFUL;
@@ -5867,11 +5869,11 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_MEMORY_REALLOC: {
                     //  Packet size is 3 words
-                    //      U+0,S1:     022
-                    //      U+0,S2:     Status
-                    //      U+0,S3:     UPI of target MSP
-                    //      U+1,W:      Segment index of block to be resized
-                    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+                    //  U+0,S1          Subfunction
+                    //  U+0,S2:         Status
+                    //  U+0,S3:         UPI of target MSP
+                    //  U+1,W:          Segment index of block to be resized
+                    //  U+2,W:          Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
                     int status = SS_SUCCESSFUL;
@@ -5898,7 +5900,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_CONSOLE_SEND_STATUS: {
                     //  Packet size is 4 words
-                    //  U+0,S1:         030
+                    //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,Q3:         Length of first message in characters
                     //  U+0,Q4:         Length of second message in characters
@@ -5936,7 +5938,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_CONSOLE_SEND_READ_ONLY: {
                     //  Packet size is 3 words
-                    //  U+0,S1          031
+                    //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,Q3:         Length of message in characters
                     //  U+1,W:          Unique message identifier
@@ -5961,7 +5963,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_CONSOLE_SEND_READ_REPLY: {
                     //  Packet size is 3 words
-                    //  U+0,S1          032
+                    //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,Q3          Length of message in characters
                     //  U+0,Q4          Maximum accepted length of response in characters
@@ -5988,7 +5990,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_CONSOLE_POLL: {
                     //  Packet size is 3 words
-                    //  U+0,S1          033
+                    //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,Q3          Size of reply buffer in words
                     //  U+0,Q4          Number of characters received if a message was read
@@ -6025,7 +6027,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 case SF_CONSOLE_RESET: {
                     //  Packet size is 1 word
-                    //  U+0,S1          033
+                    //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     SystemProcessor.getInstance().consoleReset();
                     operand = Word36.setS2(operand, SS_SUCCESSFUL);
@@ -6033,56 +6035,48 @@ public class InstructionProcessor extends Processor implements Worker {
                     break;
                 }
 
-                //TODO dayclock functions
-
-                case SF_JUMPKEYS_GET:
+                case SF_DAYCLOCK_READ:
+                    //  Packet size is 3 words
+                    //  U+0,S1          Subfunction
+                    //  U+1,2:          Dayclock value in microseconds since epoch read from our dayclock
                     //TODO
                     break;
 
-                case SF_JUMPKEYS_SET:
+                case SF_DAYCLOCK_WRITE:
+                    //  Packet size is 3 words
+                    //  U+0,S1          Subfunction
+                    //  U+1,2:          Dayclock value in microseconds since epoch to be set in dayclock
                     //TODO
                     break;
 
-                case SF_IO_START:
+                case SF_DAYCLOCK_WRITE_COMPARATOR:
+                    //  Packet size is 3 words
+                    //  U+0,S1          Subfunction
+                    //  U+1,2:          Dayclock value in microseconds since epoch to be set in dayclock comparator
                     //TODO
-                    //  Subfunction 050: Start IO
-                    //  U+0,S1          040
-                    //  U+0,S2          UPI of IOP to be used
-                    //  U+0,S3          Channel Module index
-                    //  U+0,S4          Device index
-                    //  U+0,S6          Flags
-                    //                      Bit30: IOP should send a UPI interrupt when IO is complete
-                    //  U+1,S1          Operation
-                    //                      000: Write
-                    //                      001: Write EOF
-                    //                      002: Read
-                    //                      003: Skip
-                    //                      004: Skip EOF
-                    //                      005: Rewind
-                    //                      006: Rewind with Interlock
-                    //  U+1,Bits 6-7    Format: 0=type A, 1=type B, 2=type C, 3=type D
-                    //                      A is qword mode, 4 8-bit bytes per word
-                    //                      B is fd mode, 6 6-bit bytes per word
-                    //                      C is packed mode, 9 bytes per 2 words
-                    //                      D is similar to A, ignoring the stop bit
-                    //  U+1 Bit 8       Direction: 0=forward, 1=backward
-                    //  U+1,S3          Status of IO
-                    //                      000: IO completed successfully
-                    //                      001: IOP UPI does not correspond to an IOP
-                    //                      002: Channel module does not exist
-                    //                      003: Device does not exist
-                    //                      004: Device is not ready
-                    //                      005: Device is busy
-                    //                      006: End of file mark
-                    //                      007: End of tape mark
-                    //                      010: Address out of range
-                    //                      040: IO started successfully and is in progress
-                    //  U+1,S4          Non-integral residue count
-                    //  U+2,H1          Number of words to be transferred on output, buffer size on input
-                    //  U+2,H2          Number of words transferred
-                    //  U+3             Absolute address of IO buffer
-                    //  U+5             Device-relative address if applicable
                     break;
+
+                case SF_JUMPKEYS_GET: {
+                    //  Packet size is 2 words
+                    //  U+0,S1          Subfunction
+                    //  U+1,W           Current jump key settings are returned here
+                    long[] operands = new long[2];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+                    operands[1] = SystemProcessor.getInstance().jumpKeysGet();
+                    //noinspection ConstantConditions
+                    storeConsecutiveOperands(devAddr, operands);
+                    break;
+                }
+
+                case SF_JUMPKEYS_SET: {
+                    //  Packet size is 2 words
+                    //  U+0,S1          Subfunction
+                    //  U+1,W           Desired jump key settings
+                    long[] operands = new long[2];
+                    getConsecutiveOperands(false, operands, true);
+                    SystemProcessor.getInstance().jumpKeysSet(operands[1]);
+                    break;
+                }
 
                 default:
                     throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
@@ -7383,8 +7377,6 @@ public class InstructionProcessor extends Processor implements Worker {
     protected InstructionWord                _currentInstruction = null;
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
     private RunMode                         _currentRunMode = RunMode.Stopped;
-    private static long                     _dayclockComparator = 0;
-    private static long                     _dayclockOffset = 0;
     private DesignatorRegister              _designatorRegister = new DesignatorRegister();
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
@@ -7468,8 +7460,6 @@ public class InstructionProcessor extends Processor implements Worker {
     ) {
         _baseRegisters[index] = baseRegister;
     }
-
-    void setDayclockComparator(long value) { _dayclockComparator = value; }
 
     public void setGeneralRegister(
         final int index,
