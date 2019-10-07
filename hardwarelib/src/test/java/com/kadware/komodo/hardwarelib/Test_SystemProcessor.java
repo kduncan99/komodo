@@ -9,7 +9,6 @@ import java.util.Random;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for SystemProcessor class

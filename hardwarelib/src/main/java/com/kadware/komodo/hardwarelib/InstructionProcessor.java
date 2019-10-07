@@ -28,6 +28,44 @@ public class InstructionProcessor extends Processor implements Worker {
     //  Nested enumerations
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Indicates the type of the bank
+     */
+    public enum BankType {
+        ExtendedMode(0),
+        BasicMode(1),     //  Requires BD.S == 0
+        Gate(2),          //  Requires BD.S == 0
+        Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
+        //  Only BD.Type, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
+        Queue(4),
+        QueueRepository(6);
+
+        final int _code;
+
+        BankType(int code) { _code = code; }
+
+        public static BankType get(
+            final int code
+        ) {
+            switch (code) {
+                case 0:     return ExtendedMode;
+                case 1:     return BasicMode;
+                case 2:     return Gate;
+                case 3:     return Indirect;
+                case 4:     return Queue;
+                case 6:     return QueueRepository;
+            }
+
+            throw new RuntimeException(String.format("Bad code passed to BankType.get:%d", code));
+        }
+    }
+
+    public enum BreakpointComparison {
+        Fetch,
+        Read,
+        Write,
+    }
+
     public enum RunMode {
         Normal,
         SingleInstruction,
@@ -55,16 +93,771 @@ public class InstructionProcessor extends Processor implements Worker {
         InterruptHandlerInvalidLevelBDI,
     }
 
-    public enum BreakpointComparison {
-        Fetch,
-        Read,
-        Write,
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Miscellaneous nested classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Represents an active base table entry.
+     * It's basically a Word36 with special getters
+     */
+    public static class ActiveBaseTableEntry {
+
+        final long _value;
+
+        public ActiveBaseTableEntry(long value) { _value = value; }
+        public ActiveBaseTableEntry(
+            final int level,
+            final int bankDescriptorIndex,
+            final int offset
+        ) {
+            _value = (((long)level & 07) << 33) | (((long)bankDescriptorIndex & 077777) << 18) | (offset & 0777777);
+        }
+
+        public int getLevel() { return (int) (_value >> 33); }
+        public int getBDI() { return (int) (_value >> 18) & 077777; }
+        public int getLBDI() { return (int) (_value >> 18); }
+        public int getSubsetOffset() { return (int) (_value & 0777777); }
     }
 
+    /**
+     * Describes a base register - there are 32 of these, each describing a based bank.
+     */
+    public static class BaseRegister {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested classes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+        public final AccessInfo _accessLock;                        // ring and domain for this bank
+        public final AbsoluteAddress _baseAddress;                  //  physical location of the described bank
+        public final AccessPermissions _generalAccessPermissions;   //  ERW permissions for access from a key of lower privilege
+        public final boolean _largeSizeFlag;                        //  If true, area does not exceed 2^24 bytes - else 2^18 bytes
+        public final int _lowerLimitNormalized;                     //  Relative address, lower limit - 24 bits significant.
+                                                                    //      Corresponds to first word/value in the storage subset
+                                                                    //      one-word-granularity normalized form of the lower limit,
+                                                                    //      accounting for large size flag
+        public final AccessPermissions _specialAccessPermissions;   //  ERW permissions for access from a key of higher or equal privilege
+        public final ArraySlice _storage;                           //  describes the extent of the storage for this bank - null for void flag
+        public final int _upperLimitNormalized;                     //  Relative address, upper limit - 24 bits significant
+                                                                    //      one-word-granularity normalized form of the upper limit,
+                                                                    //      accounting for large size flag
+        public final boolean _voidFlag;                             //  if true, this is a void bank (no storage)
+
+        /**
+         * Creates a ArraySlice to represent the bank as defined by the other attributes of this object
+         * @return as described, null if void or limits indicate no storage
+         * @throws AddressingExceptionInterrupt if something is wrong with the values
+         */
+        private ArraySlice getStorage(
+        ) throws AddressingExceptionInterrupt{
+            if ((_voidFlag) || (_lowerLimitNormalized > _upperLimitNormalized)) {
+                return null;
+            }
+
+            try {
+                int bankSize = (_upperLimitNormalized - _lowerLimitNormalized + 1);
+                MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(_baseAddress._upiIndex);
+                ArraySlice mspStorage = msp.getStorage(_baseAddress._segment);
+                return new ArraySlice(mspStorage, _baseAddress._offset, bankSize);
+            } catch (UPIProcessorTypeException | UPINotAssignedException ex) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                       0,
+                                                       0);
+            }
+        }
+
+        /**
+         * Standard Constructor, used for Void bank
+         */
+        public BaseRegister(
+        ) {
+            _accessLock = new AccessInfo();
+            _baseAddress = new AbsoluteAddress((short) 0, 0, 0);
+            _generalAccessPermissions = new AccessPermissions(false, false, false);
+            _largeSizeFlag = false;
+            _lowerLimitNormalized = 0;
+            _specialAccessPermissions = new AccessPermissions(false, false, false);
+            _storage = null;
+            _upperLimitNormalized = 0;
+            _voidFlag = true;
+        }
+
+        /**
+         * Initial value constructor for a non-void bank
+         * @param baseAddress indicates UPI and offset indicating where in an MSP the storage for this bank is located
+         * @param largeSizeFlag indicates a large size bank
+         * @param lowerLimitNormalized actual normalized lower limit
+         * @param upperLimitNormalized actual normalized upper limit
+         * @param accessLock ring and domain for this bank
+         * @param generalAccessPermissions access permissions for lower ring/domain
+         * @param specialAccessPermissions access permissions for equal or higher ring/domain
+         */
+        public BaseRegister(
+            final AbsoluteAddress baseAddress,
+            final boolean largeSizeFlag,
+            final int lowerLimitNormalized,
+            final int upperLimitNormalized,
+            final AccessInfo accessLock,
+            final AccessPermissions generalAccessPermissions,
+            final AccessPermissions specialAccessPermissions
+        ) throws AddressingExceptionInterrupt {
+            _baseAddress = baseAddress;
+            _largeSizeFlag = largeSizeFlag;
+            _lowerLimitNormalized = lowerLimitNormalized;
+            _upperLimitNormalized = upperLimitNormalized;
+            _accessLock = accessLock;
+            _generalAccessPermissions = generalAccessPermissions;
+            _specialAccessPermissions = specialAccessPermissions;
+            _storage = getStorage();
+            _voidFlag = _lowerLimitNormalized >_upperLimitNormalized;
+        }
+
+        /**
+         * Constructor for building a BaseRegister from a bank descriptor with no subsetting
+         * @param bankDescriptor source bank descriptor
+         */
+        public BaseRegister(
+            final BankDescriptor bankDescriptor
+        ) throws AddressingExceptionInterrupt {
+            _accessLock = bankDescriptor.getAccessLock();
+            _baseAddress = bankDescriptor.getBaseAddress();
+            _generalAccessPermissions = new AccessPermissions(false,
+                                                              bankDescriptor.getGeneraAccessPermissions()._read,
+                                                              bankDescriptor.getGeneraAccessPermissions()._write);
+            _largeSizeFlag = bankDescriptor.getLargeBank();
+            _lowerLimitNormalized = bankDescriptor.getLowerLimitNormalized();
+            _specialAccessPermissions = new AccessPermissions(false,
+                                                              bankDescriptor.getSpecialAccessPermissions()._read,
+                                                              bankDescriptor.getSpecialAccessPermissions()._write);
+            _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized();
+            _voidFlag = _lowerLimitNormalized > _upperLimitNormalized;
+            _storage = getStorage();
+        }
+
+        /**
+         * Constructor for building a BaseRegister from a bank descriptor with subsetting.
+         * This occurs when the caller wishes to access a bank larger than the D-field allows, by accessing consecutive
+         * sections of said bank by basing those segments on consecutive base registers.
+         * In this case, we add the given offset to the base offset from the BD, and adjust the lower and upper
+         * limits accordingly.  Subsequent accesses proceed as desired by virtue of the fact that we've set
+         * the base address in the bank register, along with the limits, in this fashion.
+         * @param bankDescriptor source bank descriptor
+         * @param offset offset parameter for subsetting
+         */
+        public BaseRegister(
+            final BankDescriptor bankDescriptor,
+            final int offset
+        ) throws AddressingExceptionInterrupt {
+            _accessLock = bankDescriptor.getAccessLock();
+            _baseAddress = bankDescriptor.getBaseAddress();
+            _generalAccessPermissions = new AccessPermissions(false,
+                                                              bankDescriptor.getGeneraAccessPermissions()._read,
+                                                              bankDescriptor.getGeneraAccessPermissions()._write);
+            _largeSizeFlag = bankDescriptor.getLargeBank();
+
+            int bdLowerNorm = bankDescriptor.getLowerLimitNormalized();
+            _lowerLimitNormalized = (bdLowerNorm > offset) ? bdLowerNorm - offset : 0;
+            _specialAccessPermissions = new AccessPermissions(false,
+                                                              bankDescriptor.getSpecialAccessPermissions()._read,
+                                                              bankDescriptor.getSpecialAccessPermissions()._write);
+            _upperLimitNormalized = bankDescriptor.getUpperLimitNormalized() - offset;
+            _voidFlag = (_upperLimitNormalized < 0) || (_lowerLimitNormalized > _upperLimitNormalized);
+            _storage = getStorage();
+        }
+
+        /**
+         * Constructor for load base register direct (i.e., loading from 4-word packet in memory)
+         * @param values 4-word packet format as such:
+         * Word 0:  bit 1:  GAP read
+         *          bit 2:  GAP write
+         *          bit 4:  SAP read
+         *          bit 5:  SAP write
+         *          bit 10: void flag
+         *          bit 15: large size flag
+         *          bits 18-19: Access lock ring
+         *          bits 20-35: Access lock domain
+         * Word 1:  bits 0-8: Lower Limit
+         *          bits 18-35: Upper limit
+         * Word 2:  bits 18-35: MSBits of absolute address
+         * Word 3:  bits 0-36:  LSBits of absolute address
+         *
+         * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
+         *               otherwise, it has 512 word granularity (9 bit shift)
+         * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
+         *               otherwise, it has 1 word granularity (no shift)
+         * Absolute address is defined by the MSP architecture
+         */
+        public BaseRegister(
+            final long[] values
+        ) throws AddressingExceptionInterrupt {
+            _generalAccessPermissions = new AccessPermissions(false,
+                                                              (values[0] & 0_200000_000000L) != 0,
+                                                              (values[0] & 0_100000_000000L) != 0);
+            _specialAccessPermissions = new AccessPermissions(false,
+                                                              (values[0] & 0_020000_000000L) != 0,
+                                                              (values[0] & 0_010000_000000L) != 0);
+            _largeSizeFlag = (values[0] & 0_000004_000000L) != 0;
+            _accessLock = new AccessInfo(values[0] & 0777777);
+            _lowerLimitNormalized =(int)(((values[1] >> 27) & 0777) << (_largeSizeFlag ? 15 : 9));
+            _upperLimitNormalized = (int) ((values[1] & 0777777) << (_largeSizeFlag ? 6 : 0)) | (_largeSizeFlag ? 077 : 0);
+            _baseAddress = new AbsoluteAddress(values, 2);
+            _voidFlag = ((values[0] & 0_000200_000000L) != 0) || (_lowerLimitNormalized > _upperLimitNormalized);
+            _storage = _voidFlag ? null : getStorage();
+        }
+
+        /**
+         * Checks a relative address against this bank's limits.
+         * @param relativeAddress relative address of interest
+         * @param fetchFlag true if this is related to an instruction fetch, else false
+         * @throws ReferenceViolationInterrupt if the address is outside of limits
+         */
+        void checkAccessLimits(
+            final long relativeAddress,
+            final boolean fetchFlag
+        ) throws ReferenceViolationInterrupt {
+            if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress > _upperLimitNormalized)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
+            }
+        }
+
+        /**
+         * Checks a particular key against this bank's limits.
+         * @param fetchFlag true if this is related to an instruction fetch, else false
+         * @param readFlag true if this will result in a read
+         * @param writeFlag true if this will result in a write
+         * @param accessInfo access info of the client
+         * @throws ReferenceViolationInterrupt if the address is outside of limits
+         */
+        void checkAccessLimits(
+            final boolean fetchFlag,
+            final boolean readFlag,
+            final boolean writeFlag,
+            final AccessInfo accessInfo
+        ) throws ReferenceViolationInterrupt {
+            //  Choose GAP or SAP based on caller's accessInfo, but only if necessary
+            if (readFlag || writeFlag) {
+                boolean useSAP = ((accessInfo._ring < _accessLock._ring) || (accessInfo._domain == _accessLock._domain));
+                AccessPermissions bankPermissions = useSAP ? _specialAccessPermissions : _generalAccessPermissions;
+
+                if (readFlag && !bankPermissions._read) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, fetchFlag);
+                }
+
+                if (writeFlag && !bankPermissions._write) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, fetchFlag);
+                }
+            }
+        }
+
+        /**
+         * Checks a relative address and a particular key against this bank's limits.
+         * @param relativeAddress relative address of interest
+         * @param fetchFlag true if this is related to an instruction fetch, else false
+         * @param readFlag true if this will result in a read
+         * @param writeFlag true if this will result in a write
+         * @param accessInfo access info of the client
+         * @throws ReferenceViolationInterrupt if the address is outside of limits
+         */
+        void checkAccessLimits(
+            final long relativeAddress,
+            final boolean fetchFlag,
+            final boolean readFlag,
+            final boolean writeFlag,
+            final AccessInfo accessInfo
+        ) throws ReferenceViolationInterrupt {
+            checkAccessLimits(relativeAddress, fetchFlag);
+            checkAccessLimits(fetchFlag, readFlag, writeFlag, accessInfo);
+        }
+
+        /**
+         * Checks a range of relative addresses and a particular key against this bank's limits.
+         * @param relativeAddress relative address of interest
+         * @param count number of consecutive words of the access
+         * @param readFlag true if this will result in a read
+         * @param writeFlag true if this will result in a write
+         * @param accessInfo access info of the client
+         * @throws ReferenceViolationInterrupt if the address is outside of limits
+         */
+        void checkAccessLimits(
+            final long relativeAddress,
+            final int count,
+            final boolean readFlag,
+            final boolean writeFlag,
+            final AccessInfo accessInfo
+        ) throws ReferenceViolationInterrupt {
+            if ((relativeAddress < _lowerLimitNormalized) || (relativeAddress + count - 1 > _upperLimitNormalized)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
+
+            checkAccessLimits(false, readFlag, writeFlag, accessInfo);
+        }
+
+        @Override
+        public boolean equals(
+            final Object obj
+        ) {
+            if (obj instanceof BaseRegister) {
+                BaseRegister brobj = (BaseRegister) obj;
+                if (brobj._voidFlag && _voidFlag) {
+                    return true;
+                }
+
+                return (brobj._accessLock.equals(_accessLock)
+                        && (brobj._baseAddress.equals(_baseAddress))
+                        //  we must not compare ._enter flags, as they are undefined in the base register
+                        //  so we have to compare the individual read and write flags instead
+                        && (brobj._generalAccessPermissions._read == _generalAccessPermissions._read)
+                        && (brobj._generalAccessPermissions._write == _generalAccessPermissions._write)
+                        && (brobj._largeSizeFlag == _largeSizeFlag)
+                        && (brobj._lowerLimitNormalized == _lowerLimitNormalized)
+                        //  as above
+                        && (brobj._specialAccessPermissions._read == _specialAccessPermissions._read)
+                        && (brobj._specialAccessPermissions._write == _specialAccessPermissions._write)
+                        && (brobj._upperLimitNormalized == _upperLimitNormalized));
+            }
+
+            return false;
+        }
+
+        /**
+         * Retrieves the content of this base register in canonical/architecturally-correct format.
+         * Format is as such:
+         * Word 0:  bit 1:  GAP read
+         *          bit 2:  GAP write
+         *          bit 4:  SAP read
+         *          bit 5:  SAP write
+         *          bit 10: void flag
+         *          bit 15: large size flag
+         *          bits 18-19: Access lock ring
+         *          bits 20-35: Access lock domain
+         * Word 1:  bits 0-8: Lower Limit
+         *          bits 18-35: Upper limit
+         * Word 2:  bits 18-35: MSBits of absolute address
+         * Word 3:  bits 0-36:  LSBits of absolute address
+         *
+         * Lower Limit - if large size, lower limit has 32,768 word granularity (15 bit shift)
+         *               otherwise, it has 512 word granularity (9 bit shift)
+         * Upper limit - if large size, upper limit has 64 word granularity (6 bit shift)
+         *               otherwise, it has 1 word granularity (no shift)
+         * Absolute address is defined by the MSP architecture
+         * @return 4 word array of values
+         */
+        long[] getBaseRegisterWords(
+        ) {
+            long[] result = new long[4];
+            for (int rx = 0; rx < 4; ++rx) { result[rx] = 0; }
+
+            if (_generalAccessPermissions._read) { result[0] |= 0_200000_000000L; }
+            if (_generalAccessPermissions._write) { result[0] |= 0_100000_000000L; }
+            if (_specialAccessPermissions._read) { result[0] |= 0_020000_000000L; }
+            if (_specialAccessPermissions._write) { result[0] |= 0_010000_000000L; }
+            if (_voidFlag) { result[0] |= 0_000200_000000L; }
+            if (_largeSizeFlag) { result[0] |= 0_000004_000000L; }
+            result[0] |= (_accessLock._ring) << 16;
+            result[0] |= _accessLock._domain;
+
+            result[1] = ((long)_lowerLimitNormalized >> (_largeSizeFlag ? 15 : 9)) << 27;
+            result[1] |= (long)_upperLimitNormalized >> (_largeSizeFlag ? 6 : 0);
+
+            result[2] = _baseAddress._segment;
+            result[3] = ((long) (_baseAddress._upiIndex) << 32) | _baseAddress._offset;
+
+            return result;
+        }
+
+        /**
+         * @return lower limit with granularity depending upon large size flag
+         */
+        public int getLowerLimit(
+        ) {
+            return (_largeSizeFlag ? _lowerLimitNormalized >> 15 : _lowerLimitNormalized >> 9);
+        }
+
+        /**
+         * @return upper limit with granularity depending upon large size flag
+         */
+        public int getUpperLimit() {
+            return (_largeSizeFlag ? _upperLimitNormalized >> 6 : _upperLimitNormalized);
+        }
+
+        @Override public int hashCode() { return _voidFlag ? 0 : _baseAddress.hashCode(); }
+    }
+
+    /**
+     * An 8-word Word36Array which describes a bank.
+     * This structure is defined by the hardware PRM and exists in memory, although it may be presented from the outside
+     * world for testing or setup purposes.
+     */
+    public static class BankDescriptor extends ArraySlice {
+
+        /**
+         * Constructor for a BankDescriptor which is located in a larger structure.
+         * We do not alter the underlying array, in case it already contains a valid structure.
+         * @param base base array
+         * @param offset offset within the base array where the bank descriptor source code exists
+         */
+        public BankDescriptor(
+            final ArraySlice base,
+            final int offset
+        ) {
+            super(base, offset, 8);
+        }
+
+        public void dump() {
+            for (int ox = 0; ox < 8; ++ox) {
+                System.out.println(String.format("  %012o", get(ox)));
+            }
+        }
+
+        /**
+         * @return Access lock for this bank
+         *          BD.Access_Lock:Word 0:H2
+         */
+        AccessInfo getAccessLock() {
+            byte ring = (byte)((get(0) & 0_600000) >> 16);
+            short domain = (short)(get(0) & 0_177777);
+            return new AccessInfo(ring, domain);
+        }
+
+        /**
+         * @return Type of bank (has some impact on the validity/meaning of other fields
+         *          BD.TYPE:Word 0 Bits 8-11
+         */
+        public BankType getBankType() {
+            int code = ((int)(get(0) >> 24)) & 017;
+            return BankType.get(code);
+        }
+
+        /**
+         * @return Base Address - i.e., describes the logical physical address (if that makes sense) corresponding to the
+         *          first word of this bank in memory.  The actual meaning of this depends upon the hardware architecture.
+         *          For us, the UPI portion is held in bits 0-3 of Word 3, the segment in H2 of Word 2,
+         *          and the offset is held in bits 4-35 of Word 3.
+         *          Canonical architecture requires the offset to be an unsigned value, but hardware addressing had traditionally
+         *          begun at an artificially high value (such as 0400000000000 or some such) -- which allowed the base value to be
+         *          less than that (but still positive) in order to account for non-zero lower-limits.
+         *          Consider a lower-limit of 01000: The relative address of 01000 is valid, and refers to the first word in the bank.
+         *          But if the first word in the bank is base-address == (upi)0, referring to the first word in MSP storage,
+         *          the address translation algorithm (base-address + relative-address) gives us an absolute address of 01000,
+         *          which is wrong - we wanted 0.
+         *          To fix this, the base-address must be shifted backward/downward by the lower-limit value.
+         *          This is possible if base address begin at some high value.
+         *          However, for us the base address begins at zero, so to shift it down by lower-limit, we need signed values here.
+         */
+        public AbsoluteAddress getBaseAddress() {
+            return new AbsoluteAddress(this, 2);
+        }
+
+        /**
+         * @return position of this bank relative to the first bank describing a large or very large bank
+         *          BD.DISP:Word 4 Bits 3-17
+         */
+        int getDisplacement() {
+            return (int)(get(4) >> 18) & 077777;
+        }
+
+        /**
+         * @return Execute, Read, and Write permissions for ring/domain at a lower level
+         *          BD.GAP:Word 0 Bits 0-2
+         */
+        AccessPermissions getGeneraAccessPermissions() {
+            return new AccessPermissions((int) (get(0) >> 33));
+        }
+
+        /**
+         * @return G-flag
+         *          Addressing_Exception interrupt results if this BD is accessed by normal bank-manipulation handling
+         *          BD.G:Word 0 Bit 13
+         */
+        boolean getGeneralFault() {
+            return (get(0) & 020_000000L) != 0;
+        }
+
+        /**
+         * @return large bank flag:
+         *          If false, this is a single bank no greater than 0_777777.
+         *              BD.Lower_Limit has 512-word granularity and BD.Upper_Limit has 1-word granularity.
+         *              This is required for BD.Type other than ExtendedMode.
+         *          IF true, this is either a portion of a large bank no greater than 077_777777
+         *              or of a very large bank no greater than 077777_777777.
+         *              BD.Lower_Limit has 32768-word granularity, and BD.Upper_Limit has 64-word granularity.
+         *          BD.S:Word 0 Bit 15
+         */
+        boolean getLargeBank() {
+            return (get(0) & 04_000000L) != 0;
+        }
+
+        /**
+         * @return lower limit, subject to granularity specified in the large-bank field - for non-indirect banks
+         *          Word 1 Bits 0-8
+         */
+        public int getLowerLimit() {
+            return (int)(get(1) >> 27);
+        }
+
+        /**
+         * @return lower limit with granularity normalized out (making this 1-word granularity)
+         */
+        public int getLowerLimitNormalized() {
+            return getLargeBank() ? (getLowerLimit() << 15) : (getLowerLimit() << 9);
+        }
+
+        /**
+         * @return Execute, Read, and Write permissions for ring/domain at a lower level
+         *          BD.SAP:Word 0 Bits 3-5
+         */
+        AccessPermissions getSpecialAccessPermissions() {
+            return new AccessPermissions((int)(get(0) >> 30) & 07);
+        }
+
+        /**
+         * @return Target bank L,BDI (only for indirect banks)
+         *          L (level) is the top 3 bits in a the wrapped 18-bit field
+         *          BDI is the remaining (bottom) 15 bits
+         */
+        int getTargetLBDI() {
+            return (int)(get(0) >> 18);
+        }
+
+        /**
+         * @return upper limit, subject to granularity specified in the large-bank field - for non-indirect banks
+         *          Word 1 Bits 9-35 (bottom 3 quarter words)
+         */
+        public int getUpperLimit() {
+            return (int)(get(1) & 0777_777777L);
+        }
+
+        /**
+         * @return upper limit with granularity normalized out (making this 1-word granularity)
+         */
+        public int getUpperLimitNormalized() {
+            return getLargeBank() ? (getUpperLimit() << 6) : getUpperLimit();
+        }
+
+        /**
+         * @return U flag (upper limit suppression control)
+         *              If clear, the upper limit is taken from the bank descriptor for populating the
+         *              bank register.  If set, the bank register's upper limit is 0777777 non-normalized.
+         *              Only meaningful for large banks (S is set).
+         *          BD.U:Word 0 Bit 16
+         */
+        public boolean getUpperLimitSuppressionControl() {
+            return (get(0) & 02_000000L) != 0;
+        }
+
+        public void setAccessLock(
+            final AccessInfo accessInfo
+        ) {
+            long result = get(0) & 0_777777_000000L;
+            result |= accessInfo.get() & 0777777;
+            set(0, result);
+        }
+
+        public void setBankType(
+            final BankType value
+        ) {
+            long result = get(0) & 0_776077_777777L;
+            result |= (long)(value._code) << 24;
+            set(0, result);
+        }
+
+        public void setBaseAddress(
+            final AbsoluteAddress baseAddress
+        ) {
+            baseAddress.populate(this, 2);
+        }
+
+        public void setGeneralAccessPermissions(
+            final AccessPermissions value
+        ) {
+            long result = get(0) & 0_077777_777777L;
+            result |= ((long)value.get() << 33);
+            set(0, result);
+        }
+
+        public void setGeneralFault(
+            final boolean value
+        ) {
+            long result = get(0) & 0_777757_777777L;
+            if (value) {
+                result |= 020_000000;
+            }
+            set(0, result);
+        }
+
+        public void setLargeBank(
+            final boolean value
+        ) {
+            long result = get(0) & 0_777773_777777L;
+            if (value) {
+                result |= 04_000000;
+            }
+            set(0, result);
+        }
+
+        public void setLowerLimit(
+            final int value
+        ) {
+            long result = get(1) & 0_000777_777777L;
+            result |= (long)(value & 0777) << 27;
+            set(1, result);
+        }
+
+        public void setSpecialAccessPermissions(
+            final AccessPermissions value
+        ) {
+            long result = get(0) & 0_707777_777777L;
+            result |= ((long)value.get() << 30);
+            set(0, result);
+        }
+
+        public void setUpperLimit(
+            final int value
+        ) {
+            long result = get(1) & 0_777000_000000L;
+            result |= value & 0777_777777L;
+            set(1, result);
+        }
+
+        public void setUpperLimitSuppressionControl(
+            final boolean value
+        ) {
+            long result = get(0) & 0_777775_777777L;
+            if (value) {
+                result |= 02_000000;
+            }
+            set(0, result);
+        }
+    }
+
+    /**
+     * Describes a breakpoint register.
+     */
+    public static class BreakpointRegister {
+
+        final boolean _haltFlag;
+        final boolean _fetchFlag;
+        final boolean _readFlag;
+        final boolean _writeFlag;
+        final AbsoluteAddress _absoluteAddress;
+
+        private BreakpointRegister(
+            final boolean haltFlag,
+            final boolean fetchFlag,
+            final boolean readFlag,
+            final boolean writeFlag,
+            final AbsoluteAddress absoluteAddress
+        ) {
+            _haltFlag = haltFlag;
+            _fetchFlag = fetchFlag;
+            _readFlag = readFlag;
+            _writeFlag = writeFlag;
+            _absoluteAddress = absoluteAddress;
+        }
+
+        public static class Builder {
+
+            private boolean _haltFlag = false;
+            private boolean _fetchFlag = false;
+            private boolean _readFlag = false;
+            private boolean _writeFlag = false;
+            private AbsoluteAddress _absoluteAddress = null;
+
+            public Builder setHaltFlag(boolean value)                   { _haltFlag = value; return this; }
+            public Builder setFetchFlag(boolean value)                  { _fetchFlag = value; return this; }
+            public Builder setReadFlag(boolean value)                   { _readFlag = value; return this; }
+            public Builder setWriteFlag(boolean value)                  { _writeFlag = value; return this; }
+            public Builder setAbsoluteAddress(AbsoluteAddress value)    { _absoluteAddress = value; return this; }
+
+            public BreakpointRegister build() {
+                return new BreakpointRegister(_haltFlag, _fetchFlag, _readFlag, _writeFlag, _absoluteAddress);
+            }
+        }
+    }
+
+    /**
+     * Describes a designator register
+     */
+    public static class DesignatorRegister {
+
+        private static final long MASK_ActivityLevelQueueMonitorEnabled = Word36.MASK_B0;
+        private static final long MASK_FaultHandlingInProgress          = Word36.MASK_B6;
+        private static final long MASK_Executive24BitIndexingEnabled    = Word36.MASK_B11;
+        private static final long MASK_QuantumTimerEnabled              = Word36.MASK_B12;
+        private static final long MASK_DeferrableInterruptEnabled       = Word36.MASK_B13;
+        private static final long MASK_ProcessorPrivilege               = Word36.MASK_B14 | Word36.MASK_B15;
+        private static final long MASK_BasicModeEnabled                 = Word36.MASK_B16;
+        private static final long MASK_ExecRegisterSetSelected          = Word36.MASK_B17;
+        private static final long MASK_Carry                            = Word36.MASK_B18;
+        private static final long MASK_Overflow                         = Word36.MASK_B19;
+        private static final long MASK_CharacteristicUnderflow          = Word36.MASK_B21;
+        private static final long MASK_CharacteristicOverflow           = Word36.MASK_B22;
+        private static final long MASK_DivideCheck                      = Word36.MASK_B23;
+        private static final long MASK_OperationTrapEnabled             = Word36.MASK_B27;
+        private static final long MASK_ArithmeticExceptionEnabled       = Word36.MASK_B29;
+        private static final long MASK_BasicModeBaseRegisterSelection   = Word36.MASK_B31;
+        private static final long MASK_QuarterWordModeEnabled           = Word36.MASK_B32;
+
+        private long _value = 0;
+
+        public DesignatorRegister() {}
+        public DesignatorRegister(long value) { _value = value & Word36.BIT_MASK; }
+
+        private void changeBit(
+            final long mask,
+            final boolean newBit
+        ) {
+            _value = newBit ? Word36.logicalOr(_value, mask) : Word36.logicalAnd(_value, invertMask(mask));
+        }
+
+        private long invertMask(final long mask)                { return mask ^ Word36.BIT_MASK; }
+
+        public void clear()                                     { _value = 0; }
+        public boolean getActivityLevelQueueMonitorEnabled()    { return (_value & MASK_ActivityLevelQueueMonitorEnabled) != 0; }
+        public boolean getFaultHandlingInProgress()             { return (_value & MASK_FaultHandlingInProgress) != 0; }
+        public boolean getExecutive24BitIndexingEnabled()       { return (_value & MASK_Executive24BitIndexingEnabled) != 0; }
+        public boolean getQuantumTimerEnabled()                 { return (_value & MASK_QuantumTimerEnabled) != 0; }
+        public boolean getDeferrableInterruptEnabled()          { return (_value & MASK_DeferrableInterruptEnabled) != 0; }
+        public int getProcessorPrivilege()                      { return (int)((_value & (Word36.MASK_B14 | Word36.MASK_B15)) >> 20); }
+        public boolean getBasicModeEnabled()                    { return (_value & MASK_BasicModeEnabled) != 0; }
+        public boolean getExecRegisterSetSelected()             { return (_value & MASK_ExecRegisterSetSelected) != 0; }
+        public boolean getCarry()                               { return (_value & MASK_Carry) != 0; }
+        public boolean getOverflow()                            { return (_value & MASK_Overflow) != 0; }
+        public boolean getCharacteristicUnderflow()             { return (_value & MASK_CharacteristicUnderflow) != 0; }
+        public boolean getCharacteristicOverflow()              { return (_value & MASK_CharacteristicOverflow) != 0; }
+        public boolean getDivideCheck()                         { return (_value & MASK_DivideCheck) != 0; }
+        public boolean getOperationTrapEnabled()                { return (_value & MASK_OperationTrapEnabled) != 0; }
+        public boolean getArithmeticExceptionEnabled()          { return (_value & MASK_ArithmeticExceptionEnabled) != 0; }
+        public boolean getBasicModeBaseRegisterSelection()      { return (_value & MASK_BasicModeBaseRegisterSelection) != 0; }
+        public boolean getQuarterWordModeEnabled()              { return (_value & MASK_QuarterWordModeEnabled) != 0; }
+        public long getW()                                      { return _value; }
+        public long getS4()                                     { return Word36.getS4(_value); }
+
+        public void setActivityLevelQueueMonitorEnabled(boolean flag)   { changeBit(MASK_ActivityLevelQueueMonitorEnabled, flag); }
+        public void setFaultHandlingInProgress(boolean flag)            { changeBit(MASK_FaultHandlingInProgress, flag); }
+        public void setExecutive24BitIndexingEnabled(boolean flag)      { changeBit(MASK_Executive24BitIndexingEnabled, flag); }
+        public void setQuantumTimerEnabled(boolean flag)                { changeBit(MASK_QuantumTimerEnabled, flag); }
+        public void setDeferrableInterruptEnabled(boolean flag)         { changeBit(MASK_DeferrableInterruptEnabled, flag); }
+        public void setS4(long value)                                   { _value = Word36.setS4(_value, value); }
+        public void setW(long value)                                    { _value = value & Word36.BIT_MASK; }
+
+        public void setProcessorPrivilege(
+            final int value
+        ) {
+            long cleared = _value & invertMask(MASK_ProcessorPrivilege);
+            _value = cleared | ((value & 03L) << 20);
+        }
+
+        public void setBasicModeEnabled(boolean flag)                   { changeBit(MASK_BasicModeEnabled, flag); }
+        public void setExecRegisterSetSelected(boolean flag)            { changeBit(MASK_ExecRegisterSetSelected, flag); }
+        public void setCarry(boolean flag)                              { changeBit(MASK_Carry, flag); }
+        public void setOverflow(boolean flag)                           { changeBit(MASK_Overflow, flag); }
+        public void setCharacteristicUnderflow(boolean flag)            { changeBit(MASK_CharacteristicUnderflow, flag); }
+        public void setCharacteristicOverflow(boolean flag)             { changeBit(MASK_CharacteristicOverflow, flag); }
+        public void setDivideCheck(boolean flag)                        { changeBit(MASK_DivideCheck, flag); }
+        public void setOperationTrapEnabled(boolean flag)               { changeBit(MASK_OperationTrapEnabled, flag); }
+        public void setArithmeticExceptionEnabled(boolean flag)         { changeBit(MASK_ArithmeticExceptionEnabled, flag); }
+        public void setBasicModeBaseRegisterSelection(boolean flag)     { changeBit(MASK_BasicModeBaseRegisterSelection, flag); }
+        public void setQuarterWordModeEnabled(boolean flag)             { changeBit(MASK_QuarterWordModeEnabled, flag); }
+    }
 
     /**
      * Contains developed absolute addresses and other information necessary for preserving values which are
@@ -76,7 +869,7 @@ public class InstructionProcessor extends Processor implements Worker {
         private final int _offset;
         private final AbsoluteAddress[] _addresses;
 
-        public DevelopedAddresses(
+        DevelopedAddresses(
             final BaseRegister baseRegister,
             final int offset,
             final AbsoluteAddress[] addresses
@@ -84,6 +877,360 @@ public class InstructionProcessor extends Processor implements Worker {
             _baseRegister = baseRegister;
             _offset = offset;
             _addresses = addresses;
+        }
+    }
+
+    /**
+     * Represents a particular gate within a gate bank
+     */
+    private static class Gate {
+
+        public final AccessPermissions _generalPermissions;     //  GAP.E
+        public final AccessPermissions _specialPermissions;     //  SAP.E
+        public final boolean _libraryGate;                      //  LIB - we don't support these currently
+        public final boolean _gotoInhibit;                      //  GI
+        public final boolean _designatorBitInhibit;             //  DBI
+        public final boolean _accessKeyInhibit;                 //  AKI
+        public final boolean _latentParameter0Inhibit;          //  LP0I
+        public final boolean _latentParameter1Inhibit;          //  LP1I
+        public final AccessInfo _accessLock;                    //  Lock which caller must satisfy to enter the gate
+        public final int _targetBankLevel;
+        public final int _targetBankDescriptorIndex;
+        public final int _targetBankOffset;
+        public final int _basicModeBaseRegister;                //  range is 0:3 meaning B12:B15
+        public final DesignatorRegister _designatorBits12_17;   //  bits 12-17 significant (okay, maybe not 16)
+        public final AccessInfo _accessKey;                     //  key to be loaded into IKR
+        public final long _latentParameter0;
+        public final long _latentParameter1;
+
+        /**
+         * Builds a Gate object from the 8-word storage entry representing the gate
+         * @param gateDefinition represents the content of the containing gate
+         */
+        Gate(
+            final long[] gateDefinition
+        ) {
+            _generalPermissions = new AccessPermissions((int) (gateDefinition[0] >> 33));
+            _specialPermissions = new AccessPermissions((int) (gateDefinition[0] >> 30));
+            _libraryGate = (gateDefinition[0] & 0_000040_000000L) != 0;
+            _gotoInhibit = (gateDefinition[0] & 0_000020_000000L) != 0;
+            _designatorBitInhibit = (gateDefinition[0] & 0_000010_000000L) != 0;
+            _accessKeyInhibit = (gateDefinition[0] & 0_000004_000000L) != 0;
+            _latentParameter0Inhibit = (gateDefinition[0] & 0_000002_000000L) != 0;
+            _latentParameter1Inhibit = (gateDefinition[0] & 0_000001_000000L) != 0;
+            _accessLock = new AccessInfo(gateDefinition[0] & 0_777777);
+
+            _targetBankLevel = (int) (gateDefinition[1] >> 33) & 03;
+            _targetBankDescriptorIndex = (int) (gateDefinition[1] >> 18) & 077777;
+            _targetBankOffset = (int) (gateDefinition[1] & 0777777);
+
+            _basicModeBaseRegister = (int) ((gateDefinition[2] >> 24) & 03);
+            _designatorBits12_17 = new DesignatorRegister(gateDefinition[2] & 0_000077_000000L);
+            _accessKey = new AccessInfo(gateDefinition[2] & 0_777777);
+
+            _latentParameter0 = gateDefinition[3];
+            _latentParameter1 = gateDefinition[4];
+        }
+    }
+
+    /**
+     * An extension of Word36 which describes an indicator key register
+     */
+    static class IndicatorKeyRegister {
+
+        private long _value = 0;
+
+        public IndicatorKeyRegister() {}
+        public IndicatorKeyRegister(long value)                 { _value = value & Word36.BIT_MASK; }
+
+        public void clear()                                     { _value = 0; }
+        public long getW()                                      { return _value; }
+        public int getShortStatusField()                        { return (int) Word36.getS1(_value); }
+        public int getMidInstructionDescription()               { return (int) (Word36.getS2(_value) >> 3); }
+        public int getPendingInterruptInformation()             { return (int) (Word36.getS2(_value) & 07); }
+        public int getInterruptClassField()                     { return (int) Word36.getS3(_value); }
+        public int getAccessKey()                               { return (int) Word36.getH2(_value); }
+        public AccessInfo getAccessInfo()                       { return new AccessInfo(getAccessKey()); }
+        public boolean getInstructionInF0()                     { return (getMidInstructionDescription() & 04) != 0; }
+        public boolean getExecuteRepeatedInstruction()          { return (getMidInstructionDescription() & 02) != 0; }
+        public boolean getBreakpointRegisterMatchCondition()    { return (getPendingInterruptInformation() & 04) != 0; }
+        public boolean getSoftwareBreak()                       { return (getPendingInterruptInformation() & 02) != 0; }
+
+        public void setW(long value)                            { _value = value; }
+        public void setShortStatusField(int value)              { _value = Word36.setS1(_value, value); }
+        public void setMidInstructionDescription(int value)     { _value = (_value & 0_770777_777777L) | ((value & 07) << 27); }
+        public void setPendingInterruptInformation(int value)   { _value = (_value & 0_777077_777777L) | ((value & 07) << 24); }
+        public void setInterruptClassField(int value)           { _value = Word36.setS3(_value, value); }
+        public void setAccessKey(int value)                     { _value = Word36.setH2(_value, value); }
+
+        public void setInstructionInF0(
+            final boolean flag
+        ) {
+            _value &= 0_773777_777777L;
+            if (flag) {
+                _value |= 0_004000_000000L;
+            }
+        }
+
+        public void setExecuteRepeatedInstruction(
+            final boolean flag
+        ) {
+            _value &= 0_775777_777777L;
+            if (flag) {
+                _value |= 0_002000_000000L;
+            }
+        }
+
+        public void setBreakpointRegisterMatchCondition(
+            final boolean flag
+        ) {
+            _value &= 0_777377_777777L;
+            if (flag) {
+                _value |= 0_000400_000000L;
+            }
+        }
+
+        public void setSoftwareBreak(
+            final boolean flag
+        ) {
+            _value &= 0_777577_777777L;
+            if (flag) {
+                _value |= 0_000200_000000L;
+            }
+        }
+    }
+
+    /**
+     * Nothing really different from the VirtualAddress class, but this is a specific hard-held register in the IP.
+     */
+    //TODO should we make this invariant?
+    public static class ProgramAddressRegister {
+
+        long _value = 0;
+
+        ProgramAddressRegister()                    {}
+        public long get()                           { return _value; }
+        public int getLBDI()                        { return (int) (_value >> 18); }
+        public int getProgramCounter()              { return (int) _value & 0_777777; }
+        public void set(long value)                 { _value = value & 0_777777_777777L; }
+        public void setLBDI(long value)             { _value = (_value & 0_777777) | ((value & 0_777777) << 18); }
+        public void setProgramCounter(long value)   { _value = (_value & 0_777777_000000L) | (value & 0_777777); }
+    }
+
+    /**
+     * Represents an RCS stack frame
+     */
+    private static class ReturnControlStackFrame {
+
+        final int _reentryPointBankLevel;
+        final int _reentryPointBankDescriptorIndex;
+        final int _reentryPointOffset;
+        final boolean _trap;
+        final int _basicModeBaseRegister;                       //  Range 0:3, added to 12 signifies a base register
+        final DesignatorRegister _designatorRegisterDB12To17;
+        final AccessInfo _accessKey;
+
+        /**
+         * Builds a frame object from the 2-word storage entry
+         */
+        ReturnControlStackFrame(
+            final long[] frame
+        ) {
+            _reentryPointBankLevel = (int) (frame[0] >> 33) & 07;
+            _reentryPointBankDescriptorIndex = (int) (frame[0] >> 18) & 077777;
+            _reentryPointOffset = (int) (frame[0] & 0777777);
+            _trap = (frame[1] & 0_400000_000000L) != 0;
+            _basicModeBaseRegister = (int) (frame[1] >> 24) & 03;
+            _designatorRegisterDB12To17 = new DesignatorRegister(frame[1] & 0_000077_000000L);
+            _accessKey = new AccessInfo(frame[1] & 0777777);
+        }
+
+        /**
+         * Builds a frame object from the discrete components
+         */
+        ReturnControlStackFrame(
+            final int reentryPointBankLevel,
+            final int reentryPointBankDescriptorIndex,
+            final int reentryPointOffset,
+            final boolean trap,
+            final int basicModeBaseRegister,
+            final DesignatorRegister designatorRegister,
+            final AccessInfo accessKey
+        ) {
+            _reentryPointBankLevel = reentryPointBankLevel;
+            _reentryPointBankDescriptorIndex = reentryPointBankDescriptorIndex;
+            _reentryPointOffset = reentryPointOffset;
+            _trap = trap;
+            _basicModeBaseRegister = basicModeBaseRegister & 07;
+            _designatorRegisterDB12To17 = new DesignatorRegister(designatorRegister.getW() & 0_000077_000000L);
+            _accessKey = accessKey;
+        }
+
+        /**
+         * Returns two-word representation of the RCS frame
+         */
+        long[] get() {
+            long[] result = new long[2];
+            result[0] = ((long) _reentryPointBankLevel << 33)
+                        | ((long) _reentryPointBankDescriptorIndex << 18)
+                        | (result[0] |= _reentryPointOffset);
+
+            result[1] = (_trap ? 0_400000_000000L : 0)
+                        | (_basicModeBaseRegister << 24)
+                        | _designatorRegisterDB12To17.getW()
+                        | _accessKey.get();
+
+            return result;
+        }
+    }
+
+    /**
+     * Represents a virtual address for Basic or Extended mode.
+     */
+    private static class VirtualAddress extends Word36 {
+
+        public VirtualAddress()         {}
+        VirtualAddress(long value)      { super(value); }
+
+        /**
+         * Basic mode initial value constructor
+         * @param execFlag true for exec bank, else false
+         * @param levelFlag level portion of the bank name, true for 1, false for 0
+         * @param bdIndex bank descriptor index 0:07777
+         * @param offset offset 0:0777777
+         */
+        public VirtualAddress(
+            final boolean execFlag,
+            final boolean levelFlag,
+            final int bdIndex,
+            final int offset
+        ) {
+            super(getValue(execFlag, levelFlag, bdIndex, offset));
+        }
+
+        /**
+         * Extended mode initial value constructor
+         * @param level level, 0:7
+         * @param bdIndex bank descriptor index 0:077777
+         * @param offset offset 0:0777777
+         */
+        public VirtualAddress(
+            final int level,
+            final int bdIndex,
+            final int offset
+        ) {
+            super(getValue(level, bdIndex, offset));
+        }
+
+        public int getBankDescriptorIndex() { return (int) (getH1() & 077777); }
+        public int getLevel()               { return (int) (getW() >> 33); }
+        public int getOffset()              { return (int) getH2(); }
+
+        /**
+         * Converts discrete values to a composite 36-bit value wrapped in a long integer
+         * @param level level, 0:7
+         * @param bdIndex bank descriptor index 0:077777
+         * @param offset offset 0:0777777
+         * @return composite 36-bit value
+         */
+        public static long getValue(
+            final int level,
+            final int bdIndex,
+            final int offset
+        ) {
+            long value = (long)(level & 07) << 33;
+            value |= (long)(bdIndex & 077777) << 18;
+            value |= (offset & 0777777);
+            return value;
+        }
+
+        /**
+         * Converts discrete values to a composite 36-bit value wrapped in a long integer
+         * @param execFlag basic mode exec flag
+         * @param levelFlag basic mode level flag
+         * @param bdIndex bank descriptor index 0:07777
+         * @param offset offset 0:0777777
+         * @return composite 36-bit value
+         */
+        public static long getValue(
+            final boolean execFlag,
+            final boolean levelFlag,
+            final int bdIndex,
+            final int offset
+        ) {
+            long value = (long)(translateBasicToExtendedLevel(execFlag, levelFlag) & 07) << 33;
+            value |= (long)(bdIndex & 07777) << 18;
+            value |= (offset & 0777777);
+            return value;
+        }
+
+        /**
+         * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)
+         */
+        public static int translateBasicToExtendedLevel(
+            final boolean execFlag,
+            final boolean levelFlag
+        ) {
+            if (execFlag) {
+                return levelFlag ? (byte)0 : (byte)2;
+            } else {
+                return levelFlag ? (byte)6 : (byte)4;
+            }
+        }
+
+        /**
+         * Translates this L,BDI,OFFSET bank name to E,LS,BDI,OFFSET format
+         */
+        public long translateToBasicMode() {
+            boolean execFlag = true;
+            boolean levelSpecFlag = true;
+            int bdi = 0;
+
+            if (getBankDescriptorIndex() <= 07777) {
+                bdi = getBankDescriptorIndex();
+                switch (getLevel()) {
+                    case 0:
+                        break;
+
+                    case 2:
+                        levelSpecFlag = false;
+                        break;
+
+                    case 4:
+                        execFlag = false;
+                        levelSpecFlag = false;
+                        break;
+
+                    case 6:
+                        execFlag = false;
+                }
+            }
+
+            return (execFlag ? 0_400000_000000L : 0)
+                   | (levelSpecFlag ? 0_040000_000000L : 0)
+                   | (bdi << 18)
+                   | getOffset();
+        }
+
+        /**
+         * Translates an extended mode bank name to the corresponding base mode name
+         */
+        public static long translateToBasicMode(
+            final int bankLevel,
+            final int bankDescriptorIndex,
+            final int offset
+        ) {
+            if ((bankDescriptorIndex >= 0) && (bankDescriptorIndex <= 07777)) {
+                long result = ((long) (bankDescriptorIndex & 07777) << 18) | offset & 0777777;
+                switch (bankLevel) {
+                    case 0: return result | 0_440000_000000L;
+                    case 2: return result | 0_400000_000000L;
+                    case 4: return result;
+                    case 6: return result | 0_040000_000000L;
+                }
+            }
+
+            return 0_440000_000000L | (offset & 0777777);
         }
     }
 
@@ -785,7 +1932,7 @@ public class InstructionProcessor extends Processor implements Worker {
                         //  call or goto operation - destination mode is defined by target bank type
                         if (bmInfo._targetBankDescriptor == null) {
                             bmInfo._transferMode = sourceModeBasic ? TransferMode.BasicToBasic : TransferMode.ExtendedToExtended;
-                        } else if (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode) {
+                        } else if (bmInfo._targetBankDescriptor.getBankType() == BankType.BasicMode) {
                             bmInfo._transferMode = sourceModeBasic ? TransferMode.BasicToBasic : TransferMode.ExtendedToBasic;
                         } else {
                             bmInfo._transferMode = sourceModeBasic ? TransferMode.BasicToExtended : TransferMode.ExtendedToExtended;
@@ -1065,7 +2212,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     DesignatorRegister newDR = new DesignatorRegister(0);
                     newDR.setExecRegisterSetSelected(true);
                     newDR.setArithmeticExceptionEnabled(true);
-                    newDR.setBasicModeEnabled(bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode);
+                    newDR.setBasicModeEnabled(bmInfo._targetBankDescriptor.getBankType() == BankType.BasicMode);
                     newDR.setBasicModeBaseRegisterSelection(_designatorRegister.getBasicModeBaseRegisterSelection());
                     newDR.setFaultHandlingInProgress(hwCheck);
                     _designatorRegister = newDR;
@@ -1260,7 +2407,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  with relative address not set to the lower limit of the target BD?
                     if ((bmInfo._transferMode != null)
                         && (bmInfo._gateBank == null)
-                        && (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode)) {
+                        && (bmInfo._targetBankDescriptor.getBankType() == BankType.BasicMode)) {
                         if ((!perms._enter)
                             && (bmInfo._targetBankOffset != bmInfo._targetBankDescriptor.getLowerLimitNormalized())) {
                             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
@@ -1273,7 +2420,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  while the new PAR.PC does not refer to that bank?
                     if ((bmInfo._transferMode != null)
                         && ((bmInfo._gateBank != null) || !perms._enter)) {
-                        if (bmInfo._targetBankDescriptor.getBankType() == BankDescriptor.BankType.BasicMode) {
+                        if (bmInfo._targetBankDescriptor.getBankType() == BankType.BasicMode) {
                             BaseRegister br = _baseRegisters[bmInfo._baseRegisterIndex];
                             int relAddr = _programAddressRegister.getProgramCounter();
                             try {
@@ -4222,7 +5369,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 skip = true;
             } else {
                 BankDescriptor bd = getBankDescriptor(origLevel, origBDI, false);
-                if (bd.getBankType() == BankDescriptor.BankType.QueueRepository) {
+                if (bd.getBankType() == BankType.QueueRepository) {
                     throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
                                                            origLevel,
                                                            origBDI);
@@ -4230,7 +5377,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
                 bankName = origLevel << 15;
                 bankName |= ((origBDI - bd.getDisplacement()) & 077777);
-                if (bd.getBankType() != BankDescriptor.BankType.BasicMode) {
+                if (bd.getBankType() != BankType.BasicMode) {
                     skip = true;
                 }
             }
@@ -7046,7 +8193,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 boolean enterAccess;
-                if (!scratchPad._gatedBankFlag && (bd.getBankType() != BankDescriptor.BankType.BasicMode)) {
+                if (!scratchPad._gatedBankFlag && (bd.getBankType() != BankType.BasicMode)) {
                     enterAccess = true;
                 } else {
                     enterAccess = checkAccess(true,
@@ -7061,7 +8208,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 if (!enterAccess) {
                     scratchPad._skipNextInstruction = false;
                     scratchPad._accessDenied = true;
-                } else if ((bd.getBankType() != BankDescriptor.BankType.Queue) && (bd.getGeneralFault())) {
+                } else if ((bd.getBankType() != BankType.Queue) && (bd.getGeneralFault())) {
                     scratchPad._skipNextInstruction = false;
                     scratchPad._generalFault = true;
                 }
@@ -7372,7 +8519,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
     private final BaseRegister[]            _baseRegisters = new BaseRegister[32];
     private final AbsoluteAddress           _breakpointAddress = new AbsoluteAddress((short)0, 0, 0);
-    private final BreakpointRegister        _breakpointRegister = new BreakpointRegister();
+    private final BreakpointRegister        _breakpointRegister = null;
     private boolean                         _broadcastInterruptEligibility = false;
     protected InstructionWord                _currentInstruction = null;
     private InstructionHandler              _currentInstructionHandler = null;  //  TODO do we need this?
@@ -7381,7 +8528,6 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean                         _developmentMode = true;    //  TODO default this to false and provide a means of changing it
     private final GeneralRegisterSet        _generalRegisterSet = new GeneralRegisterSet();
     private IndicatorKeyRegister            _indicatorKeyRegister = new IndicatorKeyRegister();
-    private final InventoryManager          _inventoryManager = InventoryManager.getInstance();
     private boolean                         _jumpHistoryFullInterruptEnabled = false;
     private final Word36[]                  _jumpHistoryTable = new Word36[JUMP_HISTORY_TABLE_SIZE];
     private int                             _jumpHistoryTableNext = 0;
@@ -7617,11 +8763,10 @@ public class InstructionProcessor extends Processor implements Worker {
         final BreakpointComparison comparison,
         final AbsoluteAddress absoluteAddress
     ) {
-        //TODO needs work
         if (_breakpointAddress.equals(absoluteAddress)
-                && (((comparison == BreakpointComparison.Fetch) && _breakpointRegister.getFetchFlag())
-                    || ((comparison == BreakpointComparison.Read) && _breakpointRegister.getReadFlag())
-                    || ((comparison == BreakpointComparison.Write) && _breakpointRegister.getWriteFlag()))) {
+                && (((comparison == BreakpointComparison.Fetch) && _breakpointRegister._fetchFlag)
+                    || ((comparison == BreakpointComparison.Read) && _breakpointRegister._readFlag)
+                    || ((comparison == BreakpointComparison.Write) && _breakpointRegister._writeFlag))) {
             //TODO Per doc, 2.4.1.2 Breakpoint_Register - we need to halt if Halt Enable is set
             //      which means Stop Right Now... how do we do that for all callers of this code?
             _indicatorKeyRegister.setBreakpointRegisterMatchCondition(true);
@@ -9311,7 +10456,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean runCheckPendingInterruptConditions(
     ) {
         if (_indicatorKeyRegister.getBreakpointRegisterMatchCondition() && !_midInstructionInterruptPoint) {
-            if (_breakpointRegister.getHaltFlag()) {
+            if (_breakpointRegister._haltFlag) {
                 stop(StopReason.Breakpoint, 0);
             } else {
                 raiseInterrupt(new BreakpointInterrupt());

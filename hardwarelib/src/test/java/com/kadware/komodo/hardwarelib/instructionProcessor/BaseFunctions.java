@@ -461,11 +461,11 @@ class BaseFunctions {
             Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
             if ((lcIndex & 01) == 01) {
                 if (!poolSpecMap.containsKey(4)) {
-                    poolSpecMap.put(4, new LinkedList<Linker.LCPoolSpecification>());
+                    poolSpecMap.put(4, new LinkedList<>());
                 }
                 poolSpecMap.get(4).add(poolSpec);
             } else {
-                poolSpecMap.put(nextDBankBDI, new LinkedList<Linker.LCPoolSpecification>());
+                poolSpecMap.put(nextDBankBDI, new LinkedList<>());
                 poolSpecMap.get(nextDBankBDI).add(poolSpec);
                 ++nextDBankBDI;
             }
@@ -523,7 +523,7 @@ class BaseFunctions {
             Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
             int bdi = lcIndex + 4;
             if (!poolSpecMap.containsKey(bdi)) {
-                poolSpecMap.put(bdi, new LinkedList<Linker.LCPoolSpecification>());
+                poolSpecMap.put(bdi, new LinkedList<>());
             }
             poolSpecMap.get(bdi).add(poolSpec);
         }
@@ -670,14 +670,14 @@ class BaseFunctions {
                                         new MSPRegionAttributes(attrString, 0, level));
                 AbsoluteAddress absAddr = new AbsoluteAddress(msp._upiIndex, 0, (int) subRegion._position);
 
-                BaseRegister bReg =
-                    new BaseRegister(absAddr,
-                                     false,
-                                     bankLower,
-                                     bankUpper,
-                                     bdtBank._accessInfo,
-                                     bdtBank._generalPermissions,
-                                     bdtBank._specialPermissions);
+                InstructionProcessor.BaseRegister bReg =
+                    new InstructionProcessor.BaseRegister(absAddr,
+                                                          false,
+                                                          bankLower,
+                                                          bankUpper,
+                                                          bdtBank._accessInfo,
+                                                          bdtBank._generalPermissions,
+                                                          bdtBank._specialPermissions);
                 ip.setBaseRegister(16 + level, bReg);
                 bReg._storage.load(bdtBank._content, 0);
             }
@@ -692,14 +692,14 @@ class BaseFunctions {
             RegionTracker.SubRegion stackSubRegion =
                 msp._regions.assign(stackSize,
                                     new MSPRegionAttributes("ICS", 0, 0));
-            BaseRegister bReg =
-                new BaseRegister(new AbsoluteAddress(msp._upiIndex, 0, (int) stackSubRegion._position),
-                                 false,
-                                 0,
-                                 stackSize - 1,
-                                 new AccessInfo((byte) 0, (short) 0),
-                                 new AccessPermissions(false, false, false),
-                                 new AccessPermissions(false, true, true));
+            InstructionProcessor.BaseRegister bReg =
+                new InstructionProcessor.BaseRegister(new AbsoluteAddress(msp._upiIndex, 0, (int) stackSubRegion._position),
+                                                      false,
+                                                      0,
+                                                      stackSize - 1,
+                                                      new AccessInfo((byte) 0, (short) 0),
+                                                      new AccessPermissions(false, false, false),
+                                                      new AccessPermissions(false, true, true));
             ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, bReg);
             bReg._storage.load(msp.getStorage(0), (int) stackSubRegion._position, stackSize, 0);
             Word36 reg = new Word36();
@@ -741,7 +741,7 @@ class BaseFunctions {
      * @return the bank descriptor describing the bank we just loaded
      * @throws AddressingExceptionInterrupt for an invalid MSP reference
      */
-    private static BankDescriptor loadBank(
+    private static InstructionProcessor.BankDescriptor loadBank(
         final InstructionProcessor ip,
         final InstrumentedMainStorageProcessor msp,
         final LoadableBank bank,
@@ -764,9 +764,9 @@ class BaseFunctions {
 
             //  Create a bank descriptor for it in the appropriate bdt
             ArraySlice bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
-            BankDescriptor bd = new BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
+            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
             bd.setAccessLock(bank._accessInfo);
-            bd.setBankType(bank._isExtendedMode ? BankDescriptor.BankType.ExtendedMode : BankDescriptor.BankType.BasicMode);
+            bd.setBankType(bank._isExtendedMode ? InstructionProcessor.BankType.ExtendedMode : InstructionProcessor.BankType.BasicMode);
             bd.setBaseAddress(absAddr);
             bd.setGeneralAccessPermissions(bank._generalPermissions);
             bd.setGeneralFault(false);
@@ -803,7 +803,11 @@ class BaseFunctions {
         final AbsoluteModule module
     ) throws AddressingExceptionInterrupt {
         for (LoadableBank loadableBank : module._loadableBanks.values()) {
-            BankDescriptor bd = loadBank(ip, msp, loadableBank, loadableBank._bankLevel, loadableBank._bankDescriptorIndex);
+            InstructionProcessor.BankDescriptor bd = loadBank(ip,
+                                                              msp,
+                                                              loadableBank,
+                                                              loadableBank._bankLevel,
+                                                              loadableBank._bankDescriptorIndex);
 
             if (loadableBank._initialBaseRegister != null) {
                 int brIndex = loadableBank._initialBaseRegister;
@@ -813,13 +817,13 @@ class BaseFunctions {
                                    bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
                 int bankLower = loadableBank._startingAddress;
                 int bankUpper = loadableBank._startingAddress + loadableBank._content.getSize() - 1;
-                BaseRegister bReg = new BaseRegister(bd.getBaseAddress(),
-                                                     false,
-                                                     bankLower,
-                                                     bankUpper,
-                                                     loadableBank._accessInfo,
-                                                     loadableBank._generalPermissions,
-                                                     loadableBank._specialPermissions);
+                InstructionProcessor.BaseRegister bReg = new InstructionProcessor.BaseRegister(bd.getBaseAddress(),
+                                                                                               false,
+                                                                                               bankLower,
+                                                                                               bankUpper,
+                                                                                               loadableBank._accessInfo,
+                                                                                               loadableBank._generalPermissions,
+                                                                                               loadableBank._specialPermissions);
                 ip.setBaseRegister(brIndex, bReg);
                 // storage is null because of limits
                 if (!bReg._voidFlag) {
@@ -840,9 +844,10 @@ class BaseFunctions {
                     }
                 } else {
                     //  based on something other than B0, set active base table
-                    ActiveBaseTableEntry abte = new ActiveBaseTableEntry(loadableBank._bankLevel,
-                                                                         loadableBank._bankDescriptorIndex,
-                                                                         0);
+                    InstructionProcessor.ActiveBaseTableEntry abte =
+                        new InstructionProcessor.ActiveBaseTableEntry(loadableBank._bankLevel,
+                                                                      loadableBank._bankDescriptorIndex,
+                                                                      0);
                     ip.loadActiveBaseTableEntry(brIndex, abte);
                 }
 
@@ -874,7 +879,7 @@ class BaseFunctions {
         loadBanks(ip, msp, absoluteModule);
 
         //  Update designator register if directed by the absolute module
-        DesignatorRegister dReg = ip.getDesignatorRegister();
+        InstructionProcessor.DesignatorRegister dReg = ip.getDesignatorRegister();
 
         if (absoluteModule._setQuarter) {
             dReg.setQuarterWordModeEnabled(true);
@@ -892,7 +897,7 @@ class BaseFunctions {
         dReg.setProcessorPrivilege(3);
 
         //  Set processor address
-        ProgramAddressRegister par = ip.getProgramAddressRegister();
+        InstructionProcessor.ProgramAddressRegister par = ip.getProgramAddressRegister();
         par.setProgramCounter(absoluteModule._entryPointAddress);
 
         return new Processors(ip, msp);
@@ -908,7 +913,7 @@ class BaseFunctions {
     ) {
         InstrumentedInstructionProcessor ip = processors._instructionProcessor;
         InstrumentedMainStorageProcessor msp = processors._mainStorageProcessor;
-        DesignatorRegister dr = ip.getDesignatorRegister();
+        InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
         int oldpp = dr.getProcessorPrivilege();
         dr.setProcessorPrivilege(0);
 
@@ -981,7 +986,7 @@ class BaseFunctions {
 
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
-                BaseRegister br = ip.getBaseRegister(bx);
+                InstructionProcessor.BaseRegister br = ip.getBaseRegister(bx);
                 System.out.println(String.format("    BR%d base:%s(UPI:%d Offset:%08o) lower:%d upper:%d",
                                                  bx,
                                                  br._voidFlag ? "(VOID)" : "",
@@ -1037,10 +1042,10 @@ class BaseFunctions {
 
             for (int level = 0; level < 8; ++level) {
                 System.out.println(String.format("  Level %d Banks:", level));
-                BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
+                InstructionProcessor.BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
                 int firstBDI = (level == 0) ? 32 : 0;
                 for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
-                    BankDescriptor bd = new BankDescriptor(br._storage, 8 * bdi);
+                    InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(br._storage, 8 * bdi);
                     if (bd.getBaseAddress()._upiIndex > 0) {
                         System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o Type:%s",
                                                          bdi,
