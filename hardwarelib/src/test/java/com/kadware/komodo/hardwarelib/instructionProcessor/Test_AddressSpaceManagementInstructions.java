@@ -16,8 +16,6 @@ import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import com.kadware.komodo.hardwarelib.AbsoluteAddress;
-import com.kadware.komodo.hardwarelib.ActiveBaseTableEntry;
-import com.kadware.komodo.hardwarelib.BaseRegister;
 import com.kadware.komodo.minalib.AbsoluteModule;
 import com.kadware.komodo.minalib.Assembler;
 import com.kadware.komodo.minalib.Linker;
@@ -55,23 +53,23 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        ActiveBaseTableEntry[] expectedValues = {
+        InstructionProcessor.ActiveBaseTableEntry[] expectedValues = {
             null,
-            new ActiveBaseTableEntry(0_000004_001000L),
-            new ActiveBaseTableEntry(0_000005_002000L),
-            new ActiveBaseTableEntry(0_000006_001000L),
-            new ActiveBaseTableEntry(0_000007_002000L),
-            new ActiveBaseTableEntry(0_000010_001000L),
-            new ActiveBaseTableEntry(0_000011_002000L),
-            new ActiveBaseTableEntry(0_000000_000000L),
-            new ActiveBaseTableEntry(0_201025_022000L),
-            new ActiveBaseTableEntry(0_201026_022000L),
-            new ActiveBaseTableEntry(0_201027_022000L),
-            new ActiveBaseTableEntry(0_201030_022000L),
-            new ActiveBaseTableEntry(0_404037_040000L),
-            new ActiveBaseTableEntry(0_404777_047777L),
-            new ActiveBaseTableEntry(0_720020_050000L),
-            new ActiveBaseTableEntry(0_720030_050050L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000004_001000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000005_002000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000006_001000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000007_002000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000010_001000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000011_002000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_000000_000000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_201025_022000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_201026_022000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_201027_022000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_201030_022000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_404037_040000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_404777_047777L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_720020_050000L),
+            new InstructionProcessor.ActiveBaseTableEntry(0_720030_050050L),
         };
 
         AbsoluteModule absoluteModule = buildCodeExtended(source, false);
@@ -246,17 +244,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
         assertFalse(br27._voidFlag);
         assertFalse(br27._largeSizeFlag);
         assertEquals(020000, br27._lowerLimitNormalized);
         assertEquals(020017, br27._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
 
-        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
 
-        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
         assertTrue(br29._voidFlag);
     }
 
@@ -295,14 +293,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
         assertFalse(br27._voidFlag);
         assertFalse(br27._largeSizeFlag);
         assertEquals(01000, br27._lowerLimitNormalized);
         assertEquals(01017, br27._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
 
-        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
         assertTrue(br29._voidFlag);
     }
 
@@ -502,15 +500,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
-        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
         assertTrue(br27._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
 
-        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
 
-        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
         assertFalse(br29._voidFlag);
         assertFalse(br29._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
@@ -568,15 +566,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
-        BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
+        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
         assertTrue(br27._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
 
-        BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
+        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
 
-        BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
+        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
         assertFalse(br29._voidFlag);
         assertFalse(br29._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
@@ -697,7 +695,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
         //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-        BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
+        InstructionProcessor.BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
         processors._instructionProcessor.setBaseRegister(20, br13);
         startAndWait(processors._instructionProcessor);
 
@@ -745,7 +743,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
         //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-        BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
+        InstructionProcessor.BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
         processors._instructionProcessor.setBaseRegister(20, br2);
         startAndWait(processors._instructionProcessor);
 
@@ -792,7 +790,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
         //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-        BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
+        InstructionProcessor.BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
         processors._instructionProcessor.setBaseRegister(20, br13);
         startAndWait(processors._instructionProcessor);
 
@@ -840,7 +838,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
         //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-        BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
+        InstructionProcessor.BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
         processors._instructionProcessor.setBaseRegister(20, br2);
         startAndWait(processors._instructionProcessor);
 
@@ -1073,17 +1071,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(020000, br7._lowerLimitNormalized);
         assertEquals(020017, br7._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
 
-        BaseRegister br8 = processors._instructionProcessor.getBaseRegister(8);
+        InstructionProcessor.BaseRegister br8 = processors._instructionProcessor.getBaseRegister(8);
         assertTrue(br8._voidFlag);
 
-        BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+        InstructionProcessor.BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
         assertTrue(br9._voidFlag);
     }
 
@@ -1122,14 +1120,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(01000, br7._lowerLimitNormalized);
         assertEquals(01017, br7._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
 
-        BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+        InstructionProcessor.BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
         assertTrue(br9._voidFlag);
     }
 
@@ -1491,15 +1489,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
-        BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+        InstructionProcessor.BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
         assertTrue(br5._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 
-        BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+        InstructionProcessor.BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
         assertTrue(br6._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 
-        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -1557,15 +1555,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
-        BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+        InstructionProcessor.BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
         assertTrue(br5._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 
-        BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+        InstructionProcessor.BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
         assertTrue(br6._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 
-        BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertTrue(br7._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -1763,26 +1761,29 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - 30 and 31 are void banks
         for (int bx = 24; bx < 30; ++bx) {
             if (bx != 26) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                                   false,
-                                                   bx * 512,
-                                                   bx * 512 + 511,
-                                                   new AccessInfo(0, bx),
-                                                   new AccessPermissions(false, true, true),
-                                                   new AccessPermissions(false, true, true));
+                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+                InstructionProcessor.BaseRegister br =
+                    new InstructionProcessor.BaseRegister(addr,
+                                                          false,
+                                                          bx * 512,
+                                                          bx * 512 + 511,
+                                                          new AccessInfo(0, bx),
+                                                          new AccessPermissions(false, true, true),
+                                                          new AccessPermissions(false, true, true));
                 processors._instructionProcessor.setBaseRegister(bx, br);
             }
         }
 
-        BaseRegister br30 = new BaseRegister();
+        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister();
         processors._instructionProcessor.setBaseRegister(30, br30);
-        BaseRegister br31 = new BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
-                                             false,
-                                             02000,
-                                             01777,
-                                             new AccessInfo(0, 0),
-                                             new AccessPermissions(false, false, false),
-                                             new AccessPermissions(false, false, false));
+        InstructionProcessor.BaseRegister br31 =
+            new InstructionProcessor.BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
+                                                  false,
+                                                  02000,
+                                                  01777,
+                                                  new AccessInfo(0, 0),
+                                                  new AccessPermissions(false, false, false),
+                                                  new AccessPermissions(false, false, false));
         processors._instructionProcessor.setBaseRegister(31, br31);
 
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
@@ -1793,7 +1794,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         //  create BaseRegister objects for all the data that has been created via SBED
         Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
-        BaseRegister[] baseRegisters = new BaseRegister[32];
+        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[32];
         long[] data = getBank(processors._instructionProcessor, 13);
         for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
             if (bx != 26) {
@@ -1802,7 +1803,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                 subData[1] = data[dx + 1];
                 subData[2] = data[dx + 2];
                 subData[3] = data[dx + 3];
-                baseRegisters[bx] = new BaseRegister(subData);
+                baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
             }
         }
 
@@ -1858,26 +1859,30 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - 30 and 31 are void banks, 26 is the ICS (leave it alone)
         for (int bx = 24; bx < 30; ++bx) {
             if (bx != 26) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                                   false,
-                                                   bx * 512,
-                                                   bx * 512 + 511,
-                                                   new AccessInfo(0, bx),
-                                                   new AccessPermissions(false, true, true),
-                                                   new AccessPermissions(false, true, true));
+                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+                InstructionProcessor.BaseRegister br =
+                    new InstructionProcessor.BaseRegister(addr,
+                                                          false,
+                                                          bx * 512,
+                                                          bx * 512 + 511,
+                                                          new AccessInfo(0, bx),
+                                                          new AccessPermissions(false, true, true),
+                                                          new AccessPermissions(false, true, true));
                 processors._instructionProcessor.setBaseRegister(bx, br);
             }
         }
 
-        BaseRegister br30 = new BaseRegister();
+        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister();
         processors._instructionProcessor.setBaseRegister(30, br30);
-        BaseRegister br31 = new BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
-                                             false,
-                                             02000,
-                                             01777,
-                                             new AccessInfo(0, 0),
-                                             new AccessPermissions(false, false, false),
-                                             new AccessPermissions(false, false, false));
+        AbsoluteAddress addr = new AbsoluteAddress((short) 0, 0, 0);
+        InstructionProcessor.BaseRegister br31 =
+            new InstructionProcessor.BaseRegister(addr,
+                                                  false,
+                                                  02000,
+                                                  01777,
+                                                  new AccessInfo(0, 0),
+                                                  new AccessPermissions(false, false, false),
+                                                  new AccessPermissions(false, false, false));
         processors._instructionProcessor.setBaseRegister(31, br31);
 
         processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
@@ -1887,7 +1892,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
-        BaseRegister[] baseRegisters = new BaseRegister[32];
+        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[32];
         long[] data = getBank(processors._instructionProcessor, 2);
         for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
             long[] subData = new long[4];
@@ -1895,7 +1900,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             subData[1] = data[dx + 1];
             subData[2] = data[dx + 2];
             subData[3] = data[dx + 3];
-            baseRegisters[bx] = new BaseRegister(subData);
+            baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
         }
 
         for (int bx = 16; bx < 32; ++bx) {
@@ -2130,13 +2135,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - leave 12 and 13 alone
         for (int bx = 0; bx < 16; ++bx) {
             if ((bx < 12) || (bx > 13)) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                                   false,
-                                                   bx * 512,
-                                                   bx * 512 + 511,
-                                                   new AccessInfo(0, bx),
-                                                   new AccessPermissions(false, true, true),
-                                                   new AccessPermissions(false, true, true));
+                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+                InstructionProcessor.BaseRegister br =
+                    new InstructionProcessor.BaseRegister(addr,
+                                                          false,
+                                                          bx * 512,
+                                                          bx * 512 + 511,
+                                                          new AccessInfo(0, bx),
+                                                          new AccessPermissions(false, true, true),
+                                                          new AccessPermissions(false, true, true));
                 processors._instructionProcessor.setBaseRegister(bx, br);
             }
         }
@@ -2148,7 +2155,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
-        BaseRegister[] baseRegisters = new BaseRegister[16];
+        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
         long[] data = getBank(processors._instructionProcessor, 13);
         for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
             long[] subData = new long[4];
@@ -2156,7 +2163,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             subData[1] = data[dx + 1];
             subData[2] = data[dx + 2];
             subData[3] = data[dx + 3];
-            baseRegisters[bx] = new BaseRegister(subData);
+            baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
         }
 
         for (int bx = 0; bx < 16; ++bx) {
@@ -2209,13 +2216,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  set up some fake banks - leave 0 through 2 alone
         for (int bx = 0; bx < 16; ++bx) {
             if (bx > 2) {
-                BaseRegister br = new BaseRegister(new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024),
-                                                   false,
-                                                   bx * 512,
-                                                   bx * 512 + 511,
-                                                   new AccessInfo(0, bx),
-                                                   new AccessPermissions(false, true, true),
-                                                   new AccessPermissions(false, true, true));
+                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+                InstructionProcessor.BaseRegister br =
+                    new InstructionProcessor.BaseRegister(addr,
+                                                          false,
+                                                          bx * 512,
+                                                          bx * 512 + 511,
+                                                          new AccessInfo(0, bx),
+                                                          new AccessPermissions(false, true, true),
+                                                          new AccessPermissions(false, true, true));
                 processors._instructionProcessor.setBaseRegister(bx, br);
             }
         }
@@ -2227,7 +2236,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 
         Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
-        BaseRegister[] baseRegisters = new BaseRegister[16];
+        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
         long[] data = getBank(processors._instructionProcessor, 2);
         for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
             long[] subData = new long[4];
@@ -2235,7 +2244,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             subData[1] = data[dx + 1];
             subData[2] = data[dx + 2];
             subData[3] = data[dx + 3];
-            baseRegisters[bx] = new BaseRegister(subData);
+            baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
         }
 
         for (int bx = 0; bx < 16; ++bx) {
