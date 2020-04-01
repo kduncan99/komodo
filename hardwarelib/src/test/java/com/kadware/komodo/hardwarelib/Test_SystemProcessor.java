@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.hardwarelib;
@@ -17,7 +17,10 @@ public class Test_SystemProcessor {
 
     private static final Logger LOGGER = LogManager.getLogger("TESTER");
 
-    @Test
+    /**
+     * This is not an actual unit test - run this in order to test Console
+     */
+    // @Test
     public void create(
     ) throws MaxNodesException  {
         SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Kurt Duncan
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.commlib;

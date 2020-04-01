@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.baselib;
@@ -13,9 +13,11 @@ import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
+/**
+ * An application-specific logging appender
+ */
 public class KomodoAppender extends AbstractAppender {
 
     public static class LogEntry {

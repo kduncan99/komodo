@@ -1,18 +1,14 @@
 /*
- * Copyright (c) 2018-2019 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
 package com.kadware.komodo.minalib.expressions.operators;
 
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.Locale;
-import com.kadware.komodo.minalib.diagnostics.FormDiagnostic;
-import com.kadware.komodo.minalib.diagnostics.RelocationDiagnostic;
 import com.kadware.komodo.minalib.dictionary.IntegerValue;
 import com.kadware.komodo.minalib.dictionary.Value;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import com.kadware.komodo.minalib.exceptions.FormException;
-import com.kadware.komodo.minalib.exceptions.RelocationException;
 import com.kadware.komodo.minalib.exceptions.TypeException;
 import java.util.Stack;
 

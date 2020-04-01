@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.kadware.komodo.commlib;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Object encapsulating certain other objercts.
+ * Object encapsulating certain other objects.
  * Client issues a GET on the /poll subdirectory, and we respond with anything that has changed since the last GET.
  * Any encapsulated entities which have not changed will be null.  If all items are null, nothing has changed.
  * A GET may be held for a finite period of time, pending the availability of content.
