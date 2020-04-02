@@ -17,6 +17,7 @@ import javafx.scene.layout.GridPane;
 @SuppressWarnings("Duplicates")
 class JumpKeyPane extends GridPane {
 
+    //  TODO Needs a good bit of layout enhancement. It works for now, but it isn't pretty
     private static class ButtonHandler implements EventHandler<ActionEvent> {
 
         private final ConsoleInfo _consoleInfo;

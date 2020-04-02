@@ -7,7 +7,10 @@ package com.kadware.komodo.hardwarelib;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
-import com.kadware.komodo.commlib.*;
+import com.kadware.komodo.commlib.HttpMethod;
+import com.kadware.komodo.commlib.SecureServer;
+import com.kadware.komodo.commlib.SystemProcessorJumpKeys;
+import com.kadware.komodo.commlib.SystemProcessorPoll;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -27,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 
-//TODO move this somewhere else, where it makes sense
+//TODO move this commentary somewhere else, where it makes sense
 //  Tape Boot Procedure:
 //      A starting IP is specified, along with the device upon which the boot tape is mounted,
 //      and the disk device on which the DRS pack is mounted.
@@ -169,10 +172,10 @@ public class SystemProcessor extends Processor {
                                 long mask = 1L << (36 - jk);
                                 if (entry.getValue()) {
                                     workingValue |= mask;
-                                    LOGGER.info(String.format("Setting JK %d", jk));//TODO
+                                    LOGGER.info(String.format("Setting JK %d", jk));
                                 } else {
                                     workingValue &= (mask ^ 0_777777_777777L);
-                                    LOGGER.info(String.format("Clearing JK %d", jk));//TODO
+                                    LOGGER.info(String.format("Clearing JK %d", jk));
                                 }
                             }
                         }
@@ -227,7 +230,7 @@ public class SystemProcessor extends Processor {
                     return;
                 }
 
-                PollThread pthread = new PollThread(exchange,clientInfo);
+                PollThread pthread = new PollThread(exchange, clientInfo);
                 pthread.start();
             }
         }
@@ -503,6 +506,7 @@ public class SystemProcessor extends Processor {
 
     private KomodoAppender _appender;
     private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
+    private Configurator _configurator;
     private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
     private Listener _listener = null;
