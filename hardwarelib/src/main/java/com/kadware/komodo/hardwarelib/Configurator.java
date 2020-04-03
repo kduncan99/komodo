@@ -38,6 +38,7 @@ public class Configurator {
 
     public final String _copyright;
     public final Credentials _adminCredentials;
+    public final String _systemIdentifier;
     public final Version _version;
     public final String _versionString;
 
@@ -45,6 +46,7 @@ public class Configurator {
     public Configurator(
         @JsonProperty("copyright") final String copyright,
         @JsonProperty("version") final Version version,
+        @JsonProperty("systemIdentifier") final String systemIdentifier,
         @JsonProperty("credentials") final Credentials adminCredentials
     ) {
         _copyright = copyright;
@@ -54,6 +56,12 @@ public class Configurator {
                                        _version._minor,
                                        _version._patch,
                                        _version._build);
+        if (systemIdentifier == null) {
+            _systemIdentifier = "EM2200";
+        } else {
+            _systemIdentifier = systemIdentifier;
+        }
+
         _adminCredentials = adminCredentials;
     }
 
