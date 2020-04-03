@@ -289,6 +289,14 @@ public class SecureServer {
         _server.bind(isAddr, CONNECTION_BACKLOG);
     }
 
+    public String getCommonName() {
+        return _commonName;
+    }
+
+    public int getPortNumber() {
+        return _portNumber;
+    }
+
     /**
      * Starts the server
      */

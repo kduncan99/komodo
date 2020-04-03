@@ -1,1 +1,15 @@
-{"_copyright":"Copyright 2018-2020 by Kurt Duncan - All Rights Reserved","_adminCredentials":{"_userName":"admin","_salt":"568B3A73D1F2356BF84246FBAC9FE62A9C8661BF7EF317529EE38EB8F2810FC84A527A26B87330DCB67E4CEE3ED1B606611F48E02FC5B0FDF3C40F2ACC3A5C41","_hashedPassword":"6C62CA5B776EEE61427271020A514C969B40E88F33347819194F077F4248C28F"},"_version":{"_major":1,"_minor":0,"_patch":0,"_build":0},"_versionString":"1.0.0.0"}
+{
+  "_copyright": "Copyright 2018-2020 by Kurt Duncan - All Rights Reserved",
+  "_adminCredentials": {
+    "_userName": "admin",
+    "_salt": "568B3A73D1F2356BF84246FBAC9FE62A9C8661BF7EF317529EE38EB8F2810FC84A527A26B87330DCB67E4CEE3ED1B606611F48E02FC5B0FDF3C40F2ACC3A5C41",
+    "_hashedPassword": "6C62CA5B776EEE61427271020A514C969B40E88F33347819194F077F4248C28F"
+  },
+  "_version": {
+    "_major": 1,
+    "_minor": 0,
+    "_patch": 0,
+    "_build": 0
+  },
+  "_versionString": "1.0.0.0"
+}

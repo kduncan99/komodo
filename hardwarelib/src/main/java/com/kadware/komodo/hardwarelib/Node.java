@@ -32,7 +32,8 @@ public abstract class Node {
 
         Processor(1),
         ChannelModule(2),
-        Device(3),
+        //  Controller(3),  not used
+        Device(4),
         InvalidCategory(077);
 
         private final int _code;
@@ -45,7 +46,8 @@ public abstract class Node {
             switch (code) {
                 case 1:     return Processor;
                 case 2:     return ChannelModule;
-                case 3:     return Device;
+                //  We do not model Control Units, but if we did, they'd be case 3
+                case 4:     return Device;
                 default:    return InvalidCategory;
             }
         }

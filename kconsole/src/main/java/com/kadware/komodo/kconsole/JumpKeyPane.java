@@ -6,7 +6,7 @@ package com.kadware.komodo.kconsole;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.commlib.SecureClient;
-import com.kadware.komodo.commlib.SystemProcessorJumpKeys;
+import com.kadware.komodo.commlib.JumpKeys;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.event.ActionEvent;
@@ -37,7 +37,7 @@ class JumpKeyPane extends GridPane {
         @Override
         public void handle(ActionEvent event) {
             try {
-                SystemProcessorJumpKeys spjk = new SystemProcessorJumpKeys();
+                JumpKeys spjk = new JumpKeys();
                 spjk._componentValues = new HashMap<>();
                 spjk._componentValues.put(String.valueOf(_jumpKey), _toggleButton.isSelected());
                 _toggleButton.setStyle(_buttonStyles.get(_toggleButton.isSelected()));

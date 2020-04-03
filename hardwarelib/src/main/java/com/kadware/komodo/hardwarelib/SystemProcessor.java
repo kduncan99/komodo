@@ -4,45 +4,16 @@
 
 package com.kadware.komodo.hardwarelib;
 
-//  Don't be stupid - do not use * in import statements
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
-import com.kadware.komodo.commlib.HttpMethod;
-import com.kadware.komodo.commlib.SecureServer;
-import com.kadware.komodo.commlib.SystemProcessorJumpKeys;
-import com.kadware.komodo.commlib.SystemProcessorPollResult;
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import com.kadware.komodo.baselib.Word36;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.cert.CertificateException;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
 
 //TODO move this commentary somewhere else, where it makes sense
 //  Tape Boot Procedure:
@@ -93,668 +64,25 @@ import org.apache.logging.log4j.core.config.Configurator;
  * It is also responsible for creating and managing the partition data bank which is used by the operating system.
  */
 @SuppressWarnings("Duplicates")
-public class SystemProcessor extends Processor {
+public class SystemProcessor extends Processor implements JumpKeyPanel {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Data
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final long LOG_PERIODICITY_MSECS = 1000;             //  check the log every 1 second
-    private static final int MAX_LATEST_READ_ONLY_MESSAGES = 20;
-    public static final int MAX_OUTSTANDING_READ_REPLY_MESSAGES = 10;
-    private static final long PRUNE_PERIODICITY_MSECS = 60 * 1000;      //  prune every 60 seconds
+    private static final String CONFIGURATION_FILENAME = "../resources/configuration.json";
 
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
     private static SystemProcessor _instance = null;
 
     private KomodoAppender _appender;                   //  Log appender, so we can catch log entries
-    private String _credentials = "YWRtaW46YWRtaW4=";   //  TODO for now, it's admin/admin - later, pull from configuration
-    private com.kadware.komodo.hardwarelib.Configurator _configurator;
+    private Configurator _configurator;
     private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
-    private Listener _listener = null;
     private long _mostRecentLogIdentifier = 0;
-    private static Long _nextMessageIdentifier = 1L;
     private long _jumpKeys = 0;
-
-    //  The list of ReadOnlyMessages is maintined for new clients, so that they can see a history of messages whichwere
-    //  sent prior to their session establishment. Message are placed here, but they are also placed on the queues of all
-    //  the existing clients, so that if a storm of messages occur, the clients still get them, even if *this* container
-    //  overflows.
-    private final List<ReadOnlyMessage> _latestReadOnlyMessages = new LinkedList<>();
-
-    //  The map of ReadReplyMessages is keyed by the message identifier for quick location (although searching the max
-    //  number of them would be pretty quick anyway). The individual clients do not need separate containers for these,
-    //  as they do not overflow.
-    private final Map<Long, ReadReplyMessage> _pendingReadReplyMessages = new HashMap<>();
-
-    //  This is always the latest status message. Clients may pick it up at any time.
-    private StatusMessage _lastestStatusMessage = null;
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Primitive objects representing console traffic in either direction
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Represents a single- or multi-line message representing a notification generated either by the OS or by one of
-     * the applications, intended to be displayed upon the system console. Usually messages are presented within a single
-     * line - however some of the more verbose messages may require several lines of output.
-     * ...
-     * It is unspecified whether the console device is able to display the entire message, nor what the console does in the
-     * event a message is too long to be displayed. A console may truncate the message, or it may break up the message at a
-     * convenient point and display it as two or more individual lines. The only restriction is that a console may not
-     * reject the message for any reason.
-     */
-    public static class ReadOnlyMessage {
-
-        public final long _identifier;      //  our internal unique identifier for this message
-        public final long _osIdentifier;    //  operating system identifier for this message
-        public final String[] _text;
-
-        ReadOnlyMessage(
-            final long osIdentifier,
-            final String text
-        ) {
-            _identifier = SystemProcessor.getNextMessageIdentifier();
-            _osIdentifier = osIdentifier;
-            String[] temp = { text };
-            _text = temp;
-        }
-
-        ReadOnlyMessage(
-            final long osIdentifier,
-            final String[] text
-        ) {
-            _identifier = SystemProcessor.getNextMessageIdentifier();
-            _osIdentifier = osIdentifier;
-            _text = Arrays.copyOf(text, text.length);
-        }
-    }
-
-    /**
-     * Represents a single- or multi-line message representing a notification generated either by the OS or by one of
-     * the applications, intended to be displayed upon the system console. Usually messages are presented within a single
-     * line - however some of the more verbose messages may require several lines of output.
-     * ...
-     * It is unspecified whether the console device is able to display the entire message, nor what the console does in the
-     * event a message is too long to be displayed. A console may truncate the message, or it may break up the message at a
-     * convenient point and display it as two or more individual lines. If the console is display-only, it should reject the
-     * message.
-     * ...
-     * It is unspecified whether the console is required to support the maximum size of response. A console may imply a
-     * shorter restriction on the response length if so dictated by the console hardware. A console should be designed such
-     * that responses of at least 12 characters are possible; a minimum of 64 characters are suggested.
-     * ...
-     * Multi-line responses are not supported.
-     * ...
-     * Consoles must be able to manage up to MAX_OUTSTANDING_READ_REPLY_MESSAGES concurrent messages.
-     */
-    public static class ReadReplyMessage {
-
-        public final long _identifier;  //  our internal unique identifier for this message
-        public final long _osIdentifier;    //  operating system identifier for this message
-        public final int _maxResponseLength;
-        public final String[] _prompt;
-        public String _response;
-
-        ReadReplyMessage(
-            final long osIdentifier,
-            final String prompt,
-            final int maxResponseLength
-        ) {
-            _identifier = SystemProcessor.getNextMessageIdentifier();
-            _osIdentifier = osIdentifier;
-            _maxResponseLength = maxResponseLength;
-            String[] temp = { prompt };
-            _prompt = temp;
-            _response = null;
-        }
-
-        ReadReplyMessage(
-            final long osIdentifier,
-            final String[] prompt,
-            final int maxResponseLength
-        ) {
-            _identifier = SystemProcessor.getNextMessageIdentifier();
-            _osIdentifier = osIdentifier;
-            _maxResponseLength = maxResponseLength;
-            _prompt = Arrays.copyOf(prompt, prompt.length);
-            _response = null;
-        }
-    }
-
-    /**
-     * Represents a multi-line status message indicating some basic important (or not-so-important) tallies, rates, etc.
-     * Only the most recently-posted set of status messages is expected to be relevant.
-     */
-    public static class StatusMessage {
-
-        public final long _identifier;  //  our internal unique identifier for this message
-        private final String[] _text;
-
-        StatusMessage(
-            final String[] text
-        ) {
-            _identifier = SystemProcessor.getNextMessageIdentifier();
-            _text = Arrays.copyOf(text, text.length);
-        }
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Information local to each established session
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * ClientInfo - information regarding a particular client
-     */
-    private static class ClientInfo {
-        private long _lastLogIdentifier = 0;
-        private long _lastPoll = System.currentTimeMillis();
-
-        public boolean _updatedHardwareConfiguration = false;
-        public boolean _updatedJumpKeys = false;
-        public boolean _updatedReadReplyMessages = false;
-        public boolean _updatedStatusMessage = false;
-        public boolean _updatedSystemConfiguration = false;
-
-        //  This item being non-empty implies _newLogEntries is true
-        public List<KomodoAppender.LogEntry> _localPendingLogEntries = new LinkedList<>();
-
-        //  This item being non-empty implies _newReadOnlyMessages is true
-        public List<ReadOnlyMessage> _localPendingReadOnlyMessages = new LinkedList<>();
-
-        public boolean hasUpdates() {
-            return !_localPendingLogEntries.isEmpty()
-                || !_localPendingReadOnlyMessages.isEmpty()
-                || _updatedHardwareConfiguration
-                || _updatedJumpKeys
-                || _updatedReadReplyMessages
-                || _updatedStatusMessage
-                || _updatedSystemConfiguration;
-        }
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  HTTP listener
-    //  All requests must use basic authentication for every message (in the headers, of course)
-    //  All requests must include a (supposedly) unique UUID as a client identifier in the headers "Client={uuid}"
-    //  This unique UUID must be used for every message sent by a given instance of a client.
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    private class Listener extends SecureServer {
-
-        private static final long AGE_OUT_MSECS = 10 * 60 * 1000;   //  10 minutes of no polling ages out a client
-        private static final long POLL_WAIT_MSECS = 10000;          //  10 second poll delay
-
-        /**
-         * Invalid path handler class
-         */
-        private class DefaultRequestHandler implements HttpHandler {
-
-            @Override
-            public void handle(
-                final HttpExchange exchange
-            ) throws IOException {
-                if (!validateCredentials(exchange)) {
-                    respondUnauthorized(exchange);
-                    return;
-                }
-
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
-                }
-
-                String response = "Path or object does not exist";
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
-                OutputStream os = exchange.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
-            }
-        }
-
-        /**
-         * Handles requests against the /jumpkeys path
-         */
-        private class JumpKeysRequestHandler implements HttpHandler {
-
-            @Override
-            public void handle(
-                final HttpExchange exchange
-            ) throws IOException {
-                if (!validateCredentials(exchange)) {
-                    respondUnauthorized(exchange);
-                    return;
-                }
-
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
-                }
-
-                int code = HttpURLConnection.HTTP_OK;
-                String response = "";
-                if (exchange.getRequestMethod().equals(HttpMethod.PUT._value)
-                    || exchange.getRequestMethod().equals(HttpMethod.PUT._value)) {
-                    try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        SystemProcessorJumpKeys content = mapper.readValue(exchange.getRequestBody(),
-                                                                           new TypeReference<SystemProcessorJumpKeys>() { });
-                        long workingValue = _jumpKeys;
-                        if (content._compositeValue != null) {
-                            if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
-                                throw new Exception("Invalid composite value");
-                            }
-
-                            workingValue = content._compositeValue;
-                        }
-
-                        if (content._componentValues != null) {
-                            for (Map.Entry<String, Boolean> entry : content._componentValues.entrySet()) {
-                                int jk = Integer.parseInt(entry.getKey());
-                                if ((jk < 1) || (jk > 36)) {
-                                    throw new Exception("Jump key out of range");
-                                } else if (entry.getValue() == null) {
-                                    throw new Exception("Value for jump key was unspecified");
-                                }
-
-                                long mask = 1L << (36 - jk);
-                                if (entry.getValue()) {
-                                    workingValue |= mask;
-                                    LOGGER.info(String.format("Setting JK %d", jk));
-                                } else {
-                                    workingValue &= (mask ^ 0_777777_777777L);
-                                    LOGGER.info(String.format("Clearing JK %d", jk));
-                                }
-                            }
-                        }
-
-                        //  Call the function so that all clients are notified of the change
-                        jumpKeysSet(workingValue);
-                    } catch (NumberFormatException ex) {
-                        code = HttpURLConnection.HTTP_BAD_REQUEST;
-                        response = "Jump key was not an integer";
-                    } catch (Exception ex) {
-                        code = HttpURLConnection.HTTP_BAD_REQUEST;
-                        response = ex.getMessage();
-                    }
-                } else {
-                    code = HttpURLConnection.HTTP_BAD_METHOD;
-                }
-
-                exchange.sendResponseHeaders(code, response.length());
-                OutputStream os = exchange.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
-            }
-        }
-
-        /**
-         * Handle a poll request (a GET to /poll).
-         * Check to see if there is anything new.  If so, send it.
-         * Otherwise, wait for some period of time to see whether anything new pops up.
-         */
-        private class PollRequestHandler implements HttpHandler {
-
-            @Override
-            public void handle(
-                final HttpExchange exchange
-            ) throws IOException {
-                if (!validateCredentials(exchange)) {
-                    respondUnauthorized(exchange);
-                    return;
-                }
-
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
-                }
-
-                String method = exchange.getRequestMethod();
-                if (!method.equals(HttpMethod.GET._value)) {
-                    String content = method + " not allowed";
-                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, content.length());
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(content.getBytes());
-                    os.close();
-                    return;
-
-                }
-
-                PollThread pthread = new PollThread(exchange, clientInfo);
-                pthread.start();
-            }
-        }
-
-        /**
-         * One of these is spun off for every GET on /poll. We delay returning until either we reach a timeout in which
-         * case we return an empty poll result, or there is an update which our particular client would like to know about.
-         * Needed so we can go back and service other requests while we're waiting on anything noteworthy to occur.
-         */
-        private class PollThread extends Thread {
-
-            private final ClientInfo _clientInfo;
-            private final HttpExchange _exchange;
-
-            private PollThread(
-                final HttpExchange exchange,
-                final ClientInfo clientInfo
-            ) {
-                _clientInfo = clientInfo;
-                _exchange = exchange;
-            }
-
-            public void run() {
-                //  Update last poll time, then check if there are any updates already waiting for the client to pick up.
-                //  If not, go into a wait loop, which will be interrupted if any updates eventuate during the wait.
-                //  At the end of the wait construct and return a SystemProcessorPollResult object
-                _clientInfo._lastPoll = System.currentTimeMillis();
-                synchronized (_clientInfo) {
-                    if (!_clientInfo.hasUpdates()) {
-                        try {
-                            _clientInfo.wait(POLL_WAIT_MSECS);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
-                    }
-                }
-
-                SystemProcessorPollResult pollResult = new SystemProcessorPollResult();
-
-                if (!_clientInfo._localPendingLogEntries.isEmpty()) {
-                    int entryCount = _clientInfo._localPendingLogEntries.size();
-                    pollResult._newLogEntries = new SystemProcessorPollResult.SystemLogEntry[entryCount];
-                    int ex = 0;
-                    for (KomodoAppender.LogEntry localEntry : _clientInfo._localPendingLogEntries) {
-                        SystemProcessorPollResult.SystemLogEntry logEntry = new SystemProcessorPollResult.SystemLogEntry();
-                        logEntry._timestamp = localEntry._timeMillis;
-                        logEntry._entity = localEntry._source;
-                        logEntry._message = localEntry._message;
-                        _clientInfo._lastLogIdentifier = localEntry._identifier;
-                        pollResult._newLogEntries[ex] = logEntry;
-                    }
-                }
-
-                if (!_clientInfo._localPendingReadOnlyMessages.isEmpty()) {
-                    int msgCount = _clientInfo._localPendingReadOnlyMessages.size();
-                    pollResult._newReadOnlyMessages = new SystemProcessorPollResult.ReadOnlyMessage[msgCount];
-                    int mx = 0;
-                    for (ReadOnlyMessage localROM : _clientInfo._localPendingReadOnlyMessages) {
-                        SystemProcessorPollResult.ReadOnlyMessage spprMsg = new SystemProcessorPollResult.ReadOnlyMessage();
-                        spprMsg._identifier = localROM._identifier;
-                        spprMsg._osIdentifier = localROM._osIdentifier;
-                        spprMsg._text = localROM._text;
-                        pollResult._newReadOnlyMessages[mx++] = spprMsg;
-                    }
-                    _clientInfo._localPendingReadOnlyMessages.clear();
-                }
-
-                if (_clientInfo._updatedHardwareConfiguration) {
-                    //TODO
-                }
-
-                if (_clientInfo._updatedJumpKeys) {
-                    pollResult._jumpKeySettings = _jumpKeys;
-                }
-
-                if (_clientInfo._updatedReadReplyMessages) {
-                    int msgCount = _pendingReadReplyMessages.size();
-                    pollResult._extantReadReplyMessages = new SystemProcessorPollResult.ReadReplyMessage[msgCount];
-                    int mx = 0;
-                    for (ReadReplyMessage msg : _pendingReadReplyMessages.values()) {
-                        SystemProcessorPollResult.ReadReplyMessage spprMsg = new SystemProcessorPollResult.ReadReplyMessage();
-                        spprMsg._identifier = msg._identifier;
-                        spprMsg._osIdentifier = msg._osIdentifier;
-                        spprMsg._text = msg._prompt;
-                        spprMsg._maxReplySize = msg._maxResponseLength;
-                        pollResult._extantReadReplyMessages[mx++] = spprMsg;
-                    }
-                }
-
-                if (_clientInfo._updatedStatusMessage) {
-                    pollResult._latestStatusMessage = new SystemProcessorPollResult.StatusMessage();
-                    pollResult._latestStatusMessage._text = _lastestStatusMessage._text;
-                }
-
-                if (_clientInfo._updatedSystemConfiguration) {
-                    //TODO
-                }
-
-                try {
-                    ObjectMapper mapper = new ObjectMapper();
-                    String response = mapper.writeValueAsString(pollResult);
-                    _exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-                    OutputStream os = _exchange.getResponseBody();
-                    os.write(response.getBytes());
-                    os.close();
-                } catch (IOException ex) {
-                    LOGGER.catching(ex);
-                }
-            }
-        }
-
-        /**
-         * Handle puts and posts to /session
-         * Validates credentials and method
-         * Creates and stashes a ClientInfo record for future method calls
-         */
-        private class SessionRequestHandler implements HttpHandler {
-
-            @Override
-            public void handle(
-                final HttpExchange exchange
-            ) throws IOException {
-                if (!validateCredentials(exchange)) {
-                    respondUnauthorized(exchange);
-                    return;
-                }
-
-                String method = exchange.getRequestMethod();
-                if (!method.equals(HttpMethod.POST._value) && !method.equals(HttpMethod.PUT._value)) {
-                    String content = method + " not allowed";
-                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, content.length());
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(content.getBytes());
-                    os.close();
-                    return;
-                }
-
-                String clientId = UUID.randomUUID().toString();
-                ClientInfo clientInfo = new ClientInfo();
-                synchronized (this) {
-                    _clientInfos.put(clientId, clientInfo);
-                    clientInfo._localPendingReadOnlyMessages.addAll(_latestReadOnlyMessages);
-                    clientInfo._updatedJumpKeys = true;
-                    clientInfo._updatedReadReplyMessages = true;
-                    clientInfo._updatedStatusMessage = true;
-                    clientInfo._updatedHardwareConfiguration = true;
-                    clientInfo._updatedSystemConfiguration = true;
-                }
-
-                String content = new ObjectMapper().writeValueAsString(clientId);
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, content.length());
-                OutputStream os = exchange.getResponseBody();
-                os.write(content.getBytes());
-                os.close();
-            }
-        }
-
-        /**
-         * Data items
-         */
-        private Map<String, ClientInfo> _clientInfos = new HashMap<>();
-
-        /**
-         * constructor
-         */
-        private Listener(
-            final int portNumber
-        ) {
-            super("SystemProcessor", portNumber);
-        }
-
-        /**
-         * Client wants us to age-out any old client info objects
-         */
-        private void prune() {
-            synchronized (_clientInfos) {
-                long now = System.currentTimeMillis();
-                Iterator<Map.Entry<String, ClientInfo>> iter = _clientInfos.entrySet().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry<String, ClientInfo> entry = iter.next();
-                    ClientInfo cinfo = entry.getValue();
-                    if (now > (cinfo._lastPoll + AGE_OUT_MSECS)) {
-                        iter.remove();
-                    }
-                }
-            }
-        }
-
-        /**
-         * Client wants us to start accepting requests
-         */
-        @Override
-        public void setup(
-        ) throws CertificateException,
-                 InvalidKeyException,
-                 IOException,
-                 KeyManagementException,
-                 KeyStoreException,
-                 NoSuchAlgorithmException,
-                 NoSuchProviderException,
-                 SignatureException {
-            super.setup();
-            appendHandler("/", new DefaultRequestHandler());
-            appendHandler("/jumpkeys", new JumpKeysRequestHandler());
-            appendHandler("/session", new SessionRequestHandler());
-            appendHandler("/poll", new PollRequestHandler());
-            start();
-        }
-
-        /**
-         * Owner wants us to stop accepting requests
-         */
-        @Override
-        public void stop() {
-            super.stop();
-
-            //  kill any pending polls
-            Set<ClientInfo> cinfos;
-            synchronized (this) {
-                cinfos = new HashSet<>(_clientInfos.values());
-                _clientInfos.clear();
-            }
-
-            for (ClientInfo cinfo : cinfos) {
-                synchronized (cinfo) {
-                    cinfo.notify();
-                }
-            }
-        }
-
-//        /**
-//         * Update the log entry containers in all the registered clientInfo objects then wake them up
-//         */
-//        private void updatePendingClients() {
-//            Set<ClientInfo> cinfos;
-//            synchronized (this) {
-//                cinfos = new HashSet<>(_clientInfos.values());
-//            }
-//
-//            for (ClientInfo cinfo : cinfos) {
-//                synchronized (cinfo) {
-//                    cinfo._newLogEntries = true;
-//                    cinfo.notify();
-//                }
-//            }
-//        }
-
-        /**
-         * Checks the headers for a client id, then locates the corresponding ClientInfo object.
-         * Returns null if ClientInfo object is not found or unspecified, in which case the response
-         * is already filled in and closed - caller needs only return.
-         */
-        private ClientInfo findClient(
-            final HttpExchange exchange
-        ) throws IOException {
-            List<String> values = exchange.getRequestHeaders().get("Client");
-            if ((values != null) && (values.size() == 1)) {
-                String clientId = values.get(0);
-                synchronized (this) {
-                    ClientInfo clientInfo = _clientInfos.get(clientId);
-                    if (clientInfo != null) {
-                        return clientInfo;
-                    }
-                }
-            }
-
-            String msg = "Missing or invalid client identifier\n";
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
-            OutputStream os = exchange.getResponseBody();
-            os.write(msg.getBytes());
-            os.close();
-            return null;
-        }
-
-        /**
-         * Convenient method for setting up a 401 response
-         */
-        private void respondUnauthorized(
-            final HttpExchange exchange
-        ) throws IOException {
-            String response = "Unauthorized - credentials not provided or are invalid";
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-
-        /**
-         * Convenient method for handling the situation where no session exists
-         */
-        private void respondNoSession(
-            final HttpExchange exchange
-        ) throws IOException {
-            String response = "Forbidden - session not established";
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-
-        /**
-         * Validate the credentials in the header of the given exchange object.
-         * On failure, error status is posted to the HttpExchange which is then closed.
-         * In this case, the client simply returns - all the work is done.
-         *
-         * @return true if credentials are valid, else false
-         */
-        private boolean validateCredentials(
-            final HttpExchange exchange
-        ) throws IOException {
-            Headers headers = exchange.getRequestHeaders();
-
-            List<String> values = headers.get("Authorization");
-            if ((values != null) && (values.size() == 1)) {
-                String[] split = values.get(0).split(" ");
-                if ((split.length >= 2) && (_credentials.equals(split[1]))) {
-                    return true;
-                }
-            }
-
-            String msg = "Please enter credentials\n";
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_UNAUTHORIZED, 0);
-            OutputStream os = exchange.getResponseBody();
-            os.write(msg.getBytes());
-            os.close();
-            return false;
-        }
-    }
+    private final SystemConsole _console;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -765,9 +93,8 @@ public class SystemProcessor extends Processor {
      * constructor
      * @param name node name of the SP
      */
-    SystemProcessor(
-        final String name,
-        final int portNumber
+    SystemProcessor (
+        final String name
     ) {
         super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         synchronized (SystemProcessor.class) {
@@ -778,12 +105,19 @@ public class SystemProcessor extends Processor {
             _instance = this;
         }
 
-        _listener = new Listener(portNumber);
-
         _appender = KomodoAppender.create();
         LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
-        Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
+        org.apache.logging.log4j.core.config.Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
         logContext.updateLoggers();
+
+        try {
+            _configurator = Configurator.read(CONFIGURATION_FILENAME);
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+            throw new RuntimeException("Cannot load configuration file");
+        }
+
+        _console = new RESTSystemConsole(name + "Console", _configurator, this);
     }
 
     /**
@@ -792,6 +126,9 @@ public class SystemProcessor extends Processor {
     public SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _instance = this;
+        _console = new RESTSystemConsole("SP0Console",
+                                         _configurator,
+                                         this);
     }
 
     /**
@@ -904,15 +241,6 @@ public class SystemProcessor extends Processor {
 //        }
 //    }
 
-    /**
-     * Used for sequencing / identifying message objects
-     */
-    private static long getNextMessageIdentifier() {
-        synchronized (_nextMessageIdentifier) {
-            return _nextMessageIdentifier++;
-        }
-    }
-
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Implementations / overrides of abstract base methods
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -942,52 +270,71 @@ public class SystemProcessor extends Processor {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Implementations / overrides of JumpKeyPanel
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public boolean getJumpKey(
+        final int jumpKeyId
+    ) {
+        if ((jumpKeyId > 0) && (jumpKeyId < 37)) {
+            long mask = 1 << (36 - jumpKeyId);
+            return (_jumpKeys & mask) != 0;
+        }
+        return false;
+    }
+
+    @Override
+    public Word36 getJumpKeys() {
+        return new Word36(_jumpKeys);
+    }
+
+    @Override
+    public void setJumpKey(
+        final int jumpKeyId,
+        final boolean value
+    ) {
+        if ((jumpKeyId > 0) && (jumpKeyId < 37)) {
+            if (value) {
+                long mask = 1 << (36 - jumpKeyId);
+                _jumpKeys |= mask;
+            } else {
+                long mask = 1 << (36 - jumpKeyId);
+                mask ^= 0_777777_777777L;
+                _jumpKeys &= mask;
+            }
+        }
+    }
+
+    @Override
+    public void setJumpKeys(
+        final Word36 word36
+    ) {
+        _jumpKeys = word36.getW();
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Async worker thread for the SystemProcessor
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @Override
     public void run() {
         LOGGER.info(_name + " worker thread starting");
-        try {
-            _listener.setup();
-        } catch (Exception ex) {
-            LOGGER.catching(ex);
-            System.out.println("Caught " + ex.getMessage());
-            System.out.println("Cannot start SystemProcessor secure server");
-        } catch (Throwable t) {
-            System.out.println("Caught " + t.getMessage());
-        }
 
+        _console.start();
         long nextLogCheck = System.currentTimeMillis() + LOG_PERIODICITY_MSECS;
-        long nextPrune = System.currentTimeMillis() + PRUNE_PERIODICITY_MSECS;
         while (!_workerTerminate) {
             long now = System.currentTimeMillis();
             if (now > nextLogCheck) {
                 if (_appender.getMostRecentIdentifier() > _mostRecentLogIdentifier) {
                     KomodoAppender.LogEntry[] appenderEntries = _appender.retrieveFrom(_mostRecentLogIdentifier + 1);
                     if (appenderEntries.length > 0) {
-                        Set<ClientInfo> cinfos;
-                        synchronized (this) {
-                            cinfos = new HashSet<>(this._listener._clientInfos.values());
-                        }
-
-                        List<KomodoAppender.LogEntry> logEntryList = Arrays.asList(appenderEntries);
-                        for (ClientInfo cinfo : cinfos) {
-                            synchronized (cinfo) {
-                                cinfo._localPendingLogEntries.addAll(logEntryList);
-                                cinfo.notify();
-                            }
-                        }
-
+                        _console.postSystemLogEntries(appenderEntries);
                         _mostRecentLogIdentifier = _appender.getMostRecentIdentifier();
                     }
                 }
                 nextLogCheck += LOG_PERIODICITY_MSECS;
-            }
-
-            if (now > nextPrune) {
-                _listener.prune();
-                nextPrune += PRUNE_PERIODICITY_MSECS;
             }
 
             //  Check UPI ACKs and SENDs
@@ -1023,7 +370,7 @@ public class SystemProcessor extends Processor {
             }
         }
 
-        _listener.stop();
+        _console.stop();
         LOGGER.info(_name + " worker thread terminating");
     }
 
@@ -1036,42 +383,40 @@ public class SystemProcessor extends Processor {
     /**
      * Represents input from the console
      */
-    static class ConsoleInput {
-        public final long _identifier;  //  zero for unsolicited input, messageIdentifier from SendReadReply if response
-        public final String _message;
+//    static class ConsoleInput {
+//        public final long _identifier;  //  zero for unsolicited input, messageIdentifier from SendReadReply if response
+//        public final String _message;
+//
+//        ConsoleInput(
+//            final long identifier,
+//            final String message
+//        ) {
+//            _identifier = identifier;
+//            _message = message;
+//        }
+//
+//        ConsoleInput(
+//            final String message
+//        ) {
+//            _identifier = 0;
+//            _message = message;
+//        }
+//    }
 
-        ConsoleInput(
-            final long identifier,
-            final String message
-        ) {
-            _identifier = identifier;
-            _message = message;
-        }
-
-        ConsoleInput(
-            final String message
-        ) {
-            _identifier = 0;
-            _message = message;
-        }
-    }
-
-    ConsoleInput consolePoll() {
-        return null;//TODO
-    }
+//    ConsoleInput consolePoll() {
+//        return null;//TODO
+//    }
 
     /**
      * Resets the conceptual system console
      */
     void consoleReset() {
-        //TODO what do do here? do we need to propogate this to the clients?
-        //  for one thing, clear the outstanding message queues
+        _console.reset();
     }
 
     /**
      * Sends a read-only message to the conceptual system console.
      * The message may be padded or truncated to an appropriate size.
-     * Functions by accepting the message sourced from the OS, and queueing it for eventual delivery via poll response.
      * It may be generated by the OS via the SYSC instruction.
      * @param osMessageIdentifier unique identifier of this message among all messages from the operating system
      * @param message actual message to be sent
@@ -1080,45 +425,33 @@ public class SystemProcessor extends Processor {
         final long osMessageIdentifier,
         final String message
     ) {
-        synchronized (this) {
-            ReadOnlyMessage msg = new ReadOnlyMessage(osMessageIdentifier, message);
-            if (_latestReadOnlyMessages.size() == MAX_LATEST_READ_ONLY_MESSAGES) {
-                _latestReadOnlyMessages.remove(0);
-            }
-
-            _latestReadOnlyMessages.add(msg);
-
-            Set<ClientInfo> cinfos;
-            synchronized (this) {
-                cinfos = new HashSet<>(this._listener._clientInfos.values());
-            }
-
-            for (ClientInfo cinfo : cinfos) {
-                synchronized (cinfo) {
-                    cinfo._localPendingReadOnlyMessages.add(msg);
-                    cinfo.notify();
-                }
-            }
-        }
+        SystemConsole.ReadOnlyMessage msg = new SystemConsole.ReadOnlyMessage(_console.getNextMessageIdentifier(),
+                                                                              osMessageIdentifier,
+                                                                              message);
+        _console.postMessage(msg);
     }
 
     /**
      * Sends a read-reply message to the conceptual system console.
      * The message may be padded or truncated to an appropriate size.
      * The eventual reply is guaranteed not to exceed the indicated max characters size.
-     * The message will be identified with a console message index, which is returned from this call.
-     * Functions by accepting the message sourced from the OS, and queueing it for eventual delivery via poll response.
      * It may be generated by the OS via the SYSC instruction.
      * @param osMessageIdentifier unique identifier of this message among all messages from the operating system
      * @param message actual message to be sent
      * @param replyMaxCharacters max characters allowed in the response
+     * @return unique identifier from the console
      */
-    int consoleSendReadReplyMessage(
+    long consoleSendReadReplyMessage(
         final long osMessageIdentifier,
         final String message,
         final int replyMaxCharacters
     ) {
-        return 0;//TODO
+        SystemConsole.ReadReplyMessage msg = new SystemConsole.ReadReplyMessage(_console.getNextMessageIdentifier(),
+                                                                                osMessageIdentifier,
+                                                                                message,
+                                                                                replyMaxCharacters);
+        _console.postMessage(msg);
+        return msg._identifier;
     }
 
     /**
@@ -1130,21 +463,10 @@ public class SystemProcessor extends Processor {
     void consoleSendStatusMessage(
         final String[] messages
     ) {
-        synchronized (this) {
-            _lastestStatusMessage = new StatusMessage(messages);
-
-            Set<ClientInfo> cinfos;
-            synchronized (this) {
-                cinfos = new HashSet<>(this._listener._clientInfos.values());
-            }
-
-            for (ClientInfo cinfo : cinfos) {
-                synchronized (cinfo) {
-                    cinfo._updatedStatusMessage = true;
-                    cinfo.notify();
-                }
-            }
-        }
+        SystemConsole.StatusMessage msg = new SystemConsole.StatusMessage(_console.getNextMessageIdentifier(),
+                                                                          0,
+                                                                          messages);
+        _console.postMessage(msg);
     }
 
     /**
@@ -1184,34 +506,5 @@ public class SystemProcessor extends Processor {
         long microOfSecond = i.getLong(ChronoField.MICRO_OF_SECOND);
         long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
         _dayclockOffsetMicros = value - systemMicros;
-    }
-
-    /**
-     * Retrieve 36-bit word representing the jump keys.
-     * JK1 is in the MSBit of 36 bits, JK36 is in the LSbit
-     */
-    long jumpKeysGet() {
-        return _jumpKeys;
-    }
-
-    /**
-     * Sets the set of jump keys.
-     * @param value JK1 is in the MSBit of 36 bits, JK36 is in the LSbit
-     */
-    void jumpKeysSet(
-        final long value
-    ) {
-        _jumpKeys = value;
-        Set<ClientInfo> cinfos;
-        synchronized (this) {
-            cinfos = new HashSet<>(this._listener._clientInfos.values());
-        }
-
-        for (ClientInfo cinfo : cinfos) {
-            synchronized (cinfo) {
-                cinfo._updatedJumpKeys = true;
-                cinfo.notify();
-            }
-        }
     }
 }
