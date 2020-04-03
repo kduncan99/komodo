@@ -8,10 +8,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.commlib.ConsoleInputMessage;
+import com.kadware.komodo.commlib.ConsoleOutputMessage;
+import com.kadware.komodo.commlib.ConsoleStatusMessage;
 import com.kadware.komodo.commlib.HttpMethod;
 import com.kadware.komodo.commlib.SecureServer;
 import com.kadware.komodo.commlib.JumpKeys;
-import com.kadware.komodo.commlib.SystemProcessorPollResult;
+import com.kadware.komodo.commlib.PollResult;
+import com.kadware.komodo.commlib.SystemLogEntry;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -57,6 +61,7 @@ public class RESTSystemConsole implements SystemConsole {
         void function(final ClientInfo clientInfo);
     }
 
+
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Information local to each established session
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -68,31 +73,27 @@ public class RESTSystemConsole implements SystemConsole {
         private long _lastActivity = System.currentTimeMillis();
         private InetSocketAddress _remoteAddress = null;
 
+        public List<KomodoAppender.LogEntry> _pendingLogEntries = new LinkedList<>();
+        public List<OutputMessage> _pendingOutputMessages = new LinkedList<>();
         public boolean _updatedHardwareConfiguration = false;
         public boolean _updatedJumpKeys = false;
         public boolean _updatedReadReplyMessages = false;
         public boolean _updatedStatusMessage = false;
         public boolean _updatedSystemConfiguration = false;
 
-        //  This item being non-empty implies _newLogEntries is true
-        public List<KomodoAppender.LogEntry> _localPendingLogEntries = new LinkedList<>();
-
-        //  This item being non-empty implies _newReadOnlyMessages is true
-        public List<ReadOnlyMessage> _localPendingReadOnlyMessages = new LinkedList<>();
-
         public void clear() {
+            _pendingLogEntries.clear();
+            _pendingOutputMessages.clear();
             _updatedHardwareConfiguration = false;
             _updatedJumpKeys = false;
             _updatedReadReplyMessages = false;
             _updatedStatusMessage = false;
             _updatedSystemConfiguration = false;
-            _localPendingLogEntries.clear();
-            _localPendingReadOnlyMessages.clear();
         }
 
-        public boolean hasUpdates() {
-            return !_localPendingLogEntries.isEmpty()
-                || !_localPendingReadOnlyMessages.isEmpty()
+        public boolean hasUpdatesForClient() {
+            return !_pendingLogEntries.isEmpty()
+                || !_pendingOutputMessages.isEmpty()
                 || _updatedHardwareConfiguration
                 || _updatedJumpKeys
                 || _updatedReadReplyMessages
@@ -100,6 +101,7 @@ public class RESTSystemConsole implements SystemConsole {
                 || _updatedSystemConfiguration;
         }
     }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Data
@@ -121,19 +123,13 @@ public class RESTSystemConsole implements SystemConsole {
     private Long _nextMessageIdentifier = 1L;
     private WorkerThread _workerThread = null;
 
-    //  The list of ReadOnlyMessages is maintined for new clients, so that they can see a history of messages whichwere
-    //  sent prior to their session establishment. Message are placed here, but they are also placed on the queues of all
-    //  the existing clients, so that if a storm of messages occur, the clients still get them, even if *this* container
-    //  overflows.
-    private final List<ReadOnlyMessage> _latestReadOnlyMessages = new LinkedList<>();
-
-    //  The map of ReadReplyMessages is keyed by the message identifier for quick location (although searching the max
-    //  number of them would be pretty quick anyway). The individual clients do not need separate containers for these,
-    //  as they do not overflow.
-    private final Map<Long, ReadReplyMessage> _pendingReadReplyMessages = new HashMap<>();
+    //  Recent output messages. Pinned messages are never allowed to scroll out of this list.
+    //  This list is allowed to grow to a certain amount, but never beyond it unless required by the previous directive.
+    private final Map<Long, OutputMessage> _outputMessageCache = new HashMap<>();
 
     //  This is always the latest status message. Clients may pick it up at any time.
-    private StatusMessage _lastestStatusMessage = null;
+    private StatusMessage _latestStatusMessage = null;
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructor
@@ -279,6 +275,38 @@ public class RESTSystemConsole implements SystemConsole {
     }
 
     /**
+     * Provides a method for injecting input to the system via POST to /message
+     */
+    private class MessageHandler implements HttpHandler {
+
+        @Override
+        public void handle(
+            final HttpExchange exchange
+        ) {
+            if (!validateCredentials(exchange)) {
+                respondUnauthorized(exchange);
+                return;
+            }
+
+            ClientInfo clientInfo = findClient(exchange);
+            if (clientInfo == null) {
+                respondNoSession(exchange);
+                return;
+            }
+
+            clientInfo._lastActivity = System.currentTimeMillis();
+
+            String method = exchange.getRequestMethod();
+            if (!method.equals(HttpMethod.POST._value)) {
+                respondBadMethod(exchange);
+                return;
+            }
+
+            //  TODO implement the rest of the code
+        }
+    }
+
+    /**
      * Handle a poll request (a GET to /poll).
      * Check to see if there is anything new.  If so, send it.
      * Otherwise, wait for some period of time to see whether anything new pops up.
@@ -288,7 +316,7 @@ public class RESTSystemConsole implements SystemConsole {
         @Override
         public void handle(
             final HttpExchange exchange
-        ) throws IOException {
+        ) {
             if (!validateCredentials(exchange)) {
                 respondUnauthorized(exchange);
                 return;
@@ -337,7 +365,7 @@ public class RESTSystemConsole implements SystemConsole {
             //  At the end of the wait construct and return a SystemProcessorPollResult object
             _clientInfo._lastActivity = System.currentTimeMillis();
             synchronized (_clientInfo) {
-                if (!_clientInfo.hasUpdates()) {
+                if (!_clientInfo.hasUpdatesForClient()) {
                     try {
                         _clientInfo.wait(POLL_WAIT_MSECS);
                     } catch (InterruptedException ex) {
@@ -346,14 +374,14 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
 
-            SystemProcessorPollResult pollResult = new SystemProcessorPollResult();
+            PollResult pollResult = new PollResult();
 
-            if (!_clientInfo._localPendingLogEntries.isEmpty()) {
-                int entryCount = _clientInfo._localPendingLogEntries.size();
-                pollResult._newLogEntries = new SystemProcessorPollResult.SystemLogEntry[entryCount];
+            if (!_clientInfo._pendingLogEntries.isEmpty()) {
+                int entryCount = _clientInfo._pendingLogEntries.size();
+                pollResult._newLogEntries = new SystemLogEntry[entryCount];
                 int ex = 0;
-                for (KomodoAppender.LogEntry localEntry : _clientInfo._localPendingLogEntries) {
-                    SystemProcessorPollResult.SystemLogEntry logEntry = new SystemProcessorPollResult.SystemLogEntry();
+                for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
+                    SystemLogEntry logEntry = new SystemLogEntry();
                     logEntry._timestamp = localEntry._timeMillis;
                     logEntry._entity = localEntry._source;
                     logEntry._message = localEntry._message;
@@ -361,18 +389,18 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
 
-            if (!_clientInfo._localPendingReadOnlyMessages.isEmpty()) {
-                int msgCount = _clientInfo._localPendingReadOnlyMessages.size();
-                pollResult._newReadOnlyMessages = new SystemProcessorPollResult.ReadOnlyMessage[msgCount];
+            if (!_clientInfo._pendingOutputMessages.isEmpty()) {
+                int msgCount = _clientInfo._pendingOutputMessages.size();
+                pollResult._newOutputMessages = new ConsoleOutputMessage[msgCount];
                 int mx = 0;
-                for (ReadOnlyMessage localROM : _clientInfo._localPendingReadOnlyMessages) {
-                    SystemProcessorPollResult.ReadOnlyMessage spprMsg = new SystemProcessorPollResult.ReadOnlyMessage();
-                    spprMsg._identifier = localROM._identifier;
-                    spprMsg._osIdentifier = localROM._osIdentifier;
-                    spprMsg._text = localROM._text;
-                    pollResult._newReadOnlyMessages[mx++] = spprMsg;
+                for (OutputMessage pendingMsg : _clientInfo._pendingOutputMessages) {
+                    ConsoleOutputMessage commMsg = new ConsoleOutputMessage();
+                    commMsg._identifier = pendingMsg._identifier;
+                    commMsg._pinned = pendingMsg._pinned;
+                    commMsg._text = Arrays.copyOf(pendingMsg._text, pendingMsg._text.length);
+                    pollResult._newOutputMessages[mx++] = commMsg;
                 }
-                _clientInfo._localPendingReadOnlyMessages.clear();
+                _clientInfo._pendingOutputMessages.clear();
             }
 
             if (_clientInfo._updatedHardwareConfiguration) {
@@ -383,23 +411,9 @@ public class RESTSystemConsole implements SystemConsole {
                 pollResult._jumpKeySettings = _jumpKeyPanel.getJumpKeys().getW();
             }
 
-            if (_clientInfo._updatedReadReplyMessages) {
-                int msgCount = _pendingReadReplyMessages.size();
-                pollResult._extantReadReplyMessages = new SystemProcessorPollResult.ReadReplyMessage[msgCount];
-                int mx = 0;
-                for (ReadReplyMessage msg : _pendingReadReplyMessages.values()) {
-                    SystemProcessorPollResult.ReadReplyMessage spprMsg = new SystemProcessorPollResult.ReadReplyMessage();
-                    spprMsg._identifier = msg._identifier;
-                    spprMsg._osIdentifier = msg._osIdentifier;
-                    spprMsg._text = msg._prompt;
-                    spprMsg._maxReplySize = msg._maxResponseLength;
-                    pollResult._extantReadReplyMessages[mx++] = spprMsg;
-                }
-            }
-
             if (_clientInfo._updatedStatusMessage) {
-                pollResult._latestStatusMessage = new SystemProcessorPollResult.StatusMessage();
-                pollResult._latestStatusMessage._text = _lastestStatusMessage._text;
+                pollResult._latestStatusMessage = new ConsoleStatusMessage();
+                pollResult._latestStatusMessage._text = Arrays.copyOf(_latestStatusMessage._text, _latestStatusMessage._text.length);
             }
 
             if (_clientInfo._updatedSystemConfiguration) {
@@ -443,7 +457,7 @@ public class RESTSystemConsole implements SystemConsole {
 
             String clientId = UUID.randomUUID().toString();
             ClientInfo clientInfo = new ClientInfo();
-            clientInfo._localPendingReadOnlyMessages.addAll(_latestReadOnlyMessages);
+            clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values()); //  TODO probably not thread-safe, what to do?
             clientInfo._updatedJumpKeys = true;
             clientInfo._updatedReadReplyMessages = true;
             clientInfo._updatedStatusMessage = true;
@@ -464,6 +478,7 @@ public class RESTSystemConsole implements SystemConsole {
     //  All requests must include a (supposedly) unique UUID as a client identifier in the headers "Client={uuid}"
     //  This unique UUID must be used for every message sent by a given instance of a client.
     //  ----------------------------------------------------------------------------------------------------------------------------
+
     private class Listener extends SecureServer {
 
         /**
@@ -491,6 +506,7 @@ public class RESTSystemConsole implements SystemConsole {
             super.setup();
             appendHandler("/", new DefaultRequestHandler());
             appendHandler("/jumpkeys", new JumpKeysRequestHandler());
+            appendHandler("/message", new MessageHandler());
             appendHandler("/session", new SessionRequestHandler());
             appendHandler("/poll", new PollRequestHandler());
             start();
@@ -714,16 +730,6 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Used for sequencing / identifying message objects
-     */
-    @Override
-    public long getNextMessageIdentifier() {
-        synchronized (_nextMessageIdentifier) {
-            return _nextMessageIdentifier++;
-        }
-    }
-
-    /**
      * For debugging
      */
     @Override
@@ -739,14 +745,17 @@ public class RESTSystemConsole implements SystemConsole {
                     "  Listener commonName=%s portNumber=%d\n",
                     _listener.getCommonName(),
                     _listener.getPortNumber()));
+
+                //TODO show any cached messages
             }
 
             long now = System.currentTimeMillis();
             for (ClientInfo cinfo : cinfos) {
                 synchronized (cinfo) {
-                        writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
-                                                   cinfo._remoteAddress.getAddress().getHostAddress(),
-                                                   now - cinfo._lastActivity));
+                    writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
+                                               cinfo._remoteAddress.getAddress().getHostAddress(),
+                                               now - cinfo._lastActivity));
+                    //  TODO show pending stuff
                 }
             }
         } catch (IOException ex) {
@@ -754,53 +763,45 @@ public class RESTSystemConsole implements SystemConsole {
         }
     }
 
+    /**
+     * Used for sequencing / identifying message objects
+     */
     @Override
-    public InputMessage pollMessage() {
+    public long getNextMessageIdentifier() {
+        synchronized (_nextMessageIdentifier) {
+            return _nextMessageIdentifier++;
+        }
+    }
+
+    @Override
+    public InputMessage pollInputMessage() {
         //TODO
         return null;
     }
 
     @Override
-    public boolean postMessage(
+    public void postOutputMessage(
         final OutputMessage message
     ) {
-        boolean result = false;
-
-        if (message instanceof ReadOnlyMessage) {
-            //  Add this message to the end of the cache of latest messages, ensuring the cache does not excced the preset size,
-            //  then append it to the pending containers of all the established clients, and poke them
-            ReadOnlyMessage romsg = (ReadOnlyMessage) message;
-            synchronized (this) {
-                if (_latestReadOnlyMessages.size() == MAX_LATEST_READ_ONLY_MESSAGES) {
-                    _latestReadOnlyMessages.remove(0);
-                }
-                _latestReadOnlyMessages.add(romsg);
-            }
-            pokeClients(clientInfo -> clientInfo._localPendingReadOnlyMessages.add(romsg));
-            result = true;
-        } else if (message instanceof ReadReplyMessage) {
-            //  Put this in our pending-read-only-message container, and poke the established clients
-            ReadReplyMessage rrmsg = (ReadReplyMessage) message;
-            synchronized (this) {
-                if (_pendingReadReplyMessages.size() < MAX_OUTSTANDING_READ_REPLY_MESSAGES) {
-                    _pendingReadReplyMessages.put(rrmsg._identifier, rrmsg);
-                    result = true;
-                }
-            }
-            if (result) {
-                pokeClients(clientInfo -> clientInfo._updatedReadReplyMessages = true);
-            }
-        } else if (message instanceof StatusMessage) {
-            //  Put this in our latest-status-message location and poke the established clients
-            StatusMessage stmsg = (StatusMessage) message;
-            synchronized (this) {
-                _lastestStatusMessage = stmsg;
-            }
-            pokeClients(clientInfo -> clientInfo._updatedStatusMessage = true);
-            result = true;
+        //  Add the message to our output cache. If it's new, yay.
+        //  If a message with this identifier is still in our cache, we overlay it.
+        //  Either way, we add it to the pending output for all the clients.
+        synchronized (this) {
+            _outputMessageCache.put(message._identifier, message);
         }
 
-        return result;
+        pokeClients(clientInfo -> clientInfo._pendingOutputMessages.add(message));
+    }
+
+    @Override
+    public void postStatusMessage(
+        final StatusMessage message
+    ) {
+        synchronized (this) {
+            _latestStatusMessage = message;
+        }
+
+        pokeClients(clientInfo -> clientInfo._updatedStatusMessage = true);
     }
 
     @Override
@@ -808,37 +809,17 @@ public class RESTSystemConsole implements SystemConsole {
         final KomodoAppender.LogEntry[] logEntries
     ) {
         List<KomodoAppender.LogEntry> logList = Arrays.asList(logEntries);
-        pokeClients(clientInfo -> clientInfo._localPendingLogEntries.addAll(logList));
+        pokeClients(clientInfo -> clientInfo._pendingLogEntries.addAll(logList));
     }
 
     @Override
     public void reset() {
         //  We don't close the established sessions, but we do clear out all messaging and such.
         synchronized (this) {
-            _pendingReadReplyMessages.clear();
-            _latestReadOnlyMessages.clear();
-            _lastestStatusMessage = null;
+            _outputMessageCache.clear();
+            _latestStatusMessage = null;
             pokeClients(ClientInfo::clear);
         }
-    }
-
-    @Override
-    public boolean revokeMessage(
-        final OutputMessage message
-    ) {
-        boolean result = false;
-
-        if (message instanceof ReadReplyMessage) {
-            //  Does this message exist in our pending container? If so, remove it and poke the established clients
-            synchronized (this) {
-                result = _pendingReadReplyMessages.remove(message._identifier) != null;
-            }
-            if (result) {
-                pokeClients(clientInfo -> clientInfo._updatedReadReplyMessages = true);
-            }
-        }
-
-        return result;
     }
 
     @Override

@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kconsole;
 
-import com.kadware.komodo.commlib.SystemProcessorPollResult.HardwareLogEntry;
+import com.kadware.komodo.commlib.PollResult.HardwareLogEntry;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;

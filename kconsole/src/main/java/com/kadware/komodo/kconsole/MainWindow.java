@@ -7,7 +7,7 @@ package com.kadware.komodo.kconsole;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.commlib.SecureClient;
-import com.kadware.komodo.commlib.SystemProcessorPollResult;
+import com.kadware.komodo.commlib.PollResult;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -27,8 +27,8 @@ class MainWindow {
                 try {
                     SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
                     ObjectMapper mapper = new ObjectMapper();
-                    SystemProcessorPollResult spp =
-                        mapper.readValue(sendResult._responseStream, new TypeReference<SystemProcessorPollResult>() {});
+                    PollResult spp =
+                        mapper.readValue(sendResult._responseStream, new TypeReference<PollResult>() {});
                     if (spp != null) {
                         _pollResult = spp;
                         Platform.runLater(_refreshTask);
@@ -73,7 +73,7 @@ class MainWindow {
     private BorderPane _borderPane;
     private final ConsoleInfo _consoleInfo;
     private final PollThread _pollThread = new PollThread();
-    private SystemProcessorPollResult _pollResult = null;
+    private PollResult _pollResult = null;
     private final RefreshTask _refreshTask = new RefreshTask();
 
 
