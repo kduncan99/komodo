@@ -25,6 +25,8 @@ class MainWindow {
         public void run() {
             while (!_terminate) {
                 try {
+                    //  This has a delay built-in, by virtual of the call to /poll which blocks for a period of time
+                    //  until there is something to report, or until the /poll endpoint gets tired of us hanging around.
                     SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
                     ObjectMapper mapper = new ObjectMapper();
                     PollResult spp =
@@ -49,71 +51,70 @@ class MainWindow {
 
         public void run() {
             if (_pollResult != null) {
-                if (_pollResult._identifiers != null) {
-                    String headerMsg = String.format("Remote System:%s Version:%s",
-                                                     _pollResult._identifiers._systemIdentifier,
-                                                     _pollResult._identifiers._versionString);
-                    _borderPane.setTop(new Label(headerMsg));
+                if (_pollResult._jumpKeySettings != null) {
+                    _consoleInfo._jumpKeyPane.update(_pollResult._jumpKeySettings);
                 }
 
-                if (_pollResult._jumpKeys != null) {
-                    _consoleInfo._jumpKeyPane.update(_pollResult._jumpKeys);
+                if (_pollResult._newOutputMessages != null) {
+                    _consoleInfo._consolePane.update(_pollResult._newOutputMessages);
                 }
 
-                if (_pollResult._logEntries != null) {
-                    _consoleInfo._logPane.update(_pollResult._logEntries);
+                if (_pollResult._newLogEntries != null) {
+                    _consoleInfo._logPane.update(_pollResult._newLogEntries);
                 }
 
-                //TODO  Check other elements of the poll result
+                //TODO check for system configuration changes
+                //TODO check for hardware configuration changes
             }
         }
     }
 
-
-    private BorderPane _borderPane;
     private final ConsoleInfo _consoleInfo;
     private final PollThread _pollThread = new PollThread();
     private PollResult _pollResult = null;
     private final RefreshTask _refreshTask = new RefreshTask();
 
-
     MainWindow(ConsoleInfo consoleInfo) { _consoleInfo = consoleInfo; }
-
 
     /**
      * Creates the scene for this window
      */
     Scene createScene() {
+        _consoleInfo._consolePane = ConsolePane.create(_consoleInfo);
         _consoleInfo._jumpKeyPane = JumpKeyPane.create(_consoleInfo);
         _consoleInfo._logPane = LogPane.create(_consoleInfo);
 
-        Tab overviewTab = new Tab("Overview", new Label("Hardware overview"));
-        overviewTab.setClosable(false);
-
-        Tab consoleTab = new Tab("Console", new Label("Operating system console"));
-        consoleTab.setClosable(false);
-
         Tab iplTab = new Tab("IPL", new Label("Initial Program Load"));
         iplTab.setClosable(false);
-        //TODO for now, just put the JK's on the pane, we'll add more stuff later, in some kind of other pane
         iplTab.setContent(_consoleInfo._jumpKeyPane);
 
-        Tab logTab = new Tab("Log", new Label("Hardware log"));
+        Tab consoleTab = new Tab("Console", new Label("Operating System Console"));
+        consoleTab.setClosable(false);
+        consoleTab.setContent(_consoleInfo._consolePane);
+
+        Tab hardwareConfigTab = new Tab("Components", new Label("Hardware Configuration"));
+        hardwareConfigTab.setClosable(false);
+
+        Tab systemConfigTab = new Tab("Configuration", new Label("System Settings"));
+        systemConfigTab.setClosable(false);
+
+        Tab logTab = new Tab("Log", new Label("System Log"));
         logTab.setClosable(false);
         logTab.setContent(_consoleInfo._logPane);
 
         TabPane tabPane = new TabPane();
-        tabPane.getTabs().add(overviewTab);
-        tabPane.getTabs().add(consoleTab);
         tabPane.getTabs().add(iplTab);
+        tabPane.getTabs().add(consoleTab);
+        tabPane.getTabs().add(hardwareConfigTab);
+        tabPane.getTabs().add(systemConfigTab);
         tabPane.getTabs().add(logTab);
 
-        _borderPane = new BorderPane();
-        _borderPane.setTop(new Label(""));
-        _borderPane.setCenter(tabPane);
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(new Label(""));
+        borderPane.setCenter(tabPane);
 
         _pollThread.start();
-        return new Scene(_borderPane, 700, 350);
+        return new Scene(borderPane, 700, 350);
     }
 
     /**

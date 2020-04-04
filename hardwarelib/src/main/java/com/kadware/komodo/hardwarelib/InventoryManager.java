@@ -257,13 +257,12 @@ public class InventoryManager {
      * @throws MaxNodesException if too many processors of this type have been created
      */
     public SystemProcessor createSystemProcessor(
-        final int managementPort
     ) throws MaxNodesException {
         int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
         for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 String name = String.format("IP%d", px);
-                SystemProcessor sp = new SystemProcessor(name, managementPort);
+                SystemProcessor sp = new SystemProcessor(name);
                 _processors.put(upiIndex, sp);
                 sp.initialize();
                 return sp;

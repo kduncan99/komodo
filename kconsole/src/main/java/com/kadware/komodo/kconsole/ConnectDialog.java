@@ -7,6 +7,7 @@ package com.kadware.komodo.kconsole;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.commlib.SecureClient;
+import java.net.SocketException;
 import java.util.Base64;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -85,11 +86,16 @@ class ConnectDialog {
 
                 SecureClient.SendResult result = client.sendPut("/session", new byte[0]);
                 if (result._responseCode == 401) {
-                    new Alert(Alert.AlertType.ERROR, "Credentials invalid").showAndWait();
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Credentials invalid");
+                    alert.showAndWait();
                     return;
                 } else if (result._responseCode > 299) {
-                    new Alert(Alert.AlertType.ERROR,
-                              String.format("Code:%d (%s)", result._responseCode, result._responseMessage)).showAndWait();
+                    String alertMessage = String.format("Code:%d (%s)\n%s",
+                                                        result._responseCode,
+                                                        result._responseMessage,
+                                                        new String(result._responseStream));
+                    Alert alert = new Alert(Alert.AlertType.ERROR, alertMessage);
+                    alert.showAndWait();
                     return;
                 }
 
@@ -103,10 +109,15 @@ class ConnectDialog {
                 _consoleInfo._primaryStage.setScene(_consoleInfo._mainWindow.createScene());
                 _consoleInfo._connectDialog = null;
             } catch (NumberFormatException ex) {
-                new Alert(Alert.AlertType.ERROR, "Invalid port number").showAndWait();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Invalid port number");
+                alert.showAndWait();
+            } catch (SocketException ex) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, String.format("Connection error:\n%s", ex.getMessage()));
+                alert.showAndWait();
             } catch (Exception ex) {
                 ex.printStackTrace();//TODO remove later
-                new Alert(Alert.AlertType.ERROR, ex.getMessage()).showAndWait();
+                Alert alert = new Alert(Alert.AlertType.ERROR, ex.getMessage());
+                alert.showAndWait();
             }
         }
     }

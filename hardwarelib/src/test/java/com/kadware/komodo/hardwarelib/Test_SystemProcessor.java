@@ -20,21 +20,62 @@ public class Test_SystemProcessor {
     /**
      * This is not an actual unit test - run this in order to test Console
      */
-    // @Test
-    public void create(
+
+    boolean _primitiveStopFlag = false;
+
+    @Test
+    public void primitive(
     ) throws MaxNodesException  {
-        SystemProcessor p = InventoryManager.getInstance().createSystemProcessor(2200);
-        InstructionProcessor ip0 = InventoryManager.getInstance().createInstructionProcessor();
-        InstructionProcessor ip1 = InventoryManager.getInstance().createInstructionProcessor();
-        InputOutputProcessor iop = InventoryManager.getInstance().createInputOutputProcessor();
-        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
-        Random r = new Random(System.currentTimeMillis());
-        while (true) {
-            LOGGER.trace(String.format("%d", System.currentTimeMillis()));
+        SystemProcessor p = InventoryManager.getInstance().createSystemProcessor();
+//        InstructionProcessor ip0 = InventoryManager.getInstance().createInstructionProcessor();
+//        InstructionProcessor ip1 = InventoryManager.getInstance().createInstructionProcessor();
+//        InputOutputProcessor iop = InventoryManager.getInstance().createInputOutputProcessor();
+//        MainStorageProcessor msp = InventoryManager.getInstance().createMainStorageProcessor();
+//        Random r = new Random(System.currentTimeMillis());
+        _primitiveStopFlag = false;
+        long lastStamp = System.currentTimeMillis();
+        int inputCount = 0;
+        LOGGER.info("Starting");
+        p.consoleSendOutputMessage(false, "-- Console Interaction Test Starts --");
+        p.consoleSendOutputMessage(false,"Enter H for help, Q to quit");
+
+        while (!_primitiveStopFlag) {
+            long now = System.currentTimeMillis();
+            long elapsed = now - lastStamp;
+            if (elapsed > 5 * 1000) {
+                String sysmsg[] = new String [2];
+                sysmsg[0] = String.format("Elapsed: %dms", elapsed);
+                sysmsg[1] = String.format("Inputs: %d", inputCount);
+                p.consoleSendStatusMessage(sysmsg);
+                LOGGER.info(sysmsg[0]);
+                lastStamp = now;
+            }
+
+            String input = p.consolePollInputMessage();
+            if (input != null) {
+                processInput(p, input.trim().toUpperCase());
+            }
             try {
-                Thread.sleep(Math.abs(r.nextInt() % 10) * 1000);
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
             }
+        }
+
+        p.consoleSendOutputMessage(false, "-- Console Interaction Test Ends --");
+        LOGGER.info("Ending");
+    }
+
+    public void processInput(
+        SystemProcessor p,
+        String input
+    ) {
+        LOGGER.info(String.format("Input:%s", input));
+        if (input.equals("H")) {
+            p.consoleSendOutputMessage(false, "Yes, you do need help");
+        } else if (input.equals("Q")) {
+            _primitiveStopFlag = true;
+        } else {
+            p.consoleSendOutputMessage(false, "What?");
         }
     }
 

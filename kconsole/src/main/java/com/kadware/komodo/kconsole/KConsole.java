@@ -8,7 +8,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 @SuppressWarnings("Duplicates")
-public class Console extends Application {
+public class KConsole extends Application {
 
     private final ConsoleInfo _consoleInfo = new ConsoleInfo();
 

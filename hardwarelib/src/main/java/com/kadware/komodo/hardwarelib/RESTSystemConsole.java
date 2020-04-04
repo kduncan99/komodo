@@ -457,36 +457,54 @@ public class RESTSystemConsole implements SystemConsole {
         @Override
         public void handle(
             final HttpExchange exchange
-        ) throws IOException {
-            if (!validateCredentials(exchange)) {
-                respondUnauthorized(exchange);
-                return;
-            }
+        ) {
+            try {
+                if (!validateCredentials(exchange)) {
+                    respondUnauthorized(exchange);
+                    return;
+                }
 
-            String method = exchange.getRequestMethod();
-            if (!method.equalsIgnoreCase(HttpMethod.POST._value)) {
-                respondBadMethod(exchange);
-                return;
-            }
+                String method = exchange.getRequestMethod();
+                if (!method.equalsIgnoreCase(HttpMethod.POST._value)) {
+                    respondBadMethod(exchange);
+                    return;
+                }
 
-            String clientId = UUID.randomUUID().toString();
-            ClientInfo clientInfo = new ClientInfo();
-            synchronized (_outputMessageCache) {
-                clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
-            }
-            clientInfo._updatedJumpKeys = true;
-            clientInfo._updatedReadReplyMessages = true;
-            clientInfo._updatedStatusMessage = true;
-            clientInfo._updatedHardwareConfiguration = true;
-            clientInfo._updatedSystemConfiguration = true;
-            clientInfo._remoteAddress = exchange.getRemoteAddress();
-            synchronized (this) {
-                _clientInfos.put(clientId, clientInfo);
-            }
+                String clientId = UUID.randomUUID().toString();
+                ClientInfo clientInfo = new ClientInfo();
+                synchronized (_outputMessageCache) {
+                    clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
+                }
+                clientInfo._updatedJumpKeys = true;
+                clientInfo._updatedReadReplyMessages = true;
+                clientInfo._updatedStatusMessage = true;
+                clientInfo._updatedHardwareConfiguration = true;
+                clientInfo._updatedSystemConfiguration = true;
+                clientInfo._remoteAddress = exchange.getRemoteAddress();
+                synchronized (this) {
+                    _clientInfos.put(clientId, clientInfo);
+                }
 
-            respondCreated(exchange, clientId);
+                respondCreated(exchange, clientId);
+            } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
+            }
         }
     }
+
+    public String getStackTrace(
+        final Throwable t
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(t.toString());
+        sb.append("\n");
+        for (StackTraceElement e : t.getStackTrace()) {
+            sb.append(e.toString());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  HTTP listener
@@ -622,6 +640,7 @@ public class RESTSystemConsole implements SystemConsole {
         final String text
     ) {
         try {
+            System.out.println("-->" + text);//TODO remove
             exchange.sendResponseHeaders(code, text.length());
             OutputStream os = exchange.getResponseBody();
             os.write(text.getBytes());
@@ -649,8 +668,7 @@ public class RESTSystemConsole implements SystemConsole {
         final HttpExchange exchange,
         final String explanation
     ) {
-        String response = String.format("%s\n", explanation);
-        respond(exchange, HttpURLConnection.HTTP_BAD_REQUEST, response);
+        respond(exchange, HttpURLConnection.HTTP_BAD_REQUEST, explanation + "\n");
     }
 
     /**
@@ -702,8 +720,14 @@ public class RESTSystemConsole implements SystemConsole {
         final HttpExchange exchange,
         final String message
     ) {
-        String response = String.format("%s\n", message);
-        respond(exchange, java.net.HttpURLConnection.HTTP_NOT_FOUND, response);
+        respond(exchange, java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
+    }
+
+    private void respondServerError(
+        final HttpExchange exchange,
+        final String message
+    ) {
+        respond(exchange, HttpURLConnection.HTTP_SERVER_ERROR, message + "\n");
     }
 
     /**

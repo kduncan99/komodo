@@ -6870,9 +6870,9 @@ public class InstructionProcessor extends Processor implements Worker {
     private class SYSCFunctionHandler extends InstructionHandler {
 
         private static final int SF_CONSOLE_SEND_STATUS = 030;
-        private static final int SF_CONSOLE_SEND_READ_ONLY = 031;
-        private static final int SF_CONSOLE_SEND_READ_REPLY = 032;
-        private static final int SF_CONSOLE_POLL = 033;
+        private static final int SF_CONSOLE_SEND_MESSAGE = 031;
+        private static final int SF_CONSOLE_POLL_MESSAGE = 032;
+        //  TODO need some way to resend messages - used to un-pin and remove the prefix of read-reply messgaes
         private static final int SF_CONSOLE_RESET = 034;
 
         private static final int SF_DAYCLOCK_READ = 042;
@@ -7046,6 +7046,13 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_SEND_STATUS: {
+                    //  TODO need to re-evaluate the interface between here and the SP.
+                    //  SP no longer knows about operator msg ids, so we need to be able to send pinned messages,
+                    //  and to update them to non-pinned status (and adjust the output to remove the operator ident)
+                    //  It is up to the OS to convert the meaning of read-reply to pinned, and deal with the
+                    //  corresponding inputs.
+                    //  For now, we'll just comment out the whole mess.
+
                     //  Packet size is 4 words
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
@@ -7054,88 +7061,64 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing first message in ASCII
                     //  U+3:            Virtual address of buffer containing second message in ASCII
-                    long[] operands = new long[4];
-                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-
-                    int status = SS_SUCCESSFUL;
-                    int msg1Chars = (int) Word36.getQ3(operands[0]);
-                    int msg2Chars = (int) Word36.getQ4(operands[0]);
-                    int msg1Words = (msg1Chars / 4) + ((msg1Chars % 4 == 0) ? 0 : 1);
-                    int msg2Words = (msg2Chars / 4) + ((msg2Chars % 4 == 0) ? 0 : 1);
-                    long msgId = operands[1];
-
-                    VirtualAddressInfo vaInfo1 = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, msg1Words);
-                    VirtualAddressInfo vaInfo2 = verifyVirtualAddress(new VirtualAddress(operands[3]), true, false, msg2Words);
-
-                    if (vaInfo1._status != SS_SUCCESSFUL) {
-                        status = vaInfo1._status;
-                    } else if (vaInfo2._status != SS_SUCCESSFUL) {
-                        status = vaInfo2._status;
-                    } else {
-                        String msg1 = vaInfo1._bankDescriptor.toASCII(vaInfo1._virtualAddress.getOffset(), msg1Words).substring(0, msg1Chars);
-                        String msg2 = vaInfo2._bankDescriptor.toASCII(vaInfo2._virtualAddress.getOffset(), msg2Words).substring(0, msg2Chars);
-                        SystemProcessor.getInstance().consoleSendStatusMessage(msg1, msg2);
-                    }
-
-                    operands[0] = Word36.setS2(operands[0], status);
-                    //noinspection ConstantConditions
-                    storeConsecutiveOperands(devAddr, operands);
+//                    long[] operands = new long[4];
+//                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+//
+//                    int status = SS_SUCCESSFUL;
+//                    int msg1Chars = (int) Word36.getQ3(operands[0]);
+//                    int msg2Chars = (int) Word36.getQ4(operands[0]);
+//                    int msg1Words = (msg1Chars / 4) + ((msg1Chars % 4 == 0) ? 0 : 1);
+//                    int msg2Words = (msg2Chars / 4) + ((msg2Chars % 4 == 0) ? 0 : 1);
+//                    long msgId = operands[1];
+//
+//                    VirtualAddressInfo vaInfo1 = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, msg1Words);
+//                    VirtualAddressInfo vaInfo2 = verifyVirtualAddress(new VirtualAddress(operands[3]), true, false, msg2Words);
+//
+//                    if (vaInfo1._status != SS_SUCCESSFUL) {
+//                        status = vaInfo1._status;
+//                    } else if (vaInfo2._status != SS_SUCCESSFUL) {
+//                        status = vaInfo2._status;
+//                    } else {
+//                        String messages[] = { vaInfo1._bankDescriptor.toASCII(vaInfo1._virtualAddress.getOffset(), msg1Words).substring(0, msg1Chars),
+//                                              vaInfo2._bankDescriptor.toASCII(vaInfo2._virtualAddress.getOffset(), msg2Words).substring(0, msg2Chars) };
+//
+//                        SystemProcessor.getInstance().consoleSendStatusMessage(messages);
+//                    }
+//
+//                    operands[0] = Word36.setS2(operands[0], status);
+//                    //noinspection ConstantConditions
+//                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
-                case SF_CONSOLE_SEND_READ_ONLY: {
+                case SF_CONSOLE_SEND_MESSAGE: {
                     //  Packet size is 3 words
-                    //  U+0,S1          Subfunction
+                    //  U+0,S1:         Subfunction
                     //  U+0,S2:         Status
+                    //  U+0,S3:         Attributes
+                    //      Bit 12-16:      Unused
+                    //      Bit 17:         If set, this message is pinned - used for read-reply messages
                     //  U+0,Q3:         Length of message in characters
-                    //  U+1,W:          Unique message identifier
+                    //  U+1,W:          Unique message identifier (may or may not be used)
                     //  U+2:            Virtual address of buffer containing message in ASCII
-                    long[] operands = new long[3];
-                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-
-                    int chars = (int) Word36.getQ3(operands[0]);
-                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
-                    long msgId = operands[1];
-                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
-                    if (vaInfo._status == SS_SUCCESSFUL) {
-                        String msg = vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msgId, msg);
-                    }
-
-                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
-                    //noinspection ConstantConditions
-                    storeConsecutiveOperands(devAddr, operands);
+//                    long[] operands = new long[3];
+//                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+//
+//                    int chars = (int) Word36.getQ3(operands[0]);
+//                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
+//                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
+//                    if (vaInfo._status == SS_SUCCESSFUL) {
+//                        String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+//                        SystemProcessor.getInstance().consoleSendOutputMessage(false, msg);
+//                    }
+//
+//                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
+//                    //noinspection ConstantConditions
+//                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
-                case SF_CONSOLE_SEND_READ_REPLY: {
-                    //  Packet size is 3 words
-                    //  U+0,S1          Subfunction
-                    //  U+0,S2:         Status
-                    //  U+0,Q3          Length of message in characters
-                    //  U+0,Q4          Maximum accepted length of response in characters
-                    //  U+1,W:          Unique message identifier
-                    //  U+2:            Virtual address of buffer containing message in ASCII
-                    long[] operands = new long[3];
-                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-
-                    int chars = (int) Word36.getQ3(operands[0]);
-                    int replyChars = (int) Word36.getQ4(operands[0]);
-                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
-                    long msgId = operands[1];
-                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
-                    if (vaInfo._status == SS_SUCCESSFUL) {
-                        String msg = vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadReplyMessage(msgId, msg, replyChars);
-                    }
-
-                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
-                    //noinspection ConstantConditions
-                    storeConsecutiveOperands(devAddr, operands);
-                    break;
-                }
-
-                case SF_CONSOLE_POLL: {
+                case SF_CONSOLE_POLL_MESSAGE: {
                     //  Packet size is 3 words
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
@@ -7143,32 +7126,32 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+0,Q4          Number of characters received if a message was read
                     //  U+1,W:          Unique message identifier
                     //  U+2:            Virtual address of buffer containing message in ASCII
-                    long[] operands = new long[3];
-                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-
-                    int status = SS_SUCCESSFUL;
-                    int words = (int) Word36.getQ3(operands[0]);
-                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), false, true, words);
-                    if (vaInfo._status == SS_SUCCESSFUL) {
-                        SystemProcessor.ConsoleInput consInput = SystemProcessor.getInstance().consolePoll();
-                        if (consInput != null) {
-                            operands[0] = Word36.setQ4(operands[0], consInput._message.length());
-                            operands[1] = consInput._identifier;
-                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
-                                 wx < words && ssx < consInput._message.length();
-                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
-                                vaInfo._bankDescriptor.set(bdx, Word36.stringToWordASCII(consInput._message.substring(ssx, ssy)).getW());
-                            }
-                        } else {
-                            status = SS_NO_DATA;
-                        }
-                    } else {
-                        status = vaInfo._status;
-                    }
-
-                    operands[0] = Word36.setS2(operands[0], status);
-                    //noinspection ConstantConditions
-                    storeConsecutiveOperands(devAddr, operands);
+//                    long[] operands = new long[3];
+//                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+//
+//                    int status = SS_SUCCESSFUL;
+//                    int words = (int) Word36.getQ3(operands[0]);
+//                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), false, true, words);
+//                    if (vaInfo._status == SS_SUCCESSFUL) {
+//                        SystemProcessor.ConsoleInput consInput = SystemProcessor.getInstance().consolePoll();
+//                        if (consInput != null) {
+//                            operands[0] = Word36.setQ4(operands[0], consInput._message.length());
+//                            operands[1] = consInput._identifier;
+//                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
+//                                 wx < words && ssx < consInput._message.length();
+//                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
+//                                vaInfo._bankDescriptor.set(bdx, Word36.stringToWordASCII(consInput._message.substring(ssx, ssy)).getW());
+//                            }
+//                        } else {
+//                            status = SS_NO_DATA;
+//                        }
+//                    } else {
+//                        status = vaInfo._status;
+//                    }
+//
+//                    operands[0] = Word36.setS2(operands[0], status);
+//                    //noinspection ConstantConditions
+//                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
@@ -7209,7 +7192,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W           Current jump key settings are returned here
                     long[] operands = new long[2];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    operands[1] = SystemProcessor.getInstance().jumpKeysGet();
+                    operands[1] = SystemProcessor.getInstance().getJumpKeys().getW();
                     //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
@@ -7221,7 +7204,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W           Desired jump key settings
                     long[] operands = new long[2];
                     getConsecutiveOperands(false, operands, true);
-                    SystemProcessor.getInstance().jumpKeysSet(operands[1]);
+                    SystemProcessor.getInstance().setJumpKeys(new Word36(operands[1]));
                     break;
                 }
 
