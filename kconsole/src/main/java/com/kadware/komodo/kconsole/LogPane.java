@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kconsole;
 
-import com.kadware.komodo.commlib.PollResult.HardwareLogEntry;
+import com.kadware.komodo.commlib.SystemLogEntry;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,17 +35,16 @@ class LogPane extends ScrollPane {
     static LogPane create(
         final ConsoleInfo consoleInfo
     ) {
-        LogPane pane = new LogPane();
-        return pane;
+        return new LogPane();
     }
 
     /**
      * more log info is available - update the display
      */
     void update(
-        final HardwareLogEntry[] logEntries
+        final SystemLogEntry[] logEntries
     ) {
-        for (HardwareLogEntry entry : logEntries) {
+        for (SystemLogEntry entry : logEntries) {
             Date date = new Date(entry._timestamp);
             String[] entitySplit = entry._entity.split("\\.");
             String s = String.format("%s [%s] %s",

@@ -21,16 +21,16 @@ class JumpKeyPane extends GridPane {
     private static class ButtonHandler implements EventHandler<ActionEvent> {
 
         private final ConsoleInfo _consoleInfo;
-        private final int _jumpKey;
+        private final int _jumpKeyId;                   //  1 to 36
         private final ToggleButton _toggleButton;
 
         private ButtonHandler(
             final ConsoleInfo consoleInfo,
             final ToggleButton toggleButton,
-            final int jumpKey
+            final int jumpKeyId
         ) {
             _consoleInfo = consoleInfo;
-            _jumpKey = jumpKey;
+            _jumpKeyId = jumpKeyId;
             _toggleButton = toggleButton;
         }
 
@@ -39,7 +39,7 @@ class JumpKeyPane extends GridPane {
             try {
                 JumpKeys spjk = new JumpKeys();
                 spjk._componentValues = new HashMap<>();
-                spjk._componentValues.put(String.valueOf(_jumpKey), _toggleButton.isSelected());
+                spjk._componentValues.put(_jumpKeyId, _toggleButton.isSelected());
                 _toggleButton.setStyle(_buttonStyles.get(_toggleButton.isSelected()));
 
                 ObjectMapper mapper = new ObjectMapper();
