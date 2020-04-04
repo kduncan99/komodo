@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +109,7 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
-    private static final int MAX_LATEST_READ_ONLY_MESSAGES = 20;
-    public static final int MAX_OUTSTANDING_READ_REPLY_MESSAGES = 10;
+    private static final int OUTPUT_CACHE_MAX_SIZE = 20;                    //  max 20 entries (unless we have >20 pinned)
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
     private static final long WORKER_PERIODICITY_MSECS = 1000;              //  worker thread does its work every 1 second
 
@@ -125,7 +125,9 @@ public class RESTSystemConsole implements SystemConsole {
 
     //  Recent output messages. Pinned messages are never allowed to scroll out of this list.
     //  This list is allowed to grow to a certain amount, but never beyond it unless required by the previous directive.
-    private final Map<Long, OutputMessage> _outputMessageCache = new HashMap<>();
+    private final Map<Long, OutputMessage> _outputMessageCache = new LinkedHashMap<>();
+
+    private final List<InputMessage> _pendingInputMessages = new LinkedList<>();
 
     //  This is always the latest status message. Clients may pick it up at any time.
     private StatusMessage _latestStatusMessage = null;
@@ -302,7 +304,19 @@ public class RESTSystemConsole implements SystemConsole {
                 return;
             }
 
-            //  TODO implement the rest of the code
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                ConsoleInputMessage msg = mapper.readValue(exchange.getRequestBody(), ConsoleInputMessage.class);
+
+                InputMessage im = new InputMessage(getNextMessageIdentifier(), msg._text);
+                synchronized (_pendingInputMessages) {
+                    _pendingInputMessages.add(im);
+                }
+
+                respondCreated(exchange, "");
+            } catch (IOException ex) {
+                respondBadRequest(exchange, "Badly-formatted body");
+            }
         }
     }
 
@@ -457,7 +471,9 @@ public class RESTSystemConsole implements SystemConsole {
 
             String clientId = UUID.randomUUID().toString();
             ClientInfo clientInfo = new ClientInfo();
-            clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values()); //  TODO probably not thread-safe, what to do?
+            synchronized (_outputMessageCache) {
+                clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
+            }
             clientInfo._updatedJumpKeys = true;
             clientInfo._updatedReadReplyMessages = true;
             clientInfo._updatedStatusMessage = true;
@@ -737,25 +753,45 @@ public class RESTSystemConsole implements SystemConsole {
         final BufferedWriter writer
     ) {
         try {
-            Set<ClientInfo> cinfos;
-            synchronized (this) {
-                cinfos = new java.util.HashSet<>(_clientInfos.values());
-                writer.write(String.format("RESTSystemConsole %s\n", _name));
-                writer.write(String.format(
-                    "  Listener commonName=%s portNumber=%d\n",
-                    _listener.getCommonName(),
-                    _listener.getPortNumber()));
+            writer.write(String.format("RESTSystemConsole %s\n", _name));
+            writer.write(String.format(
+                "  Listener commonName=%s portNumber=%d\n",
+                _listener.getCommonName(),
+                _listener.getPortNumber()));
 
-                //TODO show any cached messages
+            writer.write("  Output Message Cache:\n");
+            synchronized (_outputMessageCache) {
+                for (OutputMessage msg : _outputMessageCache.values()) {
+                    writer.write(String.format("    %d: pinned=%s\n", msg._identifier, msg._pinned));
+                    for (String s : msg._text) {
+                        writer.write(String.format("    ->'%s'\n", s));
+                    }
+                }
+            }
+
+            writer.write("  Pending input messages:\n");
+            synchronized (_pendingInputMessages) {
+                for (InputMessage msg : _pendingInputMessages) {
+                    writer.write(String.format("    %d: '%s'\n", msg._identifier, msg._text));
+                }
             }
 
             long now = System.currentTimeMillis();
-            for (ClientInfo cinfo : cinfos) {
-                synchronized (cinfo) {
-                    writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
-                                               cinfo._remoteAddress.getAddress().getHostAddress(),
-                                               now - cinfo._lastActivity));
-                    //  TODO show pending stuff
+            synchronized (_clientInfos) {
+                for (ClientInfo cinfo : _clientInfos.values()) {
+                    synchronized (cinfo) {
+                        writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
+                                                   cinfo._remoteAddress.getAddress().getHostAddress(),
+                                                   now - cinfo._lastActivity));
+
+                        writer.write("  Pending output messages\n");
+                        for (OutputMessage msg : cinfo._pendingOutputMessages) {
+                            writer.write(String.format("    %d: pinned=%s\n", msg._identifier, msg._pinned));
+                            for (String s : msg._text) {
+                                writer.write(String.format("    ->'%s'\n", s));
+                            }
+                        }
+                    }
                 }
             }
         } catch (IOException ex) {
@@ -775,7 +811,12 @@ public class RESTSystemConsole implements SystemConsole {
 
     @Override
     public InputMessage pollInputMessage() {
-        //TODO
+        synchronized (_pendingInputMessages) {
+            if (!_pendingInputMessages.isEmpty()) {
+                return _pendingInputMessages.remove(0);
+            }
+        }
+
         return null;
     }
 
@@ -786,8 +827,15 @@ public class RESTSystemConsole implements SystemConsole {
         //  Add the message to our output cache. If it's new, yay.
         //  If a message with this identifier is still in our cache, we overlay it.
         //  Either way, we add it to the pending output for all the clients.
-        synchronized (this) {
+        synchronized (_outputMessageCache) {
             _outputMessageCache.put(message._identifier, message);
+            Iterator<Map.Entry<Long, OutputMessage>> iter = _outputMessageCache.entrySet().iterator();
+            while ((_outputMessageCache.size() > OUTPUT_CACHE_MAX_SIZE) && iter.hasNext()) {
+                Map.Entry<Long, OutputMessage> entry = iter.next();
+                if (!entry.getValue()._pinned) {
+                    iter.remove();
+                }
+            }
         }
 
         pokeClients(clientInfo -> clientInfo._pendingOutputMessages.add(message));
@@ -797,10 +845,7 @@ public class RESTSystemConsole implements SystemConsole {
     public void postStatusMessage(
         final StatusMessage message
     ) {
-        synchronized (this) {
-            _latestStatusMessage = message;
-        }
-
+        _latestStatusMessage = message;
         pokeClients(clientInfo -> clientInfo._updatedStatusMessage = true);
     }
 
@@ -815,11 +860,12 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public void reset() {
         //  We don't close the established sessions, but we do clear out all messaging and such.
-        synchronized (this) {
+        synchronized (_outputMessageCache) {
             _outputMessageCache.clear();
-            _latestStatusMessage = null;
-            pokeClients(ClientInfo::clear);
         }
+
+        _latestStatusMessage = null;
+        pokeClients(ClientInfo::clear);
     }
 
     @Override
