@@ -42,8 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Class which implements the functionality necessary for a system console.
@@ -72,6 +70,7 @@ public class RESTSystemConsole implements SystemConsole {
      * ClientInfo - information regarding a particular client
      */
     private static class ClientInfo {
+        private final String _identifier;
         private long _lastActivity = System.currentTimeMillis();
         private InetSocketAddress _remoteAddress = null;
 
@@ -82,6 +81,12 @@ public class RESTSystemConsole implements SystemConsole {
         public boolean _updatedReadReplyMessages = false;
         public boolean _updatedStatusMessage = false;
         public boolean _updatedSystemConfiguration = false;
+
+        ClientInfo(
+            final String identifier
+        ) {
+            _identifier = identifier;
+        }
 
         public void clear() {
             _pendingLogEntries.clear();
@@ -114,7 +119,7 @@ public class RESTSystemConsole implements SystemConsole {
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
     private static final long WORKER_PERIODICITY_MSECS = 1000;              //  worker thread does its work every 1 second
 
-    private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
+    //  No logging here, too easy to get stuck in a log->show->log->show loop
 
     private Map<String, ClientInfo> _clientInfos = new HashMap<>();
     private final Configurator _configurator;
@@ -166,19 +171,24 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
-            if (!validateCredentials(exchange)) {
-                respondUnauthorized(exchange);
-                return;
-            }
+            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
+            try {
+                if (!validateCredentials(exchange) && !validateClientIdentifier(exchange)) {
+                    respondUnauthorized(exchange);
+                    return;
+                }
 
-            ClientInfo clientInfo = findClient(exchange);
-            if (clientInfo == null) {
-                respondNoSession(exchange);
-                return;
-            }
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    respondNoSession(exchange);
+                    return;
+                }
 
-            clientInfo._lastActivity = System.currentTimeMillis();
-            respondNotFound(exchange, "Path or object does not exist");
+                clientInfo._lastActivity = System.currentTimeMillis();
+                respondNotFound(exchange, "Path or object does not exist");
+            } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
+            }
         }
     }
 
@@ -207,73 +217,74 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
-            if (!validateCredentials(exchange)) {
-                respondUnauthorized(exchange);
-                return;
-            }
-
-            ClientInfo clientInfo = findClient(exchange);
-            if (clientInfo == null) {
-                respondNoSession(exchange);
-                return;
-            }
-
-            clientInfo._lastActivity = System.currentTimeMillis();
-
-            //  For GET - return the settings as both a composite value and a map of individual jump key settings
-            if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.GET._value)) {
-                JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
-                respondNormal(exchange, jumpKeysResponse);
-                return;
-            }
-
-            //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
-            //  If it has no composite value, but it has component values, use them to individually set the jump keys.
-            //  If it has neither, reject the PUT.
-            if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.PUT._value)) {
-                JumpKeys content;
-                try {
-                    content = new ObjectMapper().readValue(exchange.getRequestBody(), new TypeReference<JumpKeys>() {});
-                } catch (IOException ex) {
-                    respondBadRequest(exchange, ex.getMessage());
+            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
+            try {
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    respondNoSession(exchange);
                     return;
                 }
 
-                if (content._compositeValue != null) {
-                    if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
-                        respondBadRequest(exchange, "Invalid composite value");
+                clientInfo._lastActivity = System.currentTimeMillis();
+
+                //  For GET - return the settings as both a composite value and a map of individual jump key settings
+                if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.GET._value)) {
+                    JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
+                    respondNormal(exchange, jumpKeysResponse);
+                    return;
+                }
+
+                //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
+                //  If it has no composite value, but it has component values, use them to individually set the jump keys.
+                //  If it has neither, reject the PUT.
+                if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.PUT._value)) {
+                    JumpKeys content;
+                    try {
+                        content = new ObjectMapper().readValue(exchange.getRequestBody(), new TypeReference<JumpKeys>() {
+                        });
+                    } catch (IOException ex) {
+                        respondBadRequest(exchange, ex.getMessage());
                         return;
                     }
 
-                    _jumpKeyPanel.setJumpKeys(new Word36(content._compositeValue));
-                    JumpKeys response = createJumpKeys(content._compositeValue);
-                    respondNormal(exchange, response);
-                    return;
-                }
-
-                if (content._componentValues != null) {
-                    for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
-                        int jumpKeyId = entry.getKey();
-                        if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
-                            respondBadRequest(exchange, String.format("Invalid component value jump key id: %d", jumpKeyId));
+                    if (content._compositeValue != null) {
+                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
+                            respondBadRequest(exchange, "Invalid composite value");
                             return;
                         }
 
-                        boolean setting = entry.getValue();
-                        _jumpKeyPanel.setJumpKey(jumpKeyId, setting);
-
-                        JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
-                        respondNormal(exchange, jumpKeysResponse);
+                        _jumpKeyPanel.setJumpKeys(new Word36(content._compositeValue));
+                        JumpKeys response = createJumpKeys(content._compositeValue);
+                        respondNormal(exchange, response);
                         return;
                     }
+
+                    if (content._componentValues != null) {
+                        for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
+                            int jumpKeyId = entry.getKey();
+                            if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
+                                respondBadRequest(exchange, String.format("Invalid component value jump key id: %d", jumpKeyId));
+                                return;
+                            }
+
+                            boolean setting = entry.getValue();
+                            _jumpKeyPanel.setJumpKey(jumpKeyId, setting);
+
+                            JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
+                            respondNormal(exchange, jumpKeysResponse);
+                            return;
+                        }
+                    }
+
+                    respondBadRequest(exchange, "Requires either composite or component values");
+                    return;
                 }
 
-                respondBadRequest(exchange, "Requires either composite or component values");
-                return;
+                //  Neither a GET or a PUT - this is not allowed.
+                respondBadMethod(exchange);
+            } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
             }
-
-            //  Neither a GET or a PUT - this is not allowed.
-            respondBadMethod(exchange);
         }
     }
 
@@ -286,26 +297,22 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
-            if (!validateCredentials(exchange)) {
-                respondUnauthorized(exchange);
-                return;
-            }
-
-            ClientInfo clientInfo = findClient(exchange);
-            if (clientInfo == null) {
-                respondNoSession(exchange);
-                return;
-            }
-
-            clientInfo._lastActivity = System.currentTimeMillis();
-
-            String method = exchange.getRequestMethod();
-            if (!method.equals(HttpMethod.POST._value)) {
-                respondBadMethod(exchange);
-                return;
-            }
-
             try {
+                System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    respondNoSession(exchange);
+                    return;
+                }
+
+                clientInfo._lastActivity = System.currentTimeMillis();
+
+                String method = exchange.getRequestMethod();
+                if (!method.equals(HttpMethod.POST._value)) {
+                    respondBadMethod(exchange);
+                    return;
+                }
+
                 ObjectMapper mapper = new ObjectMapper();
                 ConsoleInputMessage msg = mapper.readValue(exchange.getRequestBody(), ConsoleInputMessage.class);
 
@@ -317,6 +324,8 @@ public class RESTSystemConsole implements SystemConsole {
                 respondCreated(exchange, "");
             } catch (IOException ex) {
                 respondBadRequest(exchange, "Badly-formatted body");
+            } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
             }
         }
     }
@@ -332,26 +341,26 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
-            if (!validateCredentials(exchange)) {
-                respondUnauthorized(exchange);
-                return;
+            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
+            try {
+                ClientInfo clientInfo = findClient(exchange);
+                if (clientInfo == null) {
+                    respondNoSession(exchange);
+                    return;
+                }
+
+                clientInfo._lastActivity = System.currentTimeMillis();
+
+                String method = exchange.getRequestMethod();
+                if (!method.equals(HttpMethod.GET._value)) {
+                    respondBadMethod(exchange);
+                    return;
+                }
+
+                new PollThread(exchange, clientInfo).start();
+            } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
             }
-
-            ClientInfo clientInfo = findClient(exchange);
-            if (clientInfo == null) {
-                respondNoSession(exchange);
-                return;
-            }
-
-            clientInfo._lastActivity = System.currentTimeMillis();
-
-            String method = exchange.getRequestMethod();
-            if (!method.equals(HttpMethod.GET._value)) {
-                respondBadMethod(exchange);
-                return;
-            }
-
-            new PollThread(exchange, clientInfo).start();
         }
     }
 
@@ -375,75 +384,72 @@ public class RESTSystemConsole implements SystemConsole {
 
         @Override
         public void run() {
-            //  Update last poll time, then check if there are any updates already waiting for the client to pick up.
-            //  If not, go into a wait loop, which will be interrupted if any updates eventuate during the wait.
+            //  Check if there are any updates already waiting for the client to pick up.
+            //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
             //  At the end of the wait construct and return a SystemProcessorPollResult object
-            _clientInfo._lastActivity = System.currentTimeMillis();
             synchronized (_clientInfo) {
                 if (!_clientInfo.hasUpdatesForClient()) {
                     try {
                         _clientInfo.wait(POLL_WAIT_MSECS);
                     } catch (InterruptedException ex) {
-                        LOGGER.catching(ex);
+                        //  do nothing
                     }
                 }
-            }
 
-            PollResult pollResult = new PollResult();
+                PollResult pollResult = new PollResult();
 
-            if (!_clientInfo._pendingLogEntries.isEmpty()) {
-                int entryCount = _clientInfo._pendingLogEntries.size();
-                pollResult._newLogEntries = new SystemLogEntry[entryCount];
-                int ex = 0;
-                for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
-                    SystemLogEntry logEntry = new SystemLogEntry();
-                    logEntry._timestamp = localEntry._timeMillis;
-                    logEntry._entity = localEntry._source;
-                    logEntry._message = localEntry._message;
-                    pollResult._newLogEntries[ex] = logEntry;
+                if (!_clientInfo._pendingLogEntries.isEmpty()) {
+                    int entryCount = _clientInfo._pendingLogEntries.size();
+                    pollResult._newLogEntries = new SystemLogEntry[entryCount];
+                    int ex = 0;
+                    for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
+                        SystemLogEntry logEntry = new SystemLogEntry();
+                        logEntry._timestamp = localEntry._timeMillis;
+                        logEntry._entity = localEntry._source;
+                        logEntry._message = localEntry._message;
+                        pollResult._newLogEntries[ex] = logEntry;
+                    }
                 }
-            }
 
-            if (!_clientInfo._pendingOutputMessages.isEmpty()) {
-                int msgCount = _clientInfo._pendingOutputMessages.size();
-                pollResult._newOutputMessages = new ConsoleOutputMessage[msgCount];
-                int mx = 0;
-                for (OutputMessage pendingMsg : _clientInfo._pendingOutputMessages) {
-                    ConsoleOutputMessage commMsg = new ConsoleOutputMessage();
-                    commMsg._identifier = pendingMsg._identifier;
-                    commMsg._pinned = pendingMsg._pinned;
-                    commMsg._text = Arrays.copyOf(pendingMsg._text, pendingMsg._text.length);
-                    pollResult._newOutputMessages[mx++] = commMsg;
+                if (!_clientInfo._pendingOutputMessages.isEmpty()) {
+                    int msgCount = _clientInfo._pendingOutputMessages.size();
+                    pollResult._newOutputMessages = new ConsoleOutputMessage[msgCount];
+                    int mx = 0;
+                    for (OutputMessage pendingMsg : _clientInfo._pendingOutputMessages) {
+                        ConsoleOutputMessage commMsg = new ConsoleOutputMessage();
+                        commMsg._identifier = pendingMsg._identifier;
+                        commMsg._pinned = pendingMsg._pinned;
+                        commMsg._text = Arrays.copyOf(pendingMsg._text, pendingMsg._text.length);
+                        pollResult._newOutputMessages[mx++] = commMsg;
+                    }
                 }
-                _clientInfo._pendingOutputMessages.clear();
-            }
 
-            if (_clientInfo._updatedHardwareConfiguration) {
-                //TODO
-            }
+                if (_clientInfo._updatedHardwareConfiguration) {
+                    //TODO
+                }
 
-            if (_clientInfo._updatedJumpKeys) {
-                pollResult._jumpKeySettings = _jumpKeyPanel.getJumpKeys().getW();
-            }
+                if (_clientInfo._updatedJumpKeys) {
+                    pollResult._jumpKeySettings = _jumpKeyPanel.getJumpKeys().getW();
+                }
 
-            if (_clientInfo._updatedStatusMessage) {
-                pollResult._latestStatusMessage = new ConsoleStatusMessage();
-                pollResult._latestStatusMessage._text = Arrays.copyOf(_latestStatusMessage._text, _latestStatusMessage._text.length);
-            }
+                if (_clientInfo._updatedStatusMessage) {
+                    pollResult._latestStatusMessage = new ConsoleStatusMessage();
+                    pollResult._latestStatusMessage._text = Arrays.copyOf(_latestStatusMessage._text, _latestStatusMessage._text.length);
+                }
 
-            if (_clientInfo._updatedSystemConfiguration) {
-                //TODO
-            }
+                if (_clientInfo._updatedSystemConfiguration) {
+                    //TODO
+                }
 
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                String response = mapper.writeValueAsString(pollResult);
-                _exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-                OutputStream os = _exchange.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
-            } catch (IOException ex) {
-                LOGGER.catching(ex);
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String response = mapper.writeValueAsString(pollResult);
+                    respondNormal(_exchange, response);
+                } catch (IOException ex) {
+                    respondServerError(_exchange, ex.getMessage());
+                }
+
+                _clientInfo.clear();
             }
         }
     }
@@ -459,6 +465,7 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
+            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 if (!validateCredentials(exchange)) {
                     respondUnauthorized(exchange);
@@ -472,7 +479,7 @@ public class RESTSystemConsole implements SystemConsole {
                 }
 
                 String clientId = UUID.randomUUID().toString();
-                ClientInfo clientInfo = new ClientInfo();
+                ClientInfo clientInfo = new ClientInfo(clientId);
                 synchronized (_outputMessageCache) {
                     clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
                 }
@@ -494,6 +501,9 @@ public class RESTSystemConsole implements SystemConsole {
         }
     }
 
+    /**
+     * For debugging
+     */
     public String getStackTrace(
         final Throwable t
     ) {
@@ -559,21 +569,36 @@ public class RESTSystemConsole implements SystemConsole {
         }
     }
 
+
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Checks the headers for a client id, then locates the corresponding ClientInfo object.
-     * Returns null if ClientInfo object is not found or unspecified.
+     * Returns null if ClientInfo object is not found or is unspecified.
+     * Serves as validation for clients which have presumably previously done a POST to /session
      */
     private ClientInfo findClient(
         final HttpExchange exchange
     ) {
         List<String> values = exchange.getRequestHeaders().get("Client");
+        //TODO remove block
+        System.out.println("Client headers:");
+        for (String v : values) {
+            System.out.println("  " + v);
+        }
+        //TODO end remove block
         if ((values != null) && (values.size() == 1)) {
             String clientId = values.get(0);
+            System.out.println("clientId from exchange=" + clientId);//TODO remove
             synchronized (_clientInfos) {
+                //TODO start remove block
+                System.out.println("Existing client ids:");
+                for (ClientInfo ci : _clientInfos.values()) {
+                    System.out.println("  " + ci._identifier);
+                }
+                //TODO end remove block
                 ClientInfo clientInfo = _clientInfos.get(clientId);
                 if (clientInfo != null) {
                     return clientInfo;
@@ -612,6 +637,7 @@ public class RESTSystemConsole implements SystemConsole {
      */
     private void pruneClients() {
         synchronized (_clientInfos) {
+            System.out.println("--------- PRUNING -----------");//TODO remove
             long now = System.currentTimeMillis();
             Iterator<Map.Entry<String, ClientInfo>> iter = _clientInfos.entrySet().iterator();
             List<ClientInfo> removedClientInfos = new LinkedList<>();
@@ -619,12 +645,14 @@ public class RESTSystemConsole implements SystemConsole {
                 Map.Entry<String, ClientInfo> entry = iter.next();
                 ClientInfo cinfo = entry.getValue();
                 if (now > (cinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
+                    System.out.println("    Removing client " + cinfo._identifier);//TODO remove
                     iter.remove();
                     removedClientInfos.add(cinfo);
                 }
             }
 
             for (ClientInfo cinfo : removedClientInfos) {
+                System.out.println("    Clearing client " + cinfo._identifier);//TODO remove
                 synchronized (cinfo) {
                     cinfo.clear();
                     cinfo.notify();
@@ -642,13 +670,13 @@ public class RESTSystemConsole implements SystemConsole {
         final String text
     ) {
         try {
-            System.out.println("-->" + text);//TODO remove
+            System.out.println("-->" + text);   //TODO remove
             exchange.sendResponseHeaders(code, text.length());
             OutputStream os = exchange.getResponseBody();
             os.write(text.getBytes());
             os.close();
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            //  Do nothing
         }
     }
 
@@ -685,7 +713,7 @@ public class RESTSystemConsole implements SystemConsole {
             String response = mapper.writeValueAsString(jsonMappableObject);
             respond(exchange, HttpURLConnection.HTTP_CREATED, response);
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            //  Do nothing
         }
     }
 
@@ -701,7 +729,7 @@ public class RESTSystemConsole implements SystemConsole {
             String response = mapper.writeValueAsString(jsonMappableObject);
             respond(exchange, HttpURLConnection.HTTP_OK, response);
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            //  Do nothing
         }
     }
 
@@ -729,7 +757,7 @@ public class RESTSystemConsole implements SystemConsole {
         final HttpExchange exchange,
         final String message
     ) {
-        respond(exchange, HttpURLConnection.HTTP_SERVER_ERROR, message + "\n");
+        respond(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, message + "\n");
     }
 
     /**
@@ -743,14 +771,23 @@ public class RESTSystemConsole implements SystemConsole {
     }
 
     /**
+     * Validates the client id - for everything *except* POST to /session
+     */
+    private boolean validateClientIdentifier(
+        final HttpExchange exchange
+    ) {
+        return true; //TODO
+    }
+
+    /**
      * Validate the credentials in the header of the given exchange object.
+     * Only for POST to /session.
      * @return true if credentials are valid, else false
      */
     private boolean validateCredentials(
         final HttpExchange exchange
     ) {
         Headers headers = exchange.getRequestHeaders();
-
         List<String> values = headers.get("Authorization");
         if ((values != null) && (values.size() == 1)) {
             String[] split = values.get(0).split(" ");
@@ -827,7 +864,7 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            //  Do nothing
         }
     }
 
@@ -908,7 +945,7 @@ public class RESTSystemConsole implements SystemConsole {
             _workerThread.start();
             return true;
         } catch (Exception ex) {
-            LOGGER.catching(ex);
+            //  Do nothing
             return false;
         }
     }
@@ -937,7 +974,7 @@ public class RESTSystemConsole implements SystemConsole {
                 try {
                     Thread.sleep(WORKER_PERIODICITY_MSECS);
                 } catch (InterruptedException ex) {
-                    LOGGER.catching(ex);
+                    //  Do nothing
                 }
             }
         }

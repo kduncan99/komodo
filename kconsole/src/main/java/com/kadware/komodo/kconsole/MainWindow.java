@@ -10,7 +10,6 @@ import com.kadware.komodo.commlib.SecureClient;
 import com.kadware.komodo.commlib.PollResult;
 import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -27,7 +26,7 @@ class MainWindow {
                 try {
                     //  This has a delay built-in, by virtual of the call to /poll which blocks for a period of time
                     //  until there is something to report, or until the /poll endpoint gets tired of us hanging around.
-                    SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendGet("/poll");
+                    SecureClient.ResultFromSend sendResult = _consoleInfo._secureClient.sendGet("/poll");
                     ObjectMapper mapper = new ObjectMapper();
                     PollResult spp =
                         mapper.readValue(sendResult._responseStream, new TypeReference<PollResult>() {});
@@ -36,8 +35,9 @@ class MainWindow {
                         Platform.runLater(_refreshTask);
                     }
                 } catch (Exception ex) {
-                    new Alert(Alert.AlertType.ERROR,
-                              "Communications with remote lost:" + ex.getMessage()).showAndWait();
+                    //  TODO following - fails, not on FX application thread; does Platform.ext() also die?
+//                    new Alert(Alert.AlertType.ERROR,
+//                              "Communications with remote lost:" + ex.getMessage()).showAndWait();
                     Platform.exit();
                 }
             }

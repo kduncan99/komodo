@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -29,12 +30,12 @@ public class SecureClient {
     /**
      * Provides useful information resulting from the send() request
      */
-    public static class SendResult {
-        public final int _responseCode;
-        public final String _responseMessage;
-        public final byte[] _responseStream;
+    public static class ResultFromSend {
+        public final int _responseCode;         //  HTTP response code
+        public final String _responseMessage;   //  The message (if any) sent along with the code
+        public final byte[] _responseStream;    //  The bytes read from either the output or the error stream
 
-        SendResult(
+        ResultFromSend(
             final int responseCode,
             final String responseMessage,
             final byte[] responseStream
@@ -100,26 +101,26 @@ public class SecureClient {
     /**
      * Given a response in the form of an InputStream, we convert that content to a byte array and return it.
      */
-    private byte[] getResponseStream(
+    private byte[] getResponseStreamBytes(
         final InputStream stream
     ) throws IOException {
         if (stream == null) {
             return new byte[0];
-        }
-
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            DataInputStream dataInputStream = new DataInputStream(stream);
-            int bufferSize = 32768;
-            byte[] buffer = new byte[bufferSize];
-            int charsRead;
-            while ((charsRead = dataInputStream.read(buffer, 0, bufferSize)) != -1) {
-                outputStream.write(buffer, 0, charsRead);
+        } else {
+            try {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                DataInputStream dataInputStream = new DataInputStream(stream);
+                int bufferSize = 32768;
+                byte[] buffer = new byte[bufferSize];
+                int charsRead;
+                while ((charsRead = dataInputStream.read(buffer, 0, bufferSize)) != -1) {
+                    outputStream.write(buffer, 0, charsRead);
+                }
+                return outputStream.toByteArray();
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                throw ex;
             }
-            return outputStream.toByteArray();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            throw ex;
         }
     }
 
@@ -194,7 +195,7 @@ public class SecureClient {
      * @param content       if not null, it is the data to be sent.
      * @return resulting traffic from the requested action (applies only to "GET")
      */
-    public SendResult send(
+    public ResultFromSend send(
         final HttpMethod operation,
         final String path,
         final byte[] content
@@ -208,6 +209,7 @@ public class SecureClient {
         //	Set up the new connection using a dummy host name verifier
         URL url = new URL("https", _urlString, _portNumber, path.replace(" ", "%20"));
         LOGGER.info(String.format("Sending to URL:%s operation=%s", url, operation.toString()));
+        System.out.println(String.format("Sending to URL:%s operation=%s", url, operation.toString()));//TODO remove
 
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setSSLSocketFactory(sslContext.getSocketFactory());
@@ -233,17 +235,23 @@ public class SecureClient {
 
         int responseCode = connection.getResponseCode();
         String responseMessage = connection.getResponseMessage();
-        byte[] response = getResponseStream(connection.getInputStream());
         LOGGER.info(String.format("Result=%d:%s", responseCode, responseMessage));
+        byte[] response;
+        if (responseCode >= 300) {
+            response = getResponseStreamBytes(connection.getErrorStream());
+        } else {
+            response = getResponseStreamBytes(connection.getInputStream());
+        }
+
         LOGGER.info(String.format("<--%s", new String(response)));
-        return new SendResult(responseCode, responseMessage, response);
+        return new ResultFromSend(responseCode, responseMessage, response);
     }
 
     /**
      * Implements a REST DELETE function
      * @param path REST path
      */
-    public SendResult sendDelete(
+    public ResultFromSend sendDelete(
         final String path
     ) throws IOException,
              KeyManagementException,
@@ -255,7 +263,7 @@ public class SecureClient {
      * Implements a REST GET function
      * @param path REST path
      */
-    public SendResult sendGet(
+    public ResultFromSend sendGet(
         final String path
     ) throws IOException,
              KeyManagementException,
@@ -268,7 +276,7 @@ public class SecureClient {
      * @param path REST path
      * @param content content to be applied to the path
      */
-    public SendResult sendPost(
+    public ResultFromSend sendPost(
         final String path,
         final byte[] content
     ) throws IOException,
@@ -282,7 +290,7 @@ public class SecureClient {
      * @param path REST path
      * @param content content to be applied to the path
      */
-    public SendResult sendPut(
+    public ResultFromSend sendPut(
         final String path,
         final byte[] content
     ) throws IOException,

@@ -44,7 +44,7 @@ class JumpKeyPane extends GridPane {
 
                 ObjectMapper mapper = new ObjectMapper();
                 String content = mapper.writeValueAsString(spjk);
-                SecureClient.SendResult sendResult = _consoleInfo._secureClient.sendPut("/jumpkeys", content.getBytes());
+                SecureClient.ResultFromSend sendResult = _consoleInfo._secureClient.sendPut("/jumpkeys", content.getBytes());
                 //TODO check sendResult for errors
             } catch (Exception ex) {
                 //  do nothing

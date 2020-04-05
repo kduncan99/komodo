@@ -10,9 +10,6 @@ import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.security.tools.keytool.CertAndKeyGen;
-import sun.security.x509.*;
-
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,6 +21,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import sun.security.tools.keytool.CertAndKeyGen;
+import sun.security.x509.*;
 
 public class SecureServer {
 

@@ -51,7 +51,7 @@ class ConnectDialog {
 
         /**
          * Open a connection as directed, and see whether the target is responsive, and an actual SystemProcessor interface
-         * If everything looks okay, transition to the main window.
+         * If everything looks okay, transition to the main window after storing the cookie session id.
          */
         public void handle(
             final ActionEvent event
@@ -84,7 +84,7 @@ class ConnectDialog {
                 String hash = Base64.getEncoder().encodeToString(composition.getBytes());
                 client.addProperty("Authorization", "Basic " + hash);
 
-                SecureClient.SendResult result = client.sendPost("/session", new byte[0]);
+                SecureClient.ResultFromSend result = client.sendPost("/session", new byte[0]);
                 if (result._responseCode == 401) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Credentials invalid");
                     alert.showAndWait();
