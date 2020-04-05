@@ -19,18 +19,9 @@ class ConsolePane extends ScrollPane {
 
     private static final int OUTPUT_ROWS = 24;
     private static final int OUTPUT_COLUMNS = 132;
-    private static final String BLANK_ROW = String.format("%0" + String.valueOf(OUTPUT_COLUMNS) + "s", "");
+    private static final String BLANK_ROW = String.format("%" + String.valueOf(OUTPUT_COLUMNS) + "s", "");
     private String[] _outputArea = new String[OUTPUT_ROWS];
     private String _inputArea;
-
-//    private static final int MAX_LINES = 1000;
-//    private static final DateFormat DATE_FORMATTER = new SimpleDateFormat("YYYYMMDD-HHmmss.SSS");
-//    static {
-//        DATE_FORMATTER.setTimeZone(TimeZone.getTimeZone("UTC"));
-//    }
-
-//    private final List<String> _logCache = new LinkedList<>();
-//    private final Label _label;
 
     private ConsolePane() {
 //        _label = new Label();

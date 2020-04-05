@@ -29,6 +29,10 @@ public class Credentials {
         @JsonProperty("salt") final String salt,
         @JsonProperty("hashedPassword") final String hashedPassword
     ) {
+        System.out.println(String.format("Loading from JSON: userName=%s", userName));//TODO remove
+        System.out.println(String.format("                 : salt=%s", salt));//TODO this too
+        System.out.println(String.format("                 : hashedPassword=%s", hashedPassword));//TODO and this
+
         _userName = userName;
         if ((salt == null) || (hashedPassword == null)) {
             _salt = getSecureSalt();
@@ -37,15 +41,26 @@ public class Credentials {
             _salt = salt;
             _hashedPassword = hashedPassword;
         }
+
+        System.out.println(String.format("Final Result     : userName=%s", _userName));//TODO remove
+        System.out.println(String.format("                 : salt=%s", _salt));//TODO this too
+        System.out.println(String.format("                 : hashedPassword=%s", _hashedPassword));//TODO and this
     }
 
     public Credentials(
         final String userName,
         final String clearTextPassword
     ) {
+        System.out.println(String.format("Loading from JSON: userName=%s", userName));//TODO remove
+        System.out.println(String.format("                 : password=%s", clearTextPassword));//TODO this too
+
         _userName = userName;
         _salt = getSecureSalt();
         _hashedPassword = computeHash(clearTextPassword, _salt);
+
+        System.out.println(String.format("Final Result     : userName=%s", _userName));//TODO remove
+        System.out.println(String.format("                 : salt=%s", _salt));//TODO this too
+        System.out.println(String.format("                 : hashedPassword=%s", _hashedPassword));//TODO and this
     }
 
     public static String computeHash(
@@ -98,7 +113,10 @@ public class Credentials {
     public boolean validatePassword(
         final String clearTextPassword
     ) {
+        System.out.println(String.format("validate: ctPassword=%s", clearTextPassword));//TODO remove this
         String computedHash = computeHash(clearTextPassword, _salt);
-        return computedHash.equals(_hashedPassword);
+        boolean result = computedHash.equals(_hashedPassword);
+        System.out.println(String.format("  reuslt: %s", result));//TODO and this
+        return result;
     }
 }

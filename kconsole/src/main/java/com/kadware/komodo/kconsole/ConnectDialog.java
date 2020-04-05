@@ -84,7 +84,7 @@ class ConnectDialog {
                 String hash = Base64.getEncoder().encodeToString(composition.getBytes());
                 client.addProperty("Authorization", "Basic " + hash);
 
-                SecureClient.SendResult result = client.sendPut("/session", new byte[0]);
+                SecureClient.SendResult result = client.sendPost("/session", new byte[0]);
                 if (result._responseCode == 401) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Credentials invalid");
                     alert.showAndWait();

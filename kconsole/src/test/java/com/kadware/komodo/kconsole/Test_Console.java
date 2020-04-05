@@ -8,6 +8,6 @@ package com.kadware.komodo.kconsole;
  * ad-hoc testing for the GUI console
  * Starts up an emulator shell, then opens the GUI.
  */
-public class TestConsole {
+public class Test_Console {
 
 }

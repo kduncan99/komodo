@@ -32,6 +32,7 @@ import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -475,6 +476,7 @@ public class RESTSystemConsole implements SystemConsole {
                 synchronized (_outputMessageCache) {
                     clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
                 }
+
                 clientInfo._updatedJumpKeys = true;
                 clientInfo._updatedReadReplyMessages = true;
                 clientInfo._updatedStatusMessage = true;
@@ -753,10 +755,16 @@ public class RESTSystemConsole implements SystemConsole {
         if ((values != null) && (values.size() == 1)) {
             String[] split = values.get(0).split(" ");
             if (split.length == 2) {
-                String givenUserName = split[0];
-                if (givenUserName.equalsIgnoreCase(_configurator._adminCredentials._userName)) {
-                    String givenClearTextPassword = split[1];
-                    return _configurator._adminCredentials.validatePassword(givenClearTextPassword);
+                if (split[0].equalsIgnoreCase("Basic")) {
+                    String unBased = new String(Base64.getDecoder().decode(split[1]));
+                    String[] unBasedSplit = unBased.split(":");
+                    if (unBasedSplit.length == 2) {
+                        String givenUserName = unBasedSplit[0];
+                        String givenClearTextPassword = unBasedSplit[1];
+                        if (givenUserName.equalsIgnoreCase(_configurator._adminCredentials._userName)) {
+                            return _configurator._adminCredentials.validatePassword(givenClearTextPassword);
+                        }
+                    }
                 }
             }
         }
