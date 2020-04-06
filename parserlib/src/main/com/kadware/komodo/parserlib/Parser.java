@@ -101,15 +101,13 @@ public class Parser {
         }
 
         StringBuilder sb = new StringBuilder();
-        int tx = _index;
-        while (!atEnd() && Character.isDigit(_text[tx])) {
-            sb.append(_text[tx]);
+        while (!atEnd() && Character.isDigit(peek())) {
+            sb.append(next());
         }
         if (sb.length() == 0) {
             throw new NotFoundParserException(_index);
         }
 
-        _index += sb.length();
         return Integer.parseInt(sb.toString());
     }
 
@@ -134,9 +132,9 @@ public class Parser {
         StringBuilder sb = new StringBuilder();
         int tx = _index;
         while (!atEnd()) {
-            char ch = _text[tx];
+            char ch = peek();
             if (Character.isDigit(ch)) {
-                sb.append(_text[tx]);
+                sb.append(next());
             } else {
                 boolean found = false;
                 for (int scx = 0; scx < stopCharacters.length(); ++scx) {
@@ -147,6 +145,8 @@ public class Parser {
                 }
                 if (!found) {
                     throw new DataFormatParserException(tx);
+                } else {
+                    break;
                 }
             }
         }
@@ -154,7 +154,6 @@ public class Parser {
             throw new NotFoundParserException(_index);
         }
 
-        _index += sb.length();
         return Integer.parseInt(sb.toString());
     }
 
@@ -173,15 +172,13 @@ public class Parser {
         }
 
         StringBuilder sb = new StringBuilder();
-        int tx = _index;
-        while (!atEnd() && Character.isDigit(_text[tx])) {
-            sb.append(_text[tx]);
+        while (!atEnd() && Character.isDigit(peek())) {
+            sb.append(next());
         }
         if (sb.length() == 0) {
             throw new NotFoundParserException(_index);
         }
 
-        _index += sb.length();
         return Long.parseLong(sb.toString());
     }
 
@@ -206,9 +203,9 @@ public class Parser {
         StringBuilder sb = new StringBuilder();
         int tx = _index;
         while (!atEnd()) {
-            char ch = _text[tx];
+            char ch = peek();
             if (Character.isDigit(ch)) {
-                sb.append(_text[tx]);
+                sb.append(next());
             } else {
                 boolean found = false;
                 for (int scx = 0; scx < stopCharacters.length(); ++scx) {
@@ -219,6 +216,8 @@ public class Parser {
                 }
                 if (!found) {
                     throw new DataFormatParserException(tx);
+                } else {
+                    break;
                 }
             }
         }
@@ -226,7 +225,6 @@ public class Parser {
             throw new NotFoundParserException(_index);
         }
 
-        _index += sb.length();
         return Long.parseLong(sb.toString());
     }
 
@@ -301,13 +299,23 @@ public class Parser {
         _index = 0;
     }
 
+    public void skip(
+        final int count
+    ) throws OutOfDataParserException {
+        if (count > remaining()) {
+            throw new OutOfDataParserException(_index);
+        }
+
+        _index += count;
+    }
+
     public int skipSpaces() {
         int count = 0;
         while (!atEnd() && Character.isSpaceChar(_text[_index])) {
             count++;
+            _index++;
         }
 
-        _index += count;
         return count;
     }
 
@@ -315,9 +323,9 @@ public class Parser {
         int count = 0;
         while (!atEnd() && Character.isWhitespace(_text[_index])) {
             count++;
+            _index++;
         }
 
-        _index += count;
         return count;
     }
 }

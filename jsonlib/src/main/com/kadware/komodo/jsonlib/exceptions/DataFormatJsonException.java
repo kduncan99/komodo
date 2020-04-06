@@ -4,9 +4,9 @@
 
 package com.kadware.komodo.jsonlib.exceptions;
 
-public class JsonDeserializeException extends JsonException {
+public class DataFormatJsonException extends JsonException {
 
-    public JsonDeserializeException(
+    public DataFormatJsonException(
         final String message
     ) {
         super(message);

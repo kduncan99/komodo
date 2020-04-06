@@ -7,9 +7,10 @@ package com.kadware.komodo.jsonlib;
 import com.kadware.komodo.jsonlib.exceptions.NotFoundJsonException;
 import com.kadware.komodo.parserlib.Parser;
 
-public interface JsonNode {
+public interface JsonEntity {
 
     boolean isArray();
+    boolean isBoolean();
     boolean isComponent();
     boolean isComposite();
     boolean isNull();
@@ -17,7 +18,6 @@ public interface JsonNode {
     boolean isObject();
     boolean isString();
 
-    void deserialize(final Parser parser)
-        throws NotFoundJsonException;
     String serialize();
+    String[] serializeForDisplay();
 }

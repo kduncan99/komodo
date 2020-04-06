@@ -1,7 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutomaticModuleUnloader">
+    <loaded-modules>
+      <module name="baselib" />
+      <module name="komodo" />
+      <module name="jsonlib" />
+      <module name="parserlib" />
+    </loaded-modules>
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="" />
+    <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/junit_junit_4_13.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonArray.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonBoolean.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/hamcrest-core-1.3.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/junit-4.13.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/parserlib/parserlib.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/parserlib/src/test/com/kadware/komodo/parserlib/Test_Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/jsonlib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/jsonlib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNull.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNull.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/JsonDeserializeException.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/DataFormatJsonException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/DataFormatException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/NotFoundException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/OutOfDataException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/Parser.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/ParserException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/StackEmptyException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/parselib.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/Parser.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -9,6 +44,16 @@
   </component>
   <component name="CodeStyleSettingsInfer">
     <option name="done" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="1" />
@@ -20,21 +65,120 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="Downloaded.Files.Path.Enabled" value="true" />
+    <property name="Repository.Attach.Annotations" value="false" />
+    <property name="Repository.Attach.JavaDocs" value="false" />
+    <property name="Repository.Attach.Sources" value="false" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/parserlib/src/main/com" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Libraries" />
+    <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.41531664" />
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Java" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.kadware.komodo.jsonlib" />
+    </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.kadware.komodo.jsonlib" />
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
+  </component>
+  <component name="RunManager" selected="JUnit.Test_JsonNull">
+    <configuration name="Test_JsonNull" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="jsonlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonNull" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_JsonNull.deserialize_good_2" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="jsonlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonNull" />
+      <option name="METHOD_NAME" value="deserialize_good_2" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Parser" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="parserlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Parser.skipSpaces" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="parserlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
+      <option name="METHOD_NAME" value="skipSpaces" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Parser.skipWhiteSpace" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="parserlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
+      <option name="METHOD_NAME" value="skipWhiteSpace" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.Test_JsonNull" />
+        <item itemvalue="JUnit.Test_Parser" />
+        <item itemvalue="JUnit.Test_Parser.skipSpaces" />
+        <item itemvalue="JUnit.Test_Parser.skipWhiteSpace" />
+        <item itemvalue="JUnit.Test_JsonNull.deserialize_good_2" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -47,28 +191,60 @@
       <option name="presentableId" value="Default" />
       <updated>1586188297692</updated>
       <workItem from="1586188306566" duration="3948000" />
+      <workItem from="1586192598619" duration="10504000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="UnloadedModulesList">
+    <module name="parselib" />
+  </component>
   <component name="WindowStateProjectService">
-    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure" timestamp="1586191067700">
+    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure" timestamp="1586207469535">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586191067700" />
+    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586207469535" />
     <state x="1963" y="523" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog" timestamp="1586190902897">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1963" y="523" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586190902897" />
-    <state x="2136" y="575" key="FileChooserDialogImpl" timestamp="1586191048800">
+    <state x="2269" y="1230" width="398" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1586205974382">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586191048800" />
-    <state x="1833" y="767" key="new project wizard" timestamp="1586190540192">
+    <state x="2269" y="1230" width="398" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586205974382" />
+    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog" timestamp="1586207390361">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="1833" y="767" key="new project wizard/0.0.3840.2120@0.0.3840.2120" timestamp="1586190540192" />
+    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586207390361" />
+    <state x="2136" y="575" key="FileChooserDialogImpl" timestamp="1586206081391">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586206081391" />
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586209284238">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
+    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586209284238">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
+    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586209284238">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
+    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586209284238">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
+    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586206177094">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586206177094" />
+    <state x="1833" y="767" key="new project wizard" timestamp="1586206941969">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="1833" y="767" key="new project wizard/0.0.3840.2120@0.0.3840.2120" timestamp="1586206941969" />
   </component>
 </project>

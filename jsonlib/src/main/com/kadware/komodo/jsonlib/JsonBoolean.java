@@ -4,30 +4,44 @@
 
 package com.kadware.komodo.jsonlib;
 
-import com.kadware.komodo.jsonlib.exceptions.NotFoundJsonException;
 import com.kadware.komodo.parserlib.Parser;
 import com.kadware.komodo.parserlib.exceptions.NotFoundParserException;
 import com.kadware.komodo.parserlib.exceptions.OutOfDataParserException;
 
-public class JsonNull implements JsonEntity {
+public class JsonBoolean implements JsonEntity {
 
-    public JsonNull () {}
+    public final boolean _value;
+
+    public JsonBoolean(
+        final boolean value
+    ) {
+        _value = value;
+    }
 
     @Override public boolean isArray() { return false; }
-    @Override public boolean isBoolean() { return false; }
+    @Override public boolean isBoolean() { return true; }
     @Override public boolean isComponent() { return true; }
     @Override public boolean isComposite() { return false; }
-    @Override public boolean isNull() { return true; }
+    @Override public boolean isNull() { return false; }
     @Override public boolean isNumber() { return false; }
     @Override public boolean isObject() { return false; }
     @Override public boolean isString() { return false; }
 
-    public static JsonNull deserialize(
+    public static JsonBoolean deserialize(
         final Parser parser
     ) {
         try {
-            parser.parseSpecificTokenCaseInsensitive("null");
-            return new JsonNull();
+            parser.parseSpecificTokenCaseInsensitive("true");
+            return new JsonBoolean(true);
+        } catch (NotFoundParserException ex) {
+            //  Drop through
+        } catch (OutOfDataParserException ex) {
+            return null;
+        }
+
+        try {
+            parser.parseSpecificTokenCaseInsensitive("false");
+            return new JsonBoolean(false);
         } catch (NotFoundParserException | OutOfDataParserException ex) {
             return null;
         }

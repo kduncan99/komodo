@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/jsonlib/jsonlib.iml" filepath="$PROJECT_DIR$/jsonlib/jsonlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/komodo.iml" filepath="$PROJECT_DIR$/komodo.iml" />
       <module fileurl="file://$PROJECT_DIR$/parselib/parselib.iml" filepath="$PROJECT_DIR$/parselib/parselib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/parserlib/parserlib.iml" filepath="$PROJECT_DIR$/parserlib/parserlib.iml" />
     </modules>
   </component>
 </project>

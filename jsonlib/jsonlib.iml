@@ -8,8 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="parselib" />
-    <orderEntry type="library" name="main" level="project" />
-    <orderEntry type="module" module-name="komodo" />
+    <orderEntry type="library" name="junit:junit:4.13" level="project" />
+    <orderEntry type="module" module-name="parserlib" />
   </component>
 </module>
