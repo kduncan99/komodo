@@ -1,0 +1,203 @@
+-- TODO InProgress
+Okay, FUCK jackson with a ten-foot long rusty pole infected with SARS-2.
+Forget JSON completely, since there isn't a native library for it.
+Write our own RPC thing, and fuck all this HTTP back and forth bullshit.
+
+* hardwarelib
+IP: SYSC console routines need clarification wrt pinned messages
+IP: SYSC subfunctions need unit tests
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
+
+* kconsole
+In progress
+
+
+-- TODO BUGS
+* kconsole
+When the server goes away, kconsole just dies - need to post an alert, then go back to connect dialog
+
+* hardwarelib
+ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
+Check to ensure breakpoints are all working.
+
+* minalib
+Assembler isn't returning null module when errors are detected... why?
+    Do all T diagnostics result in a rel module not being generated?
+((077) + 5) does not generate a literal 077 as it should do
+String concatenation does not honor precision per MASM 5.3.1
+assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
+
+
+-- TODO Thoughts
+
+
+-- TODO implement
+* baselib
+more FloatingPointComponent tests
+
+* hardwarelib
+Redo all the node and subclasses tests, many of which are commented out
+For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
+SystemProcessor: For starting/monitoring/stopping system, and for console communication
+  Move dayclock architecture to SystemProcessor
+Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
+RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
+RAMTapeDevice byte interface, optional compression, optional backing store
+PrinterDevice
+CardReaderDevice
+CardPunchDevice
+IP: SYSC subfunctions for IO
+IP: need more address space management instructions unit tests
+IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
+IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
+IP: unit tests
+  LIJ, LBJ, LDJ
+  LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
+  LRD, SMD, RMD, LMC, SDMN, SDMS, SDMF, RDC
+Change unit test extended mode dbanks to start at lower-limit 0 - this *should* work...
+For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
+  what to do when we run off the end of the bank?
+need some conditional jump tests which would incur reference violation if they jumped
+    both jumping (ref violation) and not jumping (no ref violation)
+IP: BT instruction and unit tests
+IP: UNLK instruction
+IP: SPID see new info in newest PRM
+IP: operations control instructions (and unit tests)
+  SEND
+  ACK
+IP: special instructions (and unit tests)
+  EX
+  EXR
+  DCB
+IP: storage-to-storage instructions (and unit tests) other than BT
+  BIM
+  BIC
+  BIMT
+  BICL
+  BIML
+  BN
+  BBN
+  BTSP
+  BTU
+IP: string instructions (and unit tests)
+  LS
+  LSA
+  SS
+  TES
+  TNES
+IP: Queue banks
+IP: queuing instructions
+  ENQ
+  ENQF
+  DEQ
+  DEQW
+  DEPOSITQB
+  WITHDRAWQB
+IP: system instrumentation instructions
+  LBRX
+  CJHE
+  SJH
+IP: floating point binary instructions (and unit tests)
+  FA
+  FAN
+  DFA
+  DFAN
+  FM
+  DFM
+  FD
+  DFD
+  LUF
+  DFU
+  LCF
+  DFP,DLCF
+  FEL
+  FCL
+  MCDU
+  CDU
+IP: fixed point decimal instructions (and unit tests)
+  ADE
+  DADE
+  SDE
+  DSDE
+  DEI
+  DDEI
+  IDE
+  DIDE
+  BDE
+  DEB
+  EDDE
+IP: search and masked search instructions (and unit tests)
+  SE
+  SNE
+  SNG
+  SG
+  SW
+  SNW
+  MSE
+  MSNE
+  MSLE,MSNG
+  MSG
+  MSW
+  MSNW
+  MASL
+  MASG
+
+* minalib
+We really need to support identifiers > 12 characters
+more FloatingPointValue unit tests
+more unit tests for string value generation
+unit tests for node references - need to check results
+unit tests for more built-in functions - we're missing a lot of them
+support special form for JGD instruction
+support special form for BT instruction
+support node references on LHS of $EQU statements
+need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
+remove UndefinedReferenceDiagnostic (I think...)
+use DiagnosticDirective for stuff.. now I forgot what this means
+do we need microstrings?
+$USE (A.2.8) specifies base register to use if none given
+add test cases for interrupts (many of them already marked TODO)
+can we do implicit base register (and do it right)?  also with the $LIT directive...
+support user-defined functions
+allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
+functions
+  $ILCN
+  $L0
+  $L1
+  $LCB
+  $LCFV
+  $LCN
+  $SSS
+  $LCV
+  $NODE (an empty node - this is maybe a built-in value, not a function?)
+directives
+  $END
+  $USE (implicit base register)
+  $INSERT (maybe)
+  $BASE (maybe)
+  $IF / $ELSE / $ELSF / $ENDF
+  $DO / $ENDD
+  $REPEAT / $ENDR
+  $GEN
+  $INCLUDE (what does this mean for us?)
+  $INFO finish the various groups we're going to implement
+
+* Mina - wrapper around minalib
+
+* Exec - using Mina (or minalib, but hopefully mina)
+Subsystems:
+  Init
+  Console (can we farm this out to SCP?)
+  CoreScheduler
+  JobScheduler
+  IO
+  MFD
+  ProgFileSystem
+  Facilities
+  RSI
+  Spooler
+  Loader (load, swap, etc)
+  MemoryMgr
+  TIP
+  CSI

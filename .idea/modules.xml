@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/baselib/baselib.iml" filepath="$PROJECT_DIR$/baselib/baselib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jsonlib/jsonlib.iml" filepath="$PROJECT_DIR$/jsonlib/jsonlib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/komodo.iml" filepath="$PROJECT_DIR$/komodo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/parselib/parselib.iml" filepath="$PROJECT_DIR$/parselib/parselib.iml" />
+    </modules>
+  </component>
+</project>
