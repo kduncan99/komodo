@@ -10,32 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/junit_junit_4_13.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonArray.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonBoolean.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonParser.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/hamcrest-core-1.3.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/junit-4.13.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parserlib/parserlib.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parserlib/src/test/com/kadware/komodo/parserlib/Test_Parser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonBoolean.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jsonlib/jsonlib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/jsonlib.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNull.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNull.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/JsonDeserializeException.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/DataFormatJsonException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/DataFormatException.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/NotFoundException.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/OutOfDataException.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/Parser.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/Parser.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/ParserException.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/komodo/com/kadware/komodo/parserlib/StackEmptyException.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/parserlib/parselib.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +68,46 @@
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.Test_JsonNull">
+  <component name="RunManager" selected="JUnit.All in parserlib">
+    <configuration name="All in jsonlib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="jsonlib" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in komodo" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="komodo" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in parserlib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="parserlib" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_JsonBoolean" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="jsonlib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonBoolean" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test_JsonNull" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="jsonlib" />
       <extension name="coverage">
@@ -107,76 +123,13 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_JsonNull.deserialize_good_2" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="jsonlib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonNull" />
-      <option name="METHOD_NAME" value="deserialize_good_2" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_Parser" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="parserlib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_Parser.skipSpaces" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="parserlib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
-      <option name="METHOD_NAME" value="skipSpaces" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_Parser.skipWhiteSpace" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="parserlib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.parserlib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.parserlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.parserlib.Test_Parser" />
-      <option name="METHOD_NAME" value="skipWhiteSpace" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.All in parserlib" />
+        <item itemvalue="JUnit.All in jsonlib" />
+        <item itemvalue="JUnit.All in komodo" />
+        <item itemvalue="JUnit.Test_JsonBoolean" />
         <item itemvalue="JUnit.Test_JsonNull" />
-        <item itemvalue="JUnit.Test_Parser" />
-        <item itemvalue="JUnit.Test_Parser.skipSpaces" />
-        <item itemvalue="JUnit.Test_Parser.skipWhiteSpace" />
-        <item itemvalue="JUnit.Test_JsonNull.deserialize_good_2" />
       </list>
     </recent_temporary>
   </component>
@@ -191,7 +144,7 @@
       <option name="presentableId" value="Default" />
       <updated>1586188297692</updated>
       <workItem from="1586188306566" duration="3948000" />
-      <workItem from="1586192598619" duration="10504000" />
+      <workItem from="1586192598619" duration="11927000" />
     </task>
     <servers />
   </component>
@@ -222,22 +175,22 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586206081391" />
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586209284238">
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586224184156">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
-    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586209284238">
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
+    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586224184156">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
-    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586209284238">
+    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
+    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586224184156">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
-    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586209284238">
+    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
+    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586224184156">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586209284238" />
+    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586206177094">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>

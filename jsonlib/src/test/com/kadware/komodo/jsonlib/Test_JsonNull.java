@@ -34,13 +34,6 @@ public class Test_JsonNull {
 
     @Test
     public void deserialize_good_2() {
-        String text = "null";
-        Parser parser = new Parser(text);
-        assertNotNull(JsonNull.deserialize(parser));
-    }
-
-    @Test
-    public void deserialize_good_3() {
         String text = "null  false";
         Parser parser = new Parser(text);
         assertNotNull(JsonNull.deserialize(parser));
@@ -48,7 +41,7 @@ public class Test_JsonNull {
 
     @Test
     public void deserialize_bad_1() {
-        String text = "  false true ";
+        String text = "false true ";
         Parser parser = new Parser(text);
         assertNull(JsonNull.deserialize(parser));
     }
@@ -56,6 +49,13 @@ public class Test_JsonNull {
     @Test
     public void deserialize_bad_2() {
         String text = "  null";
+        Parser parser = new Parser(text);
+        assertNull(JsonNull.deserialize(parser));
+    }
+
+    @Test
+    public void deserialize_bad_3() {
+        String text = "";
         Parser parser = new Parser(text);
         assertNull(JsonNull.deserialize(parser));
     }
