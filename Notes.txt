@@ -1,22 +1,12 @@
 -- TODO InProgress
-Okay, FUCK jackson with a ten-foot long rusty pole infected with SARS-2.
-Forget JSON completely, since there isn't a native library for it.
-Write our own RPC thing, and fuck all this HTTP back and forth bullshit.
-
 * hardwarelib
 IP: SYSC console routines need clarification wrt pinned messages
 IP: SYSC subfunctions need unit tests
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
-* kconsole
-In progress
-
 
 -- TODO BUGS
-* kconsole
-When the server goes away, kconsole just dies - need to post an alert, then go back to connect dialog
-
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.

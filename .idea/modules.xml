@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/commlib/commlib.iml" filepath="$PROJECT_DIR$/commlib/commlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/hardwarelib/hardwarelib.iml" filepath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" />
       <module fileurl="file://$PROJECT_DIR$/jsonlib/jsonlib.iml" filepath="$PROJECT_DIR$/jsonlib/jsonlib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kexec/kexec.iml" filepath="$PROJECT_DIR$/kexec/kexec.iml" />
       <module fileurl="file://$PROJECT_DIR$/komodo.iml" filepath="$PROJECT_DIR$/komodo.iml" />
       <module fileurl="file://$PROJECT_DIR$/minalib/minalib.iml" filepath="$PROJECT_DIR$/minalib/minalib.iml" />
       <module fileurl="file://$PROJECT_DIR$/parselib/parselib.iml" filepath="$PROJECT_DIR$/parselib/parselib.iml" />
