@@ -6,13 +6,25 @@
       <module name="komodo" />
       <module name="jsonlib" />
       <module name="parserlib" />
+      <module name="commlib" />
+      <module name="hardwarelib" />
+      <module name="minalib" />
     </loaded-modules>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonBoolean.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/commlib/commlib.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/minalib/minalib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/junit_junit_4_13.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/ArraySlice.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/ArraySlice.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/jsonlib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/jsonlib/jsonlib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/parserlib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/parserlib/parserlib.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,17 +80,25 @@
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.All in parserlib">
-    <configuration name="All in jsonlib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="jsonlib" />
+  <component name="RunManager" selected="JUnit.All in hardwarelib">
+    <configuration name="All in baselib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="baselib" />
       <option name="PACKAGE_NAME" value="" />
       <option name="TEST_OBJECT" value="package" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="All in komodo" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="komodo" />
+    <configuration name="All in hardwarelib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in minalib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="minalib" />
       <option name="PACKAGE_NAME" value="" />
       <option name="TEST_OBJECT" value="package" />
       <method v="2">
@@ -93,43 +113,27 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test_JsonBoolean" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="jsonlib" />
+    <configuration name="com.kadware.komodo.baselib in baselib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="baselib" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
+          <option name="PATTERN" value="com.kadware.komodo.baselib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonBoolean" />
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_JsonNull" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="jsonlib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.jsonlib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.jsonlib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.jsonlib.Test_JsonNull" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.baselib" />
+      <option name="TEST_OBJECT" value="package" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.All in hardwarelib" />
+        <item itemvalue="JUnit.All in minalib" />
+        <item itemvalue="JUnit.All in baselib" />
+        <item itemvalue="JUnit.com.kadware.komodo.baselib in baselib" />
         <item itemvalue="JUnit.All in parserlib" />
-        <item itemvalue="JUnit.All in jsonlib" />
-        <item itemvalue="JUnit.All in komodo" />
-        <item itemvalue="JUnit.Test_JsonBoolean" />
-        <item itemvalue="JUnit.Test_JsonNull" />
       </list>
     </recent_temporary>
   </component>
@@ -144,7 +148,7 @@
       <option name="presentableId" value="Default" />
       <updated>1586188297692</updated>
       <workItem from="1586188306566" duration="3948000" />
-      <workItem from="1586192598619" duration="11927000" />
+      <workItem from="1586192598619" duration="21665000" />
     </task>
     <servers />
   </component>
@@ -155,10 +159,10 @@
     <module name="parselib" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure" timestamp="1586207469535">
+    <state x="2429" y="1176" width="1014" height="677" key="#Project_Structure" timestamp="1586303383788">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="1923" y="492" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586207469535" />
+    <state x="2429" y="1176" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586303383788" />
     <state x="1963" y="523" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog" timestamp="1586190902897">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -167,37 +171,41 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2269" y="1230" width="398" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586205974382" />
-    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog" timestamp="1586207390361">
+    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog" timestamp="1586303370099">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586207390361" />
+    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586303370099" />
     <state x="2136" y="575" key="FileChooserDialogImpl" timestamp="1586206081391">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586206081391" />
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586224184156">
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586303421015">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
-    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586224184156">
+    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586303421015" />
+    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586303421015">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
-    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586224184156">
+    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586303421015" />
+    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586303421015">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
-    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586224184156">
+    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586303421015" />
+    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586303421015">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586224184156" />
-    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586206177094">
+    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586303421015" />
+    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586292762287">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586206177094" />
-    <state x="1833" y="767" key="new project wizard" timestamp="1586206941969">
+    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586292762287" />
+    <state x="2175" y="995" width="586" height="732" key="find.popup" timestamp="1586285712377">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="1833" y="767" key="new project wizard/0.0.3840.2120@0.0.3840.2120" timestamp="1586206941969" />
+    <state x="2175" y="995" width="586" height="732" key="find.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586285712377" />
+    <state x="1833" y="767" key="new project wizard" timestamp="1586296137473">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="1833" y="767" key="new project wizard/0.0.3840.2120@0.0.3840.2120" timestamp="1586296137473" />
   </component>
 </project>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="commlib" options="--add-exports java.base/sun.security.tools.keytool=ALL-UNNAMED --add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="minalib" options="--add-exports java.xml/com.sun.org.apache.xerces.internal.impl.xpath.regex=ALL-UNNAMED" />
+    </option>
+  </component>
+</project>

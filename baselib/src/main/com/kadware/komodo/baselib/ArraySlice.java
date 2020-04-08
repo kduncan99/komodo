@@ -5,7 +5,9 @@
 package com.kadware.komodo.baselib;
 
 import java.util.Arrays;
-//  TODO logging0
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+
 
 /**
  * Represents a subset of a base array of elements of type T
@@ -195,7 +197,7 @@ public class ArraySlice {
     public void load(
         final long[] source
     ) {
-        int slimit = source.length > _length ? _length : source.length;
+        int slimit = Math.min(source.length, _length);
         for (int sx = 0, ax = _offset; sx < slimit; ++sx, ++ax) {
             _array[ax] = source[sx];
         }
@@ -281,55 +283,54 @@ public class ArraySlice {
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      */
-    //  TODO logging
-//    public void logMultiFormat(
-//        final Logger logger,
-//        final Level logLevel,
-//        final String caption
-//    ) {
-//        if (!caption.isEmpty()) {
-//            logger.printf(logLevel, "--[ %s ]--", caption);
-//        }
-//
-//        int bufferIndex = 0;
-//        int remainingWords = _length;
-//        final int wordsPerRow = 4;
-//        for (int rowIndex = 0;
-//             remainingWords > 0;
-//             rowIndex += wordsPerRow, bufferIndex += wordsPerRow, remainingWords -= wordsPerRow) {
-//            //  Get a subset of the buffer
-//            int wordBufferSize = remainingWords > wordsPerRow ? wordsPerRow : remainingWords;
-//            ArraySlice subset = new ArraySlice(this, bufferIndex, wordBufferSize);
-//
-//            //  Build octal string
-//            StringBuilder octalBuilder = new StringBuilder();
-//            octalBuilder.append(subset.toOctal(true));
-//            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-//                octalBuilder.append("             ");
-//            }
-//
-//            //  Build fieldata string
-//            StringBuilder fieldataBuilder = new StringBuilder();
-//            fieldataBuilder.append(subset.toFieldata(true));
-//            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-//                fieldataBuilder.append("       ");
-//            }
-//
-//            //  Build ASCII string
-//            StringBuilder asciiBuilder = new StringBuilder();
-//            asciiBuilder.append(subset.toASCII(true));
-//            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-//                asciiBuilder.append("     ");
-//            }
-//
-//            //  Log the output
-//            logger.printf(logLevel, String.format("%06o:%s  %s  %s",
-//                                                  rowIndex,
-//                                                  octalBuilder.toString(),
-//                                                  fieldataBuilder.toString(),
-//                                                  asciiBuilder.toString()));
-//        }
-//    }
+    public void logMultiFormat(
+        final Logger logger,
+        final Level logLevel,
+        final String caption
+    ) {
+        if (!caption.isEmpty()) {
+            logger.printf(logLevel, "--[ %s ]--", caption);
+        }
+
+        int bufferIndex = 0;
+        int remainingWords = _length;
+        final int wordsPerRow = 4;
+        for (int rowIndex = 0;
+             remainingWords > 0;
+             rowIndex += wordsPerRow, bufferIndex += wordsPerRow, remainingWords -= wordsPerRow) {
+            //  Get a subset of the buffer
+            int wordBufferSize = remainingWords > wordsPerRow ? wordsPerRow : remainingWords;
+            ArraySlice subset = new ArraySlice(this, bufferIndex, wordBufferSize);
+
+            //  Build octal string
+            StringBuilder octalBuilder = new StringBuilder();
+            octalBuilder.append(subset.toOctal(true));
+            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
+                octalBuilder.append("             ");
+            }
+
+            //  Build fieldata string
+            StringBuilder fieldataBuilder = new StringBuilder();
+            fieldataBuilder.append(subset.toFieldata(true));
+            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
+                fieldataBuilder.append("       ");
+            }
+
+            //  Build ASCII string
+            StringBuilder asciiBuilder = new StringBuilder();
+            asciiBuilder.append(subset.toASCII(true));
+            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
+                asciiBuilder.append("     ");
+            }
+
+            //  Log the output
+            logger.printf(logLevel, String.format("%06o:%s  %s  %s",
+                                                  rowIndex,
+                                                  octalBuilder.toString(),
+                                                  fieldataBuilder.toString(),
+                                                  asciiBuilder.toString()));
+        }
+    }
 
     /**
      * Logs the contents of a particular buffer of 36-bit values in octal, seven words per line.
@@ -337,29 +338,28 @@ public class ArraySlice {
      * @param logLevel log level (i.e., DEBUG, TRACE, etc)
      * @param caption description of the log data.  No caption is produced if this value is empty.
      */
-    //  TODO logging
-//    public void logOctal(
-//        final Logger logger,
-//        final Level logLevel,
-//        final String caption
-//    ) {
-//        if (!caption.isEmpty()) {
-//            logger.printf(logLevel, "--[ %s ]--", caption);
-//        }
-//
-//        int bufferIndex = 0;
-//        int remainingWords = _length;
-//        for (int rowIndex = 0; remainingWords > 0; rowIndex += 7, bufferIndex += 7, remainingWords -= 7) {
-//            //  Get a subset of the buffer
-//            ArraySlice subset = new ArraySlice(this, bufferIndex, 7);
-//
-//            //  Build octal string
-//            String octalString = subset.toOctal(true);
-//
-//            //  Log the output
-//            logger.printf(logLevel, String.format("%06o:%s", rowIndex, octalString));
-//        }
-//    }
+    public void logOctal(
+        final Logger logger,
+        final Level logLevel,
+        final String caption
+    ) {
+        if (!caption.isEmpty()) {
+            logger.printf(logLevel, "--[ %s ]--", caption);
+        }
+
+        int bufferIndex = 0;
+        int remainingWords = _length;
+        for (int rowIndex = 0; remainingWords > 0; rowIndex += 7, bufferIndex += 7, remainingWords -= 7) {
+            //  Get a subset of the buffer
+            ArraySlice subset = new ArraySlice(this, bufferIndex, 7);
+
+            //  Build octal string
+            String octalString = subset.toOctal(true);
+
+            //  Log the output
+            logger.printf(logLevel, String.format("%06o:%s", rowIndex, octalString));
+        }
+    }
 
     /**
      * Packs this entire array as pairs of 36-bit words into groups of 9 bytes.
