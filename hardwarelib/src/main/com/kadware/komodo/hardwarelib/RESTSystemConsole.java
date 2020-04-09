@@ -4,12 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.commlib.ConsoleInputMessage;
-import com.kadware.komodo.commlib.ConsoleOutputMessage;
+import com.kadware.komodo.commlib.ConsoleReadOnlyMessage;
 import com.kadware.komodo.commlib.ConsoleStatusMessage;
 import com.kadware.komodo.commlib.HttpMethod;
 import com.kadware.komodo.commlib.SecureServer;
@@ -34,7 +33,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
@@ -76,20 +75,34 @@ public class RESTSystemConsole implements SystemConsole {
      * ClientInfo - information regarding a particular client
      */
     private static class ClientInfo {
+
+        private final String _clientId;
         private long _lastActivity = System.currentTimeMillis();
+        private boolean _isMaster = false;
         private InetSocketAddress _remoteAddress = null;
 
+        //  notification-ish things
+        public boolean _inputDelivered = false;
+        public boolean _isMasterChanged = false;
         public List<KomodoAppender.LogEntry> _pendingLogEntries = new LinkedList<>();
-        public List<OutputMessage> _pendingOutputMessages = new LinkedList<>();
+        public List<ReadOnlyMessage> _pendingReadOnlyMessages = new LinkedList<>();
         public boolean _updatedHardwareConfiguration = false;
         public boolean _updatedJumpKeys = false;
         public boolean _updatedReadReplyMessages = false;
         public boolean _updatedStatusMessage = false;
         public boolean _updatedSystemConfiguration = false;
 
+        ClientInfo(
+            final String clientId
+        ) {
+            _clientId = clientId;
+        }
+
         public void clear() {
+            _inputDelivered = false;
+            _isMasterChanged = false;
             _pendingLogEntries.clear();
-            _pendingOutputMessages.clear();
+            _pendingReadOnlyMessages.clear();
             _updatedHardwareConfiguration = false;
             _updatedJumpKeys = false;
             _updatedReadReplyMessages = false;
@@ -98,8 +111,10 @@ public class RESTSystemConsole implements SystemConsole {
         }
 
         public boolean hasUpdatesForClient() {
-            return !_pendingLogEntries.isEmpty()
-                || !_pendingOutputMessages.isEmpty()
+            return _inputDelivered
+                || _isMasterChanged
+                || !_pendingLogEntries.isEmpty()
+                || !_pendingReadOnlyMessages.isEmpty()
                 || _updatedHardwareConfiguration
                 || _updatedJumpKeys
                 || _updatedReadReplyMessages
@@ -114,10 +129,10 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
-    private static final String FAVICON_FILE_NAME = "../resources/systemConsole/favicon.jpg";
-    private static final String HTML_FILE_NAME = "../resources/systemConsole/index.html";
-    private static final int OUTPUT_CACHE_MAX_SIZE = 20;                    //  max 20 entries (unless we have >20 pinned)
+    private static final String FAVICON_FILE_NAME = "favicon.jpg";
+    private static final String HTML_FILE_NAME = "index.html";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
+    private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
     private static final long WORKER_PERIODICITY_MSECS = 10000;             //  worker thread does its work every 10 seconds
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getName(),
@@ -125,23 +140,26 @@ public class RESTSystemConsole implements SystemConsole {
 
     private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
 
+    private final APIListener _apiListener;
     private final Map<String, ClientInfo> _clientInfos = new HashMap<>();
     private final Configurator _configurator;
     private final JumpKeyPanel _jumpKeyPanel;
-    private final APIListener _apiListener;
-    private final WebListener _webListener;
     private final String _name;
-    private Long _nextMessageIdentifier = 1L;
+    private final WebListener _webListener;
+    private final String _webRootPath;
     private WorkerThread _workerThread = null;
-
-    //  Recent output messages. Pinned messages are never allowed to scroll out of this list.
-    //  This list is allowed to grow to a certain amount, but never beyond it unless required by the previous directive.
-    private final Map<Long, OutputMessage> _outputMessageCache = new LinkedHashMap<>();
-
-    private final List<InputMessage> _pendingInputMessages = new LinkedList<>();
 
     //  This is always the latest status message. Clients may pick it up at any time.
     private StatusMessage _latestStatusMessage = null;
+
+    //  Input messages we've received from the console, but which have not yet been delivered to the operating system.
+    private final Map<String, InputMessage> _pendingInputMessages = new LinkedHashMap<>();
+
+    //  ReadReply messages which have not yet been replied to
+    private final Map<Integer, ReadReplyMessage> _pendingReadReplyMessages = new HashMap<>();
+
+    //  Recent output messages. We preserve a certain number of these so that they can be redisplayed if necessary
+    private final Queue<ReadOnlyMessage> _recentReadOnlyMessages = new LinkedList<>() {};
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -155,6 +173,7 @@ public class RESTSystemConsole implements SystemConsole {
     RESTSystemConsole(
         final String name,
         final Configurator configurator,
+        final String webRootPath,
         final JumpKeyPanel jumpKeyPanel
     ) {
         _name = name;
@@ -162,6 +181,7 @@ public class RESTSystemConsole implements SystemConsole {
         _jumpKeyPanel = jumpKeyPanel;
         _apiListener = new APIListener(2200);     //  TODO pull portnumber from Configurator hardware configuration
         _webListener = new WebListener(443);
+        _webRootPath = webRootPath;
     }
 
 
@@ -178,6 +198,7 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) throws IOException {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
             System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
@@ -193,6 +214,7 @@ public class RESTSystemConsole implements SystemConsole {
                 clientInfo._lastActivity = System.currentTimeMillis();
                 respondNotFound(exchange, "Path or object does not exist");
             } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
         }
@@ -223,6 +245,7 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
             System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
@@ -246,8 +269,7 @@ public class RESTSystemConsole implements SystemConsole {
                 if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.PUT._value)) {
                     JumpKeys content;
                     try {
-                        content = new ObjectMapper().readValue(exchange.getRequestBody(), new TypeReference<JumpKeys>() {
-                        });
+                        content = new ObjectMapper().readValue(exchange.getRequestBody(), JumpKeys.class);
                     } catch (IOException ex) {
                         respondBadRequest(exchange, ex.getMessage());
                         return;
@@ -289,6 +311,7 @@ public class RESTSystemConsole implements SystemConsole {
                 //  Neither a GET or a PUT - this is not allowed.
                 respondBadMethod(exchange);
             } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
         }
@@ -303,8 +326,9 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
+            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
-                System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
                 ClientInfo clientInfo = findClient(exchange);
                 if (clientInfo == null) {
                     respondNoSession(exchange);
@@ -319,18 +343,32 @@ public class RESTSystemConsole implements SystemConsole {
                     return;
                 }
 
-                ObjectMapper mapper = new ObjectMapper();
-                ConsoleInputMessage msg = mapper.readValue(exchange.getRequestBody(), ConsoleInputMessage.class);
-
-                InputMessage im = new InputMessage(getNextMessageIdentifier(), msg._text);
+                boolean collision = false;
                 synchronized (_pendingInputMessages) {
-                    _pendingInputMessages.add(im);
+                    if (_pendingInputMessages.containsKey(clientInfo._clientId)) {
+                        collision = true;
+                    } else {
+                        ObjectMapper mapper = new ObjectMapper();
+                        ConsoleInputMessage msg = mapper.readValue(exchange.getRequestBody(), ConsoleInputMessage.class);
+                        if (msg._messageId != null) {
+                            ReadReplyInputMessage rrim = new ReadReplyInputMessage(msg._messageId, msg._text);
+                            _pendingInputMessages.put(clientInfo._clientId, rrim);
+                        } else {
+                            UnsolicitedInputMessage uim = new UnsolicitedInputMessage(msg._text);
+                            _pendingInputMessages.put(clientInfo._clientId, uim);
+                        }
+                    }
                 }
 
-                respondWithText(exchange, HttpURLConnection.HTTP_CREATED, "");
+                if (collision) {
+                    respondWithText(exchange, HttpURLConnection.HTTP_CONFLICT, "Previous input not yet acknowledged");
+                } else {
+                    respondWithText(exchange, HttpURLConnection.HTTP_CREATED, "");
+                }
             } catch (IOException ex) {
                 respondBadRequest(exchange, "Badly-formatted body");
             } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
         }
@@ -347,6 +385,7 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
             System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
@@ -365,6 +404,7 @@ public class RESTSystemConsole implements SystemConsole {
 
                 new APIPollThread(exchange, clientInfo).start();
             } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
         }
@@ -402,6 +442,21 @@ public class RESTSystemConsole implements SystemConsole {
                     }
                 }
 
+                Boolean isMaster = null;
+                if (_clientInfo._isMasterChanged) {
+                    isMaster = _clientInfo._isMaster;
+                }
+
+                Long jumpKeyValue = null;
+                if (_clientInfo._updatedJumpKeys) {
+                    jumpKeyValue = _jumpKeyPanel.getJumpKeys().getW();
+                }
+
+                ConsoleStatusMessage latestStatusMessage = null;
+                if (_clientInfo._updatedStatusMessage) {
+                    latestStatusMessage = new ConsoleStatusMessage(_latestStatusMessage._text);
+                }
+
                 SystemLogEntry[] newLogEntries = null;
                 if (!_clientInfo._pendingLogEntries.isEmpty()) {
                     int entryCount = _clientInfo._pendingLogEntries.size();
@@ -412,15 +467,13 @@ public class RESTSystemConsole implements SystemConsole {
                     }
                 }
 
-                ConsoleOutputMessage[] newOutputMessages = null;
-                if (!_clientInfo._pendingOutputMessages.isEmpty()) {
-                    int msgCount = _clientInfo._pendingOutputMessages.size();
-                    newOutputMessages = new ConsoleOutputMessage[msgCount];
+                ConsoleReadOnlyMessage[] newReadOnlyMessages = null;
+                if (!_clientInfo._pendingReadOnlyMessages.isEmpty()) {
+                    int msgCount = _clientInfo._pendingReadOnlyMessages.size();
+                    newReadOnlyMessages = new ConsoleReadOnlyMessage[msgCount];
                     int mx = 0;
-                    for (OutputMessage pendingMsg : _clientInfo._pendingOutputMessages) {
-                        newOutputMessages[mx++] = new ConsoleOutputMessage(pendingMsg._identifier,
-                                                                           pendingMsg._pinned,
-                                                                           Arrays.copyOf(pendingMsg._text, pendingMsg._text.length));
+                    for (ReadOnlyMessage pendingMsg : _clientInfo._pendingReadOnlyMessages) {
+                        newReadOnlyMessages[mx++] = new ConsoleReadOnlyMessage(pendingMsg._text);
                     }
                 }
 
@@ -428,21 +481,18 @@ public class RESTSystemConsole implements SystemConsole {
                     //TODO
                 }
 
-                Long jumpKeyValue = null;
-                if (_clientInfo._updatedJumpKeys) {
-                    jumpKeyValue = _jumpKeyPanel.getJumpKeys().getW();
-                }
-
-                ConsoleStatusMessage latestStatusMessage = null;
-                if (_clientInfo._updatedStatusMessage) {
-                    latestStatusMessage = new ConsoleStatusMessage(_latestStatusMessage._identifier, _latestStatusMessage._text);
-                }
-
                 if (_clientInfo._updatedSystemConfiguration) {
                     //TODO
                 }
 
-                PollResult pollResult = new PollResult(jumpKeyValue, newLogEntries, latestStatusMessage, newOutputMessages);
+                PollResult pollResult = new PollResult(_clientInfo._inputDelivered,
+                                                       isMaster,
+                                                       jumpKeyValue,
+                                                       latestStatusMessage,
+                                                       newLogEntries,
+                                                       newReadOnlyMessages,
+                                                       _clientInfo._updatedReadReplyMessages);
+
                 respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, pollResult);
                 _clientInfo.clear();
             }
@@ -474,23 +524,28 @@ public class RESTSystemConsole implements SystemConsole {
                 }
 
                 String clientId = UUID.randomUUID().toString();
-                ClientInfo clientInfo = new ClientInfo();
-                synchronized (_outputMessageCache) {
-                    clientInfo._pendingOutputMessages.addAll(_outputMessageCache.values());
+                ClientInfo clientInfo = new ClientInfo(clientId);
+                synchronized (_recentReadOnlyMessages) {
+                    clientInfo._pendingReadOnlyMessages.addAll(_recentReadOnlyMessages);
                 }
 
+                clientInfo._remoteAddress = exchange.getRemoteAddress();
+                clientInfo._inputDelivered = false;
                 clientInfo._updatedJumpKeys = true;
-                clientInfo._updatedReadReplyMessages = true;
                 clientInfo._updatedStatusMessage = true;
                 clientInfo._updatedHardwareConfiguration = true;
                 clientInfo._updatedSystemConfiguration = true;
-                clientInfo._remoteAddress = exchange.getRemoteAddress();
                 synchronized (this) {
+                    if (_clientInfos.isEmpty()) {
+                        clientInfo._isMaster = true;
+                        clientInfo._updatedReadReplyMessages = true;
+                    }
                     _clientInfos.put(clientId, clientInfo);
                 }
 
                 respondWithJSON(exchange, HttpURLConnection.HTTP_CREATED, clientId);
             } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
         }
@@ -505,20 +560,23 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
-            try {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
             System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
-            if (exchange.getRequestURI().getPath().equals("/favicon.ico")) {
-                respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, "image/jpeg", FAVICON_FILE_NAME);
-            } else {
-                byte[] bytes = Files.readAllBytes(Paths.get(HTML_FILE_NAME));
-                String message = new String(bytes, StandardCharsets.US_ASCII);
-                exchange.getResponseHeaders().add("Content-type", "text/html");
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, message.length());
-                OutputStream os = exchange.getResponseBody();
-                os.write(message.getBytes());
-                os.close();
-            }
-                } catch (Throwable t) {
+            try {
+                if (exchange.getRequestURI().getPath().equals("/favicon.ico")) {
+                    String fileName = String.format("%s/%s", _webRootPath, FAVICON_FILE_NAME);
+                    respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, "image/jpeg", fileName);
+                } else {
+                    String fileName = String.format("%s/%s", _webRootPath, HTML_FILE_NAME);
+                    byte[] bytes = Files.readAllBytes(Paths.get(fileName));
+                    String message = new String(bytes, StandardCharsets.US_ASCII);
+                    exchange.getResponseHeaders().add("Content-type", "text/html");
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, message.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(message.getBytes());
+                    os.close();
+                }
+            } catch (Throwable t) {
                 LOGGER.catching(t);
             }
         }
@@ -766,6 +824,7 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) {
+        LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
         try {
             byte[] bytes = Files.readAllBytes(Paths.get(fileName));
             exchange.getResponseHeaders().add("Content-type", mimeType);
@@ -791,6 +850,7 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) {
+        LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
         try {
             String message = new String(Files.readAllBytes(Paths.get(fileName)), "UTF-8");
             exchange.getResponseHeaders().add("Content-type", mimeType);
@@ -814,8 +874,9 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String content
     ) {
+        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
+        System.out.println("-->" + content);   //TODO remove
         try {
-            System.out.println("-->" + content);   //TODO remove
             exchange.getResponseHeaders().add("Content-type", "text/html");
             exchange.sendResponseHeaders(code, content.length());
             OutputStream os = exchange.getResponseBody();
@@ -836,10 +897,12 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final Object object
     ) {
+        LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
         try {
             ObjectMapper mapper = new ObjectMapper();
             String content = mapper.writeValueAsString(object);
             System.out.println("-->" + content);   //TODO remove
+            LOGGER.trace(String.format("  JSON:%s", content));
             exchange.getResponseHeaders().add("Content-type", "application/json");
             exchange.sendResponseHeaders(code, content.length());
             OutputStream os = exchange.getResponseBody();
@@ -860,8 +923,9 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String content
     ) {
+        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
+        System.out.println("-->" + content);   //TODO remove
         try {
-            System.out.println("-->" + content);   //TODO remove
             exchange.getResponseHeaders().add("Content-type", "text/plain");
             exchange.sendResponseHeaders(code, content.length());
             OutputStream os = exchange.getResponseBody();
@@ -908,6 +972,20 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
+     * For notifying clients that a pending ReadReplyMessage is no long pending,
+     * at least insofar as the operating system is concerned.
+     */
+    public void cancelReadReplyMessage(
+        final int messageId
+    ) {
+        synchronized (_pendingReadReplyMessages) {
+            _pendingReadReplyMessages.remove(messageId);
+        }
+
+        pokeClients(clientInfo -> clientInfo._updatedReadReplyMessages = true);
+    }
+
+    /**
      * For debugging
      */
     @Override
@@ -923,20 +1001,33 @@ public class RESTSystemConsole implements SystemConsole {
                                        _apiListener.getCommonName(),
                                        _apiListener.getPortNumber()));
 
-            writer.write("  Output Message Cache:\n");
-            synchronized (_outputMessageCache) {
-                for (OutputMessage msg : _outputMessageCache.values()) {
-                    writer.write(String.format("    %d: pinned=%s\n", msg._identifier, msg._pinned));
-                    for (String s : msg._text) {
-                        writer.write(String.format("    ->'%s'\n", s));
-                    }
+            writer.write("  Recent Read-Only Messages:\n");
+            synchronized (_recentReadOnlyMessages) {
+                for (ReadOnlyMessage msg : _recentReadOnlyMessages) {
+                    writer.write(String.format("    '%s''\n", msg._text));
+                }
+            }
+
+            writer.write("  Pending Read-Reply Messages:\n");
+            synchronized (_pendingReadReplyMessages) {
+                for (ReadReplyMessage msg : _pendingReadReplyMessages.values()) {
+                    writer.write(String.format("    %d:'%s'", msg._messageId, msg._text));
+                    writer.write(String.format("       Max reply:%d", msg._maxReplyLength));
                 }
             }
 
             writer.write("  Pending input messages:\n");
             synchronized (_pendingInputMessages) {
-                for (InputMessage msg : _pendingInputMessages) {
-                    writer.write(String.format("    %d: '%s'\n", msg._identifier, msg._text));
+                for (Map.Entry<String, InputMessage> entry : _pendingInputMessages.entrySet()) {
+                    String clientId = entry.getKey();
+                    InputMessage im = entry.getValue();
+                    if (im instanceof UnsolicitedInputMessage) {
+                        UnsolicitedInputMessage uim = (UnsolicitedInputMessage) im;
+                        writer.write(String.format("    clientId=%s:'%s'\n", clientId, uim._text));
+                    } else if (im instanceof ReadReplyInputMessage) {
+                        ReadReplyInputMessage rrim = (ReadReplyInputMessage) im;
+                        writer.write(String.format("    clientId=%s: %d '%s'\n", clientId, rrim._messageId, rrim._text));
+                    }
                 }
             }
 
@@ -944,65 +1035,78 @@ public class RESTSystemConsole implements SystemConsole {
             synchronized (_clientInfos) {
                 for (ClientInfo cinfo : _clientInfos.values()) {
                     synchronized (cinfo) {
-                        writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
+                        writer.write(String.format("  Client   %sRemote Address:%s   Last Activity %d msec ago\n",
+                                                   cinfo._isMaster ? "MASTER " : "",
                                                    cinfo._remoteAddress.getAddress().getHostAddress(),
                                                    now - cinfo._lastActivity));
 
                         writer.write("  Pending output messages\n");
-                        for (OutputMessage msg : cinfo._pendingOutputMessages) {
-                            writer.write(String.format("    %d: pinned=%s\n", msg._identifier, msg._pinned));
-                            for (String s : msg._text) {
-                                writer.write(String.format("    ->'%s'\n", s));
-                            }
+                        for (ReadOnlyMessage msg : cinfo._pendingReadOnlyMessages) {
+                            writer.write(String.format("    '%s'\n", msg._text));
                         }
                     }
                 }
             }
         } catch (IOException ex) {
-            //  Do nothing
-        }
-    }
-
-    /**
-     * Used for sequencing / identifying message objects
-     */
-    @Override
-    public long getNextMessageIdentifier() {
-        synchronized (this) {
-            return _nextMessageIdentifier++;
+            LOGGER.catching(ex);
         }
     }
 
     @Override
     public InputMessage pollInputMessage() {
-        synchronized (_pendingInputMessages) {
-            if (!_pendingInputMessages.isEmpty()) {
-                return _pendingInputMessages.remove(0);
+        InputMessage result = null;
+        synchronized (this) {
+            Iterator<Map.Entry<String, InputMessage>> iter = _pendingInputMessages.entrySet().iterator();
+            if (iter.hasNext()) {
+                Map.Entry<String, InputMessage> firstEntry = iter.next();
+                String clientId = firstEntry.getKey();
+                result = firstEntry.getValue();
+                ClientInfo cinfo = _clientInfos.get(clientId);
+                if (cinfo != null) {
+                    cinfo._inputDelivered = true;
+                    synchronized (cinfo) {
+                        cinfo.notify();
+                    }
+                }
             }
         }
-
-        return null;
+        return result;
     }
 
     @Override
-    public void postOutputMessage(
-        final OutputMessage message
+    public void postReadOnlyMessage(
+        final ReadOnlyMessage message
     ) {
-        //  Add the message to our output cache. If it's new, yay.
-        //  If a message with this identifier is still in our cache, we overlay it.
-        //  Either way, we add it to the pending output for all the clients.
-        synchronized (_outputMessageCache) {
-            _outputMessageCache.put(message._identifier, message);
-            Iterator<Map.Entry<Long, OutputMessage>> iter = _outputMessageCache.entrySet().iterator();
-            while ((_outputMessageCache.size() > OUTPUT_CACHE_MAX_SIZE) && iter.hasNext()) {
-                Map.Entry<Long, OutputMessage> entry = iter.next();
-                if (!entry.getValue()._pinned) {
-                    iter.remove();
+        synchronized (_recentReadOnlyMessages) {
+            _recentReadOnlyMessages.add(message);
+            while (_recentReadOnlyMessages.size() > MAX_RECENT_READ_ONLY_MESSAGES) {
+                _recentReadOnlyMessages.poll();
+            }
+        }
+
+        pokeClients(clientInfo -> clientInfo._pendingReadOnlyMessages.add(message));
+    }
+
+    @Override
+    public void postReadReplyMessage(
+        final ReadReplyMessage message
+    ) {
+        synchronized (_pendingReadReplyMessages) {
+            _pendingReadReplyMessages.put(message._messageId, message);
+        }
+
+        ReadOnlyMessage rom = new ReadOnlyMessage(message._text);
+        synchronized (_clientInfos) {
+            for (ClientInfo cinfo : _clientInfos.values()) {
+                if (cinfo._isMaster) {
+                    cinfo._updatedReadReplyMessages = true;
+                } else {
+                    cinfo._pendingReadOnlyMessages.add(rom);
                 }
             }
         }
 
-        pokeClients(clientInfo -> clientInfo._pendingOutputMessages.add(message));
+        pokeClients(null);
     }
 
     /**
@@ -1024,7 +1128,7 @@ public class RESTSystemConsole implements SystemConsole {
     public void postSystemLogEntries(
         final KomodoAppender.LogEntry[] logEntries
     ) {
-        List<KomodoAppender.LogEntry> logList = new LinkedList<KomodoAppender.LogEntry>();
+        List<KomodoAppender.LogEntry> logList = new LinkedList<>();
         for (KomodoAppender.LogEntry logEntry : logEntries) {
             boolean avoid = false;
             for (String s : _logReportingBlackList) {
@@ -1049,12 +1153,13 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public void reset() {
         //  We don't close the established sessions, but we do clear out all messaging and such.
-        synchronized (_outputMessageCache) {
-            _outputMessageCache.clear();
-        }
-
-        _latestStatusMessage = null;
         pokeClients(ClientInfo::clear);
+        synchronized(this) {
+            _latestStatusMessage = null;
+            _pendingInputMessages.clear();
+            _pendingReadReplyMessages.clear();
+            _recentReadOnlyMessages.clear();
+        }
     }
 
     /**
@@ -1069,7 +1174,7 @@ public class RESTSystemConsole implements SystemConsole {
             _workerThread.start();
             return true;
         } catch (Exception ex) {
-            //  Do nothing
+            LOGGER.catching(ex);
             return false;
         }
     }
@@ -1103,7 +1208,7 @@ public class RESTSystemConsole implements SystemConsole {
                 try {
                     Thread.sleep(WORKER_PERIODICITY_MSECS);
                 } catch (InterruptedException ex) {
-                    //  Do nothing
+                    LOGGER.catching(ex);
                 }
             }
         }

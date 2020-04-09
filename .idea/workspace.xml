@@ -14,12 +14,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kexec/kexec.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleReadReplyMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleInputMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleInputMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleOutputMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleReadOnlyMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleStatusMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleStatusMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/PollResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/PollResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InventoryManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InventoryManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/systemConsole/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,6 +80,7 @@
       <recent name="com.kadware.komodo.jsonlib" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.kadware.komodo.commlib" />
       <recent name="com.kadware.komodo.jsonlib" />
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
@@ -154,6 +164,7 @@
       <workItem from="1586188306566" duration="3948000" />
       <workItem from="1586192598619" duration="45515000" />
       <workItem from="1586384336514" duration="1781000" />
+      <workItem from="1586397858190" duration="20546000" />
     </task>
     <servers />
   </component>
@@ -192,30 +203,30 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586306857272" />
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom" timestamp="1586386576650">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586457688484">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586386576650" />
-    <state width="1588" height="420" key="GridCell.Tab.0.center" timestamp="1586386576650">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586457688484" />
+    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586457688484">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586386576650" />
-    <state width="1588" height="420" key="GridCell.Tab.0.left" timestamp="1586386576650">
+    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586457688484" />
+    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586457688484">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586386576650" />
-    <state width="1588" height="420" key="GridCell.Tab.0.right" timestamp="1586386576650">
+    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586457688484" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586457688484">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1588" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586386576650" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586457688484" />
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586307021950">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586307021950" />
-    <state x="2175" y="995" width="586" height="732" key="find.popup" timestamp="1586285712377">
+    <state x="2175" y="995" width="586" height="732" key="find.popup" timestamp="1586457665246">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2175" y="995" width="586" height="732" key="find.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586285712377" />
+    <state x="2175" y="995" width="586" height="732" key="find.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586457665246" />
     <state x="1833" y="767" key="new project wizard" timestamp="1586306619373">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>

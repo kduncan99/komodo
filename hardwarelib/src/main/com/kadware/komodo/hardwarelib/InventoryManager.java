@@ -261,7 +261,7 @@ public class InventoryManager {
         int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
         for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
-                String name = String.format("IP%d", px);
+                String name = String.format("SP%d", px);
                 SystemProcessor sp = new SystemProcessor(name);
                 _processors.put(upiIndex, sp);
                 sp.initialize();

@@ -22,68 +22,98 @@ interface SystemConsole {
     /**
      * Represents input to the operating system from the console device
      */
-    class InputMessage {
+    abstract class InputMessage {
 
-        public final long _identifier;      //  console-assigned unique identifier for this message
-        public final String _text;          //  text of the message
+        public final String _text;
 
         InputMessage(
-            final long identifier,
             final String text
         ) {
-            _identifier = identifier;
             _text = text;
+        }
+    }
+
+    /**
+     * Represents unsolicited input to the operating system from the console device
+     */
+    class UnsolicitedInputMessage extends InputMessage {
+
+        UnsolicitedInputMessage(
+            final String text
+        ) {
+            super(text);
+        }
+    }
+
+    /**
+     * Represents input to the operating system from the console device, in response to a previous read-reply message
+     */
+    class ReadReplyInputMessage extends InputMessage {
+
+        public final int _messageId;        //  from the associated ReadReplyOutputMessage
+
+        ReadReplyInputMessage(
+            final int messageId,
+            final String text
+        ) {
+            super(text);
+            _messageId = messageId;
         }
     }
 
     /**
      * Represents output from the operating system to the console device
      */
-    class OutputMessage {
+    abstract class OutputMessage {}
 
-        public final long _identifier;      //  unique identifier for this message
-        public final boolean _pinned;       //  if true, this is a message which should not scroll off the display
-        public final String[] _text;
+    /**
+     * Represents output from the operating system to the console device, which does not require a response
+     */
+    class ReadOnlyMessage extends OutputMessage {
 
-        OutputMessage(
-            final long identifier,
-            final boolean pinned,
+        public final String _text;
+
+        ReadOnlyMessage(
             final String text
         ) {
-            _identifier = identifier;
-            _pinned = pinned;
-            String[] temp = { text };
-            _text = temp;
-        }
-
-        OutputMessage(
-            final long identifier,
-            final boolean pinned,
-            final String[] text
-        ) {
-            _identifier = identifier;
-            _pinned = pinned;
-            _text = Arrays.copyOf(text, text.length);
+            _text = text;
         }
     }
 
     /**
-     * Represents a multi-line status message indicating some basic important (or not-so-important) tallies, rates, etc.
-     * Only the most recently-posted set of status messages is expected to be relevant.
+     * Represents output from the operating system to the console device, which does require a response
      */
-    class StatusMessage {
+    class ReadReplyMessage extends OutputMessage {
 
-        public final long _identifier;      //  unique identifier for this message
-        public final String[] _text;
+        public final int _maxReplyLength;   //  max accepted reply length in characters
+        public final int _messageId;
+        public final String _text;
+
+        ReadReplyMessage(
+            final int messageId,
+            final String text,
+            final int maxReplyLength
+        ) {
+            _messageId = messageId;
+            _text = text;
+            _maxReplyLength = maxReplyLength;
+        }
+    }
+
+    /**
+     * Represents output from the operating system to the console device
+     */
+    class StatusMessage extends OutputMessage {
+
+        public final String[] _text;    //  One or more lines of text comprising the reported status
 
         StatusMessage(
-            final long identifier,
             final String[] text
         ) {
-            _identifier = identifier;
             _text = Arrays.copyOf(text, text.length);
         }
     }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Methods which must be implemented by the subclass
@@ -97,10 +127,13 @@ interface SystemConsole {
     );
 
     /**
-     * Required in the construction of any OutputMessage - asks the implementor to produce a unique
-     * integer identifier for subsequently identifying the particular message being constructed.
+     * Cancels a specific pending read-reply message.
+     * Used when the message was successfully responded to, so that the client console knows that the message
+     * is no longer outstanding.
      */
-    long getNextMessageIdentifier();
+    void cancelReadReplyMessage(
+        final int messageId
+    );
 
     /**
      * Polls the console for the next available input message
@@ -109,10 +142,17 @@ interface SystemConsole {
     InputMessage pollInputMessage();
 
     /**
-     * Posts a particular OutputMessage to the implementor.
+     * Posts a particular ReadOnlyMessage to the implementor.
      */
-    void postOutputMessage(
-        final OutputMessage message
+    void postReadOnlyMessage(
+        final ReadOnlyMessage message
+    );
+
+    /**
+     * Posts a particular ReadReplyMessage to the implementor.
+     */
+    void postReadReplyMessage(
+        final ReadReplyMessage message
     );
 
     /**
