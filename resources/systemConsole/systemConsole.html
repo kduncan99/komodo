@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
+<!-- This is the main HTML for the system console -->
+<!-- It has IPL, execConsole, log, systemConfig, and hardwareConfig panels, all implemented as tabbed panes -->
+<head>
+    <meta charset="utf-8" />
+    <title>Komodo System Console</title>
+    <link href="systemConsole.css" type="text/css" rel="stylesheet" />
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+    <h1>Komodo System Console v1.0</h1>
+    <ul class="tab-list">
+        <li class="active"><a class="tab-control" href="#IPL">IPL</a></li>
+        <li><a class='tab-control' href="#Console">OS Console</a></li>
+        <li><a class='tab-control' href="#Hardware">Hardware</a></li>
+        <li><a class='tab-control' href="#System">System</a></li>
+        <li><a class='tab-control' href="#Logging">Logging</a></li>
+    </ul>
+    <div id="IPL" class="tab-panel active">
+        IPL Content
+    </div>
+    <div id="Console" class="tab-panel">
+        Console Content
+    </div>
+    <div id="Hardware" class="tab-panel">
+        Hardware Configuration Content
+    </div>
+    <div id="System" class="tab-panel">
+        System Content
+    </div>
+    <div id="Logging" class="tab-panel">
+        Logging Content
+    </div>
+    <script src="jquery-3.4.1.min.js"></script>
+    <script src="systemConsole.js"></script>
+</body>
+</html>

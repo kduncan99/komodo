@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -129,8 +128,7 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
-    private static final String FAVICON_FILE_NAME = "favicon.jpg";
-    private static final String HTML_FILE_NAME = "index.html";
+    private static final String HTML_FILE_NAME = "systemConsole.html";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
     private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
     private static final long WORKER_PERIODICITY_MSECS = 10000;             //  worker thread does its work every 10 seconds
@@ -563,19 +561,49 @@ public class RESTSystemConsole implements SystemConsole {
             LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
             System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
-                if (exchange.getRequestURI().getPath().equals("/favicon.ico")) {
-                    String fileName = String.format("%s/%s", _webRootPath, FAVICON_FILE_NAME);
-                    respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, "image/jpeg", fileName);
-                } else {
-                    String fileName = String.format("%s/%s", _webRootPath, HTML_FILE_NAME);
-                    byte[] bytes = Files.readAllBytes(Paths.get(fileName));
-                    String message = new String(bytes, StandardCharsets.US_ASCII);
-                    exchange.getResponseHeaders().add("Content-type", "text/html");
-                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, message.length());
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(message.getBytes());
-                    os.close();
+                String fileName = exchange.getRequestURI().getPath();
+                if (fileName.startsWith("/")) {
+                    fileName = fileName.substring(1);
                 }
+
+                if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
+                    fileName = HTML_FILE_NAME;
+                }
+
+                String mimeType = "";
+                boolean textFile = false;
+                if (fileName.endsWith(".html")) {
+                    mimeType = "text/html";
+                    textFile = true;
+                } else if (fileName.endsWith(".css")) {
+                    mimeType = "text/css";
+                    textFile = true;
+                } else if (fileName.endsWith(".js")) {
+                    mimeType = "text/javascript";
+                    textFile = true;
+                } else if (fileName.endsWith(".json")) {
+                    mimeType = "text/json";
+                    textFile = true;
+                } else {
+                    mimeType = "application/octet-stream";
+                }
+
+                String fullName = String.format("%s/%s", _webRootPath, fileName);
+                if (textFile) {
+                    respondWithTextFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
+                } else {
+                    respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
+                }
+//                byte[] bytes = Files.readAllBytes(Paths.get(fileName));
+//                String message = new String(bytes, StandardCharsets.US_ASCII);
+//                exchange.getResponseHeaders().add("Content-type", "text/html");
+//                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, message.length());
+//                OutputStream os = exchange.getResponseBody();
+//                os.write(message.getBytes());
+//                os.close();
+            } catch (IOException ex) {
+                System.out.println(String.format("%s %s", ex.getClass().toString(), ex.getMessage()));//TODO remove
+                respondWithText(exchange, HttpURLConnection.HTTP_NOT_FOUND, "Cannot find requested file");
             } catch (Throwable t) {
                 LOGGER.catching(t);
             }
@@ -823,18 +851,14 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String mimeType,
         final String fileName
-    ) {
+    ) throws IOException {
         LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        try {
-            byte[] bytes = Files.readAllBytes(Paths.get(fileName));
-            exchange.getResponseHeaders().add("Content-type", mimeType);
-            exchange.sendResponseHeaders(code, bytes.length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(bytes);
-            os.close();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-        }
+        byte[] bytes = Files.readAllBytes(Paths.get(fileName));
+        exchange.getResponseHeaders().add("Content-type", mimeType);
+        exchange.sendResponseHeaders(code, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
     }
 
     /**
@@ -849,19 +873,15 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String mimeType,
         final String fileName
-    ) {
+    ) throws IOException {
         LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        try {
-            String message = new String(Files.readAllBytes(Paths.get(fileName)), "UTF-8");
-            exchange.getResponseHeaders().add("Content-type", mimeType);
-            byte[] bytes = message.getBytes();
-            exchange.sendResponseHeaders(code, bytes.length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(bytes);
-            os.close();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-        }
+        String message = new String(Files.readAllBytes(Paths.get(fileName)), "UTF-8");
+        exchange.getResponseHeaders().add("Content-type", mimeType);
+        byte[] bytes = message.getBytes();
+        exchange.sendResponseHeaders(code, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
     }
 
     /**
