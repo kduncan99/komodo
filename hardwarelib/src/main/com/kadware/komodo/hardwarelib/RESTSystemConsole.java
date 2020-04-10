@@ -947,9 +947,10 @@ public class RESTSystemConsole implements SystemConsole {
         System.out.println("-->" + content);   //TODO remove
         try {
             exchange.getResponseHeaders().add("Content-type", "text/plain");
-            exchange.sendResponseHeaders(code, content.length());
+            byte[] bytes = content.getBytes();
+            exchange.sendResponseHeaders(code, bytes.length);
             OutputStream os = exchange.getResponseBody();
-            os.write(content.getBytes());
+            os.write(bytes);
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);

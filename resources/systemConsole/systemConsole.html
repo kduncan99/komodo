@@ -6,36 +6,52 @@
 <head>
     <meta charset="utf-8" />
     <title>Komodo System Console</title>
-    <link href="systemConsole.css" type="text/css" rel="stylesheet" />
-    <style type="text/css">
+    <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 
+    <script>
+        $(function() {
+            $( "#consoleTabs" ).tabs();
+        });
+    </script>
+
+    <style>
+        #consoleTabs{font-size: 14px;}
+        .ui-widget-header {
+            background: #b9cd6d;
+            border: 1px solid #b9cd6d;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
     <h1>Komodo System Console v1.0</h1>
-    <ul class="tab-list">
-        <li class="active"><a class="tab-control" href="#IPL">IPL</a></li>
-        <li><a class='tab-control' href="#Console">OS Console</a></li>
-        <li><a class='tab-control' href="#Hardware">Hardware</a></li>
-        <li><a class='tab-control' href="#System">System</a></li>
-        <li><a class='tab-control' href="#Logging">Logging</a></li>
-    </ul>
-    <div id="IPL" class="tab-panel active">
-        IPL Content
+    <div id="consoleTabs">
+        <ul>
+            <li><a href="#IPL">IPL</a></li>
+            <li><a href="#Console">OS Console</a></li>
+            <li><a href="#Hardware">Hardware</a></li>
+            <li><a href="#System">System</a></li>
+            <li><a href="#Logging">Logging</a></li>
+        </ul>
+        <div id="IPL">
+            <p>IPL Content</p>
+        </div>
+        <div id="Console">
+            <p>Console Content</p>
+        </div>
+        <div id="Hardware">
+            <p>Hardware Configuration Content</p>
+        </div>
+        <div id="System">
+            <p>System Content</p>
+        </div>
+        <div id="Logging">
+            <p>Logging Content</p>
+        </div>
     </div>
-    <div id="Console" class="tab-panel">
-        Console Content
-    </div>
-    <div id="Hardware" class="tab-panel">
-        Hardware Configuration Content
-    </div>
-    <div id="System" class="tab-panel">
-        System Content
-    </div>
-    <div id="Logging" class="tab-panel">
-        Logging Content
-    </div>
-    <script src="jquery-3.4.1.min.js"></script>
-    <script src="systemConsole.js"></script>
 </body>
 </html>

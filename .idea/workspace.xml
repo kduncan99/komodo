@@ -14,13 +14,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resources/systemConsole/jquery-3.4.1.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/favicon.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-3.4.1.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +157,7 @@
       <workItem from="1586188306566" duration="3948000" />
       <workItem from="1586192598619" duration="45515000" />
       <workItem from="1586384336514" duration="1781000" />
-      <workItem from="1586397858190" duration="25735000" />
+      <workItem from="1586397858190" duration="31257000" />
     </task>
     <servers />
   </component>
@@ -198,22 +196,22 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586462949016">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586477408214">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586462949016" />
-    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586462949016">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586477408214" />
+    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586477408214">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586462949016" />
-    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586462949016">
+    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586477408214" />
+    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586477408214">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586462949016" />
-    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586462949016">
+    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586477408214" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586477408214">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586462949016" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586477408214" />
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586307021950">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
