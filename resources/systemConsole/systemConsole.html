@@ -6,20 +6,16 @@
 <head>
     <meta charset="utf-8" />
     <title>Komodo System Console</title>
-    <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
-    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
-    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-
-    <script>
-        $(function() {
-            $( "#consoleTabs" ).tabs();
-        });
-    </script>
+    <!-- link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet" -->
+    <link href = "systemConsole.css" rel = "stylesheet">
+    <link href = "jquery-ui.css" rel = "stylesheet">
+    <script src = "jquery-3.5.0.js"></script>
+    <script src = "jquery-ui.js"></script>
 
     <style>
         #consoleTabs{font-size: 14px;}
         .ui-widget-header {
-            background: #b9cd6d;
+            background: #4040ff;
             border: 1px solid #b9cd6d;
             color: #FFFFFF;
             font-weight: bold;
@@ -28,6 +24,10 @@
 </head>
 
 <body>
+    <div id="loginDialog" title="System Console Credentisl">
+        <p>Enter user credentials:</p>
+    </div>
+
     <h1>Komodo System Console v1.0</h1>
     <div id="consoleTabs">
         <ul>
@@ -38,20 +38,184 @@
             <li><a href="#Logging">Logging</a></li>
         </ul>
         <div id="IPL">
-            <p>IPL Content</p>
+            <p>Boot Stuff</p>
         </div>
+
         <div id="Console">
-            <p>Console Content</p>
+            <p>Operating System Console</p>
+            <div id="ConsoleScreen">
+                <table id="ConsoleRows">
+                    <tr><td id="consoleRow00"><span style="color: #00ffff">SYSTEM STATUS FIRST ROW</span></td></tr>
+                    <tr><td id="consoleRow01"><span style="color: #00ffff">SYSTEM STATUS SECOND ROW</span></td></tr>
+                    <tr><td id="consoleRow02">---+---1---+---2---+---3---+---4---+---5---+---6---+---7---+---8</td></tr>
+                    <tr><td id="consoleRow03">&nbsp;&nbsp;MAPPER START</td></tr>
+                    <tr><td id="consoleRow04">&nbsp;&nbsp;MAPPER*PLEASE MOUNT THE DONKEY ON THE TAPE DRIVE</td></tr>
+                    <tr><td id="consoleRow05"><span style="color: #ffff00">0 T0 LOAD DONKEY AND REPLY YN</span></td></tr>
+                    <tr><td id="consoleRow06"><span style="color: #ffffff">&nbsp;ST CMS</span></td></tr>
+                    <tr><td id="consoleRow07">&nbsp;&nbsp;CMS START</td></tr>
+                    <tr><td id="consoleRow08">&nbsp;&nbsp;CMS NOT TODAY, SPANKY</td></tr>
+                    <tr><td id="consoleRow09">&nbsp;&nbsp;CMS ERROR</td></tr>
+                    <tr><td id="consoleRow10">&nbsp;&nbsp;CMS ERROR FIN</td></tr>
+                    <tr><td id="consoleRow11">FILLER LINE 12</td></tr>
+                    <tr><td id="consoleRow12">FILLER LINE 13</td></tr>
+                    <tr><td id="consoleRow13">FILLER LINE 14</td></tr>
+                    <tr><td id="consoleRow14">FILLER LINE 15</td></tr>
+                    <tr><td id="consoleRow15">FILLER LINE 16</td></tr>
+                    <tr><td id="consoleRow16">FILLER LINE 17</td></tr>
+                    <tr><td id="consoleRow17">FILLER LINE 18</td></tr>
+                    <tr><td id="consoleRow18">FILLER LINE 19</td></tr>
+                    <tr><td id="consoleRow19">FILLER LINE 20</td></tr>
+                    <tr><td id="consoleRow20">FILLER LINE 21</td></tr>
+                    <tr><td id="consoleRow21">FILLER LINE 22</td></tr>
+                    <tr><td id="consoleRow22">FILLER LINE 23</td></tr>
+                    <tr><td id="consoleRow23">FILLER LINE 24</td></tr>
+                </table>
+            </div>
         </div>
+
         <div id="Hardware">
             <p>Hardware Configuration Content</p>
         </div>
+
         <div id="System">
             <p>System Content</p>
         </div>
+
         <div id="Logging">
-            <p>Logging Content</p>
+            <p>Most Recent System Log Entries</p>
+            <div id="LoggingScreen">
+                <table id="LoggingRows">
+                    <tr><td>---+---1---+---2---+---3---+---4---+---5---+---6---+---7---+---8---+---9---+--10---+--11---+--12---+--13--</td></tr>
+                    <tr><td>System Log Starts</td></tr>
+                    <tr><td>20200404-091020 <span style="color: #0000ff">INFO</span> System Started</td></tr>
+                    <tr><td>20200404-091021 <span style="color: #0000ff">INFO</span> Configuration Loaded</td></tr>
+                    <tr><td>20200404-091022 <span style="color: #ff0000">ERROR</span> Configuration tag 'SweetThings' is wrong</td></tr>
+                    <tr><td>20200404-091030 <span style="color: #007f00">TRACE</span> Entry val=['this','that','the other thing','something totally and completely penguinish with no cheese whatsoever']</td></tr>
+                    <tr><td>20200404-091030 <span style="color: #007f00">TRACE</span> Exit</td></tr>
+                    <tr><td>20200404-091501 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                    <tr><td>20200404-092001 <span style="color: #0000ff">INFO</span> Checkpoint</td></tr>
+                </table>
+            </div>
         </div>
     </div>
 </body>
+<script src = "systemConsole.js" rel="script"></script>
 </html>

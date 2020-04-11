@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
@@ -53,6 +54,8 @@ import org.apache.logging.log4j.Logger;
  * via HTTP / HTTPS REST methods (i.e., DELETE, GET, POST, PUT).
  * Our design provides for multiple clients, but which are not visible as such, to the operating system, which
  * 'sees' our client(s) as one console.
+ *
+ * This implementation uses long polling.
  */
 @SuppressWarnings("Duplicates")
 public class RESTSystemConsole implements SystemConsole {
@@ -138,12 +141,11 @@ public class RESTSystemConsole implements SystemConsole {
 
     private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
 
-    private final APIListener _apiListener;
     private final Map<String, ClientInfo> _clientInfos = new HashMap<>();
     private final Configurator _configurator;
     private final JumpKeyPanel _jumpKeyPanel;
+    private final Listener _listener;
     private final String _name;
-    private final WebListener _webListener;
     private final String _webRootPath;
     private WorkerThread _workerThread = null;
 
@@ -177,8 +179,7 @@ public class RESTSystemConsole implements SystemConsole {
         _name = name;
         _configurator = configurator;
         _jumpKeyPanel = jumpKeyPanel;
-        _apiListener = new APIListener(2200);     //  TODO pull portnumber from Configurator hardware configuration
-        _webListener = new WebListener(443);
+        _listener = new Listener(443);
         _webRootPath = webRootPath;
     }
 
@@ -186,37 +187,6 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Endpoint handlers, to be attached to the HTTP listeners
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Invalid path handler class
-     */
-    private class APIDefaultRequestHandler implements HttpHandler {
-
-        @Override
-        public void handle(
-            final HttpExchange exchange
-        ) throws IOException {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
-            try {
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    if (!validateCredentials(exchange)) {
-                        respondUnauthorized(exchange);
-                    } else {
-                        respondNoSession(exchange);
-                    }
-                    return;
-                }
-
-                clientInfo._lastActivity = System.currentTimeMillis();
-                respondNotFound(exchange, "Path or object does not exist");
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
-            }
-        }
-    }
 
     /**
      * Handles requests against the /jumpkeys path
@@ -244,7 +214,6 @@ public class RESTSystemConsole implements SystemConsole {
             final HttpExchange exchange
         ) {
             LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
                 if (clientInfo == null) {
@@ -325,7 +294,6 @@ public class RESTSystemConsole implements SystemConsole {
             final HttpExchange exchange
         ) {
             LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
                 if (clientInfo == null) {
@@ -384,7 +352,6 @@ public class RESTSystemConsole implements SystemConsole {
             final HttpExchange exchange
         ) {
             LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 ClientInfo clientInfo = findClient(exchange);
                 if (clientInfo == null) {
@@ -559,7 +526,6 @@ public class RESTSystemConsole implements SystemConsole {
             final HttpExchange exchange
         ) {
             LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
             try {
                 String fileName = exchange.getRequestURI().getPath();
                 if (fileName.startsWith("/")) {
@@ -579,7 +545,7 @@ public class RESTSystemConsole implements SystemConsole {
                     mimeType = "text/css";
                     textFile = true;
                 } else if (fileName.endsWith(".js")) {
-                    mimeType = "text/javascript";
+                    mimeType = "application/javascript";
                     textFile = true;
                 } else if (fileName.endsWith(".json")) {
                     mimeType = "text/json";
@@ -589,19 +555,13 @@ public class RESTSystemConsole implements SystemConsole {
                 }
 
                 String fullName = String.format("%s/%s", _webRootPath, fileName);
+                LOGGER.trace("fullName" + fullName);//TODO remove
                 if (textFile) {
                     respondWithTextFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
                 } else {
                     respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
                 }
-//                byte[] bytes = Files.readAllBytes(Paths.get(fileName));
-//                String message = new String(bytes, StandardCharsets.US_ASCII);
-//                exchange.getResponseHeaders().add("Content-type", "text/html");
-//                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, message.length());
-//                OutputStream os = exchange.getResponseBody();
-//                os.write(message.getBytes());
-//                os.close();
-            } catch (IOException ex) {
+            } catch (NoSuchFileException ex) {
                 System.out.println(String.format("%s %s", ex.getClass().toString(), ex.getMessage()));//TODO remove
                 respondWithText(exchange, HttpURLConnection.HTTP_NOT_FOUND, "Cannot find requested file");
             } catch (Throwable t) {
@@ -634,12 +594,12 @@ public class RESTSystemConsole implements SystemConsole {
     //  This unique UUID must be used for every message sent by a given instance of a client.
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private class APIListener extends SecureServer {
+    private class Listener extends SecureServer {
 
         /**
          * constructor
          */
-        private APIListener(
+        private Listener(
             final int portNumber
         ) {
             super("RESTSystemConsole", portNumber);
@@ -659,7 +619,7 @@ public class RESTSystemConsole implements SystemConsole {
                  NoSuchProviderException,
                  SignatureException {
             super.setup();
-            appendHandler("/", new APIDefaultRequestHandler());
+            appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysRequestHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/session", new APISessionRequestHandler());
@@ -685,29 +645,29 @@ public class RESTSystemConsole implements SystemConsole {
     //  We'll Secure-HTTP it just for giggles, but there's no authentication going on.
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private class WebListener extends SecureServer {
-
-        private WebListener(
-            final int portNumber
-        ) {
-            super("WEBListener", portNumber);
-        }
-
-        @Override
-        public void setup(
-        ) throws CertificateException,
-                 InvalidKeyException,
-                 IOException,
-                 KeyManagementException,
-                 KeyStoreException,
-                 NoSuchAlgorithmException,
-                 NoSuchProviderException,
-                 SignatureException {
-            super.setup();
-            appendHandler("/", new WebHandler());
-            start();
-        }
-    }
+//    private class WebListener extends SecureServer {
+//
+//        private WebListener(
+//            final int portNumber
+//        ) {
+//            super("WEBListener", portNumber);
+//        }
+//
+//        @Override
+//        public void setup(
+//        ) throws CertificateException,
+//                 InvalidKeyException,
+//                 IOException,
+//                 KeyManagementException,
+//                 KeyStoreException,
+//                 NoSuchAlgorithmException,
+//                 NoSuchProviderException,
+//                 SignatureException {
+//            super.setup();
+//            appendHandler("/", new WebHandler());
+//            start();
+//        }
+//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -725,7 +685,13 @@ public class RESTSystemConsole implements SystemConsole {
         List<String> values = exchange.getRequestHeaders().get("Client");
         if ((values != null) && (values.size() == 1)) {
             String clientId = values.get(0);
+            LOGGER.trace(String.format("======= %s ==========", clientId));//TODO remove
             synchronized (_clientInfos) {
+                //TODO remove block
+                for (String s : _clientInfos.keySet()) {
+                    LOGGER.trace(String.format("  ------ %s", s));//TODO remove
+                }
+                //TODO end remove block
                 ClientInfo clientInfo = _clientInfos.get(clientId);
                 if (clientInfo != null) {
                     return clientInfo;
@@ -746,7 +712,6 @@ public class RESTSystemConsole implements SystemConsole {
         Set<ClientInfo> cinfos;
         synchronized (this) {
             cinfos = new HashSet<>(_clientInfos.values());
-            _clientInfos.clear();
         }
 
         for (ClientInfo cinfo : cinfos) {
@@ -771,6 +736,7 @@ public class RESTSystemConsole implements SystemConsole {
                 Map.Entry<String, ClientInfo> entry = iter.next();
                 ClientInfo cinfo = entry.getValue();
                 if (now > (cinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
+                    LOGGER.info(String.format("Removing aged-out client %s", cinfo._clientId));
                     iter.remove();
                     removedClientInfos.add(cinfo);
                 }
@@ -852,7 +818,7 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
-        LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
         byte[] bytes = Files.readAllBytes(Paths.get(fileName));
         exchange.getResponseHeaders().add("Content-type", mimeType);
         exchange.sendResponseHeaders(code, bytes.length);
@@ -862,7 +828,7 @@ public class RESTSystemConsole implements SystemConsole {
     }
 
     /**
-     * When we need to send back a text fil
+     * When we need to send back a text fild
      * @param exchange HttpExchange we're dealing with
      * @param code response code - 200, 201, whatever
      * @param mimeType e.g., text/html
@@ -874,10 +840,11 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
-        LOGGER.traceEntry(String.format("code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        String message = new String(Files.readAllBytes(Paths.get(fileName)), "UTF-8");
+        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+        String message = Files.readString(Paths.get(fileName));
         exchange.getResponseHeaders().add("Content-type", mimeType);
         byte[] bytes = message.getBytes();
+        LOGGER.trace(String.format("=========== bytes size=%d", bytes.length));//TODO remove this
         exchange.sendResponseHeaders(code, bytes.length);
         OutputStream os = exchange.getResponseBody();
         os.write(bytes);
@@ -1015,12 +982,9 @@ public class RESTSystemConsole implements SystemConsole {
     ) {
         try {
             writer.write(String.format("RESTSystemConsole %s\n", _name));
-            writer.write(String.format("  WebListener commonName=%s portNumber=%d\n",
-                                        _webListener.getCommonName(),
-                                        _webListener.getPortNumber()));
             writer.write(String.format("  APIListener commonName=%s portNumber=%d\n",
-                                       _apiListener.getCommonName(),
-                                       _apiListener.getPortNumber()));
+                                       _listener.getCommonName(),
+                                       _listener.getPortNumber()));
 
             writer.write("  Recent Read-Only Messages:\n");
             synchronized (_recentReadOnlyMessages) {
@@ -1189,8 +1153,8 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public boolean start() {
         try {
-            _webListener.setup();
-            _apiListener.setup();
+//            _webListener.setup(); //TODO remove
+            _listener.setup();
             _workerThread = new WorkerThread();
             _workerThread.start();
             return true;
@@ -1205,8 +1169,8 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void stop() {
-        _webListener.stop();
-        _apiListener.stop();
+//          _webListener.stop();    //TODO remove
+        _listener.stop();
         _workerThread._terminate = true;
         _workerThread = null;
     }

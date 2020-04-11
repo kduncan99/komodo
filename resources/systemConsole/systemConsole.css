@@ -1,0 +1,39 @@
+/* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
+
+/* Do we need this one? */
+/*
+#consoleTabs{font-size: 14px;}
+.ui-widget-header {
+    background: #4040ff;
+    border: 1px solid #b9cd6d;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+*/
+
+/* OS console stuff - monospaced characters at 12px, 24x80 display
+   which gives us minheight of 24*12 = 288, and minwidth of 80*12 = 960 */
+#ConsoleScreen {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    min-height: 288px;
+    min-width: 960px;
+    background-color: black;
+    color: #00ff00;
+}
+
+/* Logging console stuff - monospaced characters at 12px, (0:200)x132 display
+   which gives us minheight of 24*12 = 288, maxheight of 50*12 = 600,
+                  minwidth of 80*12 = 960, maxwidth of 132*12 = 1344 */
+#LoggingScreen {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    min-height: 288px;
+    max-height: 400px;
+    min-width: 960px;
+    max-width: 1344px;
+    overflow: scroll;
+    background-color: white;
+    color: black;
+}
+
