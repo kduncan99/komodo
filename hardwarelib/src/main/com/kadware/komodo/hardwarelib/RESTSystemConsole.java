@@ -428,7 +428,10 @@ public class RESTSystemConsole implements SystemConsole {
                     newLogEntries = new SystemLogEntry[entryCount];
                     int ex = 0;
                     for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
-                        newLogEntries[ex] = new SystemLogEntry(localEntry._timeMillis, localEntry._source, localEntry._message);
+                        newLogEntries[ex] = new SystemLogEntry(localEntry._timeMillis,
+                                                               localEntry._category,
+                                                               localEntry._source,
+                                                               localEntry._message);
                     }
                 }
 

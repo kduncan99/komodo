@@ -15,7 +15,10 @@
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/KomodoAppender.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/KomodoAppender.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/SystemLogEntry.java" beforeDir="false" afterPath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/SystemLogEntry.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -76,7 +79,7 @@
       <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.Test_SystemProcessor">
+  <component name="RunManager" selected="JUnit.Test_SystemProcessor.primitive">
     <configuration name="All in baselib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="baselib" />
       <option name="PACKAGE_NAME" value="" />
@@ -134,8 +137,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.Test_SystemProcessor" />
         <item itemvalue="JUnit.Test_SystemProcessor.primitive" />
+        <item itemvalue="JUnit.Test_SystemProcessor" />
         <item itemvalue="JUnit.All in hardwarelib" />
         <item itemvalue="JUnit.All in minalib" />
         <item itemvalue="JUnit.All in baselib" />
@@ -156,7 +159,7 @@
       <workItem from="1586192598619" duration="45515000" />
       <workItem from="1586384336514" duration="1781000" />
       <workItem from="1586397858190" duration="36095000" />
-      <workItem from="1586522119249" duration="32851000" />
+      <workItem from="1586522119249" duration="37958000" />
     </task>
     <servers />
   </component>
@@ -199,22 +202,22 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586575065406">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586623583859">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586575065406" />
-    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586575065406">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586623583859" />
+    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586623583859">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586575065406" />
-    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586575065406">
+    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586623583859" />
+    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586623583859">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586575065406" />
-    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586575065406">
+    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586623583859" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586623583859">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586575065406" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586623583859" />
     <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586558986031">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -247,6 +250,10 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1833" y="767" key="new project wizard/0.0.3840.2120@0.0.3840.2120" timestamp="1586306619373" />
+    <state x="1563" y="652" key="run.anything.popup" timestamp="1586622896937">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="1563" y="652" key="run.anything.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586622896937" />
     <state x="1570" y="942" width="672" height="678" key="search.everywhere.popup" timestamp="1586560894621">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>

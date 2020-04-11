@@ -22,6 +22,7 @@ public class KomodoAppender extends AbstractAppender {
 
     public static class LogEntry {
         public final Long _identifier;
+        public final String _category;
         public final String _message;
         public final String _source;
         public final long _timeMillis;
@@ -31,6 +32,7 @@ public class KomodoAppender extends AbstractAppender {
             final long identifier
         ) {
             _identifier = identifier;
+            _category = event.getLevel().toString();
             _source = event.getLoggerName();
             _message = event.getMessage().getFormattedMessage();
             _timeMillis = event.getTimeMillis();
