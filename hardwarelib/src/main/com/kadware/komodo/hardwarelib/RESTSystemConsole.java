@@ -640,37 +640,6 @@ public class RESTSystemConsole implements SystemConsole {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  HTTP listener for the web service
-    //  Since the user can do nothing without logging in through the API, there's little need to secure this.
-    //  We'll Secure-HTTP it just for giggles, but there's no authentication going on.
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-//    private class WebListener extends SecureServer {
-//
-//        private WebListener(
-//            final int portNumber
-//        ) {
-//            super("WEBListener", portNumber);
-//        }
-//
-//        @Override
-//        public void setup(
-//        ) throws CertificateException,
-//                 InvalidKeyException,
-//                 IOException,
-//                 KeyManagementException,
-//                 KeyStoreException,
-//                 NoSuchAlgorithmException,
-//                 NoSuchProviderException,
-//                 SignatureException {
-//            super.setup();
-//            appendHandler("/", new WebHandler());
-//            start();
-//        }
-//    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -685,13 +654,7 @@ public class RESTSystemConsole implements SystemConsole {
         List<String> values = exchange.getRequestHeaders().get("Client");
         if ((values != null) && (values.size() == 1)) {
             String clientId = values.get(0);
-            LOGGER.trace(String.format("======= %s ==========", clientId));//TODO remove
             synchronized (_clientInfos) {
-                //TODO remove block
-                for (String s : _clientInfos.keySet()) {
-                    LOGGER.trace(String.format("  ------ %s", s));//TODO remove
-                }
-                //TODO end remove block
                 ClientInfo clientInfo = _clientInfos.get(clientId);
                 if (clientInfo != null) {
                     return clientInfo;
