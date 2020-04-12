@@ -1,5 +1,14 @@
 //  Copyright(c) 2020 by Kurt Duncan - All Rights Reserved
 
+//  Globals ------------------------------------------------------------------------------------------------------------------------
+
+const maxLoggingRows = 200;
+const credentialUsername = 'admin';   //  TODO solicit these from the user
+const credentialPassword = 'admin';   //  TODO as above
+var clientIdent = '';
+var polling = false;
+var validating = false;
+
 //  General stuff ------------------------------------------------------------------------------------------------------------------
 
 $(function() {
@@ -9,12 +18,6 @@ $(function() {
 $('#consoleTabs').click(function(){
     poll(); //  TODO a hack to get things rolling - replace this intelligently later
 });
-
-var credentialUsername = 'admin';   //  TODO solicit these from the user
-var credentialPassword = 'admin';   //  TODO as above
-var clientIdent = '';
-var polling = false;
-var validating = false;
 
 function poll(){
     if (clientIdent === '') {
@@ -126,5 +129,9 @@ function postLogEntries(newLogEntries){
         newRow.appendChild(msgElement);
 
         tableBody.appendChild(newRow);
+    }
+
+    while (tableBody.rows.length > maxLoggingRows) {
+        tableBody.deleteRow(0);
     }
 }

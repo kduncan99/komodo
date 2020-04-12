@@ -11,27 +11,51 @@
 }
 */
 
-/* OS console stuff - monospaced characters at 12px, 24x80 display
-   which gives us minheight of 24*12 = 288, and minwidth of 80*12 = 960 */
+/* OS console stuff - monospaced characters at 12px, 24x132 display char width is ~6.8px
+   which gives us minheight of 24*(12+6) = 480, and minwidth of 80*8 = 574 */
+#Console {
+    background-color: #373737;
+    color: white;
+}
+
 #ConsoleScreen {
-    font-family: "Courier New", monospace;
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
     font-size: 12px;
-    min-height: 288px;
-    min-width: 960px;
+    min-height: 432px;
+    max-height: 432px;
+    min-width: 574px;
+    max-width: 574px;
     background-color: black;
     color: #00ff00;
 }
 
+#consoleInputRow {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
+    border-style: none;
+    font-size: 12px;
+    min-height: 18px;
+    max-height: 18px;
+    min-width: 574px;
+    max-width: 574px;
+    background-color: black;
+    color: #ffffff;
+}
+
 /* Logging console stuff - monospaced characters at 12px, (0:200)x132 display
    which gives us minheight of 24*12 = 288, maxheight of 50*12 = 600,
-                  minwidth of 80*12 = 960, maxwidth of 132*12 = 1344 */
+                  minwidth of 80*7.175 = 560, maxwidth of 132*7.175 = 924 */
+#Logging {
+    background-color: #373737;
+    color: white;
+}
+
 #LoggingScreen {
-    font-family: "Courier New", monospace;
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
     font-size: 12px;
     min-height: 288px;
-    max-height: 400px;
-    min-width: 960px;
-    max-width: 1344px;
+    max-height: 600px;
+    min-width: 560px;
+    max-width: 947px;
     overflow: scroll;
     background-color: white;
     color: black;

@@ -133,6 +133,7 @@ public class RESTSystemConsole implements SystemConsole {
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final String HTML_FILE_NAME = "systemConsole.html";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
+    private static final int MAX_RECENT_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
     private static final long WORKER_PERIODICITY_MSECS = 10000;             //  worker thread does its work every 10 seconds
 
@@ -151,6 +152,9 @@ public class RESTSystemConsole implements SystemConsole {
 
     //  This is always the latest status message. Clients may pick it up at any time.
     private StatusMessage _latestStatusMessage = null;
+
+    //  Most recent {n} log entries, so we can populate new sessions
+    private final List<KomodoAppender.LogEntry> _recentLogEntries = new LinkedList<>();
 
     //  Input messages we've received from the console, but which have not yet been delivered to the operating system.
     private final Map<String, InputMessage> _pendingInputMessages = new LinkedHashMap<>();
@@ -428,10 +432,10 @@ public class RESTSystemConsole implements SystemConsole {
                     newLogEntries = new SystemLogEntry[entryCount];
                     int ex = 0;
                     for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
-                        newLogEntries[ex] = new SystemLogEntry(localEntry._timeMillis,
-                                                               localEntry._category,
-                                                               localEntry._source,
-                                                               localEntry._message);
+                        newLogEntries[ex++] = new SystemLogEntry(localEntry._timeMillis,
+                                                                 localEntry._category,
+                                                                 localEntry._source,
+                                                                 localEntry._message);
                     }
                 }
 
@@ -495,6 +499,15 @@ public class RESTSystemConsole implements SystemConsole {
                 ClientInfo clientInfo = new ClientInfo(clientId);
                 synchronized (_recentReadOnlyMessages) {
                     clientInfo._pendingReadOnlyMessages.addAll(_recentReadOnlyMessages);
+                }
+
+                synchronized (_recentLogEntries) {
+                    //TODO remove block
+                    for (KomodoAppender.LogEntry le : _recentLogEntries) {
+                        System.out.println(String.format("%d %s %s", le._timeMillis, le._source, le._message));
+                    }
+                    //TODO end remove block
+                    clientInfo._pendingLogEntries.addAll(_recentLogEntries);
                 }
 
                 clientInfo._remoteAddress = exchange.getRemoteAddress();
@@ -784,13 +797,18 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
-        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        byte[] bytes = Files.readAllBytes(Paths.get(fileName));
-        exchange.getResponseHeaders().add("Content-type", mimeType);
-        exchange.sendResponseHeaders(code, bytes.length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(bytes);
-        os.close();
+        try {
+            LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            byte[] bytes = Files.readAllBytes(Paths.get(fileName));
+            exchange.getResponseHeaders().add("Content-type", mimeType);
+            exchange.sendResponseHeaders(code, bytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(bytes);
+            os.close();
+        } catch (Exception ex) {
+            exchange.getResponseBody().close();
+            throw ex;
+        }
     }
 
     /**
@@ -806,15 +824,20 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
-        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        String message = Files.readString(Paths.get(fileName));
-        exchange.getResponseHeaders().add("Content-type", mimeType);
-        byte[] bytes = message.getBytes();
-        LOGGER.trace(String.format("=========== bytes size=%d", bytes.length));//TODO remove this
-        exchange.sendResponseHeaders(code, bytes.length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(bytes);
-        os.close();
+        try {
+            LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            String message = Files.readString(Paths.get(fileName));
+            exchange.getResponseHeaders().add("Content-type", mimeType);
+            byte[] bytes = message.getBytes();
+            LOGGER.trace(String.format("=========== bytes size=%d", bytes.length));//TODO remove this
+            exchange.sendResponseHeaders(code, bytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(bytes);
+            os.close();
+        } catch (Exception ex) {
+            exchange.getResponseBody().close();
+            throw ex;
+        }
     }
 
     /**
@@ -837,6 +860,11 @@ public class RESTSystemConsole implements SystemConsole {
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
+            try {
+                exchange.getResponseBody().close();
+            } catch (IOException ex2) {
+                //  Can't do anything else
+            }
         }
     }
 
@@ -863,6 +891,11 @@ public class RESTSystemConsole implements SystemConsole {
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
+            try {
+                exchange.getResponseBody().close();
+            } catch (IOException ex2) {
+                //  Can't do anything else
+            }
         }
     }
 
@@ -887,6 +920,11 @@ public class RESTSystemConsole implements SystemConsole {
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
+            try {
+                exchange.getResponseBody().close();
+            } catch (IOException ex2) {
+                //  Can't do anything else
+            }
         }
     }
 
@@ -1094,6 +1132,12 @@ public class RESTSystemConsole implements SystemConsole {
         }
 
         if (!logList.isEmpty()) {
+            synchronized (_recentLogEntries) {
+                _recentLogEntries.addAll(logList);
+                while (_recentLogEntries.size() > MAX_RECENT_LOG_ENTRIES) {
+                    _recentLogEntries.remove(0);
+                }
+            }
             pokeClients(clientInfo -> clientInfo._pendingLogEntries.addAll(logList));
         }
     }
@@ -1119,7 +1163,6 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public boolean start() {
         try {
-//            _webListener.setup(); //TODO remove
             _listener.setup();
             _workerThread = new WorkerThread();
             _workerThread.start();
@@ -1135,7 +1178,6 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void stop() {
-//          _webListener.stop();    //TODO remove
         _listener.stop();
         _workerThread._terminate = true;
         _workerThread = null;
