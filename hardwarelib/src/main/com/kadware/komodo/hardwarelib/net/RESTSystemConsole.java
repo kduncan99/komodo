@@ -2,20 +2,17 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib;
+package com.kadware.komodo.hardwarelib.net;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.PathNames;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.commlib.ConsoleInputMessage;
-import com.kadware.komodo.commlib.ConsoleReadOnlyMessage;
-import com.kadware.komodo.commlib.ConsoleStatusMessage;
-import com.kadware.komodo.commlib.HttpMethod;
-import com.kadware.komodo.commlib.SecureServer;
-import com.kadware.komodo.commlib.JumpKeys;
-import com.kadware.komodo.commlib.PollResult;
-import com.kadware.komodo.commlib.SystemLogEntry;
+import com.kadware.komodo.baselib.HttpMethod;
+import com.kadware.komodo.baselib.SecureServer;
+import com.kadware.komodo.hardwarelib.SoftwareConfiguration;
+import com.kadware.komodo.hardwarelib.SystemConsole;
+import com.kadware.komodo.hardwarelib.SystemProcessor;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -173,7 +170,7 @@ public class RESTSystemConsole implements SystemConsole {
      * constructor
      * @param name node name of the SP
      */
-    RESTSystemConsole(
+    public RESTSystemConsole(
         final String name
     ) {
         _name = name;

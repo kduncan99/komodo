@@ -14,40 +14,42 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Deployment.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/PathNames.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/hardware.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/software.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/HardwareConfiguration.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SoftwareConfiguration.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/exceptions/InvalidMessageIdException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/web/dummy.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/main.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Configurator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/commlib.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleInputMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleInputMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleReadOnlyMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadOnlyMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleReadReplyMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadReplyMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/ConsoleStatusMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleStatusMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/HttpMethod.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/HttpMethod.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/JumpKeys.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/JumpKeys.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/PollResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/PollResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/SecureClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/SecureClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/SecureServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/SecureServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/commlib/src/main/com/kadware/komodo/commlib/SystemLogEntry.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/SystemLogEntry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Configurator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/configuration.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-3.5.0.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-3.5.0.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.min.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.min.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.structure.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.structure.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.structure.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.structure.min.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.theme.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.theme.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/jquery-ui.theme.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/library/jquery-ui.theme.min.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/systemConsole/systemConsole.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/jsonlib.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonArray.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonBoolean.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonEntity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonNull.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/JsonParser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/DataFormatJsonException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/JsonException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/main/com/kadware/komodo/jsonlib/exceptions/NotFoundJsonException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonBoolean.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jsonlib/src/test/com/kadware/komodo/jsonlib/Test_JsonNull.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/parserlib.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/Parser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/exceptions/DataFormatParserException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/exceptions/NotFoundParserException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/exceptions/OutOfDataParserException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/exceptions/ParserException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/main/com/kadware/komodo/parserlib/exceptions/StackEmptyParserException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parserlib/src/test/com/kadware/komodo/parserlib/Test_Parser.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,21 +119,6 @@
     </key>
   </component>
   <component name="RunManager" selected="JUnit.Test_SystemProcessor.exercise">
-    <configuration name="Test_SystemProcessor (1)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_SystemProcessor" />
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test_SystemProcessor" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
@@ -152,7 +139,7 @@
       <useClassPathOnly />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.net.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -165,12 +152,27 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test_SystemProcessor" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.net.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_SystemProcessor" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test_SystemProcessor.exercise" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <useClassPathOnly />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.net.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -248,7 +250,7 @@
       <workItem from="1586192598619" duration="45515000" />
       <workItem from="1586384336514" duration="1781000" />
       <workItem from="1586397858190" duration="36095000" />
-      <workItem from="1586522119249" duration="66918000" />
+      <workItem from="1586522119249" duration="68472000" />
     </task>
     <servers />
   </component>
@@ -272,10 +274,10 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1537" y="1071" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586375089902" />
-    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1586701271014">
+    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1586741244649">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586701271014" />
+    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586741244649" />
     <state x="2681" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1586357413362">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -296,22 +298,22 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586740688662">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586742324974">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586740688662" />
-    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586740688662">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586742324974" />
+    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586742324974">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586740688662" />
-    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586740688662">
+    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586742324974" />
+    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586742324974">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586740688662" />
-    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586740688662">
+    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586742324974" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586742324974">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586740688662" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586742324974" />
     <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586558986031">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>

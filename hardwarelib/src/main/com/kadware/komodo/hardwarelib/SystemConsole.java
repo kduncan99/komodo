@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Specifies the interfaces which must be implemented by any concrete system console class.
  */
 @SuppressWarnings("Duplicates")
-interface SystemConsole {
+public interface SystemConsole {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Primitive objects representing console traffic in either direction
@@ -38,7 +38,7 @@ interface SystemConsole {
      */
     class UnsolicitedInputMessage extends InputMessage {
 
-        UnsolicitedInputMessage(
+        public UnsolicitedInputMessage(
             final String text
         ) {
             super(text);
@@ -52,7 +52,7 @@ interface SystemConsole {
 
         public final int _messageId;        //  from the associated ReadReplyOutputMessage
 
-        ReadReplyInputMessage(
+        public ReadReplyInputMessage(
             final int messageId,
             final String text
         ) {
@@ -73,7 +73,7 @@ interface SystemConsole {
 
         public final String _text;
 
-        ReadOnlyMessage(
+        public ReadOnlyMessage(
             final String text
         ) {
             _text = text;

@@ -9,7 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="baselib" />
-    <orderEntry type="module" module-name="commlib" />
     <orderEntry type="module" module-name="minalib" />
     <orderEntry type="library" name="com.fasterxml.jackson.core:jackson-annotations:2.10.3" level="application" />
     <orderEntry type="library" name="com.fasterxml.jackson.core:jackson-databind:2.10.3" level="application" />

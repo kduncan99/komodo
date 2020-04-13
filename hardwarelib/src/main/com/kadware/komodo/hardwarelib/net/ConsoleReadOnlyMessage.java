@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.commlib;
+package com.kadware.komodo.hardwarelib.net;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;

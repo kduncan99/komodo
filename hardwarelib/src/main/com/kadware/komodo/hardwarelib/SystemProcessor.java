@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
+import com.kadware.komodo.hardwarelib.net.RESTSystemConsole;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
@@ -384,7 +385,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         return _hardwareConfiguration;
     }
 
-    SoftwareConfiguration getSoftwareConfiguration() {
+    public SoftwareConfiguration getSoftwareConfiguration() {
         return _softwareConfiguration;
     }
 
