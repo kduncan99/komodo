@@ -168,7 +168,7 @@ public interface SystemConsole {
      * Notifies the console that new system log entries are available - if it cares.
      */
     void postSystemLogEntries(
-        final KomodoAppender.LogEntry[] logEntries
+        final KomodoLoggingAppender.LogEntry[] logEntries
     );
 
     /**

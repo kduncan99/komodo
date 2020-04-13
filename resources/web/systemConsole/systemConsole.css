@@ -1,18 +1,5 @@
 /* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
 
-/* Do we need this one? */
-/*
-#consoleTabs{font-size: 14px;}
-.ui-widget-header {
-    background: #4040ff;
-    border: 1px solid #b9cd6d;
-    color: #FFFFFF;
-    font-weight: bold;
-}
-*/
-
-/* OS console stuff - monospaced characters at 12px, 24x132 display char width is ~6.8px
-   which gives us minheight of 24*(12+6) = 480, and minwidth of 80*8 = 574 */
 #Console {
     background-color: #373737;
     color: white;
@@ -21,12 +8,26 @@
 #ConsoleScreen {
     font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
     font-size: 12px;
-    min-height: 432px;
-    max-height: 432px;
-    min-width: 574px;
-    max-width: 574px;
+    min-width: 564px;
+    max-width: 564px;
     background-color: black;
     color: #00ff00;
+}
+
+ul.consoleOutput {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    min-width: 564px;
+    max-width: 564px;
+}
+
+li.consoleRow {
+    border-spacing: 0 0;
+    min-height: 14px;
+    max-height: 14px;
+    min-width: 564px;
+    max-width: 564px;
 }
 
 #consoleInputRow {
@@ -35,15 +36,13 @@
     font-size: 12px;
     min-height: 18px;
     max-height: 18px;
-    min-width: 574px;
-    max-width: 574px;
+    min-width: 564px;
+    max-width: 564px;
     background-color: black;
     color: #ffffff;
 }
 
-/* Logging console stuff - monospaced characters at 12px, (0:200)x132 display
-   which gives us minheight of 24*12 = 288, maxheight of 50*12 = 600,
-                  minwidth of 80*7.175 = 560, maxwidth of 132*7.175 = 924 */
+
 #Logging {
     background-color: #373737;
     color: white;

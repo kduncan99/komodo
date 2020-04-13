@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.KomodoAppender;
+import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import com.kadware.komodo.hardwarelib.net.RESTSystemConsole;
@@ -78,7 +78,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
     private static SystemProcessor _instance = null;
 
-    private KomodoAppender _appender;                   //  Log appender, so we can catch log entries
+    private KomodoLoggingAppender _appender;                   //  Log appender, so we can catch log entries
     private final SystemConsole _console;
     private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
@@ -108,7 +108,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             _instance = this;
         }
 
-        _appender = KomodoAppender.create();
+        _appender = KomodoLoggingAppender.create();
         LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
         org.apache.logging.log4j.core.config.Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
         logContext.updateLoggers();
@@ -330,7 +330,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             long now = System.currentTimeMillis();
             if (now > nextLogCheck) {
                 if (_appender.getMostRecentIdentifier() > _mostRecentLogIdentifier) {
-                    KomodoAppender.LogEntry[] appenderEntries = _appender.retrieveFrom(_mostRecentLogIdentifier + 1);
+                    KomodoLoggingAppender.LogEntry[] appenderEntries = _appender.retrieveFrom(_mostRecentLogIdentifier + 1);
                     if (appenderEntries.length > 0) {
                         _console.postSystemLogEntries(appenderEntries);
                         _mostRecentLogIdentifier = _appender.getMostRecentIdentifier();

@@ -35,7 +35,7 @@ public class Test_SystemProcessor {
             sp.consoleSendReadOnlyMessage("Enter H for help, Q to quit");
 
             Instant next5SecondAction = Instant.now().plusSeconds(5);
-            Instant next5MinuteAction = Instant.now().plusSeconds(5 * 60);
+            Instant next5MinuteAction = Instant.now().plusSeconds(30); //5 * 60);
 
             while (!_stop) {
                 //  Any input?
@@ -50,12 +50,12 @@ public class Test_SystemProcessor {
                 Instant now = Instant.now();
                 if (!now.isBefore(next5SecondAction)) {
                     fiveSecondAction(sp, now);
-                    next5SecondAction = now.plusSeconds(5);
+                    next5SecondAction = next5SecondAction.plusSeconds(5);
                 }
 
                 if (!now.isBefore(next5MinuteAction)) {
                     fiveMinuteAction(sp, now);
-                    next5MinuteAction = now.plusSeconds(5 * 60);
+                    next5MinuteAction = next5MinuteAction.plusSeconds(30);//5 * 60);
                 }
 
                 //  Sleep for a little bit
@@ -85,7 +85,8 @@ public class Test_SystemProcessor {
             final SystemProcessor sp,
             final Instant now
         ) {
-            String msg = String.format("%sT/D %s", padChars, now.toString());
+            String textPortion = now.toString().split("\\.")[0];
+            String msg = String.format("%sT/D %s", padChars, textPortion);
             msg = msg.substring(msg.length() - 80);
             sp.consoleSendReadOnlyMessage(msg);
         }

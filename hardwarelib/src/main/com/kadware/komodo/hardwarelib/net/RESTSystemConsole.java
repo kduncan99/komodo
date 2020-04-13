@@ -5,7 +5,7 @@
 package com.kadware.komodo.hardwarelib.net;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kadware.komodo.baselib.KomodoAppender;
+import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.PathNames;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.HttpMethod;
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
@@ -84,7 +84,7 @@ public class RESTSystemConsole implements SystemConsole {
         //  notification-ish things
         public boolean _inputDelivered = false;
         public boolean _isMasterChanged = false;
-        public List<KomodoAppender.LogEntry> _pendingLogEntries = new LinkedList<>();
+        public List<KomodoLoggingAppender.LogEntry> _pendingLogEntries = new LinkedList<>();
         public List<ReadOnlyMessage> _pendingReadOnlyMessages = new LinkedList<>();
         public boolean _updatedHardwareConfiguration = false;
         public boolean _updatedJumpKeys = false;
@@ -130,6 +130,7 @@ public class RESTSystemConsole implements SystemConsole {
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final String HTML_FILE_NAME = "systemConsole/systemConsole.html";
+    private static final String FAVICON_FILE_NAME = "systemConsole/favicon.png";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
     private static final int MAX_RECENT_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
@@ -150,7 +151,7 @@ public class RESTSystemConsole implements SystemConsole {
     private StatusMessage _latestStatusMessage = null;
 
     //  Most recent {n} log entries, so we can populate new sessions
-    private final List<KomodoAppender.LogEntry> _recentLogEntries = new LinkedList<>();
+    private final List<KomodoLoggingAppender.LogEntry> _recentLogEntries = new LinkedList<>();
 
     //  Input messages we've received from the console, but which have not yet been delivered to the operating system.
     private final Map<String, InputMessage> _pendingInputMessages = new LinkedHashMap<>();
@@ -425,7 +426,7 @@ public class RESTSystemConsole implements SystemConsole {
                     int entryCount = _clientInfo._pendingLogEntries.size();
                     newLogEntries = new SystemLogEntry[entryCount];
                     int ex = 0;
-                    for (KomodoAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
+                    for (KomodoLoggingAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
                         newLogEntries[ex++] = new SystemLogEntry(localEntry._timeMillis,
                                                                  localEntry._category,
                                                                  localEntry._source,
@@ -542,20 +543,31 @@ public class RESTSystemConsole implements SystemConsole {
 
                 String mimeType = "";
                 boolean textFile = false;
-                if (fileName.endsWith(".html")) {
-                    mimeType = "text/html";
-                    textFile = true;
-                } else if (fileName.endsWith(".css")) {
-                    mimeType = "text/css";
-                    textFile = true;
-                } else if (fileName.endsWith(".js")) {
-                    mimeType = "application/javascript";
-                    textFile = true;
-                } else if (fileName.endsWith(".json")) {
-                    mimeType = "text/json";
-                    textFile = true;
+                if (fileName.contains("favicon.ico")) {
+                    fileName = FAVICON_FILE_NAME;
+                    mimeType = "image/x-icon";
                 } else {
-                    mimeType = "application/octet-stream";
+                    if (fileName.endsWith(".html")) {
+                        mimeType = "text/html";
+                        textFile = true;
+                    } else if (fileName.endsWith(".css")) {
+                        mimeType = "text/css";
+                        textFile = true;
+                    } else if (fileName.endsWith(".bmp")) {
+                        mimeType = "image/bmp";
+                        textFile = false;
+                    } else if (fileName.endsWith(".png")) {
+                        mimeType = "image/png";
+                        textFile = false;
+                    } else if (fileName.endsWith(".js")) {
+                        mimeType = "application/javascript";
+                        textFile = true;
+                    } else if (fileName.endsWith(".json")) {
+                        mimeType = "text/json";
+                        textFile = true;
+                    } else {
+                        mimeType = "application/octet-stream";
+                    }
                 }
 
                 String fullName = String.format("%s%s", _webDirectory, fileName);
@@ -565,9 +577,6 @@ public class RESTSystemConsole implements SystemConsole {
                 } else {
                     respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
                 }
-            } catch (NoSuchFileException ex) {
-                System.out.println(String.format("%s %s", ex.getClass().toString(), ex.getMessage()));//TODO remove
-                respondWithText(exchange, HttpURLConnection.HTTP_NOT_FOUND, "Cannot find requested file");
             } catch (Throwable t) {
                 LOGGER.catching(t);
             }
@@ -751,6 +760,7 @@ public class RESTSystemConsole implements SystemConsole {
 
     /**
      * Convenient method for handling the situation where we cannot find something which was requested by the client.
+     * This is NOT the same thing as not finding something which definitely should be there.
      */
     private void respondNotFound(
         final HttpExchange exchange,
@@ -784,30 +794,38 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String mimeType,
         final String fileName
-    ) throws IOException {
+    ) {
         LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
         byte[] bytes;
         try {
             bytes = Files.readAllBytes(Paths.get(fileName));
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            exchange.sendResponseHeaders(code, 0);
-            OutputStream os = exchange.getResponseBody();
-            os.write(String.format("Cannot find requested file '%s'", fileName).getBytes());
-            os.close();
-            return;
+            bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+            try {
+                exchange.sendResponseHeaders(code, bytes.length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(bytes);
+                exchange.close();
+                return;
+            } catch (IOException ex2) {
+                LOGGER.catching(ex2);
+                exchange.close();
+                return;
+            }
         }
 
-        exchange.getResponseHeaders().add("Content-type", mimeType);
-        exchange.sendResponseHeaders(code, bytes.length);
+        exchange.getResponseHeaders().add("content-type", mimeType);
+        exchange.getResponseHeaders().add("Cache-Control", "no-store");
         try {
+            System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
+            exchange.sendResponseHeaders(code, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
-            os.close();
         } catch (Exception ex) {
             LOGGER.catching(ex);
-            exchange.getResponseBody().close();
-            throw ex;
+        } finally {
+            exchange.close();
         }
     }
 
@@ -823,31 +841,37 @@ public class RESTSystemConsole implements SystemConsole {
         final int code,
         final String mimeType,
         final String fileName
-    ) throws IOException {
+    ) {
         LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        String message;
+        List<String> textLines;
         try {
-            message = Files.readString(Paths.get(fileName));
+            textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            exchange.sendResponseHeaders(code, 0);
-            OutputStream os = exchange.getResponseBody();
-            os.write(String.format("Cannot find requested file '%s'", fileName).getBytes());
-            os.close();
-            return;
+            byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+            try {
+                exchange.sendResponseHeaders(code, bytes.length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(bytes);
+                return;
+            } catch (IOException ex2) {
+                LOGGER.catching(ex2);
+                exchange.close();
+                return;
+            }
         }
 
-        exchange.getResponseHeaders().add("Content-type", mimeType);
-        byte[] bytes = message.getBytes();
-        exchange.sendResponseHeaders(code, bytes.length);
+        byte[] bytes = String.join("\r\n", textLines).getBytes();
+        exchange.getResponseHeaders().add("content-type", mimeType);
+        exchange.getResponseHeaders().add("Cache-Control", "no-store");
         try {
+            exchange.sendResponseHeaders(code, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
-            os.close();
         } catch (Exception ex) {
             LOGGER.catching(ex);
-            exchange.getResponseBody().close();
-            throw ex;
+        } finally {
+            exchange.close();
         }
     }
 
@@ -863,8 +887,9 @@ public class RESTSystemConsole implements SystemConsole {
     ) {
         LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
         System.out.println("-->" + content);   //TODO remove
+        exchange.getResponseHeaders().add("Content-type", "text/html");
+        exchange.getResponseHeaders().add("Cache-Control", "no-store");
         try {
-            exchange.getResponseHeaders().add("Content-type", "text/html");
             exchange.sendResponseHeaders(code, content.length());
             OutputStream os = exchange.getResponseBody();
             os.write(content.getBytes());
@@ -892,6 +917,7 @@ public class RESTSystemConsole implements SystemConsole {
             System.out.println("-->" + content);   //TODO remove
             LOGGER.trace(String.format("  JSON:%s", content));
             exchange.getResponseHeaders().add("Content-type", "application/json");
+            exchange.getResponseHeaders().add("Cache-Control", "no-store");
             exchange.sendResponseHeaders(code, content.length());
             OutputStream os = exchange.getResponseBody();
             os.write(content.getBytes());
@@ -1121,10 +1147,10 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void postSystemLogEntries(
-        final KomodoAppender.LogEntry[] logEntries
+        final KomodoLoggingAppender.LogEntry[] logEntries
     ) {
-        List<KomodoAppender.LogEntry> logList = new LinkedList<>();
-        for (KomodoAppender.LogEntry logEntry : logEntries) {
+        List<KomodoLoggingAppender.LogEntry> logList = new LinkedList<>();
+        for (KomodoLoggingAppender.LogEntry logEntry : logEntries) {
             boolean avoid = false;
             for (String s : _logReportingBlackList) {
                 if (s.equalsIgnoreCase(logEntry._source)) {

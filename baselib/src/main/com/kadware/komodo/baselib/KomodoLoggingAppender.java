@@ -18,7 +18,7 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 /**
  * An application-specific logging appender
  */
-public class KomodoAppender extends AbstractAppender {
+public class KomodoLoggingAppender extends AbstractAppender {
 
     public static class LogEntry {
         public final Long _identifier;
@@ -56,17 +56,17 @@ public class KomodoAppender extends AbstractAppender {
     /**
      * Constructor
      */
-    private KomodoAppender(
+    private KomodoLoggingAppender(
         PatternLayout layout
     ) {
         super("KomodoAppender", null, layout, true, null);
     }
 
-    public static KomodoAppender create() {
+    public static KomodoLoggingAppender create() {
         LoggerContext context = LoggerContext.getContext(false);
         Configuration config = context.getConfiguration();
         PatternLayout layout = PatternLayout.createDefaultLayout(config);
-        KomodoAppender appender = new KomodoAppender(layout);
+        KomodoLoggingAppender appender = new KomodoLoggingAppender(layout);
         appender.start();
 
         config.addAppender(appender);

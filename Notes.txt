@@ -1,6 +1,9 @@
 -- TODO InProgress
+Need to separate WEB directory in deployment scheme
+Need a common test method to build a temporary deployment, so we don't keep overwriting /config
+
 * hardwarelib
-RESTSystemConsole needs to use an Executor service for handling threads
+RESTSystemConsole needs to spin off threads for all handlers, not just poll.
 How to derive the resources directory in production vs. unit test models?
     Can't be in configurator, because that file is *in* the resources directory.
 IP: SYSC subfunctions need unit tests
@@ -10,6 +13,9 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 *systemConsole
+Refreshing dies mostly - why?
+  for one thing, close the exchange object, not the streams
+  we *must* call sendResponseHeaders before calling getResponseBody()
 OS Console page
   Needs an input text field with a blinking cursor
   Needs to function
