@@ -6892,6 +6892,7 @@ public class InstructionProcessor extends Processor implements Worker {
         private static final int SS_INVALID_ADDRESS = 03;
         private static final int SS_INVALID_SIZE = 04;
         private static final int SS_ACCESS_DENIED = 05;
+        private static final int SS_BAD_MESSAGE_ID = 06;
         private static final int SS_NO_DATA = 010;
 
         private class VirtualAddressInfo {
@@ -7046,7 +7047,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_SEND_STATUS: {
-                    //  Packet size is 3+ words
+                    //  Packet size is 3 - 8 words depending upon the value of U+0,S3
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,S3:         Number of messages (at least 1, no more than 6)
@@ -7059,9 +7060,9 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+2:            Virtual address of buffer containing first message in ASCII
                     //  U+3:            Virtual address of buffer containing second message in ASCII
                     //  U+4:            Virtual address of buffer containing third message in ASCII if existing
-                    //  U+4:            Virtual address of buffer containing fourth message in ASCII if existing
-                    //  U+4:            Virtual address of buffer containing fifth message in ASCII if existing
-                    //  U+4:            Virtual address of buffer containing sixth message in ASCII if existing
+                    //  U+5:            Virtual address of buffer containing fourth message in ASCII if existing
+                    //  U+6:            Virtual address of buffer containing fifth message in ASCII if existing
+                    //  U+7:            Virtual address of buffer containing sixth message in ASCII if existing
                     long[] operands = new long[4];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
 
@@ -7144,10 +7145,14 @@ public class InstructionProcessor extends Processor implements Worker {
                     VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadReplyMessage(messageId, msg, maxReplyChars);
+                        try {
+                            SystemProcessor.getInstance().consoleSendReadReplyMessage(messageId, msg, maxReplyChars);
+                            operands[0] = Word36.setS2(operands[0], vaInfo._status);
+                        } catch (InvalidMessageIdException ex) {
+                            operands[0] = Word36.setS2(operands[0], SS_BAD_MESSAGE_ID);
+                        }
                     }
 
-                    operands[0] = Word36.setS2(operands[0], vaInfo._status);
                     //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;

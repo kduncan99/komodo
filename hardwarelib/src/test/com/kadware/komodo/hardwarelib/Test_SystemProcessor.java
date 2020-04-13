@@ -4,7 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
@@ -16,61 +20,83 @@ public class Test_SystemProcessor {
 
     private static final Logger LOGGER = LogManager.getLogger("TESTER");
 
-    /**
-     * This is not an actual unit test - run this in order to test Console
-     */
+    private static class ConsoleExerciser {
 
-    boolean _primitiveStopFlag = false;
+        private static final String padChars = "                                                                                ";
+        private int _inputCount = 0;
+        boolean _stop = false;
 
-    @Test
-    public void primitive(
-    ) throws MaxNodesException  {
-        SystemProcessor p = InventoryManager.getInstance().createSystemProcessor();
-        _primitiveStopFlag = false;
-        long lastStamp = System.currentTimeMillis();
-        int inputCount = 0;
-        LOGGER.info("Starting");
-        p.consoleSendReadOnlyMessage("-- Console Interaction Test Starts --");
-        p.consoleSendReadOnlyMessage("Enter H for help, Q to quit");
+        public void exercise(
+        ) throws MaxNodesException {
+            SystemProcessor sp = InventoryManager.getInstance().createSystemProcessor();
 
-        while (!_primitiveStopFlag) {
-            long now = System.currentTimeMillis();
-            long elapsed = now - lastStamp;
-            if (elapsed > 5 * 1000) {
-                String[] sysmsg = new String [2];
-                sysmsg[0] = String.format("Elapsed: %dms", elapsed);
-                sysmsg[1] = String.format("Inputs: %d", inputCount);
-                p.consoleSendStatusMessage(sysmsg);
-                LOGGER.info(sysmsg[0]);
-                lastStamp = now;
+            LOGGER.info("Console Exerciser Starting");
+            sp.consoleSendReadOnlyMessage("-- Console Interaction Test Starts --");
+            sp.consoleSendReadOnlyMessage("Enter H for help, Q to quit");
+
+            Instant next5SecondAction = Instant.now().plusSeconds(5);
+            Instant next5MinuteAction = Instant.now().plusSeconds(5 * 60);
+
+            while (!_stop) {
+                //  Any input?
+                try {
+                    String msg = sp.consolePollInputMessage();
+                    //TODO do something with it
+                } catch (InvalidMessageIdException ex) {
+                    //TODO bitch about it
+                }
+
+                //  Do periodic things
+                Instant now = Instant.now();
+                if (!now.isBefore(next5SecondAction)) {
+                    fiveSecondAction(sp, now);
+                    next5SecondAction = now.plusSeconds(5);
+                }
+
+                if (!now.isBefore(next5MinuteAction)) {
+                    fiveMinuteAction(sp, now);
+                    next5MinuteAction = now.plusSeconds(5 * 60);
+                }
+
+                //  Sleep for a little bit
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    LOGGER.catching(ex);
+                }
             }
 
-//            String input = p.consolePollInputMessage();
-//            if (input != null) {
-//                processInput(p, input.trim().toUpperCase());
-//            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-            }
+            LOGGER.info("Console Exerciser Done");
         }
 
-        p.consoleSendReadOnlyMessage("-- Console Interaction Test Ends --");
-        LOGGER.info("Ending");
+        public void fiveSecondAction(
+            final SystemProcessor sp,
+            final Instant now
+        ) {
+            String[] messages = new String[2];
+            String timeStr = now.toString().split("\\.")[0];
+            messages[0] = String.format("Time %s%s", timeStr, padChars).substring(0, 80);
+            messages[1] = String.format("Inputs:%d  Jobs:%d%s", _inputCount, 0, padChars).substring(0, 80);
+            sp.consoleSendStatusMessage(messages);
+            LOGGER.info("Poll");
+        }
+
+        public void fiveMinuteAction(
+            final SystemProcessor sp,
+            final Instant now
+        ) {
+            String msg = String.format("%sT/D %s", padChars, now.toString());
+            msg = msg.substring(msg.length() - 80);
+            sp.consoleSendReadOnlyMessage(msg);
+        }
     }
 
-    public void processInput(
-        SystemProcessor p,
-        String input
-    ) {
-        LOGGER.info(String.format("Input:%s", input));
-        if (input.equals("H")) {
-            p.consoleSendReadOnlyMessage("Yes, you do need help");
-        } else if (input.equals("Q")) {
-            _primitiveStopFlag = true;
-        } else {
-            p.consoleSendReadOnlyMessage("What?");
-        }
+    //  Note that this ONLY works if you run THIS TEST CASE EXPLICITLY.
+    //  If you try to run the module, the environment variables are not set up.
+    @Test
+    public void exercise(
+    ) throws MaxNodesException {
+        new ConsoleExerciser().exercise();
     }
 
     //  TODO Need a variety of unit tests here

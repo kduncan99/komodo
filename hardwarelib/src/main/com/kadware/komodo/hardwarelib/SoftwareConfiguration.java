@@ -6,15 +6,18 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.Credentials;
+import com.kadware.komodo.baselib.PathNames;
 import java.io.File;
 import java.io.IOException;
 
-public class Configurator {
+public class SoftwareConfiguration {
+
+    private static final String FILE_NAME = PathNames.CONFIG_ROOT_DIRECTORY + "software.json";
 
     public static class Version {
         @JsonProperty("major")      public final int _major;
@@ -40,10 +43,11 @@ public class Configurator {
     @JsonProperty("credentials")        public final Credentials _adminCredentials;
     @JsonProperty("systemIdentifier")   public final String _systemIdentifier;
     @JsonProperty("version")            public final Version _version;
-     public final String _versionString;
+
+    public final String _versionString;
 
     @JsonCreator
-    public Configurator(
+    public SoftwareConfiguration(
         @JsonProperty("copyright") final String copyright,
         @JsonProperty("version") final Version version,
         @JsonProperty("systemIdentifier") final String systemIdentifier,
@@ -65,20 +69,25 @@ public class Configurator {
         _adminCredentials = adminCredentials;
     }
 
-    /**
-     * Creates a Configurator object from a JSON-formatted file
-     */
-    public static Configurator read(
+
+    public static SoftwareConfiguration read(
+    ) throws IOException {
+        return read(FILE_NAME);
+    }
+
+    public static SoftwareConfiguration read(
         final String fileName
     ) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper.readValue(new File(fileName), Configurator.class);
+        return mapper.readValue(new File(fileName), SoftwareConfiguration.class);
     }
 
-    /**
-     * Writes a Configurator object to a JSON-formatted file
-     */
+    public void write(
+    ) throws IOException {
+        write(FILE_NAME);
+    }
+
     public void write(
         final String fileName
     ) throws IOException {

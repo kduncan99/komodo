@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.KomodoAppender;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
@@ -77,12 +78,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     private static SystemProcessor _instance = null;
 
     private KomodoAppender _appender;                   //  Log appender, so we can catch log entries
-    private Configurator _configurator;
+    private final SystemConsole _console;
     private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
-    private long _mostRecentLogIdentifier = 0;
+    private HardwareConfiguration _hardwareConfiguration = null;
     private long _jumpKeys = 0;
-    private final SystemConsole _console;
+    private long _mostRecentLogIdentifier = 0;
+    private SoftwareConfiguration _softwareConfiguration = null;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -110,17 +112,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         org.apache.logging.log4j.core.config.Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
         logContext.updateLoggers();
 
-        try {
-            _configurator = Configurator.read(CONFIGURATION_FILENAME);
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            throw new RuntimeException("Cannot load configuration file");
-        }
-
-        _console = new RESTSystemConsole(name + "Console",
-                                         _configurator,
-                                         "../resources/systemConsole",// TODO should not hardcode this, what to do?
-                                         this);
+        _console = new RESTSystemConsole(name + "Console");
     }
 
     /**
@@ -129,10 +121,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     public SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _instance = this;
-        _console = new RESTSystemConsole("SP0Console",
-                                         _configurator,
-                                         "../resources/systemConsole",
-                                         this);
+        _console = new RESTSystemConsole("SP0Console");
     }
 
     /**
@@ -326,6 +315,14 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     public void run() {
         LOGGER.info(_name + " worker thread starting");
 
+        try {
+            _hardwareConfiguration = HardwareConfiguration.read();
+            _softwareConfiguration = SoftwareConfiguration.read();
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+            LOGGER.error("Cannot start SP - configuration file is unreadable");
+        }
+
         _console.start();
         long nextLogCheck = System.currentTimeMillis() + LOG_PERIODICITY_MSECS;
         while (!_workerTerminate) {
@@ -379,20 +376,47 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     }
 
 
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Some getters, for other things within this package
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    HardwareConfiguration getHardwareConfiguration() {
+        return _hardwareConfiguration;
+    }
+
+    SoftwareConfiguration getSoftwareConfiguration() {
+        return _softwareConfiguration;
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Public methods - for other processors to invoke
     //  Mostly for InstructionProcessor's SYSC instruction
-    //  ------------------------------------------------------------------------
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO what do do here?
-//    String consolePollInputMessage() {
-//        SystemConsole.InputMessage im = _console.pollInputMessage();
-//        if (im == null) {
-//            return null;
-//        } else {
-//            return im._text;
-//        }
-//    }
+    /**
+     * Reads input from the system console.
+     * If no input is available, the return value is null.
+     * If input is available, unsolicited input is returned with a single leading blank,
+     * while responses to read-reply messages are returned in the format {n}{s} where {n} is the ASCII
+     * representation of the message id followed by the text (if any).
+     */
+    String consolePollInputMessage(
+    ) throws InvalidMessageIdException {
+        SystemConsole.InputMessage im = _console.pollInputMessage();
+        if (im instanceof SystemConsole.ReadReplyInputMessage) {
+            SystemConsole.ReadReplyInputMessage rrim = (SystemConsole.ReadReplyInputMessage) im;
+            if ((rrim._messageId < 0) || (rrim._messageId > 9)) {
+                throw new InvalidMessageIdException(rrim._messageId);
+            }
+            return String.format("%d%s", rrim._messageId, rrim._text);
+        } else if (im instanceof SystemConsole.UnsolicitedInputMessage) {
+            SystemConsole.UnsolicitedInputMessage uim = (SystemConsole.UnsolicitedInputMessage) im;
+            return String.format(" %s", uim._text);
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Resets the conceptual system console
@@ -423,7 +447,10 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int messageId,
         final String message,
         final int maxReplyLength
-    ) {
+    ) throws InvalidMessageIdException {
+        if ((messageId < 0) || (messageId > 9)) {
+            throw new InvalidMessageIdException(messageId);
+        }
         _console.postReadReplyMessage(new SystemConsole.ReadReplyMessage(messageId, message, maxReplyLength));
     }
 

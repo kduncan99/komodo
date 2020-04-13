@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoAppender;
+import com.kadware.komodo.baselib.PathNames;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.commlib.ConsoleInputMessage;
 import com.kadware.komodo.commlib.ConsoleReadOnlyMessage;
@@ -131,7 +132,7 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
-    private static final String HTML_FILE_NAME = "systemConsole.html";
+    private static final String HTML_FILE_NAME = "systemConsole/systemConsole.html";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
     private static final int MAX_RECENT_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
@@ -143,11 +144,9 @@ public class RESTSystemConsole implements SystemConsole {
     private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
 
     private final Map<String, ClientInfo> _clientInfos = new HashMap<>();
-    private final Configurator _configurator;
-    private final JumpKeyPanel _jumpKeyPanel;
     private final Listener _listener;
     private final String _name;
-    private final String _webRootPath;
+    private final String _webDirectory;
     private WorkerThread _workerThread = null;
 
     //  This is always the latest status message. Clients may pick it up at any time.
@@ -175,16 +174,11 @@ public class RESTSystemConsole implements SystemConsole {
      * @param name node name of the SP
      */
     RESTSystemConsole(
-        final String name,
-        final Configurator configurator,
-        final String webRootPath,
-        final JumpKeyPanel jumpKeyPanel
+        final String name
     ) {
         _name = name;
-        _configurator = configurator;
-        _jumpKeyPanel = jumpKeyPanel;
         _listener = new Listener(443);
-        _webRootPath = webRootPath;
+        _webDirectory = PathNames.RESOURCES_ROOT_DIRECTORY + "web/";
     }
 
 
@@ -229,7 +223,8 @@ public class RESTSystemConsole implements SystemConsole {
 
                 //  For GET - return the settings as both a composite value and a map of individual jump key settings
                 if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.GET._value)) {
-                    JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
+                    SystemProcessor sp = SystemProcessor.getInstance();
+                    JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
                     respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
                     return;
                 }
@@ -238,6 +233,7 @@ public class RESTSystemConsole implements SystemConsole {
                 //  If it has no composite value, but it has component values, use them to individually set the jump keys.
                 //  If it has neither, reject the PUT.
                 if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.PUT._value)) {
+                    SystemProcessor sp = SystemProcessor.getInstance();
                     JumpKeys content;
                     try {
                         content = new ObjectMapper().readValue(exchange.getRequestBody(), JumpKeys.class);
@@ -252,7 +248,7 @@ public class RESTSystemConsole implements SystemConsole {
                             return;
                         }
 
-                        _jumpKeyPanel.setJumpKeys(new Word36(content._compositeValue));
+                        sp.setJumpKeys(new Word36(content._compositeValue));
                         JumpKeys jumpKeysResponse = createJumpKeys(content._compositeValue);
                         respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
                         return;
@@ -267,9 +263,9 @@ public class RESTSystemConsole implements SystemConsole {
                             }
 
                             boolean setting = entry.getValue();
-                            _jumpKeyPanel.setJumpKey(jumpKeyId, setting);
+                            sp.setJumpKey(jumpKeyId, setting);
 
-                            JumpKeys jumpKeysResponse = createJumpKeys(_jumpKeyPanel.getJumpKeys().getW());
+                            JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
                             respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
                             return;
                         }
@@ -418,7 +414,8 @@ public class RESTSystemConsole implements SystemConsole {
 
                 Long jumpKeyValue = null;
                 if (_clientInfo._updatedJumpKeys) {
-                    jumpKeyValue = _jumpKeyPanel.getJumpKeys().getW();
+                    SystemProcessor sp = SystemProcessor.getInstance();
+                    jumpKeyValue = sp.getJumpKeys().getW();
                 }
 
                 ConsoleStatusMessage latestStatusMessage = null;
@@ -502,11 +499,6 @@ public class RESTSystemConsole implements SystemConsole {
                 }
 
                 synchronized (_recentLogEntries) {
-                    //TODO remove block
-                    for (KomodoAppender.LogEntry le : _recentLogEntries) {
-                        System.out.println(String.format("%d %s %s", le._timeMillis, le._source, le._message));
-                    }
-                    //TODO end remove block
                     clientInfo._pendingLogEntries.addAll(_recentLogEntries);
                 }
 
@@ -547,7 +539,6 @@ public class RESTSystemConsole implements SystemConsole {
                 if (fileName.startsWith("/")) {
                     fileName = fileName.substring(1);
                 }
-
                 if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
                     fileName = HTML_FILE_NAME;
                 }
@@ -570,8 +561,8 @@ public class RESTSystemConsole implements SystemConsole {
                     mimeType = "application/octet-stream";
                 }
 
-                String fullName = String.format("%s/%s", _webRootPath, fileName);
-                LOGGER.trace("fullName" + fullName);//TODO remove
+                String fullName = String.format("%s%s", _webDirectory, fileName);
+                LOGGER.trace("fullName:" + fullName);//TODO remove
                 if (textFile) {
                     respondWithTextFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
                 } else {
@@ -797,15 +788,27 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
+        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+        byte[] bytes;
         try {
-            LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-            byte[] bytes = Files.readAllBytes(Paths.get(fileName));
-            exchange.getResponseHeaders().add("Content-type", mimeType);
-            exchange.sendResponseHeaders(code, bytes.length);
+            bytes = Files.readAllBytes(Paths.get(fileName));
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+            exchange.sendResponseHeaders(code, 0);
+            OutputStream os = exchange.getResponseBody();
+            os.write(String.format("Cannot find requested file '%s'", fileName).getBytes());
+            os.close();
+            return;
+        }
+
+        exchange.getResponseHeaders().add("Content-type", mimeType);
+        exchange.sendResponseHeaders(code, bytes.length);
+        try {
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
             os.close();
         } catch (Exception ex) {
+            LOGGER.catching(ex);
             exchange.getResponseBody().close();
             throw ex;
         }
@@ -824,17 +827,28 @@ public class RESTSystemConsole implements SystemConsole {
         final String mimeType,
         final String fileName
     ) throws IOException {
+        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+        String message;
         try {
-            LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-            String message = Files.readString(Paths.get(fileName));
-            exchange.getResponseHeaders().add("Content-type", mimeType);
-            byte[] bytes = message.getBytes();
-            LOGGER.trace(String.format("=========== bytes size=%d", bytes.length));//TODO remove this
-            exchange.sendResponseHeaders(code, bytes.length);
+            message = Files.readString(Paths.get(fileName));
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+            exchange.sendResponseHeaders(code, 0);
+            OutputStream os = exchange.getResponseBody();
+            os.write(String.format("Cannot find requested file '%s'", fileName).getBytes());
+            os.close();
+            return;
+        }
+
+        exchange.getResponseHeaders().add("Content-type", mimeType);
+        byte[] bytes = message.getBytes();
+        exchange.sendResponseHeaders(code, bytes.length);
+        try {
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
             os.close();
         } catch (Exception ex) {
+            LOGGER.catching(ex);
             exchange.getResponseBody().close();
             throw ex;
         }
@@ -860,11 +874,7 @@ public class RESTSystemConsole implements SystemConsole {
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            try {
-                exchange.getResponseBody().close();
-            } catch (IOException ex2) {
-                //  Can't do anything else
-            }
+            exchange.close();
         }
     }
 
@@ -891,11 +901,7 @@ public class RESTSystemConsole implements SystemConsole {
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            try {
-                exchange.getResponseBody().close();
-            } catch (IOException ex2) {
-                //  Can't do anything else
-            }
+            exchange.close();
         }
     }
 
@@ -911,20 +917,18 @@ public class RESTSystemConsole implements SystemConsole {
     ) {
         LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
         System.out.println("-->" + content);   //TODO remove
+
+        exchange.getResponseHeaders().add("Content-type", "text/plain");
+        byte[] bytes = content.getBytes();
+
         try {
-            exchange.getResponseHeaders().add("Content-type", "text/plain");
-            byte[] bytes = content.getBytes();
             exchange.sendResponseHeaders(code, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
             os.close();
         } catch (IOException ex) {
             LOGGER.catching(ex);
-            try {
-                exchange.getResponseBody().close();
-            } catch (IOException ex2) {
-                //  Can't do anything else
-            }
+            exchange.close();
         }
     }
 
@@ -947,8 +951,10 @@ public class RESTSystemConsole implements SystemConsole {
                     if (unBasedSplit.length == 2) {
                         String givenUserName = unBasedSplit[0];
                         String givenClearTextPassword = unBasedSplit[1];
-                        if (givenUserName.equalsIgnoreCase(_configurator._adminCredentials._userName)) {
-                            return _configurator._adminCredentials.validatePassword(givenClearTextPassword);
+                        SystemProcessor sp = SystemProcessor.getInstance();
+                        SoftwareConfiguration sc = sp.getSoftwareConfiguration();
+                        if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
+                            return sc._adminCredentials.validatePassword(givenClearTextPassword);
                         }
                     }
                 }
@@ -1050,6 +1056,8 @@ public class RESTSystemConsole implements SystemConsole {
                 Map.Entry<String, InputMessage> firstEntry = iter.next();
                 String clientId = firstEntry.getKey();
                 result = firstEntry.getValue();
+                iter.remove();
+
                 ClientInfo cinfo = _clientInfos.get(clientId);
                 if (cinfo != null) {
                     cinfo._inputDelivered = true;
@@ -1059,6 +1067,7 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
         }
+
         return result;
     }
 
@@ -1161,7 +1170,8 @@ public class RESTSystemConsole implements SystemConsole {
      * Starts this entity
      */
     @Override
-    public boolean start() {
+    public boolean start(
+    ) {
         try {
             _listener.setup();
             _workerThread = new WorkerThread();

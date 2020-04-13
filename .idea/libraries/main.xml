@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="main">
-    <CLASSES />
-    <JAVADOC />
-    <SOURCES>
-      <root url="file://$PROJECT_DIR$/parserlib/src/main" />
-    </SOURCES>
-  </library>
-</component>
