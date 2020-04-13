@@ -18,6 +18,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -181,6 +182,304 @@ public class RESTSystemConsole implements SystemConsole {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Abstract classes for the various handlers and handler threads
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * One of these exists per endpoint - the implementing class is endpoint-specific,
+     * and knows how to construct an endpoint-specific handler thread to handle each HTTP request for the endpoint.
+     */
+    private static abstract class DelegatingHttpHandler implements HttpHandler {
+
+        public void handle(
+            final HttpExchange exchange
+        ) {
+            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
+            delegate(exchange);
+        }
+
+        public abstract void delegate(
+            final HttpExchange exchange
+        );
+    }
+
+    /**
+     * We get a new one of these for every HTTP request that comes in.
+     */
+    private abstract class HandlerThread extends Thread {
+
+        final HttpExchange _exchange;
+        final InputStream _requestBody;
+        final Headers _requestHeaders;
+        final String _requestMethod;
+
+        public HandlerThread(
+            final HttpExchange exchange
+        ) {
+            _exchange = exchange;
+            _requestBody = _exchange.getRequestBody();
+            _requestHeaders = _exchange.getRequestHeaders();
+            _requestMethod = _exchange.getRequestMethod();
+        }
+
+        @Override
+        public abstract void run();
+
+        /**
+         * Checks the headers for a client id, then locates the corresponding ClientInfo object.
+         * Returns null if ClientInfo object is not found or is unspecified.
+         * Serves as validation for clients which have presumably previously done a POST to /session
+         */
+        ClientInfo findClient(
+        ) {
+            List<String> values = _requestHeaders.get("Client");
+            if ((values != null) && (values.size() == 1)) {
+                String clientId = values.get(0);
+                synchronized (_clientInfos) {
+                    ClientInfo clientInfo = _clientInfos.get(clientId);
+                    if (clientInfo != null) {
+                        return clientInfo;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * For debugging
+         */
+        public String getStackTrace(
+            final Throwable t
+        ) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(t.toString());
+            sb.append("\n");
+            for (StackTraceElement e : t.getStackTrace()) {
+                sb.append(e.toString());
+                sb.append("\n");
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Convenient method for handling the situation where a method is requested which is not supported on the endpoint
+         */
+        void respondBadMethod() {
+            String response = String.format("Method %s is not supported for the given endpoint\n", _requestMethod);
+            respondWithText(HttpURLConnection.HTTP_BAD_METHOD, response);
+        }
+
+        /**
+         * Convenient method for handling the situation where a particular request was in error.
+         */
+        void respondBadRequest(
+            final String explanation
+        ) {
+            respondWithText(HttpURLConnection.HTTP_BAD_REQUEST, explanation + "\n");
+        }
+
+        /**
+         * Convenient method for handling the situation where no session exists
+         */
+        void respondNoSession() {
+            String response = "Forbidden - session not established\n";
+            respondWithText(HttpURLConnection.HTTP_FORBIDDEN, response);
+        }
+
+        /**
+         * Convenient method for handling the situation where we cannot find something which was requested by the client.
+         * This is NOT the same thing as not finding something which definitely should be there.
+         */
+        void respondNotFound(
+            final String message
+        ) {
+            respondWithText(java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
+        }
+
+        /**
+         * Convenient method for handling an internal server error
+         */
+        void respondServerError(
+            final String message
+        ) {
+            respondWithText(HttpURLConnection.HTTP_INTERNAL_ERROR, message + "\n");
+        }
+
+        /**
+         * Convenient method for setting up a 401 response
+         */
+        void respondUnauthorized() {
+            String response = "Unauthorized - credentials not provided or are invalid\nPlease enter credentials\n";
+            respondWithText(HttpURLConnection.HTTP_UNAUTHORIZED, response);
+        }
+
+        /**
+         * For responding to the client with the content of a binary file
+         */
+        void respondWithBinaryFile(
+            final int code,
+            final String mimeType,
+            final String fileName
+        ) {
+            LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            byte[] bytes;
+            try {
+                bytes = Files.readAllBytes(Paths.get(fileName));
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+                try {
+                    _exchange.sendResponseHeaders(code, bytes.length);
+                    OutputStream os = _exchange.getResponseBody();
+                    os.write(bytes);
+                    _exchange.close();
+                    return;
+                } catch (IOException ex2) {
+                    LOGGER.catching(ex2);
+                    _exchange.close();
+                    return;
+                }
+            }
+
+            _exchange.getResponseHeaders().add("content-type", mimeType);
+            _exchange.getResponseHeaders().add("Cache-Control", "no-store");
+            try {
+                System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
+                _exchange.sendResponseHeaders(code, bytes.length);
+                OutputStream os = _exchange.getResponseBody();
+                os.write(bytes);
+            } catch (Exception ex) {
+                LOGGER.catching(ex);
+            } finally {
+                _exchange.close();
+            }
+        }
+
+        /**
+         * Convenient method for sending responses containing JSON
+         * @param code The response code - 200, 201, 403, etc - most responses >= 300 won't necessarily have a JSON formatted body
+         */
+        void respondWithJSON(
+            final int code,
+            final Object object
+        ) {
+            LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                String content = mapper.writeValueAsString(object);
+                System.out.println("-->" + content);   //TODO remove
+                LOGGER.trace(String.format("  JSON:%s", content));
+                _exchange.getResponseHeaders().add("Content-type", "application/json");
+                _exchange.getResponseHeaders().add("Cache-Control", "no-store");
+                _exchange.sendResponseHeaders(code, content.length());
+                OutputStream os = _exchange.getResponseBody();
+                os.write(content.getBytes());
+                os.close();
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                _exchange.close();
+            }
+        }
+
+        /**
+         * Convenient method for sending responses containing straight text
+         * @param code The response code - 200, 201, 403, etc
+         */
+        void respondWithText(
+            final int code,
+            final String content
+        ) {
+            LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
+            System.out.println("-->" + content);   //TODO remove
+
+            _exchange.getResponseHeaders().add("Content-type", "text/plain");
+            byte[] bytes = content.getBytes();
+
+            try {
+                _exchange.sendResponseHeaders(code, bytes.length);
+                OutputStream os = _exchange.getResponseBody();
+                os.write(bytes);
+                os.close();
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                _exchange.close();
+            }
+        }
+
+        /**
+         * When we need to send back a text file
+         */
+        void respondWithTextFile(
+            final int code,
+            final String mimeType,
+            final String fileName
+        ) {
+            LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            List<String> textLines;
+            try {
+                textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+                try {
+                    _exchange.sendResponseHeaders(code, bytes.length);
+                    OutputStream os = _exchange.getResponseBody();
+                    os.write(bytes);
+                    return;
+                } catch (IOException ex2) {
+                    LOGGER.catching(ex2);
+                    _exchange.close();
+                    return;
+                }
+            }
+
+            byte[] bytes = String.join("\r\n", textLines).getBytes();
+            _exchange.getResponseHeaders().add("content-type", mimeType);
+            _exchange.getResponseHeaders().add("Cache-Control", "no-store");
+            try {
+                _exchange.sendResponseHeaders(code, bytes.length);
+                OutputStream os = _exchange.getResponseBody();
+                os.write(bytes);
+            } catch (Exception ex) {
+                LOGGER.catching(ex);
+            } finally {
+                _exchange.close();
+            }
+        }
+
+        /**
+         * Validate the credentials in the header of the given exchange object.
+         * Only for POST to /session.
+         * @return true if credentials are valid, else false
+         */
+        boolean validateCredentials() {
+            List<String> values = _requestHeaders.get("Authorization");
+            if ((values != null) && (values.size() == 1)) {
+                String[] split = values.get(0).split(" ");
+                if (split.length == 2) {
+                    if (split[0].equalsIgnoreCase("Basic")) {
+                        String unBased = new String(Base64.getDecoder().decode(split[1]));
+                        String[] unBasedSplit = unBased.split(":");
+                        if (unBasedSplit.length == 2) {
+                            String givenUserName = unBasedSplit[0];
+                            String givenClearTextPassword = unBasedSplit[1];
+                            SystemProcessor sp = SystemProcessor.getInstance();
+                            SoftwareConfiguration sc = sp.getSoftwareConfiguration();
+                            if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
+                                return sc._adminCredentials.validatePassword(givenClearTextPassword);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
     //  Endpoint handlers, to be attached to the HTTP listeners
     //  ----------------------------------------------------------------------------------------------------------------------------
 
@@ -190,94 +489,107 @@ public class RESTSystemConsole implements SystemConsole {
      * PUT accepts the JK settings as a WORD36 wrapped in a long, and persists them to the singular system jump key panel.
      * Either way, JK36 is in the least-significant bit and JKn is 36-n bits to the left of the LSB.
      */
-    private class APIJumpKeysRequestHandler implements HttpHandler {
+    private class APIJumpKeysHandler extends DelegatingHttpHandler {
 
-        private JumpKeys createJumpKeys(
-            final long compositeValue
-        ) {
-            HashMap<Integer, Boolean> map = new HashMap<>();
-            long bitMask = 0_400000_000000L;
-            for (int jkid = 1; jkid <= 36; jkid++) {
-                map.put(jkid, (compositeValue & bitMask) != 0);
-                bitMask >>= 1;
-            }
-
-            return new JumpKeys(compositeValue, map);
-        }
-
-        @Override
-        public void handle(
+        public void delegate(
             final HttpExchange exchange
         ) {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            try {
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
+            Thread t = new LocalThread(exchange);
+            t.start();
+        }
+
+        private class LocalThread extends HandlerThread {
+
+            LocalThread(
+                final HttpExchange exchange
+            ) {
+                super(exchange);
+            }
+
+            private JumpKeys createJumpKeys(
+                final long compositeValue
+            ) {
+                HashMap<Integer, Boolean> map = new HashMap<>();
+                long bitMask = 0_400000_000000L;
+                for (int jkid = 1; jkid <= 36; jkid++) {
+                    map.put(jkid, (compositeValue & bitMask) != 0);
+                    bitMask >>= 1;
                 }
 
-                clientInfo._lastActivity = System.currentTimeMillis();
+                return new JumpKeys(compositeValue, map);
+            }
 
-                //  For GET - return the settings as both a composite value and a map of individual jump key settings
-                if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.GET._value)) {
-                    SystemProcessor sp = SystemProcessor.getInstance();
-                    JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
-                    respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
-                    return;
-                }
-
-                //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
-                //  If it has no composite value, but it has component values, use them to individually set the jump keys.
-                //  If it has neither, reject the PUT.
-                if (exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.PUT._value)) {
-                    SystemProcessor sp = SystemProcessor.getInstance();
-                    JumpKeys content;
-                    try {
-                        content = new ObjectMapper().readValue(exchange.getRequestBody(), JumpKeys.class);
-                    } catch (IOException ex) {
-                        respondBadRequest(exchange, ex.getMessage());
+            @Override
+            public void run() {
+                try {
+                    ClientInfo clientInfo = findClient();
+                    if (clientInfo == null) {
+                        respondNoSession();
                         return;
                     }
 
-                    if (content._compositeValue != null) {
-                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
-                            respondBadRequest(exchange, "Invalid composite value");
+                    clientInfo._lastActivity = System.currentTimeMillis();
+
+                    //  For GET - return the settings as both a composite value and a map of individual jump key settings
+                    if (_requestMethod.equalsIgnoreCase(HttpMethod.GET._value)) {
+                        SystemProcessor sp = SystemProcessor.getInstance();
+                        JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
+                        respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                        return;
+                    }
+
+                    //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
+                    //  If it has no composite value, but it has component values, use them to individually set the jump keys.
+                    //  If it has neither, reject the PUT.
+                    if (_requestMethod.equalsIgnoreCase(HttpMethod.PUT._value)) {
+                        SystemProcessor sp = SystemProcessor.getInstance();
+                        JumpKeys content;
+                        try {
+                            content = new ObjectMapper().readValue(_requestBody, JumpKeys.class);
+                        } catch (IOException ex) {
+                            respondBadRequest(ex.getMessage());
                             return;
                         }
 
-                        sp.setJumpKeys(new Word36(content._compositeValue));
-                        JumpKeys jumpKeysResponse = createJumpKeys(content._compositeValue);
-                        respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
-                        return;
-                    }
-
-                    if (content._componentValues != null) {
-                        for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
-                            int jumpKeyId = entry.getKey();
-                            if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
-                                respondBadRequest(exchange, String.format("Invalid component value jump key id: %d", jumpKeyId));
+                        if (content._compositeValue != null) {
+                            if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
+                                respondBadRequest("Invalid composite value");
                                 return;
                             }
 
-                            boolean setting = entry.getValue();
-                            sp.setJumpKey(jumpKeyId, setting);
-
-                            JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
-                            respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                            sp.setJumpKeys(new Word36(content._compositeValue));
+                            JumpKeys jumpKeysResponse = createJumpKeys(content._compositeValue);
+                            respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
                             return;
                         }
+
+                        if (content._componentValues != null) {
+                            for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
+                                int jumpKeyId = entry.getKey();
+                                if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
+                                    respondBadRequest(String.format("Invalid component value jump key id: %d", jumpKeyId));
+                                    return;
+                                }
+
+                                boolean setting = entry.getValue();
+                                sp.setJumpKey(jumpKeyId, setting);
+
+                                JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
+                                respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                                return;
+                            }
+                        }
+
+                        respondBadRequest("Requires either composite or component values");
+                        return;
                     }
 
-                    respondBadRequest(exchange, "Requires either composite or component values");
-                    return;
+                    //  Neither a GET or a PUT - this is not allowed.
+                    respondBadMethod();
+                } catch (Throwable t) {
+                    LOGGER.catching(t);
+                    respondServerError(getStackTrace(t));
                 }
-
-                //  Neither a GET or a PUT - this is not allowed.
-                respondBadMethod(exchange);
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
             }
         }
     }
@@ -285,55 +597,66 @@ public class RESTSystemConsole implements SystemConsole {
     /**
      * Provides a method for injecting input to the system via POST to /message
      */
-    private class APIMessageHandler implements HttpHandler {
+    private class APIMessageHandler extends DelegatingHttpHandler {
 
-        @Override
-        public void handle(
+        public void delegate(
             final HttpExchange exchange
         ) {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            try {
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
-                }
+            Thread t = new LocalThread(exchange);
+            t.start();
+        }
 
-                clientInfo._lastActivity = System.currentTimeMillis();
+        private class LocalThread extends HandlerThread {
 
-                String method = exchange.getRequestMethod();
-                if (!method.equals(HttpMethod.POST._value)) {
-                    respondBadMethod(exchange);
-                    return;
-                }
+            LocalThread(
+                final HttpExchange exchange
+            ) {
+                super(exchange);
+            }
 
-                boolean collision = false;
-                synchronized (_pendingInputMessages) {
-                    if (_pendingInputMessages.containsKey(clientInfo._clientId)) {
-                        collision = true;
-                    } else {
-                        ObjectMapper mapper = new ObjectMapper();
-                        ConsoleInputMessage msg = mapper.readValue(exchange.getRequestBody(), ConsoleInputMessage.class);
-                        if (msg._messageId != null) {
-                            ReadReplyInputMessage rrim = new ReadReplyInputMessage(msg._messageId, msg._text);
-                            _pendingInputMessages.put(clientInfo._clientId, rrim);
+            @Override
+            public void run() {
+                try {
+                    ClientInfo clientInfo = findClient();
+                    if (clientInfo == null) {
+                        respondNoSession();
+                        return;
+                    }
+
+                    clientInfo._lastActivity = System.currentTimeMillis();
+                    if (!_requestMethod.equals(HttpMethod.POST._value)) {
+                        respondBadMethod();
+                        return;
+                    }
+
+                    boolean collision = false;
+                    synchronized (_pendingInputMessages) {
+                        if (_pendingInputMessages.containsKey(clientInfo._clientId)) {
+                            collision = true;
                         } else {
-                            UnsolicitedInputMessage uim = new UnsolicitedInputMessage(msg._text);
-                            _pendingInputMessages.put(clientInfo._clientId, uim);
+                            ObjectMapper mapper = new ObjectMapper();
+                            ConsoleInputMessage msg = mapper.readValue(_requestBody, ConsoleInputMessage.class);
+                            if (msg._messageId != null) {
+                                ReadReplyInputMessage rrim = new ReadReplyInputMessage(msg._messageId, msg._text);
+                                _pendingInputMessages.put(clientInfo._clientId, rrim);
+                            } else {
+                                UnsolicitedInputMessage uim = new UnsolicitedInputMessage(msg._text);
+                                _pendingInputMessages.put(clientInfo._clientId, uim);
+                            }
                         }
                     }
-                }
 
-                if (collision) {
-                    respondWithText(exchange, HttpURLConnection.HTTP_CONFLICT, "Previous input not yet acknowledged");
-                } else {
-                    respondWithText(exchange, HttpURLConnection.HTTP_CREATED, "");
+                    if (collision) {
+                        respondWithText(HttpURLConnection.HTTP_CONFLICT, "Previous input not yet acknowledged");
+                    } else {
+                        respondWithText(HttpURLConnection.HTTP_CREATED, "");
+                    }
+                } catch (IOException ex) {
+                    respondBadRequest("Badly-formatted body");
+                } catch (Throwable t) {
+                    LOGGER.catching(t);
+                    respondServerError(getStackTrace(t));
                 }
-            } catch (IOException ex) {
-                respondBadRequest(exchange, "Badly-formatted body");
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
             }
         }
     }
@@ -343,125 +666,112 @@ public class RESTSystemConsole implements SystemConsole {
      * Check to see if there is anything new.  If so, send it.
      * Otherwise, wait for some period of time to see whether anything new pops up.
      */
-    private class APIPollRequestHandler implements HttpHandler {
+    private class APIPollRequestHandler extends DelegatingHttpHandler {
 
-        @Override
-        public void handle(
+        public void delegate(
             final HttpExchange exchange
         ) {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            try {
-                ClientInfo clientInfo = findClient(exchange);
-                if (clientInfo == null) {
-                    respondNoSession(exchange);
-                    return;
-                }
+            Thread t = new LocalThread(exchange);
+            t.start();
+        }
 
-                clientInfo._lastActivity = System.currentTimeMillis();
+        private class LocalThread extends HandlerThread {
 
-                String method = exchange.getRequestMethod();
-                if (!method.equals(HttpMethod.GET._value)) {
-                    respondBadMethod(exchange);
-                    return;
-                }
-
-                new APIPollThread(exchange, clientInfo).start();
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
+            LocalThread(
+                final HttpExchange exchange
+            ) {
+                super(exchange);
             }
-        }
-    }
 
-    /**
-     * One of these is spun off for every GET on /poll. We delay returning until either we reach a timeout in which
-     * case we return an empty poll result, or there is an update which our particular client would like to know about.
-     * Needed so we can go back and service other requests while we're waiting on anything noteworthy to occur.
-     */
-    class APIPollThread extends Thread {
-
-        private final ClientInfo _clientInfo;
-        private final HttpExchange _exchange;
-
-        private APIPollThread(
-            final HttpExchange exchange,
-            final ClientInfo clientInfo
-        ) {
-            _clientInfo = clientInfo;
-            _exchange = exchange;
-        }
-
-        @Override
-        public void run() {
-            //  Check if there are any updates already waiting for the client to pick up.
-            //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-            //  At the end of the wait construct and return a SystemProcessorPollResult object
-            synchronized (_clientInfo) {
-                if (!_clientInfo.hasUpdatesForClient()) {
-                    try {
-                        _clientInfo.wait(POLL_WAIT_MSECS);
-                    } catch (InterruptedException ex) {
-                        //  do nothing
+            @Override
+            public void run() {
+                try {
+                    ClientInfo clientInfo = findClient();
+                    if (clientInfo == null) {
+                        respondNoSession();
+                        return;
                     }
-                }
 
-                Boolean isMaster = null;
-                if (_clientInfo._isMasterChanged) {
-                    isMaster = _clientInfo._isMaster;
-                }
-
-                Long jumpKeyValue = null;
-                if (_clientInfo._updatedJumpKeys) {
-                    SystemProcessor sp = SystemProcessor.getInstance();
-                    jumpKeyValue = sp.getJumpKeys().getW();
-                }
-
-                ConsoleStatusMessage latestStatusMessage = null;
-                if (_clientInfo._updatedStatusMessage) {
-                    latestStatusMessage = new ConsoleStatusMessage(_latestStatusMessage._text);
-                }
-
-                SystemLogEntry[] newLogEntries = null;
-                if (!_clientInfo._pendingLogEntries.isEmpty()) {
-                    int entryCount = _clientInfo._pendingLogEntries.size();
-                    newLogEntries = new SystemLogEntry[entryCount];
-                    int ex = 0;
-                    for (KomodoLoggingAppender.LogEntry localEntry : _clientInfo._pendingLogEntries) {
-                        newLogEntries[ex++] = new SystemLogEntry(localEntry._timeMillis,
-                                                                 localEntry._category,
-                                                                 localEntry._source,
-                                                                 localEntry._message);
+                    clientInfo._lastActivity = System.currentTimeMillis();
+                    if (!_requestMethod.equals(HttpMethod.GET._value)) {
+                        respondBadMethod();
+                        return;
                     }
-                }
 
-                ConsoleReadOnlyMessage[] newReadOnlyMessages = null;
-                if (!_clientInfo._pendingReadOnlyMessages.isEmpty()) {
-                    int msgCount = _clientInfo._pendingReadOnlyMessages.size();
-                    newReadOnlyMessages = new ConsoleReadOnlyMessage[msgCount];
-                    int mx = 0;
-                    for (ReadOnlyMessage pendingMsg : _clientInfo._pendingReadOnlyMessages) {
-                        newReadOnlyMessages[mx++] = new ConsoleReadOnlyMessage(pendingMsg._text);
+                    //  Check if there are any updates already waiting for the client to pick up.
+                    //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
+                    //  At the end of the wait construct and return a SystemProcessorPollResult object
+                    synchronized (clientInfo) {
+                        if (!clientInfo.hasUpdatesForClient()) {
+                            try {
+                                clientInfo.wait(POLL_WAIT_MSECS);
+                            } catch (InterruptedException ex) {
+                                //  do nothing
+                            }
+                        }
+
+                        Boolean isMaster = null;
+                        if (clientInfo._isMasterChanged) {
+                            isMaster = clientInfo._isMaster;
+                        }
+
+                        Long jumpKeyValue = null;
+                        if (clientInfo._updatedJumpKeys) {
+                            SystemProcessor sp = SystemProcessor.getInstance();
+                            jumpKeyValue = sp.getJumpKeys().getW();
+                        }
+
+                        ConsoleStatusMessage latestStatusMessage = null;
+                        if (clientInfo._updatedStatusMessage) {
+                            latestStatusMessage = new ConsoleStatusMessage(_latestStatusMessage._text);
+                        }
+
+                        SystemLogEntry[] newLogEntries = null;
+                        if (!clientInfo._pendingLogEntries.isEmpty()) {
+                            int entryCount = clientInfo._pendingLogEntries.size();
+                            newLogEntries = new SystemLogEntry[entryCount];
+                            int ex = 0;
+                            for (KomodoLoggingAppender.LogEntry localEntry : clientInfo._pendingLogEntries) {
+                                newLogEntries[ex++] = new SystemLogEntry(localEntry._timeMillis,
+                                                                         localEntry._category,
+                                                                         localEntry._source,
+                                                                         localEntry._message);
+                            }
+                        }
+
+                        ConsoleReadOnlyMessage[] newReadOnlyMessages = null;
+                        if (!clientInfo._pendingReadOnlyMessages.isEmpty()) {
+                            int msgCount = clientInfo._pendingReadOnlyMessages.size();
+                            newReadOnlyMessages = new ConsoleReadOnlyMessage[msgCount];
+                            int mx = 0;
+                            for (ReadOnlyMessage pendingMsg : clientInfo._pendingReadOnlyMessages) {
+                                newReadOnlyMessages[mx++] = new ConsoleReadOnlyMessage(pendingMsg._text);
+                            }
+                        }
+
+                        if (clientInfo._updatedHardwareConfiguration) {
+                            //TODO
+                        }
+
+                        if (clientInfo._updatedSystemConfiguration) {
+                            //TODO
+                        }
+
+                        PollResult pollResult = new PollResult(clientInfo._inputDelivered,
+                                                               isMaster,
+                                                               jumpKeyValue,
+                                                               latestStatusMessage,
+                                                               newLogEntries,
+                                                               newReadOnlyMessages,
+                                                               clientInfo._updatedReadReplyMessages);
+
+                        respondWithJSON(HttpURLConnection.HTTP_OK, pollResult);
+                        clientInfo.clear();
                     }
+                } catch (Throwable t) {
+                    LOGGER.catching(t);
+                    respondServerError(getStackTrace(t));
                 }
-
-                if (_clientInfo._updatedHardwareConfiguration) {
-                    //TODO
-                }
-
-                if (_clientInfo._updatedSystemConfiguration) {
-                    //TODO
-                }
-
-                PollResult pollResult = new PollResult(_clientInfo._inputDelivered,
-                                                       isMaster,
-                                                       jumpKeyValue,
-                                                       latestStatusMessage,
-                                                       newLogEntries,
-                                                       newReadOnlyMessages,
-                                                       _clientInfo._updatedReadReplyMessages);
-
-                respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, pollResult);
-                _clientInfo.clear();
             }
         }
     }
@@ -471,53 +781,65 @@ public class RESTSystemConsole implements SystemConsole {
      * Validates credentials and method
      * Creates and stashes a ClientInfo record for future method calls
      */
-    private class APISessionRequestHandler implements HttpHandler {
+    private class APISessionRequestHandler extends DelegatingHttpHandler {
 
-        @Override
-        public void handle(
+        public void delegate(
             final HttpExchange exchange
         ) {
-            System.out.println(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));//TODO remove
-            try {
-                if (!validateCredentials(exchange)) {
-                    respondUnauthorized(exchange);
-                    return;
-                }
+            Thread t = new LocalThread(exchange);
+            t.start();
+        }
 
-                String method = exchange.getRequestMethod();
-                if (!method.equalsIgnoreCase(HttpMethod.POST._value)) {
-                    respondBadMethod(exchange);
-                    return;
-                }
+        private class LocalThread extends HandlerThread {
 
-                String clientId = UUID.randomUUID().toString();
-                ClientInfo clientInfo = new ClientInfo(clientId);
-                synchronized (_recentReadOnlyMessages) {
-                    clientInfo._pendingReadOnlyMessages.addAll(_recentReadOnlyMessages);
-                }
+            LocalThread(
+                final HttpExchange exchange
+            ) {
+                super(exchange);
+            }
 
-                synchronized (_recentLogEntries) {
-                    clientInfo._pendingLogEntries.addAll(_recentLogEntries);
-                }
-
-                clientInfo._remoteAddress = exchange.getRemoteAddress();
-                clientInfo._inputDelivered = false;
-                clientInfo._updatedJumpKeys = true;
-                clientInfo._updatedStatusMessage = true;
-                clientInfo._updatedHardwareConfiguration = true;
-                clientInfo._updatedSystemConfiguration = true;
-                synchronized (this) {
-                    if (_clientInfos.isEmpty()) {
-                        clientInfo._isMaster = true;
-                        clientInfo._updatedReadReplyMessages = true;
+            @Override
+            public void run() {
+                try {
+                    if (!validateCredentials()) {
+                        respondUnauthorized();
+                        return;
                     }
-                    _clientInfos.put(clientId, clientInfo);
-                }
 
-                respondWithJSON(exchange, HttpURLConnection.HTTP_CREATED, clientId);
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
+                    if (!_requestMethod.equalsIgnoreCase(HttpMethod.POST._value)) {
+                        respondBadMethod();
+                        return;
+                    }
+
+                    String clientId = UUID.randomUUID().toString();
+                    ClientInfo clientInfo = new ClientInfo(clientId);
+                    synchronized (_recentReadOnlyMessages) {
+                        clientInfo._pendingReadOnlyMessages.addAll(_recentReadOnlyMessages);
+                    }
+
+                    synchronized (_recentLogEntries) {
+                        clientInfo._pendingLogEntries.addAll(_recentLogEntries);
+                    }
+
+                    clientInfo._remoteAddress = _exchange.getRemoteAddress();
+                    clientInfo._inputDelivered = false;
+                    clientInfo._updatedJumpKeys = true;
+                    clientInfo._updatedStatusMessage = true;
+                    clientInfo._updatedHardwareConfiguration = true;
+                    clientInfo._updatedSystemConfiguration = true;
+                    synchronized (this) {
+                        if (_clientInfos.isEmpty()) {
+                            clientInfo._isMaster = true;
+                            clientInfo._updatedReadReplyMessages = true;
+                        }
+                        _clientInfos.put(clientId, clientInfo);
+                    }
+
+                    respondWithJSON(HttpURLConnection.HTTP_CREATED, clientId);
+                } catch (Throwable t) {
+                    LOGGER.catching(t);
+                    respondServerError(getStackTrace(t));
+                }
             }
         }
     }
@@ -525,78 +847,75 @@ public class RESTSystemConsole implements SystemConsole {
     /**
      * Handle all the web endpoint requests
      */
-    private class WebHandler implements HttpHandler {
+    private class WebHandler extends DelegatingHttpHandler {
 
-        @Override
-        public void handle(
+        public void delegate(
             final HttpExchange exchange
         ) {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
-            try {
-                String fileName = exchange.getRequestURI().getPath();
-                if (fileName.startsWith("/")) {
-                    fileName = fileName.substring(1);
-                }
-                if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
-                    fileName = HTML_FILE_NAME;
-                }
+            Thread t = new LocalThread(exchange);
+            t.start();
+        }
 
-                String mimeType = "";
-                boolean textFile = false;
-                if (fileName.contains("favicon.ico")) {
-                    fileName = FAVICON_FILE_NAME;
-                    mimeType = "image/x-icon";
-                } else {
-                    if (fileName.endsWith(".html")) {
-                        mimeType = "text/html";
-                        textFile = true;
-                    } else if (fileName.endsWith(".css")) {
-                        mimeType = "text/css";
-                        textFile = true;
-                    } else if (fileName.endsWith(".bmp")) {
-                        mimeType = "image/bmp";
-                        textFile = false;
-                    } else if (fileName.endsWith(".png")) {
-                        mimeType = "image/png";
-                        textFile = false;
-                    } else if (fileName.endsWith(".js")) {
-                        mimeType = "application/javascript";
-                        textFile = true;
-                    } else if (fileName.endsWith(".json")) {
-                        mimeType = "text/json";
-                        textFile = true;
-                    } else {
-                        mimeType = "application/octet-stream";
+        private class LocalThread extends HandlerThread {
+
+            LocalThread(
+                final HttpExchange exchange
+            ) {
+                super(exchange);
+            }
+
+            @Override
+            public void run() {
+                try {
+                    String fileName = _exchange.getRequestURI().getPath();
+                    if (fileName.startsWith("/")) {
+                        fileName = fileName.substring(1);
                     }
-                }
+                    if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
+                        fileName = HTML_FILE_NAME;
+                    }
 
-                String fullName = String.format("%s%s", _webDirectory, fileName);
-                LOGGER.trace("fullName:" + fullName);//TODO remove
-                if (textFile) {
-                    respondWithTextFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
-                } else {
-                    respondWithBinaryFile(exchange, HttpURLConnection.HTTP_OK, mimeType, fullName);
+                    String mimeType;
+                    boolean textFile = false;
+                    if (fileName.contains("favicon.ico")) {
+                        fileName = FAVICON_FILE_NAME;
+                        mimeType = "image/x-icon";
+                    } else {
+                        if (fileName.endsWith(".html")) {
+                            mimeType = "text/html";
+                            textFile = true;
+                        } else if (fileName.endsWith(".css")) {
+                            mimeType = "text/css";
+                            textFile = true;
+                        } else if (fileName.endsWith(".bmp")) {
+                            mimeType = "image/bmp";
+                            textFile = false;
+                        } else if (fileName.endsWith(".png")) {
+                            mimeType = "image/png";
+                            textFile = false;
+                        } else if (fileName.endsWith(".js")) {
+                            mimeType = "application/javascript";
+                            textFile = true;
+                        } else if (fileName.endsWith(".json")) {
+                            mimeType = "text/json";
+                            textFile = true;
+                        } else {
+                            mimeType = "application/octet-stream";
+                        }
+                    }
+
+                    String fullName = String.format("%s%s", _webDirectory, fileName);
+                    LOGGER.trace("fullName:" + fullName);//TODO remove
+                    if (textFile) {
+                        respondWithTextFile(HttpURLConnection.HTTP_OK, mimeType, fullName);
+                    } else {
+                        respondWithBinaryFile(HttpURLConnection.HTTP_OK, mimeType, fullName);
+                    }
+                } catch (Throwable t) {
+                    LOGGER.catching(t);
                 }
-            } catch (Throwable t) {
-                LOGGER.catching(t);
             }
         }
-    }
-
-    /**
-     * For debugging
-     */
-    public String getStackTrace(
-        final Throwable t
-    ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(t.toString());
-        sb.append("\n");
-        for (StackTraceElement e : t.getStackTrace()) {
-            sb.append(e.toString());
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 
 
@@ -633,7 +952,7 @@ public class RESTSystemConsole implements SystemConsole {
                  SignatureException {
             super.setup();
             appendHandler("/", new WebHandler());
-            appendHandler("/jumpkeys", new APIJumpKeysRequestHandler());
+            appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/session", new APISessionRequestHandler());
             appendHandler("/poll", new APIPollRequestHandler());
@@ -655,28 +974,6 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Checks the headers for a client id, then locates the corresponding ClientInfo object.
-     * Returns null if ClientInfo object is not found or is unspecified.
-     * Serves as validation for clients which have presumably previously done a POST to /session
-     */
-    private ClientInfo findClient(
-        final HttpExchange exchange
-    ) {
-        List<String> values = exchange.getRequestHeaders().get("Client");
-        if ((values != null) && (values.size() == 1)) {
-            String clientId = values.get(0);
-            synchronized (_clientInfos) {
-                ClientInfo clientInfo = _clientInfos.get(clientId);
-                if (clientInfo != null) {
-                    return clientInfo;
-                }
-            }
-        }
-
-        return null;
-    }
 
     /**
      * Thread-safe method for invoking a particular function on all established clients, then waking them up
@@ -727,265 +1024,265 @@ public class RESTSystemConsole implements SystemConsole {
         }
     }
 
-    /**
-     * Convenient method for handling the situation where a method is requested which is not supported on the endpoint
-     */
-    private void respondBadMethod(
-        final HttpExchange exchange
-    ) {
-        String response = String.format("Method %s is not supported for the given endpoint\n",
-                                        exchange.getRequestMethod());
-        respondWithText(exchange, HttpURLConnection.HTTP_BAD_METHOD, response);
-    }
-
-    /**
-     * Convenient method for handling the situation where a particular request was in error.
-     */
-    private void respondBadRequest(
-        final HttpExchange exchange,
-        final String explanation
-    ) {
-        respondWithText(exchange, HttpURLConnection.HTTP_BAD_REQUEST, explanation + "\n");
-    }
-
-    /**
-     * Convenient method for handling the situation where no session exists
-     */
-    private void respondNoSession(
-        final HttpExchange exchange
-    ) {
-        String response = "Forbidden - session not established\n";
-        respondWithText(exchange, HttpURLConnection.HTTP_FORBIDDEN, response);
-    }
-
-    /**
-     * Convenient method for handling the situation where we cannot find something which was requested by the client.
-     * This is NOT the same thing as not finding something which definitely should be there.
-     */
-    private void respondNotFound(
-        final HttpExchange exchange,
-        final String message
-    ) {
-        respondWithText(exchange, java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
-    }
-
-    /**
-     * Convenient method for handling an internal server error
-     */
-    private void respondServerError(
-        final HttpExchange exchange,
-        final String message
-    ) {
-        respondWithText(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, message + "\n");
-    }
-
-    /**
-     * Convenient method for setting up a 401 response
-     */
-    private void respondUnauthorized(
-        final HttpExchange exchange
-    ) {
-        String response = "Unauthorized - credentials not provided or are invalid\nPlease enter credentials\n";
-        respondWithText(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, response);
-    }
-
-    private void respondWithBinaryFile(
-        final HttpExchange exchange,
-        final int code,
-        final String mimeType,
-        final String fileName
-    ) {
-        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(Paths.get(fileName));
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
-            try {
-                exchange.sendResponseHeaders(code, bytes.length);
-                OutputStream os = exchange.getResponseBody();
-                os.write(bytes);
-                exchange.close();
-                return;
-            } catch (IOException ex2) {
-                LOGGER.catching(ex2);
-                exchange.close();
-                return;
-            }
-        }
-
-        exchange.getResponseHeaders().add("content-type", mimeType);
-        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-        try {
-            System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
-            exchange.sendResponseHeaders(code, bytes.length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(bytes);
-        } catch (Exception ex) {
-            LOGGER.catching(ex);
-        } finally {
-            exchange.close();
-        }
-    }
-
-    /**
-     * When we need to send back a text fild
-     * @param exchange HttpExchange we're dealing with
-     * @param code response code - 200, 201, whatever
-     * @param mimeType e.g., text/html
-     * @param fileName Path/Filename of the file we need to send
-     */
-    private void respondWithTextFile(
-        final HttpExchange exchange,
-        final int code,
-        final String mimeType,
-        final String fileName
-    ) {
-        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-        List<String> textLines;
-        try {
-            textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
-            try {
-                exchange.sendResponseHeaders(code, bytes.length);
-                OutputStream os = exchange.getResponseBody();
-                os.write(bytes);
-                return;
-            } catch (IOException ex2) {
-                LOGGER.catching(ex2);
-                exchange.close();
-                return;
-            }
-        }
-
-        byte[] bytes = String.join("\r\n", textLines).getBytes();
-        exchange.getResponseHeaders().add("content-type", mimeType);
-        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-        try {
-            exchange.sendResponseHeaders(code, bytes.length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(bytes);
-        } catch (Exception ex) {
-            LOGGER.catching(ex);
-        } finally {
-            exchange.close();
-        }
-    }
-
-    /**
-     * Convenient method for sending responses containing HTML text
-     * @param exchange The HttpExchance object into which we inject the response
-     * @param code The response code - 200, 201, 403, etc
-     */
-    private void respondWithHTML(
-        final HttpExchange exchange,
-        final int code,
-        final String content
-    ) {
-        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
-        System.out.println("-->" + content);   //TODO remove
-        exchange.getResponseHeaders().add("Content-type", "text/html");
-        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-        try {
-            exchange.sendResponseHeaders(code, content.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(content.getBytes());
-            os.close();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            exchange.close();
-        }
-    }
-
-    /**
-     * Convenient method for sending responses containing JSON
-     * @param exchange The HttpExchance object into which we inject the response
-     * @param code The response code - 200, 201, 403, etc - most responses >= 300 won't necessarily have a JSON formatted body
-     */
-    private void respondWithJSON(
-        final HttpExchange exchange,
-        final int code,
-        final Object object
-    ) {
-        LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String content = mapper.writeValueAsString(object);
-            System.out.println("-->" + content);   //TODO remove
-            LOGGER.trace(String.format("  JSON:%s", content));
-            exchange.getResponseHeaders().add("Content-type", "application/json");
-            exchange.getResponseHeaders().add("Cache-Control", "no-store");
-            exchange.sendResponseHeaders(code, content.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(content.getBytes());
-            os.close();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            exchange.close();
-        }
-    }
-
-    /**
-     * Convenient method for sending responses containing straight text
-     * @param exchange The HttpExchance object into which we inject the response
-     * @param code The response code - 200, 201, 403, etc
-     */
-    private void respondWithText(
-        final HttpExchange exchange,
-        final int code,
-        final String content
-    ) {
-        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
-        System.out.println("-->" + content);   //TODO remove
-
-        exchange.getResponseHeaders().add("Content-type", "text/plain");
-        byte[] bytes = content.getBytes();
-
-        try {
-            exchange.sendResponseHeaders(code, bytes.length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(bytes);
-            os.close();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            exchange.close();
-        }
-    }
-
-    /**
-     * Validate the credentials in the header of the given exchange object.
-     * Only for POST to /session.
-     * @return true if credentials are valid, else false
-     */
-    private boolean validateCredentials(
-        final HttpExchange exchange
-    ) {
-        Headers headers = exchange.getRequestHeaders();
-        List<String> values = headers.get("Authorization");
-        if ((values != null) && (values.size() == 1)) {
-            String[] split = values.get(0).split(" ");
-            if (split.length == 2) {
-                if (split[0].equalsIgnoreCase("Basic")) {
-                    String unBased = new String(Base64.getDecoder().decode(split[1]));
-                    String[] unBasedSplit = unBased.split(":");
-                    if (unBasedSplit.length == 2) {
-                        String givenUserName = unBasedSplit[0];
-                        String givenClearTextPassword = unBasedSplit[1];
-                        SystemProcessor sp = SystemProcessor.getInstance();
-                        SoftwareConfiguration sc = sp.getSoftwareConfiguration();
-                        if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
-                            return sc._adminCredentials.validatePassword(givenClearTextPassword);
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
+//    /**
+//     * Convenient method for handling the situation where a method is requested which is not supported on the endpoint
+//     */
+//    private void respondBadMethod(
+//        final HttpExchange exchange
+//    ) {
+//        String response = String.format("Method %s is not supported for the given endpoint\n",
+//                                        exchange.getRequestMethod());
+//        respondWithText(exchange, HttpURLConnection.HTTP_BAD_METHOD, response);
+//    }
+//
+//    /**
+//     * Convenient method for handling the situation where a particular request was in error.
+//     */
+//    private void respondBadRequest(
+//        final HttpExchange exchange,
+//        final String explanation
+//    ) {
+//        respondWithText(exchange, HttpURLConnection.HTTP_BAD_REQUEST, explanation + "\n");
+//    }
+//
+//    /**
+//     * Convenient method for handling the situation where no session exists
+//     */
+//    private void respondNoSession(
+//        final HttpExchange exchange
+//    ) {
+//        String response = "Forbidden - session not established\n";
+//        respondWithText(exchange, HttpURLConnection.HTTP_FORBIDDEN, response);
+//    }
+//
+//    /**
+//     * Convenient method for handling the situation where we cannot find something which was requested by the client.
+//     * This is NOT the same thing as not finding something which definitely should be there.
+//     */
+//    private void respondNotFound(
+//        final HttpExchange exchange,
+//        final String message
+//    ) {
+//        respondWithText(exchange, java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
+//    }
+//
+//    /**
+//     * Convenient method for handling an internal server error
+//     */
+//    private void respondServerError(
+//        final HttpExchange exchange,
+//        final String message
+//    ) {
+//        respondWithText(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, message + "\n");
+//    }
+//
+//    /**
+//     * Convenient method for setting up a 401 response
+//     */
+//    private void respondUnauthorized(
+//        final HttpExchange exchange
+//    ) {
+//        String response = "Unauthorized - credentials not provided or are invalid\nPlease enter credentials\n";
+//        respondWithText(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, response);
+//    }
+//
+//    private void respondWithBinaryFile(
+//        final HttpExchange exchange,
+//        final int code,
+//        final String mimeType,
+//        final String fileName
+//    ) {
+//        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+//        byte[] bytes;
+//        try {
+//            bytes = Files.readAllBytes(Paths.get(fileName));
+//        } catch (IOException ex) {
+//            LOGGER.catching(ex);
+//            bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+//            try {
+//                exchange.sendResponseHeaders(code, bytes.length);
+//                OutputStream os = exchange.getResponseBody();
+//                os.write(bytes);
+//                exchange.close();
+//                return;
+//            } catch (IOException ex2) {
+//                LOGGER.catching(ex2);
+//                exchange.close();
+//                return;
+//            }
+//        }
+//
+//        exchange.getResponseHeaders().add("content-type", mimeType);
+//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
+//        try {
+//            System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
+//            exchange.sendResponseHeaders(code, bytes.length);
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(bytes);
+//        } catch (Exception ex) {
+//            LOGGER.catching(ex);
+//        } finally {
+//            exchange.close();
+//        }
+//    }
+//
+//    /**
+//     * When we need to send back a text fild
+//     * @param exchange HttpExchange we're dealing with
+//     * @param code response code - 200, 201, whatever
+//     * @param mimeType e.g., text/html
+//     * @param fileName Path/Filename of the file we need to send
+//     */
+//    private void respondWithTextFile(
+//        final HttpExchange exchange,
+//        final int code,
+//        final String mimeType,
+//        final String fileName
+//    ) {
+//        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+//        List<String> textLines;
+//        try {
+//            textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
+//        } catch (IOException ex) {
+//            LOGGER.catching(ex);
+//            byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+//            try {
+//                exchange.sendResponseHeaders(code, bytes.length);
+//                OutputStream os = exchange.getResponseBody();
+//                os.write(bytes);
+//                return;
+//            } catch (IOException ex2) {
+//                LOGGER.catching(ex2);
+//                exchange.close();
+//                return;
+//            }
+//        }
+//
+//        byte[] bytes = String.join("\r\n", textLines).getBytes();
+//        exchange.getResponseHeaders().add("content-type", mimeType);
+//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
+//        try {
+//            exchange.sendResponseHeaders(code, bytes.length);
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(bytes);
+//        } catch (Exception ex) {
+//            LOGGER.catching(ex);
+//        } finally {
+//            exchange.close();
+//        }
+//    }
+//
+//    /**
+//     * Convenient method for sending responses containing HTML text
+//     * @param exchange The HttpExchance object into which we inject the response
+//     * @param code The response code - 200, 201, 403, etc
+//     */
+//    private void respondWithHTML(
+//        final HttpExchange exchange,
+//        final int code,
+//        final String content
+//    ) {
+//        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
+//        System.out.println("-->" + content);   //TODO remove
+//        exchange.getResponseHeaders().add("Content-type", "text/html");
+//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
+//        try {
+//            exchange.sendResponseHeaders(code, content.length());
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(content.getBytes());
+//            os.close();
+//        } catch (IOException ex) {
+//            LOGGER.catching(ex);
+//            exchange.close();
+//        }
+//    }
+//
+//    /**
+//     * Convenient method for sending responses containing JSON
+//     * @param exchange The HttpExchance object into which we inject the response
+//     * @param code The response code - 200, 201, 403, etc - most responses >= 300 won't necessarily have a JSON formatted body
+//     */
+//    private void respondWithJSON(
+//        final HttpExchange exchange,
+//        final int code,
+//        final Object object
+//    ) {
+//        LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            String content = mapper.writeValueAsString(object);
+//            System.out.println("-->" + content);   //TODO remove
+//            LOGGER.trace(String.format("  JSON:%s", content));
+//            exchange.getResponseHeaders().add("Content-type", "application/json");
+//            exchange.getResponseHeaders().add("Cache-Control", "no-store");
+//            exchange.sendResponseHeaders(code, content.length());
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(content.getBytes());
+//            os.close();
+//        } catch (IOException ex) {
+//            LOGGER.catching(ex);
+//            exchange.close();
+//        }
+//    }
+//
+//    /**
+//     * Convenient method for sending responses containing straight text
+//     * @param exchange The HttpExchance object into which we inject the response
+//     * @param code The response code - 200, 201, 403, etc
+//     */
+//    private void respondWithText(
+//        final HttpExchange exchange,
+//        final int code,
+//        final String content
+//    ) {
+//        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
+//        System.out.println("-->" + content);   //TODO remove
+//
+//        exchange.getResponseHeaders().add("Content-type", "text/plain");
+//        byte[] bytes = content.getBytes();
+//
+//        try {
+//            exchange.sendResponseHeaders(code, bytes.length);
+//            OutputStream os = exchange.getResponseBody();
+//            os.write(bytes);
+//            os.close();
+//        } catch (IOException ex) {
+//            LOGGER.catching(ex);
+//            exchange.close();
+//        }
+//    }
+//
+//    /**
+//     * Validate the credentials in the header of the given exchange object.
+//     * Only for POST to /session.
+//     * @return true if credentials are valid, else false
+//     */
+//    private boolean validateCredentials(
+//        final HttpExchange exchange
+//    ) {
+//        Headers headers = exchange.getRequestHeaders();
+//        List<String> values = headers.get("Authorization");
+//        if ((values != null) && (values.size() == 1)) {
+//            String[] split = values.get(0).split(" ");
+//            if (split.length == 2) {
+//                if (split[0].equalsIgnoreCase("Basic")) {
+//                    String unBased = new String(Base64.getDecoder().decode(split[1]));
+//                    String[] unBasedSplit = unBased.split(":");
+//                    if (unBasedSplit.length == 2) {
+//                        String givenUserName = unBasedSplit[0];
+//                        String givenClearTextPassword = unBasedSplit[1];
+//                        SystemProcessor sp = SystemProcessor.getInstance();
+//                        SoftwareConfiguration sc = sp.getSoftwareConfiguration();
+//                        if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
+//                            return sc._adminCredentials.validatePassword(givenClearTextPassword);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        return false;
+//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

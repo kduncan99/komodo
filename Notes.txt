@@ -13,9 +13,6 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 *systemConsole
-Refreshing dies mostly - why?
-  for one thing, close the exchange object, not the streams
-  we *must* call sendResponseHeaders before calling getResponseBody()
 OS Console page
   Needs an input text field with a blinking cursor
   Needs to function
