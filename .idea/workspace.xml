@@ -14,9 +14,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleInputMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadOnlyMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadReplyMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleStatusMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/JumpKeys.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/PollResult.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/SystemLogEntry.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,12 +79,16 @@
     <property name="settings.editor.selected.configurable" value="reference.settings.ide.settings.notifications" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\kduncan\Projects\komodo\config" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\systemConsole" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\library" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
+    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.kadware.komodo.hardwarelib" />
       <recent name="com.kadware.komodo.baselib" />
       <recent name="com.kadware.komodo.jsonlib" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\kduncan\Projects\komodo\config" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="com.kadware.komodo.hardwarelib.exceptions" />
@@ -78,11 +97,8 @@
       <recent name="com.kadware.komodo.jsonlib" />
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
+    <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\kduncan\Projects\komodo\config" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\systemConsole" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\library" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
     </key>
   </component>
   <component name="RunManager" selected="JUnit.Test_SystemProcessor.exercise">
@@ -139,7 +155,7 @@
       <useClassPathOnly />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.net.*" />
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -191,17 +207,18 @@
       <item itemvalue="JUnit.Test_SystemProcessor" />
       <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
       <item itemvalue="JUnit.Test_SystemProcessor.primitive" />
-      <item itemvalue="JUnit.Test_SystemProcessor (1)" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
-        <item itemvalue="JUnit.Test_SystemProcessor (1)" />
         <item itemvalue="JUnit.Test_SystemProcessor" />
         <item itemvalue="JUnit.com.kadware.komodo.baselib in baselib" />
         <item itemvalue="JUnit.Test_SystemProcessor.primitive" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value=",ALPHA_COMPARATOR" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -217,7 +234,10 @@
       <workItem from="1586192598619" duration="45515000" />
       <workItem from="1586384336514" duration="1781000" />
       <workItem from="1586397858190" duration="36095000" />
-      <workItem from="1586522119249" duration="99888000" />
+      <workItem from="1586522119249" duration="106404000" />
+      <workItem from="1586873488841" duration="16544000" />
+      <workItem from="1586925614068" duration="21841000" />
+      <workItem from="1587039279338" duration="38425000" />
     </task>
     <servers />
   </component>
@@ -241,10 +261,10 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1537" y="1071" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586375089902" />
-    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1586741244649">
+    <state x="2269" y="1230" width="433" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1586994561785">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="2269" y="1230" width="422" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586741244649" />
+    <state x="2269" y="1230" width="433" height="266" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.3840.2120@0.0.3840.2120" timestamp="1586994561785" />
     <state x="2681" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1586357413362">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -257,6 +277,10 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586701221930" />
+    <state x="1164" y="673" width="1348" height="1266" key="DiffContextDialog" timestamp="1587067517190">
+      <screen x="0" y="0" width="3840" height="2120" />
+    </state>
+    <state x="1164" y="673" width="1348" height="1266" key="DiffContextDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1587067517190" />
     <state x="1700" y="1197" key="EnvironmentVariablesDialog" timestamp="1586735019756">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -265,38 +289,38 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1586821345056">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1587148457867">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586821345056" />
-    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1586821345056">
+    <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1488" height="420" key="GridCell.Tab.0.center" timestamp="1587148457867">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586821345056" />
-    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1586821345056">
+    <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1488" height="420" key="GridCell.Tab.0.left" timestamp="1587148457867">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586821345056" />
-    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1586821345056">
+    <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1488" height="420" key="GridCell.Tab.0.right" timestamp="1587148457867">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586821345056" />
-    <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586558986031">
+    <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="515" key="GridCell.Tab.1.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586558986031" />
-    <state width="1488" height="515" key="GridCell.Tab.1.center" timestamp="1586558986031">
+    <state width="1488" height="515" key="GridCell.Tab.1.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
+    <state width="1488" height="515" key="GridCell.Tab.1.center" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="515" key="GridCell.Tab.1.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586558986031" />
-    <state width="1488" height="515" key="GridCell.Tab.1.left" timestamp="1586558986031">
+    <state width="1488" height="515" key="GridCell.Tab.1.center/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
+    <state width="1488" height="515" key="GridCell.Tab.1.left" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="515" key="GridCell.Tab.1.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586558986031" />
-    <state width="1488" height="515" key="GridCell.Tab.1.right" timestamp="1586558986031">
+    <state width="1488" height="515" key="GridCell.Tab.1.left/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
+    <state width="1488" height="515" key="GridCell.Tab.1.right" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state width="1488" height="515" key="GridCell.Tab.1.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586558986031" />
+    <state width="1488" height="515" key="GridCell.Tab.1.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
     <state x="1410" y="985" key="SettingsEditor" timestamp="1586734853740">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -317,9 +341,9 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1563" y="652" key="run.anything.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586622896937" />
-    <state x="1570" y="942" width="672" height="678" key="search.everywhere.popup" timestamp="1586723036616">
+    <state x="1570" y="942" width="672" height="678" key="search.everywhere.popup" timestamp="1586829463162">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
-    <state x="1570" y="942" width="672" height="678" key="search.everywhere.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586723036616" />
+    <state x="1570" y="942" width="672" height="678" key="search.everywhere.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586829463162" />
   </component>
 </project>

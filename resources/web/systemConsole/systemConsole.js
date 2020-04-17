@@ -7,87 +7,113 @@ const credentialUsername = 'admin';   //  TODO solicit these from the user
 const credentialPassword = 'admin';   //  TODO as above
 let clientIdent = '';
 let polling = false;                    //  poll in progress
-let statusMessageLines = 0;             //  Number of status messages lines at top of console
 let validating = false;                 //  validation in progress
 
-const consoleSizeRows = 24;
-const consoleSizeColumns = 80;
+const attributes = {
+    screenSizeRows: 24,
+    screenSizeColumns: 80
+};
 
-//  Table of message ids, keyed by row.  E.g., messageIds[4] == 2 means row with index 4, that is, row 5, contains
-//  a read-reply message with an id of 5.  messageIds[7] == -1 means row 7 does not contain a read-reply message.
-let messageIds = [];
-for (let mx = 0; mx < consoleSizeRows; mx++){
-    messageIds[mx] = -1;
-}
+const logBackgroundColor = 0xffffff;
+const logDebugColor = 0xffff00;
+const logErrorColor = 0xff0000;
+const logInfoColor = 0x0000ff;
+const logTraceColor = 0x00ff00;
 
-//  Colors for OS console (presented on a black background, so they should be lighter)
-//  constants for now; later we might make these configurable.
-const consoleInputBackground = '#000000';
-const consoleInputColor = '#ffffff';
-const consoleInputSpan = '<span style="color:' + consoleInputColor + '; background-color:' + consoleInputBackground + '">';
-const consoleInputReverseSpan = '<span style="color:' + consoleInputBackground + '; background-color:' + consoleInputColor + '">';
+const defaultConsoleColor = 0x00ff00;
+const defaultConsoleBackground = 0x000000;
 
-const consoleReadOnlyBackground = '#000000';
-const consoleReadOnlyColor = '#00ff00';
-const consoleReadOnlySpan = '<span style="color:' + consoleReadOnlyColor + '; background-color:' + consoleReadOnlyBackground + '">';
-
-const consoleReadReplyBackground = '#000000';
-const consoleReadReplyColor = '#ff3f3f';
-const consoleReadReplySpan = '<span style="color:' + consoleReadReplyColor + '; background-color:' + consoleReadReplyBackground + '">';
-
-const consoleSystemStatusBackground = '#000000';
-const consoleSystemStatusColor = '#00ffff';
-const consoleSystemStatusSpan = '<span style="color:' + consoleSystemStatusColor + '; background-color:' + consoleSystemStatusBackground + '">';
-
-let consoleInputCursorColumn = 0;       //  location of cursor in input area
-let consoleInputCursorInverted = false; //  used for flashing the cursor
-
-//  Colors for log pane (presented on a white background, so they should be darker)
-const logErrorColor = '#ff0000';
-const logDebugColor = '#ffff00';
-const logTraceColor = '#00ff00';
-const logInfoColor = '#0000ff';
+let pendingPostMessageXHR = null;
 
 const spaceRegexPattern = new RegExp(' ', 'g');
 
+let blankLineHTML = '';
+for (let cx = 0; cx < attributes.screenSizeColumns; cx++){
+    blankLineHTML += '&nbsp;'
+}
 
 $(function() {
     $( "#consoleTabs" ).tabs();
 });
 
 
-//  Schedule the given polling function every 1/2 second (cursor flashing is the most periodic, and requires this)
+//  Schedule the given polling function every 1 second - this might be too frequent, keep an eye on it.
 window.setInterval(function(){
-    flashCursor();
     if (!validating && !polling){
         pollServer();
-    }
-}, 500);
-
-
-//  Every .5 seconds, we invert the cursor-inverted flag, then redraw the input text accordingly
-function flashCursor(){
-    consoleInputCursorInverted = !consoleInputCursorInverted;
-    const row = document.getElementById('consoleInputRow');
-    const originalText = row.textContent;
-    if (consoleInputCursorInverted){
-        html = '';
-        if (consoleInputCursorColumn > 0){
-            html = html + consoleInputSpan + originalText.substring(0, consoleInputCursorColumn) + '</span>';
-        }
-        html = html + consoleInputReverseSpan + originalText.substring(consoleInputCursorColumn, consoleInputCursorColumn + 1) + '</span>';
-        if (consoleInputCursorColumn < consoleSizeColumns - 1){
-            html = html + consoleInputSpan + originalText.substring(consoleInputCursorColumn + 1) + '</span>';
-        }
     } else {
-        html = consoleInputSpan + originalText + '</span>';
+        setStatusRow(false);
     }
-    row.innerHTML = html;
+}, 1000);
+
+
+//  Responds to pressing the Enter or Return key for input, or the Esc key to unlock the keyboard
+$('input[type=text]').on('keydown', function(e) {
+    const inputRow = document.getElementById('consoleInputRow');
+    if (e.which === 13 || e.keyCode === 13){
+        e.preventDefault();
+        if (pendingPostMessageXHR != null) {
+            alert('Previous input not yet acknowledged');
+        } else if (validating) {
+            alert("Validation in progress - please wait");
+        } else if (clientIdent === '') {
+            alert("No session active - input ignored");
+            inputRow.value = '';
+        } else {
+            const inputRow = document.getElementById('consoleInputRow');
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/message', true);
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+            xhr.setRequestHeader('Client', clientIdent);
+            let json = JSON.stringify({text: inputRow.value.trim()});
+            xhr.onload = function () {
+                pendingPostMessageXHR = null;
+                if (xhr.status === 200 || xhr.status === 201) {
+                    //  input was accepted
+                } else if (xhr.status === 400) {
+                    //  input was rejected for content
+                    alert('Input rejected:' + xhr.statusText);
+                } else if (xhr.status === 401) {
+                    alert('Session is no longer validated');
+                } else {
+                    alert('Server is refusing input:' + xhr.statusText);
+                }
+                inputRow.disabled = false;
+                inputRow.value = '';
+                setStatusRow(false);
+            };
+            xhr.onerror = function () {
+                //  Some sort of network error occurred - complain and unclog input
+                alert('Network error - cannot submit console input');
+                inputRow.disabled = false;
+                inputRow.value = '';
+                setStatusRow(false);
+            };
+            xhr.send(json);
+            pendingPostMessageXHR = xhr;
+            inputRow.disabled = true;
+            setStatusRow(false);
+        }
+    } else if (e.which === 27 || e.keyCode === 27) {
+        e.preventDefault();
+        const row = document.getElementById('consoleInputRow');
+        pendingPostMessageXHR = false;
+        row.disabled=false;
+    }
+});
+
+
+//  Creates a <span> leading tag for specifying color and background color.
+//  Parameters should be integers values as 0x{rr}{gg}{bb}
+function createSpan(fgcolor, bgcolor) {
+    const fgStr = '#' + (fgcolor.toString(16).padStart(6, '0'));
+    const bgStr = '#' + (bgcolor.toString(16).padStart(6, '0'));
+    return '<span style="color:' + fgStr + '; background-color:' + bgStr + '">'
 }
 
 
 //  Poll the REST server, unless we're not validated in which case, validate
-function pollServer(){
+function pollServer() {
     if (clientIdent === '') {
         if (validating) {
             console.debug("waiting for validation...");
@@ -100,6 +126,7 @@ function pollServer(){
         } else {
             polling = true;
             console.debug("polling...");
+            //TODO use XMLHttpRequest directly
             $.ajax({
                 url: '/poll',
                 type: 'GET',
@@ -108,18 +135,23 @@ function pollServer(){
                     "Client": clientIdent
                 },
                 success: function (data, textStatus, jqXHR) {
-                    console.debug("POLL SUCCESS");//TODO do something with the data
                     console.debug(jqXHR.responseJSON);
+                    const jumpKeySettings = jqXHR.responseJSON.jumpKeySettings;
+                    const newLogEntries = jqXHR.responseJSON.newLogEntries;
+                    const newMessages = jqXHR.responseJSON.outputMessages;
 
-                    pollCheckLogEntries(jqXHR);
-                    //  TODO check for master status changed
-                    //  TODO check for input accepted flag
-                    pollCheckStatusMessage(jqXHR);
-                    pollCheckReadOnlyMessages(jqXHR);
-                    //  TODO check for new read-reply console output
-                    //  TODO check for updated jumpkeys
-                    //  TODO check for updated system config
-                    //  TODO check for updated hardware config
+                    if (jumpKeySettings != null) {
+                        //TODO update jump key settings panel
+                    }
+
+                    if ((newLogEntries != null) && (newLogEntries.length > 0)) {
+                        processNewLogEntries(newLogEntries);
+                    }
+
+                    if ((newMessages != null) && (newMessages.length > 0)) {
+                        processNewConsoleMessages(newMessages);
+                    }
+
                     polling = false;
                 },
                 error: function (jqXHR, textStatus /*, errorThrown*/) {
@@ -129,152 +161,217 @@ function pollServer(){
                     //TODO if it's a 403, re-validate
                     //TODO any other status, or nothing at all, we complain then shut down
                 }
-            })
+            });
+            setStatusRow(true);
         }
     }
 }
 
 
-//  after a poll comes back, see if there are any new log entries
-function pollCheckLogEntries(jqXHR){
-    const newLogEntries = jqXHR.responseJSON.newLogEntries;
-    if (newLogEntries != null) {
-        const tableBody = document.getElementById('LoggingRows');
-        for (let i = 0; i < newLogEntries.length; i++) {
-            const timestamp = newLogEntries[i].timestamp;
-            const category = newLogEntries[i].category;
-            const entity = newLogEntries[i].entity;
-            const message = newLogEntries[i].message;
+//  Processes console messages we've retrieved from a poll
+function processNewConsoleMessages(newMessages) {
+    for (let mx = 0; mx < newMessages.length; mx++) {
+        const messageType = newMessages[mx].messageType;
+        const rowIndex = newMessages[mx].rowIndex;
+        const textColor = newMessages[mx].textColor;
+        const backgroundColor = newMessages[mx].backgroundColor;
+        const text = newMessages[mx].text;
+        const rightJustified = newMessages[mx].rightJustified;
+        let html = '';
 
-            const dateStr = new Date(timestamp).toISOString();
-            const dateElement = document.createElement('td');
-            dateElement.innerHTML = dateStr;
+        switch(messageType) {
+            case 0:     //  CLEAR_SCREEN
+                const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
+                html = createSpan(defaultConsoleColor, defaultConsoleBackground) + blankLineHTML + '</span>';
+                for (let rx = 0; rx < attributes.screenSizeRows; rx++) {
+                    rows[rx].innerHTML = html;
+                }
+                break;
 
-            let categoryStr = category.padStart(5, ' ');
-            if (category === 'ERROR') {
-                categoryStr = '<span style="color: ' + logErrorColor + '">' + category + '</span>'
-            } else if (category === 'DEBUG') {
-                categoryStr = '<span style="color: ' + logDebugColor + '">' + category + '</span>'
-            } else if (category === 'TRACE') {
-                categoryStr = '<span style="color: ' + logTraceColor + '">' + category + '</span>'
-            } else if (category === 'INFO') {
-                categoryStr = '<span style="color: ' + logInfoColor + '">' + category + '</span>'
-            }
-            const catElement = document.createElement('td');
-            catElement.innerHTML = categoryStr;
+            case 1:     //  UNLOCK_KEYBOARD
+                pendingPostMessageXHR = null;
+                const inputRow = document.getElementById('consoleInputRow');
+                inputRow.disabled = false;
+                break;
 
-            const entityElement = document.createElement('td');
-            entityElement.innerHTML = entity;
+            case 2:     //  DELETE_ROW
+                if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
+                    const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
+                    let rx = rowIndex + 1;
+                    while (rx < attributes.screenSizeRows) {
+                        rows[rx - 1].innerHTML = rows[rx].innerHTML;
+                        rx++;
+                    }
+                    html = createSpan(defaultConsoleColor, defaultConsoleBackground) + blankLineHTML + '</span>';
+                    rows[attributes.screenSizeRows - 1].innerHTML = html;
+                }
+                break;
 
-            const messageStr = message.replace(new RegExp(' ', 'g'), '&nbsp;');
-            const msgElement = document.createElement('td');
-            msgElement.innerHTML = messageStr;
-
-            const newRow = tableBody.insertRow(0);
-            newRow.appendChild(dateElement);
-            newRow.appendChild(catElement);
-            newRow.appendChild(entityElement);
-            newRow.appendChild(msgElement);
-
-            tableBody.appendChild(newRow);
-        }
-
-        while (tableBody.rows.length > maxLoggingRows) {
-            tableBody.deleteRow(0);
-        }
-    }
-}
-
-
-//  after a poll comes back, check whether there are any new read-only messages
-function pollCheckReadOnlyMessages(jqXHR){
-    const newReadOnlyMessages = jqXHR.responseJSON.newReadOnlyMessages;
-    if (newReadOnlyMessages != null) {
-        const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-        for (let mx = 0; mx < newReadOnlyMessages.length; mx++){
-            scrollConsole(rows);
-            const romText = newReadOnlyMessages[mx].text;
-            const lastRow = rows[consoleSizeRows - 1];
-            const text = romText.replace(spaceRegexPattern, '&nbsp;');
-            lastRow.innerHTML = consoleReadOnlySpan + text + '</span>';
+            case 3:     //  WRITE_ROW
+                if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
+                    const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
+                    let adjustedText = text.substring(0, attributes.screenSizeColumns);
+                    if (rightJustified) {
+                        adjustedText = adjustedText.padStart(attributes.screenSizeColumns, ' ');
+                    }
+                    html = createSpan(textColor, backgroundColor);
+                    html += adjustedText.substring(0, attributes.screenSizeColumns).replace(spaceRegexPattern, '&nbsp;');
+                    html += '</span>';
+                    rows[rowIndex].innerHTML = html;
+                }
+                break;
         }
     }
 }
 
 
-//  after a poll comes back, see if there's an updated status message
-function pollCheckStatusMessage(jqXHR){
-    const latestStatusMessage = jqXHR.responseJSON.latestStatusMessage;
-    if (latestStatusMessage != null) {
-        const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-        const newStatusMessages = latestStatusMessage.text;
-        if (newStatusMessages.length < statusMessageLines) {
-            //  If there fewer status message lines in the new message, erase the bottom existing message(s)
-            //  TODO
-        } else if (newStatusMessages.length > statusMessageLines) {
-            //  If there are more status messages lines in the new message, make sure we don't overwrite any
-            //  existing read-reply messages
-            //  TODO
-        }
+//  Processes log entries we've retrieved from a poll
+function processNewLogEntries(newLogEntries) {
+    const tableBody = document.getElementById('LoggingRows');
+    for (let i = 0; i < newLogEntries.length; i++) {
+        const timestamp = newLogEntries[i].timestamp;
+        const category = newLogEntries[i].category;
+        const entity = newLogEntries[i].entity;
+        const message = newLogEntries[i].message;
 
-        statusMessageLines = newStatusMessages.length;
-        for (let mx = 0; mx < statusMessageLines; mx++) {
-            const row = rows[mx];
-            const text = newStatusMessages[mx].substring(0, consoleSizeColumns).replace(spaceRegexPattern, '&nbsp;');
-            row.innerHTML = consoleSystemStatusSpan + text + '</span>';
+        const dateStr = new Date(timestamp).toISOString();
+        const dateElement = document.createElement('td');
+        dateElement.innerHTML = dateStr;
+
+        let categoryStr = category.padStart(5, ' ');
+        if (category === 'ERROR') {
+            categoryStr = createSpan(logErrorColor, logBackgroundColor)  + category + '</span>'
+        } else if (category === 'DEBUG') {
+            categoryStr = createSpan(logDebugColor, logBackgroundColor) + category + '</span>'
+        } else if (category === 'TRACE') {
+            categoryStr = createSpan(logTraceColor, logBackgroundColor) + category + '</span>'
+        } else if (category === 'INFO') {
+            categoryStr = createSpan(logInfoColor, logBackgroundColor) + category + '</span>'
         }
+        const catElement = document.createElement('td');
+        catElement.innerHTML = categoryStr;
+
+        const entityElement = document.createElement('td');
+        entityElement.innerHTML = entity;
+
+        const messageStr = message.replace(new RegExp(' ', 'g'), '&nbsp;');
+        const msgElement = document.createElement('td');
+        msgElement.innerHTML = messageStr;
+
+        const newRow = tableBody.insertRow(0);
+        newRow.appendChild(dateElement);
+        newRow.appendChild(catElement);
+        newRow.appendChild(entityElement);
+        newRow.appendChild(msgElement);
+
+        tableBody.appendChild(newRow);
+    }
+
+    while (tableBody.rows.length > maxLoggingRows) {
+        tableBody.deleteRow(0);
     }
 }
 
 
-//  Scrolls the console up by one line, presumably in preparation for inserting a new line at the bottom.
-//  Some trickery involved - we cannot scroll the system status area which comprises the top {n} lines
-//  where {n} >= 0, nor can we scroll a read-reply message off the top. So, we must find the first row
-//  below the system status messages which does not contain a read-reply message, and scroll everything else
-//  below that row, up by one row.
-//  This does raise an interesting question, in that if the system status area + number of read-reply rows
-//  is equal to the number of rows on the screen, we're pooched.
-//  Since the standard OS only does 2 status lines and a max of 10 read-reply lines, we don't worry about it.
-function scrollConsole(rows){
-    let rx = statusMessageLines;
-    while (!(messageIds[rx++] === -1)){}
-
-    //  Now rx is the index of the first row to be scrolled
-    while (rx < consoleSizeRows) {
-        const prevRow = rows[rx - 1];
-        const thisRow = rows[rx];
-        prevRow.innerHTML = thisRow.innerHTML;
-        messageIds[rx - 1] = messageIds[rx];
-        rx++;
+//  Updates the status row
+function setStatusRow(pollTrigger) {
+    let html = '';
+    for (cx = 0; cx < attributes.screenSizeColumns - 14; cx++) {
+        html += '&nbsp;';
     }
 
-    //  Clear the final row, and we're done
-    rows[consoleSizeRows - 1].innerHTML = consoleReadOnlySpan + '</span>';
-    messageIds[consoleSizeRows - 1] = -1;
+    //  TODO change all these to createSpan()
+    if (pendingPostMessageXHR) {
+        fg = '#000000';
+        bg = '#ffff00';
+    } else {
+        fg = '#bfbfbf';
+        bg = '#3f3f00';
+    }
+    html += '<span style="color:' + fg + '; background-color:' + bg + '">LOCK</span> ';
+
+    if (pollTrigger) {
+        fg = '#000000';
+        bg = '#00ffff';
+    } else if (polling) {
+        fg = '#000000';
+        bg = '#00ff00';
+    } else {
+        fg = '#bfbfbf';
+        bg = '#003f00';
+    }
+    html += '<span style="color:' + fg + '; background-color:' + bg + '">POLL</span> ';
+
+    if (validating) {
+        fg = '#000000';
+        bg = '#ffff00';
+    } else if (clientIdent === '') {
+        fg = '#bfbfbf';
+        bg = '#003f00';
+    } else {
+        fg = '#000000';
+        bg = '#00ff00';
+    }
+    html += '<span style="color:' + fg + '; background-color:' + bg + '">SESN</span>';
+
+    const row = document.getElementById('statusRow');
+    row.innerHTML = html;
 }
 
 
 //  Initiates a validation sequence with the REST server
-function validate(){
+function validate() {
     validating = true;
     console.debug("validating...");
-    $.ajax({
-        url:        '/session',
-        type:       'POST',
-        dataType:   'json',
-        headers: {
-            "Authorization": "Basic " + btoa(credentialUsername + ":" + credentialPassword)
-        },
-        success: function(data /*, textStatus, jqXHR */){
-            console.debug("VALIDATE SUCCESS:" + data);
-            clientIdent = data;
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/session', true);
+    xhr.responseType = "json";
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(credentialUsername + ':' + credentialPassword));
+    let json = JSON.stringify(attributes);
+    xhr.onload = function () {
+        pendingPostMessageXHR = null;
+        if (xhr.status === 200 || xhr.status === 201) {
+            //  input was accepted - should be 201, but we'll take 200
+            console.debug("VALIDATE SUCCESS:" + xhr.response);
+            clientIdent = xhr.response;
             validating = false;
-        },
-        error: function(jqXHR, textStatus /*, errorThrown*/){
-            console.debug("VALIDATE FAILED:" + jqXHR.status + ":" + textStatus);
-            validating = false;
-            //TODO if it's a 401, go back and re-invoke the credential dialog
-            //TODO anything else, complain and shut down
+        } else {
+            //  input was rejected for content
+            console.debug("VALIDATE FAILED:" + xhr.statusText);
+            alert('Validation failure:' + xhr.statusText);
+            //TODO go back to login dialog
         }
-    })
+        setStatusRow(false);
+    };
+    xhr.onerror = function () {
+        //  Some sort of network error occurred - complain and unclog input
+        alert('Network error - cannot contact indicated server');
+        //TODO set validating = false
+        //TODO go back to login dialog
+        setStatusRow(false);
+    };
+    xhr.send(json);
+    // //TODO use XMLHttpRequest directly
+    // $.ajax({
+    //     url:        '/session',
+    //     type:       'POST',
+    //     dataType:   'json',
+    //     headers: {
+    //         "Authorization": "Basic " + btoa(credentialUsername + ":" + credentialPassword)
+    //     },
+    //     success: function(data /*, textStatus, jqXHR */) {
+    //         console.debug("VALIDATE SUCCESS:" + data);
+    //         clientIdent = data;
+    //         validating = false;
+    //     },
+    //     error: function(jqXHR, textStatus /*, errorThrown*/) {
+    //         console.debug("VALIDATE FAILED:" + jqXHR.status + ":" + textStatus);
+    //         validating = false;
+    //         //TODO if it's a 401, go back and re-invoke the credential dialog
+    //         //TODO anything else, complain and shut down
+    //     }
+    // });
+
+    setStatusRow(false);
 }

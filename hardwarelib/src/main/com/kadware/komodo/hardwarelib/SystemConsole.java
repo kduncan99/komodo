@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.*;
 import java.io.BufferedWriter;
-import java.util.Arrays;
 
 
 /**
@@ -14,110 +13,6 @@ import java.util.Arrays;
  */
 @SuppressWarnings("Duplicates")
 public interface SystemConsole {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Primitive objects representing console traffic in either direction
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Represents input to the operating system from the console device
-     */
-    abstract class InputMessage {
-
-        public final String _text;
-
-        InputMessage(
-            final String text
-        ) {
-            _text = text;
-        }
-    }
-
-    /**
-     * Represents unsolicited input to the operating system from the console device
-     */
-    class UnsolicitedInputMessage extends InputMessage {
-
-        public UnsolicitedInputMessage(
-            final String text
-        ) {
-            super(text);
-        }
-    }
-
-    /**
-     * Represents input to the operating system from the console device, in response to a previous read-reply message
-     */
-    class ReadReplyInputMessage extends InputMessage {
-
-        public final int _messageId;        //  from the associated ReadReplyOutputMessage
-
-        public ReadReplyInputMessage(
-            final int messageId,
-            final String text
-        ) {
-            super(text);
-            _messageId = messageId;
-        }
-    }
-
-    /**
-     * Represents output from the operating system to the console device
-     */
-    abstract class OutputMessage {}
-
-    /**
-     * Represents output from the operating system to the console device, which does not require a response
-     */
-    class ReadOnlyMessage extends OutputMessage {
-
-        public final String _text;
-
-        public ReadOnlyMessage(
-            final String text
-        ) {
-            _text = text;
-        }
-    }
-
-    /**
-     * Represents output from the operating system to the console device, which does require a response
-     */
-    class ReadReplyMessage extends OutputMessage {
-
-        public final int _maxReplyLength;   //  max accepted reply length in characters
-        public final int _messageId;
-        public final String _text;
-
-        ReadReplyMessage(
-            final int messageId,
-            final String text,
-            final int maxReplyLength
-        ) {
-            _messageId = messageId;
-            _text = text;
-            _maxReplyLength = maxReplyLength;
-        }
-    }
-
-    /**
-     * Represents output from the operating system to the console device
-     */
-    class StatusMessage extends OutputMessage {
-
-        public final String[] _text;    //  One or more lines of text comprising the reported status
-
-        StatusMessage(
-            final String[] text
-        ) {
-            _text = Arrays.copyOf(text, text.length);
-        }
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Methods which must be implemented by the subclass
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * For debugging - writes information specific to the implementor, to the log
@@ -137,31 +32,32 @@ public interface SystemConsole {
 
     /**
      * Polls the console for the next available input message
-     * @return InputMessage object, or null if there is no message to be had
+     * @return text, or null if there is no message to be had
      */
-    InputMessage pollInputMessage();
+    String pollInputMessage();
 
     /**
-     * Posts a particular ReadOnlyMessage to the implementor.
+     * Posts a read-only message to the implementor
      */
     void postReadOnlyMessage(
-        final ReadOnlyMessage message
+        final String message,
+        final Boolean rightJustified
     );
 
     /**
-     * Posts a particular ReadReplyMessage to the implementor.
+     * Posts a read-reply message to the implementor
      */
     void postReadReplyMessage(
-        final ReadReplyMessage message
+        final int messageId,
+        final String message,
+        final int maxReplyLength
     );
 
     /**
-     * Posts a particular OutputMessage to the implementor.
-     * If the identifier is the same as a message already known to the console, it overwrites that message.
-     * This is the method used for 'unpinning' a previously pinned message.
+     * Posts a particular set of status messages to the implementor
      */
-    void postStatusMessage(
-        final StatusMessage message
+    void postStatusMessages(
+        final String[] messgaes
     );
 
     /**

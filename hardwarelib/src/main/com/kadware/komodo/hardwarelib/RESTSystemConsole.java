@@ -2,17 +2,15 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib.net;
+package com.kadware.komodo.hardwarelib;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.PathNames;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.HttpMethod;
 import com.kadware.komodo.baselib.SecureServer;
-import com.kadware.komodo.hardwarelib.SoftwareConfiguration;
-import com.kadware.komodo.hardwarelib.SystemConsole;
-import com.kadware.komodo.hardwarelib.SystemProcessor;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -32,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +54,9 @@ import org.apache.logging.log4j.Logger;
  * 'sees' our client(s) as one console.
  *
  * This implementation uses long polling.
+ * Keeping it simple - we require clients to implement a 24x80 output screen, with a separate input text facility.
+ * This can change by altering the screen size constants here; the client should be implemented such that it can
+ * easily be changed as well.
  */
 @SuppressWarnings("Duplicates")
 public class RESTSystemConsole implements SystemConsole {
@@ -64,63 +66,456 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private interface PokeClientFunction {
-        void function(final ClientInfo clientInfo);
+        void function(final SessionInfo sessionInfo);
     }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Information local to each established session
+    //  Communications packets sent between us and the REST client
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * ClientInfo - information regarding a particular client
+     * Information sent to us by the client when it attempts to establish a session
      */
-    private static class ClientInfo {
+    private static class ClientAttributes {
+        @JsonProperty("screenSizeColumns")  final int _screenSizeColumns;
+        @JsonProperty("screenSizeRows")    final int _screenSizeRows;
 
+        ClientAttributes(
+            @JsonProperty("screenSizeColumns")  final int screenSizeColumns,
+            @JsonProperty("screenSizeRows")     final int screenSizeRows
+        ) {
+            _screenSizeColumns = screenSizeColumns;
+            _screenSizeRows = screenSizeRows;
+        }
+    }
+
+    /**
+     * Client sends this to us whenever the operator hits 'enter'
+     */
+    private static class InputMessage {
+        @JsonProperty("text")           final String _text;
+
+        InputMessage(
+            @JsonProperty("text")       final String text
+        ) {
+            _text = text;
+        }
+    }
+
+    /**
+     * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
+     */
+    private static class JumpKeys {
+        //  36-bit composite value, wrapped in a long.
+        @JsonProperty("compositeValue") public Long _compositeValue;
+
+        //  Individual values, per bit.
+        //  Key is the jump key identifier from 1 to 36
+        //  Value is true if jk is set (or to be set), false if jk is clear (or to be clear).
+        //  For PUT an unspecified jk means the value is left as-is.
+        //  For GET values for all jump keys are returned.
+        @JsonProperty("componentValues") public Map<Integer, Boolean> _componentValues;
+
+        JumpKeys(
+            @JsonProperty("compositeValue")     final Long compositeValue,
+            @JsonProperty("componentValues")    final Map<Integer, Boolean> componentValues
+        ) {
+            _compositeValue = compositeValue;
+            _componentValues = new HashMap<>(componentValues);
+        }
+    }
+
+    /**
+     * We send these to the client to affect what is on its display.
+     */
+    private static class OutputMessage {
+
+        static final int OMTYPE_CLEAR_SCREEN = 0;
+        static final int OMTYPE_UNLOCK_KEYBOARD = 1;
+        static final int OMTYPE_DELETE_ROW = 2;
+        static final int OMTYPE_WRITE_ROW = 3;
+
+        @JsonProperty("backgroundColor")        final Integer _backgroundColor; //  0xrrggbb format
+        @JsonProperty("messageType")            final Integer _messageType;
+        @JsonProperty("rowIndex")               final Integer _rowIndex;
+        @JsonProperty("textColor")              final Integer _textColor;       //  0xrrggbb format
+        @JsonProperty("text")                   final String _text;
+        @JsonProperty("rightJustified")         final Boolean _rightJustified;
+
+        OutputMessage(
+            @JsonProperty("messageType")        final Integer messageType,      //  all msgs
+            @JsonProperty("rowIndex")           final Integer rowIndex,         //  DELETE_ROW, WRITE_ROW
+            @JsonProperty("textColor")          final Integer textColor,        //  WRITE_ROW
+            @JsonProperty("backgroundColor")    final Integer backgroundColor,  //  WRITE_ROW
+            @JsonProperty("text")               final String text,              //  WRITE_ROW
+            @JsonProperty("rightJustified")     final Boolean rightJustified    //  WRITE_ROW
+        ) {
+            _messageType = messageType;
+            _rowIndex = rowIndex;
+            _textColor = textColor;
+            _backgroundColor = backgroundColor;
+            _text = text;
+            _rightJustified = rightJustified;
+        }
+
+        static OutputMessage createClearScreenMessage() {
+            return new OutputMessage(OMTYPE_CLEAR_SCREEN, null, null, null, null, null);
+        }
+
+        static OutputMessage createUnlockKeyboardMessage() {
+            return new OutputMessage(OMTYPE_UNLOCK_KEYBOARD, null, null, null, null, null);
+        }
+
+        static OutputMessage createDeleteRowMessage(
+            final int rowIndex
+        ) {
+            return new OutputMessage(OMTYPE_DELETE_ROW, rowIndex, null, null, null, null);
+        }
+
+        static OutputMessage createWriteRowMessage(
+            final int rowIndex,
+            final int textColor,
+            final int backgroundColor,
+            final String text,
+            final Boolean rightJustified
+        ) {
+            return new OutputMessage(OMTYPE_WRITE_ROW, rowIndex, textColor, backgroundColor, text, rightJustified);
+        }
+    }
+
+    /**
+     * Object encapsulating certain other objects.
+     * Client issues a GET on the /poll subdirectory, and we respond with all the updated information.
+     * An entity will be null if that entity has not been updated in the interim.
+     */
+    private static class PollResult {
+
+        //  populated by us when the JK settings have changed
+        @JsonProperty("jumpKeySettings")            public Long _jumpKeySettings;
+
+        //  Populated by us when any new log entries are available
+        @JsonProperty("newLogEntries")              public SystemLogEntry[] _logEntries;
+
+        //  Output messages we send to the client.
+        @JsonProperty("outputMessages")             public OutputMessage[] _outputMessages;
+
+        PollResult() {
+            _jumpKeySettings = null;
+            _logEntries = new SystemLogEntry[0];
+            _outputMessages = new OutputMessage[0];
+        }
+
+        PollResult(
+            @JsonProperty("jumpKeySettings")            final Long jumpKeySettings,
+            @JsonProperty("newLogEntries")              final SystemLogEntry[] logEntries,
+            @JsonProperty("outputMessages")             final OutputMessage[] outputMessages
+        ) {
+            _jumpKeySettings = jumpKeySettings;
+            _logEntries = logEntries == null ? null : Arrays.copyOf(logEntries, logEntries.length);
+            _outputMessages = outputMessages == null ? null : Arrays.copyOf(outputMessages, outputMessages.length);
+        }
+    }
+
+    /**
+     * Object describing a log entry we've caught from the system logger, to be sent on to the client
+     */
+    private static class SystemLogEntry {
+        @JsonProperty("timestamp")              public Long _timestamp;     //  system milliseconds
+        @JsonProperty("category")               public String _category;    //  ERROR, TRACE, etc
+        @JsonProperty("entity")                 public String _entity;      //  reporting entity
+        @JsonProperty("message")                public String _message;
+
+        SystemLogEntry (
+            @JsonProperty("timestamp")      final Long timestamp,
+            @JsonProperty("category")       final String category,
+            @JsonProperty("entity")         final String entity,
+            @JsonProperty("message")        final String message
+        ) {
+            _timestamp = timestamp;
+            _category = category;
+            _entity = entity;
+            _message = message;
+        }
+
+        SystemLogEntry(
+            KomodoLoggingAppender.LogEntry logEntry
+        ) {
+            _category = logEntry._category;
+            _entity = logEntry._source;
+            _message = logEntry._message;
+            _timestamp = logEntry._timeMillis;
+        }
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Internal classes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static class PendingReadReplyMessage {
+        int _currentRowIndex;
+        final int _maxReplyLength;
+        final int _messageId;
+        final String _text;
+
+        PendingReadReplyMessage(
+            final int rowIndex,
+            final int maxReplyLength,
+            final int messageId,
+            final String text
+        ) {
+            _currentRowIndex = rowIndex;
+            _maxReplyLength = maxReplyLength;
+            _messageId = messageId;
+            _text = text;
+        }
+    }
+
+    /**
+     * SessionIInfo - information regarding a particular client
+     */
+    private static class SessionInfo {
+
+        private final ClientAttributes _clientAttributes;
         private final String _clientId;
         private long _lastActivity = System.currentTimeMillis();
         private boolean _isMaster = false;
+        private PollResult _pollResult = new PollResult();
         private InetSocketAddress _remoteAddress = null;
+        private int _statusMessageCount = 0;
 
-        //  notification-ish things
-        public boolean _inputDelivered = false;
-        public boolean _isMasterChanged = false;
-        public List<KomodoLoggingAppender.LogEntry> _pendingLogEntries = new LinkedList<>();
-        public List<ReadOnlyMessage> _pendingReadOnlyMessages = new LinkedList<>();
-        public boolean _updatedHardwareConfiguration = false;
-        public boolean _updatedJumpKeys = false;
-        public boolean _updatedReadReplyMessages = false;
-        public boolean _updatedStatusMessage = false;
-        public boolean _updatedSystemConfiguration = false;
+        //  Read Reply messages which have not yet been responded to
+        //  Key is the messageId, value is a PendingReadReplyMessage object
+        private final Map<Integer, PendingReadReplyMessage> _pendingReadReplyMessages = new HashMap<>();
 
-        ClientInfo(
-            final String clientId
+        //  A row is 'pinned' if it contains content which cannot be allowed to scroll off the display.
+        //  Examples are status messages and pending read reply messages.
+        //  This table is indexed by the corresponding row index (which is the row number minus 1, if anyone cares).
+        private final boolean[] _pinnedState;
+
+        SessionInfo(
+            final String clientId,
+            final ClientAttributes clientAttributes
         ) {
+            _clientAttributes = clientAttributes;
             _clientId = clientId;
+            _pinnedState = new boolean[clientAttributes._screenSizeRows];
         }
 
-        public void clear() {
-            _inputDelivered = false;
-            _isMasterChanged = false;
-            _pendingLogEntries.clear();
-            _pendingReadOnlyMessages.clear();
-            _updatedHardwareConfiguration = false;
-            _updatedJumpKeys = false;
-            _updatedReadReplyMessages = false;
-            _updatedStatusMessage = false;
-            _updatedSystemConfiguration = false;
+        void appendLogEntries(
+            final List<SystemLogEntry> entries
+        ) {
+            PollResult pr = _pollResult;
+            if (pr._logEntries == null) {
+                pr._logEntries = entries.toArray(new SystemLogEntry[0]);
+            } else {
+                int origArrayLen = pr._logEntries.length;
+                int newArrayLen = origArrayLen + entries.size();
+                SystemLogEntry[] newArray = Arrays.copyOf(pr._logEntries, newArrayLen);
+                int newx = origArrayLen;
+                for (SystemLogEntry sle : entries) {
+                    newArray[newx++] = sle;
+                }
+                pr._logEntries = newArray;
+            }
         }
 
-        public boolean hasUpdatesForClient() {
-            return _inputDelivered
-                || _isMasterChanged
-                || !_pendingLogEntries.isEmpty()
-                || !_pendingReadOnlyMessages.isEmpty()
-                || _updatedHardwareConfiguration
-                || _updatedJumpKeys
-                || _updatedReadReplyMessages
-                || _updatedStatusMessage
-                || _updatedSystemConfiguration;
+        void appendOutputMessage(
+            final OutputMessage newMessage
+        ) {
+            PollResult pr = _pollResult;
+            if (pr._outputMessages == null) {
+                pr._outputMessages = new OutputMessage[1];
+                pr._outputMessages[0] = newMessage;
+            } else {
+                int origLen = pr._outputMessages.length;
+                pr._outputMessages = Arrays.copyOf(pr._outputMessages, origLen + 1);
+                pr._outputMessages[origLen] = newMessage;
+            }
+        }
+
+        void appendOutputMessages(
+            final List<OutputMessage> entries
+        ) {
+            PollResult pr = _pollResult;
+            if (pr._outputMessages == null) {
+                pr._outputMessages = entries.toArray(new OutputMessage[0]);
+            } else {
+                int origArrayLen = pr._outputMessages.length;
+                int newArrayLen = origArrayLen + entries.size();
+                OutputMessage[] newArray = Arrays.copyOf(pr._outputMessages, newArrayLen);
+                int newx = origArrayLen;
+                for (OutputMessage msg : entries) {
+                    newArray[newx++] = msg;
+                }
+                pr._outputMessages = newArray;
+            }
+        }
+
+        /**
+         * Cancels a read-reply message - generally means that the message has been responded to
+         */
+        void cancelReadReplyMessage(
+            final int messageId
+        ) {
+            PendingReadReplyMessage prrm = _pendingReadReplyMessages.get(messageId);
+            if (prrm != null) {
+                String text = ("  " + prrm._text).substring(0, _clientAttributes._screenSizeColumns);
+                appendOutputMessage(OutputMessage.createWriteRowMessage(prrm._currentRowIndex,
+                                                                        READ_ONLY_FG_COLOR,
+                                                                        READ_ONLY_BG_COLOR,
+                                                                        text,
+                                                                        false));
+                _pendingReadReplyMessages.remove(messageId);
+            }
+        }
+
+        /**
+         * Indicates whether we have information to send back to the client.
+         */
+        boolean hasUpdates() {
+            PollResult pr = _pollResult;
+            return (pr._jumpKeySettings != null)
+                || (pr._logEntries.length > 0)
+                || (pr._outputMessages.length > 0);
+        }
+
+        /**
+         * Resets the client
+         */
+        void resetClient() {
+            _pendingReadReplyMessages.clear();
+            List<OutputMessage> newMessages = new LinkedList<>();
+            newMessages.add(OutputMessage.createClearScreenMessage());
+            newMessages.add(OutputMessage.createUnlockKeyboardMessage());
+            appendOutputMessages(newMessages);
+        }
+
+        /**
+         * Posts an echo of an input message
+         */
+        void postInputMessage(
+            final String message
+        ) {
+            scroll();
+            int rx = _clientAttributes._screenSizeRows - 1;
+            appendOutputMessage(OutputMessage.createWriteRowMessage(rx, INPUT_FG_COLOR, INPUT_BG_COLOR, message, false));
+        }
+
+        /**
+         * Posts a read-only message to this client
+         */
+        void postReadOnlyMessage(
+            final String message,
+            final Boolean rightJustified
+        ) {
+            scroll();
+            int rx = _clientAttributes._screenSizeRows - 1;
+            appendOutputMessage(OutputMessage.createWriteRowMessage(rx,
+                                                                    READ_ONLY_FG_COLOR,
+                                                                    READ_ONLY_BG_COLOR,
+                                                                    message,
+                                                                    rightJustified));
+        }
+
+        /**
+         * Posts a new read-reply message to the client
+         */
+        void postReadReplyMessage(
+            final int messageId,
+            final String message,
+            final int maxReplySize
+        ) {
+            if ((messageId >= 0) && (messageId <= 9) && !_pendingReadReplyMessages.containsKey(messageId)) {
+                scroll();
+                String text = String.format("%d %s", messageId, message);
+                int rx = _clientAttributes._screenSizeRows - 1;
+                appendOutputMessage(OutputMessage.createWriteRowMessage(rx,
+                                                                        READ_REPLY_FG_COLOR,
+                                                                        READ_REPLY_BG_COLOR,
+                                                                        text,
+                                                                        false));
+
+                PendingReadReplyMessage prrm = new PendingReadReplyMessage(rx, maxReplySize, messageId, message);
+                _pendingReadReplyMessages.put(messageId, prrm);
+            }
+        }
+
+        /**
+         * Posts a new set of status messages to the client.
+         * Note that we have to ensure that we do not accidentally overwrite any pending read-reply messages.
+         * If the new set of messages has more content than the previous set, and if we would overwrite one or more
+         *      pending read-reply messages, then those messages have to be moved to the bottom of the screen - i.e., they
+         *      must be effectively resent.
+         * If the new set has less content, we need to overwrite the previous excessive status message rows with blank rows.
+         */
+        void postStatusMessages(
+            final String[] messages
+        ) {
+            List<OutputMessage> output = new LinkedList<>();
+            for (int mx = 0; mx < _statusMessageCount; ++mx) {
+                if (mx < messages.length) {
+                    output.add(OutputMessage.createWriteRowMessage(mx, STATUS_FG_COLOR, STATUS_BG_COLOR, messages[mx], false));
+                    _pinnedState[mx] = true;
+                } else {
+                    output.add(OutputMessage.createWriteRowMessage(mx, READ_ONLY_FG_COLOR, READ_ONLY_BG_COLOR, "",false));
+                    _pinnedState[mx] = false;
+                }
+            }
+            appendOutputMessages(output);
+
+            List<PendingReadReplyMessage> displaced = new LinkedList<>();
+            Iterator<Map.Entry<Integer, PendingReadReplyMessage>> iter = _pendingReadReplyMessages.entrySet().iterator();
+            while (iter.hasNext()) {
+                PendingReadReplyMessage prrm = iter.next().getValue();
+                if (prrm._currentRowIndex < messages.length) {
+                    displaced.add(prrm);
+                    iter.remove();
+                }
+            }
+
+            int lastRowIndex = _clientAttributes._screenSizeRows - 1;
+            for (PendingReadReplyMessage prrm : displaced) {
+                scroll();
+                prrm._currentRowIndex = lastRowIndex;
+                _pendingReadReplyMessages.put(prrm._messageId, prrm);
+                _pinnedState[lastRowIndex] = true;
+            }
+
+            _statusMessageCount = messages.length;
+        }
+
+        /**
+         * Finds the first delete-able row on the client's display, and effectively deletes it,
+         * scrolling all rows below it up by one row.
+         */
+        void scroll() {
+            //  Find the index of the first non-pinned row
+            int rx = 0;
+            while (_pinnedState[rx]) {
+                rx++;
+            }
+
+            //  Scroll - create client output to implement this visually, then scroll all our internal objects as well.
+            List<OutputMessage> output = new LinkedList<>();
+            output.add(OutputMessage.createDeleteRowMessage(rx));
+            output.add(OutputMessage.createWriteRowMessage(_clientAttributes._screenSizeRows - 1,
+                                                           READ_ONLY_FG_COLOR,
+                                                           READ_ONLY_BG_COLOR,
+                                                           "",
+                                                           false));
+
+            for (PendingReadReplyMessage prrm : _pendingReadReplyMessages.values()) {
+                if (prrm._currentRowIndex > rx) {
+                    prrm._currentRowIndex--;
+                }
+            }
+            for (int ry = rx + 1; ry < _clientAttributes._screenSizeRows; ++ry) {
+                _pinnedState[ry - 1] = _pinnedState[ry];
+            }
+
+            appendOutputMessages(output);
         }
     }
 
@@ -129,12 +524,25 @@ public class RESTSystemConsole implements SystemConsole {
     //  Data
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    private static final int INPUT_FG_COLOR = 0xffffff;
+    private static final int INPUT_BG_COLOR = 0x000000;
+    private static final int READ_ONLY_FG_COLOR = 0x00ff00;
+    private static final int READ_ONLY_BG_COLOR = 0x000000;
+    private static final int READ_REPLY_FG_COLOR = 0xffff00;
+    private static final int READ_REPLY_BG_COLOR = 0x000000;
+    private static final int STATUS_FG_COLOR = 0x00ffff;
+    private static final int STATUS_BG_COLOR = 0x000000;
+
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final String HTML_FILE_NAME = "systemConsole/systemConsole.html";
     private static final String FAVICON_FILE_NAME = "systemConsole/favicon.png";
     private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
-    private static final int MAX_RECENT_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
-    private static final int MAX_RECENT_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
+    private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
+    private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
+    private static final int MAX_CONSOLE_SIZE_COLUMNS = 132;
+    private static final int MAX_CONSOLE_SIZE_ROWS = 50;
+    private static final int MIN_CONSOLE_SIZE_COLUMNS = 64;
+    private static final int MIN_CONSOLE_SIZE_ROWS = 20;
     private static final long WORKER_PERIODICITY_MSECS = 10000;             //  worker thread does its work every 10 seconds
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getName(),
@@ -142,26 +550,21 @@ public class RESTSystemConsole implements SystemConsole {
 
     private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
 
-    private final Map<String, ClientInfo> _clientInfos = new HashMap<>();
     private final Listener _listener;
     private final String _name;
+    private final Map<String, SessionInfo> _sessions = new HashMap<>();
     private final String _webDirectory;
     private WorkerThread _workerThread = null;
 
-    //  This is always the latest status message. Clients may pick it up at any time.
-    private StatusMessage _latestStatusMessage = null;
+    //  Most recent read-only messages and log entries and all read-reply messages,
+    //  held here so we can fill out a new session
+    private final List<KomodoLoggingAppender.LogEntry> _cachedLogEntries = new LinkedList<>();
+    private final Queue<String> _cachedReadOnlyMessages = new LinkedList<>();
+    private final List<PendingReadReplyMessage> _cachedReadReplyMessages = new LinkedList<>();
 
-    //  Most recent {n} log entries, so we can populate new sessions
-    private final List<KomodoLoggingAppender.LogEntry> _recentLogEntries = new LinkedList<>();
-
-    //  Input messages we've received from the console, but which have not yet been delivered to the operating system.
-    private final Map<String, InputMessage> _pendingInputMessages = new LinkedHashMap<>();
-
-    //  ReadReply messages which have not yet been replied to
-    private final Map<Integer, ReadReplyMessage> _pendingReadReplyMessages = new HashMap<>();
-
-    //  Recent output messages. We preserve a certain number of these so that they can be redisplayed if necessary
-    private final Queue<ReadOnlyMessage> _recentReadOnlyMessages = new LinkedList<>() {};
+    //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
+    //  Key is the session identifier of the client which sent it to us; value is the actual message.
+    private final Map<String, String> _pendingInputMessages = new LinkedHashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -226,19 +629,19 @@ public class RESTSystemConsole implements SystemConsole {
         public abstract void run();
 
         /**
-         * Checks the headers for a client id, then locates the corresponding ClientInfo object.
-         * Returns null if ClientInfo object is not found or is unspecified.
+         * Checks the headers for a client id, then locates the corresponding SessionInfo object.
+         * Returns null if SessionInfo object is not found or is unspecified.
          * Serves as validation for clients which have presumably previously done a POST to /session
          */
-        ClientInfo findClient(
+        SessionInfo findClient(
         ) {
             List<String> values = _requestHeaders.get("Client");
             if ((values != null) && (values.size() == 1)) {
                 String clientId = values.get(0);
-                synchronized (_clientInfos) {
-                    ClientInfo clientInfo = _clientInfos.get(clientId);
-                    if (clientInfo != null) {
-                        return clientInfo;
+                synchronized (_sessions) {
+                    SessionInfo sessionInfo = _sessions.get(clientId);
+                    if (sessionInfo != null) {
+                        return sessionInfo;
                     }
                 }
             }
@@ -285,16 +688,6 @@ public class RESTSystemConsole implements SystemConsole {
         void respondNoSession() {
             String response = "Forbidden - session not established\n";
             respondWithText(HttpURLConnection.HTTP_FORBIDDEN, response);
-        }
-
-        /**
-         * Convenient method for handling the situation where we cannot find something which was requested by the client.
-         * This is NOT the same thing as not finding something which definitely should be there.
-         */
-        void respondNotFound(
-            final String message
-        ) {
-            respondWithText(java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
         }
 
         /**
@@ -345,7 +738,6 @@ public class RESTSystemConsole implements SystemConsole {
             _exchange.getResponseHeaders().add("content-type", mimeType);
             _exchange.getResponseHeaders().add("Cache-Control", "no-store");
             try {
-                System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
                 _exchange.sendResponseHeaders(code, bytes.length);
                 OutputStream os = _exchange.getResponseBody();
                 os.write(bytes);
@@ -522,26 +914,23 @@ public class RESTSystemConsole implements SystemConsole {
             @Override
             public void run() {
                 try {
-                    ClientInfo clientInfo = findClient();
-                    if (clientInfo == null) {
+                    SessionInfo sessionInfo = findClient();
+                    if (sessionInfo == null) {
                         respondNoSession();
                         return;
                     }
 
-                    clientInfo._lastActivity = System.currentTimeMillis();
+                    sessionInfo._lastActivity = System.currentTimeMillis();
 
-                    //  For GET - return the settings as both a composite value and a map of individual jump key settings
                     if (_requestMethod.equalsIgnoreCase(HttpMethod.GET._value)) {
+                        //  For GET - return the settings as both a composite value and a map of individual jump key settings
                         SystemProcessor sp = SystemProcessor.getInstance();
                         JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
                         respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
-                        return;
-                    }
-
-                    //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
-                    //  If it has no composite value, but it has component values, use them to individually set the jump keys.
-                    //  If it has neither, reject the PUT.
-                    if (_requestMethod.equalsIgnoreCase(HttpMethod.PUT._value)) {
+                    } else if (_requestMethod.equalsIgnoreCase(HttpMethod.PUT._value)) {
+                        //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
+                        //  If it has no composite value, but it has component values, use them to individually set the jump keys.
+                        //  If it has neither, reject the PUT.
                         SystemProcessor sp = SystemProcessor.getInstance();
                         JumpKeys content;
                         try {
@@ -551,6 +940,7 @@ public class RESTSystemConsole implements SystemConsole {
                             return;
                         }
 
+                        JumpKeys jumpKeysResponse = null;
                         if (content._compositeValue != null) {
                             if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
                                 respondBadRequest("Invalid composite value");
@@ -558,12 +948,8 @@ public class RESTSystemConsole implements SystemConsole {
                             }
 
                             sp.setJumpKeys(new Word36(content._compositeValue));
-                            JumpKeys jumpKeysResponse = createJumpKeys(content._compositeValue);
-                            respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
-                            return;
-                        }
-
-                        if (content._componentValues != null) {
+                            jumpKeysResponse = createJumpKeys(content._compositeValue);
+                        } else if (content._componentValues != null) {
                             for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
                                 int jumpKeyId = entry.getKey();
                                 if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
@@ -574,18 +960,23 @@ public class RESTSystemConsole implements SystemConsole {
                                 boolean setting = entry.getValue();
                                 sp.setJumpKey(jumpKeyId, setting);
 
-                                JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
+                                jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
                                 respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
                                 return;
                             }
+                        } else {
+                            respondBadRequest("Requires either composite or component values");
                         }
 
-                        respondBadRequest("Requires either composite or component values");
-                        return;
+                        if (jumpKeysResponse != null) {
+                            respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                            long jkValue = jumpKeysResponse._compositeValue;
+                            pokeClients(sInfo -> {if (sInfo != sessionInfo) sInfo._pollResult._jumpKeySettings = jkValue;});
+                        }
+                    } else {
+                        //  Neither a GET or a PUT - this is not allowed.
+                        respondBadMethod();
                     }
-
-                    //  Neither a GET or a PUT - this is not allowed.
-                    respondBadMethod();
                 } catch (Throwable t) {
                     LOGGER.catching(t);
                     respondServerError(getStackTrace(t));
@@ -617,13 +1008,13 @@ public class RESTSystemConsole implements SystemConsole {
             @Override
             public void run() {
                 try {
-                    ClientInfo clientInfo = findClient();
-                    if (clientInfo == null) {
+                    SessionInfo sessionInfo = findClient();
+                    if (sessionInfo == null) {
                         respondNoSession();
                         return;
                     }
 
-                    clientInfo._lastActivity = System.currentTimeMillis();
+                    sessionInfo._lastActivity = System.currentTimeMillis();
                     if (!_requestMethod.equals(HttpMethod.POST._value)) {
                         respondBadMethod();
                         return;
@@ -631,17 +1022,16 @@ public class RESTSystemConsole implements SystemConsole {
 
                     boolean collision = false;
                     synchronized (_pendingInputMessages) {
-                        if (_pendingInputMessages.containsKey(clientInfo._clientId)) {
+                        if (_pendingInputMessages.containsKey(sessionInfo._clientId)) {
                             collision = true;
                         } else {
                             ObjectMapper mapper = new ObjectMapper();
-                            ConsoleInputMessage msg = mapper.readValue(_requestBody, ConsoleInputMessage.class);
-                            if (msg._messageId != null) {
-                                ReadReplyInputMessage rrim = new ReadReplyInputMessage(msg._messageId, msg._text);
-                                _pendingInputMessages.put(clientInfo._clientId, rrim);
-                            } else {
-                                UnsolicitedInputMessage uim = new UnsolicitedInputMessage(msg._text);
-                                _pendingInputMessages.put(clientInfo._clientId, uim);
+                            InputMessage msg = mapper.readValue(_requestBody, InputMessage.class);
+
+                            //  Ignore empty input, and trim the front and back of non-empty input.
+                            String inputText = msg._text.trim();
+                            if (!inputText.isEmpty()) {
+                                _pendingInputMessages.put(sessionInfo._clientId, inputText);
                             }
                         }
                     }
@@ -686,13 +1076,13 @@ public class RESTSystemConsole implements SystemConsole {
             @Override
             public void run() {
                 try {
-                    ClientInfo clientInfo = findClient();
-                    if (clientInfo == null) {
+                    SessionInfo sessionInfo = findClient();
+                    if (sessionInfo == null) {
                         respondNoSession();
                         return;
                     }
 
-                    clientInfo._lastActivity = System.currentTimeMillis();
+                    sessionInfo._lastActivity = System.currentTimeMillis();
                     if (!_requestMethod.equals(HttpMethod.GET._value)) {
                         respondBadMethod();
                         return;
@@ -701,72 +1091,17 @@ public class RESTSystemConsole implements SystemConsole {
                     //  Check if there are any updates already waiting for the client to pick up.
                     //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
                     //  At the end of the wait construct and return a SystemProcessorPollResult object
-                    synchronized (clientInfo) {
-                        if (!clientInfo.hasUpdatesForClient()) {
+                    synchronized (sessionInfo) {
+                        if (!sessionInfo.hasUpdates()) {
                             try {
-                                clientInfo.wait(POLL_WAIT_MSECS);
+                                sessionInfo.wait(POLL_WAIT_MSECS);
                             } catch (InterruptedException ex) {
-                                //  do nothing
+                                LOGGER.catching(ex);
                             }
                         }
 
-                        Boolean isMaster = null;
-                        if (clientInfo._isMasterChanged) {
-                            isMaster = clientInfo._isMaster;
-                        }
-
-                        Long jumpKeyValue = null;
-                        if (clientInfo._updatedJumpKeys) {
-                            SystemProcessor sp = SystemProcessor.getInstance();
-                            jumpKeyValue = sp.getJumpKeys().getW();
-                        }
-
-                        ConsoleStatusMessage latestStatusMessage = null;
-                        if (clientInfo._updatedStatusMessage) {
-                            latestStatusMessage = new ConsoleStatusMessage(_latestStatusMessage._text);
-                        }
-
-                        SystemLogEntry[] newLogEntries = null;
-                        if (!clientInfo._pendingLogEntries.isEmpty()) {
-                            int entryCount = clientInfo._pendingLogEntries.size();
-                            newLogEntries = new SystemLogEntry[entryCount];
-                            int ex = 0;
-                            for (KomodoLoggingAppender.LogEntry localEntry : clientInfo._pendingLogEntries) {
-                                newLogEntries[ex++] = new SystemLogEntry(localEntry._timeMillis,
-                                                                         localEntry._category,
-                                                                         localEntry._source,
-                                                                         localEntry._message);
-                            }
-                        }
-
-                        ConsoleReadOnlyMessage[] newReadOnlyMessages = null;
-                        if (!clientInfo._pendingReadOnlyMessages.isEmpty()) {
-                            int msgCount = clientInfo._pendingReadOnlyMessages.size();
-                            newReadOnlyMessages = new ConsoleReadOnlyMessage[msgCount];
-                            int mx = 0;
-                            for (ReadOnlyMessage pendingMsg : clientInfo._pendingReadOnlyMessages) {
-                                newReadOnlyMessages[mx++] = new ConsoleReadOnlyMessage(pendingMsg._text);
-                            }
-                        }
-
-                        if (clientInfo._updatedHardwareConfiguration) {
-                            //TODO
-                        }
-
-                        if (clientInfo._updatedSystemConfiguration) {
-                            //TODO
-                        }
-
-                        PollResult pollResult = new PollResult(clientInfo._inputDelivered,
-                                                               isMaster,
-                                                               jumpKeyValue,
-                                                               latestStatusMessage,
-                                                               newLogEntries,
-                                                               newReadOnlyMessages,
-                                                               clientInfo._updatedReadReplyMessages);
-
-                        respondWithJSON(HttpURLConnection.HTTP_OK, pollResult);
-                        clientInfo.clear();
+                        respondWithJSON(HttpURLConnection.HTTP_OK, sessionInfo._pollResult);
+                        sessionInfo._pollResult = new PollResult();
                     }
                 } catch (Throwable t) {
                     LOGGER.catching(t);
@@ -779,7 +1114,7 @@ public class RESTSystemConsole implements SystemConsole {
     /**
      * Handle posts to /session
      * Validates credentials and method
-     * Creates and stashes a ClientInfo record for future method calls
+     * Creates and stashes a SessionInfo record for future method calls
      */
     private class APISessionRequestHandler extends DelegatingHttpHandler {
 
@@ -811,30 +1146,59 @@ public class RESTSystemConsole implements SystemConsole {
                         return;
                     }
 
+                    ObjectMapper mapper = new ObjectMapper();
+                    ClientAttributes attr = mapper.readValue(_requestBody, ClientAttributes.class);
+                    if ((attr._screenSizeColumns < MIN_CONSOLE_SIZE_COLUMNS)
+                        || (attr._screenSizeColumns > MAX_CONSOLE_SIZE_COLUMNS)
+                        || (attr._screenSizeRows < MIN_CONSOLE_SIZE_ROWS)
+                        || (attr._screenSizeRows > MAX_CONSOLE_SIZE_ROWS)) {
+                        respondBadRequest("Invalid screen size specified");
+                        return;
+                    }
+
                     String clientId = UUID.randomUUID().toString();
-                    ClientInfo clientInfo = new ClientInfo(clientId);
-                    synchronized (_recentReadOnlyMessages) {
-                        clientInfo._pendingReadOnlyMessages.addAll(_recentReadOnlyMessages);
-                    }
+                    SessionInfo sessionInfo = new SessionInfo(clientId, attr);
 
-                    synchronized (_recentLogEntries) {
-                        clientInfo._pendingLogEntries.addAll(_recentLogEntries);
-                    }
-
-                    clientInfo._remoteAddress = _exchange.getRemoteAddress();
-                    clientInfo._inputDelivered = false;
-                    clientInfo._updatedJumpKeys = true;
-                    clientInfo._updatedStatusMessage = true;
-                    clientInfo._updatedHardwareConfiguration = true;
-                    clientInfo._updatedSystemConfiguration = true;
-                    synchronized (this) {
-                        if (_clientInfos.isEmpty()) {
-                            clientInfo._isMaster = true;
-                            clientInfo._updatedReadReplyMessages = true;
+                    synchronized (_cachedLogEntries) {
+                        List<SystemLogEntry> sles = new LinkedList<>();
+                        for (KomodoLoggingAppender.LogEntry le : _cachedLogEntries) {
+                            sles.add(new SystemLogEntry(le));
                         }
-                        _clientInfos.put(clientId, clientInfo);
+                        sessionInfo.appendLogEntries(sles);
                     }
 
+                    sessionInfo._remoteAddress = _exchange.getRemoteAddress();
+                    List<OutputMessage> omList = new LinkedList<>();
+                    omList.add(OutputMessage.createClearScreenMessage());
+
+                    synchronized (_cachedReadOnlyMessages) {
+                        for (String message : _cachedReadOnlyMessages) {
+                            omList.add(OutputMessage.createDeleteRowMessage(0));
+                            omList.add(OutputMessage.createWriteRowMessage(attr._screenSizeRows - 1,
+                                                                           READ_ONLY_FG_COLOR,
+                                                                           READ_ONLY_BG_COLOR,
+                                                                           message,
+                                                                           false));
+                        }
+                    }
+
+                    synchronized (_cachedReadReplyMessages) {
+                        for (PendingReadReplyMessage prrm : _cachedReadReplyMessages) {
+                            String text = String.format("%d %s", prrm._messageId, prrm._text);
+                            omList.add(OutputMessage.createDeleteRowMessage(0));
+                            omList.add(OutputMessage.createWriteRowMessage(attr._screenSizeRows - 1,
+                                                                           READ_REPLY_FG_COLOR,
+                                                                           READ_REPLY_BG_COLOR,
+                                                                           text,
+                                                                           false));
+                        }
+                    }
+
+                    sessionInfo._pollResult._outputMessages = omList.toArray(new OutputMessage[0]);
+                    sessionInfo._pollResult._jumpKeySettings = SystemProcessor.getInstance().getJumpKeys().getW();
+                    synchronized (_sessions) {
+                        _sessions.put(clientId, sessionInfo);
+                    }
                     respondWithJSON(HttpURLConnection.HTTP_CREATED, clientId);
                 } catch (Throwable t) {
                     LOGGER.catching(t);
@@ -966,7 +1330,7 @@ public class RESTSystemConsole implements SystemConsole {
         @Override
         public void stop() {
             super.stop();
-            pokeClients(ClientInfo::clear);
+            pokeClients(sessionInfo -> sessionInfo._pollResult = new PollResult());
         }
     }
 
@@ -982,17 +1346,17 @@ public class RESTSystemConsole implements SystemConsole {
     private void pokeClients(
         final PokeClientFunction pokeFunction
     ) {
-        Set<ClientInfo> cinfos;
-        synchronized (this) {
-            cinfos = new HashSet<>(_clientInfos.values());
+        Set<SessionInfo> sinfos;
+        synchronized (_sessions) {
+            sinfos = new HashSet<>(_sessions.values());
         }
 
-        for (ClientInfo cinfo : cinfos) {
-            synchronized (cinfo) {
+        for (SessionInfo sinfo : sinfos) {
+            synchronized (sinfo) {
                 if (pokeFunction != null) {
-                    pokeFunction.function(cinfo);
+                    pokeFunction.function(sinfo);
                 }
-                cinfo.notify();
+                sinfo.notify();
             }
         }
     }
@@ -1001,288 +1365,28 @@ public class RESTSystemConsole implements SystemConsole {
      * Client wants us to age-out any old client info objects
      */
     private void pruneClients() {
-        synchronized (_clientInfos) {
+        synchronized (_sessions) {
             long now = System.currentTimeMillis();
-            Iterator<Map.Entry<String, ClientInfo>> iter = _clientInfos.entrySet().iterator();
-            List<ClientInfo> removedClientInfos = new LinkedList<>();
+            Iterator<Map.Entry<String, SessionInfo>> iter = _sessions.entrySet().iterator();
+            List<SessionInfo> removedSessionInfos = new LinkedList<>();
             while (iter.hasNext()) {
-                Map.Entry<String, ClientInfo> entry = iter.next();
-                ClientInfo cinfo = entry.getValue();
-                if (now > (cinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
-                    LOGGER.info(String.format("Removing aged-out client %s", cinfo._clientId));
+                Map.Entry<String, SessionInfo> entry = iter.next();
+                SessionInfo sinfo = entry.getValue();
+                if (now > (sinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
+                    LOGGER.info(String.format("Removing aged-out client %s", sinfo._clientId));
                     iter.remove();
-                    removedClientInfos.add(cinfo);
+                    removedSessionInfos.add(sinfo);
                 }
             }
 
-            for (ClientInfo cinfo : removedClientInfos) {
-                synchronized (cinfo) {
-                    cinfo.clear();
-                    cinfo.notify();
+            for (SessionInfo sinfo : removedSessionInfos) {
+                synchronized (sinfo) {
+                    sinfo._pollResult = new PollResult();
+                    sinfo.notify();
                 }
             }
         }
     }
-
-//    /**
-//     * Convenient method for handling the situation where a method is requested which is not supported on the endpoint
-//     */
-//    private void respondBadMethod(
-//        final HttpExchange exchange
-//    ) {
-//        String response = String.format("Method %s is not supported for the given endpoint\n",
-//                                        exchange.getRequestMethod());
-//        respondWithText(exchange, HttpURLConnection.HTTP_BAD_METHOD, response);
-//    }
-//
-//    /**
-//     * Convenient method for handling the situation where a particular request was in error.
-//     */
-//    private void respondBadRequest(
-//        final HttpExchange exchange,
-//        final String explanation
-//    ) {
-//        respondWithText(exchange, HttpURLConnection.HTTP_BAD_REQUEST, explanation + "\n");
-//    }
-//
-//    /**
-//     * Convenient method for handling the situation where no session exists
-//     */
-//    private void respondNoSession(
-//        final HttpExchange exchange
-//    ) {
-//        String response = "Forbidden - session not established\n";
-//        respondWithText(exchange, HttpURLConnection.HTTP_FORBIDDEN, response);
-//    }
-//
-//    /**
-//     * Convenient method for handling the situation where we cannot find something which was requested by the client.
-//     * This is NOT the same thing as not finding something which definitely should be there.
-//     */
-//    private void respondNotFound(
-//        final HttpExchange exchange,
-//        final String message
-//    ) {
-//        respondWithText(exchange, java.net.HttpURLConnection.HTTP_NOT_FOUND, message + "\n");
-//    }
-//
-//    /**
-//     * Convenient method for handling an internal server error
-//     */
-//    private void respondServerError(
-//        final HttpExchange exchange,
-//        final String message
-//    ) {
-//        respondWithText(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, message + "\n");
-//    }
-//
-//    /**
-//     * Convenient method for setting up a 401 response
-//     */
-//    private void respondUnauthorized(
-//        final HttpExchange exchange
-//    ) {
-//        String response = "Unauthorized - credentials not provided or are invalid\nPlease enter credentials\n";
-//        respondWithText(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, response);
-//    }
-//
-//    private void respondWithBinaryFile(
-//        final HttpExchange exchange,
-//        final int code,
-//        final String mimeType,
-//        final String fileName
-//    ) {
-//        LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-//        byte[] bytes;
-//        try {
-//            bytes = Files.readAllBytes(Paths.get(fileName));
-//        } catch (IOException ex) {
-//            LOGGER.catching(ex);
-//            bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
-//            try {
-//                exchange.sendResponseHeaders(code, bytes.length);
-//                OutputStream os = exchange.getResponseBody();
-//                os.write(bytes);
-//                exchange.close();
-//                return;
-//            } catch (IOException ex2) {
-//                LOGGER.catching(ex2);
-//                exchange.close();
-//                return;
-//            }
-//        }
-//
-//        exchange.getResponseHeaders().add("content-type", mimeType);
-//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-//        try {
-//            System.out.println(String.format("BYTES len = %d", bytes.length));//TODO
-//            exchange.sendResponseHeaders(code, bytes.length);
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(bytes);
-//        } catch (Exception ex) {
-//            LOGGER.catching(ex);
-//        } finally {
-//            exchange.close();
-//        }
-//    }
-//
-//    /**
-//     * When we need to send back a text fild
-//     * @param exchange HttpExchange we're dealing with
-//     * @param code response code - 200, 201, whatever
-//     * @param mimeType e.g., text/html
-//     * @param fileName Path/Filename of the file we need to send
-//     */
-//    private void respondWithTextFile(
-//        final HttpExchange exchange,
-//        final int code,
-//        final String mimeType,
-//        final String fileName
-//    ) {
-//        LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
-//        List<String> textLines;
-//        try {
-//            textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
-//        } catch (IOException ex) {
-//            LOGGER.catching(ex);
-//            byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
-//            try {
-//                exchange.sendResponseHeaders(code, bytes.length);
-//                OutputStream os = exchange.getResponseBody();
-//                os.write(bytes);
-//                return;
-//            } catch (IOException ex2) {
-//                LOGGER.catching(ex2);
-//                exchange.close();
-//                return;
-//            }
-//        }
-//
-//        byte[] bytes = String.join("\r\n", textLines).getBytes();
-//        exchange.getResponseHeaders().add("content-type", mimeType);
-//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-//        try {
-//            exchange.sendResponseHeaders(code, bytes.length);
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(bytes);
-//        } catch (Exception ex) {
-//            LOGGER.catching(ex);
-//        } finally {
-//            exchange.close();
-//        }
-//    }
-//
-//    /**
-//     * Convenient method for sending responses containing HTML text
-//     * @param exchange The HttpExchance object into which we inject the response
-//     * @param code The response code - 200, 201, 403, etc
-//     */
-//    private void respondWithHTML(
-//        final HttpExchange exchange,
-//        final int code,
-//        final String content
-//    ) {
-//        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
-//        System.out.println("-->" + content);   //TODO remove
-//        exchange.getResponseHeaders().add("Content-type", "text/html");
-//        exchange.getResponseHeaders().add("Cache-Control", "no-store");
-//        try {
-//            exchange.sendResponseHeaders(code, content.length());
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(content.getBytes());
-//            os.close();
-//        } catch (IOException ex) {
-//            LOGGER.catching(ex);
-//            exchange.close();
-//        }
-//    }
-//
-//    /**
-//     * Convenient method for sending responses containing JSON
-//     * @param exchange The HttpExchance object into which we inject the response
-//     * @param code The response code - 200, 201, 403, etc - most responses >= 300 won't necessarily have a JSON formatted body
-//     */
-//    private void respondWithJSON(
-//        final HttpExchange exchange,
-//        final int code,
-//        final Object object
-//    ) {
-//        LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
-//        try {
-//            ObjectMapper mapper = new ObjectMapper();
-//            String content = mapper.writeValueAsString(object);
-//            System.out.println("-->" + content);   //TODO remove
-//            LOGGER.trace(String.format("  JSON:%s", content));
-//            exchange.getResponseHeaders().add("Content-type", "application/json");
-//            exchange.getResponseHeaders().add("Cache-Control", "no-store");
-//            exchange.sendResponseHeaders(code, content.length());
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(content.getBytes());
-//            os.close();
-//        } catch (IOException ex) {
-//            LOGGER.catching(ex);
-//            exchange.close();
-//        }
-//    }
-//
-//    /**
-//     * Convenient method for sending responses containing straight text
-//     * @param exchange The HttpExchance object into which we inject the response
-//     * @param code The response code - 200, 201, 403, etc
-//     */
-//    private void respondWithText(
-//        final HttpExchange exchange,
-//        final int code,
-//        final String content
-//    ) {
-//        LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
-//        System.out.println("-->" + content);   //TODO remove
-//
-//        exchange.getResponseHeaders().add("Content-type", "text/plain");
-//        byte[] bytes = content.getBytes();
-//
-//        try {
-//            exchange.sendResponseHeaders(code, bytes.length);
-//            OutputStream os = exchange.getResponseBody();
-//            os.write(bytes);
-//            os.close();
-//        } catch (IOException ex) {
-//            LOGGER.catching(ex);
-//            exchange.close();
-//        }
-//    }
-//
-//    /**
-//     * Validate the credentials in the header of the given exchange object.
-//     * Only for POST to /session.
-//     * @return true if credentials are valid, else false
-//     */
-//    private boolean validateCredentials(
-//        final HttpExchange exchange
-//    ) {
-//        Headers headers = exchange.getRequestHeaders();
-//        List<String> values = headers.get("Authorization");
-//        if ((values != null) && (values.size() == 1)) {
-//            String[] split = values.get(0).split(" ");
-//            if (split.length == 2) {
-//                if (split[0].equalsIgnoreCase("Basic")) {
-//                    String unBased = new String(Base64.getDecoder().decode(split[1]));
-//                    String[] unBasedSplit = unBased.split(":");
-//                    if (unBasedSplit.length == 2) {
-//                        String givenUserName = unBasedSplit[0];
-//                        String givenClearTextPassword = unBasedSplit[1];
-//                        SystemProcessor sp = SystemProcessor.getInstance();
-//                        SoftwareConfiguration sc = sp.getSoftwareConfiguration();
-//                        if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
-//                            return sc._adminCredentials.validatePassword(givenClearTextPassword);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return false;
-//    }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -1290,17 +1394,17 @@ public class RESTSystemConsole implements SystemConsole {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * For notifying clients that a pending ReadReplyMessage is no long pending,
+     * For notifying clients that a pending ReadReplyMessage is no longer pending,
      * at least insofar as the operating system is concerned.
+     * Invoked by the SystemProcessor.
      */
     public void cancelReadReplyMessage(
         final int messageId
     ) {
-        synchronized (_pendingReadReplyMessages) {
-            _pendingReadReplyMessages.remove(messageId);
+        synchronized (_cachedReadReplyMessages) {
+            _cachedReadReplyMessages.remove(messageId);
         }
-
-        pokeClients(clientInfo -> clientInfo._updatedReadReplyMessages = true);
+        pokeClients(sessionInfo -> sessionInfo.cancelReadReplyMessage(messageId));
     }
 
     /**
@@ -1316,49 +1420,24 @@ public class RESTSystemConsole implements SystemConsole {
                                        _listener.getCommonName(),
                                        _listener.getPortNumber()));
 
-            writer.write("  Recent Read-Only Messages:\n");
-            synchronized (_recentReadOnlyMessages) {
-                for (ReadOnlyMessage msg : _recentReadOnlyMessages) {
-                    writer.write(String.format("    '%s''\n", msg._text));
-                }
-            }
-
-            writer.write("  Pending Read-Reply Messages:\n");
-            synchronized (_pendingReadReplyMessages) {
-                for (ReadReplyMessage msg : _pendingReadReplyMessages.values()) {
-                    writer.write(String.format("    %d:'%s'", msg._messageId, msg._text));
-                    writer.write(String.format("       Max reply:%d", msg._maxReplyLength));
-                }
-            }
-
             writer.write("  Pending input messages:\n");
             synchronized (_pendingInputMessages) {
-                for (Map.Entry<String, InputMessage> entry : _pendingInputMessages.entrySet()) {
+                for (Map.Entry<String, String> entry : _pendingInputMessages.entrySet()) {
                     String clientId = entry.getKey();
-                    InputMessage im = entry.getValue();
-                    if (im instanceof UnsolicitedInputMessage) {
-                        UnsolicitedInputMessage uim = (UnsolicitedInputMessage) im;
-                        writer.write(String.format("    clientId=%s:'%s'\n", clientId, uim._text));
-                    } else if (im instanceof ReadReplyInputMessage) {
-                        ReadReplyInputMessage rrim = (ReadReplyInputMessage) im;
-                        writer.write(String.format("    clientId=%s: %d '%s'\n", clientId, rrim._messageId, rrim._text));
-                    }
+                    String text = entry.getValue();
+                    writer.write(String.format("    clientId=%s:'%s'\n", clientId, text));
                 }
             }
 
             long now = System.currentTimeMillis();
-            synchronized (_clientInfos) {
-                for (ClientInfo cinfo : _clientInfos.values()) {
-                    synchronized (cinfo) {
+            synchronized (_sessions) {
+                for (SessionInfo sinfo : _sessions.values()) {
+                    synchronized (sinfo) {
                         writer.write(String.format("  Client   %sRemote Address:%s   Last Activity %d msec ago\n",
-                                                   cinfo._isMaster ? "MASTER " : "",
-                                                   cinfo._remoteAddress.getAddress().getHostAddress(),
-                                                   now - cinfo._lastActivity));
-
-                        writer.write("  Pending output messages\n");
-                        for (ReadOnlyMessage msg : cinfo._pendingReadOnlyMessages) {
-                            writer.write(String.format("    '%s'\n", msg._text));
-                        }
+                                                   sinfo._isMaster ? "MASTER " : "",
+                                                   sinfo._remoteAddress.getAddress().getHostAddress(),
+                                                   now - sinfo._lastActivity));
+                        //TODO whatever from the pollInfo object
                     }
                 }
             }
@@ -1367,75 +1446,78 @@ public class RESTSystemConsole implements SystemConsole {
         }
     }
 
+    /**
+     * SystemProcessor calls here to see if there is an input message waiting to be passed along.
+     * If we find one, construct an output message for the session it came from, to unlock that client's keyboard.
+     */
     @Override
-    public InputMessage pollInputMessage() {
-        InputMessage result = null;
-        synchronized (this) {
-            Iterator<Map.Entry<String, InputMessage>> iter = _pendingInputMessages.entrySet().iterator();
+    public String pollInputMessage() {
+        Map.Entry<String, String> nextEntry = null;
+        synchronized (_pendingInputMessages) {
+            Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
             if (iter.hasNext()) {
-                Map.Entry<String, InputMessage> firstEntry = iter.next();
-                String clientId = firstEntry.getKey();
-                result = firstEntry.getValue();
+                nextEntry = iter.next();
                 iter.remove();
-
-                ClientInfo cinfo = _clientInfos.get(clientId);
-                if (cinfo != null) {
-                    cinfo._inputDelivered = true;
-                    synchronized (cinfo) {
-                        cinfo.notify();
-                    }
-                }
             }
         }
 
-        return result;
+        if (nextEntry != null) {
+            SessionInfo sinfo;
+            synchronized (_sessions) {
+                sinfo = _sessions.get(nextEntry.getKey());
+            }
+            if (sinfo != null) {
+                synchronized (sinfo) {
+                    sinfo.postInputMessage(nextEntry.getValue());
+                }
+            }
+
+            return nextEntry.getValue();
+        } else {
+            return null;
+        }
     }
 
+    /**
+     * SystemProcessor calls here to post a read-only message
+     */
     @Override
     public void postReadOnlyMessage(
-        final ReadOnlyMessage message
+        final String message,
+        final Boolean rightJustified
     ) {
-        synchronized (_recentReadOnlyMessages) {
-            _recentReadOnlyMessages.add(message);
-            while (_recentReadOnlyMessages.size() > MAX_RECENT_READ_ONLY_MESSAGES) {
-                _recentReadOnlyMessages.poll();
+        synchronized (_cachedReadOnlyMessages) {
+            _cachedReadOnlyMessages.add(message);
+            while (_cachedReadOnlyMessages.size() > MAX_CACHED_READ_ONLY_MESSAGES) {
+                _cachedReadOnlyMessages.poll();
             }
         }
-
-        pokeClients(clientInfo -> clientInfo._pendingReadOnlyMessages.add(message));
+        pokeClients(sessionInfo -> sessionInfo.postReadOnlyMessage(message, rightJustified));
     }
 
+    /**
+     * SystemProcessor calls here to post a read-reply message
+     */
     @Override
     public void postReadReplyMessage(
-        final ReadReplyMessage message
+        final int messageId,
+        final String message,
+        final int maxReplyLength
     ) {
-        synchronized (_pendingReadReplyMessages) {
-            _pendingReadReplyMessages.put(message._messageId, message);
+        synchronized (_cachedReadReplyMessages) {
+            _cachedReadReplyMessages.add(new PendingReadReplyMessage(-1, maxReplyLength, messageId, message));
         }
-
-        ReadOnlyMessage rom = new ReadOnlyMessage(message._text);
-        synchronized (_clientInfos) {
-            for (ClientInfo cinfo : _clientInfos.values()) {
-                if (cinfo._isMaster) {
-                    cinfo._updatedReadReplyMessages = true;
-                } else {
-                    cinfo._pendingReadOnlyMessages.add(rom);
-                }
-            }
-        }
-
-        pokeClients(null);
+        pokeClients(sessionInfo -> sessionInfo.postReadReplyMessage(messageId, message, maxReplyLength));
     }
 
     /**
      * Cache the given status message and notify the pending clients that an updated message is available
      */
     @Override
-    public void postStatusMessage(
-        final StatusMessage message
+    public void postStatusMessages(
+        final String[] messages
     ) {
-        _latestStatusMessage = message;
-        pokeClients(clientInfo -> clientInfo._updatedStatusMessage = true);
+        pokeClients(sessionInfo -> sessionInfo.postStatusMessages(messages));
     }
 
     /**
@@ -1461,13 +1543,21 @@ public class RESTSystemConsole implements SystemConsole {
         }
 
         if (!logList.isEmpty()) {
-            synchronized (_recentLogEntries) {
-                _recentLogEntries.addAll(logList);
-                while (_recentLogEntries.size() > MAX_RECENT_LOG_ENTRIES) {
-                    _recentLogEntries.remove(0);
+            //  Update cache of recent log entries first
+            synchronized (_cachedLogEntries) {
+                _cachedLogEntries.addAll(logList);
+                while (_cachedLogEntries.size() > MAX_CACHED_LOG_ENTRIES) {
+                    _cachedLogEntries.remove(0);
                 }
             }
-            pokeClients(clientInfo -> clientInfo._pendingLogEntries.addAll(logList));
+
+            //  Now notify any sessions of the new entries
+            List<SystemLogEntry> sles = new LinkedList<>();
+            for (KomodoLoggingAppender.LogEntry kle : logList) {
+                sles.add(new SystemLogEntry(kle));
+            }
+
+            pokeClients(sessionInfo -> sessionInfo.appendLogEntries(sles));
         }
     }
 
@@ -1476,14 +1566,7 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void reset() {
-        //  We don't close the established sessions, but we do clear out all messaging and such.
-        pokeClients(ClientInfo::clear);
-        synchronized(this) {
-            _latestStatusMessage = null;
-            _pendingInputMessages.clear();
-            _pendingReadReplyMessages.clear();
-            _recentReadOnlyMessages.clear();
-        }
+        pokeClients(SessionInfo::resetClient);
     }
 
     /**

@@ -7,9 +7,11 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.apache.logging.log4j.Logger;
+import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
 
@@ -22,43 +24,206 @@ public class Test_SystemProcessor {
 
     private static class ConsoleExerciser {
 
-        private static final String padChars = "                                                                                ";
+        private enum JobState {
+            Init,
+            Running,
+            Done,
+        };
+
+        private class Job extends Thread {
+
+            private final String _name;
+            private JobState _state = JobState.Init;
+            private boolean _restart = false;
+            private boolean _terminate = false;
+            private long _timeStartMillis = 0;
+            private long _timeTermMillis = 0;
+
+            public Job(
+                final String name
+            ) {
+                _name = name;
+            }
+
+            public void run() {
+                _state = JobState.Running;
+                _timeStartMillis = System.currentTimeMillis();
+                _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s START", _name), false);
+
+                //TODO read-reply msg "{name}*JOB STARTING - CONTINUE? YN"
+                //TODO loop on something or other
+
+                _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s DONE", _name));
+                _state = JobState.Done;
+                _timeTermMillis = System.currentTimeMillis();
+            }
+        }
+
         private int _inputCount = 0;
-        boolean _stop = false;
+        private final Map<String, Job> _jobs = new HashMap<>();
+        int _session = 0;               //  job monitor session
+        boolean _stop = false;          //  stop the job monitor
+        boolean _terminate = false;     //  terminate the exerciser
+        SystemProcessor _systemProcessor = null;
 
-        public void exercise(
-        ) throws MaxNodesException {
-            SystemProcessor sp = InventoryManager.getInstance().createSystemProcessor();
+        private void checkForInput() {
+            String msg = _systemProcessor.consolePollInputMessage();
+            if ((msg != null) && !msg.isEmpty()) {
+                char idChar = msg.charAt(0);
+                if (Character.isDigit(msg.charAt(0))) {
+                    //  The input is a read-reply response.  Ensure we're waiting on it, check length, etc.
+                    //  Then route it appropriately.
+                    //  (does the SP clear it out - or the RESTSystemConsole? who notifies the client that it's been answered?)
+                    //TODO
+                } else {
+                    //  Handle unsolicited input from the user.  First, echo it as a Read-Only message,
+                    //  then validate it, then pass it along to the appropriate command handler.
+                    String[] split = msg.toUpperCase().split(" ");
+                    switch (split[0]) {
+                        case "h":
+                        case "H":   //  help
+                            commandHelp(split);
+                            break;
 
-            LOGGER.info("Console Exerciser Starting");
-            sp.consoleSendReadOnlyMessage("-- Console Interaction Test Starts --");
-            sp.consoleSendReadOnlyMessage("Enter H for help, Q to quit");
+                        case "l":
+                        case "L":   //  list all jobs
+                            commandList(split);
+                            break;
 
-            Instant next5SecondAction = Instant.now().plusSeconds(5);
-            Instant next5MinuteAction = Instant.now().plusSeconds(30); //5 * 60);
+                        case "q":
+                        case "Q":   //  quit
+                            commandQuit(split);
+                            break;
 
-            while (!_stop) {
-                //  Any input?
-                try {
-                    String msg = sp.consolePollInputMessage();
-                    //TODO do something with it
-                } catch (InvalidMessageIdException ex) {
-                    //TODO bitch about it
+                        case "r":
+                        case "R":   //  restart the job monitor
+                            commandRestart(split);
+                            break;
+
+                        case "s":
+                        case "S":   //  start a job
+                            commandStart(split);
+                            break;
+
+                        case "t":
+                        case "T":   //  terminate a particular job
+                            commandTerminate(split);
+                            break;
+
+                        default:
+                            _systemProcessor.consoleSendReadOnlyMessage("  Command Not Recognized - Enter H for Help");
+                    }
+                }
+            }
+        }
+
+        private void commandHelp(
+            final String[] commandSplit
+        ) {
+            if (commandSplit.length > 1) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                return;
+            }
+
+            _systemProcessor.consoleSendReadOnlyMessage("  Commands:");
+            _systemProcessor.consoleSendReadOnlyMessage("    H           - help");
+            _systemProcessor.consoleSendReadOnlyMessage("    L           - list active jobs");
+            _systemProcessor.consoleSendReadOnlyMessage("    Q           - quit exerciser");
+            _systemProcessor.consoleSendReadOnlyMessage("    R           - restart job monitor");
+            _systemProcessor.consoleSendReadOnlyMessage("    S {jobName} - start a job");
+            _systemProcessor.consoleSendReadOnlyMessage("    T {jobName} - terminate a job");
+            _inputCount++;
+        }
+
+        private void commandList(
+            final String[] commandSplit
+        ) {
+            if (commandSplit.length > 1) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                return;
+            }
+
+            synchronized (_jobs) {
+                if (_jobs.size() == 0) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job List Is Empty");
+                } else {
+                    long now = System.currentTimeMillis();
+                    for (Job job : _jobs.values()) {
+                        long msec = (job._state == JobState.Done) ? (job._timeTermMillis - job._timeStartMillis)
+                                                                  : now - job._timeStartMillis;
+                        String msg = String.format("  %s Time:%dms State%s", job._name, msec, job._state);
+                        _systemProcessor.consoleSendReadOnlyMessage(msg);
+                    }
+                }
+            }
+        }
+
+        private void commandQuit(
+            final String[] commandSplit
+        ) {
+            if (commandSplit.length > 1) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                return;
+            }
+
+            _terminate = true;
+            _inputCount++;
+        }
+
+        public void commandRestart(
+            final String[] commandSplit
+        ) {
+            if (commandSplit.length > 1) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                return;
+            }
+
+            _stop = true;
+            _inputCount++;
+        }
+
+        public void commandStart(
+            final String[] commandSplit
+        ) {
+            _systemProcessor.consoleSendReadOnlyMessage("Not yet implemented");
+            _inputCount++;
+        }
+
+        public void commandTerminate(
+            final String[] commandSplit
+        ) {
+            _systemProcessor.consoleSendReadOnlyMessage("Not yet implemented");
+            _inputCount++;
+        }
+
+        public void jobMonitor() {
+            _session++;
+            _inputCount = 0;
+            _terminate = false;
+            _stop = false;
+            LOGGER.info(String.format("Job Monitor Session %d Starting", _session));
+            _systemProcessor.consoleReset();
+            _systemProcessor.consoleSendReadOnlyMessage(String.format("Job Monitor Active - Session %d", _session));
+
+            final long duration5Seconds = 5 * 1000;
+            final long duration5Minutes = 5 * 60 * 1000;
+            long next5SecondAction = System.currentTimeMillis() + duration5Seconds;
+            long next5MinuteAction = System.currentTimeMillis() + duration5Minutes;
+
+            while (!_stop && !_terminate) {
+                checkForInput();
+
+                final long now = System.currentTimeMillis();
+                if (now >= next5SecondAction) {
+                    fiveSecondAction();
+                    next5SecondAction += duration5Seconds;
                 }
 
-                //  Do periodic things
-                Instant now = Instant.now();
-                if (!now.isBefore(next5SecondAction)) {
-                    fiveSecondAction(sp, now);
-                    next5SecondAction = next5SecondAction.plusSeconds(5);
+                if (now >= next5MinuteAction) {
+                    fiveMinuteAction();
+                    next5MinuteAction += duration5Minutes;
                 }
 
-                if (!now.isBefore(next5MinuteAction)) {
-                    fiveMinuteAction(sp, now);
-                    next5MinuteAction = next5MinuteAction.plusSeconds(30);//5 * 60);
-                }
-
-                //  Sleep for a little bit
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
@@ -66,29 +231,50 @@ public class Test_SystemProcessor {
                 }
             }
 
+            _systemProcessor.consoleSendReadOnlyMessage("  Shutting down jobs...");
+            synchronized (_jobs) {
+                for (Job job : _jobs.values()) {
+                    job._terminate = true;
+                    while (job._state != JobState.Done) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
+                    }
+                }
+                _jobs.clear();
+            }
+
+            _systemProcessor.consoleSendReadOnlyMessage(String.format("Job Monitor Session %d Stopped", _session));
+            LOGGER.info(String.format("Job Monitor Session %d Stopped", _session));
+        }
+
+        public void exercise(
+        ) throws MaxNodesException {
+            _systemProcessor = InventoryManager.getInstance().createSystemProcessor();
+
+            LOGGER.info("Console Exerciser Starting");
+            while (!_terminate) {
+                jobMonitor();
+            }
             LOGGER.info("Console Exerciser Done");
         }
 
-        public void fiveSecondAction(
-            final SystemProcessor sp,
-            final Instant now
-        ) {
+        public void fiveSecondAction() {
             String[] messages = new String[2];
-            String timeStr = now.toString().split("\\.")[0];
-            messages[0] = String.format("Time %s%s", timeStr, padChars).substring(0, 80);
-            messages[1] = String.format("Inputs:%d  Jobs:%d%s", _inputCount, 0, padChars).substring(0, 80);
-            sp.consoleSendStatusMessage(messages);
-            LOGGER.info("Poll");
+            String timeStr = Instant.now().toString().split("\\.")[0];
+            messages[0] = String.format("Time %s  Session %d", timeStr, _session);
+            messages[1] = String.format("Inputs:%d  Jobs:%d", _inputCount, _jobs.size());
+            _systemProcessor.consoleSendStatusMessage(messages);
         }
 
-        public void fiveMinuteAction(
-            final SystemProcessor sp,
-            final Instant now
-        ) {
-            String textPortion = now.toString().split("\\.")[0];
-            String msg = String.format("%sT/D %s", padChars, textPortion);
-            msg = msg.substring(msg.length() - 80);
-            sp.consoleSendReadOnlyMessage(msg);
+        public void fiveMinuteAction() {
+            String msg = String.format("T/D %s", Instant.now().toString().split("\\.")[0]);
+            _systemProcessor.consoleSendReadOnlyMessage(msg, true);
+            synchronized (_jobs) {
+                _jobs.entrySet().removeIf(entry -> entry.getValue()._state == JobState.Done);
+            }
         }
     }
 

@@ -7106,6 +7106,9 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  Packet size is 3 words
                     //  U+0,S1:         Subfunction
                     //  U+0,S2:         Status
+                    //  U+0,S3:         Flags
+                    //                      Bit 12-16: unused
+                    //                      Bit 17:     0 normally, 1 for right-justified
                     //  U+0,Q3:         Length of message in characters
                     //  U+1:            unused
                     //  U+2:            Virtual address of buffer containing message in ASCII
@@ -7114,10 +7117,12 @@ public class InstructionProcessor extends Processor implements Worker {
 
                     int chars = (int) Word36.getQ3(operands[0]);
                     int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
+                    int flags = (int) Word36.getS3(operands[0]);
                     VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msg);
+                        Boolean rightJust = (flags & 0x01) != 0;
+                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msg, rightJust);
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);

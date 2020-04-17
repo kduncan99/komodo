@@ -3,9 +3,7 @@ Need to separate WEB directory in deployment scheme
 Need a common test method to build a temporary deployment, so we don't keep overwriting /config
 
 * hardwarelib
-RESTSystemConsole needs to spin off threads for all handlers, not just poll.
-How to derive the resources directory in production vs. unit test models?
-    Can't be in configurator, because that file is *in* the resources directory.
+Houston, I think we have a thread locking issue somewhere
 IP: SYSC subfunctions need unit tests
 
 *minalib
@@ -13,14 +11,19 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 *systemConsole
+Can we make the containing screen not the entire width of the browser window?
+Needs session sign-on
+Needs session close button
 OS Console page
-  Needs an input text field with a blinking cursor
-  Needs to function
+    Needs console input help pages for KEXEC commands
 IPL page
 Hardware page
 System page
 
 -- TODO BUGS
+* RESTSystemConsole
+cached read only messages do not preserve rightJustified attribute - currently, that's only T/D messages which we don't
+  really need to cache anyway, so should we just not cache rightJustified messages?
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
