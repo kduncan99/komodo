@@ -103,7 +103,7 @@ public class AbsoluteAddress {
     @Override
     public int hashCode(
     ) {
-        return (new Integer(_upiIndex)).hashCode() ^ (new Integer(_segment)).hashCode() ^ (new Integer((int)_offset)).hashCode();
+        return _upiIndex ^ _segment ^ (int)_offset;
     }
 
     /**

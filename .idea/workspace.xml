@@ -12,26 +12,34 @@
       <module name="kexec" />
     </loaded-modules>
   </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/copyright/Standard.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleInputMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadOnlyMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleReadReplyMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/ConsoleStatusMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/JumpKeys.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/PollResult.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/net/SystemLogEntry.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/hardwarelib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/AbsoluteAddress.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/AbsoluteAddress.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minalib/minalib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/minalib/minalib.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,13 +59,15 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="ypzh31zp" />
+  </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="1" />
   </component>
   <component name="ProjectId" id="1aApY2qy4Wdc0e36GkUB3zJn6u3" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
@@ -70,13 +80,13 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/config" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
-    <property name="project.structure.side.proportion" value="0.41531664" />
-    <property name="settings.editor.selected.configurable" value="reference.settings.ide.settings.notifications" />
+    <property name="project.structure.side.proportion" value="0.38089758" />
+    <property name="settings.editor.selected.configurable" value="configurable.group.language" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -244,11 +254,23 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="WindowStateProjectService">
-    <state x="1857" y="1172" width="1014" height="677" key="#Project_Structure" timestamp="1586734769304">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="1892" y="1206" width="1024" height="845" key="#Project_Structure" timestamp="1587233429101">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="1857" y="1172" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586734769304" />
+    <state x="1892" y="1206" width="1024" height="845" key="#Project_Structure/67.27.3773.2133@67.27.3773.2133" timestamp="1587233429101" />
     <state x="1775" y="1205" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1586739801168">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -273,10 +295,11 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1637" y="1090" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586703351744" />
-    <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog" timestamp="1586701221930">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="2189" y="619" width="524" height="484" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog" timestamp="1587233423636">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586701221930" />
+    <state x="2189" y="619" width="524" height="484" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1587233423636" />
     <state x="1164" y="673" width="1348" height="1266" key="DiffContextDialog" timestamp="1587067517190">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -285,10 +308,11 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state x="1700" y="1197" key="EnvironmentVariablesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586735019756" />
-    <state x="2136" y="575" key="FileChooserDialogImpl" timestamp="1586457923468">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl" timestamp="1587233308341">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
+    <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587233308341" />
     <state width="1488" height="420" key="GridCell.Tab.0.bottom" timestamp="1587148457867">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -321,14 +345,16 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state width="1488" height="515" key="GridCell.Tab.1.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
-    <state x="1410" y="985" key="SettingsEditor" timestamp="1586734853740">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="1452" y="1018" width="1252" height="904" key="SettingsEditor" timestamp="1587232636247">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="1410" y="985" key="SettingsEditor/0.0.3840.2120@0.0.3840.2120" timestamp="1586734853740" />
-    <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1586307021950">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="1452" y="1018" width="1252" height="904" key="SettingsEditor/67.27.3773.2133@67.27.3773.2133" timestamp="1587232636247" />
+    <state x="2164" y="763" width="636" height="229" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1587233089581">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586307021950" />
+    <state x="2164" y="763" width="636" height="229" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/67.27.3773.2133@67.27.3773.2133" timestamp="1587233089581" />
     <state x="2175" y="995" width="667" height="732" key="find.popup" timestamp="1586804565954">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>

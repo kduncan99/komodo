@@ -9,6 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="baselib" />
-    <orderEntry type="library" scope="TEST" name="junit:junit:4.13" level="application" />
+    <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>
