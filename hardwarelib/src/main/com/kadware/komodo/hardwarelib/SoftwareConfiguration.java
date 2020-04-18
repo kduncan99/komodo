@@ -41,6 +41,7 @@ public class SoftwareConfiguration {
 
     @JsonProperty("copyright")          public final String _copyright;
     @JsonProperty("credentials")        public final Credentials _adminCredentials;
+    @JsonProperty("httpPort")           public final Integer _httpPort;
     @JsonProperty("systemIdentifier")   public final String _systemIdentifier;
     @JsonProperty("version")            public final Version _version;
 
@@ -48,10 +49,11 @@ public class SoftwareConfiguration {
 
     @JsonCreator
     public SoftwareConfiguration(
-        @JsonProperty("copyright") final String copyright,
-        @JsonProperty("version") final Version version,
-        @JsonProperty("systemIdentifier") final String systemIdentifier,
-        @JsonProperty("credentials") final Credentials adminCredentials
+        @JsonProperty("copyright")          final String copyright,
+        @JsonProperty("version")            final Version version,
+        @JsonProperty("systemIdentifier")   final String systemIdentifier,
+        @JsonProperty("credentials")        final Credentials adminCredentials,
+        @JsonProperty("httpPort")           final Integer httpPort
     ) {
         _copyright = copyright;
         _version = version;
@@ -60,12 +62,8 @@ public class SoftwareConfiguration {
                                        _version._minor,
                                        _version._patch,
                                        _version._build);
-        if (systemIdentifier == null) {
-            _systemIdentifier = "EM2200";
-        } else {
-            _systemIdentifier = systemIdentifier;
-        }
-
+        _systemIdentifier = systemIdentifier;
+        _httpPort = httpPort;
         _adminCredentials = adminCredentials;
     }
 

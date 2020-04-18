@@ -576,10 +576,11 @@ public class RESTSystemConsole implements SystemConsole {
      * @param name node name of the SP
      */
     public RESTSystemConsole(
-        final String name
+        final String name,
+        final int port
     ) {
         _name = name;
-        _listener = new Listener(443);
+        _listener = new Listener(port);
         _webDirectory = PathNames.RESOURCES_ROOT_DIRECTORY + "web/";
     }
 
@@ -1444,6 +1445,11 @@ public class RESTSystemConsole implements SystemConsole {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
+    }
+
+    @Override
+    public String getName() {
+        return _name;
     }
 
     /**

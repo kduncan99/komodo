@@ -132,6 +132,7 @@ public class InputOutputProcessor extends Processor {
     public void run() {
         LOGGER.info(_name + " worker thread starting");
 
+        _isReady = true;
         while (!_workerTerminate) {
             boolean waitFlag = true;
 
@@ -235,6 +236,7 @@ public class InputOutputProcessor extends Processor {
         }
 
         LOGGER.info(_name + " worker thread terminating");
+        _isReady = false;
     }
 
     /**

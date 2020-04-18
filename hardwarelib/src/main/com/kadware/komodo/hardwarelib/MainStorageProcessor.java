@@ -195,6 +195,7 @@ public class MainStorageProcessor extends Processor {
     public void run() {
         LOGGER.info(_name + " worker thread starting");
 
+        _isReady = true;
         while (!_workerTerminate) {
             synchronized (_upiPendingAcknowledgements) {
                 for (Processor source : _upiPendingAcknowledgements) {
@@ -218,5 +219,6 @@ public class MainStorageProcessor extends Processor {
         }
 
         LOGGER.info(_name + " worker thread terminating");
+        _isReady = false;
     }
 }

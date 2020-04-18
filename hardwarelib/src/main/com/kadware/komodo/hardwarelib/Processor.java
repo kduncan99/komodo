@@ -136,6 +136,11 @@ public abstract class Processor extends Node implements Worker {
     protected boolean _workerTerminate;         //  worker thread must monitor this, and shut down when it goes true
     protected final Thread _workerThread;       //  reference to worker thread.
 
+    /**
+     * Indicates whether this Processor has completed initialization and is ready for work
+     */
+    protected boolean _isReady;
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Constructors
@@ -231,6 +236,10 @@ public abstract class Processor extends Node implements Worker {
                 LOGGER.catching(ex);
             }
         }
+    }
+
+    public final boolean isReady() {
+        return _isReady;
     }
 
     /**

@@ -30,6 +30,8 @@ public interface SystemConsole {
         final int messageId
     );
 
+    String getName();
+
     /**
      * Polls the console for the next available input message
      * @return text, or null if there is no message to be had

@@ -10440,6 +10440,7 @@ public class InstructionProcessor extends Processor implements Worker {
             _storageLocks.put(this, new HashSet<AbsoluteAddress>());
         }
 
+        _isReady = true;
         while (!_workerTerminate) {
             //  If the virtual processor is not running, then the thread only watches for UPI traffic,
             //  and otherwise sleeps slowly, waiting for a notify() which would indicate something needs done.
@@ -10476,6 +10477,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         LOGGER.info(_name + " worker thread terminating");
+        _isReady = false;
     }
 
     /**

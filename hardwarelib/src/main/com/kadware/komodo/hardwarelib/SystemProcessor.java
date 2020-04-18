@@ -77,7 +77,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     private static SystemProcessor _instance = null;
 
     private KomodoLoggingAppender _appender;                   //  Log appender, so we can catch log entries
-    private final SystemConsole _console;
+    private SystemConsole _console;
     private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
     private HardwareConfiguration _hardwareConfiguration = null;
@@ -110,8 +110,6 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
         org.apache.logging.log4j.core.config.Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.ALL);
         logContext.updateLoggers();
-
-        _console = new RESTSystemConsole(name + "Console");
     }
 
     /**
@@ -120,7 +118,6 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     public SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _instance = this;
-        _console = new RESTSystemConsole("SP0Console");
     }
 
     /**
@@ -321,7 +318,11 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             LOGGER.error("Cannot start SP - configuration file is unreadable");
         }
 
+        _console = new RESTSystemConsole(_name + " Console", _softwareConfiguration._httpPort);
         _console.start();
+        LOGGER.info(_console.getName() + " Ready");
+        _isReady = true;
+
         long nextLogCheck = System.currentTimeMillis() + LOG_PERIODICITY_MSECS;
         while (!_workerTerminate) {
             long now = System.currentTimeMillis();
@@ -371,6 +372,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
         _console.stop();
         LOGGER.info(_name + " worker thread terminating");
+        _isReady = false;
     }
 
 

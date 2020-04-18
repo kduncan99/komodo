@@ -4,14 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import org.apache.logging.log4j.Logger;
-import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
 
@@ -51,6 +48,8 @@ public class Test_SystemProcessor {
                 _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s START", _name), false);
 
                 //TODO read-reply msg "{name}*JOB STARTING - CONTINUE? YN"
+                //TODO read-reply msg "{name}*ENTER SLEEP INTERVAL IN SECONDS"
+                //TODO read-reply msg "{name}*ENTER REPETITION COUNTER"
                 //TODO loop on something or other
 
                 _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s DONE", _name));
@@ -185,7 +184,35 @@ public class Test_SystemProcessor {
         public void commandStart(
             final String[] commandSplit
         ) {
-            _systemProcessor.consoleSendReadOnlyMessage("Not yet implemented");
+            if (commandSplit.length != 2) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                return;
+            }
+
+            String jobName = commandSplit[1].toUpperCase();
+            if (!Character.isAlphabetic(jobName.charAt(0))) {
+                _systemProcessor.consoleSendReadOnlyMessage("Invalid Job Name");
+                return;
+            }
+            for (int nx = 1; nx < commandSplit[1].length(); ++nx) {
+                char ch = jobName.charAt(nx);
+                if (!Character.isDigit(ch) && !(Character.isAlphabetic(ch))) {
+                    _systemProcessor.consoleSendReadOnlyMessage("Invalid Job Name");
+                    return;
+                }
+            }
+
+            synchronized (_jobs) {
+                if (_jobs.containsKey(jobName)) {
+                    _systemProcessor.consoleSendReadOnlyMessage("Duplicate Job Name");
+                    return;
+                }
+
+                Job job = new Job(jobName);
+                _jobs.put(jobName, job);
+                job.start();
+            }
+
             _inputCount++;
         }
 
@@ -253,12 +280,20 @@ public class Test_SystemProcessor {
         public void exercise(
         ) throws MaxNodesException {
             _systemProcessor = InventoryManager.getInstance().createSystemProcessor();
+            while (!_systemProcessor.isReady()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    LOGGER.catching(ex);
+                }
+            }
 
             LOGGER.info("Console Exerciser Starting");
             while (!_terminate) {
                 jobMonitor();
             }
             LOGGER.info("Console Exerciser Done");
+            _systemProcessor.terminate();
         }
 
         public void fiveSecondAction() {
