@@ -6892,7 +6892,6 @@ public class InstructionProcessor extends Processor implements Worker {
         private static final int SS_INVALID_ADDRESS = 03;
         private static final int SS_INVALID_SIZE = 04;
         private static final int SS_ACCESS_DENIED = 05;
-        private static final int SS_BAD_MESSAGE_ID = 06;
         private static final int SS_NO_DATA = 010;
 
         private class VirtualAddressInfo {
@@ -7150,12 +7149,8 @@ public class InstructionProcessor extends Processor implements Worker {
                     VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        try {
-                            SystemProcessor.getInstance().consoleSendReadReplyMessage(messageId, msg, maxReplyChars);
-                            operands[0] = Word36.setS2(operands[0], vaInfo._status);
-                        } catch (InvalidMessageIdException ex) {
-                            operands[0] = Word36.setS2(operands[0], SS_BAD_MESSAGE_ID);
-                        }
+                        SystemProcessor.getInstance().consoleSendReadReplyMessage(messageId, msg, maxReplyChars);
+                        operands[0] = Word36.setS2(operands[0], vaInfo._status);
                     }
 
                     //noinspection ConstantConditions

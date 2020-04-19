@@ -472,7 +472,8 @@ public class RESTSystemConsole implements SystemConsole {
          * Cancels a read-reply message - generally means that the message has been responded to
          */
         void cancelReadReplyMessage(
-            final int messageId
+            final int messageId,
+            final String replacementText
         ) {
             EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={})",
                                                 this.getClass().getSimpleName(),
@@ -481,11 +482,10 @@ public class RESTSystemConsole implements SystemConsole {
 
             PendingReadReplyMessage prrm = _pendingReadReplyMessages.get(messageId);
             if (prrm != null) {
-                String text = ("  " + prrm._text).substring(0, _clientAttributes._screenSizeColumns);
                 appendOutputMessage(OutputMessage.createWriteRowMessage(prrm._currentRowIndex,
                                                                         READ_ONLY_FG_COLOR,
                                                                         READ_ONLY_BG_COLOR,
-                                                                        text,
+                                                                        replacementText,
                                                                         false));
                 _pendingReadReplyMessages.remove(messageId);
 
@@ -579,12 +579,11 @@ public class RESTSystemConsole implements SystemConsole {
 
             if ((messageId >= 0) && (messageId <= 9) && !_pendingReadReplyMessages.containsKey(messageId)) {
                 scroll();
-                String text = String.format("%d %s", messageId, message);
                 int rx = _clientAttributes._screenSizeRows - 1;
                 appendOutputMessage(OutputMessage.createWriteRowMessage(rx,
                                                                         READ_REPLY_FG_COLOR,
                                                                         READ_REPLY_BG_COLOR,
-                                                                        text,
+                                                                        message,
                                                                         false));
 
                 PendingReadReplyMessage prrm = new PendingReadReplyMessage(rx, maxReplySize, messageId, message);
@@ -1628,7 +1627,8 @@ public class RESTSystemConsole implements SystemConsole {
      * Invoked by the SystemProcessor.
      */
     public void cancelReadReplyMessage(
-        final int messageId
+        final int messageId,
+        final String replacementText
     ) {
         EntryMessage em = LOGGER.traceEntry("{}.{}(messageId=%d)",
                                             this.getClass().getSimpleName(),
@@ -1636,9 +1636,17 @@ public class RESTSystemConsole implements SystemConsole {
                                             messageId);
 
         synchronized (_cachedReadReplyMessages) {
-            _cachedReadReplyMessages.remove(messageId);
+            Iterator<PendingReadReplyMessage> iter = _cachedReadReplyMessages.iterator();
+            while (iter.hasNext()) {
+                PendingReadReplyMessage prrm = iter.next();
+                if (prrm._messageId == messageId) {
+                    iter.remove();
+                    break;
+                }
+            }
         }
-        pokeClients(sessionInfo -> sessionInfo.cancelReadReplyMessage(messageId));
+
+        pokeClients(sessionInfo -> sessionInfo.cancelReadReplyMessage(messageId, replacementText));
         LOGGER.traceExit(em);
     }
 

@@ -27,7 +27,8 @@ public interface SystemConsole {
      * is no longer outstanding.
      */
     void cancelReadReplyMessage(
-        final int messageId
+        final int messageId,
+        final String replacementText
     );
 
     String getName();

@@ -6,8 +6,7 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
@@ -27,34 +26,104 @@ public class Test_SystemProcessor {
             Done,
         };
 
-        private class Job extends Thread {
+        private static class Job extends Thread {
 
+            private static int _nextNotificationId = 1;
+            private String _pendingMessage;     //  from operator
             private final String _name;
             private JobState _state = JobState.Init;
-            private boolean _restart = false;
+            private final SystemProcessor _systemProcessor;
             private boolean _terminate = false;
-            private long _timeStartMillis = 0;
-            private long _timeTermMillis = 0;
+            private long _timeStartMillis = 0;  //  system time when job started
+            private long _timeTermMillis = 0;   //  system time when job completed
 
             public Job(
-                final String name
+                final String name,
+                final SystemProcessor sp
             ) {
                 _name = name;
+                _systemProcessor = sp;
             }
 
             public void run() {
                 _state = JobState.Running;
                 _timeStartMillis = System.currentTimeMillis();
-                _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s START", _name), false);
+                post("STARTED");
 
-                //TODO read-reply msg "{name}*JOB STARTING - CONTINUE? YN"
+                String reply = null;
+                while (!_terminate && (reply == null)) {
+                    reply = postAndWait("JOB STARTING - CONTINUE? YN", 1);
+                    if (reply != null) {
+                        if (reply.equalsIgnoreCase("n")) {
+                            _terminate = true;
+                        } else if (!reply.equalsIgnoreCase("y")) {
+                            reply = null;
+                        }
+                    }
+                }
+
                 //TODO read-reply msg "{name}*ENTER SLEEP INTERVAL IN SECONDS"
                 //TODO read-reply msg "{name}*ENTER REPETITION COUNTER"
-                //TODO loop on something or other
+                int interval = 5000;
+                int count = 10;
 
-                _systemProcessor.consoleSendReadOnlyMessage(String.format("  %s DONE", _name));
+                if (!_terminate) {
+                    while (count > 0) {
+                        synchronized (this) {
+                            try {
+                                this.wait(interval);
+                            } catch (InterruptedException ex) {
+                                LOGGER.catching(ex);
+                            }
+                        }
+                        count--;
+                    }
+                }
+
+                post("DONE");
                 _state = JobState.Done;
                 _timeTermMillis = System.currentTimeMillis();
+            }
+
+            private void post(
+                final String message
+            ) {
+                _systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":" + message, false);
+            }
+
+            private String postAndWait(
+                final String notification,
+                final int maxReplySize
+            ) {
+                int nid;
+                synchronized (Job.class) {
+                    nid = _nextNotificationId++;
+                }
+
+                _systemProcessor.consoleSendReadReplyMessage(nid, "! " + _name + ":" + notification, maxReplySize);
+                String reply = null;
+                while (!_terminate && (reply == null)) {
+                    if (_pendingMessage != null) {
+                        if (_pendingMessage.length() > maxReplySize) {
+                            _systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":Response Too Long",
+                                                                        false);
+                        } else {
+                            reply = _pendingMessage;
+                        }
+                        _pendingMessage = null;
+                    } else {
+                        synchronized(this) {
+                            try {
+                                this.wait(1000);
+                            } catch (InterruptedException ex) {
+                                //  nothing to do
+                            }
+                        }
+                    }
+                }
+
+                _systemProcessor.consoleCancelReadReplyMessage(nid, "  " + _name + ":" + notification);
+                return reply;
             }
         }
 
@@ -94,6 +163,11 @@ public class Test_SystemProcessor {
                             commandQuit(split);
                             break;
 
+                        case "m":
+                        case "M":   //  message
+                            commandMessage(split);
+                            break;
+
                         case "r":
                         case "R":   //  restart the job monitor
                             commandRestart(split);
@@ -119,26 +193,28 @@ public class Test_SystemProcessor {
         private void commandHelp(
             final String[] commandSplit
         ) {
+            _inputCount++;
             if (commandSplit.length > 1) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
                 return;
             }
 
             _systemProcessor.consoleSendReadOnlyMessage("  Commands:");
-            _systemProcessor.consoleSendReadOnlyMessage("    H           - help");
-            _systemProcessor.consoleSendReadOnlyMessage("    L           - list active jobs");
-            _systemProcessor.consoleSendReadOnlyMessage("    Q           - quit exerciser");
-            _systemProcessor.consoleSendReadOnlyMessage("    R           - restart job monitor");
-            _systemProcessor.consoleSendReadOnlyMessage("    S {jobName} - start a job");
-            _systemProcessor.consoleSendReadOnlyMessage("    T {jobName} - terminate a job");
-            _inputCount++;
+            _systemProcessor.consoleSendReadOnlyMessage("    H                     - help");
+            _systemProcessor.consoleSendReadOnlyMessage("    L                     - list active jobs");
+            _systemProcessor.consoleSendReadOnlyMessage("    Q                     - quit exerciser");
+            _systemProcessor.consoleSendReadOnlyMessage("    M {jobName} {message} - send a message to a job");
+            _systemProcessor.consoleSendReadOnlyMessage("    R                     - restart job monitor");
+            _systemProcessor.consoleSendReadOnlyMessage("    S {jobName}           - start a job");
+            _systemProcessor.consoleSendReadOnlyMessage("    T {jobName}           - terminate a job");
         }
 
         private void commandList(
             final String[] commandSplit
         ) {
+            _inputCount++;
             if (commandSplit.length > 1) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
                 return;
             }
 
@@ -150,7 +226,11 @@ public class Test_SystemProcessor {
                     for (Job job : _jobs.values()) {
                         long msec = (job._state == JobState.Done) ? (job._timeTermMillis - job._timeStartMillis)
                                                                   : now - job._timeStartMillis;
-                        String msg = String.format("  %s Time:%dms State:%s", job._name, msec, job._state);
+                        String msg = String.format("  %s Time:%dms State:%s Msg:%s",
+                                                   job._name,
+                                                   msec,
+                                                   job._state,
+                                                   job._pendingMessage == null ? "N" : "Y");
                         _systemProcessor.consoleSendReadOnlyMessage(msg);
                     }
                 }
@@ -160,67 +240,123 @@ public class Test_SystemProcessor {
         private void commandQuit(
             final String[] commandSplit
         ) {
+            _inputCount++;
             if (commandSplit.length > 1) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
                 return;
             }
 
             _terminate = true;
+        }
+
+        public void commandMessage(
+            final String[] commandSplit
+        ) {
             _inputCount++;
+            if (commandSplit.length != 3) {
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
+                return;
+            }
+
+            String jobName = commandSplit[1];
+            String message = commandSplit[2];
+            Job job = null;
+            synchronized (_jobs) {
+                job = _jobs.get(jobName);
+                if (job == null) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job Not Found");
+                } else if (job._state == JobState.Done) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job Is Already Done");
+                    job = null;
+                } else if (job._pendingMessage != null) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job Has Not Retrieved Previous Message");
+                    job = null;
+                } else {
+                    job._pendingMessage = message;
+                }
+            }
+
+            if (job != null) {
+                synchronized (job) {
+                    job.notify();
+                }
+            }
         }
 
         public void commandRestart(
             final String[] commandSplit
         ) {
+            _inputCount++;
             if (commandSplit.length > 1) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
                 return;
             }
 
             _stop = true;
-            _inputCount++;
         }
 
         public void commandStart(
             final String[] commandSplit
         ) {
+            _inputCount++;
             if (commandSplit.length != 2) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Input");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
                 return;
             }
 
             String jobName = commandSplit[1].toUpperCase();
             if (!Character.isAlphabetic(jobName.charAt(0))) {
-                _systemProcessor.consoleSendReadOnlyMessage("Invalid Job Name");
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Job Name");
                 return;
             }
             for (int nx = 1; nx < commandSplit[1].length(); ++nx) {
                 char ch = jobName.charAt(nx);
                 if (!Character.isDigit(ch) && !(Character.isAlphabetic(ch))) {
-                    _systemProcessor.consoleSendReadOnlyMessage("Invalid Job Name");
+                    _systemProcessor.consoleSendReadOnlyMessage("  Invalid Job Name");
                     return;
                 }
             }
 
             synchronized (_jobs) {
                 if (_jobs.containsKey(jobName)) {
-                    _systemProcessor.consoleSendReadOnlyMessage("Duplicate Job Name");
+                    _systemProcessor.consoleSendReadOnlyMessage("  Duplicate Job Name");
                     return;
                 }
 
-                Job job = new Job(jobName);
+                Job job = new Job(jobName, _systemProcessor);
                 _jobs.put(jobName, job);
                 job.start();
             }
-
-            _inputCount++;
         }
 
         public void commandTerminate(
             final String[] commandSplit
         ) {
-            _systemProcessor.consoleSendReadOnlyMessage("Not yet implemented");
             _inputCount++;
+            if (commandSplit.length != 2) {
+                _systemProcessor.consoleSendReadOnlyMessage("  Invalid Input");
+                return;
+            }
+
+            String jobName = commandSplit[1];
+            Job job = null;
+            synchronized (_jobs) {
+                job = _jobs.get(jobName);
+                if (job == null) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job Not Found");
+                } else if (job._state == JobState.Done) {
+                    _systemProcessor.consoleSendReadOnlyMessage("  Job Is Already Done");
+                    job = null;
+                } else {
+                    job._terminate = true;
+                }
+            }
+
+            if (job != null) {
+                synchronized (job) {
+                    job.notify();
+                }
+            }
         }
 
         public void jobMonitor() {
@@ -259,19 +395,35 @@ public class Test_SystemProcessor {
             }
 
             _systemProcessor.consoleSendReadOnlyMessage("  Shutting down jobs...");
+            List<Job> jobsLeft = new LinkedList<>();
             synchronized (_jobs) {
                 for (Job job : _jobs.values()) {
-                    job._terminate = true;
-                    while (job._state != JobState.Done) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
+                    if (job._state != JobState.Done) {
+                        job._terminate = true;
+                        jobsLeft.add(job);
+                    }
+                }
+            }
+
+            for (Job job : jobsLeft) {
+                synchronized (job) {
+                    job.notify();
+                }
+            }
+
+            boolean jobWait = true;
+            while (jobWait) {
+                jobWait = false;
+                synchronized (_jobs) {
+                    for (Job job : _jobs.values()) {
+                        if (job._state != JobState.Done) {
+                            jobWait = true;
+                            break;
                         }
                     }
                 }
-                _jobs.clear();
             }
+            _jobs.clear();
 
             _systemProcessor.consoleSendReadOnlyMessage(String.format("Job Monitor Session %d Stopped", _session));
             LOGGER.info(String.format("Job Monitor Session %d Stopped", _session));

@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.hardwarelib.exceptions.InvalidMessageIdException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
@@ -395,6 +394,16 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
+     * Cancels a previously-sent read-reply message, and optionally replaces the previous message with new text
+     */
+    void consoleCancelReadReplyMessage(
+        final int messageId,
+        final String replacementText
+    ) {
+        _console.cancelReadReplyMessage(messageId, replacementText);
+    }
+
+    /**
      * Reads input from the system console.
      * If no input is available, the return value is null.
      * If input is available, unsolicited input is returned with a single leading blank,
@@ -447,10 +456,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int messageId,
         final String message,
         final int maxReplyLength
-    ) throws InvalidMessageIdException {
-        if ((messageId < 0) || (messageId > 9)) {
-            throw new InvalidMessageIdException(messageId);
-        }
+    ) {
         _console.postReadReplyMessage(messageId, message, maxReplyLength);
     }
 
