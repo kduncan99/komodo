@@ -1,9 +1,10 @@
 -- TODO InProgress
 Need to separate WEB directory in deployment scheme
 Need a common test method to build a temporary deployment, so we don't keep overwriting /config
+Find all appropriate Thread.sleep and convert to Thread.onSpinLock() -- only for short duration waits
 
 * hardwarelib
-Houston, I think we have a thread locking issue somewhere
+RESTSystemConsole: Houston, I think we have a thread locking issue somewhere
 IP: SYSC subfunctions need unit tests
 
 *minalib
@@ -11,10 +12,11 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 *systemConsole
-Can we make the containing screen not the entire width of the browser window?
 Needs session sign-on
 Needs session close button
 OS Console page
+    Output and Input areas should be the same length - which length is another question
+    Can we make the containing screen not the entire width of the browser window?
     Needs console input help pages for KEXEC commands
 IPL page
 Hardware page

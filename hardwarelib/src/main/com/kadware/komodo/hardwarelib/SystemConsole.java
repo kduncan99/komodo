@@ -39,6 +39,12 @@ public interface SystemConsole {
     String pollInputMessage();
 
     /**
+     * Alternate method of polling the console.
+     * Waits until input is available, then returns - if the wait period is exceeded, returns with null
+     */
+    String pollInputMessage(long timeoutMillis);
+
+    /**
      * Posts a read-only message to the implementor
      */
     void postReadOnlyMessage(

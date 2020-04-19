@@ -401,8 +401,10 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * while responses to read-reply messages are returned in the format {n}{s} where {n} is the ASCII
      * representation of the message id followed by the text (if any).
      */
-    String consolePollInputMessage() {
-        return _console.pollInputMessage();
+    String consolePollInputMessage(
+        final long waitMilliseconds
+    ) {
+        return _console.pollInputMessage(waitMilliseconds);
     }
 
     /**

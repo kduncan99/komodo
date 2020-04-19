@@ -1,12 +1,12 @@
 //  Copyright(c) 2020 by Kurt Duncan - All Rights Reserved
 
 //  Globals ------------------------------------------------------------------------------------------------------------------------
-
 const maxLoggingRows = 200;
-const credentialUsername = 'admin';   //  TODO solicit these from the user
-const credentialPassword = 'admin';   //  TODO as above
+const credentialUsername = 'admin';     //  TODO solicit these from the user
+const credentialPassword = 'admin';     //  TODO as above
 let clientIdent = '';
 let polling = false;                    //  poll in progress
+let pollFailed = false;                 //  previous poll failed
 let validating = false;                 //  validation in progress
 
 const attributes = {
@@ -19,22 +19,52 @@ const logDebugColor = 0xffff00;
 const logErrorColor = 0xff0000;
 const logInfoColor = 0x0000ff;
 const logTraceColor = 0x00ff00;
-
 const defaultConsoleColor = 0x00ff00;
 const defaultConsoleBackground = 0x000000;
+const defaultInputColor = 0xffffff;
+const defaultInputBackground = 0x000000;
 
 let pendingPostMessageXHR = null;
-
 const spaceRegexPattern = new RegExp(' ', 'g');
 
-let blankLineHTML = '';
-for (let cx = 0; cx < attributes.screenSizeColumns; cx++){
-    blankLineHTML += '&nbsp;'
-}
+const blankLine = ''.padStart(attributes.screenSizeColumns, ' ');
 
+
+//  Do tab panels
 $(function() {
     $( "#consoleTabs" ).tabs();
 });
+
+resetConsole();
+
+
+//  Because browsers are designed to act like a magazine of indeterminate size for displaying content,
+//  it's bloody difficult to set up (even using monospaced fonts) something resembling a terminal screen with a reliable
+//  width and height for the screen, and for the content thereof.
+// $(function() {
+//     const textContent = ''.padStart(80, 'M');
+//     const inputRow = document.getElementById('consoleInputRow');
+//     inputRow.textContent = textContent;
+//     const lineWidthPixels = inputRow.offsetWidth;
+//     const lineHeightPixels = inputRow.offsetHeight;
+//
+//     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
+//     for (let rx = 0; rx < attributes.screenSizeRows; ++rx) {
+//         rows[rx].attributes.height = lineHeightPixels;
+//         rows[rx].attributes.width = lineWidthPixels;
+//     }
+//
+//     const statusRow = document.getElementById('statusRow');
+//     statusRow.height = lineHeightPixels;
+//     statusRow.width = lineWidthPixels;
+//
+//     inputRow.innerHTML = blankLine.replace(spaceRegexPattern, '&nbsp;');
+//     inputRow.height = lineHeightPixels;
+//     inputRow.width = lineWidthPixels;
+//
+//     console.debug("line height " + lineHeightPixels + "px");//TODO remove
+//     console.debug("line width  " + lineWidthPixels + "px");//TODO remove this also
+// });
 
 
 //  Schedule the given polling function every 1 second - this might be too frequent, keep an eye on it.
@@ -103,12 +133,32 @@ $('input[type=text]').on('keydown', function(e) {
 });
 
 
-//  Creates a <span> leading tag for specifying color and background color.
-//  Parameters should be integers values as 0x{rr}{gg}{bb}
-function createSpan(fgcolor, bgcolor) {
-    const fgStr = '#' + (fgcolor.toString(16).padStart(6, '0'));
-    const bgStr = '#' + (bgcolor.toString(16).padStart(6, '0'));
-    return '<span style="color:' + fgStr + '; background-color:' + bgStr + '">'
+function clearInputArea() {
+    const html = createSpan(defaultInputColor, defaultInputBackground, blankLine);
+    const inputRow = document.getElementById('consoleInputRow');
+    inputRow.disabled = false;
+    inputRow.innerHTML = html;
+}
+
+
+function clearOutputArea() {
+    const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
+    const html = createSpan(defaultConsoleColor, defaultConsoleBackground, blankLine);
+    for (let rx = 0; rx < attributes.screenSizeRows; rx++) {
+        rows[rx].innerHTML = html;
+    }
+}
+
+
+//  Creates a span of html consisting of a <span> leading tag for specifying color and background color,
+//  the given text where literal spaces are replaced by '&nbsp', and a final </span> tag.
+//  Parameters should be integers values constructed as 0x{rr}{gg}{bb}
+function createSpan(fgcolor, bgcolor, text) {
+    const fgStr = '#' + (Number(fgcolor).toString(16).padStart(6, '0'));
+    const bgStr = '#' + (Number(bgcolor).toString(16).padStart(6, '0'));
+    const openTag = '<span style="color:' + fgStr + '; background-color:' + bgStr + '">'
+    const html = text.replace(spaceRegexPattern, '&nbsp;');
+    return openTag + html + '</span>';
 }
 
 
@@ -126,19 +176,19 @@ function pollServer() {
         } else {
             polling = true;
             console.debug("polling...");
-            //TODO use XMLHttpRequest directly
-            $.ajax({
-                url: '/poll',
-                type: 'GET',
-                dataType: 'json',
-                headers: {
-                    "Client": clientIdent
-                },
-                success: function (data, textStatus, jqXHR) {
-                    console.debug(jqXHR.responseJSON);
-                    const jumpKeySettings = jqXHR.responseJSON.jumpKeySettings;
-                    const newLogEntries = jqXHR.responseJSON.newLogEntries;
-                    const newMessages = jqXHR.responseJSON.outputMessages;
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', '/poll', true);
+            xhr.responseType = "json";
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+            xhr.setRequestHeader('Client', clientIdent);
+            xhr.onload = function () {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    //  input was accepted - should be 200, but we'll take 201
+                    pollFailed = false;
+                    console.debug("POLL SUCCESS:" + xhr.response);  //  TODO remove later
+                    const jumpKeySettings = xhr.response.jumpKeySettings;
+                    const newLogEntries = xhr.response.newLogEntries;
+                    const newMessages = xhr.response.outputMessages;
 
                     if (jumpKeySettings != null) {
                         //TODO update jump key settings panel
@@ -151,17 +201,51 @@ function pollServer() {
                     if ((newMessages != null) && (newMessages.length > 0)) {
                         processNewConsoleMessages(newMessages);
                     }
-
-                    polling = false;
-                },
-                error: function (jqXHR, textStatus /*, errorThrown*/) {
-                    console.debug("POLL FAILED:" + jqXHR.status + ":" + textStatus);
-                    polling = false;
-                    //TODO if it's a 401 (unlikely) or a 403, change some stuff around so that we re-validate
-                    //TODO if it's a 403, re-validate
-                    //TODO any other status, or nothing at all, we complain then shut down
+                } else {
+                    console.debug("POLL FAILED:" + xhr.statusText);
+                    pollFailed = true;
                 }
-            });
+                polling = false;
+                setStatusRow(false);
+            };
+            xhr.onerror = function () {
+                //  Some sort of network error occurred - complain and unclog input
+                alert('Network error - cannot contact indicated server');
+                polling = false;
+                clientIdent = '';
+                setStatusRow(false);
+                //TODO go back to login dialog
+            };
+            xhr.send();
+            //TODO use XMLHttpRequest directly
+            // $.ajax({
+            //     url: '/poll',
+            //     type: 'GET',
+            //     dataType: 'json',
+            //     headers: {
+            //         "Client": clientIdent
+            //     },
+            //     success: function (data, textStatus, jqXHR) {
+            //         console.debug(jqXHR.responseJSON);
+            //         const jumpKeySettings = jqXHR.responseJSON.jumpKeySettings;
+            //         const newLogEntries = jqXHR.responseJSON.newLogEntries;
+            //         const newMessages = jqXHR.responseJSON.outputMessages;
+            //
+            //         if (jumpKeySettings != null) {
+            //             //TODO update jump key settings panel
+            //         }
+            //
+            //         if ((newLogEntries != null) && (newLogEntries.length > 0)) {
+            //             processNewLogEntries(newLogEntries);
+            //         }
+            //
+            //         if ((newMessages != null) && (newMessages.length > 0)) {
+            //             processNewConsoleMessages(newMessages);
+            //         }
+            //
+            //         polling = false;
+            //     },
+            // });
             setStatusRow(true);
         }
     }
@@ -181,11 +265,7 @@ function processNewConsoleMessages(newMessages) {
 
         switch(messageType) {
             case 0:     //  CLEAR_SCREEN
-                const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-                html = createSpan(defaultConsoleColor, defaultConsoleBackground) + blankLineHTML + '</span>';
-                for (let rx = 0; rx < attributes.screenSizeRows; rx++) {
-                    rows[rx].innerHTML = html;
-                }
+                clearOutputArea();
                 break;
 
             case 1:     //  UNLOCK_KEYBOARD
@@ -202,7 +282,7 @@ function processNewConsoleMessages(newMessages) {
                         rows[rx - 1].innerHTML = rows[rx].innerHTML;
                         rx++;
                     }
-                    html = createSpan(defaultConsoleColor, defaultConsoleBackground) + blankLineHTML + '</span>';
+                    html = createSpan(defaultConsoleColor, defaultConsoleBackground, blankLine);
                     rows[attributes.screenSizeRows - 1].innerHTML = html;
                 }
                 break;
@@ -211,12 +291,17 @@ function processNewConsoleMessages(newMessages) {
                 if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
                     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
                     let adjustedText = text.substring(0, attributes.screenSizeColumns);
+                    console.debug('WRITE_ROW');//TODO remove
+                    console.debug('  text:[' + text + '] len=' + text.length);  //TODO remove
+                    console.debug('  adj: [' + adjustedText + '] len=' + adjustedText.length);  // TODO remove
+                    console.debug('  rightJust = ' + rightJustified);   //  TODO remove
                     if (rightJustified) {
                         adjustedText = adjustedText.padStart(attributes.screenSizeColumns, ' ');
+                    } else {
+                        adjustedText = adjustedText.padEnd(attributes.screenSizeColumns, ' ');
                     }
-                    html = createSpan(textColor, backgroundColor);
-                    html += adjustedText.substring(0, attributes.screenSizeColumns).replace(spaceRegexPattern, '&nbsp;');
-                    html += '</span>';
+                    console.debug('  adj: [' + adjustedText + '] len=' + adjustedText.length); //TODO remove
+                    html = createSpan(textColor, backgroundColor, adjustedText.substring(0, attributes.screenSizeColumns));
                     rows[rowIndex].innerHTML = html;
                 }
                 break;
@@ -240,13 +325,13 @@ function processNewLogEntries(newLogEntries) {
 
         let categoryStr = category.padStart(5, ' ');
         if (category === 'ERROR') {
-            categoryStr = createSpan(logErrorColor, logBackgroundColor)  + category + '</span>'
+            categoryStr = createSpan(logErrorColor, logBackgroundColor, category);
         } else if (category === 'DEBUG') {
-            categoryStr = createSpan(logDebugColor, logBackgroundColor) + category + '</span>'
+            categoryStr = createSpan(logDebugColor, logBackgroundColor, category);
         } else if (category === 'TRACE') {
-            categoryStr = createSpan(logTraceColor, logBackgroundColor) + category + '</span>'
+            categoryStr = createSpan(logTraceColor, logBackgroundColor, category);
         } else if (category === 'INFO') {
-            categoryStr = createSpan(logInfoColor, logBackgroundColor) + category + '</span>'
+            categoryStr = createSpan(logInfoColor, logBackgroundColor, category);
         }
         const catElement = document.createElement('td');
         catElement.innerHTML = categoryStr;
@@ -273,49 +358,43 @@ function processNewLogEntries(newLogEntries) {
 }
 
 
+function resetConsole() {
+    clearOutputArea();
+    clearInputArea();
+    setStatusRow();
+}
+
+
 //  Updates the status row
 function setStatusRow(pollTrigger) {
-    let html = '';
-    for (cx = 0; cx < attributes.screenSizeColumns - 14; cx++) {
-        html += '&nbsp;';
-    }
-
-    //  TODO change all these to createSpan()
+    let html = ''.padStart(attributes.screenSizeColumns - 14, ' ');
     if (pendingPostMessageXHR) {
-        fg = '#000000';
-        bg = '#ffff00';
+        html += createSpan(0x000000, 0xffff00, 'LOCK');
     } else {
-        fg = '#bfbfbf';
-        bg = '#3f3f00';
+        html += createSpan(0xbfbfbf, 0x3f3f00, 'LOCK');
     }
-    html += '<span style="color:' + fg + '; background-color:' + bg + '">LOCK</span> ';
 
+    html += ' '
     if (pollTrigger) {
-        fg = '#000000';
-        bg = '#00ffff';
+        html += createSpan(0x000000, 0x00ffff, 'POLL');
     } else if (polling) {
-        fg = '#000000';
-        bg = '#00ff00';
+        html += createSpan(0x000000, 0x00ff00, 'POLL');
+    } else if (pollFailed) {
+        html += createSpan(0x000000, 0xff0000, 'POLL');
     } else {
-        fg = '#bfbfbf';
-        bg = '#003f00';
+        html += createSpan(0xbfbfbf, 0x003f00, 'POLL');
     }
-    html += '<span style="color:' + fg + '; background-color:' + bg + '">POLL</span> ';
+    html += ' ';
 
     if (validating) {
-        fg = '#000000';
-        bg = '#ffff00';
+        html += createSpan(0x000000, 0xffff00, 'SESN');
     } else if (clientIdent === '') {
-        fg = '#bfbfbf';
-        bg = '#003f00';
+        html += createSpan(0xbfbfbf, 0x003f00, 'SESN');
     } else {
-        fg = '#000000';
-        bg = '#00ff00';
+        html += createSpan(0x000000, 0x00ff00, 'SESN');
     }
-    html += '<span style="color:' + fg + '; background-color:' + bg + '">SESN</span>';
 
-    const row = document.getElementById('statusRow');
-    row.innerHTML = html;
+    document.getElementById('statusRow').innerHTML = html;
 }
 
 
@@ -352,26 +431,5 @@ function validate() {
         setStatusRow(false);
     };
     xhr.send(json);
-    // //TODO use XMLHttpRequest directly
-    // $.ajax({
-    //     url:        '/session',
-    //     type:       'POST',
-    //     dataType:   'json',
-    //     headers: {
-    //         "Authorization": "Basic " + btoa(credentialUsername + ":" + credentialPassword)
-    //     },
-    //     success: function(data /*, textStatus, jqXHR */) {
-    //         console.debug("VALIDATE SUCCESS:" + data);
-    //         clientIdent = data;
-    //         validating = false;
-    //     },
-    //     error: function(jqXHR, textStatus /*, errorThrown*/) {
-    //         console.debug("VALIDATE FAILED:" + jqXHR.status + ":" + textStatus);
-    //         validating = false;
-    //         //TODO if it's a 401, go back and re-invoke the credential dialog
-    //         //TODO anything else, complain and shut down
-    //     }
-    // });
-
     setStatusRow(false);
 }

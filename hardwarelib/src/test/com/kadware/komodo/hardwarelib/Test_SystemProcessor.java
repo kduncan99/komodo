@@ -66,7 +66,7 @@ public class Test_SystemProcessor {
         SystemProcessor _systemProcessor = null;
 
         private void checkForInput() {
-            String msg = _systemProcessor.consolePollInputMessage();
+            String msg = _systemProcessor.consolePollInputMessage(10000);
             if ((msg != null) && !msg.isEmpty()) {
                 char idChar = msg.charAt(0);
                 if (Character.isDigit(msg.charAt(0))) {
@@ -150,7 +150,7 @@ public class Test_SystemProcessor {
                     for (Job job : _jobs.values()) {
                         long msec = (job._state == JobState.Done) ? (job._timeTermMillis - job._timeStartMillis)
                                                                   : now - job._timeStartMillis;
-                        String msg = String.format("  %s Time:%dms State%s", job._name, msec, job._state);
+                        String msg = String.format("  %s Time:%dms State:%s", job._name, msec, job._state);
                         _systemProcessor.consoleSendReadOnlyMessage(msg);
                     }
                 }

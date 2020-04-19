@@ -42,8 +42,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.*;
 
 
 /**
@@ -60,6 +63,71 @@ import org.apache.logging.log4j.Logger;
  */
 @SuppressWarnings("Duplicates")
 public class RESTSystemConsole implements SystemConsole {
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Data
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static final int INPUT_FG_COLOR = 0xffffff;
+    private static final int INPUT_BG_COLOR = 0x000000;
+    private static final int READ_ONLY_FG_COLOR = 0x00ff00;
+    private static final int READ_ONLY_BG_COLOR = 0x000000;
+    private static final int READ_REPLY_FG_COLOR = 0xffff00;
+    private static final int READ_REPLY_BG_COLOR = 0x000000;
+    private static final int STATUS_FG_COLOR = 0x00ffff;
+    private static final int STATUS_BG_COLOR = 0x000000;
+
+    private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
+    private static final String HTML_FILE_NAME = "systemConsole/systemConsole.html";
+    private static final String FAVICON_FILE_NAME = "systemConsole/favicon.png";
+    private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
+    private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
+    private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
+    private static final int MAX_CONSOLE_SIZE_COLUMNS = 132;
+    private static final int MAX_CONSOLE_SIZE_ROWS = 50;
+    private static final int MIN_CONSOLE_SIZE_COLUMNS = 64;
+    private static final int MIN_CONSOLE_SIZE_ROWS = 20;
+    private static final long PRUNER_PERIODICITY_SECONDS = 10;              //  pruner does its work every 10 seconds
+
+    private static final String[] _logReportingBlackList = { SystemProcessor.class.getName(),
+                                                             RESTSystemConsole.class.getName() };
+
+    private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
+
+    private final Listener _listener;
+    private final String _name;
+    private final Pruner _pruner = new Pruner();
+    private final Map<String, SessionInfo> _sessions = new HashMap<>();
+    private final String _webDirectory;
+
+    //  Most recent read-only messages and log entries and all read-reply messages,
+    //  held here so we can fill out a new session
+    private final List<KomodoLoggingAppender.LogEntry> _cachedLogEntries = new LinkedList<>();
+    private final Queue<String> _cachedReadOnlyMessages = new LinkedList<>();
+    private final List<PendingReadReplyMessage> _cachedReadReplyMessages = new LinkedList<>();
+
+    //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
+    //  Key is the session identifier of the client which sent it to us; value is the actual message.
+    private final Map<String, String> _pendingInputMessages = new LinkedHashMap<>();
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Constructor
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * constructor
+     * @param name node name of the SP
+     */
+    public RESTSystemConsole(
+            final String name,
+            final int port
+    ) {
+        _name = name;
+        _listener = new Listener(port);
+        _webDirectory = PathNames.RESOURCES_ROOT_DIRECTORY + "web/";
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  interface for anonymous-class-based client notification
@@ -131,10 +199,10 @@ public class RESTSystemConsole implements SystemConsole {
      */
     private static class OutputMessage {
 
-        static final int OMTYPE_CLEAR_SCREEN = 0;
-        static final int OMTYPE_UNLOCK_KEYBOARD = 1;
-        static final int OMTYPE_DELETE_ROW = 2;
-        static final int OMTYPE_WRITE_ROW = 3;
+        static final int MESSAGE_TYPE_CLEAR_SCREEN = 0;
+        static final int MESSAGE_TYPE_UNLOCK_KEYBOARD = 1;
+        static final int MESSAGE_TYPE_DELETE_ROW = 2;
+        static final int MESSAGE_TYPE_WRITE_ROW = 3;
 
         @JsonProperty("backgroundColor")        final Integer _backgroundColor; //  0xrrggbb format
         @JsonProperty("messageType")            final Integer _messageType;
@@ -159,18 +227,43 @@ public class RESTSystemConsole implements SystemConsole {
             _rightJustified = rightJustified;
         }
 
+        @Override
+        public String toString() {
+            switch (_messageType) {
+                case MESSAGE_TYPE_CLEAR_SCREEN:
+                    return "CLEAR_SCREEN";
+
+                case MESSAGE_TYPE_DELETE_ROW:
+                    return String.format("DELETE_ROW %d", _rowIndex);
+
+                case MESSAGE_TYPE_UNLOCK_KEYBOARD:
+                    return "UNLOCK_KEYBOARD";
+
+                case MESSAGE_TYPE_WRITE_ROW:
+                    return String.format("WRITE_ROW %d fg=0x%06x bg=0x%06x right=%s, '%s'",
+                                         _rowIndex,
+                                         _textColor,
+                                         _backgroundColor,
+                                         _rightJustified,
+                                         _text);
+
+                default:
+                    return (String.format("Unknown message type %s", _messageType));
+            }
+        }
+
         static OutputMessage createClearScreenMessage() {
-            return new OutputMessage(OMTYPE_CLEAR_SCREEN, null, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_CLEAR_SCREEN, null, null, null, null, null);
         }
 
         static OutputMessage createUnlockKeyboardMessage() {
-            return new OutputMessage(OMTYPE_UNLOCK_KEYBOARD, null, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_UNLOCK_KEYBOARD, null, null, null, null, null);
         }
 
         static OutputMessage createDeleteRowMessage(
             final int rowIndex
         ) {
-            return new OutputMessage(OMTYPE_DELETE_ROW, rowIndex, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_DELETE_ROW, rowIndex, null, null, null, null);
         }
 
         static OutputMessage createWriteRowMessage(
@@ -180,7 +273,7 @@ public class RESTSystemConsole implements SystemConsole {
             final String text,
             final Boolean rightJustified
         ) {
-            return new OutputMessage(OMTYPE_WRITE_ROW, rowIndex, textColor, backgroundColor, text, rightJustified);
+            return new OutputMessage(MESSAGE_TYPE_WRITE_ROW, rowIndex, textColor, backgroundColor, text, rightJustified);
         }
     }
 
@@ -206,6 +299,7 @@ public class RESTSystemConsole implements SystemConsole {
             _outputMessages = new OutputMessage[0];
         }
 
+        /* This c'tor is used to build an object from JSON - it is not currently needed
         PollResult(
             @JsonProperty("jumpKeySettings")            final Long jumpKeySettings,
             @JsonProperty("newLogEntries")              final SystemLogEntry[] logEntries,
@@ -215,6 +309,7 @@ public class RESTSystemConsole implements SystemConsole {
             _logEntries = logEntries == null ? null : Arrays.copyOf(logEntries, logEntries.length);
             _outputMessages = outputMessages == null ? null : Arrays.copyOf(outputMessages, outputMessages.length);
         }
+        */
     }
 
     /**
@@ -226,6 +321,7 @@ public class RESTSystemConsole implements SystemConsole {
         @JsonProperty("entity")                 public String _entity;      //  reporting entity
         @JsonProperty("message")                public String _message;
 
+        /* This c'tor is used to build an object from JSON - it is not currently needed
         SystemLogEntry (
             @JsonProperty("timestamp")      final Long timestamp,
             @JsonProperty("category")       final String category,
@@ -237,6 +333,7 @@ public class RESTSystemConsole implements SystemConsole {
             _entity = entity;
             _message = message;
         }
+        */
 
         SystemLogEntry(
             KomodoLoggingAppender.LogEntry logEntry
@@ -250,7 +347,7 @@ public class RESTSystemConsole implements SystemConsole {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Internal classes
+    //  Miscellaneous internal classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static class PendingReadReplyMessage {
@@ -273,14 +370,13 @@ public class RESTSystemConsole implements SystemConsole {
     }
 
     /**
-     * SessionIInfo - information regarding a particular client
+     * SessionInfo - information regarding a particular client
      */
     private static class SessionInfo {
 
         private final ClientAttributes _clientAttributes;
         private final String _clientId;
         private long _lastActivity = System.currentTimeMillis();
-        private boolean _isMaster = false;
         private PollResult _pollResult = new PollResult();
         private InetSocketAddress _remoteAddress = null;
         private int _statusMessageCount = 0;
@@ -306,6 +402,10 @@ public class RESTSystemConsole implements SystemConsole {
         void appendLogEntries(
             final List<SystemLogEntry> entries
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(entries len={})",
+                                                this.getClass().getSimpleName(),
+                                                "appendLogEntries",
+                                                entries.size());
             PollResult pr = _pollResult;
             if (pr._logEntries == null) {
                 pr._logEntries = entries.toArray(new SystemLogEntry[0]);
@@ -319,11 +419,18 @@ public class RESTSystemConsole implements SystemConsole {
                 }
                 pr._logEntries = newArray;
             }
+
+            LOGGER.traceExit(em);
         }
 
         void appendOutputMessage(
             final OutputMessage newMessage
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(newMessage={})",
+                                                this.getClass().getSimpleName(),
+                                                "appendOutputMessage",
+                                                newMessage);
+
             PollResult pr = _pollResult;
             if (pr._outputMessages == null) {
                 pr._outputMessages = new OutputMessage[1];
@@ -333,11 +440,17 @@ public class RESTSystemConsole implements SystemConsole {
                 pr._outputMessages = Arrays.copyOf(pr._outputMessages, origLen + 1);
                 pr._outputMessages[origLen] = newMessage;
             }
+
+            LOGGER.traceExit(em);
         }
 
         void appendOutputMessages(
             final List<OutputMessage> entries
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "appendOutputMessages");
+
             PollResult pr = _pollResult;
             if (pr._outputMessages == null) {
                 pr._outputMessages = entries.toArray(new OutputMessage[0]);
@@ -350,6 +463,8 @@ public class RESTSystemConsole implements SystemConsole {
                     newArray[newx++] = msg;
                 }
                 pr._outputMessages = newArray;
+
+                LOGGER.traceExit(em);
             }
         }
 
@@ -359,6 +474,11 @@ public class RESTSystemConsole implements SystemConsole {
         void cancelReadReplyMessage(
             final int messageId
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={})",
+                                                this.getClass().getSimpleName(),
+                                                "cancelReadReplyMessage",
+                                                messageId);
+
             PendingReadReplyMessage prrm = _pendingReadReplyMessages.get(messageId);
             if (prrm != null) {
                 String text = ("  " + prrm._text).substring(0, _clientAttributes._screenSizeColumns);
@@ -368,6 +488,8 @@ public class RESTSystemConsole implements SystemConsole {
                                                                         text,
                                                                         false));
                 _pendingReadReplyMessages.remove(messageId);
+
+                LOGGER.traceExit(em);
             }
         }
 
@@ -385,11 +507,17 @@ public class RESTSystemConsole implements SystemConsole {
          * Resets the client
          */
         void resetClient() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={})",
+                                                this.getClass().getSimpleName(),
+                                                "resetClient");
+
             _pendingReadReplyMessages.clear();
             List<OutputMessage> newMessages = new LinkedList<>();
             newMessages.add(OutputMessage.createClearScreenMessage());
             newMessages.add(OutputMessage.createUnlockKeyboardMessage());
             appendOutputMessages(newMessages);
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -398,9 +526,16 @@ public class RESTSystemConsole implements SystemConsole {
         void postInputMessage(
             final String message
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}')",
+                                                this.getClass().getSimpleName(),
+                                                "postInputMessage",
+                                                message);
+
             scroll();
             int rx = _clientAttributes._screenSizeRows - 1;
             appendOutputMessage(OutputMessage.createWriteRowMessage(rx, INPUT_FG_COLOR, INPUT_BG_COLOR, message, false));
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -410,6 +545,12 @@ public class RESTSystemConsole implements SystemConsole {
             final String message,
             final Boolean rightJustified
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}', rightJust={})",
+                                                this.getClass().getSimpleName(),
+                                                "postReadOnlyMessage",
+                                                message,
+                                                rightJustified);
+
             scroll();
             int rx = _clientAttributes._screenSizeRows - 1;
             appendOutputMessage(OutputMessage.createWriteRowMessage(rx,
@@ -417,6 +558,8 @@ public class RESTSystemConsole implements SystemConsole {
                                                                     READ_ONLY_BG_COLOR,
                                                                     message,
                                                                     rightJustified));
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -427,6 +570,13 @@ public class RESTSystemConsole implements SystemConsole {
             final String message,
             final int maxReplySize
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={} message='{}', maxReplySize={})",
+                                                this.getClass().getSimpleName(),
+                                                "postReadReplyMessage",
+                                                messageId,
+                                                message,
+                                                maxReplySize);
+
             if ((messageId >= 0) && (messageId <= 9) && !_pendingReadReplyMessages.containsKey(messageId)) {
                 scroll();
                 String text = String.format("%d %s", messageId, message);
@@ -440,6 +590,8 @@ public class RESTSystemConsole implements SystemConsole {
                 PendingReadReplyMessage prrm = new PendingReadReplyMessage(rx, maxReplySize, messageId, message);
                 _pendingReadReplyMessages.put(messageId, prrm);
             }
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -453,6 +605,11 @@ public class RESTSystemConsole implements SystemConsole {
         void postStatusMessages(
             final String[] messages
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
+                                                this.getClass().getSimpleName(),
+                                                "postStatusMessages",
+                                                String.join(" ", messages));
+
             List<OutputMessage> output = new LinkedList<>();
             for (int mx = 0; mx < _statusMessageCount; ++mx) {
                 if (mx < messages.length) {
@@ -484,6 +641,8 @@ public class RESTSystemConsole implements SystemConsole {
             }
 
             _statusMessageCount = messages.length;
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -491,6 +650,10 @@ public class RESTSystemConsole implements SystemConsole {
          * scrolling all rows below it up by one row.
          */
         void scroll() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
+                                                this.getClass().getSimpleName(),
+                                                "scroll");
+
             //  Find the index of the first non-pinned row
             int rx = 0;
             while (_pinnedState[rx]) {
@@ -516,72 +679,71 @@ public class RESTSystemConsole implements SystemConsole {
             }
 
             appendOutputMessages(output);
+            LOGGER.traceExit(em);
         }
     }
 
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Data
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    private static final int INPUT_FG_COLOR = 0xffffff;
-    private static final int INPUT_BG_COLOR = 0x000000;
-    private static final int READ_ONLY_FG_COLOR = 0x00ff00;
-    private static final int READ_ONLY_BG_COLOR = 0x000000;
-    private static final int READ_REPLY_FG_COLOR = 0xffff00;
-    private static final int READ_REPLY_BG_COLOR = 0x000000;
-    private static final int STATUS_FG_COLOR = 0x00ffff;
-    private static final int STATUS_BG_COLOR = 0x000000;
-
-    private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
-    private static final String HTML_FILE_NAME = "systemConsole/systemConsole.html";
-    private static final String FAVICON_FILE_NAME = "systemConsole/favicon.png";
-    private static final long POLL_WAIT_MSECS = 10000;                      //  10 second (maximum) poll delay
-    private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
-    private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
-    private static final int MAX_CONSOLE_SIZE_COLUMNS = 132;
-    private static final int MAX_CONSOLE_SIZE_ROWS = 50;
-    private static final int MIN_CONSOLE_SIZE_COLUMNS = 64;
-    private static final int MIN_CONSOLE_SIZE_ROWS = 20;
-    private static final long WORKER_PERIODICITY_MSECS = 10000;             //  worker thread does its work every 10 seconds
-
-    private static final String[] _logReportingBlackList = { SystemProcessor.class.getName(),
-                                                             RESTSystemConsole.class.getName() };
-
-    private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
-
-    private final Listener _listener;
-    private final String _name;
-    private final Map<String, SessionInfo> _sessions = new HashMap<>();
-    private final String _webDirectory;
-    private WorkerThread _workerThread = null;
-
-    //  Most recent read-only messages and log entries and all read-reply messages,
-    //  held here so we can fill out a new session
-    private final List<KomodoLoggingAppender.LogEntry> _cachedLogEntries = new LinkedList<>();
-    private final Queue<String> _cachedReadOnlyMessages = new LinkedList<>();
-    private final List<PendingReadReplyMessage> _cachedReadReplyMessages = new LinkedList<>();
-
-    //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
-    //  Key is the session identifier of the client which sent it to us; value is the actual message.
-    private final Map<String, String> _pendingInputMessages = new LinkedHashMap<>();
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructor
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     /**
-     * constructor
-     * @param name node name of the SP
+     * Periodically age-out dead sessions
      */
-    public RESTSystemConsole(
-        final String name,
-        final int port
-    ) {
-        _name = name;
-        _listener = new Listener(port);
-        _webDirectory = PathNames.RESOURCES_ROOT_DIRECTORY + "web/";
+    private class Pruner {
+
+        private class RunnablePruner implements Runnable {
+            public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
+
+                synchronized (_sessions) {
+                    long now = System.currentTimeMillis();
+                    Iterator<Map.Entry<String, SessionInfo>> iter = _sessions.entrySet().iterator();
+                    List<SessionInfo> removedSessionInfos = new LinkedList<>();
+                    while (iter.hasNext()) {
+                        Map.Entry<String, SessionInfo> entry = iter.next();
+                        SessionInfo sinfo = entry.getValue();
+                        if (now > (sinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
+                            LOGGER.info(String.format("Removing aged-out client %s", sinfo._clientId));
+                            iter.remove();
+                            removedSessionInfos.add(sinfo);
+                        }
+                    }
+
+                    for (SessionInfo sinfo : removedSessionInfos) {
+                        synchronized (sinfo) {
+                            sinfo._pollResult = new PollResult();
+                            sinfo.notify();
+                        }
+                    }
+                }
+
+                LOGGER.traceExit(em);
+            }
+        }
+
+        private final Runnable _runnable = new RunnablePruner();
+        private final ScheduledExecutorService _scheduler = Executors.newScheduledThreadPool(1);
+        private ScheduledFuture<?> _schedule = null;
+
+        private void start() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "start");
+            _schedule = _scheduler.scheduleWithFixedDelay(_runnable,
+                                                          PRUNER_PERIODICITY_SECONDS,
+                                                          PRUNER_PERIODICITY_SECONDS,
+                                                          SECONDS);
+            LOGGER.traceExit(em);
+        }
+
+        private void stop() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "stop");
+            _schedule.cancel(false);
+            _schedule = null;
+            LOGGER.traceExit(em);
+        }
     }
 
 
@@ -598,8 +760,13 @@ public class RESTSystemConsole implements SystemConsole {
         public void handle(
             final HttpExchange exchange
         ) {
-            LOGGER.traceEntry(String.format("<-- %s %s", exchange.getRequestMethod(), exchange.getRequestURI()));
+            EntryMessage em = LOGGER.traceEntry("{}.{}(method={} URI={})",
+                                                this.getClass().getSimpleName(),
+                                                "handle",
+                                                exchange.getRequestMethod(),
+                                                exchange.getRequestURI());
             delegate(exchange);
+            LOGGER.traceExit(em);
         }
 
         public abstract void delegate(
@@ -636,18 +803,24 @@ public class RESTSystemConsole implements SystemConsole {
          */
         SessionInfo findClient(
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "findClient");
+
+            SessionInfo result = null;
             List<String> values = _requestHeaders.get("Client");
             if ((values != null) && (values.size() == 1)) {
                 String clientId = values.get(0);
                 synchronized (_sessions) {
                     SessionInfo sessionInfo = _sessions.get(clientId);
                     if (sessionInfo != null) {
-                        return sessionInfo;
+                        result = sessionInfo;
                     }
                 }
             }
 
-            return null;
+            LOGGER.traceExit(em, result);
+            return result;
         }
 
         /**
@@ -712,11 +885,15 @@ public class RESTSystemConsole implements SystemConsole {
          * For responding to the client with the content of a binary file
          */
         void respondWithBinaryFile(
-            final int code,
             final String mimeType,
             final String fileName
         ) {
-            LOGGER.traceEntry(String.format("respondWithBinaryFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            EntryMessage em = LOGGER.traceEntry("{}.{}(mimeType={} fileName={})",
+                                                this.getClass().getSimpleName(),
+                                                "respondWithBinaryFile",
+                                                mimeType,
+                                                fileName);
+
             byte[] bytes;
             try {
                 bytes = Files.readAllBytes(Paths.get(fileName));
@@ -724,22 +901,23 @@ public class RESTSystemConsole implements SystemConsole {
                 LOGGER.catching(ex);
                 bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
                 try {
-                    _exchange.sendResponseHeaders(code, bytes.length);
+                    _exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, bytes.length);
                     OutputStream os = _exchange.getResponseBody();
                     os.write(bytes);
                     _exchange.close();
-                    return;
                 } catch (IOException ex2) {
                     LOGGER.catching(ex2);
                     _exchange.close();
-                    return;
                 }
+
+                LOGGER.traceExit(em);
+                return;
             }
 
             _exchange.getResponseHeaders().add("content-type", mimeType);
             _exchange.getResponseHeaders().add("Cache-Control", "no-store");
             try {
-                _exchange.sendResponseHeaders(code, bytes.length);
+                _exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
                 OutputStream os = _exchange.getResponseBody();
                 os.write(bytes);
             } catch (Exception ex) {
@@ -747,6 +925,8 @@ public class RESTSystemConsole implements SystemConsole {
             } finally {
                 _exchange.close();
             }
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -757,12 +937,16 @@ public class RESTSystemConsole implements SystemConsole {
             final int code,
             final Object object
         ) {
-            LOGGER.traceEntry(String.format("code:%d object:%s", code, object.toString()));
+            EntryMessage em = LOGGER.traceEntry("{}.{}(code={} content={})",
+                                                this.getClass().getSimpleName(),
+                                                "respondWithJSON",
+                                                code,
+                                                object);
+
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 String content = mapper.writeValueAsString(object);
-                System.out.println("-->" + content);   //TODO remove
-                LOGGER.trace(String.format("  JSON:%s", content));
+                LOGGER.trace("-->" + content);
                 _exchange.getResponseHeaders().add("Content-type", "application/json");
                 _exchange.getResponseHeaders().add("Cache-Control", "no-store");
                 _exchange.sendResponseHeaders(code, content.length());
@@ -773,6 +957,8 @@ public class RESTSystemConsole implements SystemConsole {
                 LOGGER.catching(ex);
                 _exchange.close();
             }
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -783,8 +969,11 @@ public class RESTSystemConsole implements SystemConsole {
             final int code,
             final String content
         ) {
-            LOGGER.traceEntry(String.format("code:%d content:%s", code, content));
-            System.out.println("-->" + content);   //TODO remove
+            EntryMessage em = LOGGER.traceEntry("{}.{}(code={} content={})",
+                                                this.getClass().getSimpleName(),
+                                                "respondWithText",
+                                                code,
+                                                content);
 
             _exchange.getResponseHeaders().add("Content-type", "text/plain");
             byte[] bytes = content.getBytes();
@@ -798,17 +987,23 @@ public class RESTSystemConsole implements SystemConsole {
                 LOGGER.catching(ex);
                 _exchange.close();
             }
+
+            LOGGER.traceExit(em);
         }
 
         /**
          * When we need to send back a text file
          */
         void respondWithTextFile(
-            final int code,
             final String mimeType,
             final String fileName
         ) {
-            LOGGER.traceEntry(String.format("respondWithTextFile - code:%d mimeType:%s fileName:%s", code, mimeType, fileName));
+            EntryMessage em = LOGGER.traceEntry("{}.{}(mimeType={} fileName={})",
+                                                this.getClass().getSimpleName(),
+                                                "respondWithTextFile",
+                                                mimeType,
+                                                fileName);
+
             List<String> textLines;
             try {
                 textLines = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
@@ -816,22 +1011,23 @@ public class RESTSystemConsole implements SystemConsole {
                 LOGGER.catching(ex);
                 byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
                 try {
-                    _exchange.sendResponseHeaders(code, bytes.length);
+                    _exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, bytes.length);
                     OutputStream os = _exchange.getResponseBody();
                     os.write(bytes);
-                    return;
                 } catch (IOException ex2) {
                     LOGGER.catching(ex2);
                     _exchange.close();
-                    return;
                 }
+
+                LOGGER.traceExit(em);
+                return;
             }
 
             byte[] bytes = String.join("\r\n", textLines).getBytes();
             _exchange.getResponseHeaders().add("content-type", mimeType);
             _exchange.getResponseHeaders().add("Cache-Control", "no-store");
             try {
-                _exchange.sendResponseHeaders(code, bytes.length);
+                _exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
                 OutputStream os = _exchange.getResponseBody();
                 os.write(bytes);
             } catch (Exception ex) {
@@ -839,6 +1035,8 @@ public class RESTSystemConsole implements SystemConsole {
             } finally {
                 _exchange.close();
             }
+
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -847,6 +1045,11 @@ public class RESTSystemConsole implements SystemConsole {
          * @return true if credentials are valid, else false
          */
         boolean validateCredentials() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "validateCredentials");
+
+            boolean result = false;
             List<String> values = _requestHeaders.get("Authorization");
             if ((values != null) && (values.size() == 1)) {
                 String[] split = values.get(0).split(" ");
@@ -860,14 +1063,15 @@ public class RESTSystemConsole implements SystemConsole {
                             SystemProcessor sp = SystemProcessor.getInstance();
                             SoftwareConfiguration sc = sp.getSoftwareConfiguration();
                             if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
-                                return sc._adminCredentials.validatePassword(givenClearTextPassword);
+                                result = sc._adminCredentials.validatePassword(givenClearTextPassword);
                             }
                         }
                     }
                 }
             }
 
-            return false;
+            LOGGER.traceExit(em, result);
+            return result;
         }
     }
 
@@ -914,10 +1118,14 @@ public class RESTSystemConsole implements SystemConsole {
 
             @Override
             public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
                 try {
                     SessionInfo sessionInfo = findClient();
                     if (sessionInfo == null) {
                         respondNoSession();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
@@ -938,6 +1146,7 @@ public class RESTSystemConsole implements SystemConsole {
                             content = new ObjectMapper().readValue(_requestBody, JumpKeys.class);
                         } catch (IOException ex) {
                             respondBadRequest(ex.getMessage());
+                            LOGGER.traceExit(em);
                             return;
                         }
 
@@ -945,6 +1154,7 @@ public class RESTSystemConsole implements SystemConsole {
                         if (content._compositeValue != null) {
                             if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
                                 respondBadRequest("Invalid composite value");
+                                LOGGER.traceExit(em);
                                 return;
                             }
 
@@ -955,6 +1165,7 @@ public class RESTSystemConsole implements SystemConsole {
                                 int jumpKeyId = entry.getKey();
                                 if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
                                     respondBadRequest(String.format("Invalid component value jump key id: %d", jumpKeyId));
+                                    LOGGER.traceExit(em);
                                     return;
                                 }
 
@@ -963,6 +1174,7 @@ public class RESTSystemConsole implements SystemConsole {
 
                                 jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
                                 respondWithJSON(HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                                LOGGER.traceExit(em);
                                 return;
                             }
                         } else {
@@ -982,6 +1194,8 @@ public class RESTSystemConsole implements SystemConsole {
                     LOGGER.catching(t);
                     respondServerError(getStackTrace(t));
                 }
+
+                LOGGER.traceExit(em);
             }
         }
     }
@@ -1008,16 +1222,21 @@ public class RESTSystemConsole implements SystemConsole {
 
             @Override
             public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
                 try {
                     SessionInfo sessionInfo = findClient();
                     if (sessionInfo == null) {
                         respondNoSession();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
                     sessionInfo._lastActivity = System.currentTimeMillis();
                     if (!_requestMethod.equals(HttpMethod.POST._value)) {
                         respondBadMethod();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
@@ -1034,6 +1253,8 @@ public class RESTSystemConsole implements SystemConsole {
                             if (!inputText.isEmpty()) {
                                 _pendingInputMessages.put(sessionInfo._clientId, inputText);
                             }
+
+                            _pendingInputMessages.notifyAll();
                         }
                     }
 
@@ -1045,9 +1266,10 @@ public class RESTSystemConsole implements SystemConsole {
                 } catch (IOException ex) {
                     respondBadRequest("Badly-formatted body");
                 } catch (Throwable t) {
-                    LOGGER.catching(t);
                     respondServerError(getStackTrace(t));
                 }
+
+                LOGGER.traceExit(em);
             }
         }
     }
@@ -1076,16 +1298,21 @@ public class RESTSystemConsole implements SystemConsole {
 
             @Override
             public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
                 try {
                     SessionInfo sessionInfo = findClient();
                     if (sessionInfo == null) {
                         respondNoSession();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
                     sessionInfo._lastActivity = System.currentTimeMillis();
                     if (!_requestMethod.equals(HttpMethod.GET._value)) {
                         respondBadMethod();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
@@ -1108,6 +1335,8 @@ public class RESTSystemConsole implements SystemConsole {
                     LOGGER.catching(t);
                     respondServerError(getStackTrace(t));
                 }
+
+                LOGGER.traceExit(em);
             }
         }
     }
@@ -1136,14 +1365,19 @@ public class RESTSystemConsole implements SystemConsole {
 
             @Override
             public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
                 try {
                     if (!validateCredentials()) {
                         respondUnauthorized();
+                        LOGGER.traceExit(em);
                         return;
                     }
 
                     if (!_requestMethod.equalsIgnoreCase(HttpMethod.POST._value)) {
                         respondBadMethod();
+                        LOGGER.traceExit(this.getClass().getName() + "run()");
                         return;
                     }
 
@@ -1154,6 +1388,7 @@ public class RESTSystemConsole implements SystemConsole {
                         || (attr._screenSizeRows < MIN_CONSOLE_SIZE_ROWS)
                         || (attr._screenSizeRows > MAX_CONSOLE_SIZE_ROWS)) {
                         respondBadRequest("Invalid screen size specified");
+                        LOGGER.traceExit(em);
                         return;
                     }
 
@@ -1205,6 +1440,8 @@ public class RESTSystemConsole implements SystemConsole {
                     LOGGER.catching(t);
                     respondServerError(getStackTrace(t));
                 }
+
+                LOGGER.traceExit(em);
             }
         }
     }
@@ -1231,6 +1468,9 @@ public class RESTSystemConsole implements SystemConsole {
 
             @Override
             public void run() {
+                EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                    this.getClass().getSimpleName(),
+                                                    "run");
                 try {
                     String fileName = _exchange.getRequestURI().getPath();
                     if (fileName.startsWith("/")) {
@@ -1270,15 +1510,16 @@ public class RESTSystemConsole implements SystemConsole {
                     }
 
                     String fullName = String.format("%s%s", _webDirectory, fileName);
-                    LOGGER.trace("fullName:" + fullName);//TODO remove
                     if (textFile) {
-                        respondWithTextFile(HttpURLConnection.HTTP_OK, mimeType, fullName);
+                        respondWithTextFile(mimeType, fullName);
                     } else {
-                        respondWithBinaryFile(HttpURLConnection.HTTP_OK, mimeType, fullName);
+                        respondWithBinaryFile(mimeType, fullName);
                     }
                 } catch (Throwable t) {
                     LOGGER.catching(t);
                 }
+
+                LOGGER.traceExit(em);
             }
         }
     }
@@ -1315,6 +1556,9 @@ public class RESTSystemConsole implements SystemConsole {
                  NoSuchAlgorithmException,
                  NoSuchProviderException,
                  SignatureException {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "setup");
             super.setup();
             appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
@@ -1322,6 +1566,7 @@ public class RESTSystemConsole implements SystemConsole {
             appendHandler("/session", new APISessionRequestHandler());
             appendHandler("/poll", new APIPollRequestHandler());
             start();
+            LOGGER.traceExit(em);
         }
 
         /**
@@ -1330,14 +1575,18 @@ public class RESTSystemConsole implements SystemConsole {
          */
         @Override
         public void stop() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "stop");
             super.stop();
             pokeClients(sessionInfo -> sessionInfo._pollResult = new PollResult());
+            LOGGER.traceExit(em);
         }
     }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Private methods
+    //  Private methods (finally)
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -1347,6 +1596,10 @@ public class RESTSystemConsole implements SystemConsole {
     private void pokeClients(
         final PokeClientFunction pokeFunction
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "pokeClients");
+
         Set<SessionInfo> sinfos;
         synchronized (_sessions) {
             sinfos = new HashSet<>(_sessions.values());
@@ -1360,33 +1613,8 @@ public class RESTSystemConsole implements SystemConsole {
                 sinfo.notify();
             }
         }
-    }
 
-    /**
-     * Client wants us to age-out any old client info objects
-     */
-    private void pruneClients() {
-        synchronized (_sessions) {
-            long now = System.currentTimeMillis();
-            Iterator<Map.Entry<String, SessionInfo>> iter = _sessions.entrySet().iterator();
-            List<SessionInfo> removedSessionInfos = new LinkedList<>();
-            while (iter.hasNext()) {
-                Map.Entry<String, SessionInfo> entry = iter.next();
-                SessionInfo sinfo = entry.getValue();
-                if (now > (sinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
-                    LOGGER.info(String.format("Removing aged-out client %s", sinfo._clientId));
-                    iter.remove();
-                    removedSessionInfos.add(sinfo);
-                }
-            }
-
-            for (SessionInfo sinfo : removedSessionInfos) {
-                synchronized (sinfo) {
-                    sinfo._pollResult = new PollResult();
-                    sinfo.notify();
-                }
-            }
-        }
+        LOGGER.traceExit(em);
     }
 
 
@@ -1402,10 +1630,16 @@ public class RESTSystemConsole implements SystemConsole {
     public void cancelReadReplyMessage(
         final int messageId
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(messageId=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "cancelReadReplyMessage",
+                                            messageId);
+
         synchronized (_cachedReadReplyMessages) {
             _cachedReadReplyMessages.remove(messageId);
         }
         pokeClients(sessionInfo -> sessionInfo.cancelReadReplyMessage(messageId));
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -1415,6 +1649,10 @@ public class RESTSystemConsole implements SystemConsole {
     public void dump(
         final BufferedWriter writer
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "dump");
+
         try {
             writer.write(String.format("RESTSystemConsole %s\n", _name));
             writer.write(String.format("  APIListener commonName=%s portNumber=%d\n",
@@ -1434,8 +1672,7 @@ public class RESTSystemConsole implements SystemConsole {
             synchronized (_sessions) {
                 for (SessionInfo sinfo : _sessions.values()) {
                     synchronized (sinfo) {
-                        writer.write(String.format("  Client   %sRemote Address:%s   Last Activity %d msec ago\n",
-                                                   sinfo._isMaster ? "MASTER " : "",
+                        writer.write(String.format("  Client   Remote Address:%s   Last Activity %d msec ago\n",
                                                    sinfo._remoteAddress.getAddress().getHostAddress(),
                                                    now - sinfo._lastActivity));
                         //TODO whatever from the pollInfo object
@@ -1445,6 +1682,8 @@ public class RESTSystemConsole implements SystemConsole {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
+
+        LOGGER.traceExit(em);
     }
 
     @Override
@@ -1458,15 +1697,43 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public String pollInputMessage() {
+        return pollInputMessage(0);
+    }
+
+    /**
+     * SystemProcessor calls here to see if there is an input message waiting to be passed along.
+     * If we find one, construct an output message for the session it came from, to unlock that client's keyboard.
+     * If there isn't one available, wait for the specified period before returning, to see if one shows up.
+     * If timeoutMillis is zero, do not wait.
+     */
+    public String pollInputMessage(
+        long timeoutMillis
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(timeout={}ms)",
+                                            this.getClass().getSimpleName(),
+                                            "pollInputMessage",
+                                            timeoutMillis);
+
         Map.Entry<String, String> nextEntry = null;
         synchronized (_pendingInputMessages) {
-            Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
-            if (iter.hasNext()) {
+            if (_pendingInputMessages.isEmpty()) {
+                if (timeoutMillis > 0) {
+                    try {
+                        _pendingInputMessages.wait(timeoutMillis);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
+                    }
+                }
+            }
+
+            if (!_pendingInputMessages.isEmpty()) {
+                Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
                 nextEntry = iter.next();
                 iter.remove();
             }
         }
 
+        String result = null;
         if (nextEntry != null) {
             SessionInfo sinfo;
             synchronized (_sessions) {
@@ -1478,10 +1745,12 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
 
-            return nextEntry.getValue();
-        } else {
-            return null;
+            LOGGER.traceExit(em, nextEntry.getValue());
+            result = nextEntry.getValue();
         }
+
+        LOGGER.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -1492,6 +1761,12 @@ public class RESTSystemConsole implements SystemConsole {
         final String message,
         final Boolean rightJustified
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}' rightJustified={})",
+                                            this.getClass().getSimpleName(),
+                                            "postReadOnlyMessage",
+                                            message,
+                                            rightJustified);
+
         synchronized (_cachedReadOnlyMessages) {
             _cachedReadOnlyMessages.add(message);
             while (_cachedReadOnlyMessages.size() > MAX_CACHED_READ_ONLY_MESSAGES) {
@@ -1499,6 +1774,8 @@ public class RESTSystemConsole implements SystemConsole {
             }
         }
         pokeClients(sessionInfo -> sessionInfo.postReadOnlyMessage(message, rightJustified));
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -1510,10 +1787,19 @@ public class RESTSystemConsole implements SystemConsole {
         final String message,
         final int maxReplyLength
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={} message='{}' maxReplyLength={})",
+                                            this.getClass().getSimpleName(),
+                                            "postReadReplyMessage",
+                                            messageId,
+                                            message,
+                                            maxReplyLength);
+
         synchronized (_cachedReadReplyMessages) {
             _cachedReadReplyMessages.add(new PendingReadReplyMessage(-1, maxReplyLength, messageId, message));
         }
         pokeClients(sessionInfo -> sessionInfo.postReadReplyMessage(messageId, message, maxReplyLength));
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -1523,12 +1809,18 @@ public class RESTSystemConsole implements SystemConsole {
     public void postStatusMessages(
         final String[] messages
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}({})",
+                                            this.getClass().getSimpleName(),
+                                            "postStatusMessages",
+                                            String.join(",", messages));
         pokeClients(sessionInfo -> sessionInfo.postStatusMessages(messages));
+        LOGGER.traceExit(em);
     }
 
     /**
      * Given a set of log entries, propagate all of the ones which do not come from black-listed sources, to any pending clients.
      * If there are none after filtering, don't annoy the clients.
+     * Do NOT log entry/exit - that will just create a fiasco.
      */
     @Override
     public void postSystemLogEntries(
@@ -1572,7 +1864,11 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void reset() {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "reset");
         pokeClients(SessionInfo::resetClient);
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -1581,13 +1877,17 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public boolean start(
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "start");
         try {
             _listener.setup();
-            _workerThread = new WorkerThread();
-            _workerThread.start();
+            _pruner.start();
+            LOGGER.traceExit(em, true);
             return true;
         } catch (Exception ex) {
             LOGGER.catching(ex);
+            LOGGER.traceExit(em, false);
             return false;
         }
     }
@@ -1597,32 +1897,11 @@ public class RESTSystemConsole implements SystemConsole {
      */
     @Override
     public void stop() {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "stop");
         _listener.stop();
-        _workerThread._terminate = true;
-        _workerThread = null;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Worker thread
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * This async thread/class exists mainly just to prune the established sessions periodically
-     */
-    private class WorkerThread extends Thread {
-
-        public boolean _terminate = false;
-
-        public void run() {
-            while (!_terminate) {
-                pruneClients();
-                try {
-                    Thread.sleep(WORKER_PERIODICITY_MSECS);
-                } catch (InterruptedException ex) {
-                    LOGGER.catching(ex);
-                }
-            }
-        }
+        _pruner.stop();
+        LOGGER.traceExit(em);
     }
 }

@@ -34,16 +34,16 @@
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/software.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/software.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InputOutputProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InputOutputProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/MainStorageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/MainStorageProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Processor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Processor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/KomodoLoggingAppender.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/KomodoLoggingAppender.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/LoggerStub.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/LoggerStub.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SoftwareConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SoftwareConfiguration.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +90,7 @@
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.38089758" />
-    <property name="settings.editor.selected.configurable" value="configurable.group.language" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Java" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -304,10 +304,11 @@
     </state>
     <state x="2160" y="588" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586701221930" />
     <state x="2189" y="619" width="524" height="484" key="#com.intellij.util.ui.classpath.ChooseLibrariesDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1587233423636" />
-    <state x="1164" y="673" width="1348" height="1266" key="DiffContextDialog" timestamp="1587067517190">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="1211" y="704" width="1325" height="1274" key="DiffContextDialog" timestamp="1587307620659">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="1164" y="673" width="1348" height="1266" key="DiffContextDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1587067517190" />
+    <state x="1211" y="704" width="1325" height="1274" key="DiffContextDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1587307620659" />
     <state x="1700" y="1197" key="EnvironmentVariablesDialog" timestamp="1586735019756">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -317,26 +318,26 @@
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
     <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587233308341" />
-    <state width="1711" height="440" key="GridCell.Tab.0.bottom" timestamp="1587244134957">
+    <state width="1711" height="440" key="GridCell.Tab.0.bottom" timestamp="1587321463109">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587244134957" />
-    <state width="1711" height="440" key="GridCell.Tab.0.center" timestamp="1587244134956">
+    <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587321463109" />
+    <state width="1711" height="440" key="GridCell.Tab.0.center" timestamp="1587321463109">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587244134956" />
-    <state width="1711" height="440" key="GridCell.Tab.0.left" timestamp="1587244134956">
+    <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587321463109" />
+    <state width="1711" height="440" key="GridCell.Tab.0.left" timestamp="1587321463108">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587244134956" />
-    <state width="1711" height="440" key="GridCell.Tab.0.right" timestamp="1587244134957">
+    <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587321463108" />
+    <state width="1711" height="440" key="GridCell.Tab.0.right" timestamp="1587321463109">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587244134957" />
+    <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587321463109" />
     <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -353,20 +354,21 @@
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
     <state width="1488" height="515" key="GridCell.Tab.1.right/0.0.3840.2120@0.0.3840.2120" timestamp="1586834528521" />
-    <state x="1452" y="1018" width="1252" height="904" key="SettingsEditor" timestamp="1587232636247">
+    <state x="1452" y="488" width="1438" height="1434" key="SettingsEditor" timestamp="1587313096694">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="1410" y="985" key="SettingsEditor/0.0.3840.2120@0.0.3840.2120" timestamp="1586734853740" />
-    <state x="1452" y="1018" width="1252" height="904" key="SettingsEditor/67.27.3773.2133@67.27.3773.2133" timestamp="1587232636247" />
+    <state x="1452" y="488" width="1438" height="1434" key="SettingsEditor/67.27.3773.2133@67.27.3773.2133" timestamp="1587313096694" />
     <state x="2164" y="763" width="636" height="229" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD" timestamp="1587233089581">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586307021950" />
     <state x="2164" y="763" width="636" height="229" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/67.27.3773.2133@67.27.3773.2133" timestamp="1587233089581" />
-    <state x="2175" y="995" width="667" height="732" key="find.popup" timestamp="1586804565954">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="2204" y="1028" width="786" height="737" key="find.popup" timestamp="1587310263634">
+      <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state x="2175" y="995" width="667" height="732" key="find.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586804565954" />
+    <state x="2204" y="1028" width="786" height="737" key="find.popup/67.27.3773.2133@67.27.3773.2133" timestamp="1587310263634" />
     <state x="1833" y="767" key="new project wizard" timestamp="1586699294397">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
