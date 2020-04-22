@@ -125,7 +125,7 @@ public class RESTSystemConsole implements SystemConsole {
     ) {
         _name = name;
         _listener = new Listener(port);
-        _webDirectory = PathNames.RESOURCES_ROOT_DIRECTORY + "web/";
+        _webDirectory = PathNames.WEB_ROOT_DIRECTORY;
     }
 
 

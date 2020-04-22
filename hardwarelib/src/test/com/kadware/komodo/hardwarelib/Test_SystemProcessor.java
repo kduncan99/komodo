@@ -5,6 +5,8 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import org.apache.logging.log4j.Logger;
@@ -469,8 +471,13 @@ public class Test_SystemProcessor {
     //  If you try to run the module, the environment variables are not set up.
     @Test
     public void exercise(
-    ) throws MaxNodesException {
+    ) throws MaxNodesException,
+             IOException {
+        System.setProperty("BASE_DIR", "../test/");
+        Test_Deployer testDeployer = new Test_Deployer();
+        testDeployer.deploy();
         new ConsoleExerciser().exercise();
+        testDeployer.remove();
     }
 
     //  TODO Need a variety of unit tests here

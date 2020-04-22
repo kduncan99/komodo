@@ -1,7 +1,6 @@
 -- TODO InProgress
-Need to separate WEB directory in deployment scheme
-Need a common test method to build a temporary deployment, so we don't keep overwriting /config
 Find all appropriate Thread.sleep and convert to Thread.onSpinLock() -- only for short duration waits
+Rework synchronization to avoid deadlocks
 
 The following, in Node.java, should be subject to management by the SystemProcessor, directed by the software configuration
 Also, we don't use the channel entities (yet?)

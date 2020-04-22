@@ -32,13 +32,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Deployer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Deployment.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Deployment.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Node.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_FileSystemDiskDevice.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_FileSystemDiskDevice.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_FileSystemTapeDevice.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_FileSystemTapeDevice.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Node.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/PathNames.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/PathNames.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/hardware.json" beforeDir="false" afterPath="$PROJECT_DIR$/resources/config/hardware.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/software.json" beforeDir="false" afterPath="$PROJECT_DIR$/resources/config/software.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,16 +92,13 @@
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Java" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\kduncan\Projects\komodo\config" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\systemConsole" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\library" />
-      <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
-    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.kadware.komodo.hardwarelib" />
       <recent name="com.kadware.komodo.baselib" />
       <recent name="com.kadware.komodo.jsonlib" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\kduncan\Projects\komodo\config" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="com.kadware.komodo.hardwarelib.exceptions" />
@@ -106,11 +107,62 @@
       <recent name="com.kadware.komodo.jsonlib" />
       <recent name="com.kadware.komodo.jsonlib.exceptions" />
     </key>
-    <key name="CopyFile.RECENT_KEYS">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resources/config" />
       <recent name="C:\Users\kduncan\Projects\komodo\config" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\systemConsole" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\web\library" />
+      <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.Test_Node">
+  <component name="RunManager" selected="JUnit.Test_SystemProcessor.exercise">
+    <configuration name="Test_Deployer" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Deployer" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Deployer.deploy" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Deployer" />
+      <option name="METHOD_NAME" value="deploy" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test_Deployer.remove" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
+      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Deployer" />
+      <option name="METHOD_NAME" value="remove" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test_Node" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
@@ -121,21 +173,6 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
       <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Node" />
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_SystemProcessor" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.baselib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_SystemProcessor" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -188,58 +225,24 @@
       <option name="METHOD_NAME" value="exercise" />
       <option name="TEST_OBJECT" value="method" />
       <option name="PARAMETERS" value="" />
-      <envs>
-        <env name="CONFIG_DIR" value="../config/" />
-        <env name="RESOURCES_DIR" value="../resources/" />
-      </envs>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_SystemProcessor.primitive" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.baselib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_SystemProcessor" />
-      <option name="METHOD_NAME" value="primitive" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="com.kadware.komodo.baselib in baselib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="baselib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.baselib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.baselib" />
-      <option name="TEST_OBJECT" value="package" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <list>
-      <item itemvalue="JUnit.com.kadware.komodo.baselib in baselib" />
-      <item itemvalue="JUnit.Test_SystemProcessor" />
       <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
-      <item itemvalue="JUnit.Test_SystemProcessor.primitive" />
       <item itemvalue="JUnit.Test_Node" />
+      <item itemvalue="JUnit.Test_Deployer" />
+      <item itemvalue="JUnit.Test_Deployer.remove" />
+      <item itemvalue="JUnit.Test_Deployer.deploy" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.Test_Node" />
         <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
-        <item itemvalue="JUnit.Test_SystemProcessor" />
-        <item itemvalue="JUnit.com.kadware.komodo.baselib in baselib" />
-        <item itemvalue="JUnit.Test_SystemProcessor.primitive" />
+        <item itemvalue="JUnit.Test_Deployer.deploy" />
+        <item itemvalue="JUnit.Test_Deployer.remove" />
+        <item itemvalue="JUnit.Test_Deployer" />
+        <item itemvalue="JUnit.Test_Node" />
       </list>
     </recent_temporary>
   </component>
@@ -264,7 +267,7 @@
       <workItem from="1586873488841" duration="16544000" />
       <workItem from="1586925614068" duration="21841000" />
       <workItem from="1587039279338" duration="38425000" />
-      <workItem from="1587524058747" duration="3334000" />
+      <workItem from="1587524058747" duration="12268000" />
     </task>
     <servers />
   </component>
@@ -291,10 +294,11 @@
     <state x="1857" y="1172" width="1014" height="677" key="#Project_Structure/0.0.3840.2120@0.0.3840.2120" timestamp="1586734769304" />
     <state x="583" y="308" width="1035" height="839" key="#Project_Structure/0.23.1920.1124@0.23.1920.1124" timestamp="1587524296033" />
     <state x="1892" y="1206" width="1024" height="845" key="#Project_Structure/67.27.3773.2133@67.27.3773.2133" timestamp="1587233429101" />
-    <state x="1775" y="1205" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1586739801168">
-      <screen x="0" y="0" width="3840" height="2120" />
+    <state x="427" y="204" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1587577709955">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state x="1775" y="1205" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.3840.2120@0.0.3840.2120" timestamp="1586739801168" />
+    <state x="427" y="204" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1920.1124@0.23.1920.1124" timestamp="1587577709955" />
     <state x="1963" y="523" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog" timestamp="1586306821502">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
@@ -335,31 +339,35 @@
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
     <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587233308341" />
-    <state width="1358" height="303" key="GridCell.Tab.0.bottom" timestamp="1587567726698">
-      <screen x="0" y="23" width="1920" height="1126" />
+    <state width="1358" height="303" key="GridCell.Tab.0.bottom" timestamp="1587578566595">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566595" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787848" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
     <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411392" />
-    <state width="1358" height="303" key="GridCell.Tab.0.center" timestamp="1587567726697">
-      <screen x="0" y="23" width="1920" height="1126" />
+    <state width="1358" height="303" key="GridCell.Tab.0.center" timestamp="1587578566594">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566594" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
     <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
-    <state width="1358" height="303" key="GridCell.Tab.0.left" timestamp="1587567726697">
-      <screen x="0" y="23" width="1920" height="1126" />
+    <state width="1358" height="303" key="GridCell.Tab.0.left" timestamp="1587578566593">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566593" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787846" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
     <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
-    <state width="1358" height="303" key="GridCell.Tab.0.right" timestamp="1587567726698">
-      <screen x="0" y="23" width="1920" height="1126" />
+    <state width="1358" height="303" key="GridCell.Tab.0.right" timestamp="1587578566594">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
+    <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566594" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
     <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411391" />
