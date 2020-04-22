@@ -16,18 +16,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
 
 /**
  * Unit tests for FileSystemDiskDevice class
  */
 public class Test_FileSystemTapeDevice {
-
-    @Rule
-    public ExpectedException _exception = ExpectedException.none();
 
     public static class TestChannelModule extends ChannelModule {
 
@@ -174,10 +169,9 @@ public class Test_FileSystemTapeDevice {
         deleteTestFile(fileName);
     }
 
-    @Test
+    @Test(expected = FileNotFoundException.class)
     public void createVolume_badPath(
     ) throws Exception {
-        _exception.expect(FileNotFoundException.class);
         FileSystemTapeDevice.createVolume("/blah/blah/blah/TEST.vol");
     }
 

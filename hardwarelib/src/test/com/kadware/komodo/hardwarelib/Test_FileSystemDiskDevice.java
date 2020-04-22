@@ -17,16 +17,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import org.junit.*;
-import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
 
 /**
  * Unit tests for FileSystemDiskDevice class
  */
 public class Test_FileSystemDiskDevice {
-
-    @Rule
-    public ExpectedException _exception = ExpectedException.none();
 
     public static class TestChannelModule extends ChannelModule {
 
@@ -219,31 +215,27 @@ public class Test_FileSystemDiskDevice {
         deleteTestFile(fileName);
     }
 
-    @Test
+    @Test(expected = FileNotFoundException.class)
     public void createPack_badPath(
     ) throws Exception {
-        _exception.expect(FileNotFoundException.class);
         FileSystemDiskDevice.createPack("/blah/blah/blah/TEST.pack", 8192, 10000);
     }
 
-    @Test
+    @Test(expected = InvalidBlockSizeException.class)
     public void createPack_invalidBlockSize(
     ) throws Exception {
-        _exception.expect(InvalidBlockSizeException.class);
         FileSystemDiskDevice.createPack(getTestFileName(), 22, 1000);
     }
 
-    @Test
+    @Test(expected = InvalidTrackCountException.class)
     public void createPack_invalidTrackCount_1(
     ) throws Exception {
-        _exception.expect(InvalidTrackCountException.class);
         FileSystemDiskDevice.createPack(getTestFileName(), 8192, 9999);
     }
 
-    @Test
+    @Test(expected = InvalidTrackCountException.class)
     public void createPack_invalidTrackCount_2(
     ) throws Exception {
-        _exception.expect(InvalidTrackCountException.class);
         FileSystemDiskDevice.createPack(getTestFileName(), 8192, 100000);
     }
 
@@ -689,13 +681,13 @@ public class Test_FileSystemDiskDevice {
             for (int x = 0; x < 16; ++x) {
                 long blockIdVal = r.nextInt() % blockCount;
                 if (blockIdVal < 0) {
-                    blockIdVal = 0 - blockIdVal;
+                    blockIdVal = -blockIdVal;
                 }
 
                 //  note - we purposely allow block count of zero
                 int ioBlockCount = r.nextInt() % 4;
                 if (ioBlockCount < 0) {
-                    ioBlockCount = 0 - ioBlockCount;
+                    ioBlockCount = -ioBlockCount;
                 }
 
                 int bufferSize = ioBlockCount * blockSize;

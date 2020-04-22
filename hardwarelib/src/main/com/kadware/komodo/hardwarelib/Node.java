@@ -20,6 +20,26 @@ import org.apache.logging.log4j.LogManager;
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
  * Although there is nothing explicitly preventing it, the configuration should most definitely not be altered
  * while a session is active.  Add/remove/update components *only* while the OS is stopped.
+ *
+ * Our hardware model is a simplified version of the legacy 2200 model.
+ * We have one SystemProcessor which does a heck of a lot of stuff, and is required, and There Can Be Only One.
+ * We require 1:n InstructionProcessors - there is no architectural upper bound other than common sense.
+ *      Each IP runs a separate Java thread, so keep that in mind for performance considerations
+ * We require 1:n InputOutputProcessors - there is no architectural upper bound other than common sense
+ *      Each IOP runs a separate Java thread, so keep that in mind for performance considerations
+ * We require 1:n MainStorageProcessors - there is no architectural upper bound other than common sense
+ *      Each MSP has a configurably-sized fixed storage bank, and can support up to {n} dynamically-allocated
+ *      additional storage banks, managed by the operating system.
+ * The Processors are all interconnected via the Send/Ack UPI business, which is used mainly for IO.
+ * Previous comments notwithstanding, the InventoryManager does impose upper limits for the create methods.
+ *
+ * Connected to the InputOutputProcessor(s) is/are the ChannelModules. The ChannelModule is where data is translated
+ *      (if necessary) from Word36 format to byte format.  We need at least one CM for any byte devices, and one for
+ *      any word devices. We can have more... we impose no architectural limit on max CMs.
+ *
+ * We do not implement virtual controller nodes - there seemed to be very little need for doing so.
+ *
+ * Devices are 'connected' directly to channel modules, and are addressed via a device index.
  */
 @SuppressWarnings("Duplicates")
 public abstract class Node {
@@ -58,7 +78,7 @@ public abstract class Node {
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //  Hardcoded development/debug aids - maybe we could make these configurable later...
+    //TODO  Hardcoded development/debug aids - maybe we could make these configurable later...
     static final boolean LOG_CHANNEL_IOS = true;
     static final boolean LOG_CHANNEL_IO_BUFFERS = true;
     static final boolean LOG_DEVICE_IOS = true;
