@@ -32,14 +32,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/exceptions/InvalidMessageIdException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -315,26 +308,26 @@
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
     <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587233308341" />
-    <state width="1711" height="440" key="GridCell.Tab.0.bottom" timestamp="1587335742157">
+    <state width="1711" height="440" key="GridCell.Tab.0.bottom" timestamp="1587408411392">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587335742157" />
-    <state width="1711" height="440" key="GridCell.Tab.0.center" timestamp="1587335742150">
+    <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411392" />
+    <state width="1711" height="440" key="GridCell.Tab.0.center" timestamp="1587408411390">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587335742150" />
-    <state width="1711" height="440" key="GridCell.Tab.0.left" timestamp="1587335742149">
+    <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
+    <state width="1711" height="440" key="GridCell.Tab.0.left" timestamp="1587408411390">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587335742149" />
-    <state width="1711" height="440" key="GridCell.Tab.0.right" timestamp="1587335742156">
+    <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
+    <state width="1711" height="440" key="GridCell.Tab.0.right" timestamp="1587408411391">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587335742156" />
+    <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411391" />
     <state width="1488" height="515" key="GridCell.Tab.1.bottom" timestamp="1586834528521">
       <screen x="0" y="0" width="3840" height="2120" />
     </state>
