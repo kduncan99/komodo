@@ -230,11 +230,7 @@ public abstract class Processor extends Node implements Worker {
     ) {
         _workerThread.start();
         while (!_workerThread.isAlive()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                LOGGER.catching(ex);
-            }
+            Thread.onSpinWait();
         }
     }
 
@@ -251,11 +247,7 @@ public abstract class Processor extends Node implements Worker {
         _workerTerminate = true;
         synchronized (this) { notify(); }
         while (_workerThread.isAlive()) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                LOGGER.catching(ex);
-            }
+            Thread.onSpinWait();
         }
     }
 

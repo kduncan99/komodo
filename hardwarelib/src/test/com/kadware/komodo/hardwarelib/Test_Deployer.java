@@ -5,8 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.PathNames;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -101,7 +99,6 @@ public class Test_Deployer {
      * Can run standalone, or be invoked by other tests.
      * Generally, standalone won't work if for non-containerized situations, so...
      */
-    @Test
     public void deploy(
     ) throws IOException {
         Path binariesSourcePath = Paths.get("../resources/media/binaries");
@@ -133,7 +130,6 @@ public class Test_Deployer {
      * Can run standalone, or be invoked by other tests
      * Generally, standalone won't work if for non-containerized situations, so...
      */
-    @Test
     public void remove(
     ) throws IOException {
         delete(_binariesDestPath.toFile(), "");

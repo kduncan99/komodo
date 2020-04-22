@@ -32,17 +32,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Deployer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Deployment.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Deployment.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/PathNames.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/PathNames.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/hardware.json" beforeDir="false" afterPath="$PROJECT_DIR$/resources/config/hardware.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/software.json" beforeDir="false" afterPath="$PROJECT_DIR$/resources/config/software.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/ChannelModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/ChannelModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Processor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/Processor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_ByteChannelModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_ByteChannelModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Deployer.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_Deployer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_InputOutputProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_InputOutputProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/komodo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/komodo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_WordChannelModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_WordChannelModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/instructionProcessor/BaseFunctions.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/instructionProcessor/BaseFunctions.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,7 +114,15 @@
       <recent name="C:\Users\kduncan\Projects\komodo\resources\systemConsole" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.Test_SystemProcessor.exercise">
+  <component name="RunManager" selected="JUnit.All in hardwarelib">
+    <configuration name="All in hardwarelib" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hardwarelib" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test_Deployer" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="hardwarelib" />
       <extension name="coverage">
@@ -159,21 +166,6 @@
       <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Deployer" />
       <option name="METHOD_NAME" value="remove" />
       <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test_Node" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="hardwarelib" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.kadware.komodo.hardwarelib.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.kadware.komodo.hardwarelib" />
-      <option name="MAIN_CLASS_NAME" value="com.kadware.komodo.hardwarelib.Test_Node" />
-      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -231,18 +223,18 @@
     </configuration>
     <list>
       <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
-      <item itemvalue="JUnit.Test_Node" />
       <item itemvalue="JUnit.Test_Deployer" />
       <item itemvalue="JUnit.Test_Deployer.remove" />
       <item itemvalue="JUnit.Test_Deployer.deploy" />
+      <item itemvalue="JUnit.All in hardwarelib" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.All in hardwarelib" />
         <item itemvalue="JUnit.Test_SystemProcessor.exercise" />
         <item itemvalue="JUnit.Test_Deployer.deploy" />
         <item itemvalue="JUnit.Test_Deployer.remove" />
         <item itemvalue="JUnit.Test_Deployer" />
-        <item itemvalue="JUnit.Test_Node" />
       </list>
     </recent_temporary>
   </component>
@@ -267,7 +259,7 @@
       <workItem from="1586873488841" duration="16544000" />
       <workItem from="1586925614068" duration="21841000" />
       <workItem from="1587039279338" duration="38425000" />
-      <workItem from="1587524058747" duration="12268000" />
+      <workItem from="1587524058747" duration="13776000" />
     </task>
     <servers />
   </component>
@@ -339,35 +331,35 @@
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
     <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587233308341" />
-    <state width="1358" height="303" key="GridCell.Tab.0.bottom" timestamp="1587578566595">
+    <state width="1358" height="303" key="GridCell.Tab.0.bottom" timestamp="1587579784246">
       <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566595" />
+    <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1124@0.23.1920.1124" timestamp="1587579784246" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787848" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
     <state width="1711" height="440" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411392" />
-    <state width="1358" height="303" key="GridCell.Tab.0.center" timestamp="1587578566594">
+    <state width="1358" height="303" key="GridCell.Tab.0.center" timestamp="1587579784245">
       <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566594" />
+    <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1124@0.23.1920.1124" timestamp="1587579784245" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
     <state width="1711" height="440" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
-    <state width="1358" height="303" key="GridCell.Tab.0.left" timestamp="1587578566593">
+    <state width="1358" height="303" key="GridCell.Tab.0.left" timestamp="1587579784244">
       <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566593" />
+    <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1124@0.23.1920.1124" timestamp="1587579784244" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787846" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
     <state width="1711" height="440" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411390" />
-    <state width="1358" height="303" key="GridCell.Tab.0.right" timestamp="1587578566594">
+    <state width="1358" height="303" key="GridCell.Tab.0.right" timestamp="1587579784245">
       <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
-    <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1124@0.23.1920.1124" timestamp="1587578566594" />
+    <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1124@0.23.1920.1124" timestamp="1587579784245" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
     <state width="1711" height="440" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587408411391" />
@@ -398,10 +390,11 @@
     </state>
     <state x="2134" y="732" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/0.0.3840.2120@0.0.3840.2120" timestamp="1586307021950" />
     <state x="2164" y="763" width="636" height="229" key="com.intellij.jarRepository.RepositoryAttachDialog-DOWNLOAD/67.27.3773.2133@67.27.3773.2133" timestamp="1587233089581" />
-    <state x="2204" y="1028" width="786" height="737" key="find.popup" timestamp="1587310263634">
-      <screen x="67" y="27" width="3773" height="2133" />
+    <state x="1087" y="107" width="673" height="915" key="find.popup" timestamp="1587579775428">
+      <screen x="0" y="23" width="1920" height="1124" />
     </state>
     <state x="2175" y="995" width="667" height="732" key="find.popup/0.0.3840.2120@0.0.3840.2120" timestamp="1586804565954" />
+    <state x="1087" y="107" width="673" height="915" key="find.popup/0.23.1920.1124@0.23.1920.1124" timestamp="1587579775428" />
     <state x="2204" y="1028" width="786" height="737" key="find.popup/67.27.3773.2133@67.27.3773.2133" timestamp="1587310263634" />
     <state x="1833" y="767" key="new project wizard" timestamp="1586699294397">
       <screen x="0" y="0" width="3840" height="2120" />

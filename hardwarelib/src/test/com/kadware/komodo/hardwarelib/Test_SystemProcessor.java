@@ -390,7 +390,7 @@ public class Test_SystemProcessor {
                 }
 
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(100);//TODO convert this to scheduler
                 } catch (InterruptedException ex) {
                     LOGGER.catching(ex);
                 }
@@ -435,11 +435,7 @@ public class Test_SystemProcessor {
         ) throws MaxNodesException {
             _systemProcessor = InventoryManager.getInstance().createSystemProcessor();
             while (!_systemProcessor.isReady()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    LOGGER.catching(ex);
-                }
+                Thread.onSpinWait();
             }
 
             LOGGER.info("Console Exerciser Starting");

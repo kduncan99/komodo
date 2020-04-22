@@ -103,12 +103,7 @@ public class Test_WordChannelModule {
 //    ) {
 //        TestModule cm = new TestModule("CM1-01");
 //        cm.initialize();
-//
-//        try {
-//            Thread.sleep(1000);
-//        } catch (Exception ex) {
-//        }
-//
+//        Thread.onSpinWait();
 //        cm.terminate();
 //        assertFalse(cm.isWorkerActive());
 //    }
@@ -118,12 +113,7 @@ public class Test_WordChannelModule {
 //    ) {
 //        TestModule cm = new TestModule("CM1-01");
 //        cm.initialize();
-//
-//        try {
-//            Thread.sleep(1000);
-//        } catch (Exception ex) {
-//        }
-//
+//        Thread.onSpinWait();
 //        assertTrue(cm.isWorkerActive());
 //        cm.terminate();
 //    }

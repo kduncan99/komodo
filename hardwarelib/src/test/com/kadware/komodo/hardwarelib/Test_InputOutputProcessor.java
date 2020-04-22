@@ -291,11 +291,7 @@ public class Test_InputOutputProcessor {
         boolean scheduled = _iop.startIO(_ip, cp);
         if (scheduled) {
             while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    System.out.println("Caught " + ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         assertEquals(ChannelModule.ChannelStatus.UnconfiguredChannelModule, cp.getChannelStatus());
@@ -337,11 +333,7 @@ public class Test_InputOutputProcessor {
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
         while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                System.out.println("Caught " + ex.getMessage());
-            }
+            Thread.onSpinWait();
         }
 
         assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
@@ -386,11 +378,7 @@ public class Test_InputOutputProcessor {
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
         while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                System.out.println("Caught " + ex.getMessage());
-            }
+            Thread.onSpinWait();
         }
         assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertArrayEquals(baseData, _cm._lastBuffer._array);
@@ -462,11 +450,7 @@ public class Test_InputOutputProcessor {
         boolean scheduled = _iop.startIO(_ip, cp);
         assert(scheduled);
         while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                System.out.println("Caught " + ex.getMessage());
-            }
+            Thread.onSpinWait();
         }
 
         assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());

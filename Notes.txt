@@ -1,5 +1,4 @@
 -- TODO InProgress
-Find all appropriate Thread.sleep and convert to Thread.onSpinLock() -- only for short duration waits
 Rework synchronization to avoid deadlocks
 
 The following, in Node.java, should be subject to management by the SystemProcessor, directed by the software configuration

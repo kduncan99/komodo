@@ -1085,11 +1085,7 @@ class BaseFunctions {
     ) {
         ip.start();
         while (!ip.isStopped()) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                //  do nothing
-            }
+            Thread.onSpinWait();
         }
     }
 }

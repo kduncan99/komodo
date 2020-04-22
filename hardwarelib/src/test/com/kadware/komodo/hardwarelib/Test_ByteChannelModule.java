@@ -539,13 +539,7 @@ public class Test_ByteChannelModule {
     public void threadAlive_false_2() {
         ByteChannelModule cm = new ByteChannelModule("CM1-01");
         cm.initialize();
-
-        try {
-            Thread.sleep(1000);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
+        Thread.onSpinWait();
         cm.terminate();
         assertFalse(cm.isWorkerActive());
     }
@@ -554,13 +548,7 @@ public class Test_ByteChannelModule {
     public void threadAlive_true() {
         ByteChannelModule cm = new ByteChannelModule("CM1-01");
         cm.initialize();
-
-        try {
-            Thread.sleep(1000);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
+        Thread.onSpinWait();
         assertTrue(cm.isWorkerActive());
         cm.terminate();
     }
@@ -580,11 +568,7 @@ public class Test_ByteChannelModule {
         boolean scheduled = _cm.scheduleChannelProgram(_ip, _iop, cp, null);
         if (scheduled) {
             while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    System.out.println("Caught " + ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         assertEquals(ChannelModule.ChannelStatus.UnconfiguredDevice, cp.getChannelStatus());
@@ -627,11 +611,7 @@ public class Test_ByteChannelModule {
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(sourceBuffers[bsx]));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -652,11 +632,7 @@ public class Test_ByteChannelModule {
         boolean started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
             while (eofcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (eofcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -667,11 +643,7 @@ public class Test_ByteChannelModule {
         started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
             while (eofcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (eofcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -687,11 +659,7 @@ public class Test_ByteChannelModule {
         started = _cm.scheduleChannelProgram(_ip, _iop, rewcp, null);
         if (started) {
             while (rewcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (rewcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -712,11 +680,7 @@ public class Test_ByteChannelModule {
             started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -775,11 +739,7 @@ public class Test_ByteChannelModule {
         boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(sourceBuffer));
         if (started) {
             while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
 
@@ -801,11 +761,7 @@ public class Test_ByteChannelModule {
         started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
         if (started) {
             while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
 
@@ -862,11 +818,7 @@ public class Test_ByteChannelModule {
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(sourceBuffers[bsx]));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -887,11 +839,7 @@ public class Test_ByteChannelModule {
         boolean started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
             while (eofcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (eofcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -902,11 +850,7 @@ public class Test_ByteChannelModule {
         started = _cm.scheduleChannelProgram(_ip, _iop, eofcp, null);
         if (started) {
             while (eofcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (eofcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -922,11 +866,7 @@ public class Test_ByteChannelModule {
         started = _cm.scheduleChannelProgram(_ip, _iop, rewcp, null);
         if (started) {
             while (rewcp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                Thread.onSpinWait();
             }
         }
         if (rewcp.getChannelStatus() != ChannelModule.ChannelStatus.Successful) {
@@ -947,11 +887,7 @@ public class Test_ByteChannelModule {
             started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1014,11 +950,7 @@ public class Test_ByteChannelModule {
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataSample));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1040,11 +972,7 @@ public class Test_ByteChannelModule {
             started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1107,11 +1035,7 @@ public class Test_ByteChannelModule {
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, asBuffer);
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1133,11 +1057,7 @@ public class Test_ByteChannelModule {
             started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1205,11 +1125,7 @@ public class Test_ByteChannelModule {
             boolean started = _cm.scheduleChannelProgram(_ip, _iop, cp, asBuffer);
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
@@ -1231,11 +1147,7 @@ public class Test_ByteChannelModule {
             started = _cm.scheduleChannelProgram(_ip, _iop, cp, new ArraySlice(dataResult));
             if (started) {
                 while (cp.getChannelStatus() == ChannelModule.ChannelStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    Thread.onSpinWait();
                 }
             }
 
