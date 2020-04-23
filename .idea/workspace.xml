@@ -32,31 +32,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5f29ce94-6186-4648-93c6-c59a3dd92481" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/net/net.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/DataException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpMethod.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/HttpStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/RequestHeadersDataException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/RequestLineDataException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/SecureHttpServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/SecureServerManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/net/src/main/com/kadware/komodo/net/Server.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/web/keystore.jks" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Notes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/baselib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/baselib.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/HttpMethod.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/HttpMethod.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/SecureServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/baselib/src/main/com/kadware/komodo/baselib/SecureServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/InstructionProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/RESTSystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemConsole.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/main/com/kadware/komodo/hardwarelib/SystemProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemConsole.java" beforeDir="false" afterPath="$PROJECT_DIR$/hardwarelib/src/test/com/kadware/komodo/hardwarelib/Test_SystemConsole.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/web/systemConsole/systemConsole.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -276,7 +253,7 @@
       <workItem from="1586925614068" duration="21841000" />
       <workItem from="1587039279338" duration="38425000" />
       <workItem from="1587524058747" duration="34544000" />
-      <workItem from="1587669587210" duration="8139000" />
+      <workItem from="1587669587210" duration="9132000" />
     </task>
     <servers />
   </component>
@@ -348,38 +325,38 @@
     </state>
     <state x="2136" y="575" key="FileChooserDialogImpl/0.0.3840.2120@0.0.3840.2120" timestamp="1586457923468" />
     <state x="2166" y="606" width="735" height="513" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1587653946014" />
-    <state width="1711" height="439" key="GridCell.Tab.0.bottom" timestamp="1587678625690">
+    <state width="1711" height="439" key="GridCell.Tab.0.bottom" timestamp="1587679595438">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.bottom/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
     <state width="1745" height="373" key="GridCell.Tab.0.bottom/0.23.1920.1124@0.23.1920.1124" timestamp="1587618282305" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787848" />
     <state width="1358" height="303" key="GridCell.Tab.0.bottom/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
-    <state width="1711" height="439" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587678625690" />
-    <state width="1711" height="439" key="GridCell.Tab.0.center" timestamp="1587678625689">
+    <state width="1711" height="439" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1587679595438" />
+    <state width="1711" height="439" key="GridCell.Tab.0.center" timestamp="1587679595437">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.center/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
     <state width="1745" height="373" key="GridCell.Tab.0.center/0.23.1920.1124@0.23.1920.1124" timestamp="1587618282303" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.center/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
-    <state width="1711" height="439" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587678625689" />
-    <state width="1711" height="439" key="GridCell.Tab.0.left" timestamp="1587678625688">
+    <state width="1711" height="439" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1587679595437" />
+    <state width="1711" height="439" key="GridCell.Tab.0.left" timestamp="1587679595437">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.left/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
     <state width="1745" height="373" key="GridCell.Tab.0.left/0.23.1920.1124@0.23.1920.1124" timestamp="1587618282302" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787846" />
     <state width="1358" height="303" key="GridCell.Tab.0.left/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726697" />
-    <state width="1711" height="439" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587678625688" />
-    <state width="1711" height="439" key="GridCell.Tab.0.right" timestamp="1587678625690">
+    <state width="1711" height="439" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1587679595437" />
+    <state width="1711" height="439" key="GridCell.Tab.0.right" timestamp="1587679595438">
       <screen x="67" y="27" width="3773" height="2133" />
     </state>
     <state width="1488" height="420" key="GridCell.Tab.0.right/0.0.3840.2120@0.0.3840.2120" timestamp="1587148457867" />
     <state width="1745" height="373" key="GridCell.Tab.0.right/0.23.1920.1124@0.23.1920.1124" timestamp="1587618282304" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1125@0.23.1920.1125" timestamp="1587565787847" />
     <state width="1358" height="303" key="GridCell.Tab.0.right/0.23.1920.1126@0.23.1920.1126" timestamp="1587567726698" />
-    <state width="1711" height="439" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587678625690" />
+    <state width="1711" height="439" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1587679595438" />
     <state width="1745" height="373" key="GridCell.Tab.1.bottom" timestamp="1587618282087">
       <screen x="0" y="23" width="1920" height="1124" />
     </state>

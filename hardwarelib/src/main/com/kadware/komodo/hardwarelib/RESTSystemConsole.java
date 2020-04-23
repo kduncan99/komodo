@@ -469,7 +469,7 @@ public class RESTSystemConsole implements SystemConsole {
                                                                         replacementText,
                                                                         false));
                 _pendingReadReplyMessages.remove(messageId);
-
+                _pinnedState[prrm._currentRowIndex] = false;
                 LOGGER.traceExit(em);
             }
         }
@@ -566,7 +566,7 @@ public class RESTSystemConsole implements SystemConsole {
                                                                         READ_REPLY_BG_COLOR,
                                                                         message,
                                                                         false));
-
+                _pinnedState[rx] = true;
                 PendingReadReplyMessage prrm = new PendingReadReplyMessage(rx, maxReplySize, messageId, message);
                 _pendingReadReplyMessages.put(messageId, prrm);
             }
@@ -633,6 +633,13 @@ public class RESTSystemConsole implements SystemConsole {
             EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
                                                 this.getClass().getSimpleName(),
                                                 "scroll");
+            //TODO remove block starts
+            StringBuilder sb = new StringBuilder();
+            for (boolean b : _pinnedState) {
+                sb.append(b ? "T" : "F");
+            }
+            System.out.println("PRE------------> " + sb.toString());
+            //TODO remove block ends
 
             //  Find the index of the first non-pinned row
             int rx = 0;
@@ -657,8 +664,16 @@ public class RESTSystemConsole implements SystemConsole {
             for (int ry = rx + 1; ry < _clientAttributes._screenSizeRows; ++ry) {
                 _pinnedState[ry - 1] = _pinnedState[ry];
             }
+            _pinnedState[_clientAttributes._screenSizeRows - 1] = false;
 
             appendOutputMessages(output);
+            //TODO remove block starts
+            StringBuilder sb2 = new StringBuilder();
+            for (boolean b : _pinnedState) {
+                sb2.append(b ? "T" : "F");
+            }
+            System.out.println("PST------------> " + sb2.toString());
+            //TODO remove block ends
             LOGGER.traceExit(em);
         }
     }

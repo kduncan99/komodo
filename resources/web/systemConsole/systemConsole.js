@@ -39,35 +39,6 @@ $(function() {
 resetConsole();
 
 
-//  Because browsers are designed to act like a magazine of indeterminate size for displaying content,
-//  it's bloody difficult to set up (even using monospaced fonts) something resembling a terminal screen with a reliable
-//  width and height for the screen, and for the content thereof.
-// $(function() {
-//     const textContent = ''.padStart(80, 'M');
-//     const inputRow = document.getElementById('consoleInputRow');
-//     inputRow.textContent = textContent;
-//     const lineWidthPixels = inputRow.offsetWidth;
-//     const lineHeightPixels = inputRow.offsetHeight;
-//
-//     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-//     for (let rx = 0; rx < attributes.screenSizeRows; ++rx) {
-//         rows[rx].attributes.height = lineHeightPixels;
-//         rows[rx].attributes.width = lineWidthPixels;
-//     }
-//
-//     const statusRow = document.getElementById('statusRow');
-//     statusRow.height = lineHeightPixels;
-//     statusRow.width = lineWidthPixels;
-//
-//     inputRow.innerHTML = blankLine.replace(spaceRegexPattern, '&nbsp;');
-//     inputRow.height = lineHeightPixels;
-//     inputRow.width = lineWidthPixels;
-//
-//     console.debug("line height " + lineHeightPixels + "px");//TODO remove
-//     console.debug("line width  " + lineWidthPixels + "px");//TODO remove this also
-// });
-
-
 //  Schedule the given polling function every 1 second - this might be too frequent, keep an eye on it.
 window.setInterval(function(){
     if (!validating && !polling){
@@ -218,35 +189,6 @@ function pollServer() {
                 //TODO go back to login dialog
             };
             xhr.send();
-            //TODO use XMLHttpRequest directly
-            // $.ajax({
-            //     url: '/poll',
-            //     type: 'GET',
-            //     dataType: 'json',
-            //     headers: {
-            //         "Client": clientIdent
-            //     },
-            //     success: function (data, textStatus, jqXHR) {
-            //         console.debug(jqXHR.responseJSON);
-            //         const jumpKeySettings = jqXHR.responseJSON.jumpKeySettings;
-            //         const newLogEntries = jqXHR.responseJSON.newLogEntries;
-            //         const newMessages = jqXHR.responseJSON.outputMessages;
-            //
-            //         if (jumpKeySettings != null) {
-            //             //TODO update jump key settings panel
-            //         }
-            //
-            //         if ((newLogEntries != null) && (newLogEntries.length > 0)) {
-            //             processNewLogEntries(newLogEntries);
-            //         }
-            //
-            //         if ((newMessages != null) && (newMessages.length > 0)) {
-            //             processNewConsoleMessages(newMessages);
-            //         }
-            //
-            //         polling = false;
-            //     },
-            // });
             setStatusRow(true);
         }
     }
