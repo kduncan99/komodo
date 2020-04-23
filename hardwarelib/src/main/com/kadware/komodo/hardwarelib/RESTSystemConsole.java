@@ -633,13 +633,6 @@ public class RESTSystemConsole implements SystemConsole {
             EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
                                                 this.getClass().getSimpleName(),
                                                 "scroll");
-            //TODO remove block starts
-            StringBuilder sb = new StringBuilder();
-            for (boolean b : _pinnedState) {
-                sb.append(b ? "T" : "F");
-            }
-            System.out.println("PRE------------> " + sb.toString());
-            //TODO remove block ends
 
             //  Find the index of the first non-pinned row
             int rx = 0;
@@ -667,13 +660,6 @@ public class RESTSystemConsole implements SystemConsole {
             _pinnedState[_clientAttributes._screenSizeRows - 1] = false;
 
             appendOutputMessages(output);
-            //TODO remove block starts
-            StringBuilder sb2 = new StringBuilder();
-            for (boolean b : _pinnedState) {
-                sb2.append(b ? "T" : "F");
-            }
-            System.out.println("PST------------> " + sb2.toString());
-            //TODO remove block ends
             LOGGER.traceExit(em);
         }
     }
