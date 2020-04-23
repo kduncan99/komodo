@@ -1,5 +1,5 @@
 -- TODO InProgress
-Rework synchronization to avoid deadlocks
+RESTSystemConsole: Rework synchronization to avoid deadlocks
 
 The following, in Node.java, should be subject to management by the SystemProcessor, directed by the software configuration
 Also, we don't use the channel entities (yet?)
@@ -8,6 +8,9 @@ Also, we don't use the channel entities (yet?)
     static final boolean LOG_DEVICE_IOS = true;
     static final boolean LOG_DEVICE_IO_BUFFERS = true;
     static final boolean LOG_IO_ERRORS = true;
+
+SystemProcessor: For starting/monitoring/stopping system, and for console communication
+  Move dayclock architecture to SystemProcessor
 
 * hardwarelib
 RESTSystemConsole: Houston, I think we have a thread locking issue somewhere
@@ -54,8 +57,6 @@ more FloatingPointComponent tests
 * hardwarelib
 Redo all the node and subclasses tests, many of which are commented out (Node has been done)
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
-SystemProcessor: For starting/monitoring/stopping system, and for console communication
-  Move dayclock architecture to SystemProcessor
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
 RAMTapeDevice byte interface, optional compression, optional backing store
