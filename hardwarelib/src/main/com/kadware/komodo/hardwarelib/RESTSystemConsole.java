@@ -6,10 +6,10 @@ package com.kadware.komodo.hardwarelib;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kadware.komodo.baselib.HttpMethod;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.PathNames;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.baselib.HttpMethod;
 import com.kadware.komodo.baselib.SecureServer;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -35,7 +35,7 @@ import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.*;
+import org.apache.logging.log4j.message.EntryMessage;
 
 
 /**
@@ -78,10 +78,10 @@ public class RESTSystemConsole implements SystemConsole {
     private static final int MIN_CONSOLE_SIZE_ROWS = 20;
     private static final long PRUNER_PERIODICITY_SECONDS = 60;
 
-    private static final String[] _logReportingBlackList = { SystemProcessor.class.getName(),
-                                                             RESTSystemConsole.class.getName() };
+    private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
+                                                             RESTSystemConsole.class.getSimpleName() };
 
-    private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class);
+    private static final Logger LOGGER = LogManager.getLogger(RESTSystemConsole.class.getSimpleName());
 
     private final Listener _listener;
     private final String _name;
@@ -678,7 +678,7 @@ public class RESTSystemConsole implements SystemConsole {
                 long now = System.currentTimeMillis();
                 synchronized (_sessions) {
                     for (SessionInfo sinfo : _sessions.values()) {
-                        if (now <= (sinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
+                        if (now > (sinfo._lastActivity + CLIENT_AGE_OUT_MSECS)) {
                             sessionsToRemove.add(sinfo);
                         }
                     }
@@ -756,7 +756,7 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
 
-            LOGGER.traceExit(em, result);
+            LOGGER.traceExit(em, result == null ? null : result._clientId);
             return result;
         }
 
@@ -866,16 +866,15 @@ public class RESTSystemConsole implements SystemConsole {
 
             exchange.getResponseHeaders().add("content-type", mimeType);
             exchange.getResponseHeaders().add("Cache-Control", "no-store");
-            try {
+            try (exchange) {
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
                 OutputStream os = exchange.getResponseBody();
                 os.write(bytes);
             } catch (Exception ex) {
                 LOGGER.catching(ex);
-            } finally {
-                exchange.close();
             }
 
+            exchange.close();
             LOGGER.traceExit(em);
         }
 
@@ -890,11 +889,10 @@ public class RESTSystemConsole implements SystemConsole {
             final int code,
             final Object object
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(code={} content={})",
+            EntryMessage em = LOGGER.traceEntry("{}.{}(code={})",
                                                 this.getClass().getSimpleName(),
                                                 "respondWithJSON",
-                                                code,
-                                                object);
+                                                code);
 
             try {
                 ObjectMapper mapper = new ObjectMapper();
@@ -905,12 +903,11 @@ public class RESTSystemConsole implements SystemConsole {
                 exchange.sendResponseHeaders(code, content.length());
                 OutputStream os = exchange.getResponseBody();
                 os.write(content.getBytes());
-                os.close();
             } catch (IOException ex) {
                 LOGGER.catching(ex);
-                exchange.close();
             }
 
+            exchange.close();
             LOGGER.traceExit(em);
         }
 
@@ -938,12 +935,11 @@ public class RESTSystemConsole implements SystemConsole {
                 exchange.sendResponseHeaders(code, bytes.length);
                 OutputStream os = exchange.getResponseBody();
                 os.write(bytes);
-                os.close();
             } catch (IOException ex) {
                 LOGGER.catching(ex);
-                exchange.close();
             }
 
+            exchange.close();
             LOGGER.traceExit(em);
         }
 
@@ -986,16 +982,15 @@ public class RESTSystemConsole implements SystemConsole {
             byte[] bytes = String.join("\r\n", textLines).getBytes();
             exchange.getResponseHeaders().add("content-type", mimeType);
             exchange.getResponseHeaders().add("Cache-Control", "no-store");
-            try {
+            try (exchange) {
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
                 OutputStream os = exchange.getResponseBody();
                 os.write(bytes);
             } catch (Exception ex) {
                 LOGGER.catching(ex);
-            } finally {
-                exchange.close();
             }
 
+            exchange.close();
             LOGGER.traceExit(em);
         }
 
@@ -1075,6 +1070,8 @@ public class RESTSystemConsole implements SystemConsole {
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
 
             try {
                 SessionInfo sessionInfo = findClient(requestHeaders);
@@ -1175,6 +1172,8 @@ public class RESTSystemConsole implements SystemConsole {
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
 
             try {
                 SessionInfo sessionInfo = findClient(requestHeaders);
@@ -1281,6 +1280,8 @@ public class RESTSystemConsole implements SystemConsole {
 
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
 
             try {
                 SessionInfo sessionInfo = findClient(requestHeaders);
@@ -1325,6 +1326,8 @@ public class RESTSystemConsole implements SystemConsole {
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
 
             try {
                 if (!validateCredentials(requestHeaders)) {
@@ -1416,6 +1419,10 @@ public class RESTSystemConsole implements SystemConsole {
                                                 this.getClass().getSimpleName(),
                                                 "handle");
 
+            final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+
             try {
                 String fileName = exchange.getRequestURI().getPath();
                 if (fileName.startsWith("/")) {
@@ -1426,10 +1433,11 @@ public class RESTSystemConsole implements SystemConsole {
                 }
 
                 String mimeType;
-                boolean textFile = false;
+                boolean textFile;
                 if (fileName.contains("favicon.ico")) {
                     fileName = FAVICON_FILE_NAME;
                     mimeType = "image/x-icon";
+                    textFile = false;
                 } else {
                     if (fileName.endsWith(".html")) {
                         mimeType = "text/html";
@@ -1445,12 +1453,13 @@ public class RESTSystemConsole implements SystemConsole {
                         textFile = false;
                     } else if (fileName.endsWith(".js")) {
                         mimeType = "application/javascript";
-                        textFile = true;
+                        textFile = false;
                     } else if (fileName.endsWith(".json")) {
                         mimeType = "text/json";
                         textFile = true;
                     } else {
                         mimeType = "application/octet-stream";
+                        textFile = false;
                     }
                 }
 
@@ -1504,11 +1513,11 @@ public class RESTSystemConsole implements SystemConsole {
                                                 this.getClass().getSimpleName(),
                                                 "setup");
             super.setup();
-            appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/session", new APISessionRequestHandler());
             appendHandler("/poll", new APIPollRequestHandler());
+            appendHandler("/", new WebHandler());
             start();
             LOGGER.traceExit(em);
         }
@@ -1699,7 +1708,8 @@ public class RESTSystemConsole implements SystemConsole {
     @Override
     public void postReadOnlyMessage(
         final String message,
-        final Boolean rightJustified
+        final Boolean rightJustified,
+        final Boolean cached
     ) {
         EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}' rightJustified={})",
                                             this.getClass().getSimpleName(),
@@ -1707,10 +1717,12 @@ public class RESTSystemConsole implements SystemConsole {
                                             message,
                                             rightJustified);
 
-        synchronized (_cachedReadOnlyMessages) {
-            _cachedReadOnlyMessages.add(message);
-            while (_cachedReadOnlyMessages.size() > MAX_CACHED_READ_ONLY_MESSAGES) {
-                _cachedReadOnlyMessages.poll();
+        if (cached) {
+            synchronized (_cachedReadOnlyMessages) {
+                _cachedReadOnlyMessages.add(message);
+                while (_cachedReadOnlyMessages.size() > MAX_CACHED_READ_ONLY_MESSAGES) {
+                    _cachedReadOnlyMessages.poll();
+                }
             }
         }
 
@@ -1779,12 +1791,15 @@ public class RESTSystemConsole implements SystemConsole {
     /**
      * Given a set of log entries, propagate all of the ones which do not come from black-listed sources, to any pending clients.
      * If there are none after filtering, don't annoy the clients.
-     * Do NOT log entry/exit - that will just create a fiasco.
      */
     @Override
     public void postSystemLogEntries(
         final KomodoLoggingAppender.LogEntry[] logEntries
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "postSystemLogEntries");
+
         List<KomodoLoggingAppender.LogEntry> logList = new LinkedList<>();
         for (KomodoLoggingAppender.LogEntry logEntry : logEntries) {
             boolean avoid = false;
@@ -1821,6 +1836,8 @@ public class RESTSystemConsole implements SystemConsole {
                 }
             }
         }
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -1831,6 +1848,18 @@ public class RESTSystemConsole implements SystemConsole {
         EntryMessage em = LOGGER.traceEntry("{}.{}()",
                                             this.getClass().getSimpleName(),
                                             "reset");
+
+        synchronized (_pendingInputMessages) {
+            _pendingInputMessages.clear();
+        }
+
+        synchronized (_cachedReadOnlyMessages) {
+            _cachedReadOnlyMessages.clear();
+        }
+
+        synchronized (_cachedReadReplyMessages) {
+            _cachedReadReplyMessages.clear();
+        }
 
         for (SessionInfo sinfo : getSessions()) {
             synchronized (sinfo) {

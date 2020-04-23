@@ -7106,8 +7106,9 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+0,S1:         Subfunction
                     //  U+0,S2:         Status
                     //  U+0,S3:         Flags
-                    //                      Bit 12-16: unused
-                    //                      Bit 17:     0 normally, 1 for right-justified
+                    //                      Bit 12-15: unused
+                    //                      Bit 16:     0 normally, 1 for right-justified
+                    //                      Bit 17:     0 normally, 1 to prevent caching of the message in the console multiplexor
                     //  U+0,Q3:         Length of message in characters
                     //  U+1:            unused
                     //  U+2:            Virtual address of buffer containing message in ASCII
@@ -7120,8 +7121,9 @@ public class InstructionProcessor extends Processor implements Worker {
                     VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        Boolean rightJust = (flags & 0x01) != 0;
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msg, rightJust);
+                        Boolean rightJust = (flags & 0x02) != 0;
+                        Boolean cached = (flags & 0x01) == 0;
+                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msg, rightJust, cached);
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);

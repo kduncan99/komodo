@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.net.ssl.*;
@@ -300,6 +301,7 @@ public class SecureServer {
      * Starts the server
      */
     public void start() {
+        _server.setExecutor(Executors.newFixedThreadPool(16));//TODO use a constant here
         _server.start();
     }
 

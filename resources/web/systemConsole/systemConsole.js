@@ -27,6 +27,7 @@ const defaultInputBackground = 0x000000;
 let pendingPostMessageXHR = null;
 const spaceRegexPattern = new RegExp(' ', 'g');
 
+
 const blankLine = ''.padStart(attributes.screenSizeColumns, ' ');
 
 

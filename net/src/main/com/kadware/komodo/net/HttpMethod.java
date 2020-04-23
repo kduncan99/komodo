@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.kadware.komodo.net;
 
 import java.util.HashMap;
 import java.util.Map;

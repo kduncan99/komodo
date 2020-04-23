@@ -7,6 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/kexec/kexec.iml" filepath="$PROJECT_DIR$/kexec/kexec.iml" />
       <module fileurl="file://$PROJECT_DIR$/komodo.iml" filepath="$PROJECT_DIR$/komodo.iml" />
       <module fileurl="file://$PROJECT_DIR$/minalib/minalib.iml" filepath="$PROJECT_DIR$/minalib/minalib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/net/net.iml" filepath="$PROJECT_DIR$/net/net.iml" />
     </modules>
   </component>
 </project>

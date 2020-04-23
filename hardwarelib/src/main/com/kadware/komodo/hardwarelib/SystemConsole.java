@@ -47,10 +47,16 @@ public interface SystemConsole {
 
     /**
      * Posts a read-only message to the implementor
+     * @param message the message to be displayed
+     * @param rightJustified true if this message should be aligned against the right side of the output
+     *                       this is usually true for time-of-day messagees
+     * @param cached true if this message should be cached for future new sessions
+     *               this should be false for time-of-day messages
      */
     void postReadOnlyMessage(
         final String message,
-        final Boolean rightJustified
+        final Boolean rightJustified,
+        final Boolean cached
     );
 
     /**

@@ -83,22 +83,18 @@ public class Test_SystemConsole {
                 }
             }
 
-            //TODO read-reply msg "{name}*ENTER SLEEP INTERVAL IN SECONDS"
-            //TODO read-reply msg "{name}*ENTER REPETITION COUNTER"
             int interval = 5000;
             int count = 10;
 
-            if (!_terminate) {
-                while (count > 0) {
-                    synchronized (this) {
-                        try {
-                            this.wait(interval);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
+            while (!_terminate && (count > 0)) {
+                synchronized (this) {
+                    try {
+                        this.wait(interval);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
                     }
-                    count--;
                 }
+                count--;
             }
 
             post("DONE");
@@ -109,7 +105,9 @@ public class Test_SystemConsole {
         private void post(
             final String message
         ) {
-            _context._systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":" + message, false);
+            _context._systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":" + message,
+                                                                 false,
+                                                                 true);
         }
 
         private String postAndWait(
@@ -128,6 +126,7 @@ public class Test_SystemConsole {
                 if (_pendingMessage != null) {
                     if (_pendingMessage.length() > maxReplySize) {
                         _context._systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":Response Too Long",
+                                                                             false,
                                                                              false);
                     } else {
                         reply = _pendingMessage;
@@ -168,11 +167,8 @@ public class Test_SystemConsole {
 
     private interface CommandHandler {
         String getHelp();
-
         int getMaximumTokens();
-
         int getMinimumTokens();
-
         void handle(
             final Context context,
             final String[] commandSplit
@@ -449,7 +445,7 @@ public class Test_SystemConsole {
 
     private static class InputPoller {
 
-        private static final int POLL_INTERVAL_SECODNDS = 10;
+        private static final int POLL_WAIT_MILLIS = 30000;
         private final Context _context;
 
         InputPoller(
@@ -458,14 +454,10 @@ public class Test_SystemConsole {
             _context = context;
         }
 
-        private class PollThread implements Runnable {
+        private class InputPollerThread implements Runnable {
 
             public void run() {
-                EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                    this.getClass().getSimpleName(),
-                                                    "run");
-
-                String msg = _context._systemProcessor.consolePollInputMessage(10000);
+                String msg = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
                 if ((msg != null) && !msg.isEmpty()) {
                     String[] split = msg.toUpperCase().split(" ");
                     CommandHandler ch = _commandHandlers.get(split[0].toUpperCase());
@@ -478,12 +470,10 @@ public class Test_SystemConsole {
                         ch.handle(_context, split);
                     }
                 }
-
-                LOGGER.traceExit(em);
             }
         }
 
-        private final Runnable _runnable = new PollThread();
+        private final Runnable _runnable = new InputPollerThread();
         private final ScheduledExecutorService _scheduler = Executors.newScheduledThreadPool(1);
         private ScheduledFuture<?> _schedule = null;
 
@@ -491,10 +481,7 @@ public class Test_SystemConsole {
             EntryMessage em = LOGGER.traceEntry("{}.{}()",
                                                 this.getClass().getSimpleName(),
                                                 "start");
-            _schedule = _scheduler.scheduleWithFixedDelay(_runnable,
-                                                          POLL_INTERVAL_SECODNDS,
-                                                          POLL_INTERVAL_SECODNDS,
-                                                          SECONDS);
+            _schedule = _scheduler.scheduleWithFixedDelay(_runnable, 1, 1, SECONDS);
             LOGGER.traceExit(em);
         }
 
@@ -519,7 +506,7 @@ public class Test_SystemConsole {
             _context = context;
         }
 
-        private class ActionThread implements Runnable {
+        private class FiveMinuteActionThread implements Runnable {
 
             public void run() {
                 EntryMessage em = LOGGER.traceEntry("{}.{}()",
@@ -527,7 +514,7 @@ public class Test_SystemConsole {
                                                     "run");
 
                 String msg = String.format("T/D %s", Instant.now().toString().split("\\.")[0]);
-                _context._systemProcessor.consoleSendReadOnlyMessage(msg, true);
+                _context._systemProcessor.consoleSendReadOnlyMessage(msg, true, false);
                 synchronized (_context._jobs) {
                     _context._jobs.entrySet().removeIf(entry -> entry.getValue()._state == JobState.Done);
                 }
@@ -536,7 +523,7 @@ public class Test_SystemConsole {
             }
         }
 
-        private final Runnable _runnable = new ActionThread();
+        private final Runnable _runnable = new FiveMinuteActionThread();
         private final ScheduledExecutorService _scheduler = Executors.newScheduledThreadPool(1);
         private ScheduledFuture<?> _schedule = null;
 
@@ -572,24 +559,18 @@ public class Test_SystemConsole {
             _context = context;
         }
 
-        private class ActionThread implements Runnable {
+        private class FiveSecondActionThread implements Runnable {
 
             public void run() {
-                EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                    this.getClass().getSimpleName(),
-                                                    "run");
-
                 String[] messages = new String[2];
                 String timeStr = Instant.now().toString().split("\\.")[0];
                 messages[0] = String.format("Time %s  Session %d", timeStr, _context._session);
                 messages[1] = String.format("Inputs:%d  Jobs:%d", _context._inputCount, _context._jobs.size());
                 _context._systemProcessor.consoleSendStatusMessage(messages);
-
-                LOGGER.traceExit(em);
             }
         }
 
-        private final Runnable _runnable = new ActionThread();
+        private final Runnable _runnable = new FiveSecondActionThread();
         private final ScheduledExecutorService _scheduler = Executors.newScheduledThreadPool(1);
         private ScheduledFuture<?> _schedule = null;
 
@@ -635,6 +616,7 @@ public class Test_SystemConsole {
         InputPoller poller = new InputPoller(context);
         FiveMinuteActions fiveMinuteActions = new FiveMinuteActions(context);
         FiveSecondActions fiveSecondActions = new FiveSecondActions(context);
+
         poller.start();
         fiveMinuteActions.start();
         fiveSecondActions.start();
