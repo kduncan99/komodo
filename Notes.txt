@@ -8,6 +8,8 @@ Let's go ahead and do the pre-built certificate thing.  What could go wrong?
 
 Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
 
+Should we have a singleton configurator class?  What module should it live in?
+
 *systemConsole
 Needs session sign-on
 Needs session close button

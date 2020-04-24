@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
-<!-- This is the main HTML for the system console -->
-<!-- It has IPL, execConsole, log, systemConfig, and hardwareConfig panels, all implemented as tabbed panes -->
+<!-- This is the main HTML for the system control interface -->
+<!-- It has IPL, Console, Log, systemConfig, and hardwareConfig panels, all implemented as tabbed panes -->
 <head>
     <meta charset="utf-8" />
     <title>Komodo System Console</title>
-    <link href = "/systemConsole/systemConsole.css" rel = "stylesheet">
-    <link href = "/library/jquery-ui.css" rel = "stylesheet">
-    <script src = "/library/jquery-3.5.0.js"></script>
-    <script src = "/library/jquery-ui.js"></script>
+    <link href = "/css/jquery-ui.css" rel = "stylesheet">
+    <link href = "/css/sci.css" rel = "stylesheet">
+    <script src = "/js/jquery-ui.js" rel="script" type="application/javascript" defer></script>
+    <script src = "/js/jquery.js" rel="script" type="application/javascript" defer></script>
+    <script src = "/js/sci.js" rel="script" type="application/javascript" defer>r</script>
 
     <style>
         #consoleTabs{font-size: 14px;}
@@ -84,28 +85,8 @@
 
         <div id="Logging">
             <p>Most Recent System Log Entries</p>
-            <div id="LoggingScreen">
-                <table id="LoggingTable">
-                    <thead>
-                        <tr>
-                            <th>Date/Time</th>
-                            <th>Category</th>
-                            <th>Entity</th>
-                            <th>Message</th>
-                        </tr>
-                    </thead>
-                    <tbody id="LoggingRows">
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>System Log Starts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <iframe id="LoggingFrame" srcdoc="/logPanel.html"></iframe>
         </div>
     </div>
 </body>
-<script src = "/systemConsole/systemConsole.js" rel="script"></script>
 </html>

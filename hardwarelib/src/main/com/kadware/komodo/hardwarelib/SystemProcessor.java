@@ -317,7 +317,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             LOGGER.error("Cannot start SP - configuration file is unreadable");
         }
 
-        _console = new RESTSystemConsole(_name + " Console", _softwareConfiguration._httpPort);
+        _console = new HTTPSystemControllerInterface(_name + " Console", _softwareConfiguration._httpPort);
         _console.start();
         LOGGER.info(_console.getName() + " Ready");
         _isReady = true;

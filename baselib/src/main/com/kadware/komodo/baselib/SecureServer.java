@@ -128,18 +128,20 @@ public class SecureServer {
         public X509Certificate[] getCertificateChain(
             final String alias
         ) {
-            try {
-                Certificate[] certs = _keyStore.getCertificateChain(alias);
-                X509Certificate[] result = new X509Certificate[certs.length];
-                for (int cx = 0; cx < certs.length; ++cx) {
-                    result[cx] = (X509Certificate) certs[cx];
+            synchronized (this) {
+                try {
+                    Certificate[] certs = _keyStore.getCertificateChain(alias);
+                    X509Certificate[] result = new X509Certificate[certs.length];
+                    for (int cx = 0; cx < certs.length; ++cx) {
+                        result[cx] = (X509Certificate) certs[cx];
+                    }
+                    return result;
+                } catch (KeyStoreException e) {
+                    LOGGER.catching(e);
                 }
-                return result;
-            } catch (KeyStoreException e) {
-                LOGGER.catching(e);
-            }
 
-            return new X509Certificate[0];
+                return new X509Certificate[0];
+            }
         }
 
         /**
@@ -161,15 +163,17 @@ public class SecureServer {
         public PrivateKey getPrivateKey(
             final String alias
         ) {
-            try {
-                KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(_keyPassword.toCharArray());
-                KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) _keyStore.getEntry(alias, protection);
-                return pkEntry.getPrivateKey();
-            } catch (KeyStoreException
-                | NoSuchAlgorithmException
-                | UnrecoverableEntryException e) {
-                LOGGER.catching(e);
-                return null;
+            synchronized (this) {
+                try {
+                    KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(_keyPassword.toCharArray());
+                    KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) _keyStore.getEntry(alias, protection);
+                    return pkEntry.getPrivateKey();
+                } catch (KeyStoreException
+                    | NoSuchAlgorithmException
+                    | UnrecoverableEntryException e) {
+                    LOGGER.catching(e);
+                    return null;
+                }
             }
         }
 
@@ -183,19 +187,21 @@ public class SecureServer {
             final String keyType,
             final Principal[] issuers
         ) {
-            try {
-                ArrayList<String> list = new ArrayList<>();
-                KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(_keyPassword.toCharArray());
-                while (_keyStore.aliases().hasMoreElements()) {
-                    String alias = _keyStore.aliases().nextElement();
-                    KeyStore.Entry entry = _keyStore.getEntry(alias, protection);
-                    if (entry instanceof KeyStore.PrivateKeyEntry) {
-                        list.add(alias);
+            synchronized (this) {
+                try {
+                    ArrayList<String> list = new ArrayList<>();
+                    KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(_keyPassword.toCharArray());
+                    while (_keyStore.aliases().hasMoreElements()) {
+                        String alias = _keyStore.aliases().nextElement();
+                        KeyStore.Entry entry = _keyStore.getEntry(alias, protection);
+                        if (entry instanceof KeyStore.PrivateKeyEntry) {
+                            list.add(alias);
+                        }
                     }
+                    return (String[]) list.toArray();
+                } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
+                    return null;
                 }
-                return (String[]) list.toArray();
-            } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
-                return null;
             }
         }
     }

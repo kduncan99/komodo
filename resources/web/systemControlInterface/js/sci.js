@@ -1,11 +1,10 @@
 //  Copyright(c) 2020 by Kurt Duncan - All Rights Reserved
 
 //  Globals ------------------------------------------------------------------------------------------------------------------------
-const maxLoggingRows = 200;
 const credentialUsername = 'admin';     //  TODO solicit these from the user
 const credentialPassword = 'admin';     //  TODO as above
 let clientIdent = '';
-let polling = false;                    //  poll in progress
+let pollingConsole = false;             //  console poll in progress
 let pollFailed = false;                 //  previous poll failed
 let validating = false;                 //  validation in progress
 
@@ -14,11 +13,6 @@ const attributes = {
     screenSizeColumns: 80
 };
 
-const logBackgroundColor = 0xffffff;
-const logDebugColor = 0xffff00;
-const logErrorColor = 0xff0000;
-const logInfoColor = 0x0000ff;
-const logTraceColor = 0x00ff00;
 const defaultConsoleColor = 0x00ff00;
 const defaultConsoleBackground = 0x000000;
 const defaultInputColor = 0xffffff;
@@ -39,10 +33,14 @@ $(function() {
 resetConsole();
 
 
-//  Schedule the given polling function every 1 second - this might be too frequent, keep an eye on it.
-window.setInterval(function(){
-    if (!validating && !polling){
-        pollServer();
+//  Schedule the given polling function every 1 second
+window.setInterval(function() {
+    if (clientIdent === '' && !validating) {
+        validate();
+        setStatusRow(false);
+    } else if (clientIdent !== '' && !pollingConsole){
+        pollConsole();
+        setStatusRow(true);
     } else {
         setStatusRow(false);
     }
@@ -135,63 +133,40 @@ function createSpan(fgcolor, bgcolor, text) {
 
 
 //  Poll the REST server, unless we're not validated in which case, validate
-function pollServer() {
-    if (clientIdent === '') {
-        if (validating) {
-            console.debug("waiting for validation...");
+function pollConsole() {
+    pollingConsole = true;
+    console.debug("polling...");
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', '/poll/console', true);
+    xhr.responseType = "json";
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    xhr.setRequestHeader('Client', clientIdent);
+    xhr.onload = function () {
+        if (xhr.status === 200 || xhr.status === 201) {
+            //  input was accepted - should be 200, but we'll take 201
+            pollFailed = false;
+            console.debug("POLL SUCCESS:" + xhr.response);  //  TODO remove later
+            const newMessages = xhr.response.outputMessages;
+            if ((newMessages != null) && (newMessages.length > 0)) {
+                processNewConsoleMessages(newMessages);
+            }
         } else {
-            validate();
+            console.debug("POLL FAILED:" + xhr.statusText);
+            pollFailed = true;
         }
-    } else {
-        if (polling) {
-            console.debug("waiting on poll...");
-        } else {
-            polling = true;
-            console.debug("polling...");
-            let xhr = new XMLHttpRequest();
-            xhr.open('GET', '/poll', true);
-            xhr.responseType = "json";
-            xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-            xhr.setRequestHeader('Client', clientIdent);
-            xhr.onload = function () {
-                if (xhr.status === 200 || xhr.status === 201) {
-                    //  input was accepted - should be 200, but we'll take 201
-                    pollFailed = false;
-                    console.debug("POLL SUCCESS:" + xhr.response);  //  TODO remove later
-                    const jumpKeySettings = xhr.response.jumpKeySettings;
-                    const newLogEntries = xhr.response.newLogEntries;
-                    const newMessages = xhr.response.outputMessages;
-
-                    if (jumpKeySettings != null) {
-                        //TODO update jump key settings panel
-                    }
-
-                    if ((newLogEntries != null) && (newLogEntries.length > 0)) {
-                        processNewLogEntries(newLogEntries);
-                    }
-
-                    if ((newMessages != null) && (newMessages.length > 0)) {
-                        processNewConsoleMessages(newMessages);
-                    }
-                } else {
-                    console.debug("POLL FAILED:" + xhr.statusText);
-                    pollFailed = true;
-                }
-                polling = false;
-                setStatusRow(false);
-            };
-            xhr.onerror = function () {
-                //  Some sort of network error occurred - complain and unclog input
-                alert('Network error - cannot contact indicated server');
-                polling = false;
-                clientIdent = '';
-                setStatusRow(false);
-                //TODO go back to login dialog
-            };
-            xhr.send();
-            setStatusRow(true);
-        }
-    }
+        polling = false;
+        setStatusRow(false);
+    };
+    xhr.onerror = function () {
+        //  Some sort of network error occurred - complain and unclog input
+        alert('Network error - cannot contact indicated server');
+        polling = false;
+        clientIdent = '';
+        setStatusRow(false);
+        //TODO go back to login dialog
+    };
+    xhr.send();
+    setStatusRow(true);
 }
 
 
@@ -249,54 +224,6 @@ function processNewConsoleMessages(newMessages) {
                 }
                 break;
         }
-    }
-}
-
-
-//  Processes log entries we've retrieved from a poll
-function processNewLogEntries(newLogEntries) {
-    const tableBody = document.getElementById('LoggingRows');
-    for (let i = 0; i < newLogEntries.length; i++) {
-        const timestamp = newLogEntries[i].timestamp;
-        const category = newLogEntries[i].category;
-        const entity = newLogEntries[i].entity;
-        const message = newLogEntries[i].message;
-
-        const dateStr = new Date(timestamp).toISOString();
-        const dateElement = document.createElement('td');
-        dateElement.innerHTML = dateStr;
-
-        let categoryStr = category.padStart(5, ' ');
-        if (category === 'ERROR') {
-            categoryStr = createSpan(logErrorColor, logBackgroundColor, category);
-        } else if (category === 'DEBUG') {
-            categoryStr = createSpan(logDebugColor, logBackgroundColor, category);
-        } else if (category === 'TRACE') {
-            categoryStr = createSpan(logTraceColor, logBackgroundColor, category);
-        } else if (category === 'INFO') {
-            categoryStr = createSpan(logInfoColor, logBackgroundColor, category);
-        }
-        const catElement = document.createElement('td');
-        catElement.innerHTML = categoryStr;
-
-        const entityElement = document.createElement('td');
-        entityElement.innerHTML = entity;
-
-        const messageStr = message.replace(new RegExp(' ', 'g'), '&nbsp;');
-        const msgElement = document.createElement('td');
-        msgElement.innerHTML = messageStr;
-
-        const newRow = tableBody.insertRow(0);
-        newRow.appendChild(dateElement);
-        newRow.appendChild(catElement);
-        newRow.appendChild(entityElement);
-        newRow.appendChild(msgElement);
-
-        tableBody.appendChild(newRow);
-    }
-
-    while (tableBody.rows.length > maxLoggingRows) {
-        tableBody.deleteRow(0);
     }
 }
 
