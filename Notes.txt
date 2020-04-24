@@ -3,6 +3,10 @@ RESTSystemConsole and related
 Need to grab console identifier (session id?) and pass it all the way down the stack for inputs,
     so the OS (or whomever) can direct resulting output to that single session/console
 Which means we need to allow for directed console output, beginning with SYSC and moving back up the stack.
+So... what should we use for an identifier? Currently it's... something abstractish. Should it be CN001 or something?
+Let's go ahead and do the pre-built certificate thing.  What could go wrong?
+
+Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
 
 *systemConsole
 Needs session sign-on
@@ -23,8 +27,7 @@ Also, we don't use the channel entities (yet?)
     static final boolean LOG_DEVICE_IO_BUFFERS = true;
     static final boolean LOG_IO_ERRORS = true;
 
-SystemProcessor: For starting/monitoring/stopping system, and for console communication
-  Move dayclock architecture to SystemProcessor
+Move dayclock architecture to SystemProcessor
 
 * hardwarelib
 IP: SYSC subfunctions need unit tests
