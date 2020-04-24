@@ -33,7 +33,6 @@ $(function() {
 resetConsole();
 
 
-//  Schedule the given polling function every 1 second
 window.setInterval(function() {
     if (clientIdent === '' && !validating) {
         validate();
@@ -44,7 +43,7 @@ window.setInterval(function() {
     } else {
         setStatusRow(false);
     }
-}, 1000);
+}, 500);
 
 
 //  Responds to pressing the Enter or Return key for input, or the Esc key to unlock the keyboard
@@ -145,7 +144,6 @@ function pollConsole() {
         if (xhr.status === 200 || xhr.status === 201) {
             //  input was accepted - should be 200, but we'll take 201
             pollFailed = false;
-            console.debug("POLL SUCCESS:" + xhr.response);  //  TODO remove later
             const newMessages = xhr.response.outputMessages;
             if ((newMessages != null) && (newMessages.length > 0)) {
                 processNewConsoleMessages(newMessages);
@@ -154,13 +152,13 @@ function pollConsole() {
             console.debug("POLL FAILED:" + xhr.statusText);
             pollFailed = true;
         }
-        polling = false;
+        pollingConsole = false;
         setStatusRow(false);
     };
     xhr.onerror = function () {
         //  Some sort of network error occurred - complain and unclog input
         alert('Network error - cannot contact indicated server');
-        polling = false;
+        pollingConsole = false;
         clientIdent = '';
         setStatusRow(false);
         //TODO go back to login dialog
@@ -209,16 +207,11 @@ function processNewConsoleMessages(newMessages) {
                 if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
                     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
                     let adjustedText = text.substring(0, attributes.screenSizeColumns);
-                    console.debug('WRITE_ROW');//TODO remove
-                    console.debug('  text:[' + text + '] len=' + text.length);  //TODO remove
-                    console.debug('  adj: [' + adjustedText + '] len=' + adjustedText.length);  // TODO remove
-                    console.debug('  rightJust = ' + rightJustified);   //  TODO remove
                     if (rightJustified) {
                         adjustedText = adjustedText.padStart(attributes.screenSizeColumns, ' ');
                     } else {
                         adjustedText = adjustedText.padEnd(attributes.screenSizeColumns, ' ');
                     }
-                    console.debug('  adj: [' + adjustedText + '] len=' + adjustedText.length); //TODO remove
                     html = createSpan(textColor, backgroundColor, adjustedText.substring(0, attributes.screenSizeColumns));
                     rows[rowIndex].innerHTML = html;
                 }
@@ -247,7 +240,7 @@ function setStatusRow(pollTrigger) {
     html += ' '
     if (pollTrigger) {
         html += createSpan(0x000000, 0x00ffff, 'POLL');
-    } else if (polling) {
+    } else if (pollingConsole) {
         html += createSpan(0x000000, 0x00ff00, 'POLL');
     } else if (pollFailed) {
         html += createSpan(0x000000, 0xff0000, 'POLL');

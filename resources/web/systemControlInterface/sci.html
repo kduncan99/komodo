@@ -6,11 +6,13 @@
 <head>
     <meta charset="utf-8" />
     <title>Komodo System Console</title>
-    <link href = "/css/jquery-ui.css" rel = "stylesheet">
-    <link href = "/css/sci.css" rel = "stylesheet">
-    <script src = "/js/jquery-ui.js" rel="script" type="application/javascript" defer></script>
-    <script src = "/js/jquery.js" rel="script" type="application/javascript" defer></script>
-    <script src = "/js/sci.js" rel="script" type="application/javascript" defer>r</script>
+    <link href="/css/jquery-ui.css" rel="stylesheet">
+    <link href="/css/sci.css" rel="stylesheet">
+    <link href="/css/logPanel.css" rel="stylesheet">
+    <script src="/js/jquery-3.5.0.min.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/jquery-ui.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/sci.js" rel="script" type="text/javascript" defer>r</script>
+    <script src="/js/logPanel.js" rel="script" type="text/javascript" defer>r</script>
 
     <style>
         #consoleTabs{font-size: 14px;}
@@ -84,8 +86,23 @@
         </div>
 
         <div id="Logging">
-            <p>Most Recent System Log Entries</p>
-            <iframe id="LoggingFrame" srcdoc="/logPanel.html"></iframe>
+            <div id="LoggingScreen">
+                <table id="LoggingTable">
+                    <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Category</th>
+                        <th>Entity</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody id="LoggingRows">
+                    <tr>
+                        <td>System Log Starts</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>

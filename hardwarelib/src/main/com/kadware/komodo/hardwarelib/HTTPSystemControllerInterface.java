@@ -974,46 +974,6 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      */
     private class APIConsolePollRequestHandler extends SCIHttpHandler {
 
-        private class PollThread extends Thread {
-
-            private final HttpExchange _exchange;
-            private final SessionInfo _sessionInfo;
-
-            private PollThread(
-                final HttpExchange exchange,
-                final SessionInfo sessionInfo
-            ) {
-                _exchange = exchange;
-                _sessionInfo = sessionInfo;
-            }
-
-            public void run() {
-                //  Check if there are any updates already waiting for the client to pick up.
-                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-                //  At the end of the wait construct and return a SystemProcessorPollResult object
-                EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                    this.getClass().getSimpleName(),
-                                                    "run");
-
-                List<OutputMessage> oms;
-                synchronized (_sessionInfo._newOutputMessages) {
-                    if (!_sessionInfo._newOutputMessages.isEmpty()) {
-                        try {
-                            _sessionInfo._newOutputMessages.wait(DEFAULT_POLL_WAIT_MSECS);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
-                    }
-
-                    oms = new LinkedList<>(_sessionInfo._newOutputMessages);
-                    _sessionInfo._newOutputMessages.clear();
-                }
-
-                respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, new ConsolePollResult(oms));
-                LOGGER.traceExit(em);
-            }
-        }
-
         @Override
         public void handle(
             final HttpExchange exchange
@@ -1042,7 +1002,24 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                     return;
                 }
 
-                new PollThread(exchange, sessionInfo).start();
+                //  Check if there are any updates already waiting for the client to pick up.
+                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
+                //  At the end of the wait construct and return a SystemProcessorPollResult object
+                List<OutputMessage> oms;
+                synchronized (sessionInfo._newOutputMessages) {
+                    if (sessionInfo._newOutputMessages.isEmpty()) {
+                        try {
+                            sessionInfo._newOutputMessages.wait(DEFAULT_POLL_WAIT_MSECS);
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
+                    }
+
+                    oms = new LinkedList<>(sessionInfo._newOutputMessages);
+                    sessionInfo._newOutputMessages.clear();
+                }
+
+                respondWithJSON(exchange, HttpURLConnection.HTTP_OK, new ConsolePollResult(oms));
             } catch (Throwable t) {
                 LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
@@ -1295,7 +1272,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                             _pendingInputMessages.put(sessionInfo._clientId, inputText);
                         }
 
-                        _pendingInputMessages.notifyAll();
+                        _pendingInputMessages.notify();
                     }
                 }
 
@@ -1516,12 +1493,12 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                                                 this.getClass().getSimpleName(),
                                                 "setup");
             super.setup();
-//TODO reapply when we're ready            appendHandler("/jumpkeys", new APIJumpKeysHandler());
-            appendHandler("/message/", new APIMessageHandler());
-            appendHandler("/session/", new APISessionRequestHandler());
-            appendHandler("/poll/logs/", new APILogPollRequestHandler());
-            appendHandler("/poll/console/", new APIConsolePollRequestHandler());
             appendHandler("/", new WebHandler());
+//TODO reapply when we're ready            appendHandler("/jumpkeys", new APIJumpKeysHandler());
+            appendHandler("/message", new APIMessageHandler());
+            appendHandler("/session", new APISessionRequestHandler());
+            appendHandler("/poll/logs", new APILogPollRequestHandler());
+            appendHandler("/poll/console", new APIConsolePollRequestHandler());
             start();
             LOGGER.traceExit(em);
         }
@@ -1566,55 +1543,6 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         synchronized (_sessions) {
             return _sessions.values();
         }
-    }
-
-    /**
-     * SystemProcessor calls here to see if there is an input message waiting to be passed along.
-     * If we find one, construct an output message for the session it came from, to unlock that client's keyboard.
-     * If there isn't one available, wait for the specified period before returning, to see if one shows up.
-     * If timeoutMillis is zero, do not wait.
-     */
-    public String pollInputMessage(
-        long timeoutMillis
-    ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(timeout={}ms)",
-                                            this.getClass().getSimpleName(),
-                                            "pollInputMessage",
-                                            timeoutMillis);
-
-        String inputMessage = null;
-        SessionInfo sourceSessionInfo = null;
-        synchronized (_pendingInputMessages) {
-            if (_pendingInputMessages.isEmpty()) {
-                if (timeoutMillis > 0) {
-                    try {
-                        _pendingInputMessages.wait(timeoutMillis);
-                    } catch (InterruptedException ex) {
-                        LOGGER.catching(ex);
-                    }
-                }
-            }
-
-            if (!_pendingInputMessages.isEmpty()) {
-                Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
-                Map.Entry<String, String> nextEntry = iter.next();
-                String sourceSessionId = nextEntry.getKey();
-                inputMessage = nextEntry.getValue();
-                iter.remove();
-
-                sourceSessionInfo = _sessions.get(sourceSessionId);
-            }
-        }
-
-        if (sourceSessionInfo != null) {
-            synchronized (sourceSessionInfo._newOutputMessages) {
-                sourceSessionInfo.postInputMessage(inputMessage);
-                sourceSessionInfo._newOutputMessages.notify();
-            }
-        }
-
-        LOGGER.traceExit(em, inputMessage);
-        return inputMessage;
     }
 
 
@@ -1709,6 +1637,56 @@ public class HTTPSystemControllerInterface implements SystemConsole {
     @Override
     public String pollInputMessage() {
         return pollInputMessage(0);
+    }
+
+    /**
+     * SystemProcessor calls here to see if there is an input message waiting to be passed along.
+     * If we find one, construct an output message for the session it came from, to unlock that client's keyboard.
+     * If there isn't one available, wait for the specified period before returning, to see if one shows up.
+     * If timeoutMillis is zero, do not wait.
+     */
+    @Override
+    public String pollInputMessage(
+        long timeoutMillis
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(timeout={}ms)",
+                                            this.getClass().getSimpleName(),
+                                            "pollInputMessage",
+                                            timeoutMillis);
+
+        String inputMessage = null;
+        SessionInfo sourceSessionInfo = null;
+        synchronized (_pendingInputMessages) {
+            if (_pendingInputMessages.isEmpty()) {
+                if (timeoutMillis > 0) {
+                    try {
+                        _pendingInputMessages.wait(timeoutMillis);
+                    } catch (InterruptedException ex) {
+                        LOGGER.catching(ex);
+                    }
+                }
+            }
+
+            if (!_pendingInputMessages.isEmpty()) {
+                Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
+                Map.Entry<String, String> nextEntry = iter.next();
+                String sourceSessionId = nextEntry.getKey();
+                inputMessage = nextEntry.getValue();
+                iter.remove();
+
+                sourceSessionInfo = _sessions.get(sourceSessionId);
+            }
+        }
+
+        if (sourceSessionInfo != null) {
+            synchronized (sourceSessionInfo._newOutputMessages) {
+                sourceSessionInfo.postInputMessage(inputMessage);
+                sourceSessionInfo._newOutputMessages.notify();
+            }
+        }
+
+        LOGGER.traceExit(em, inputMessage);
+        return inputMessage;
     }
 
     /**

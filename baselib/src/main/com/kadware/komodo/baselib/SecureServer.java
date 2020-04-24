@@ -232,6 +232,8 @@ public class SecureServer {
     private static final String DEFAULT_CERT_X500NAME_ST    = "Colorado";       //  state or province name
     private static final String DEFAULT_CERT_X500NAME_C     = "US";             //  country name
 
+    private static final int THREAD_POOL_SIZE               = 32;
+
     private final String _commonName;
     private final int _portNumber;
     private HttpsServer _server;
@@ -307,7 +309,7 @@ public class SecureServer {
      * Starts the server
      */
     public void start() {
-        _server.setExecutor(Executors.newFixedThreadPool(16));//TODO use a constant here
+        _server.setExecutor(Executors.newFixedThreadPool(THREAD_POOL_SIZE));
         _server.start();
     }
 

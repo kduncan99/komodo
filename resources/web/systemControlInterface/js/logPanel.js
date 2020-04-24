@@ -19,7 +19,6 @@ window.setInterval(function() {
 //  Poll the REST server, unless we're not validated in which case, validate
 function pollLogs() {
     pollingLogs = true;
-    console.debug("pullLogs polling...");//TODO remove later
     let xhr = new XMLHttpRequest();
     xhr.open('GET', '/poll/logs', true);
     xhr.responseType = "json";
@@ -28,7 +27,6 @@ function pollLogs() {
     xhr.onload = function () {
         if (xhr.status === 200 || xhr.status === 201) {
             //  input was accepted - should be 200, but we'll take 201
-            console.debug("pollLogs POLL SUCCESS:" + xhr.response);  //  TODO remove later
             const newLogEntries = xhr.response.newLogEntries;
             if ((newLogEntries != null) && (newLogEntries.length > 0)) {
                 processNewLogEntries(newLogEntries);
