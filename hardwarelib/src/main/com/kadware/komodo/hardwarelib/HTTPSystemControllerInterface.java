@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.HttpMethod;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.PathNames;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.SecureServer;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -99,7 +98,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
     //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
     //  Key is the session identifier of the client which sent it to us; value is the actual message.
-    private final Map<String, String> _pendingInputMessages = new LinkedHashMap<>();
+    private final Map<String, SystemConsole.ConsoleInputMessage> _pendingInputMessages = new LinkedHashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -170,28 +169,29 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         }
     }
 
-    /**
-     * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
-     */
-    private static class JumpKeys {
-        //  36-bit composite value, wrapped in a long.
-        @JsonProperty("compositeValue") public Long _compositeValue;
-
-        //  Individual values, per bit.
-        //  Key is the jump key identifier from 1 to 36
-        //  Value is true if jk is set (or to be set), false if jk is clear (or to be clear).
-        //  For PUT an unspecified jk means the value is left as-is.
-        //  For GET values for all jump keys are returned.
-        @JsonProperty("componentValues") public Map<Integer, Boolean> _componentValues;
-
-        JumpKeys(
-            @JsonProperty("compositeValue")     final Long compositeValue,
-            @JsonProperty("componentValues")    final Map<Integer, Boolean> componentValues
-        ) {
-            _compositeValue = compositeValue;
-            _componentValues = new HashMap<>(componentValues);
-        }
-    }
+    //TODO we'll use this again later
+//    /**
+//     * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
+//     */
+//    private static class JumpKeys {
+//        //  36-bit composite value, wrapped in a long.
+//        @JsonProperty("compositeValue") public Long _compositeValue;
+//
+//        //  Individual values, per bit.
+//        //  Key is the jump key identifier from 1 to 36
+//        //  Value is true if jk is set (or to be set), false if jk is clear (or to be clear).
+//        //  For PUT an unspecified jk means the value is left as-is.
+//        //  For GET values for all jump keys are returned.
+//        @JsonProperty("componentValues") public Map<Integer, Boolean> _componentValues;
+//
+//        JumpKeys(
+//            @JsonProperty("compositeValue")     final Long compositeValue,
+//            @JsonProperty("componentValues")    final Map<Integer, Boolean> componentValues
+//        ) {
+//            _compositeValue = compositeValue;
+//            _componentValues = new HashMap<>(componentValues);
+//        }
+//    }
 
     /**
      * Client issues a GET on the /poll/log subdirectory, and we respond with new log entries if and when any are posted.
@@ -245,27 +245,18 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
         @Override
         public String toString() {
-            switch (_messageType) {
-                case MESSAGE_TYPE_CLEAR_SCREEN:
-                    return "CLEAR_SCREEN";
-
-                case MESSAGE_TYPE_DELETE_ROW:
-                    return String.format("DELETE_ROW %d", _rowIndex);
-
-                case MESSAGE_TYPE_UNLOCK_KEYBOARD:
-                    return "UNLOCK_KEYBOARD";
-
-                case MESSAGE_TYPE_WRITE_ROW:
-                    return String.format("WRITE_ROW %d fg=0x%06x bg=0x%06x right=%s, '%s'",
-                                         _rowIndex,
-                                         _textColor,
-                                         _backgroundColor,
-                                         _rightJustified,
-                                         _text);
-
-                default:
-                    return (String.format("Unknown message type %s", _messageType));
-            }
+            return switch (_messageType) {
+                case MESSAGE_TYPE_CLEAR_SCREEN -> "CLEAR_SCREEN";
+                case MESSAGE_TYPE_DELETE_ROW -> String.format("DELETE_ROW %d", _rowIndex);
+                case MESSAGE_TYPE_UNLOCK_KEYBOARD -> "UNLOCK_KEYBOARD";
+                case MESSAGE_TYPE_WRITE_ROW -> String.format("WRITE_ROW %d fg=0x%06x bg=0x%06x right=%s, '%s'",
+                                                             _rowIndex,
+                                                             _textColor,
+                                                             _backgroundColor,
+                                                             _rightJustified,
+                                                             _text);
+                default -> (String.format("Unknown message type %s", _messageType));
+            };
         }
 
         static OutputMessage createClearScreenMessage() {
@@ -341,8 +332,10 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      */
     private static class SessionInfo {
 
+        private static int _nextConsoleId = 1;
         private final ClientAttributes _clientAttributes;
-        private final String _clientId;
+        private final String _clientId;         //  Identifier used in cookies to identify this session
+        private final int _consoleId;           //  Identifier passed to the OS so it can target responses just to one session
         private long _lastActivity = System.currentTimeMillis();
         private final List<SystemLogEntry> _newLogEntries = new LinkedList<>();     //  log entries not yet delivered to client
         private final List<OutputMessage> _newOutputMessages = new LinkedList<>();  //  console messages not yet delivered to client
@@ -365,6 +358,9 @@ public class HTTPSystemControllerInterface implements SystemConsole {
             _clientAttributes = clientAttributes;
             _clientId = clientId;
             _pinnedState = new boolean[clientAttributes._screenSizeRows];
+            synchronized (SessionInfo.class) {
+                _consoleId = _nextConsoleId++;
+            }
         }
 
         /**
@@ -1269,7 +1265,8 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                         //  Ignore empty input, and trim the front and back of non-empty input.
                         String inputText = msg._text.trim();
                         if (!inputText.isEmpty()) {
-                            _pendingInputMessages.put(sessionInfo._clientId, inputText);
+                            _pendingInputMessages.put(sessionInfo._clientId,
+                                                      new SystemConsole.ConsoleInputMessage(sessionInfo._consoleId, inputText));
                         }
 
                         _pendingInputMessages.notify();
@@ -1557,6 +1554,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      */
     @Override
     public void cancelReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String replacementText
     ) {
@@ -1577,9 +1575,11 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         }
 
         for (SessionInfo sinfo : getSessions()) {
-            synchronized (sinfo._newOutputMessages) {
-                sinfo.cancelReadReplyMessage(messageId, replacementText);
-                sinfo._newOutputMessages.notify();
+            if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
+                synchronized (sinfo._newOutputMessages) {
+                    sinfo.cancelReadReplyMessage(messageId, replacementText);
+                    sinfo._newOutputMessages.notify();
+                }
             }
         }
 
@@ -1605,10 +1605,10 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
             writer.write("  Pending input messages:\n");
             synchronized (_pendingInputMessages) {
-                for (Map.Entry<String, String> entry : _pendingInputMessages.entrySet()) {
+                for (Map.Entry<String, SystemConsole.ConsoleInputMessage> entry : _pendingInputMessages.entrySet()) {
                     String clientId = entry.getKey();
-                    String text = entry.getValue();
-                    writer.write(String.format("    clientId=%s:'%s'\n", clientId, text));
+                    SystemConsole.ConsoleInputMessage cim = entry.getValue();
+                    writer.write(String.format("    clientId=%s:'%s'\n", clientId, cim.toString()));
                 }
             }
 
@@ -1635,7 +1635,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      * If we find one, construct an output message for the session it came from, to unlock that client's keyboard.
      */
     @Override
-    public String pollInputMessage() {
+    public ConsoleInputMessage pollInputMessage() {
         return pollInputMessage(0);
     }
 
@@ -1646,7 +1646,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      * If timeoutMillis is zero, do not wait.
      */
     @Override
-    public String pollInputMessage(
+    public ConsoleInputMessage pollInputMessage(
         long timeoutMillis
     ) {
         EntryMessage em = LOGGER.traceEntry("{}.{}(timeout={}ms)",
@@ -1654,8 +1654,8 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                                             "pollInputMessage",
                                             timeoutMillis);
 
-        String inputMessage = null;
         SessionInfo sourceSessionInfo = null;
+        SystemConsole.ConsoleInputMessage cim = null;
         synchronized (_pendingInputMessages) {
             if (_pendingInputMessages.isEmpty()) {
                 if (timeoutMillis > 0) {
@@ -1668,10 +1668,10 @@ public class HTTPSystemControllerInterface implements SystemConsole {
             }
 
             if (!_pendingInputMessages.isEmpty()) {
-                Iterator<Map.Entry<String, String>> iter = _pendingInputMessages.entrySet().iterator();
-                Map.Entry<String, String> nextEntry = iter.next();
+                Iterator<Map.Entry<String, SystemConsole.ConsoleInputMessage>> iter = _pendingInputMessages.entrySet().iterator();
+                Map.Entry<String, SystemConsole.ConsoleInputMessage> nextEntry = iter.next();
                 String sourceSessionId = nextEntry.getKey();
-                inputMessage = nextEntry.getValue();
+                cim = nextEntry.getValue();
                 iter.remove();
 
                 sourceSessionInfo = _sessions.get(sourceSessionId);
@@ -1680,13 +1680,13 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
         if (sourceSessionInfo != null) {
             synchronized (sourceSessionInfo._newOutputMessages) {
-                sourceSessionInfo.postInputMessage(inputMessage);
+                sourceSessionInfo.postInputMessage(cim._text);
                 sourceSessionInfo._newOutputMessages.notify();
             }
         }
 
-        LOGGER.traceExit(em, inputMessage);
-        return inputMessage;
+        LOGGER.traceExit(em, cim);
+        return cim;
     }
 
     /**
@@ -1694,17 +1694,19 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      */
     @Override
     public void postReadOnlyMessage(
+        final int consoleId,
         final String message,
         final Boolean rightJustified,
         final Boolean cached
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}' rightJustified={})",
+        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId={} message='{}' rightJustified={})",
                                             this.getClass().getSimpleName(),
                                             "postReadOnlyMessage",
+                                            consoleId,
                                             message,
                                             rightJustified);
 
-        if (cached) {
+        if (cached && (consoleId == 0)) {
             synchronized (_cachedReadOnlyMessages) {
                 _cachedReadOnlyMessages.add(message);
                 while (_cachedReadOnlyMessages.size() > MAX_CACHED_READ_ONLY_MESSAGES) {
@@ -1715,8 +1717,10 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
         for (SessionInfo sinfo : getSessions()) {
             synchronized (sinfo._newOutputMessages) {
-                sinfo.postReadOnlyMessage(message, rightJustified);
-                sinfo._newOutputMessages.notify();
+                if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
+                    sinfo.postReadOnlyMessage(message, rightJustified);
+                    sinfo._newOutputMessages.notify();
+                }
             }
         }
 
@@ -1728,6 +1732,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
      */
     @Override
     public void postReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String message,
         final int maxReplyLength
@@ -1744,9 +1749,11 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         }
 
         for (SessionInfo sinfo : getSessions()) {
-            synchronized (sinfo._newOutputMessages) {
-                sinfo.postReadReplyMessage(messageId, message, maxReplyLength);
-                sinfo._newOutputMessages.notify();
+            if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
+                synchronized (sinfo._newOutputMessages) {
+                    sinfo.postReadReplyMessage(messageId, message, maxReplyLength);
+                    sinfo._newOutputMessages.notify();
+                }
             }
         }
 

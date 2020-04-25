@@ -11,8 +11,25 @@ import java.io.BufferedWriter;
 /**
  * Specifies the interfaces which must be implemented by any concrete system console class.
  */
-@SuppressWarnings("Duplicates")
 public interface SystemConsole {
+
+    class ConsoleInputMessage {
+        public final int _consoleIdentifier;
+        public final String _text;
+
+        public ConsoleInputMessage(
+            final int consoleIdentifier,
+            final String text
+        ) {
+            _consoleIdentifier = consoleIdentifier;
+            _text = text;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%d:%s", _consoleIdentifier, _text);
+        }
+    }
 
     /**
      * For debugging - writes information specific to the implementor, to the log
@@ -25,8 +42,12 @@ public interface SystemConsole {
      * Cancels a specific pending read-reply message.
      * Used when the message was successfully responded to, so that the client console knows that the message
      * is no longer outstanding.
+     * @param consoleId console id of a specific console; zero for all consoles
+     * @param messageId the messgae identifier of the read-reply message we wish to cancel
+     * @param replacementText text to be written over the original read-reply message
      */
     void cancelReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String replacementText
     );
@@ -35,18 +56,19 @@ public interface SystemConsole {
 
     /**
      * Polls the console for the next available input message
-     * @return text, or null if there is no message to be had
+     * @return InputMessage object, or null if there is no message to be had
      */
-    String pollInputMessage();
+    ConsoleInputMessage pollInputMessage();
 
     /**
      * Alternate method of polling the console.
      * Waits until input is available, then returns - if the wait period is exceeded, returns with null
      */
-    String pollInputMessage(long timeoutMillis);
+    ConsoleInputMessage pollInputMessage(long timeoutMillis);
 
     /**
      * Posts a read-only message to the implementor
+     * @param consoleId console id of a specific console; zero for all consoles
      * @param message the message to be displayed
      * @param rightJustified true if this message should be aligned against the right side of the output
      *                       this is usually true for time-of-day messagees
@@ -54,6 +76,7 @@ public interface SystemConsole {
      *               this should be false for time-of-day messages
      */
     void postReadOnlyMessage(
+        final int consoleId,
         final String message,
         final Boolean rightJustified,
         final Boolean cached
@@ -61,8 +84,13 @@ public interface SystemConsole {
 
     /**
      * Posts a read-reply message to the implementor
+     * @param consoleId console id of a specific console; zero for all consoles
+     * @param messageId message identifier which can be used for canceling this message later
+     * @param message text of the message
+     * @param maxReplyLength maximum number of characters allowed in the reply
      */
     void postReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String message,
         final int maxReplyLength

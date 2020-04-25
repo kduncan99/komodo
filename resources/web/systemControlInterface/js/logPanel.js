@@ -11,13 +11,13 @@ let pollingLogs = false;
 //  Schedule the given polling function every 1 second - this might be too frequent, keep an eye on it.
 window.setInterval(function() {
     if (clientIdent !== '' && !pollingLogs) {
-        pollLogs();
+        logsPoll();
     }
 }, 1000);
 
 
 //  Poll the REST server, unless we're not validated in which case, validate
-function pollLogs() {
+function logsPoll() {
     pollingLogs = true;
     let xhr = new XMLHttpRequest();
     xhr.open('GET', '/poll/logs', true);
@@ -29,10 +29,10 @@ function pollLogs() {
             //  input was accepted - should be 200, but we'll take 201
             const newLogEntries = xhr.response.newLogEntries;
             if ((newLogEntries != null) && (newLogEntries.length > 0)) {
-                processNewLogEntries(newLogEntries);
+                logsProcessNewEntries(newLogEntries);
             }
         } else {
-            console.debug("pollLogs POLL FAILED:" + xhr.statusText);
+            console.debug("logsPoll POLL FAILED:" + xhr.statusText);
         }
         pollingLogs = false;
     };
@@ -45,7 +45,7 @@ function pollLogs() {
 
 
 //  Processes log entries we've retrieved from a poll
-function processNewLogEntries(newLogEntries) {
+function logsProcessNewEntries(newLogEntries) {
     const tableBody = document.getElementById('LoggingRows');
     for (let i = 0; i < newLogEntries.length; i++) {
         const timestamp = newLogEntries[i].timestamp;

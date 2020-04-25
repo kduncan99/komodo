@@ -51,7 +51,7 @@ public class Test_SystemConsole {
 
         private final Context _context;
         private static int _nextNotificationId = 1;
-        private String _pendingMessage;     //  from operator
+        private SystemConsole.ConsoleInputMessage _pendingMessage;     //  from operator
         private final String _name;
         private JobState _state = JobState.Init;
         private boolean _terminate = false;
@@ -69,11 +69,11 @@ public class Test_SystemConsole {
         public void run() {
             _state = JobState.Running;
             _timeStartMillis = System.currentTimeMillis();
-            post("STARTED");
+            post(0, "STARTED");
 
             String reply = null;
             while (!_terminate && (reply == null)) {
-                reply = postAndWait("JOB STARTING - CONTINUE? YN", 1);
+                reply = postAndWait(0, "JOB STARTING - CONTINUE? YN", 1);
                 if (reply != null) {
                     if (reply.equalsIgnoreCase("n")) {
                         _terminate = true;
@@ -97,20 +97,23 @@ public class Test_SystemConsole {
                 count--;
             }
 
-            post("DONE");
+            post(0, "DONE");
             _state = JobState.Done;
             _timeTermMillis = System.currentTimeMillis();
         }
 
         private void post(
+            final int consoleId,
             final String message
         ) {
-            _context._systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":" + message,
+            _context._systemProcessor.consoleSendReadOnlyMessage(consoleId,
+                                                                 "  " + _name + ":" + message,
                                                                  false,
                                                                  true);
         }
 
         private String postAndWait(
+            final int consoleId,
             final String notification,
             final int maxReplySize
         ) {
@@ -119,17 +122,19 @@ public class Test_SystemConsole {
                 nid = _nextNotificationId++;
             }
 
-            _context._systemProcessor.consoleSendReadReplyMessage(nid,
+            _context._systemProcessor.consoleSendReadReplyMessage(consoleId,
+                                                                  nid,
                                                                   "! " + _name + ":" + notification, maxReplySize);
             String reply = null;
             while (!_terminate && (reply == null)) {
                 if (_pendingMessage != null) {
-                    if (_pendingMessage.length() > maxReplySize) {
-                        _context._systemProcessor.consoleSendReadOnlyMessage("  " + _name + ":Response Too Long",
+                    if (_pendingMessage._text.length() > maxReplySize) {
+                        _context._systemProcessor.consoleSendReadOnlyMessage(_pendingMessage._consoleIdentifier,
+                                                                             "  " + _name + ":Response Too Long",
                                                                              false,
                                                                              false);
                     } else {
-                        reply = _pendingMessage;
+                        reply = _pendingMessage._text;
                     }
                     _pendingMessage = null;
                 } else {
@@ -143,7 +148,9 @@ public class Test_SystemConsole {
                 }
             }
 
-            _context._systemProcessor.consoleCancelReadReplyMessage(nid, "  " + _name + ":" + notification);
+            _context._systemProcessor.consoleCancelReadReplyMessage(consoleId,
+                                                                    nid,
+                                                                    "  " + _name + ":" + notification);
             return reply;
         }
     }
@@ -171,6 +178,7 @@ public class Test_SystemConsole {
         int getMinimumTokens();
         void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         );
     }
@@ -195,11 +203,15 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
-            context._systemProcessor.consoleSendReadOnlyMessage("  Commands:");
+            context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Commands:");
             for (CommandHandler ch : _commandHandlers.values()) {
-                context._systemProcessor.consoleSendReadOnlyMessage(ch.getHelp());
+                context._systemProcessor.consoleSendReadOnlyMessage(consoleId,
+                                                                    ch.getHelp(),
+                                                                    false,
+                                                                    false);
             }
         }
     }
@@ -224,11 +236,12 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             synchronized (context._jobs) {
                 if (context._jobs.size() == 0) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job List Is Empty");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job List Is Empty");
                 } else {
                     long now = System.currentTimeMillis();
                     for (Job job : context._jobs.values()) {
@@ -239,7 +252,7 @@ public class Test_SystemConsole {
                                                    msec,
                                                    job._state,
                                                    job._pendingMessage == null ? "N" : "Y");
-                        context._systemProcessor.consoleSendReadOnlyMessage(msg);
+                        context._systemProcessor.consoleSendReadOnlyMessage(consoleId, msg);
                     }
                 }
             }
@@ -266,6 +279,7 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             context._terminate = true;
@@ -292,6 +306,7 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             String jobName = commandSplit[1];
@@ -300,15 +315,15 @@ public class Test_SystemConsole {
             synchronized (context._jobs) {
                 job = context._jobs.get(jobName);
                 if (job == null) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job Not Found");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Not Found");
                 } else if (job._state == JobState.Done) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job Is Already Done");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Is Already Done");
                     job = null;
                 } else if (job._pendingMessage != null) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job Has Not Retrieved Previous Message");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Has Not Retrieved Previous Message");
                     job = null;
                 } else {
-                    job._pendingMessage = message;
+                    job._pendingMessage = new SystemConsole.ConsoleInputMessage(consoleId, message);
                 }
             }
 
@@ -340,6 +355,7 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             context._stop = true;
@@ -366,24 +382,25 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             String jobName = commandSplit[1].toUpperCase();
             if (!Character.isAlphabetic(jobName.charAt(0))) {
-                context._systemProcessor.consoleSendReadOnlyMessage("  Invalid Job Name");
+                context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Invalid Job Name");
                 return;
             }
             for (int nx = 1; nx < commandSplit[1].length(); ++nx) {
                 char ch = jobName.charAt(nx);
                 if (!Character.isDigit(ch) && !(Character.isAlphabetic(ch))) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Invalid Job Name");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Invalid Job Name");
                     return;
                 }
             }
 
             synchronized (context._jobs) {
                 if (context._jobs.containsKey(jobName)) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Duplicate Job Name");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Duplicate Job Name");
                     return;
                 }
 
@@ -414,6 +431,7 @@ public class Test_SystemConsole {
         @Override
         public void handle(
             final Context context,
+            final int consoleId,
             final String[] commandSplit
         ) {
             String jobName = commandSplit[1];
@@ -421,9 +439,9 @@ public class Test_SystemConsole {
             synchronized (context._jobs) {
                 job = context._jobs.get(jobName);
                 if (job == null) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job Not Found");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Not Found");
                 } else if (job._state == JobState.Done) {
-                    context._systemProcessor.consoleSendReadOnlyMessage("  Job Is Already Done");
+                    context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Is Already Done");
                     job = null;
                 } else {
                     job._terminate = true;
@@ -457,17 +475,19 @@ public class Test_SystemConsole {
         private class InputPollerThread implements Runnable {
 
             public void run() {
-                String msg = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
-                if ((msg != null) && !msg.isEmpty()) {
-                    String[] split = msg.toUpperCase().split(" ");
+                SystemConsole.ConsoleInputMessage cim = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
+                if (cim != null) {
+                    String[] split = cim._text.toUpperCase().split(" ");
                     CommandHandler ch = _commandHandlers.get(split[0].toUpperCase());
                     if (ch == null) {
-                        _context._systemProcessor.consoleSendReadOnlyMessage("  Command Not Recognized - Enter H for Help");
+                        _context._systemProcessor.consoleSendReadOnlyMessage(cim._consoleIdentifier,
+                                                                             "  Command Not Recognized - Enter H for Help");
                     } else if ((split.length < ch.getMinimumTokens()) || (split.length > ch.getMaximumTokens())) {
-                        _context._systemProcessor.consoleSendReadOnlyMessage("  Invalid Command Syntax");
+                        _context._systemProcessor.consoleSendReadOnlyMessage(cim._consoleIdentifier,
+                                                                             "  Invalid Command Syntax");
                     } else {
                         ++_context._inputCount;
-                        ch.handle(_context, split);
+                        ch.handle(_context, cim._consoleIdentifier, split);
                     }
                 }
             }
@@ -514,7 +534,7 @@ public class Test_SystemConsole {
                                                     "run");
 
                 String msg = String.format("T/D %s", Instant.now().toString().split("\\.")[0]);
-                _context._systemProcessor.consoleSendReadOnlyMessage(msg, true, false);
+                _context._systemProcessor.consoleSendReadOnlyMessage(0, msg, true, false);
                 synchronized (_context._jobs) {
                     _context._jobs.entrySet().removeIf(entry -> entry.getValue()._state == JobState.Done);
                 }
@@ -610,7 +630,8 @@ public class Test_SystemConsole {
         context._stop = false;
         LOGGER.info(String.format("Job Monitor Session %d Starting", context._session));
         context._systemProcessor.consoleReset();
-        context._systemProcessor.consoleSendReadOnlyMessage(String.format("Job Monitor Active - Session %d", context._session));
+        context._systemProcessor.consoleSendReadOnlyMessage(0,
+                                                            String.format("Job Monitor Active - Session %d", context._session));
 
         //  Start up the scheduled things
         InputPoller poller = new InputPoller(context);
@@ -638,7 +659,7 @@ public class Test_SystemConsole {
         fiveSecondActions.stop();
 
         //  Clean up
-        context._systemProcessor.consoleSendReadOnlyMessage("  Shutting down jobs...");
+        context._systemProcessor.consoleSendReadOnlyMessage(0, "  Shutting down jobs...");
         List<Job> jobsLeft = new LinkedList<>();
         synchronized (context._jobs) {
             for (Job job : context._jobs.values()) {
@@ -670,7 +691,8 @@ public class Test_SystemConsole {
         context._jobs.clear();
 
         //  Done
-        context._systemProcessor.consoleSendReadOnlyMessage(String.format("Job Monitor Session %d Stopped", context._session));
+        context._systemProcessor.consoleSendReadOnlyMessage(0,
+                                                            String.format("Job Monitor Session %d Stopped", context._session));
         LOGGER.info(String.format("Job Monitor Session %d Stopped", context._session));
     }
 
@@ -689,6 +711,7 @@ public class Test_SystemConsole {
 
         //  Start up an SP
         Context context = new Context(InventoryManager.getInstance().createSystemProcessor());
+        //noinspection LoopConditionNotUpdatedInsideLoop
         while (!context._systemProcessor.isReady()) {
             Thread.onSpinWait();
         }

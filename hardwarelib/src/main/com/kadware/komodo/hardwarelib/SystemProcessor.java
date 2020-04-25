@@ -72,7 +72,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
     private static final long LOG_PERIODICITY_MSECS = 1000;             //  check the log every 1 second
 
-    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class.getSimpleName());
     private static SystemProcessor _instance = null;
 
     private KomodoLoggingAppender _appender;                   //  Log appender, so we can catch log entries
@@ -397,10 +397,11 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * Cancels a previously-sent read-reply message, and optionally replaces the previous message with new text
      */
     void consoleCancelReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String replacementText
     ) {
-        _console.cancelReadReplyMessage(messageId, replacementText);
+        _console.cancelReadReplyMessage(consoleId, messageId, replacementText);
     }
 
     /**
@@ -410,7 +411,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * while responses to read-reply messages are returned in the format {n}{s} where {n} is the ASCII
      * representation of the message id followed by the text (if any).
      */
-    String consolePollInputMessage(
+    SystemConsole.ConsoleInputMessage consolePollInputMessage(
         final long waitMilliseconds
     ) {
         return _console.pollInputMessage(waitMilliseconds);
@@ -432,20 +433,22 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * @param cached true to cache this for future new console sessions
      */
     void consoleSendReadOnlyMessage(
+        final int consoleId,
         final String message,
         final Boolean rightJustified,
         final Boolean cached
     ) {
-        _console.postReadOnlyMessage(message, rightJustified, cached);
+        _console.postReadOnlyMessage(consoleId, message, rightJustified, cached);
     }
 
     /**
      * Convenience wrapper for the above...
      */
     void consoleSendReadOnlyMessage(
+        final int consoleId,
         final String message
     ) {
-        _console.postReadOnlyMessage(message, false, true);
+        _console.postReadOnlyMessage(consoleId, message, false, true);
     }
 
     /**
@@ -455,11 +458,12 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * @param message actual message to be sent
      */
     void consoleSendReadReplyMessage(
+        final int consoleId,
         final int messageId,
         final String message,
         final int maxReplyLength
     ) {
-        _console.postReadReplyMessage(messageId, message, maxReplyLength);
+        _console.postReadReplyMessage(consoleId, messageId, message, maxReplyLength);
     }
 
     /**

@@ -58,6 +58,9 @@ assembler needs to be smart enough to do the right thing with B16-B31 (move msbi
 
 
 -- TODO implement
+* every all
+Set logger name to foo.class.getSimpleName()
+
 * baselib
 more FloatingPointComponent tests
 

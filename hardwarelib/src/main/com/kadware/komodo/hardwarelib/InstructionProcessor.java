@@ -4079,7 +4079,6 @@ public class InstructionProcessor extends Processor implements Worker {
 
         @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
             long operand = getOperand(false, true, false, false);
-            System.out.println(String.format("CALL OPERAND %012o =============================================", operand));//TODO
             new InstructionProcessor.BankManipulator().bankManipulation(Instruction.CALL, operand);
         }
 
@@ -6872,8 +6871,9 @@ public class InstructionProcessor extends Processor implements Worker {
         private static final int SF_CONSOLE_SEND_STATUS = 030;
         private static final int SF_CONSOLE_SEND_READ_ONLY = 031;
         private static final int SF_CONSOLE_SEND_READ_REPLY = 032;
-        private static final int SF_CONSOLE_POLL_INPUT = 033;
-        private static final int SF_CONSOLE_RESET = 034;
+        private static final int SF_CONSOLE_CANCEL_READ_REPLY = 033;
+        private static final int SF_CONSOLE_POLL_INPUT = 034;
+        private static final int SF_CONSOLE_RESET = 035;
 
         private static final int SF_DAYCLOCK_READ = 042;
         private static final int SF_DAYCLOCK_WRITE = 043;
@@ -7010,6 +7010,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
                     operands[0] = Word36.setS2(operands[0], status);
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
@@ -7043,6 +7044,10 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
                     storeConsecutiveOperands(devAddr, operands);
                     break;
+                }
+
+                case SF_CONSOLE_CANCEL_READ_REPLY: {
+                    //TODO figure this out
                 }
 
                 case SF_CONSOLE_SEND_STATUS: {
@@ -7110,7 +7115,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //                      Bit 16:     0 normally, 1 for right-justified
                     //                      Bit 17:     0 normally, 1 to prevent caching of the message in the console multiplexor
                     //  U+0,Q3:         Length of message in characters
-                    //  U+1:            unused
+                    //  U+1:            Console identifier - 0 for all consoles (bottom 32 bits only)
                     //  U+2:            Virtual address of buffer containing message in ASCII
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
@@ -7118,12 +7123,16 @@ public class InstructionProcessor extends Processor implements Worker {
                     int chars = (int) Word36.getQ3(operands[0]);
                     int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
                     int flags = (int) Word36.getS3(operands[0]);
-                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
+                    int consoleId = (int) operands[1];
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]),
+                                                                     true,
+                                                                     false, words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
-                        String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                        String msg =
+                            "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
                         Boolean rightJust = (flags & 0x02) != 0;
                         Boolean cached = (flags & 0x01) == 0;
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(msg, rightJust, cached);
+                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(consoleId, msg, rightJust, cached);
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);
@@ -7139,7 +7148,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+0,S3:         Message identifier
                     //  U+0,Q3:         Length of message in characters
                     //  U+0,Q4:         Max length of reply in characters
-                    //  U+1:            unused
+                    //  U+1:            Console identifier - 0 for all consoles (bottom 32 bits only)
                     //  U+2:            Virtual address of buffer containing message in ASCII
                     long[] operands = new long[3];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
@@ -7148,10 +7157,15 @@ public class InstructionProcessor extends Processor implements Worker {
                     int chars = (int) Word36.getQ3(operands[0]);
                     int maxReplyChars = (int) Word36.getQ4(operands[0]);
                     int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
-                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, words);
+                    int consoleId = (int) operands[1];
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]),
+                                                                     true,
+                                                                     false,
+                                                                     words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
-                        String msg = "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadReplyMessage(messageId, msg, maxReplyChars);
+                        String msg =
+                            "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                        SystemProcessor.getInstance().consoleSendReadReplyMessage(consoleId, messageId, msg, maxReplyChars);
                         operands[0] = Word36.setS2(operands[0], vaInfo._status);
                     }
 
@@ -7161,40 +7175,46 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_POLL_INPUT: {
-                    //  Packet size is 3 words
+                    //  Packet size is 4 words
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
                     //  U+0,Q3          Size of reply buffer in words
                     //  U+0,Q4          Number of characters received if a message was read
-                    //  U+1,W:          Unique message identifier
-                    //  U+2:            Virtual address of buffer containing message in ASCII
-                    //TODO
-//                    long[] operands = new long[3];
-//                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-//
-//                    int status = SS_SUCCESSFUL;
-//                    int words = (int) Word36.getQ3(operands[0]);
-//                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]), false, true, words);
-//                    if (vaInfo._status == SS_SUCCESSFUL) {
-//                        SystemProcessor.ConsoleInput consInput = SystemProcessor.getInstance().consolePoll();
-//                        if (consInput != null) {
-//                            operands[0] = Word36.setQ4(operands[0], consInput._message.length());
-//                            operands[1] = consInput._identifier;
-//                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
-//                                 wx < words && ssx < consInput._message.length();
-//                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
-//                                vaInfo._bankDescriptor.set(bdx, Word36.stringToWordASCII(consInput._message.substring(ssx, ssy)).getW());
-//                            }
-//                        } else {
-//                            status = SS_NO_DATA;
-//                        }
-//                    } else {
-//                        status = vaInfo._status;
-//                    }
-//
-//                    operands[0] = Word36.setS2(operands[0], status);
-//                    //noinspection ConstantConditions
-//                    storeConsecutiveOperands(devAddr, operands);
+                    //  U+1,H2:         Time to wait, in msecs - if zero, no wait
+                    //  U+2,W:          Upon return, the identifier of the sending console
+                    //  U+3:            Virtual address of buffer containing message in ASCII
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int status = SS_SUCCESSFUL;
+                    int words = (int) Word36.getQ3(operands[0]);
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[3]),
+                                                                     false,
+                                                                     true,
+                                                                     words);
+                    if (vaInfo._status == SS_SUCCESSFUL) {
+                        int waitMillis = (int) Word36.getH2(operands[1]);
+                        SystemConsole.ConsoleInputMessage consInput
+                            = SystemProcessor.getInstance().consolePollInputMessage(waitMillis);
+                        if (consInput != null) {
+                            operands[0] = Word36.setQ4(operands[0], consInput._text.length());
+                            operands[2] = consInput._consoleIdentifier;
+                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
+                                 wx < words && ssx < consInput._text.length();
+                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
+                                Word36 w36 = Word36.stringToWordASCII(consInput._text.substring(ssx, ssy));
+                                vaInfo._bankDescriptor.set(bdx, w36.getW());
+                            }
+                        } else {
+                            status = SS_NO_DATA;
+                        }
+                    } else {
+                        status = vaInfo._status;
+                    }
+
+                    operands[0] = Word36.setS2(operands[0], status);
+                    //noinspection ConstantConditions
+                    storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 

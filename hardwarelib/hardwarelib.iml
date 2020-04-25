@@ -11,5 +11,6 @@
     <orderEntry type="module" module-name="baselib" />
     <orderEntry type="module" module-name="minalib" />
     <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" name="org.java-websocket:Java-WebSocket:1.4.1" level="project" />
   </component>
 </module>

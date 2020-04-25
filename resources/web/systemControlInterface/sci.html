@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="en">
 <!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
 <!-- This is the main HTML for the system control interface -->
@@ -8,14 +9,16 @@
     <title>Komodo System Console</title>
     <link href="/css/jquery-ui.css" rel="stylesheet">
     <link href="/css/sci.css" rel="stylesheet">
+    <link href="/css/consolePanel.css" rel="stylesheet">
     <link href="/css/logPanel.css" rel="stylesheet">
     <script src="/js/jquery-3.5.0.min.js" rel="script" type="text/javascript" defer></script>
     <script src="/js/jquery-ui.js" rel="script" type="text/javascript" defer></script>
-    <script src="/js/sci.js" rel="script" type="text/javascript" defer>r</script>
-    <script src="/js/logPanel.js" rel="script" type="text/javascript" defer>r</script>
+    <script src="/js/sci.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/consolePanel.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/logPanel.js" rel="script" type="text/javascript" defer></script>
 
     <style>
-        #consoleTabs{font-size: 14px;}
+        #sciTabs{font-size: 14px;}
         .ui-widget-header {
             background: #4040ff;
             border: 1px solid #b9cd6d;
@@ -27,7 +30,7 @@
 
 <body style="font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;">
     <h1>Komodo System Control Interface v1.0</h1>
-    <div id="consoleTabs">
+    <div id="sciTabs">
         <ul>
             <li><a href="#IPL">IPL</a></li>
             <li><a href="#Console">OS Console</a></li>
@@ -70,7 +73,7 @@
                     <li class="consoleRow"></li>
                 </ul>
             </div>
-            <div id="statusRow"></div>
+            <div id="consoleStatusRow"></div>
             <div>
                 <label for="consoleInputRow"></label>
                 <input type="text" id="consoleInputRow" autofocus size="80" maxlength="80">
