@@ -1,9 +1,5 @@
 -- TODO InProgress
 RESTSystemConsole and related
-Need to grab console identifier (session id?) and pass it all the way down the stack for inputs,
-    so the OS (or whomever) can direct resulting output to that single session/console
-Which means we need to allow for directed console output, beginning with SYSC and moving back up the stack.
-So... what should we use for an identifier? Currently it's... something abstractish. Should it be CN001 or something?
 Let's go ahead and do the pre-built certificate thing.  What could go wrong?
 
 Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
@@ -39,9 +35,6 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 -- TODO BUGS
-* RESTSystemConsole
-cached read only messages do not preserve rightJustified attribute - currently, that's only T/D messages which we don't
-  really need to cache anyway, so should we just not cache rightJustified messages?
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
