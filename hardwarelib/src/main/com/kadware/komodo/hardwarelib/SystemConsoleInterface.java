@@ -10,8 +10,9 @@ import java.io.BufferedWriter;
 
 /**
  * Specifies the interfaces which must be implemented by any concrete system console class.
+ * Referred to fondly as the SCIF.
  */
-public interface SystemConsole {
+public interface SystemConsoleInterface {
 
     class ConsoleInputMessage {
         public final int _consoleIdentifier;

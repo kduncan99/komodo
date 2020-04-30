@@ -8,6 +8,8 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,10 +24,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import org.apache.logging.log4j.message.EntryMessage;
 import sun.security.tools.keytool.CertAndKeyGen;
 import sun.security.x509.*;
 
-public class SecureServer {
+@SuppressWarnings("DuplicatedCode")
+public class SecureWebServer {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -38,6 +42,10 @@ public class SecureServer {
         public void configure(
             HttpsParameters params
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "setup");
+
             try {
                 SSLContext sslContext = SSLContext.getDefault();
                 SSLEngine sslEngine = sslContext.createSSLEngine();
@@ -47,13 +55,15 @@ public class SecureServer {
 
                 SSLParameters defaultSSLParameters = sslContext.getDefaultSSLParameters();
                 params.setSSLParameters(defaultSSLParameters);
+                LOGGER.traceExit(em);
             } catch (Exception e) {
                 LOGGER.catching(e);
+                LOGGER.traceExit(em);
             }
         }
     }
 
-    private static class CustomKeyManager extends X509ExtendedKeyManager {
+    private class CustomKeyManager extends X509ExtendedKeyManager {
 
         private final String _keyPassword;
         private final KeyStore _keyStore;
@@ -104,7 +114,7 @@ public class SecureServer {
             final Principal[] issuers,
             final SSLEngine engine
         ) {
-            return DEFAULT_ALIAS;
+            return _alias;
         }
 
         /**
@@ -116,7 +126,7 @@ public class SecureServer {
             final Principal[] issuers,
             final Socket socket
         ) {
-            return DEFAULT_ALIAS;
+            return _alias;
         }
 
         /**
@@ -128,19 +138,25 @@ public class SecureServer {
         public X509Certificate[] getCertificateChain(
             final String alias
         ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "setup");
+
+            X509Certificate[] result = new X509Certificate[0];
             synchronized (this) {
                 try {
                     Certificate[] certs = _keyStore.getCertificateChain(alias);
-                    X509Certificate[] result = new X509Certificate[certs.length];
+                    result = new X509Certificate[certs.length];
                     for (int cx = 0; cx < certs.length; ++cx) {
                         result[cx] = (X509Certificate) certs[cx];
                     }
-                    return result;
+                    LOGGER.traceExit(em, result);
                 } catch (KeyStoreException e) {
                     LOGGER.catching(e);
                 }
 
-                return new X509Certificate[0];
+                LOGGER.traceExit(em, result);
+                return result;
             }
         }
 
@@ -211,7 +227,7 @@ public class SecureServer {
     //  Data items
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private static final Logger LOGGER = LogManager.getLogger(SecureServer.class);
+    private static final Logger LOGGER = LogManager.getLogger(SecureWebServer.class.getSimpleName());
 
     private static final int CONNECTION_BACKLOG             = 32;
     private static final String KEY_ENTRY_PASSWORD          = "horsehammerballmachine";
@@ -234,6 +250,7 @@ public class SecureServer {
 
     private static final int THREAD_POOL_SIZE               = 32;
 
+    private String _alias;
     private final String _commonName;
     private final int _portNumber;
     private HttpsServer _server;
@@ -248,7 +265,7 @@ public class SecureServer {
      * @param commonName properly formatted distinguished name string
      * @param portNumber port number upon which we listen
      */
-    public SecureServer(
+    public SecureWebServer(
         final String commonName,
         final int portNumber
     ) {
@@ -267,6 +284,59 @@ public class SecureServer {
         _server.createContext(path, handler);
     }
 
+    /**
+     * Sets up the SecureWebServer using a pre-built certificate in a pre-built keystore.
+     * Assumption is a JKS keystore.
+     */
+    public void setup(
+        final String keyStoreFileName,
+        final String alias,
+        final String keyStorePassword,
+        final String keyEntryPassword
+    ) throws CertificateException,
+             IOException,
+             KeyManagementException,
+             KeyStoreException,
+             NoSuchAlgorithmException {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(keyStoreFileName='{}' alias='{}')",
+                                            this.getClass().getSimpleName(),
+                                            "setup",
+                                            keyStoreFileName,
+                                            alias);
+
+        try {
+            KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE);
+            File f = new File(keyStoreFileName);
+            FileInputStream fis = new FileInputStream(f);
+            keyStore.load(fis, keyStorePassword.toCharArray());
+            fis.close();
+
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TRUST_MANAGER_TYPE);
+            trustManagerFactory.init(keyStore);
+
+            KeyManager[] newKeyManagers = new KeyManager[1];
+            newKeyManagers[0] = new CustomKeyManager(keyStore, keyEntryPassword);
+
+            SSLContext sslContext = SSLContext.getInstance(SSL_TYPE);
+            sslContext.init(newKeyManagers, trustManagerFactory.getTrustManagers(), null);
+            _server = HttpsServer.create();
+            _server.setHttpsConfigurator(new Configurator(sslContext));
+
+            InetAddress inetAddress = InetAddress.getByName("::");
+            InetSocketAddress isAddr = new InetSocketAddress(inetAddress, _portNumber);
+            _server.bind(isAddr, CONNECTION_BACKLOG);
+            LOGGER.traceExit(em);
+        } catch (Exception ex) {
+            LOGGER.catching(ex);
+            LOGGER.traceExit(em);
+            throw ex;
+        }
+    }
+
+    /**
+     * Sets up the SecureWebServer using a programmatically-generated self-signed certificate
+     * and a temporary in-memory keystore.
+     */
     public void setup(
     ) throws CertificateException,
              InvalidKeyException,
@@ -276,25 +346,38 @@ public class SecureServer {
              NoSuchAlgorithmException,
              NoSuchProviderException,
              SignatureException {
-        KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE);
-        keyStore.load(null, KEY_STORE_PASSWORD.toCharArray());
-        createSelfSignedCertificate(keyStore);
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "setup");
 
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TRUST_MANAGER_TYPE);
-        trustManagerFactory.init(keyStore);
+        try {
+            _alias = DEFAULT_ALIAS;
 
-        KeyManager[] newKeyManagers = new KeyManager[1];
-        newKeyManagers[0] = new CustomKeyManager(keyStore, KEY_ENTRY_PASSWORD);
+            KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE);
+            keyStore.load(null, KEY_STORE_PASSWORD.toCharArray());
+            createSelfSignedCertificate(keyStore);
 
-        SSLContext sslContext = SSLContext.getInstance(SSL_TYPE);
-        sslContext.init(newKeyManagers, trustManagerFactory.getTrustManagers(), null);
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TRUST_MANAGER_TYPE);
+            trustManagerFactory.init(keyStore);
 
-        _server = HttpsServer.create();
-        _server.setHttpsConfigurator(new Configurator(sslContext));
+            KeyManager[] newKeyManagers = new KeyManager[1];
+            newKeyManagers[0] = new CustomKeyManager(keyStore, KEY_ENTRY_PASSWORD);
 
-        InetAddress inetAddress = InetAddress.getByName("::");
-        InetSocketAddress isAddr = new InetSocketAddress(inetAddress, _portNumber);
-        _server.bind(isAddr, CONNECTION_BACKLOG);
+            SSLContext sslContext = SSLContext.getInstance(SSL_TYPE);
+            sslContext.init(newKeyManagers, trustManagerFactory.getTrustManagers(), null);
+
+            _server = HttpsServer.create();
+            _server.setHttpsConfigurator(new Configurator(sslContext));
+
+            InetAddress inetAddress = InetAddress.getByName("::");
+            InetSocketAddress isAddr = new InetSocketAddress(inetAddress, _portNumber);
+            _server.bind(isAddr, CONNECTION_BACKLOG);
+            LOGGER.traceExit(em);
+        } catch (Exception ex) {
+            LOGGER.catching(ex);
+            LOGGER.traceExit(em);
+            throw ex;
+        }
     }
 
     public String getCommonName() {
@@ -334,50 +417,61 @@ public class SecureServer {
              NoSuchAlgorithmException,
              NoSuchProviderException,
              SignatureException {
-        if (keyStore.containsAlias(DEFAULT_ALIAS)) {
-            keyStore.deleteEntry(DEFAULT_ALIAS);
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "setup");
+
+        try {
+            if (keyStore.containsAlias(DEFAULT_ALIAS)) {
+                keyStore.deleteEntry(DEFAULT_ALIAS);
+            }
+
+            //  Generate key pair
+            CertAndKeyGen keyPair = new CertAndKeyGen(KEY_TYPE, ALGORITHM);
+            keyPair.generate(KEY_SIZE);
+
+            //  Generate certificate with appropriate extensions
+            String distNameStr = createDistinguisedNameString(_commonName,
+                                                              DEFAULT_CERT_X500NAME_OU,
+                                                              DEFAULT_CERT_X500NAME_DC,
+                                                              DEFAULT_CERT_X500NAME_L,
+                                                              DEFAULT_CERT_X500NAME_ST,
+                                                              DEFAULT_CERT_X500NAME_C);
+            X500Name distinguishedName = new X500Name(distNameStr);
+
+            //  Set up extensions
+            CertificateExtensions extensions = new CertificateExtensions();
+
+            //  Always include KeyUsage.
+            //  Note that the KeyUsageExtension constructor does not provide a way to indicate criticality (which should be true),
+            //  so once we've created the object, we have to re-create with the generic constructor to set that flag true.
+            boolean[] flags = new boolean[9];
+            flags[5] = true;    //  keyCertSign flag
+            flags[6] = true;    //  Crl_Sign flag
+            KeyUsageExtension kuExtension = new KeyUsageExtension(flags);
+            Extension generalKUExtension = Extension.newExtension(kuExtension.getExtensionId(), true, kuExtension.getValue());
+            extensions.set(KeyUsageExtension.NAME, generalKUExtension);
+
+            //  Always include key identifier
+            KeyIdentifier keyIdentifier = new KeyIdentifier(keyPair.getPublicKey());
+            SubjectKeyIdentifierExtension skiExtension = new SubjectKeyIdentifierExtension(keyIdentifier.getIdentifier());
+            extensions.set(SubjectKeyIdentifierExtension.NAME, skiExtension);
+
+            //  Create the X509Certificate object
+            X509Certificate[] certificateChain = new X509Certificate[1];
+            certificateChain[0] = keyPair.getSelfCertificate(distinguishedName,
+                                                             new GregorianCalendar().getTime(),
+                                                             VALIDITY,
+                                                             extensions);
+
+            //  Store private key and the certificate chain (consisting of the single certificate) in the keyStore
+            keyStore.setKeyEntry(DEFAULT_ALIAS, keyPair.getPrivateKey(), KEY_ENTRY_PASSWORD.toCharArray(), certificateChain);
+            LOGGER.traceExit(em);
+        } catch (Exception ex) {
+            LOGGER.catching(ex);
+            LOGGER.traceExit(em);
+            throw ex;
         }
-
-        //  Generate key pair
-        CertAndKeyGen keyPair = new CertAndKeyGen(KEY_TYPE, ALGORITHM);
-        keyPair.generate(KEY_SIZE);
-
-        //  Generate certificate with appropriate extensions
-        String distNameStr = createDistinguisedNameString(_commonName,
-                                                          DEFAULT_CERT_X500NAME_OU,
-                                                          DEFAULT_CERT_X500NAME_DC,
-                                                          DEFAULT_CERT_X500NAME_L,
-                                                          DEFAULT_CERT_X500NAME_ST,
-                                                          DEFAULT_CERT_X500NAME_C);
-        X500Name distinguishedName = new X500Name(distNameStr);
-
-        //  Set up extensions
-        CertificateExtensions extensions = new CertificateExtensions();
-
-        //  Always include KeyUsage.
-        //  Note that the KeyUsageExtension constructor does not provide a way to indicate criticality (which should be true),
-        //  so once we've created the object, we have to re-create with the generic constructor to set that flag true.
-        boolean[] flags = new boolean[9];
-        flags[5] = true;    //  keyCertSign flag
-        flags[6] = true;    //  Crl_Sign flag
-        KeyUsageExtension kuExtension = new KeyUsageExtension(flags);
-        Extension generalKUExtension = Extension.newExtension(kuExtension.getExtensionId(), true, kuExtension.getValue());
-        extensions.set(KeyUsageExtension.NAME, generalKUExtension);
-
-        //  Always include key identifier
-        KeyIdentifier keyIdentifier = new KeyIdentifier(keyPair.getPublicKey());
-        SubjectKeyIdentifierExtension skiExtension = new SubjectKeyIdentifierExtension(keyIdentifier.getIdentifier());
-        extensions.set(SubjectKeyIdentifierExtension.NAME, skiExtension);
-
-        //  Create the X509Certificate object
-        X509Certificate[] certificateChain = new X509Certificate[1];
-        certificateChain[0] = keyPair.getSelfCertificate(distinguishedName,
-                                                         new GregorianCalendar().getTime(),
-                                                         VALIDITY,
-                                                         extensions);
-
-        //  Store private key and the certificate chain (consisting of the single certificate) in the keyStore
-        keyStore.setKeyEntry(DEFAULT_ALIAS, keyPair.getPrivateKey(), KEY_ENTRY_PASSWORD.toCharArray(), certificateChain);
     }
 
     /**

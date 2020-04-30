@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Base class which models an Instruction Procesor node
@@ -5556,7 +5557,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);  //  Get U, and throw it
             int regx = (int) _currentInstruction.getA();
             long micros = (getExecOrUserARegister(regx).getH2() << 36) | getExecOrUserARegister(regx + 1).getW();
-            SystemProcessor.getInstance().dayclockSetComparatorMicros(micros);
+            _systemProcessor.dayclockSetComparatorMicros(micros);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LMC; }
@@ -5668,7 +5669,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);
             int regx = (int) _currentInstruction.getA();
             long micros = (getExecOrUserARegister(regx).getH2() << 36) | getExecOrUserARegister(regx + 1).getW();
-            SystemProcessor.getInstance().dayclockSetMicros(micros);
+            _systemProcessor.dayclockSetMicros(micros);
         }
 
         @Override public Instruction getInstruction() { return Instruction.LRD; }
@@ -6222,7 +6223,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
             getJumpOperand(false);
 
-            long micros = SystemProcessor.getInstance().dayclockGetMicros();
+            long micros = _systemProcessor.dayclockGetMicros();
             int regx = (int) _currentInstruction.getA();
             setExecOrUserARegister(regx, micros >> 36);
             setExecOrUserARegister(regx + 1, micros);
@@ -6249,7 +6250,7 @@ public class InstructionProcessor extends Processor implements Worker {
             getJumpOperand(false);
 
             long result;
-            long currentMicros = SystemProcessor.getInstance().dayclockGetMicros();
+            long currentMicros = _systemProcessor.dayclockGetMicros();
             synchronized (RMDFunctionHandler.class) {
                 if (currentMicros != _RMDLastReportedMicros) {
                     _RMDLastReportedMicros = currentMicros;
@@ -7097,7 +7098,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
 
                     if (status == SS_SUCCESSFUL) {
-                        SystemProcessor.getInstance().consoleSendStatusMessage(messages);
+                        _systemProcessor.consoleSendStatusMessage(messages);
                     }
 
                     operands[0] = Word36.setS2(operands[0], status);
@@ -7132,7 +7133,7 @@ public class InstructionProcessor extends Processor implements Worker {
                             "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
                         Boolean rightJust = (flags & 0x02) != 0;
                         Boolean cached = (flags & 0x01) == 0;
-                        SystemProcessor.getInstance().consoleSendReadOnlyMessage(consoleId, msg, rightJust, cached);
+                        _systemProcessor.consoleSendReadOnlyMessage(consoleId, msg, rightJust, cached);
                     }
 
                     operands[0] = Word36.setS2(operands[0], vaInfo._status);
@@ -7165,7 +7166,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         String msg =
                             "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        SystemProcessor.getInstance().consoleSendReadReplyMessage(consoleId, messageId, msg, maxReplyChars);
+                        _systemProcessor.consoleSendReadReplyMessage(consoleId, messageId, msg, maxReplyChars);
                         operands[0] = Word36.setS2(operands[0], vaInfo._status);
                     }
 
@@ -7194,8 +7195,8 @@ public class InstructionProcessor extends Processor implements Worker {
                                                                      words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         int waitMillis = (int) Word36.getH2(operands[1]);
-                        SystemConsole.ConsoleInputMessage consInput
-                            = SystemProcessor.getInstance().consolePollInputMessage(waitMillis);
+                        SystemConsoleInterface.ConsoleInputMessage consInput
+                            = _systemProcessor.consolePollInputMessage(waitMillis);
                         if (consInput != null) {
                             operands[0] = Word36.setQ4(operands[0], consInput._text.length());
                             operands[2] = consInput._consoleIdentifier;
@@ -7222,7 +7223,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  Packet size is 1 word
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
-                    SystemProcessor.getInstance().consoleReset();
+                    _systemProcessor.consoleReset();
                     operand = Word36.setS2(operand, SS_SUCCESSFUL);
                     storeOperand(false,false,false,false, operand);
                     break;
@@ -7255,7 +7256,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W           Current jump key settings are returned here
                     long[] operands = new long[2];
                     DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
-                    operands[1] = SystemProcessor.getInstance().getJumpKeys().getW();
+                    operands[1] = _systemProcessor.getJumpKeys().getW();
                     //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
@@ -7267,7 +7268,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     //  U+1,W           Desired jump key settings
                     long[] operands = new long[2];
                     getConsecutiveOperands(false, operands, true);
-                    SystemProcessor.getInstance().setJumpKeys(new Word36(operands[1]));
+                    _systemProcessor.setJumpKeys(new Word36(operands[1]));
                     break;
                 }
 
@@ -8536,7 +8537,7 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     private static final int JUMP_HISTORY_TABLE_SIZE        = 128;
 
-    private static final Logger LOGGER = LogManager.getLogger(InstructionProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(InstructionProcessor.class.getSimpleName());
 
     /**
      * Order of base register selection for Basic Mode address resolution
@@ -8587,6 +8588,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private boolean                         _preventProgramCounterIncrement = false;
     private final ProgramAddressRegister    _programAddressRegister = new ProgramAddressRegister();
     private long                            _quantumTimer = 0;
+    private SystemProcessor                 _systemProcessor = null;
 
     private final Set<Processor> _pendingUPISends = new HashSet<>();
 
@@ -10452,6 +10454,7 @@ public class InstructionProcessor extends Processor implements Worker {
     @Override
     public void run(
     ) {
+        _isRunning = true;
         LOGGER.info(_name + " worker thread starting");
         synchronized(_storageLocks) {
             _storageLocks.put(this, new HashSet<AbsoluteAddress>());
@@ -10495,6 +10498,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         LOGGER.info(_name + " worker thread terminating");
         _isReady = false;
+        _isRunning = false;
     }
 
     /**
@@ -10692,22 +10696,21 @@ public class InstructionProcessor extends Processor implements Worker {
      */
     @Override
     public void clear() {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "clear");
+
         if (!isStopped()) {
             stop(StopReason.Cleared, 0);
             while (!isStopped()) {
-                synchronized (_workerThread) {
-                    try {
-                        _workerThread.wait(10);
-                    } catch (InterruptedException ex) {
-                        LOGGER.catching(ex);
-                    }
-                }
+                Thread.onSpinWait();
             }
         }
 
         //TODO whatever it takes to clear things up
         _pendingUPISends.clear();
         super.clear();
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -10733,19 +10736,30 @@ public class InstructionProcessor extends Processor implements Worker {
      * raise a class 29 interrupt.  It is up to the invoking entity to ensure the ICS base and index registers are
      * properly initialized, along with the Level 0 BDT bank register.
      */
-    public boolean start(
-    ) {
-        synchronized(this) {
-            if (!isStopped()) {
-                return false;
-            }
+    public boolean start() {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "start");
 
-            _preservedProgramAddressRegister.set(_programAddressRegister.get());
-            raiseInterrupt(new InitialProgramLoadInterrupt());
-            _currentRunMode = RunMode.Normal;
-            this.notify();
-            return true;
+        boolean result = false;
+        synchronized(this) {
+            if (isStopped()) {
+                try {
+                    InventoryManager im = InventoryManager.getInstance();
+                    _systemProcessor = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+                    _preservedProgramAddressRegister.set(_programAddressRegister.get());
+                    raiseInterrupt(new InitialProgramLoadInterrupt());
+                    _currentRunMode = RunMode.Normal;
+                    this.notify();
+                    result = true;
+                } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+                    LOGGER.catching(ex);
+                }
+            }
         }
+
+        LOGGER.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -10759,6 +10773,10 @@ public class InstructionProcessor extends Processor implements Worker {
         final StopReason stopReason,
         final long detail
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "stop");
+
         synchronized(this) {
             if (!isStopped()) {
                 _latestStopReason = stopReason;
@@ -10775,5 +10793,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 this.notify();
             }
         }
+
+        LOGGER.traceExit(em);
     }
 }

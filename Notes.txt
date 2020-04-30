@@ -1,12 +1,15 @@
 -- TODO InProgress
-RESTSystemConsole and related
-Let's go ahead and do the pre-built certificate thing.  What could go wrong?
+RESTSystemConsoleInterface and related
+  Let's go ahead and do the pre-built certificate thing.  What could go wrong? (inprogress - it could *not* work...)
 
-Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
+  Something weird with 5 second task - takes 10 or 15 seconds to do it. why?
+  Go back to one single long poll and distribute the results among the various .js things
+    Maybe this will fix the polling issue above?
 
-Should we have a singleton configurator class?  What module should it live in?
+  Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
+    If so, then we don't need the long poll (above) anymore.
 
-*systemConsole
+*systemConsoleInterface.js
 Needs session sign-on
 Needs session close button
 OS Console page
@@ -17,13 +20,15 @@ IPL page
 Hardware page
 System page
 
-The following, in Node.java, should be subject to management by the SystemProcessor, directed by the software configuration
+The following, in Node.java, should be subject to management by SCIF / SoftwareConfiguration
 Also, we don't use the channel entities (yet?)
     static final boolean LOG_CHANNEL_IOS = true;
     static final boolean LOG_CHANNEL_IO_BUFFERS = true;
     static final boolean LOG_DEVICE_IOS = true;
     static final boolean LOG_DEVICE_IO_BUFFERS = true;
     static final boolean LOG_IO_ERRORS = true;
+
+Give SCIF the ability to control logging levels
 
 Move dayclock architecture to SystemProcessor
 

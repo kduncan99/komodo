@@ -24,7 +24,10 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SecureClient {
+/**
+ * Currently we don't seem to need this, but we'll keep it here in case we ever *do* need it.
+ */
+public class SecureWebClient {
 
     /**
      * Provides useful information resulting from the send() request
@@ -86,7 +89,7 @@ public class SecureClient {
         }
     }
 
-    public static final Logger LOGGER = LogManager.getLogger(SecureClient.class);
+    public static final Logger LOGGER = LogManager.getLogger(SecureWebClient.class);
 
     private final List<RequestProperty> _properties = new LinkedList<>();   //  cookies, session ids, etc
     public final int _portNumber;                                           //  TCP port number for connection
@@ -162,7 +165,7 @@ public class SecureClient {
      * @param urlString IP address or DNS name for the connection
      * @param portNumber port number for the connection
      */
-    public SecureClient(
+    public SecureWebClient(
         final String urlString,
         final int portNumber
     ) {

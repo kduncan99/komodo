@@ -136,10 +136,8 @@ public abstract class Processor extends Node implements Worker {
     protected boolean _workerTerminate;         //  worker thread must monitor this, and shut down when it goes true
     protected final Thread _workerThread;       //  reference to worker thread.
 
-    /**
-     * Indicates whether this Processor has completed initialization and is ready for work
-     */
-    protected boolean _isReady;
+    protected boolean _isReady;                 //  Processor is ready for work (implies _isRunning)
+    protected boolean _isRunning;               //  Processor is running
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -193,7 +191,7 @@ public abstract class Processor extends Node implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Type:%s\n", _Type.toString()));
+            writer.write(String.format("  Type:%s Running:%s Ready:%s\n", _Type.toString(), _isRunning, _isReady));
 
             StringBuilder sb = new StringBuilder();
             sb.append("  Pending SENDs from: ");

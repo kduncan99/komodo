@@ -4,16 +4,17 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.Word36;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.message.EntryMessage;
 
 //TODO move this commentary somewhere else, where it makes sense
 //  Tape Boot Procedure:
@@ -73,16 +74,16 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     private static final long LOG_PERIODICITY_MSECS = 1000;             //  check the log every 1 second
 
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class.getSimpleName());
-    private static SystemProcessor _instance = null;
 
-    private KomodoLoggingAppender _appender;                   //  Log appender, so we can catch log entries
-    private SystemConsole _console;
-    private long _dayclockComparatorMicros;             //  value compared against emulator time to decide whether to cause interrupt
-    private long _dayclockOffsetMicros = 0;             //  value applied to host system time in micros, to obtain emulator time
-    private HardwareConfiguration _hardwareConfiguration = null;
+    private KomodoLoggingAppender _appender;            //  Log appender, so we can catch log entries
+    private SystemConsoleInterface _systemConsoleInterface;
+    Credentials _credentials;                           //  Current admin credentials for logging into the SCIF
+    private long _dayclockComparatorMicros;             //  compared against emulator time to decide whether to cause interrupt
+    private long _dayclockOffsetMicros = 0;             //  applied to host system time in micros, to obtain emulator time
+    private int _httpPort = 0;
+    private int _httpsPort = 0;
     private long _jumpKeys = 0;
     private long _mostRecentLogIdentifier = 0;
-    private SoftwareConfiguration _softwareConfiguration = null;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -90,20 +91,21 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * constructor
+     * constructor for SPs with an HTTPSystemControllerInterface (currently, that's all we have)
      * @param name node name of the SP
+     * @param httpPort port number for HTTP interface - 0 if we don't want HTTP
+     * @param httpsPort port number for HTTPS interface - 0 if we don't want HTTPS
      */
-    SystemProcessor (
-        final String name
+    SystemProcessor(
+        final String name,
+        final int httpPort,
+        final int httpsPort,
+        final Credentials credentials
     ) {
         super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
-        synchronized (SystemProcessor.class) {
-            if (_instance != null) {
-                LOGGER.error("Attempted to instantiate more than one SystemProcessor");
-                assert (false);
-            }
-            _instance = this;
-        }
+        _httpPort = httpPort;
+        _httpsPort = httpsPort;
+        _credentials = credentials;
 
         _appender = KomodoLoggingAppender.create();
         LoggerContext logContext = (LoggerContext) LogManager.getContext(false);
@@ -116,16 +118,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      */
     public SystemProcessor() {
         super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
-        _instance = this;
     }
-
-    /**
-     * Retrieve singleton instance
-     */
-    public static SystemProcessor getInstance() {
-        return _instance;
-    }
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Private methods
@@ -307,29 +300,26 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
     @Override
     public void run() {
+        _isRunning = true;
         LOGGER.info(_name + " worker thread starting");
 
-        try {
-            _hardwareConfiguration = HardwareConfiguration.read();
-            _softwareConfiguration = SoftwareConfiguration.read();
-        } catch (IOException ex) {
-            LOGGER.catching(ex);
-            LOGGER.error("Cannot start SP - configuration file is unreadable");
-        }
+        _systemConsoleInterface = new HTTPSystemControllerInterface(this,
+                                                                    _name + "-SCIF",
+                                                                    _httpPort,
+                                                                    _httpsPort);
+        _systemConsoleInterface.start();
 
-        _console = new HTTPSystemControllerInterface(_name + " Console", _softwareConfiguration._httpPort);
-        _console.start();
-        LOGGER.info(_console.getName() + " Ready");
         _isReady = true;
-
+        LOGGER.info(_systemConsoleInterface.getName() + " Ready");
         long nextLogCheck = System.currentTimeMillis() + LOG_PERIODICITY_MSECS;
         while (!_workerTerminate) {
             long now = System.currentTimeMillis();
             if (now > nextLogCheck) {
                 if (_appender.getMostRecentIdentifier() > _mostRecentLogIdentifier) {
-                    KomodoLoggingAppender.LogEntry[] appenderEntries = _appender.retrieveFrom(_mostRecentLogIdentifier + 1);
+                    KomodoLoggingAppender.LogEntry[] appenderEntries =
+                        _appender.retrieveFrom(_mostRecentLogIdentifier + 1);
                     if (appenderEntries.length > 0) {
-                        _console.postSystemLogEntries(appenderEntries);
+                        _systemConsoleInterface.postSystemLogEntries(appenderEntries);
                         _mostRecentLogIdentifier = _appender.getMostRecentIdentifier();
                     }
                 }
@@ -369,22 +359,11 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             }
         }
 
-        _console.stop();
+        _systemConsoleInterface.stop();
+        _systemConsoleInterface = null;
         LOGGER.info(_name + " worker thread terminating");
         _isReady = false;
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Some getters, for other things within this package
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    HardwareConfiguration getHardwareConfiguration() {
-        return _hardwareConfiguration;
-    }
-
-    public SoftwareConfiguration getSoftwareConfiguration() {
-        return _softwareConfiguration;
+        _isRunning = false;
     }
 
 
@@ -401,7 +380,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int messageId,
         final String replacementText
     ) {
-        _console.cancelReadReplyMessage(consoleId, messageId, replacementText);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d messageId=%d text='%s')",
+                                            this.getClass().getSimpleName(),
+                                            "consoleCancelReadReplyMessage",
+                                            consoleId,
+                                            messageId,
+                                            replacementText);
+        _systemConsoleInterface.cancelReadReplyMessage(consoleId, messageId, replacementText);
     }
 
     /**
@@ -411,17 +396,27 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * while responses to read-reply messages are returned in the format {n}{s} where {n} is the ASCII
      * representation of the message id followed by the text (if any).
      */
-    SystemConsole.ConsoleInputMessage consolePollInputMessage(
+    SystemConsoleInterface.ConsoleInputMessage consolePollInputMessage(
         final long waitMilliseconds
     ) {
-        return _console.pollInputMessage(waitMilliseconds);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(waitMilliseconds=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "consolePollInputMessage",
+                                            waitMilliseconds);
+        SystemConsoleInterface.ConsoleInputMessage result = _systemConsoleInterface.pollInputMessage(waitMilliseconds);
+        LOGGER.traceExit(em, result);
+        return result;
     }
 
     /**
      * Resets the conceptual system console
      */
     void consoleReset() {
-        _console.reset();
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "consoleReset");
+        _systemConsoleInterface.reset();
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -438,7 +433,15 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final Boolean rightJustified,
         final Boolean cached
     ) {
-        _console.postReadOnlyMessage(consoleId, message, rightJustified, cached);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d message='%s' rightJust=%s cached=%s)",
+                                            this.getClass().getSimpleName(),
+                                            "consoleSendReadOnlyMessage",
+                                            consoleId,
+                                            message,
+                                            rightJustified,
+                                            cached);
+        _systemConsoleInterface.postReadOnlyMessage(consoleId, message, rightJustified, cached);
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -448,7 +451,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int consoleId,
         final String message
     ) {
-        _console.postReadOnlyMessage(consoleId, message, false, true);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d message='%s')",
+                                            this.getClass().getSimpleName(),
+                                            "consoleSendReadOnlyMessage",
+                                            consoleId,
+                                            message);
+        _systemConsoleInterface.postReadOnlyMessage(consoleId, message, false, true);
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -463,7 +472,15 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final String message,
         final int maxReplyLength
     ) {
-        _console.postReadReplyMessage(consoleId, messageId, message, maxReplyLength);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d messageId=%s message='%s' maxReplyLength=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "consoleSendReadReplyMessage",
+                                            consoleId,
+                                            messageId,
+                                            message,
+                                            maxReplyLength);
+        _systemConsoleInterface.postReadReplyMessage(consoleId, messageId, message, maxReplyLength);
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -476,7 +493,12 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void consoleSendStatusMessage(
         final String[] messages
     ) {
-        _console.postStatusMessages(messages);
+        EntryMessage em = LOGGER.traceEntry("{}.{}(#messages=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "consoleSendStatusMessage",
+                                            messages.length);
+        _systemConsoleInterface.postStatusMessages(messages);
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -485,11 +507,18 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * to differ from the host system.
      */
     long dayclockGetMicros() {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "dayclockGetMicros");
+
         Instant i = Instant.now();
         long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
         long microOfSecond = i.getLong(ChronoField.MICRO_OF_SECOND);
         long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
-        return systemMicros + _dayclockOffsetMicros;
+        long result = systemMicros + _dayclockOffsetMicros;
+
+        LOGGER.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -501,7 +530,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void dayclockSetComparatorMicros(
         final long value
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "dayclockSetComparatorMicros");
+
         _dayclockComparatorMicros = value;
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -511,10 +546,76 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void dayclockSetMicros(
         final long value
     ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "dayclockSetMicros");
+
         Instant i = Instant.now();
         long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
         long microOfSecond = i.getLong(ChronoField.MICRO_OF_SECOND);
         long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
         _dayclockOffsetMicros = value - systemMicros;
+
+        LOGGER.traceExit(em);
+    }
+
+    /**
+     * Updates the credentials required for using the SCIF
+     * @param credentials new credentials
+     */
+    void setCredentials(
+        final Credentials credentials
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                            this.getClass().getSimpleName(),
+                                            "setCredentials");
+        _credentials = credentials;
+        LOGGER.traceExit(em);
+    }
+
+    /**
+     * Stops the current HTTP listener (if any), sets the new port number, and attempts to restart it.
+     * Only applies to SPs with an HTTPSystemControlInterface.
+     * @param httpPort new http port, 0 to disable
+     */
+    boolean setHttpPort(
+        final int httpPort
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "setHttpPort",
+                                            httpPort);
+
+        boolean result = false;
+        _httpPort = httpPort;
+        if (_systemConsoleInterface instanceof HTTPSystemControllerInterface) {
+            result = ((HTTPSystemControllerInterface) _systemConsoleInterface).setNewHttpPort(_httpPort);
+        }
+
+        LOGGER.traceExit(em, result);
+        return result;
+    }
+
+    /**
+     * Stops the current HTTP listener (if any), sets the new port number, and attempts to restart it
+     * Only applies to SPs with an HTTPSystemControlInterface.
+     * @param httpsPort new https port, 0 to disable
+     */
+    boolean setHttpsPort(
+        final int httpsPort
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "setHttpsPort",
+                                            httpsPort);
+
+        boolean result = false;
+        _httpsPort = httpsPort;
+        if (_systemConsoleInterface instanceof HTTPSystemControllerInterface) {
+            result = ((HTTPSystemControllerInterface) _systemConsoleInterface).setNewHttpsPort(_httpsPort);
+        }
+
+        LOGGER.traceExit(em, result);
+        return result;
     }
 }

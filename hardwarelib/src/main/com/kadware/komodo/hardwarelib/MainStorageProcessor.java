@@ -32,7 +32,7 @@ public class MainStorageProcessor extends Processor {
 
     private final ArraySlice _fixedStorage;
     private final Map<Integer, ArraySlice> _dynamicStorage = new HashMap<>();
-    private static final Logger LOGGER = LogManager.getLogger(MainStorageProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(MainStorageProcessor.class.getSimpleName());
 
     /**
      * constructor
@@ -193,6 +193,7 @@ public class MainStorageProcessor extends Processor {
      */
     @Override
     public void run() {
+        _isRunning = true;
         LOGGER.info(_name + " worker thread starting");
 
         _isReady = true;
@@ -220,5 +221,6 @@ public class MainStorageProcessor extends Processor {
 
         LOGGER.info(_name + " worker thread terminating");
         _isReady = false;
+        _isRunning = false;
     }
 }

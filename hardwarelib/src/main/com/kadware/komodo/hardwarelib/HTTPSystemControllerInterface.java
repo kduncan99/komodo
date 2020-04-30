@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.HttpMethod;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.PathNames;
-import com.kadware.komodo.baselib.SecureServer;
+import com.kadware.komodo.baselib.SecureWebServer;
+import com.kadware.komodo.baselib.WebServer;
+import com.kadware.komodo.baselib.Word36;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -22,12 +24,9 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -51,7 +50,7 @@ import org.apache.logging.log4j.message.EntryMessage;
  * thus allowing us to have different console sizes according to a configuration tag.  maybe.
  */
 @SuppressWarnings("Duplicates")
-public class HTTPSystemControllerInterface implements SystemConsole {
+public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Data
@@ -69,8 +68,8 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final long DEFAULT_POLL_WAIT_MSECS = 10000;              //  10 second (maximum) poll delay as a default
-    private static final String HTML_FILE_NAME = "sci.html";
-    private static final String FAVICON_FILE_NAME = "favicon.png";
+    private static final String HTML_FILE_NAME = "sci.html";                //  relative to web directory
+    private static final String FAVICON_FILE_NAME = "favicon.png";          //  relative to web directory
     private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
     private static final int MAX_CONSOLE_SIZE_COLUMNS = 132;
@@ -79,15 +78,23 @@ public class HTTPSystemControllerInterface implements SystemConsole {
     private static final int MIN_CONSOLE_SIZE_ROWS = 20;
     private static final long PRUNER_PERIODICITY_SECONDS = 60;
 
+    private static final String KEYSTORE_FILENAME = "keystore.jks";         //  relative to web directory
+    private static final String KEYSTORE_PASSWORD = "komodo";
+    private static final String KEYENTRY_ALIAS = "komodo";
+    private static final String KEYENTRY_PASSWORD = "komodoe";
+
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
                                                              HTTPSystemControllerInterface.class.getSimpleName() };
 
     private static final Logger LOGGER = LogManager.getLogger(HTTPSystemControllerInterface.class.getSimpleName());
 
-    private final Listener _listener;
+    private final String _keystoreDirectory;
+    private HttpListener _httpListener;
+    private HttpsListener _httpsListener;
     private final String _name;
     private final Pruner _pruner = new Pruner();
     private final Map<String, SessionInfo> _sessions = new HashMap<>();
+    private final SystemProcessor _parentSystemProcessor;
     private final String _webDirectory;
 
     //  Most recent read-only messages and log entries and all read-reply messages,
@@ -98,7 +105,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
     //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
     //  Key is the session identifier of the client which sent it to us; value is the actual message.
-    private final Map<String, SystemConsole.ConsoleInputMessage> _pendingInputMessages = new LinkedHashMap<>();
+    private final Map<String, SystemConsoleInterface.ConsoleInputMessage> _pendingInputMessages = new LinkedHashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -107,14 +114,22 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
     /**
      * constructor
-     * @param name node name of the SP
+     * @param parentSystemProcessor reference to the SystemProcessor which contains us
+     * @param name Name to be used for the console interface
+     * @param httpPort port number for HTTP interface - 0 to disable
+     * @param httpsPort port number for HTTPS interface - 0 to disable
      */
     public HTTPSystemControllerInterface(
-            final String name,
-            final int port
+        final SystemProcessor parentSystemProcessor,
+        final String name,
+        final int httpPort,
+        final int httpsPort
     ) {
+        _parentSystemProcessor = parentSystemProcessor;
         _name = name;
-        _listener = new Listener(port);
+        _httpListener = httpPort == 0 ? null : new HttpListener(httpPort);
+        _httpsListener = httpsPort == 0 ? null : new HttpsListener(httpsPort);
+        _keystoreDirectory = PathNames.WEB_ROOT_DIRECTORY;
         _webDirectory = PathNames.WEB_ROOT_DIRECTORY + "systemControlInterface/";
     }
 
@@ -169,29 +184,28 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         }
     }
 
-    //TODO we'll use this again later
-//    /**
-//     * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
-//     */
-//    private static class JumpKeys {
-//        //  36-bit composite value, wrapped in a long.
-//        @JsonProperty("compositeValue") public Long _compositeValue;
-//
-//        //  Individual values, per bit.
-//        //  Key is the jump key identifier from 1 to 36
-//        //  Value is true if jk is set (or to be set), false if jk is clear (or to be clear).
-//        //  For PUT an unspecified jk means the value is left as-is.
-//        //  For GET values for all jump keys are returned.
-//        @JsonProperty("componentValues") public Map<Integer, Boolean> _componentValues;
-//
-//        JumpKeys(
-//            @JsonProperty("compositeValue")     final Long compositeValue,
-//            @JsonProperty("componentValues")    final Map<Integer, Boolean> componentValues
-//        ) {
-//            _compositeValue = compositeValue;
-//            _componentValues = new HashMap<>(componentValues);
-//        }
-//    }
+    /**
+     * Object describing or requesting a change in the current jump key settings for a SystemProcessor.
+     */
+    private static class JumpKeys {
+        //  36-bit composite value, wrapped in a long.
+        @JsonProperty("compositeValue") public Long _compositeValue;
+
+        //  Individual values, per bit.
+        //  Key is the jump key identifier from 1 to 36
+        //  Value is true if jk is set (or to be set), false if jk is clear (or to be clear).
+        //  For PUT an unspecified jk means the value is left as-is.
+        //  For GET values for all jump keys are returned.
+        @JsonProperty("componentValues") public Map<Integer, Boolean> _componentValues;
+
+        JumpKeys(
+            @JsonProperty("compositeValue")     final Long compositeValue,
+            @JsonProperty("componentValues")    final Map<Integer, Boolean> componentValues
+        ) {
+            _compositeValue = compositeValue;
+            _componentValues = new HashMap<>(componentValues);
+        }
+    }
 
     /**
      * Client issues a GET on the /poll/log subdirectory, and we respond with new log entries if and when any are posted.
@@ -943,10 +957,8 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                         if (unBasedSplit.length == 2) {
                             String givenUserName = unBasedSplit[0];
                             String givenClearTextPassword = unBasedSplit[1];
-                            SystemProcessor sp = SystemProcessor.getInstance();
-                            SoftwareConfiguration sc = sp.getSoftwareConfiguration();
-                            if (givenUserName.equalsIgnoreCase(sc._adminCredentials._userName)) {
-                                result = sc._adminCredentials.validatePassword(givenClearTextPassword);
+                            if (givenUserName.equalsIgnoreCase(_parentSystemProcessor._credentials._userName)) {
+                                result = _parentSystemProcessor._credentials.validatePassword(givenClearTextPassword);
                             }
                         }
                     }
@@ -1025,115 +1037,115 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         }
     }
 
-    //TODO clean this up later
-//    /**
-//     * Handles requests against the /jumpkeys path
-//     * GET retrieves the current settings as a WORD36 wrapped in a long.
-//     * PUT accepts the JK settings as a WORD36 wrapped in a long, and persists them to the singular system jump key panel.
-//     * Either way, JK36 is in the least-significant bit and JKn is 36-n bits to the left of the LSB.
-//     */
-//    private class APIJumpKeysHandler extends SCIHttpHandler {
-//
-//        private JumpKeys createJumpKeys(
-//            final long compositeValue
-//        ) {
-//            HashMap<Integer, Boolean> map = new HashMap<>();
-//            long bitMask = 0_400000_000000L;
-//            for (int jkid = 1; jkid <= 36; jkid++) {
-//                map.put(jkid, (compositeValue & bitMask) != 0);
-//                bitMask >>= 1;
-//            }
-//
-//            return new JumpKeys(compositeValue, map);
-//        }
-//
-//        @Override
-//        public void handle(
-//            final HttpExchange exchange
-//        ) {
-//            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-//                                                this.getClass().getSimpleName(),
-//                                                "handle");
-//
-//            final InputStream requestBody = exchange.getRequestBody();
-//            final Headers requestHeaders = exchange.getRequestHeaders();
-//            final String requestMethod = exchange.getRequestMethod();
-//            final String requestURI = exchange.getRequestURI().toString();
-//            LOGGER.trace("<--" + requestMethod + " " + requestURI);
-//
-//            try {
-//                SessionInfo sessionInfo = findClient(requestHeaders);
-//                if (sessionInfo == null) {
-//                    respondNoSession(exchange);
-//                    LOGGER.traceExit(em);
-//                    return;
-//                }
-//
-//                sessionInfo._lastActivity = System.currentTimeMillis();
-//
-//                if (requestMethod.equalsIgnoreCase(HttpMethod.GET._value)) {
-//                    //  For GET - return the settings as both a composite value and a map of individual jump key settings
-//                    SystemProcessor sp = SystemProcessor.getInstance();
-//                    JumpKeys jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
-//                    respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
-//                } else if (requestMethod.equalsIgnoreCase(HttpMethod.PUT._value)) {
-//                    //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
-//                    //  If it has no composite value, but it has component values, use them to individually set the jump keys.
-//                    //  If it has neither, reject the PUT.
-//                    SystemProcessor sp = SystemProcessor.getInstance();
-//                    JumpKeys content;
-//                    try {
-//                        content = new ObjectMapper().readValue(requestBody, JumpKeys.class);
-//                    } catch (IOException ex) {
-//                        respondBadRequest(exchange, ex.getMessage());
-//                        LOGGER.traceExit(em);
-//                        return;
-//                    }
-//
-//                    JumpKeys jumpKeysResponse = null;
-//                    if (content._compositeValue != null) {
-//                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
-//                            respondBadRequest(exchange, "Invalid composite value");
-//                            LOGGER.traceExit(em);
-//                            return;
-//                        }
-//
-//                        sp.setJumpKeys(new Word36(content._compositeValue));
-//                        jumpKeysResponse = createJumpKeys(content._compositeValue);
-//                    } else if (content._componentValues != null) {
-//                        for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
-//                            int jumpKeyId = entry.getKey();
-//                            if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
-//                                respondBadRequest(exchange, String.format("Invalid component value jump key id: %d", jumpKeyId));
-//                                LOGGER.traceExit(em);
-//                                return;
-//                            }
-//
-//                            boolean setting = entry.getValue();
-//                            sp.setJumpKey(jumpKeyId, setting);
-//
-//                            jumpKeysResponse = createJumpKeys(sp.getJumpKeys().getW());
-//                            respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
-//                            LOGGER.traceExit(em);
-//                            return;
-//                        }
-//                    } else {
-//                        respondBadRequest(exchange, "Requires either composite or component values");
-//                    }
-//
-//                    //TODO notify all sessions... ?
-//                } else {
-//                    //  Neither a GET or a PUT - this is not allowed.
-//                    respondBadMethod(exchange, requestMethod);
-//                }
-//            } catch (Throwable t) {
-//                LOGGER.catching(t);
-//                respondServerError(exchange, getStackTrace(t));
-//            }
-//
-//            LOGGER.traceExit(em);
-//        }
-//    }
+    /**
+     * Handles requests against the /jumpkeys path
+     * GET retrieves the current settings as a WORD36 wrapped in a long.
+     * PUT accepts the JK settings as a WORD36 wrapped in a long, and persists them to the singular system jump key panel.
+     * Either way, JK36 is in the least-significant bit and JKn is 36-n bits to the left of the LSB.
+     */
+    private class APIJumpKeysHandler extends SCIHttpHandler {
+
+        private JumpKeys createJumpKeys(
+            final long compositeValue
+        ) {
+            HashMap<Integer, Boolean> map = new HashMap<>();
+            long bitMask = 0_400000_000000L;
+            for (int jkid = 1; jkid <= 36; jkid++) {
+                map.put(jkid, (compositeValue & bitMask) != 0);
+                bitMask >>= 1;
+            }
+
+            return new JumpKeys(compositeValue, map);
+        }
+
+        @Override
+        public void handle(
+            final HttpExchange exchange
+        ) {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "handle");
+
+            final InputStream requestBody = exchange.getRequestBody();
+            final Headers requestHeaders = exchange.getRequestHeaders();
+            final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+
+            try {
+                SessionInfo sessionInfo = findClient(requestHeaders);
+                if (sessionInfo == null) {
+                    respondNoSession(exchange);
+                    LOGGER.traceExit(em);
+                    return;
+                }
+
+                sessionInfo._lastActivity = System.currentTimeMillis();
+
+                if (requestMethod.equalsIgnoreCase(HttpMethod.GET._value)) {
+                    //  For GET - return the settings as both a composite value and a map of individual jump key settings
+                    JumpKeys jumpKeysResponse = createJumpKeys(_parentSystemProcessor.getJumpKeys().getW());
+                    respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                } else if (requestMethod.equalsIgnoreCase(HttpMethod.PUT._value)) {
+                    //  For PUT - accept the input object - if it has a composite value, use that to set the entire jump key panel.
+                    //  If it has no composite value, but it has component values, use them to individually set the jump keys.
+                    //  If it has neither, reject the PUT.
+                    JumpKeys content;
+                    try {
+                        content = new ObjectMapper().readValue(requestBody, JumpKeys.class);
+                    } catch (IOException ex) {
+                        respondBadRequest(exchange, ex.getMessage());
+                        LOGGER.traceExit(em);
+                        return;
+                    }
+
+                    JumpKeys jumpKeysResponse = null;
+                    if (content._compositeValue != null) {
+                        if ((content._compositeValue < 0) || (content._compositeValue > 0_777777_777777L)) {
+                            respondBadRequest(exchange, "Invalid composite value");
+                            LOGGER.traceExit(em);
+                            return;
+                        }
+
+                        _parentSystemProcessor.setJumpKeys(new Word36(content._compositeValue));
+                        jumpKeysResponse = createJumpKeys(content._compositeValue);
+                    } else if (content._componentValues != null) {
+                        for (Map.Entry<Integer, Boolean> entry : content._componentValues.entrySet()) {
+                            int jumpKeyId = entry.getKey();
+                            if ((jumpKeyId < 1) || (jumpKeyId > 36)) {
+                                respondBadRequest(exchange, String.format("Invalid component value jump key id: %d", jumpKeyId));
+                                LOGGER.traceExit(em);
+                                return;
+                            }
+
+                            boolean setting = entry.getValue();
+                            _parentSystemProcessor.setJumpKey(jumpKeyId, setting);
+
+                            jumpKeysResponse = createJumpKeys(_parentSystemProcessor.getJumpKeys().getW());
+                        }
+                    } else {
+                        respondBadRequest(exchange, "Requires either composite or component values");
+                        LOGGER.traceExit(em);
+                        return;
+                    }
+
+                    respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
+                    LOGGER.traceExit(em);
+                    return;
+
+                    //TODO notify all sessions... ?
+                } else {
+                    //  Neither a GET or a PUT - this is not allowed.
+                    respondBadMethod(exchange, requestMethod);
+                }
+            } catch (Throwable t) {
+                LOGGER.catching(t);
+                respondServerError(exchange, getStackTrace(t));
+            }
+
+            LOGGER.traceExit(em);
+        }
+    }
 
     /**
      * Handle a poll request (a GET to /poll).
@@ -1266,7 +1278,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                         String inputText = msg._text.trim();
                         if (!inputText.isEmpty()) {
                             _pendingInputMessages.put(sessionInfo._clientId,
-                                                      new SystemConsole.ConsoleInputMessage(sessionInfo._consoleId, inputText));
+                                                      new SystemConsoleInterface.ConsoleInputMessage(sessionInfo._consoleId, inputText));
                         }
 
                         _pendingInputMessages.notify();
@@ -1456,18 +1468,79 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  HTTP listener for the API
+    //  HTTP(s) listeners for the API
     //  All requests must use basic authentication for every message (in the headers, of course)
     //  All requests must include a (supposedly) unique UUID as a client identifier in the headers "Client={uuid}"
     //  This unique UUID must be used for every message sent by a given instance of a client.
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private class Listener extends SecureServer {
+    private class HttpListener extends WebServer {
 
         /**
          * constructor
          */
-        private Listener(
+        private HttpListener(
+            final int portNumber
+        ) {
+            super(portNumber);
+        }
+
+        /**
+         * Client wants us to start accepting requests
+         */
+        @Override
+        public void setup(
+        ) throws IOException {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "setup");
+
+            super.setup();
+            appendHandler("/", new WebHandler());
+            appendHandler("/jumpkeys", new APIJumpKeysHandler());
+            appendHandler("/message", new APIMessageHandler());
+            appendHandler("/session", new APISessionRequestHandler());
+            appendHandler("/poll/logs", new APILogPollRequestHandler());
+            appendHandler("/poll/console", new APIConsolePollRequestHandler());
+            start();
+
+            LOGGER.traceExit(em);
+        }
+
+        /**
+         * Owner wants us to stop accepting requests.
+         * Tell our base class to STOP, then go wake up all the pending clients.
+         */
+        @Override
+        public void stop() {
+            EntryMessage em = LOGGER.traceEntry("{}.{}()",
+                                                this.getClass().getSimpleName(),
+                                                "stop");
+
+            super.stop();
+
+            for (SessionInfo sinfo : getSessions()) {
+                synchronized (sinfo) {
+                    sinfo.clear();
+                }
+                synchronized (sinfo._newLogEntries) {
+                    sinfo._newLogEntries.notify();
+                }
+                synchronized (sinfo._newOutputMessages) {
+                    sinfo._newOutputMessages.notify();
+                }
+            }
+
+            LOGGER.traceExit(em);
+        }
+    }
+
+    private class HttpsListener extends SecureWebServer {
+
+        /**
+         * constructor
+         */
+        private HttpsListener(
             final int portNumber
         ) {
             super("RESTSystemConsole", portNumber);
@@ -1479,24 +1552,24 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         @Override
         public void setup(
         ) throws CertificateException,
-                 InvalidKeyException,
                  IOException,
                  KeyManagementException,
                  KeyStoreException,
-                 NoSuchAlgorithmException,
-                 NoSuchProviderException,
-                 SignatureException {
+                 NoSuchAlgorithmException {
             EntryMessage em = LOGGER.traceEntry("{}.{}()",
                                                 this.getClass().getSimpleName(),
                                                 "setup");
-            super.setup();
+
+            String keystoreFullFilename = _keystoreDirectory + KEYSTORE_FILENAME;
+            super.setup(keystoreFullFilename, KEYENTRY_ALIAS, KEYSTORE_PASSWORD, KEYENTRY_PASSWORD);//TODO think about this being hardcoded
             appendHandler("/", new WebHandler());
-//TODO reapply when we're ready            appendHandler("/jumpkeys", new APIJumpKeysHandler());
+            appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/session", new APISessionRequestHandler());
             appendHandler("/poll/logs", new APILogPollRequestHandler());
             appendHandler("/poll/console", new APIConsolePollRequestHandler());
             start();
+
             LOGGER.traceExit(em);
         }
 
@@ -1530,7 +1603,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Private methods (finally)
+    //  Class methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -1540,6 +1613,78 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         synchronized (_sessions) {
             return _sessions.values();
         }
+    }
+
+    /**
+     * Kills the current http listener (if any).
+     * If the given port is non-zero, we then create a new http listener and start it up
+     * @param httpPort new port number - 0 to disable
+     * @return true if successful, else false
+     */
+    public boolean setNewHttpPort(
+        final int httpPort
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "setNewHttpPort",
+                                            httpPort);
+
+        boolean result = true;
+        if (_httpListener != null) {
+            _httpListener.stop();
+            _httpListener = null;
+        }
+
+        if (httpPort != 0) {
+            try {
+                _httpListener = new HttpListener(httpPort);
+                _httpListener.setup();
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                result = false;
+            }
+        }
+
+        LOGGER.traceExit(em, result);
+        return result;
+    }
+
+    /**
+     * Kills the current https listener (if any).
+     * If the given port is non-zero, we then create a new https listener and start it up
+     * @param httpsPort new port number - 0 to disable
+     * @return true if successful, else false
+     */
+    public boolean setNewHttpsPort(
+        final int httpsPort
+    ) {
+        EntryMessage em = LOGGER.traceEntry("{}.{}(httpsPort=%d)",
+                                            this.getClass().getSimpleName(),
+                                            "setNewHttpsPort",
+                                            httpsPort);
+
+        boolean result = true;
+        if (_httpsListener != null) {
+            _httpsListener.stop();
+            _httpsListener = null;
+        }
+
+        if (httpsPort != 0) {
+            try {
+                _httpsListener = new HttpsListener(httpsPort);
+                _httpsListener.setup();
+            } catch (IOException
+                     | CertificateException
+                     | KeyManagementException
+                     | KeyStoreException
+                     | NoSuchAlgorithmException ex) {
+                LOGGER.catching(ex);
+                result = false;
+            }
+        }
+
+        LOGGER.traceExit(em, result);
+        return result;
     }
 
 
@@ -1599,15 +1744,21 @@ public class HTTPSystemControllerInterface implements SystemConsole {
 
         try {
             writer.write(String.format("RESTSystemConsole %s\n", _name));
-            writer.write(String.format("  APIListener commonName=%s portNumber=%d\n",
-                                       _listener.getCommonName(),
-                                       _listener.getPortNumber()));
+            if (_httpListener != null) {
+                writer.write(String.format("  HTTPListener portNumber=%d\n",
+                                           _httpListener.getPortNumber()));
+            }
+            if (_httpsListener != null) {
+                writer.write(String.format("  HTTPSListener commonName=%s portNumber=%d\n",
+                                           _httpsListener.getCommonName(),
+                                           _httpsListener.getPortNumber()));
+            }
 
             writer.write("  Pending input messages:\n");
             synchronized (_pendingInputMessages) {
-                for (Map.Entry<String, SystemConsole.ConsoleInputMessage> entry : _pendingInputMessages.entrySet()) {
+                for (Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage> entry : _pendingInputMessages.entrySet()) {
                     String clientId = entry.getKey();
-                    SystemConsole.ConsoleInputMessage cim = entry.getValue();
+                    SystemConsoleInterface.ConsoleInputMessage cim = entry.getValue();
                     writer.write(String.format("    clientId=%s:'%s'\n", clientId, cim.toString()));
                 }
             }
@@ -1655,7 +1806,7 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                                             timeoutMillis);
 
         SessionInfo sourceSessionInfo = null;
-        SystemConsole.ConsoleInputMessage cim = null;
+        SystemConsoleInterface.ConsoleInputMessage cim = null;
         synchronized (_pendingInputMessages) {
             if (_pendingInputMessages.isEmpty()) {
                 if (timeoutMillis > 0) {
@@ -1668,8 +1819,8 @@ public class HTTPSystemControllerInterface implements SystemConsole {
             }
 
             if (!_pendingInputMessages.isEmpty()) {
-                Iterator<Map.Entry<String, SystemConsole.ConsoleInputMessage>> iter = _pendingInputMessages.entrySet().iterator();
-                Map.Entry<String, SystemConsole.ConsoleInputMessage> nextEntry = iter.next();
+                Iterator<Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage>> iter = _pendingInputMessages.entrySet().iterator();
+                Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage> nextEntry = iter.next();
                 String sourceSessionId = nextEntry.getKey();
                 cim = nextEntry.getValue();
                 iter.remove();
@@ -1880,7 +2031,12 @@ public class HTTPSystemControllerInterface implements SystemConsole {
                                             this.getClass().getSimpleName(),
                                             "start");
         try {
-            _listener.setup();
+            if (_httpListener != null) {
+                _httpListener.setup();
+            }
+            if (_httpsListener != null) {
+                _httpsListener.setup();
+            }
             _pruner.start();
             LOGGER.traceExit(em, true);
             return true;
@@ -1899,7 +2055,12 @@ public class HTTPSystemControllerInterface implements SystemConsole {
         EntryMessage em = LOGGER.traceEntry("{}.{}()",
                                             this.getClass().getSimpleName(),
                                             "stop");
-        _listener.stop();
+        if (_httpListener != null) {
+            _httpListener.stop();
+        }
+        if (_httpsListener != null) {
+            _httpsListener.stop();
+        }
         _pruner.stop();
         LOGGER.traceExit(em);
     }

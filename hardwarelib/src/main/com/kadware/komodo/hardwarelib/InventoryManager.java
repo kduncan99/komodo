@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 
 import java.util.HashMap;
@@ -253,16 +254,20 @@ public class InventoryManager {
 
     /**
      * Creates a new SystemProcessor with a unique name and UPI.
+     * For SystemProcessors which have an HTTPSystemControllerInterface (currently, that's all we have)
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */
     public SystemProcessor createSystemProcessor(
+        final String name,
+        final int httpPort,
+        final int httpsPort,
+        final Credentials credentials
     ) throws MaxNodesException {
         int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
         for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
-                String name = String.format("SP%d", px);
-                SystemProcessor sp = new SystemProcessor(name);
+                SystemProcessor sp = new SystemProcessor(name, httpPort, httpsPort, credentials);
                 _processors.put(upiIndex, sp);
                 sp.initialize();
                 return sp;

@@ -4,6 +4,15 @@
 
 package com.kadware.komodo.baselib;
 
+/**
+ * Common location defining where various paths may be found at runtime.
+ * The defaults refer to where they paths are expected to be in a production deployment (presumably containerized)
+ * Said defaults can be overridden by system property settings or by environment variables.
+ * While the system properties may be set at runtime, care should be taken that those settings are made before
+ * any module accesses any of these definitions.
+ *
+ * While the definitions appear to be constants, they are in fact sensitive to run-time changes.
+ */
 public class PathNames {
 
     //  If we are in testing mode, these directories will all be under a root directory.

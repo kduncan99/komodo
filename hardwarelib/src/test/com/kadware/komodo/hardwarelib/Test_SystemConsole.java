@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.configurator.Configurator;
+import com.kadware.komodo.baselib.configurator.HardwareConfiguration;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 
 import java.io.IOException;
@@ -15,11 +17,12 @@ import java.util.concurrent.ScheduledFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
+import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
 
 /**
- * For testing the SystemConsole (presumably the RESTSystemConsole, but good for any implementor)
+ * For testing the SystemConsoleInterface (presumably the RESTSystemConsole, but good for any implementor)
  */
 public class Test_SystemConsole {
 
@@ -51,7 +54,7 @@ public class Test_SystemConsole {
 
         private final Context _context;
         private static int _nextNotificationId = 1;
-        private SystemConsole.ConsoleInputMessage _pendingMessage;     //  from operator
+        private SystemConsoleInterface.ConsoleInputMessage _pendingMessage;     //  from operator
         private final String _name;
         private JobState _state = JobState.Init;
         private boolean _terminate = false;
@@ -323,7 +326,7 @@ public class Test_SystemConsole {
                     context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Has Not Retrieved Previous Message");
                     job = null;
                 } else {
-                    job._pendingMessage = new SystemConsole.ConsoleInputMessage(consoleId, message);
+                    job._pendingMessage = new SystemConsoleInterface.ConsoleInputMessage(consoleId, message);
                 }
             }
 
@@ -475,7 +478,7 @@ public class Test_SystemConsole {
         private class InputPollerThread implements Runnable {
 
             public void run() {
-                SystemConsole.ConsoleInputMessage cim = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
+                SystemConsoleInterface.ConsoleInputMessage cim = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
                 if (cim != null) {
                     String[] split = cim._text.toUpperCase().split(" ");
                     CommandHandler ch = _commandHandlers.get(split[0].toUpperCase());
@@ -710,7 +713,24 @@ public class Test_SystemConsole {
         testDeployer.deploy();
 
         //  Start up an SP
-        Context context = new Context(InventoryManager.getInstance().createSystemProcessor());
+        Configurator config = Configurator.getInstance();
+        HardwareConfiguration hc = (HardwareConfiguration) config.getConfiguration(Configurator.Domain.KOMODO_HARDWARE);
+        HardwareConfiguration.ProcessorDefinition pd = null;
+        for (HardwareConfiguration.ProcessorDefinition pdcheck : hc._processorDefinitions) {
+            if (pdcheck._systemProcessorDefinition != null) {
+                pd = pdcheck;
+                break;
+            }
+        }
+        Assert.assertNotNull(pd);
+
+        InventoryManager im = InventoryManager.getInstance();
+        SystemProcessor sp = im.createSystemProcessor(pd._nodeName,
+                                                      pd._systemProcessorDefinition._httpPort,
+                                                      pd._systemProcessorDefinition._httpsPort,
+                                                      pd._systemProcessorDefinition._adminCredentials);
+        Context context = new Context(sp);
+
         //noinspection LoopConditionNotUpdatedInsideLoop
         while (!context._systemProcessor.isReady()) {
             Thread.onSpinWait();

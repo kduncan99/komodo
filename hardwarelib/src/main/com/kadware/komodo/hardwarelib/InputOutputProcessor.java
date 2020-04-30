@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 @SuppressWarnings("Duplicates")
 public class InputOutputProcessor extends Processor {
 
-    private static final Logger LOGGER = LogManager.getLogger(InputOutputProcessor.class);
+    private static final Logger LOGGER = LogManager.getLogger(InputOutputProcessor.class.getSimpleName());
 
     /**
      * Constructor
@@ -130,6 +130,7 @@ public class InputOutputProcessor extends Processor {
      */
     @Override
     public void run() {
+        _isRunning = true;
         LOGGER.info(_name + " worker thread starting");
 
         _isReady = true;
@@ -237,6 +238,7 @@ public class InputOutputProcessor extends Processor {
 
         LOGGER.info(_name + " worker thread terminating");
         _isReady = false;
+        _isRunning = false;
     }
 
     /**
