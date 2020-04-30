@@ -36,15 +36,15 @@ public class SecureWebServer {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     private static class Configurator extends HttpsConfigurator {
+
+        private static final Logger LOGGER = LogManager.getLogger(Configurator.class.getSimpleName());
         private Configurator(SSLContext context) { super(context); }
 
         @Override
         public void configure(
             HttpsParameters params
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "setup");
+            EntryMessage em = LOGGER.traceEntry("configure()");
 
             try {
                 SSLContext sslContext = SSLContext.getDefault();
@@ -55,16 +55,17 @@ public class SecureWebServer {
 
                 SSLParameters defaultSSLParameters = sslContext.getDefaultSSLParameters();
                 params.setSSLParameters(defaultSSLParameters);
-                LOGGER.traceExit(em);
-            } catch (Exception e) {
-                LOGGER.catching(e);
-                LOGGER.traceExit(em);
+            } catch (Exception ex) {
+                LOGGER.catching(ex);
             }
+
+            LOGGER.traceExit(em);
         }
     }
 
-    private class CustomKeyManager extends X509ExtendedKeyManager {
+    private static class CustomKeyManager extends X509ExtendedKeyManager {
 
+        private final String _alias;
         private final String _keyPassword;
         private final KeyStore _keyStore;
 
@@ -72,11 +73,14 @@ public class SecureWebServer {
          * Constructor
          * @param keyStore the KeyStore containing the certificates to use as keys
          * @param keyPassword the password to use for any private entries
+         * @param alias the preferred alias
          */
         CustomKeyManager(
             final KeyStore keyStore,
-            final String keyPassword
+            final String keyPassword,
+            final String alias
         ) {
+            _alias = alias;
             _keyStore = keyStore;
             _keyPassword = keyPassword;
         }
@@ -138,9 +142,7 @@ public class SecureWebServer {
         public X509Certificate[] getCertificateChain(
             final String alias
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "setup");
+            EntryMessage em = LOGGER.traceEntry("getCertificateChain(alias=%s)", alias);
 
             X509Certificate[] result = new X509Certificate[0];
             synchronized (this) {
@@ -150,7 +152,6 @@ public class SecureWebServer {
                     for (int cx = 0; cx < certs.length; ++cx) {
                         result[cx] = (X509Certificate) certs[cx];
                     }
-                    LOGGER.traceExit(em, result);
                 } catch (KeyStoreException e) {
                     LOGGER.catching(e);
                 }
@@ -179,18 +180,23 @@ public class SecureWebServer {
         public PrivateKey getPrivateKey(
             final String alias
         ) {
+            EntryMessage em = LOGGER.traceEntry("getPrivateKey(alias=%s)", alias);
+
+            PrivateKey result = null;
             synchronized (this) {
                 try {
                     KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(_keyPassword.toCharArray());
                     KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) _keyStore.getEntry(alias, protection);
-                    return pkEntry.getPrivateKey();
+                    result = pkEntry.getPrivateKey();
                 } catch (KeyStoreException
                     | NoSuchAlgorithmException
                     | UnrecoverableEntryException e) {
                     LOGGER.catching(e);
-                    return null;
                 }
             }
+
+            LOGGER.traceExit(em, result);
+            return result;
         }
 
         /**
@@ -203,6 +209,9 @@ public class SecureWebServer {
             final String keyType,
             final Principal[] issuers
         ) {
+            EntryMessage em = LOGGER.traceEntry("getServerAliases(keyType=%s)", keyType);
+
+            String[] result = new String[0];
             synchronized (this) {
                 try {
                     ArrayList<String> list = new ArrayList<>();
@@ -215,10 +224,15 @@ public class SecureWebServer {
                         }
                     }
                     return (String[]) list.toArray();
-                } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
-                    return null;
+                } catch (KeyStoreException
+                         | NoSuchAlgorithmException
+                         | UnrecoverableEntryException ex) {
+                    LOGGER.catching(ex);
                 }
             }
+
+            LOGGER.traceExit(em, String.join(",", result));
+            return result;
         }
     }
 
@@ -250,7 +264,6 @@ public class SecureWebServer {
 
     private static final int THREAD_POOL_SIZE               = 32;
 
-    private String _alias;
     private final String _commonName;
     private final int _portNumber;
     private HttpsServer _server;
@@ -298,9 +311,7 @@ public class SecureWebServer {
              KeyManagementException,
              KeyStoreException,
              NoSuchAlgorithmException {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(keyStoreFileName='{}' alias='{}')",
-                                            this.getClass().getSimpleName(),
-                                            "setup",
+        EntryMessage em = LOGGER.traceEntry("setup(keyStoreFileName='{}' alias='{}')",
                                             keyStoreFileName,
                                             alias);
 
@@ -315,7 +326,7 @@ public class SecureWebServer {
             trustManagerFactory.init(keyStore);
 
             KeyManager[] newKeyManagers = new KeyManager[1];
-            newKeyManagers[0] = new CustomKeyManager(keyStore, keyEntryPassword);
+            newKeyManagers[0] = new CustomKeyManager(keyStore, keyEntryPassword, alias);
 
             SSLContext sslContext = SSLContext.getInstance(SSL_TYPE);
             sslContext.init(newKeyManagers, trustManagerFactory.getTrustManagers(), null);
@@ -346,13 +357,9 @@ public class SecureWebServer {
              NoSuchAlgorithmException,
              NoSuchProviderException,
              SignatureException {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "setup");
+        EntryMessage em = LOGGER.traceEntry("setup()");
 
         try {
-            _alias = DEFAULT_ALIAS;
-
             KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE);
             keyStore.load(null, KEY_STORE_PASSWORD.toCharArray());
             createSelfSignedCertificate(keyStore);
@@ -361,7 +368,7 @@ public class SecureWebServer {
             trustManagerFactory.init(keyStore);
 
             KeyManager[] newKeyManagers = new KeyManager[1];
-            newKeyManagers[0] = new CustomKeyManager(keyStore, KEY_ENTRY_PASSWORD);
+            newKeyManagers[0] = new CustomKeyManager(keyStore, KEY_ENTRY_PASSWORD, DEFAULT_ALIAS);
 
             SSLContext sslContext = SSLContext.getInstance(SSL_TYPE);
             sslContext.init(newKeyManagers, trustManagerFactory.getTrustManagers(), null);
@@ -417,9 +424,7 @@ public class SecureWebServer {
              NoSuchAlgorithmException,
              NoSuchProviderException,
              SignatureException {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "setup");
+        EntryMessage em = LOGGER.traceEntry("createSelfSignedCertificate()");
 
         try {
             if (keyStore.containsAlias(DEFAULT_ALIAS)) {

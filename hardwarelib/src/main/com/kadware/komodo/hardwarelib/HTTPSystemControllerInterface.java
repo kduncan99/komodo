@@ -80,8 +80,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
     private static final String KEYSTORE_FILENAME = "keystore.jks";         //  relative to web directory
     private static final String KEYSTORE_PASSWORD = "komodo";
-    private static final String KEYENTRY_ALIAS = "komodo";
-    private static final String KEYENTRY_PASSWORD = "komodoe";
+    private static final String KEYENTRY_ALIAS = "default";
+    private static final String KEYENTRY_PASSWORD = "komodo";
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
                                                              HTTPSystemControllerInterface.class.getSimpleName() };
@@ -365,6 +365,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         //  This table is indexed by the corresponding row index (which is the row number minus 1, if anyone cares).
         private final boolean[] _pinnedState;
 
+        private static final Logger LOGGER = LogManager.getLogger(SessionInfo.class.getSimpleName());
+
         SessionInfo(
             final String clientId,
             final ClientAttributes clientAttributes
@@ -384,10 +386,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final int messageId,
             final String replacementText
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={})",
-                                                this.getClass().getSimpleName(),
-                                                "cancelReadReplyMessage",
-                                                messageId);
+            EntryMessage em = LOGGER.traceEntry("cancelReadReplyMessage(messageId={})", messageId);
 
             PendingReadReplyMessage prrm = _pendingReadReplyMessages.get(messageId);
             if (prrm != null) {
@@ -412,9 +411,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
          * Resets the client - caller should notify() on _newOutputMessages
          */
         void resetClient() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={})",
-                                                this.getClass().getSimpleName(),
-                                                "resetClient");
+            EntryMessage em = LOGGER.traceEntry("resetClient(messageId={})");
 
             _pendingReadReplyMessages.clear();
             _newOutputMessages.clear();
@@ -430,10 +427,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         void postInputMessage(
             final String message
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}')",
-                                                this.getClass().getSimpleName(),
-                                                "postInputMessage",
-                                                message);
+            EntryMessage em = LOGGER.traceEntry("postInputMessage(message='{}')", message);
 
             scroll();
             int rx = _clientAttributes._screenSizeRows - 1;
@@ -453,9 +447,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final String message,
             final Boolean rightJustified
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(message='{}', rightJust={})",
-                                                this.getClass().getSimpleName(),
-                                                "postReadOnlyMessage",
+            EntryMessage em = LOGGER.traceEntry("postReadOnlyMessage(message='{}', rightJust={})",
                                                 message,
                                                 rightJustified);
 
@@ -478,9 +470,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final String message,
             final int maxReplySize
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={} message='{}', maxReplySize={})",
-                                                this.getClass().getSimpleName(),
-                                                "postReadReplyMessage",
+            EntryMessage em = LOGGER.traceEntry("postReadReplyMessage(messageId={} message='{}', maxReplySize={})",
                                                 messageId,
                                                 message,
                                                 maxReplySize);
@@ -512,9 +502,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         void postStatusMessages(
             final String[] messages
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
-                                                this.getClass().getSimpleName(),
-                                                "postStatusMessages",
+            EntryMessage em = LOGGER.traceEntry("postStatusMessages(messages={})",
                                                 String.join(" ", messages));
 
             for (int mx = 0; mx < _statusMessageCount; ++mx) {
@@ -563,9 +551,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
          * scrolling all rows below it up by one row - caller should notify() on _newOutputMessages
          */
         void scroll() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(messages={})",
-                                                this.getClass().getSimpleName(),
-                                                "scroll");
+            EntryMessage em = LOGGER.traceEntry("scroll()");
 
             //  Find the index of the first non-pinned row
             int rx = 0;
@@ -600,11 +586,11 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class Pruner {
 
+        private final Logger LOGGER = LogManager.getLogger(Pruner.class.getSimpleName());
+
         private class RunnablePruner implements Runnable {
             public void run() {
-                EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                    this.getClass().getSimpleName(),
-                                                    "run");
+                EntryMessage em = LOGGER.traceEntry("run()");
 
                 List<SessionInfo> sessionsToRemove = new LinkedList<>();
                 long now = System.currentTimeMillis();
@@ -638,9 +624,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         private ScheduledFuture<?> _schedule = null;
 
         private void start() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "start");
+            EntryMessage em = LOGGER.traceEntry("start()");
             _schedule = _scheduler.scheduleWithFixedDelay(_runnable,
                                                           PRUNER_PERIODICITY_SECONDS,
                                                           PRUNER_PERIODICITY_SECONDS,
@@ -649,9 +633,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
 
         private void stop() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "stop");
+            EntryMessage em = LOGGER.traceEntry("stop()");
             _schedule.cancel(false);
             _schedule = null;
             LOGGER.traceExit(em);
@@ -668,6 +650,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private abstract class SCIHttpHandler implements HttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(SCIHttpHandler.class.getSimpleName());
+
         /**
          * Checks the headers for a client id, then locates the corresponding SessionInfo object.
          * Returns null if SessionInfo object is not found or is unspecified.
@@ -676,9 +660,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         SessionInfo findClient(
             final Headers requestHeaders
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "findClient");
+            EntryMessage em = LOGGER.traceEntry("findClient()");
 
             SessionInfo result = null;
             List<String> values = requestHeaders.get("Client");
@@ -771,11 +753,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final String mimeType,
             final String fileName
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(mimeType={} fileName={})",
-                                                this.getClass().getSimpleName(),
-                                                "respondWithBinaryFile",
-                                                mimeType,
-                                                fileName);
+            EntryMessage em = LOGGER.traceEntry("respondWithBinaryFile(mimeType={} fileName={})", mimeType, fileName);
 
             byte[] bytes;
             try {
@@ -825,10 +803,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final int code,
             final Object object
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(code={})",
-                                                this.getClass().getSimpleName(),
-                                                "respondWithJSON",
-                                                code);
+            EntryMessage em = LOGGER.traceEntry("respondWithJSON(code={})", code);
 
             try {
                 ObjectMapper mapper = new ObjectMapper();
@@ -858,11 +833,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final int code,
             final String content
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(code={} content={})",
-                                                this.getClass().getSimpleName(),
-                                                "respondWithText",
-                                                code,
-                                                content);
+            EntryMessage em = LOGGER.traceEntry("respondWithText(code={} content={})", code, content);
 
             exchange.getResponseHeaders().add("Content-type", "text/plain");
             byte[] bytes = content.getBytes();
@@ -890,11 +861,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final String mimeType,
             final String fileName
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}(mimeType={} fileName={})",
-                                                this.getClass().getSimpleName(),
-                                                "respondWithTextFile",
-                                                mimeType,
-                                                fileName);
+            EntryMessage em = LOGGER.traceEntry("respondWithTextFile(mimeType={} fileName={})", mimeType, fileName);
 
             List<String> textLines;
             try {
@@ -942,9 +909,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         boolean validateCredentials(
             final Headers requestHeaders
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "validateCredentials");
+            EntryMessage em = LOGGER.traceEntry("validateCredentials()");
 
             boolean result = false;
             List<String> values = requestHeaders.get("Authorization");
@@ -982,13 +947,13 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class APIConsolePollRequestHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(APIConsolePollRequestHandler.class.getSimpleName());
+
         @Override
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
@@ -1045,6 +1010,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class APIJumpKeysHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(APIJumpKeysHandler.class.getSimpleName());
+
         private JumpKeys createJumpKeys(
             final long compositeValue
         ) {
@@ -1062,9 +1029,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
@@ -1154,6 +1119,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class APILogPollRequestHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(APILogPollRequestHandler.class.getSimpleName());
+
         private class PollThread extends Thread {
 
             private final HttpExchange _exchange;
@@ -1171,9 +1138,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                 //  Check if there are any updates already waiting for the client to pick up.
                 //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
                 //  At the end of the wait construct and return a SystemProcessorPollResult object
-                EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                    this.getClass().getSimpleName(),
-                                                    "run");
+                EntryMessage em = LOGGER.traceEntry("run()");
 
                 List<SystemLogEntry> sles;
                 synchronized (_sessionInfo._newLogEntries) {
@@ -1198,9 +1163,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final Headers requestHeaders = exchange.getRequestHeaders();
             final String requestMethod = exchange.getRequestMethod();
@@ -1237,13 +1200,13 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class APIMessageHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(APIMessageHandler.class.getSimpleName());
+
         @Override
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
@@ -1307,13 +1270,13 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class APISessionRequestHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(APISessionRequestHandler.class.getSimpleName());
+
         @Override
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final InputStream requestBody = exchange.getRequestBody();
             final Headers requestHeaders = exchange.getRequestHeaders();
@@ -1400,13 +1363,13 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     private class WebHandler extends SCIHttpHandler {
 
+        private final Logger LOGGER = LogManager.getLogger(SCIHttpHandler.class.getSimpleName());
+
         @Override
         public void handle(
             final HttpExchange exchange
         ) {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "handle");
+            EntryMessage em = LOGGER.traceEntry("handle()");
 
             final String requestMethod = exchange.getRequestMethod();
             final String requestURI = exchange.getRequestURI().toString();
@@ -1476,6 +1439,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
     private class HttpListener extends WebServer {
 
+        private final Logger LOGGER = LogManager.getLogger(HttpListener.class.getSimpleName());
+
         /**
          * constructor
          */
@@ -1491,9 +1456,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         @Override
         public void setup(
         ) throws IOException {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "setup");
+            EntryMessage em = LOGGER.traceEntry("setup()");
 
             super.setup();
             appendHandler("/", new WebHandler());
@@ -1513,12 +1476,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
          */
         @Override
         public void stop() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "stop");
+            EntryMessage em = LOGGER.traceEntry("setup()");
 
             super.stop();
-
             for (SessionInfo sinfo : getSessions()) {
                 synchronized (sinfo) {
                     sinfo.clear();
@@ -1536,6 +1496,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     }
 
     private class HttpsListener extends SecureWebServer {
+
+        private final Logger LOGGER = LogManager.getLogger(HttpsListener.class.getSimpleName());
 
         /**
          * constructor
@@ -1556,12 +1518,10 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                  KeyManagementException,
                  KeyStoreException,
                  NoSuchAlgorithmException {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "setup");
+            EntryMessage em = LOGGER.traceEntry("setup()");
 
             String keystoreFullFilename = _keystoreDirectory + KEYSTORE_FILENAME;
-            super.setup(keystoreFullFilename, KEYENTRY_ALIAS, KEYSTORE_PASSWORD, KEYENTRY_PASSWORD);//TODO think about this being hardcoded
+            super.setup(keystoreFullFilename, KEYENTRY_ALIAS, KEYSTORE_PASSWORD, KEYENTRY_PASSWORD);
             appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
@@ -1579,9 +1539,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
          */
         @Override
         public void stop() {
-            EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                                this.getClass().getSimpleName(),
-                                                "stop");
+            EntryMessage em = LOGGER.traceEntry("stop()");
 
             super.stop();
 
@@ -1624,10 +1582,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public boolean setNewHttpPort(
         final int httpPort
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "setNewHttpPort",
-                                            httpPort);
+        EntryMessage em = LOGGER.traceEntry("setNewHttpPort(httpPort=%d)", httpPort);
 
         boolean result = true;
         if (_httpListener != null) {
@@ -1658,10 +1613,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public boolean setNewHttpsPort(
         final int httpsPort
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(httpsPort=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "setNewHttpsPort",
-                                            httpsPort);
+        EntryMessage em = LOGGER.traceEntry("setNewHttpsPort(httpsPort=%d)", httpsPort);
 
         boolean result = true;
         if (_httpsListener != null) {
@@ -1703,10 +1655,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         final int messageId,
         final String replacementText
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(messageId=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "cancelReadReplyMessage",
-                                            messageId);
+        EntryMessage em = LOGGER.traceEntry("cancelReadReplyMessage(messageId=%d)", messageId);
 
         synchronized (_cachedReadReplyMessages) {
             Iterator<PendingReadReplyMessage> iter = _cachedReadReplyMessages.iterator();
@@ -1738,10 +1687,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public void dump(
         final BufferedWriter writer
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "dump");
-
         try {
             writer.write(String.format("RESTSystemConsole %s\n", _name));
             if (_httpListener != null) {
@@ -1772,8 +1717,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
-
-        LOGGER.traceExit(em);
     }
 
     @Override
@@ -1787,7 +1730,10 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     @Override
     public ConsoleInputMessage pollInputMessage() {
-        return pollInputMessage(0);
+        EntryMessage em = LOGGER.traceEntry("pollInputMessage()");
+        ConsoleInputMessage cim = pollInputMessage(0);
+        LOGGER.traceExit(em, cim);
+        return cim;
     }
 
     /**
@@ -1800,10 +1746,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public ConsoleInputMessage pollInputMessage(
         long timeoutMillis
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(timeout={}ms)",
-                                            this.getClass().getSimpleName(),
-                                            "pollInputMessage",
-                                            timeoutMillis);
+        EntryMessage em = LOGGER.traceEntry("pollInputMessage(timeout={}ms)", timeoutMillis);
 
         SessionInfo sourceSessionInfo = null;
         SystemConsoleInterface.ConsoleInputMessage cim = null;
@@ -1850,9 +1793,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         final Boolean rightJustified,
         final Boolean cached
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId={} message='{}' rightJustified={})",
-                                            this.getClass().getSimpleName(),
-                                            "postReadOnlyMessage",
+        EntryMessage em = LOGGER.traceEntry("postReadOnlyMessage(consoleId={} message='{}' rightJustified={})",
                                             consoleId,
                                             message,
                                             rightJustified);
@@ -1888,9 +1829,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         final String message,
         final int maxReplyLength
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(messageId={} message='{}' maxReplyLength={})",
-                                            this.getClass().getSimpleName(),
-                                            "postReadReplyMessage",
+        EntryMessage em = LOGGER.traceEntry("postReadReplyMessage(messageId={} message='{}' maxReplyLength={})",
                                             messageId,
                                             message,
                                             maxReplyLength);
@@ -1918,10 +1857,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public void postStatusMessages(
         final String[] messages
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}({})",
-                                            this.getClass().getSimpleName(),
-                                            "postStatusMessages",
-                                            String.join(",", messages));
+        EntryMessage em = LOGGER.traceEntry("postStatusMessages({})", String.join(",", messages));
 
         for (SessionInfo sinfo : getSessions()) {
             synchronized (sinfo._newOutputMessages) {
@@ -1941,9 +1877,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     public void postSystemLogEntries(
         final KomodoLoggingAppender.LogEntry[] logEntries
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "postSystemLogEntries");
+        EntryMessage em = LOGGER.traceEntry("postSystemLogEntries()");
 
         List<KomodoLoggingAppender.LogEntry> logList = new LinkedList<>();
         for (KomodoLoggingAppender.LogEntry logEntry : logEntries) {
@@ -1990,9 +1924,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     @Override
     public void reset() {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "reset");
+        EntryMessage em = LOGGER.traceEntry("reset()");
 
         synchronized (_pendingInputMessages) {
             _pendingInputMessages.clear();
@@ -2027,9 +1959,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     @Override
     public boolean start(
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "start");
+        EntryMessage em = LOGGER.traceEntry("start()");
         try {
             if (_httpListener != null) {
                 _httpListener.setup();
@@ -2052,9 +1982,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      */
     @Override
     public void stop() {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "stop");
+        EntryMessage em = LOGGER.traceEntry("stop()");
         if (_httpListener != null) {
             _httpListener.stop();
         }
