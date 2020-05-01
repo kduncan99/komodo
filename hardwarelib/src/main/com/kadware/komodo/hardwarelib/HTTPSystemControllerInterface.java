@@ -84,7 +84,17 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     private static final String KEYENTRY_PASSWORD = "komodo";
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
-                                                             HTTPSystemControllerInterface.class.getSimpleName() };
+                                                             HTTPSystemControllerInterface.class.getSimpleName(),
+                                                             SCIHttpHandler.class.getSimpleName(),
+                                                             SessionInfo.class.getSimpleName(),
+                                                             Pruner.class.getSimpleName(),
+                                                             APIJumpKeysHandler.class.getSimpleName(),
+                                                             APIMessageHandler.class.getSimpleName(),
+                                                             APIPollRequestHandler.class.getSimpleName(),
+                                                             APISessionRequestHandler.class.getSimpleName(),
+                                                             WebHandler.class.getSimpleName(),
+                                                             HttpListener.class.getSimpleName(),
+                                                             HttpsListener.class.getSimpleName() };
 
     private static final Logger LOGGER = LogManager.getLogger(HTTPSystemControllerInterface.class.getSimpleName());
 
@@ -142,34 +152,34 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      * Information sent to us by the client when it attempts to establish a session
      */
     private static class ClientAttributes {
-        @JsonProperty("screenSizeColumns")  final int _screenSizeColumns;
-        @JsonProperty("screenSizeRows")     final int _screenSizeRows;
+        @JsonProperty("consoleScreenSizeColumns")   final int _screenSizeColumns;
+        @JsonProperty("consoleScreenSizeRows")      final int _screenSizeRows;
 
         ClientAttributes(
-            @JsonProperty("screenSizeColumns")  final int screenSizeColumns,
-            @JsonProperty("screenSizeRows")     final int screenSizeRows
+            @JsonProperty("consoleScreenSizeColumns")   final int screenSizeColumns,
+            @JsonProperty("consoleScreenSizeRows")      final int screenSizeRows
         ) {
             _screenSizeColumns = screenSizeColumns;
             _screenSizeRows = screenSizeRows;
         }
     }
 
-    /**
-     * Object encapsulating certain other objects.
-     * Client issues a GET on the /poll subdirectory, and we respond with all the updated information.
-     * An entity will be null if that entity has not been updated in the interim.
-     */
-    private static class ConsolePollResult {
-
-        //  Output messages we send to the client.
-        @JsonProperty("outputMessages")             public OutputMessage[] _outputMessages;
-
-        ConsolePollResult(
-            final List<OutputMessage> messages
-        ) {
-            _outputMessages = messages.toArray(new OutputMessage[0]);
-        }
-    }
+//    /**
+//     * Object encapsulating certain other objects.
+//     * Client issues a GET on the /poll subdirectory, and we respond with all the updated information.
+//     * An entity will be null if that entity has not been updated in the interim.
+//     */
+//    private static class ConsolePollResult {
+//
+//        //  Output messages we send to the client.
+//        @JsonProperty("outputMessages")             public OutputMessage[] _outputMessages;
+//
+//        ConsolePollResult(
+//            final List<OutputMessage> messages
+//        ) {
+//            _outputMessages = messages.toArray(new OutputMessage[0]);
+//        }
+//    }
 
     /**
      * Client sends this to us whenever the operator hits 'enter'
@@ -207,20 +217,41 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
     }
 
+//    /**
+//     * Client issues a GET on the /poll/log subdirectory, and we respond with new log entries if and when any are posted.
+//     * After a particular timeout, we respond back to the user with an object in which the newLogEntries element
+//     * may be either null, or an empty array.
+//     */
+//    private static class LogPollResult {
+//
+//        //  Populated by us when any new log entries are available
+//        @JsonProperty("newLogEntries")              public SystemLogEntry[] _logEntries;
+//
+//        LogPollResult(
+//            final List<SystemLogEntry> logEntries
+//        ) {
+//            _logEntries = logEntries.toArray(new SystemLogEntry[0]);
+//        }
+//    }
+
     /**
-     * Client issues a GET on the /poll/log subdirectory, and we respond with new log entries if and when any are posted.
-     * After a particular timeout, we respond back to the user with an object in which the newLogEntries element
-     * may be either null, or an empty array.
+     * Client issues a GET on the /poll subdirectory, and we respond with one of these objects whenever at least
+     * one entity in the poll result has been updated.  Upon return, those items which are arrays may either null
+     * or empty if they were not updated.
      */
-    private static class LogPollResult {
-
-        //  Populated by us when any new log entries are available
+    private static class PollResult {
+        @JsonProperty("jumpKeys")                   public JumpKeys _jumpKeys;
         @JsonProperty("newLogEntries")              public SystemLogEntry[] _logEntries;
+        @JsonProperty("outputMessages")             public OutputMessage[] _outputMessages;
 
-        LogPollResult(
-            final List<SystemLogEntry> logEntries
+        PollResult(
+            final JumpKeys jumpKeys,
+            final List<SystemLogEntry> logEntries,
+            final List<OutputMessage> messages
         ) {
+            _jumpKeys = jumpKeys;
             _logEntries = logEntries.toArray(new SystemLogEntry[0]);
+            _outputMessages = messages.toArray(new OutputMessage[0]);
         }
     }
 
@@ -274,17 +305,32 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
 
         static OutputMessage createClearScreenMessage() {
-            return new OutputMessage(MESSAGE_TYPE_CLEAR_SCREEN, null, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_CLEAR_SCREEN,
+                                     null,
+                                     null,
+                                     null,
+                                     null,
+                                     null);
         }
 
         static OutputMessage createUnlockKeyboardMessage() {
-            return new OutputMessage(MESSAGE_TYPE_UNLOCK_KEYBOARD, null, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_UNLOCK_KEYBOARD,
+                                     null,
+                                     null,
+                                     null,
+                                     null,
+                                     null);
         }
 
         static OutputMessage createDeleteRowMessage(
             final int rowIndex
         ) {
-            return new OutputMessage(MESSAGE_TYPE_DELETE_ROW, rowIndex, null, null, null, null);
+            return new OutputMessage(MESSAGE_TYPE_DELETE_ROW,
+                                     rowIndex,
+                                     null,
+                                     null,
+                                     null,
+                                     null);
         }
 
         static OutputMessage createWriteRowMessage(
@@ -294,7 +340,12 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             final String text,
             final Boolean rightJustified
         ) {
-            return new OutputMessage(MESSAGE_TYPE_WRITE_ROW, rowIndex, textColor, backgroundColor, text, rightJustified);
+            return new OutputMessage(MESSAGE_TYPE_WRITE_ROW,
+                                     rowIndex,
+                                     textColor,
+                                     backgroundColor,
+                                     text,
+                                     rightJustified);
         }
     }
 
@@ -350,6 +401,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         private final ClientAttributes _clientAttributes;
         private final String _clientId;         //  Identifier used in cookies to identify this session
         private final int _consoleId;           //  Identifier passed to the OS so it can target responses just to one session
+        private boolean _jumpKeysUpdated = false;
         private long _lastActivity = System.currentTimeMillis();
         private final List<SystemLogEntry> _newLogEntries = new LinkedList<>();     //  log entries not yet delivered to client
         private final List<OutputMessage> _newOutputMessages = new LinkedList<>();  //  console messages not yet delivered to client
@@ -402,9 +454,14 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
 
         void clear() {
-            _pendingReadReplyMessages.clear();
+            _jumpKeysUpdated = false;
             _newOutputMessages.clear();
             _newLogEntries.clear();
+            _pendingReadReplyMessages.clear();
+        }
+
+        boolean hasUpdates() {
+            return !_newOutputMessages.isEmpty() || !_newLogEntries.isEmpty() || _jumpKeysUpdated ;
         }
 
         /**
@@ -940,67 +997,67 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     //  Endpoint handlers, to be attached to the HTTP listeners
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Handle a console poll request (a GET to /poll/console).
-     * Check to see if there is anything new.  If so, send it.
-     * Otherwise, wait for some period of time to see whether anything new pops up.
-     */
-    private class APIConsolePollRequestHandler extends SCIHttpHandler {
-
-        private final Logger LOGGER = LogManager.getLogger(APIConsolePollRequestHandler.class.getSimpleName());
-
-        @Override
-        public void handle(
-            final HttpExchange exchange
-        ) {
-            EntryMessage em = LOGGER.traceEntry("handle()");
-
-            final Headers requestHeaders = exchange.getRequestHeaders();
-            final String requestMethod = exchange.getRequestMethod();
-            final String requestURI = exchange.getRequestURI().toString();
-            LOGGER.trace("<--" + requestMethod + " " + requestURI);
-
-            try {
-                SessionInfo sessionInfo = findClient(requestHeaders);
-                if (sessionInfo == null) {
-                    respondNoSession(exchange);
-                    LOGGER.traceExit(em);
-                    return;
-                }
-
-                sessionInfo._lastActivity = System.currentTimeMillis();
-                if (!requestMethod.equals(HttpMethod.GET._value)) {
-                    respondBadMethod(exchange, requestMethod);
-                    LOGGER.traceExit(em);
-                    return;
-                }
-
-                //  Check if there are any updates already waiting for the client to pick up.
-                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-                //  At the end of the wait construct and return a SystemProcessorPollResult object
-                List<OutputMessage> oms;
-                synchronized (sessionInfo._newOutputMessages) {
-                    if (sessionInfo._newOutputMessages.isEmpty()) {
-                        try {
-                            sessionInfo._newOutputMessages.wait(DEFAULT_POLL_WAIT_MSECS);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
-                    }
-
-                    oms = new LinkedList<>(sessionInfo._newOutputMessages);
-                    sessionInfo._newOutputMessages.clear();
-                }
-
-                respondWithJSON(exchange, HttpURLConnection.HTTP_OK, new ConsolePollResult(oms));
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
-            }
-
-            LOGGER.traceExit(em);
-        }
-    }
+//    /**
+//     * Handle a console poll request (a GET to /poll/console).
+//     * Check to see if there is anything new.  If so, send it.
+//     * Otherwise, wait for some period of time to see whether anything new pops up.
+//     */
+//    private class APIConsolePollRequestHandler extends SCIHttpHandler {
+//
+//        private final Logger LOGGER = LogManager.getLogger(APIConsolePollRequestHandler.class.getSimpleName());
+//
+//        @Override
+//        public void handle(
+//            final HttpExchange exchange
+//        ) {
+//            EntryMessage em = LOGGER.traceEntry("handle()");
+//
+//            final Headers requestHeaders = exchange.getRequestHeaders();
+//            final String requestMethod = exchange.getRequestMethod();
+//            final String requestURI = exchange.getRequestURI().toString();
+//            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+//
+//            try {
+//                SessionInfo sessionInfo = findClient(requestHeaders);
+//                if (sessionInfo == null) {
+//                    respondNoSession(exchange);
+//                    LOGGER.traceExit(em);
+//                    return;
+//                }
+//
+//                sessionInfo._lastActivity = System.currentTimeMillis();
+//                if (!requestMethod.equals(HttpMethod.GET._value)) {
+//                    respondBadMethod(exchange, requestMethod);
+//                    LOGGER.traceExit(em);
+//                    return;
+//                }
+//
+//                //  Check if there are any updates already waiting for the client to pick up.
+//                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
+//                //  At the end of the wait construct and return a SystemProcessorPollResult object
+//                List<OutputMessage> oms;
+//                synchronized (sessionInfo._newOutputMessages) {
+//                    if (sessionInfo._newOutputMessages.isEmpty()) {
+//                        try {
+//                            sessionInfo._newOutputMessages.wait(DEFAULT_POLL_WAIT_MSECS);
+//                        } catch (InterruptedException ex) {
+//                            LOGGER.catching(ex);
+//                        }
+//                    }
+//
+//                    oms = new LinkedList<>(sessionInfo._newOutputMessages);
+//                    sessionInfo._newOutputMessages.clear();
+//                }
+//
+//                respondWithJSON(exchange, HttpURLConnection.HTTP_OK, new ConsolePollResult(oms));
+//            } catch (Throwable t) {
+//                LOGGER.catching(t);
+//                respondServerError(exchange, getStackTrace(t));
+//            }
+//
+//            LOGGER.traceExit(em);
+//        }
+//    }
 
     /**
      * Handles requests against the /jumpkeys path
@@ -1011,19 +1068,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     private class APIJumpKeysHandler extends SCIHttpHandler {
 
         private final Logger LOGGER = LogManager.getLogger(APIJumpKeysHandler.class.getSimpleName());
-
-        private JumpKeys createJumpKeys(
-            final long compositeValue
-        ) {
-            HashMap<Integer, Boolean> map = new HashMap<>();
-            long bitMask = 0_400000_000000L;
-            for (int jkid = 1; jkid <= 36; jkid++) {
-                map.put(jkid, (compositeValue & bitMask) != 0);
-                bitMask >>= 1;
-            }
-
-            return new JumpKeys(compositeValue, map);
-        }
 
         @Override
         public void handle(
@@ -1094,11 +1138,16 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                         return;
                     }
 
+                    for (SessionInfo sinfo : getSessions()) {
+                        synchronized (sinfo) {
+                            sinfo._jumpKeysUpdated = true;
+                            sinfo.notify();
+                        }
+                    }
+
                     respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
                     LOGGER.traceExit(em);
                     return;
-
-                    //TODO notify all sessions... ?
                 } else {
                     //  Neither a GET or a PUT - this is not allowed.
                     respondBadMethod(exchange, requestMethod);
@@ -1112,88 +1161,88 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
     }
 
-    /**
-     * Handle a poll request (a GET to /poll).
-     * Check to see if there is anything new.  If so, send it.
-     * Otherwise, wait for some period of time to see whether anything new pops up.
-     */
-    private class APILogPollRequestHandler extends SCIHttpHandler {
-
-        private final Logger LOGGER = LogManager.getLogger(APILogPollRequestHandler.class.getSimpleName());
-
-        private class PollThread extends Thread {
-
-            private final HttpExchange _exchange;
-            private final SessionInfo _sessionInfo;
-
-            private PollThread(
-                final HttpExchange exchange,
-                final SessionInfo sessionInfo
-            ) {
-                _exchange = exchange;
-                _sessionInfo = sessionInfo;
-            }
-
-            public void run() {
-                //  Check if there are any updates already waiting for the client to pick up.
-                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-                //  At the end of the wait construct and return a SystemProcessorPollResult object
-                EntryMessage em = LOGGER.traceEntry("run()");
-
-                List<SystemLogEntry> sles;
-                synchronized (_sessionInfo._newLogEntries) {
-                    if (_sessionInfo._newLogEntries.isEmpty()) {
-                        try {
-                            _sessionInfo._newLogEntries.wait(DEFAULT_POLL_WAIT_MSECS);
-                        } catch (InterruptedException ex) {
-                            LOGGER.catching(ex);
-                        }
-                    }
-
-                    sles = new LinkedList<>(_sessionInfo._newLogEntries);
-                    _sessionInfo._newLogEntries.clear();
-                }
-
-                respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, new LogPollResult(sles));
-                LOGGER.traceExit(em);
-            }
-        }
-
-        @Override
-        public void handle(
-            final HttpExchange exchange
-        ) {
-            EntryMessage em = LOGGER.traceEntry("handle()");
-
-            final Headers requestHeaders = exchange.getRequestHeaders();
-            final String requestMethod = exchange.getRequestMethod();
-            final String requestURI = exchange.getRequestURI().toString();
-            LOGGER.trace("<--" + requestMethod + " " + requestURI);
-
-            try {
-                SessionInfo sessionInfo = findClient(requestHeaders);
-                if (sessionInfo == null) {
-                    respondNoSession(exchange);
-                    LOGGER.traceExit(em);
-                    return;
-                }
-
-                sessionInfo._lastActivity = System.currentTimeMillis();
-                if (!requestMethod.equals(HttpMethod.GET._value)) {
-                    respondBadMethod(exchange, requestMethod);
-                    LOGGER.traceExit(em);
-                    return;
-                }
-
-                new PollThread(exchange, sessionInfo).start();
-            } catch (Throwable t) {
-                LOGGER.catching(t);
-                respondServerError(exchange, getStackTrace(t));
-            }
-
-            LOGGER.traceExit(em);
-        }
-    }
+//    /**
+//     * Handle a poll request (a GET to /poll).
+//     * Check to see if there is anything new.  If so, send it.
+//     * Otherwise, wait for some period of time to see whether anything new pops up.
+//     */
+//    private class APILogPollRequestHandler extends SCIHttpHandler {
+//
+//        private final Logger LOGGER = LogManager.getLogger(APILogPollRequestHandler.class.getSimpleName());
+//
+//        private class PollThread extends Thread {
+//
+//            private final HttpExchange _exchange;
+//            private final SessionInfo _sessionInfo;
+//
+//            private PollThread(
+//                final HttpExchange exchange,
+//                final SessionInfo sessionInfo
+//            ) {
+//                _exchange = exchange;
+//                _sessionInfo = sessionInfo;
+//            }
+//
+//            public void run() {
+//                //  Check if there are any updates already waiting for the client to pick up.
+//                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
+//                //  At the end of the wait construct and return a SystemProcessorPollResult object
+//                EntryMessage em = LOGGER.traceEntry("run()");
+//
+//                List<SystemLogEntry> sles;
+//                synchronized (_sessionInfo._newLogEntries) {
+//                    if (_sessionInfo._newLogEntries.isEmpty()) {
+//                        try {
+//                            _sessionInfo._newLogEntries.wait(DEFAULT_POLL_WAIT_MSECS);
+//                        } catch (InterruptedException ex) {
+//                            LOGGER.catching(ex);
+//                        }
+//                    }
+//
+//                    sles = new LinkedList<>(_sessionInfo._newLogEntries);
+//                    _sessionInfo._newLogEntries.clear();
+//                }
+//
+//                respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, new LogPollResult(sles));
+//                LOGGER.traceExit(em);
+//            }
+//        }
+//
+//        @Override
+//        public void handle(
+//            final HttpExchange exchange
+//        ) {
+//            EntryMessage em = LOGGER.traceEntry("handle()");
+//
+//            final Headers requestHeaders = exchange.getRequestHeaders();
+//            final String requestMethod = exchange.getRequestMethod();
+//            final String requestURI = exchange.getRequestURI().toString();
+//            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+//
+//            try {
+//                SessionInfo sessionInfo = findClient(requestHeaders);
+//                if (sessionInfo == null) {
+//                    respondNoSession(exchange);
+//                    LOGGER.traceExit(em);
+//                    return;
+//                }
+//
+//                sessionInfo._lastActivity = System.currentTimeMillis();
+//                if (!requestMethod.equals(HttpMethod.GET._value)) {
+//                    respondBadMethod(exchange, requestMethod);
+//                    LOGGER.traceExit(em);
+//                    return;
+//                }
+//
+//                new PollThread(exchange, sessionInfo).start();
+//            } catch (Throwable t) {
+//                LOGGER.catching(t);
+//                respondServerError(exchange, getStackTrace(t));
+//            }
+//
+//            LOGGER.traceExit(em);
+//        }
+//    }
 
     /**
      * Provides a method for injecting input to the system via POST to /message
@@ -1256,6 +1305,82 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             } catch (IOException ex) {
                 respondBadRequest(exchange, "Badly-formatted body");
             } catch (Throwable t) {
+                respondServerError(exchange, getStackTrace(t));
+            }
+
+            LOGGER.traceExit(em);
+        }
+    }
+
+    /**
+     * Handle a poll request. Check to see if there is anything new. If so, send it.
+     * Otherwise, wait for some period of time to see whether anything new pops up.
+     */
+    private class APIPollRequestHandler extends SCIHttpHandler {
+
+        private final Logger LOGGER = LogManager.getLogger(APIPollRequestHandler.class.getSimpleName());
+
+        @Override
+        public void handle(
+            final HttpExchange exchange
+        ) {
+            EntryMessage em = LOGGER.traceEntry("handle()");
+
+            final Headers requestHeaders = exchange.getRequestHeaders();
+            final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+
+            try {
+                SessionInfo sessionInfo = findClient(requestHeaders);
+                if (sessionInfo == null) {
+                    respondNoSession(exchange);
+                    LOGGER.traceExit(em);
+                    return;
+                }
+
+                sessionInfo._lastActivity = System.currentTimeMillis();
+                if (!requestMethod.equals(HttpMethod.GET._value)) {
+                    respondBadMethod(exchange, requestMethod);
+                    LOGGER.traceExit(em);
+                    return;
+                }
+
+                //  Check if there are any updates already waiting for the client to pick up.
+                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
+                //  At the end of the wait construct and return a SystemProcessorPollResult object
+                JumpKeys jks = null;
+                List<SystemLogEntry> sles = new LinkedList<>();
+                List<OutputMessage> oms = new LinkedList<>();
+
+                synchronized (sessionInfo) {
+                    if (!sessionInfo.hasUpdates()) {
+                        try {
+                            sessionInfo.wait(DEFAULT_POLL_WAIT_MSECS);
+                        } catch (InterruptedException ex) {
+                            LOGGER.catching(ex);
+                        }
+                    }
+
+                    if (sessionInfo._jumpKeysUpdated) {
+                        jks = createJumpKeys(_parentSystemProcessor.getJumpKeys().getW());
+                        sessionInfo._jumpKeysUpdated = false;
+                    }
+
+                    if (!sessionInfo._newOutputMessages.isEmpty()) {
+                        oms.addAll(sessionInfo._newOutputMessages);
+                        sessionInfo._newOutputMessages.clear();
+                    }
+
+                    if (!sessionInfo._newLogEntries.isEmpty()) {
+                        sles.addAll(sessionInfo._newLogEntries);
+                        sessionInfo._newLogEntries.clear();
+                    }
+                }
+
+                respondWithJSON(exchange, HttpURLConnection.HTTP_OK, new PollResult(jks, sles, oms));
+            } catch (Throwable t) {
+                LOGGER.catching(t);
                 respondServerError(exchange, getStackTrace(t));
             }
 
@@ -1462,9 +1587,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
+            appendHandler("/poll", new APIPollRequestHandler());
             appendHandler("/session", new APISessionRequestHandler());
-            appendHandler("/poll/logs", new APILogPollRequestHandler());
-            appendHandler("/poll/console", new APIConsolePollRequestHandler());
             start();
 
             LOGGER.traceExit(em);
@@ -1525,9 +1649,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             appendHandler("/", new WebHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
+            appendHandler("/poll", new APIPollRequestHandler());
             appendHandler("/session", new APISessionRequestHandler());
-            appendHandler("/poll/logs", new APILogPollRequestHandler());
-            appendHandler("/poll/console", new APIConsolePollRequestHandler());
             start();
 
             LOGGER.traceExit(em);
@@ -1563,6 +1686,19 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class methods
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static JumpKeys createJumpKeys(
+        final long compositeValue
+    ) {
+        HashMap<Integer, Boolean> map = new HashMap<>();
+        long bitMask = 0_400000_000000L;
+        for (int jkid = 1; jkid <= 36; jkid++) {
+            map.put(jkid, (compositeValue & bitMask) != 0);
+            bitMask >>= 1;
+        }
+
+        return new JumpKeys(compositeValue, map);
+    }
 
     /**
      * Thread-safe way to get a list of all the SessionInfo objects
@@ -1670,9 +1806,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
         for (SessionInfo sinfo : getSessions()) {
             if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
-                synchronized (sinfo._newOutputMessages) {
+                synchronized (sinfo) {
                     sinfo.cancelReadReplyMessage(messageId, replacementText);
-                    sinfo._newOutputMessages.notify();
+                    sinfo.notify();
                 }
             }
         }
@@ -1773,9 +1909,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
 
         if (sourceSessionInfo != null) {
-            synchronized (sourceSessionInfo._newOutputMessages) {
+            synchronized (sourceSessionInfo) {
                 sourceSessionInfo.postInputMessage(cim._text);
-                sourceSessionInfo._newOutputMessages.notify();
+                sourceSessionInfo.notify();
             }
         }
 
@@ -1808,10 +1944,10 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
 
         for (SessionInfo sinfo : getSessions()) {
-            synchronized (sinfo._newOutputMessages) {
-                if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
+            if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
+                synchronized (sinfo) {
                     sinfo.postReadOnlyMessage(message, rightJustified);
-                    sinfo._newOutputMessages.notify();
+                    sinfo.notify();
                 }
             }
         }
@@ -1840,9 +1976,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
         for (SessionInfo sinfo : getSessions()) {
             if ((consoleId == 0) || (consoleId == sinfo._consoleId)) {
-                synchronized (sinfo._newOutputMessages) {
+                synchronized (sinfo) {
                     sinfo.postReadReplyMessage(messageId, message, maxReplyLength);
-                    sinfo._newOutputMessages.notify();
+                    sinfo.notify();
                 }
             }
         }
@@ -1860,9 +1996,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         EntryMessage em = LOGGER.traceEntry("postStatusMessages({})", String.join(",", messages));
 
         for (SessionInfo sinfo : getSessions()) {
-            synchronized (sinfo._newOutputMessages) {
+            synchronized (sinfo) {
                 sinfo.postStatusMessages(messages);
-                sinfo._newOutputMessages.notify();
+                sinfo.notify();
             }
         }
 
@@ -1909,9 +2045,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             }
 
             for (SessionInfo sinfo : getSessions()) {
-                synchronized (sinfo._newLogEntries) {
+                synchronized (sinfo) {
                     sinfo._newLogEntries.addAll(sles);
-                    sinfo._newLogEntries.notify();
+                    sinfo.notify();
                 }
             }
         }

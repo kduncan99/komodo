@@ -167,7 +167,8 @@ public class Test_SystemConsole {
 
     static {
         _commandHandlers.put("H", new HelpCommandHandler());
-        _commandHandlers.put("L", new ListCommandHandler());
+        _commandHandlers.put("I", new LogCommandHandler());
+        _commandHandlers.put("J", new JobsCommandHandler());
         _commandHandlers.put("M", new MessageCommandHandler());
         _commandHandlers.put("Q", new QuitCommandHandler());
         _commandHandlers.put("R", new RestartCommandHandler());
@@ -219,11 +220,39 @@ public class Test_SystemConsole {
         }
     }
 
-    private static class ListCommandHandler implements CommandHandler {
+    private static class LogCommandHandler implements CommandHandler {
 
         @Override
         public String getHelp() {
-            return "    L                     - list active jobs";
+            return "    I {message}           - insert an info message in the system log";
+        }
+
+        @Override
+        public int getMaximumTokens() {
+            return 99;
+        }
+
+        @Override
+        public int getMinimumTokens() {
+            return 2;
+        }
+
+        @Override
+        public void handle(
+            final Context context,
+            final int consoleId,
+            final String[] commandSplit
+        ) {
+            String msg = String.join(" ", Arrays.copyOfRange(commandSplit, 1, commandSplit.length));
+            LOGGER.info(msg);
+        }
+    }
+
+    private static class JobsCommandHandler implements CommandHandler {
+
+        @Override
+        public String getHelp() {
+            return "    J                     - list active jobs";
         }
 
         @Override

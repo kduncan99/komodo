@@ -1,23 +1,17 @@
 //  Copyright(c) 2020 by Kurt Duncan - All Rights Reserved
 
-const consoleDefaultOutputColor = 0x00ff00;
-const consoleDefaultOutputBackgroundColor = 0x000000;
-const consoleDefaultInputColor = 0xffffff;
-const consoleDefaultInputBackgroundColor = 0x000000;
-const consoleBlankLine = ''.padStart(attributes.screenSizeColumns, ' ');
+"use strict"
 
-let pollingConsole = false;             //  console poll in progress
+const CONSOLE_DEFAULT_OUTPUT_FG_COLOR = 0x00ff00;
+const CONSOLE_DEFAULT_OUTPUT_BG_COLOR = 0x000000;
+const CONSOLE_DEFAULT_INPUT_FG_COLOR = 0xffffff;
+const CONSOLE_DEFAULT_INPUT_BG_COLOR = 0x000000;
+const CONSOLE_BLANK_LINE = ''.padStart(ATTRIBUTES.consoleScreenSizeColumns, ' ');
+
 let consolePendingPostMessageXHR = null;
 
 
 consoleReset();
-
-
-window.setInterval(function() {
-    if (clientIdent !== '' && !pollingLogs) {
-        consolePoll();
-    }
-}, 500);
 
 
 //  Responds to pressing the Enter or Return key for input, or the Esc key to unlock the keyboard
@@ -53,19 +47,16 @@ $('input[type=text]').on('keydown', function(e) {
                 }
                 inputRow.disabled = false;
                 inputRow.value = '';
-                consoleSetStatusRow(false);
             };
             xhr.onerror = function () {
                 //  Some sort of network error occurred - complain and unclog input
                 alert('Network error - cannot submit console input');
                 inputRow.disabled = false;
                 inputRow.value = '';
-                consoleSetStatusRow(false);
             };
             xhr.send(json);
             consolePendingPostMessageXHR = xhr;
             inputRow.disabled = true;
-            consoleSetStatusRow(false);
         }
     } else if (e.which === 27 || e.keyCode === 27) {
         e.preventDefault();
@@ -77,7 +68,7 @@ $('input[type=text]').on('keydown', function(e) {
 
 
 function consoleClearInputArea() {
-    const html = createSpan(consoleDefaultInputColor, consoleDefaultInputBackgroundColor, consoleBlankLine);
+    const html = createSpan(CONSOLE_DEFAULT_INPUT_FG_COLOR, CONSOLE_DEFAULT_INPUT_BG_COLOR, CONSOLE_BLANK_LINE);
     const inputRow = document.getElementById('consoleInputRow');
     inputRow.disabled = false;
     inputRow.innerHTML = html;
@@ -86,46 +77,10 @@ function consoleClearInputArea() {
 
 function consoleClearOutputArea() {
     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-    const html = createSpan(consoleDefaultOutputColor, consoleDefaultOutputBackgroundColor, consoleBlankLine);
-    for (let rx = 0; rx < attributes.screenSizeRows; rx++) {
+    const html = createSpan(CONSOLE_DEFAULT_OUTPUT_FG_COLOR, CONSOLE_DEFAULT_OUTPUT_BG_COLOR, CONSOLE_BLANK_LINE);
+    for (let rx = 0; rx < ATTRIBUTES.consoleScreenSizeRows; rx++) {
         rows[rx].innerHTML = html;
     }
-}
-
-
-//  Poll the REST server, unless we're not validated in which case, validate
-function consolePoll() {
-    pollingConsole = true;
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', '/poll/console', true);
-    xhr.responseType = "json";
-    xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-    xhr.setRequestHeader('Client', clientIdent);
-    xhr.onload = function () {
-        if (xhr.status === 200 || xhr.status === 201) {
-            //  input was accepted - should be 200, but we'll take 201
-            pollFailed = false;
-            const newMessages = xhr.response.outputMessages;
-            if ((newMessages != null) && (newMessages.length > 0)) {
-                consoleProcessNewMessages(newMessages);
-            }
-        } else {
-            console.debug("POLL FAILED:" + xhr.statusText);
-            pollFailed = true;
-        }
-        pollingConsole = false;
-        consoleSetStatusRow(false);
-    };
-    xhr.onerror = function () {
-        //  Some sort of network error occurred - complain and unclog input
-        alert('Network error - cannot contact indicated server');
-        pollingConsole = false;
-        clientIdent = '';
-        consoleSetStatusRow(false);
-        //TODO go back to login dialog
-    };
-    xhr.send();
-    consoleSetStatusRow(true);
 }
 
 
@@ -152,28 +107,28 @@ function consoleProcessNewMessages(newMessages) {
                 break;
 
             case 2:     //  DELETE_ROW
-                if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
+                if ((rowIndex >= 0) && (rowIndex < ATTRIBUTES.consoleScreenSizeRows)) {
                     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
                     let rx = rowIndex + 1;
-                    while (rx < attributes.screenSizeRows) {
+                    while (rx < ATTRIBUTES.consoleScreenSizeRows) {
                         rows[rx - 1].innerHTML = rows[rx].innerHTML;
                         rx++;
                     }
-                    html = createSpan(consoleDefaultOutputColor, consoleDefaultOutputBackgroundColor, consoleBlankLine);
-                    rows[attributes.screenSizeRows - 1].innerHTML = html;
+                    html = createSpan(CONSOLE_DEFAULT_OUTPUT_FG_COLOR, CONSOLE_DEFAULT_OUTPUT_BG_COLOR, CONSOLE_BLANK_LINE);
+                    rows[ATTRIBUTES.consoleScreenSizeRows - 1].innerHTML = html;
                 }
                 break;
 
             case 3:     //  WRITE_ROW
-                if ((rowIndex >= 0) && (rowIndex < attributes.screenSizeRows)) {
+                if ((rowIndex >= 0) && (rowIndex < ATTRIBUTES.consoleScreenSizeRows)) {
                     const rows = document.getElementById('ConsoleOutput').getElementsByTagName('li');
-                    let adjustedText = text.substring(0, attributes.screenSizeColumns);
+                    let adjustedText = text.substring(0, ATTRIBUTES.consoleScreenSizeColumns);
                     if (rightJustified) {
-                        adjustedText = adjustedText.padStart(attributes.screenSizeColumns, ' ');
+                        adjustedText = adjustedText.padStart(ATTRIBUTES.consoleScreenSizeColumns, ' ');
                     } else {
-                        adjustedText = adjustedText.padEnd(attributes.screenSizeColumns, ' ');
+                        adjustedText = adjustedText.padEnd(ATTRIBUTES.consoleScreenSizeColumns, ' ');
                     }
-                    html = createSpan(textColor, backgroundColor, adjustedText.substring(0, attributes.screenSizeColumns));
+                    html = createSpan(textColor, backgroundColor, adjustedText.substring(0, ATTRIBUTES.consoleScreenSizeColumns));
                     rows[rowIndex].innerHTML = html;
                 }
                 break;
@@ -185,38 +140,37 @@ function consoleProcessNewMessages(newMessages) {
 function consoleReset() {
     consoleClearOutputArea();
     consoleClearInputArea();
-    consoleSetStatusRow();
 }
 
 
 //  Updates the status row
-function consoleSetStatusRow(pollTrigger) {
-    let html = ''.padStart(attributes.screenSizeColumns - 14, ' ');
-    if (consolePendingPostMessageXHR) {
-        html += createSpan(0x000000, 0xffff00, 'LOCK');
-    } else {
-        html += createSpan(0xbfbfbf, 0x3f3f00, 'LOCK');
-    }
-
-    html += ' '
-    if (pollTrigger) {
-        html += createSpan(0x000000, 0x00ffff, 'POLL');
-    } else if (pollingConsole) {
-        html += createSpan(0x000000, 0x00ff00, 'POLL');
-    } else if (pollFailed) {
-        html += createSpan(0x000000, 0xff0000, 'POLL');
-    } else {
-        html += createSpan(0xbfbfbf, 0x003f00, 'POLL');
-    }
-    html += ' ';
-
-    if (validating) {
-        html += createSpan(0x000000, 0xffff00, 'SESN');
-    } else if (clientIdent === '') {
-        html += createSpan(0xbfbfbf, 0x003f00, 'SESN');
-    } else {
-        html += createSpan(0x000000, 0x00ff00, 'SESN');
-    }
-
-    document.getElementById('consoleStatusRow').innerHTML = html;
-}
+// function consoleSetStatusRow(pollTrigger) {
+//     let html = ''.padStart(ATTRIBUTES.consoleScreenSizeColumns - 14, ' ');
+//     if (consolePendingPostMessageXHR) {
+//         html += createSpan(0x000000, 0xffff00, 'LOCK');
+//     } else {
+//         html += createSpan(0xbfbfbf, 0x3f3f00, 'LOCK');
+//     }
+//
+//     html += ' '
+//     if (pollTrigger) {
+//         html += createSpan(0x000000, 0x00ffff, 'POLL');
+//     } else if (pollingConsole) {
+//         html += createSpan(0x000000, 0x00ff00, 'POLL');
+//     } else if (pollFailed) {
+//         html += createSpan(0x000000, 0xff0000, 'POLL');
+//     } else {
+//         html += createSpan(0xbfbfbf, 0x003f00, 'POLL');
+//     }
+//
+//     html += ' ';
+//     if (validating) {
+//         html += createSpan(0x000000, 0xffff00, 'SESN');
+//     } else if (clientIdent === '') {
+//         html += createSpan(0xbfbfbf, 0x003f00, 'SESN');
+//     } else {
+//         html += createSpan(0x000000, 0x00ff00, 'SESN');
+//     }
+//
+//     document.getElementById('consoleStatusRow').innerHTML = html;
+// }

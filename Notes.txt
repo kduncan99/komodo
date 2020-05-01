@@ -1,11 +1,5 @@
 -- TODO InProgress
 RESTSystemConsoleInterface and related
-  Let's go ahead and do the pre-built certificate thing.  What could go wrong? (inprogress - it could *not* work...)
-
-  Something weird with 5 second task - takes 10 or 15 seconds to do it. why?
-  Go back to one single long poll and distribute the results among the various .js things
-    Maybe this will fix the polling issue above?
-
   Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
     If so, then we don't need the long poll (above) anymore.
 
