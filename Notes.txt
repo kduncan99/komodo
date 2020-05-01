@@ -4,8 +4,9 @@ RESTSystemConsoleInterface and related
     If so, then we don't need the long poll (above) anymore.
 
 *systemConsoleInterface.js
-Needs session sign-on
-Needs session close button
+Need poll indicator on main screen.... I think.
+  Should it go back onto the console tab?
+After successful validation, we should get a confirmation alert
 OS Console page
     Output and Input areas should be the same length - which length is another question
     Can we make the containing screen not the entire width of the browser window?

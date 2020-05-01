@@ -21,6 +21,35 @@ let validating = false;             //  validation in progress
 let validationFailed = false;       //  previous validation attempt failed
 
 
+
+
+
+const credentialsPopup = document.getElementById('credentials');
+const credentialsSubmit = document.getElementById("credentialsSubmit");
+
+credentialsSubmit.onclick = function() {
+    const usernameField = document.getElementById('credentialsUsername');
+    const passwordField = document.getElementById('credentialsPassword');
+    credentialsUserName = usernameField.value;
+    credentialsPassword = passwordField.value;
+    usernameField.value = '';
+    passwordField.value = '';
+    solicitingCredentials = false;
+    credentialsPopup.style.display = "none";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 //  Set up tab panels
 $(function() {
     $( "#sciTabs" ).tabs();
@@ -59,22 +88,25 @@ function periodicScan() {
             //  poll indicator was flashed - dim it now, but leave it lit
             //  TODO
         }
+        console.debug('ps: polling');//TODO remove
         return;
     }
 
     if (validating) {
+        console.debug('ps: validating');//TODO remove
         return;
     }
 
     if (solicitingCredentials) {
+        console.debug('ps: soliciting');//TODO remove
         return;
     }
 
+    console.debug('ps: moving on...');//TODO remove
     if (clientIdent === '') {
         //  we're not validated
         if (validationFailed) {
-            //  TODO start solicit credentials
-            solicitingCredentials = true;
+            solicitCredentials('Validation failed - re-enter credentials');
         } else {
             startValidation();
         }
@@ -88,13 +120,12 @@ function periodicScan() {
 
 
 function solicitCredentials(prompt) {
-    //TODO 'raise' the dialog - however that works
+    validationFailed = false;
     solicitingCredentials = true;
-
-    //TODO remove the following temporary cruft
-    credentialsUserName = 'admin'
-    credentialsPassword = 'admin'
-    solicitingCredentials = false;
+    document.getElementById('credentialsUsername').value = '';
+    document.getElementById('credentialsPassword').value = '';
+    document.getElementById('credentialsPrompt').innerText = prompt
+    credentialsPopup.style.display = "block";
 }
 
 
@@ -149,6 +180,7 @@ function startPoll() {
 
 //  Initiates a validation sequence with the REST server
 function startValidation() {
+    validationFailed = false;
     validating = true;
     pollFailedCounter = 0;
     console.debug("validating...");
@@ -163,19 +195,18 @@ function startValidation() {
             //  input was accepted - should be 201, but we'll take 200
             console.debug("VALIDATE SUCCESS:" + xhr.response);
             clientIdent = xhr.response;
-            validating = false;
         } else {
             //  input was rejected for content
             console.debug("VALIDATE FAILED:" + xhr.statusText);
             validationFailed = true;
-            solicitCredentials('Validation failure - re-enter credentials');
         }
+        validating = false;
     };
     xhr.onerror = function () {
         //  Some sort of network error occurred - complain
         alert('Network error - cannot contact indicated server - try refreshing the page');
-        validating = false;
         validationFailed = false;
+        validating = false;
     };
     xhr.send(json);
 }
