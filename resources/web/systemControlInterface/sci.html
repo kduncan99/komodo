@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <!--suppress ALL -->
-<html lang="en">
+
 <!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
 <!-- This is the main HTML for the system control interface -->
 <!-- It has IPL, Console, Log, systemConfig, and hardwareConfig panels, all implemented as tabbed panes -->
+<!-- With the exception of ids used for tab captions, all DOM element ids are camel-case - i.e., identifierName -->
+<!-- All class names are word case - i.e., ClassName -->
+
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>Komodo System Console</title>
@@ -38,59 +42,66 @@
             <li><a href="#System">System</a></li>
             <li><a href="#Logging">Logging</a></li>
         </ul>
+        <!-- --------------------------------------------------------------------------------------------- -->
         <div id="IPL">
             <p>Boot Stuff</p>
         </div>
-
+        <!-- --------------------------------------------------------------------------------------------- -->
         <div id="Console">
             <p>Operating System Console</p>
-            <div id="ConsoleScreen">
-                <ul id="ConsoleOutput" class="consoleOutput">
+            <div>
+                <ul id="consoleOutput">
                     <!-- hard coding to 24 rows... if the .js file changes, then we should change this here -->
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
-                    <li class="consoleRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
+                    <li class="ConsoleOutputRow"></li>
                 </ul>
             </div>
-            <div></div>
             <div>
-                <label for="consoleInputRow"></label>
-                <input type="text" id="consoleInputRow" autofocus size="80" maxlength="80">
+                <ul id="consoleStatus" class="ConsoleStatus">
+                    <li class="ConsoleStatusRow" id="consoleStatusRow"></li>
+                </ul>
+            </div>
+            <div>
+                <form id="consoleInput">
+                    <input type="text" id="consoleInputRow" size="80" maxlength="80">
+                    <input type="submit" id="consoleSubmit" hidden>
+                </form>
             </div>
         </div>
-
+        <!-- --------------------------------------------------------------------------------------------- -->
         <div id="Hardware">
             <p>Hardware Configuration Content</p>
         </div>
-
+        <!-- --------------------------------------------------------------------------------------------- -->
         <div id="System">
             <p>System Content</p>
         </div>
-
+        <!-- --------------------------------------------------------------------------------------------- -->
         <div id="Logging">
-            <div id="LoggingScreen">
-                <table id="LoggingTable">
+            <div id="loggingScreen">
+                <table id="loggingTable">
                     <thead>
                     <tr>
                         <th>Date/Time</th>
@@ -99,7 +110,7 @@
                         <th>Message</th>
                     </tr>
                     </thead>
-                    <tbody id="LoggingRows">
+                    <tbody id="loggingRows">
                     <tr>
                         <td>System Log Starts</td>
                     </tr>
@@ -107,22 +118,23 @@
                 </table>
             </div>
         </div>
+        <!-- --------------------------------------------------------------------------------------------- -->
     </div>
 
     <!-- credentials modal -->
-    <div id="credentials" class="sciModal">
-        <div class="credentialsContent">
-            <div class="credentialsHead">
+    <div id="credentials" class="SCIModal">
+        <form id="credentialsForm" class="SCIModalContent">
+            <div class="SCIModalHead">
                 <p id="credentialsPrompt">Please enter credentials for the System Control Interface</p>
             </div>
-            <div class="credentialsMain">
+            <div class="SCIModalMain">
                 <label for="credentialsUsername">UserName:</label>
                 <input type="text" id="credentialsUsername" name="username"><br><br>
                 <label for="credentialsPassword">Password:</label>
-                <input type="text" id="credentialsPassword" name="password"><br><br>
+                <input type="password" id="credentialsPassword" name="password"><br><br>
                 <input type="submit" id="credentialsSubmit" value="Submit">
             </div>
-        </div>
+        </form>
     </div>
 </body>
 </html>

@@ -1,7 +1,6 @@
 /* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
 
-/* modal class */
-.sciModal {
+.SCIModal {
     display: none;
     position: fixed;
     z-index: 1;
@@ -15,8 +14,7 @@
     background-color: rgba(0,0,0,0.4);
 }
 
-/* credentials-specific */
-.credentialsContent {
+.SCIModalContent {
     position: relative;
     background-color: #fefefe;
     margin: auto;
@@ -29,13 +27,13 @@
     animation-duration: 0.4s
 }
 
-.credentialsHead {
+.SCIModalHead {
     padding: 2px 16px;
     color: #7fffff;
     background-color: #0000ff;
 }
 
-.credentialsMain {
+.SCIModalMain {
     padding: 2px 16px;
 }
 

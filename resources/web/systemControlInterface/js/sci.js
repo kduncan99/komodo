@@ -4,6 +4,11 @@
 
 const POLL_FAILURE_LIMIT = 5;               //  Max consecutive poll failures allowed before we give up
 const SPACE_REGEX_PATTERN = new RegExp(' ', 'g');
+const CREDENTIALS_DIV = document.getElementById('credentials');
+const CREDENTIALS_FORM = document.getElementById('credentialsForm');
+const CREDENTIALS_USERNAME_FIELD = document.getElementById('credentialsUsername');
+const CREDENTIALS_PASSWORD_FIELD = document.getElementById('credentialsPassword');
+const CREDENTIALS_PROMPT = document.getElementById('credentialsPrompt');
 
 const ATTRIBUTES = {
     consoleScreenSizeRows: 24,
@@ -21,42 +26,29 @@ let validating = false;             //  validation in progress
 let validationFailed = false;       //  previous validation attempt failed
 
 
-
-
-
-const credentialsPopup = document.getElementById('credentials');
-const credentialsSubmit = document.getElementById("credentialsSubmit");
-
-credentialsSubmit.onclick = function() {
-    const usernameField = document.getElementById('credentialsUsername');
-    const passwordField = document.getElementById('credentialsPassword');
-    credentialsUserName = usernameField.value;
-    credentialsPassword = passwordField.value;
-    usernameField.value = '';
-    passwordField.value = '';
-    solicitingCredentials = false;
-    credentialsPopup.style.display = "none";
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 //  Set up tab panels
 $(function() {
-    $( "#sciTabs" ).tabs();
+    $( "#sciTabs" ).tabs({
+        activate: function(event, ui) {
+            if (ui.newPanel[0].id === 'Console') {
+                consoleActivate();
+            }
+        }
+    });
 });
 
 
-//  Raise credentials window, then schedule the periodic scan
+//  Set up credentials submit handling, raise credentials window, then schedule the periodic scan
+CREDENTIALS_FORM.onsubmit = function() {
+    credentialsUserName = CREDENTIALS_USERNAME_FIELD.value;
+    credentialsPassword = CREDENTIALS_PASSWORD_FIELD.value;
+    CREDENTIALS_USERNAME_FIELD.value = '';
+    CREDENTIALS_PASSWORD_FIELD.value = '';
+    solicitingCredentials = false;
+    CREDENTIALS_DIV.style.display = "none";
+    return false;
+};
+
 solicitCredentials("Enter credentials for managing Komodo");
 window.setInterval(periodicScan, 1000);
 
@@ -83,26 +75,15 @@ function createSpan(fgcolor, bgcolor, text) {
 //          If we've reached the limit of polling failures do nothing (user already has been notified)
 //          otherwise start poll
 function periodicScan() {
-    if (polling) {
+    if (polling | validating || solicitingCredentials || (pollFailedCounter >= POLL_FAILURE_LIMIT)) {
         if (pollFlashed) {
             //  poll indicator was flashed - dim it now, but leave it lit
-            //  TODO
+            pollFlashed = false;
+            consoleSetStatusRow()
         }
-        console.debug('ps: polling');//TODO remove
         return;
     }
 
-    if (validating) {
-        console.debug('ps: validating');//TODO remove
-        return;
-    }
-
-    if (solicitingCredentials) {
-        console.debug('ps: soliciting');//TODO remove
-        return;
-    }
-
-    console.debug('ps: moving on...');//TODO remove
     if (clientIdent === '') {
         //  we're not validated
         if (validationFailed) {
@@ -111,10 +92,7 @@ function periodicScan() {
             startValidation();
         }
     } else {
-        //  we are validated
-        if (pollFailedCounter < POLL_FAILURE_LIMIT) {
-            startPoll();
-        }
+        startPoll();
     }
 }
 
@@ -122,18 +100,19 @@ function periodicScan() {
 function solicitCredentials(prompt) {
     validationFailed = false;
     solicitingCredentials = true;
-    document.getElementById('credentialsUsername').value = '';
-    document.getElementById('credentialsPassword').value = '';
-    document.getElementById('credentialsPrompt').innerText = prompt
-    credentialsPopup.style.display = "block";
+    CREDENTIALS_USERNAME_FIELD.value = '';
+    CREDENTIALS_PASSWORD_FIELD.value = '';
+    CREDENTIALS_PROMPT.innerText = prompt;
+    CREDENTIALS_DIV.style.display = "block";
+    CREDENTIALS_USERNAME_FIELD.focus();
 }
 
 
 //  Poll the REST server
 function startPoll() {
     polling = true;
-    //  TODO flash poll indicator
     pollFlashed = true;
+    consoleSetStatusRow();
 
     let xhr = new XMLHttpRequest();
     xhr.open('GET', '/poll', true);
@@ -162,17 +141,24 @@ function startPoll() {
             console.debug("POLL FAILED:" + xhr.statusText);
             pollFailedCounter++;
             if (pollFailedCounter >= POLL_FAILURE_LIMIT) {
-                //  TODO update poll indicator
                 alert('Poll Failure Limit Reached - Server may have been shut down')
             }
         }
+        pollFlashed = false;
         polling = false;
+        consoleSetStatusRow();
     };
     xhr.onerror = function () {
         //  Some sort of network error occurred - complain
-        alert('Network error - Cannot contact indicated server');
         validating = false;
         validationFailed = false;
+        pollFailedCounter++;
+        pollFlashed = false;
+        polling = false;
+        if (pollFailedCounter >= POLL_FAILURE_LIMIT) {
+            alert('Poll Failure Limit Reached - Server may have been shut down')
+        }
+        consoleSetStatusRow();
     };
     xhr.send();
 }
@@ -200,13 +186,18 @@ function startValidation() {
             console.debug("VALIDATE FAILED:" + xhr.statusText);
             validationFailed = true;
         }
+
         validating = false;
+        consoleSetStatusRow();
     };
     xhr.onerror = function () {
         //  Some sort of network error occurred - complain
         alert('Network error - cannot contact indicated server - try refreshing the page');
         validationFailed = false;
         validating = false;
+        consoleSetStatusRow();
     };
+
     xhr.send(json);
+    consoleSetStatusRow();
 }

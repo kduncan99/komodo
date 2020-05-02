@@ -1,34 +1,30 @@
 -- TODO InProgress
-RESTSystemConsoleInterface and related
-  Investigate whether we can build a WebSocket library on top of the existing HttpServer thing.
-    If so, then we don't need the long poll (above) anymore.
+Logging - what is the difference between source and entity?
 
-*systemConsoleInterface.js
-Need poll indicator on main screen.... I think.
-  Should it go back onto the console tab?
-After successful validation, we should get a confirmation alert
-OS Console page
-    Output and Input areas should be the same length - which length is another question
-    Can we make the containing screen not the entire width of the browser window?
-    Needs console input help pages for KEXEC commands
+*sci.js and related
+Console help for KEXEC console commands
 IPL page
+  Jump Keys
+  Help describing the KEXEC usage of the jump keys
+  Boot source (binary selection of tape boot, disk boot, other binary boot)
 Hardware page
+  Node configuration, basically
 System page
-
-The following, in Node.java, should be subject to management by SCIF / SoftwareConfiguration
-Also, we don't use the channel entities (yet?)
-    static final boolean LOG_CHANNEL_IOS = true;
-    static final boolean LOG_CHANNEL_IO_BUFFERS = true;
-    static final boolean LOG_DEVICE_IOS = true;
-    static final boolean LOG_DEVICE_IO_BUFFERS = true;
-    static final boolean LOG_IO_ERRORS = true;
-
-Give SCIF the ability to control logging levels
-
-Move dayclock architecture to SystemProcessor
+  All the non-hardware related configurables
+    Give SCIF the ability to control logging levels
+        The following, in Node.java, should be subject to management by SCIF / SoftwareConfiguration
+            static final boolean LOG_CHANNEL_IOS = true;
+            static final boolean LOG_CHANNEL_IO_BUFFERS = true;
+            static final boolean LOG_DEVICE_IOS = true;
+            static final boolean LOG_DEVICE_IO_BUFFERS = true;
+            static final boolean LOG_IO_ERRORS = true;
+OS Configuration page (new page)
+  KEXEC configuration items
 
 * hardwarelib
+SP: Move dayclock architecture to SystemProcessor
 IP: SYSC subfunctions need unit tests
+CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
 
 *minalib
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
