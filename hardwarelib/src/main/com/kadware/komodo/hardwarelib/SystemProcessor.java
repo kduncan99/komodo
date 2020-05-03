@@ -259,7 +259,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int jumpKeyId
     ) {
         if ((jumpKeyId > 0) && (jumpKeyId < 37)) {
-            long mask = 1 << (36 - jumpKeyId);
+            long mask = 1L << (36 - jumpKeyId);
             return (_jumpKeys & mask) != 0;
         }
         return false;
@@ -276,7 +276,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final boolean value
     ) {
         if ((jumpKeyId > 0) && (jumpKeyId < 37)) {
-            long mask = 1 << (36 - jumpKeyId);
+            long mask = 1L << (36 - jumpKeyId);
             if (value) {
                 _jumpKeys |= mask;
             } else {

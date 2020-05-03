@@ -737,7 +737,7 @@ public class Test_SystemConsole {
     public void exercise(
     ) throws MaxNodesException,
              IOException {
-        System.setProperty("BASE_DIR", "../test/");
+        System.setProperty("BASE_DIR", "../test-deploy/");
         Deployer testDeployer = new Deployer();
         testDeployer.deploy();
 
