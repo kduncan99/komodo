@@ -10,9 +10,9 @@ import java.io.BufferedWriter;
 
 /**
  * Specifies the interfaces which must be implemented by any concrete system console class.
- * Referred to fondly as the SCIF.
+ * Referred to fondly as the SPIF.
  */
-public interface SystemConsoleInterface {
+public interface SystemProcessorInterface {
 
     class ConsoleInputMessage {
         public final int _consoleIdentifier;
@@ -54,6 +54,11 @@ public interface SystemConsoleInterface {
     );
 
     String getName();
+
+    /**
+     * Notifies the console interface that jump keys have been updated
+     */
+    void jumpKeysUpdated();
 
     /**
      * Polls the console for the next available input message

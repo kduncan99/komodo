@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
 
 /**
- * For testing the SystemConsoleInterface (presumably the RESTSystemConsole, but good for any implementor)
+ * For testing the SystemProcessorInterface (presumably the RESTSystemConsole, but good for any implementor)
  */
 public class Test_SystemConsole {
 
@@ -54,7 +54,7 @@ public class Test_SystemConsole {
 
         private final Context _context;
         private static int _nextNotificationId = 1;
-        private SystemConsoleInterface.ConsoleInputMessage _pendingMessage;     //  from operator
+        private SystemProcessorInterface.ConsoleInputMessage _pendingMessage;     //  from operator
         private final String _name;
         private JobState _state = JobState.Init;
         private boolean _terminate = false;
@@ -355,7 +355,7 @@ public class Test_SystemConsole {
                     context._systemProcessor.consoleSendReadOnlyMessage(consoleId, "  Job Has Not Retrieved Previous Message");
                     job = null;
                 } else {
-                    job._pendingMessage = new SystemConsoleInterface.ConsoleInputMessage(consoleId, message);
+                    job._pendingMessage = new SystemProcessorInterface.ConsoleInputMessage(consoleId, message);
                 }
             }
 
@@ -507,7 +507,7 @@ public class Test_SystemConsole {
         private class InputPollerThread implements Runnable {
 
             public void run() {
-                SystemConsoleInterface.ConsoleInputMessage cim = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
+                SystemProcessorInterface.ConsoleInputMessage cim = _context._systemProcessor.consolePollInputMessage(POLL_WAIT_MILLIS);
                 if (cim != null) {
                     String[] split = cim._text.toUpperCase().split(" ");
                     CommandHandler ch = _commandHandlers.get(split[0].toUpperCase());

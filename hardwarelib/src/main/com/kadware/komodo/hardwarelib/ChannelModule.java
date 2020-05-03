@@ -11,8 +11,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Base class which models a channel module node
@@ -47,13 +46,13 @@ public abstract class ChannelModule extends Node implements Worker {
         public static ByteTranslationFormat getValue(
             final int code
         ) {
-            switch (code) {
-                case 0:     return QuarterWordPerByte;
-                case 1:     return SixthWordByte;
-                case 2:     return QuarterWordPacked;
-                case 3:     return QuarterWordPerByteNoTermination;
-                default:    return null;
-            }
+            return switch (code) {
+                case 0 -> QuarterWordPerByte;
+                case 1 -> SixthWordByte;
+                case 2 -> QuarterWordPacked;
+                case 3 -> QuarterWordPerByteNoTermination;
+                default -> null;
+            };
         }
     }
 
@@ -72,11 +71,11 @@ public abstract class ChannelModule extends Node implements Worker {
         public static ChannelModuleType getValue(
             final int code
         ) {
-            switch (code) {
-                case 1:     return Byte;
-                case 2:     return Word;
-                default:    return null;
-            }
+            return switch (code) {
+                case 1 -> Byte;
+                case 2 -> Word;
+                default -> null;
+            };
         }
     }
 
@@ -251,10 +250,9 @@ public abstract class ChannelModule extends Node implements Worker {
                 assert(_deviceAddress != null);
                 assert(_ioFunction != null);
 
-                if (_ioFunction.isReadFunction()
-                    || (_ioFunction.isWriteFunction() && (_ioFunction != Device.IOFunction.WriteEndOfFile))) {
-                    assert(_acws != null);
-                }
+                assert !_ioFunction.isReadFunction()
+                       && (!_ioFunction.isWriteFunction() || (_ioFunction == Device.IOFunction.WriteEndOfFile))
+                       || (_acws != null);
 
                 return new ChannelProgram(_iopUpiIndex,
                                           _channelModuleIndex,
@@ -291,17 +289,17 @@ public abstract class ChannelModule extends Node implements Worker {
         public static ChannelStatus getValue(
             final int code
         ) {
-            switch (code) {
-                case 0:     return Successful;
-                case 1:     return Cancelled;
-                case 2:     return DeviceError;
-                case 3:     return UnconfiguredChannelModule;
-                case 4:     return UnconfiguredDevice;
-                case 5:     return InvalidAddress;
-                case 6:     return InsufficientBuffers;
-                case 040:   return InProgress;
-                default:    return InvalidStatus;
-            }
+            return switch (code) {
+                case 0 -> Successful;
+                case 1 -> Cancelled;
+                case 2 -> DeviceError;
+                case 3 -> UnconfiguredChannelModule;
+                case 4 -> UnconfiguredDevice;
+                case 5 -> InvalidAddress;
+                case 6 -> InsufficientBuffers;
+                case 040 -> InProgress;
+                default -> InvalidStatus;
+            };
         }
     }
 
@@ -341,12 +339,12 @@ public abstract class ChannelModule extends Node implements Worker {
                 writer.write(String.format("    Src:%s IOP:%s Started:%s Completed:%s Dev:%d Func:%s\n",
                                            _source._name,
                                            _ioProcessor._name,
-                                           String.valueOf(_started),
-                                           String.valueOf(_completed),
+                                           _started,
+                                           _completed,
                                            _channelProgram.getDeviceAddress(),
                                            _channelProgram.getFunction().toString()));
             } catch (IOException ex) {
-                LOGGER.catching(ex);
+                _logger.catching(ex);
             }
         }
     }
@@ -355,8 +353,6 @@ public abstract class ChannelModule extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    private static final Logger LOGGER = LogManager.getLogger(ChannelModule.class);
 
     public final ChannelModuleType _channelModuleType;
 
@@ -434,7 +430,9 @@ public abstract class ChannelModule extends Node implements Worker {
      */
     @Override
     public void clear() {
+        EntryMessage em = _logger.traceEntry("clear()");
         _trackers.clear();
+        _logger.traceExit(em);
     }
 
     /**
@@ -451,7 +449,7 @@ public abstract class ChannelModule extends Node implements Worker {
                 tracker.dump(writer);
             }
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
         }
     }
 
@@ -471,10 +469,12 @@ public abstract class ChannelModule extends Node implements Worker {
     @Override
     public final void initialize(
     ) {
+        EntryMessage em = _logger.traceEntry("initialize()");
         _workerThread.start();
         while (!_workerThread.isAlive()) {
             Thread.onSpinWait();
         }
+        _logger.traceExit(em);
     }
 
     /**
@@ -492,35 +492,44 @@ public abstract class ChannelModule extends Node implements Worker {
         final ChannelProgram channelProgram,
         final ArraySlice compositeBuffer
     ) {
+        EntryMessage em = _logger.traceEntry("scheduleChannelProgram(source={} ioProcessor={})",
+                                             source._name,
+                                             ioProcessor._name);
+        boolean result = false;
         if (!_descendants.containsKey(channelProgram.getDeviceAddress())) {
             channelProgram.setChannelStatus(ChannelStatus.UnconfiguredDevice);
-            return false;
+        } else {
+
+            channelProgram.setChannelStatus(ChannelStatus.InProgress);
+            synchronized (this) {
+                _trackers.add(createTracker(source, ioProcessor, channelProgram, compositeBuffer));
+                notify();
+            }
+            result = true;
         }
 
-        channelProgram.setChannelStatus(ChannelStatus.InProgress);
-        synchronized (this) {
-            _trackers.add(createTracker(source, ioProcessor, channelProgram, compositeBuffer));
-            notify();
-        }
-
-        return true;
+        _logger.traceExit(em, result);
+        return result;
     }
 
     /**
      * For the descendent device to signal the channel module when an IO has completed
      */
     final void signal() {
+        EntryMessage em = _logger.traceEntry("signal()");
         synchronized(_workerThread) {
             _workerThread.notify();
         }
+        _logger.traceExit(em);
     }
 
     /**
      * Invoked just before tearing down the configuration.  Stop the thread.
      */
     @Override
-    public final void terminate(
-    ) {
+    public final void terminate() {
+        EntryMessage em = _logger.traceEntry("terminate()");
+
         _workerTerminate = true;
         synchronized(_workerThread) {
             _workerThread.notify();
@@ -529,5 +538,7 @@ public abstract class ChannelModule extends Node implements Worker {
         while (_workerThread.isAlive()) {
             Thread.onSpinWait();
         }
+
+        _logger.traceExit(em);
     }
 }

@@ -7195,7 +7195,7 @@ public class InstructionProcessor extends Processor implements Worker {
                                                                      words);
                     if (vaInfo._status == SS_SUCCESSFUL) {
                         int waitMillis = (int) Word36.getH2(operands[1]);
-                        SystemConsoleInterface.ConsoleInputMessage consInput
+                        SystemProcessorInterface.ConsoleInputMessage consInput
                             = _systemProcessor.consolePollInputMessage(waitMillis);
                         if (consInput != null) {
                             operands[0] = Word36.setQ4(operands[0], consInput._text.length());

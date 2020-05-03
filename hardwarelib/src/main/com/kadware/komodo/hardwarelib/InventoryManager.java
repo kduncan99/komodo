@@ -254,7 +254,7 @@ public class InventoryManager {
 
     /**
      * Creates a new SystemProcessor with a unique name and UPI.
-     * For SystemProcessors which have an HTTPSystemControllerInterface (currently, that's all we have)
+     * For SystemProcessors which have an HTTPSystemProcessorInterface (currently, that's all we have)
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */

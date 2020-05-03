@@ -47,7 +47,7 @@ import org.apache.logging.log4j.message.EntryMessage;
  * easily be changed as well.
  */
 @SuppressWarnings("Duplicates")
-public class HTTPSystemControllerInterface implements SystemConsoleInterface {
+public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Data
@@ -81,7 +81,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     private static final String KEYENTRY_PASSWORD = "komodo";
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
-                                                             HTTPSystemControllerInterface.class.getSimpleName(),
+                                                             HTTPSystemProcessorInterface.class.getSimpleName(),
                                                              SCIHttpHandler.class.getSimpleName(),
                                                              SessionInfo.class.getSimpleName(),
                                                              Pruner.class.getSimpleName(),
@@ -93,7 +93,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                                                              HttpListener.class.getSimpleName(),
                                                              HttpsListener.class.getSimpleName() };
 
-    private static final Logger LOGGER = LogManager.getLogger(HTTPSystemControllerInterface.class.getSimpleName());
+    private static final Logger LOGGER = LogManager.getLogger(HTTPSystemProcessorInterface.class.getSimpleName());
 
     private final String _keystoreDirectory;
     private HttpListener _httpListener;
@@ -112,7 +112,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
     //  Input messages we've received from the client(s), but which have not yet been delivered to the operating system.
     //  Key is the session identifier of the client which sent it to us; value is the actual message.
-    private final Map<String, SystemConsoleInterface.ConsoleInputMessage> _pendingInputMessages = new LinkedHashMap<>();
+    private final Map<String, SystemProcessorInterface.ConsoleInputMessage> _pendingInputMessages = new LinkedHashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
      * @param httpPort port number for HTTP interface - 0 to disable
      * @param httpsPort port number for HTTPS interface - 0 to disable
      */
-    public HTTPSystemControllerInterface(
+    public HTTPSystemProcessorInterface(
         final SystemProcessor parentSystemProcessor,
         final String name,
         final int httpPort,
@@ -1108,7 +1108,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                         String inputText = msg._text.trim();
                         if (!inputText.isEmpty()) {
                             _pendingInputMessages.put(sessionInfo._clientId,
-                                                      new SystemConsoleInterface.ConsoleInputMessage(sessionInfo._consoleId, inputText));
+                                                      new SystemProcessorInterface.ConsoleInputMessage(sessionInfo._consoleId, inputText));
                         }
 
                         _pendingInputMessages.notify();
@@ -1656,9 +1656,9 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
 
             writer.write("  Pending input messages:\n");
             synchronized (_pendingInputMessages) {
-                for (Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage> entry : _pendingInputMessages.entrySet()) {
+                for (Map.Entry<String, SystemProcessorInterface.ConsoleInputMessage> entry : _pendingInputMessages.entrySet()) {
                     String clientId = entry.getKey();
-                    SystemConsoleInterface.ConsoleInputMessage cim = entry.getValue();
+                    SystemProcessorInterface.ConsoleInputMessage cim = entry.getValue();
                     writer.write(String.format("    clientId=%s:'%s'\n", clientId, cim.toString()));
                 }
             }
@@ -1704,7 +1704,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         EntryMessage em = LOGGER.traceEntry("pollInputMessage(timeout={}ms)", timeoutMillis);
 
         SessionInfo sourceSessionInfo = null;
-        SystemConsoleInterface.ConsoleInputMessage cim = null;
+        SystemProcessorInterface.ConsoleInputMessage cim = null;
         synchronized (_pendingInputMessages) {
             if (_pendingInputMessages.isEmpty()) {
                 if (timeoutMillis > 0) {
@@ -1717,8 +1717,8 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             }
 
             if (!_pendingInputMessages.isEmpty()) {
-                Iterator<Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage>> iter = _pendingInputMessages.entrySet().iterator();
-                Map.Entry<String, SystemConsoleInterface.ConsoleInputMessage> nextEntry = iter.next();
+                Iterator<Map.Entry<String, SystemProcessorInterface.ConsoleInputMessage>> iter = _pendingInputMessages.entrySet().iterator();
+                Map.Entry<String, SystemProcessorInterface.ConsoleInputMessage> nextEntry = iter.next();
                 String sourceSessionId = nextEntry.getKey();
                 cim = nextEntry.getValue();
                 iter.remove();

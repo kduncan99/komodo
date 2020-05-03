@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Base class which models a Procesor node
@@ -211,7 +212,7 @@ public abstract class Processor extends Node implements Worker {
             }
             writer.write(sb.toString());
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
         }
     }
 
@@ -226,10 +227,12 @@ public abstract class Processor extends Node implements Worker {
     @Override
     public final void initialize(
     ) {
+        EntryMessage em = _logger.traceEntry("initialize()");
         _workerThread.start();
         while (!_workerThread.isAlive()) {
             Thread.onSpinWait();
         }
+        _logger.traceExit(em);
     }
 
     public final boolean isReady() {
@@ -241,12 +244,13 @@ public abstract class Processor extends Node implements Worker {
      */
     @Override
     public final void terminate() {
-        //  Tell the worker thread to go away.
+        EntryMessage em = _logger.traceEntry("initialize()");
         _workerTerminate = true;
         synchronized (this) { notify(); }
         while (_workerThread.isAlive()) {
             Thread.onSpinWait();
         }
+        _logger.traceExit(em);
     }
 
     /**
@@ -259,14 +263,17 @@ public abstract class Processor extends Node implements Worker {
     final boolean upiAcknowledge(
         final int upiIndex
     ) throws UPINotAssignedException  {
+        EntryMessage em = _logger.traceEntry("upiAcknowledge(upiIndex={})", upiIndex);
         Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
+        boolean result;
         synchronized (destProc._upiPendingAcknowledgements) {
-            boolean result = destProc._upiPendingAcknowledgements.add(this);
+            result = destProc._upiPendingAcknowledgements.add(this);
             if (result) {
                 synchronized (destProc) { destProc.notify(); }
             }
-            return result;
         }
+        _logger.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -279,14 +286,17 @@ public abstract class Processor extends Node implements Worker {
      */
     final boolean upiSendBroadcast(
     ) throws InvalidSystemConfigurationException {
+        EntryMessage em = _logger.traceEntry("upSendBroadcast()");
         InstructionProcessor ip = getBroadcastProcessor();
+        boolean result;
         synchronized (ip._upiPendingInterrupts) {
-            boolean result = ip._upiPendingInterrupts.add(this);
+            result = ip._upiPendingInterrupts.add(this);
             if (result) {
                 synchronized (ip) { ip.notify(); }
             }
-            return result;
         }
+        _logger.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -300,14 +310,17 @@ public abstract class Processor extends Node implements Worker {
     final boolean upiSendDirected(
         final int upiIndex
     ) throws UPINotAssignedException  {
+        EntryMessage em = _logger.traceEntry("upSendDirected(upiIndex={}})", upiIndex);
         Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
+        boolean result;
         synchronized (destProc._upiPendingInterrupts) {
-            boolean result = destProc._upiPendingInterrupts.add(this);
+            result = destProc._upiPendingInterrupts.add(this);
             if (result) {
                 synchronized (destProc) { destProc.notify(); }
             }
-            return result;
         }
+        _logger.traceExit(em, result);
+        return result;
     }
 
 
@@ -388,6 +401,7 @@ public abstract class Processor extends Node implements Worker {
      */
     static void updateBroadcastProcessor(
     ) throws InvalidSystemConfigurationException {
+        EntryMessage em = LOGGER.traceEntry("updateBroadcastProcessor()");
         synchronized (Processor.class) {
             List<InstructionProcessor> processors = InventoryManager.getInstance().getInstructionProcessors();
             if (processors.isEmpty()) {
@@ -402,5 +416,6 @@ public abstract class Processor extends Node implements Worker {
 
             _broadcastDestination = processors.get(0);
         }
+        LOGGER.traceExit(em);
     }
 }

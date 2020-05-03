@@ -76,8 +76,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class.getSimpleName());
 
     private KomodoLoggingAppender _appender;            //  Log appender, so we can catch log entries
-    private SystemConsoleInterface _systemConsoleInterface;
-    Credentials _credentials;                           //  Current admin credentials for logging into the SCIF
+    private SystemProcessorInterface _systemConsoleInterface;
+    Credentials _credentials;                           //  Current admin credentials for logging into the SPIF
     private long _dayclockComparatorMicros;             //  compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  applied to host system time in micros, to obtain emulator time
     private int _httpPort = 0;
@@ -91,7 +91,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * constructor for SPs with an HTTPSystemControllerInterface (currently, that's all we have)
+     * constructor for SPs with an HTTPSystemProcessorInterface (currently, that's all we have)
      * @param name node name of the SP
      * @param httpPort port number for HTTP interface - 0 if we don't want HTTP
      * @param httpsPort port number for HTTPS interface - 0 if we don't want HTTPS
@@ -303,10 +303,10 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         _isRunning = true;
         LOGGER.info(_name + " worker thread starting");
 
-        _systemConsoleInterface = new HTTPSystemControllerInterface(this,
-                                                                    _name + "-SCIF",
-                                                                    _httpPort,
-                                                                    _httpsPort);
+        _systemConsoleInterface = new HTTPSystemProcessorInterface(this,
+                                                                    _name + "-SPIF",
+                                                                   _httpPort,
+                                                                   _httpsPort);
         _systemConsoleInterface.start();
 
         _isReady = true;
@@ -396,14 +396,14 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * while responses to read-reply messages are returned in the format {n}{s} where {n} is the ASCII
      * representation of the message id followed by the text (if any).
      */
-    SystemConsoleInterface.ConsoleInputMessage consolePollInputMessage(
+    SystemProcessorInterface.ConsoleInputMessage consolePollInputMessage(
         final long waitMilliseconds
     ) {
         EntryMessage em = LOGGER.traceEntry("{}.{}(waitMilliseconds=%d)",
                                             this.getClass().getSimpleName(),
                                             "consolePollInputMessage",
                                             waitMilliseconds);
-        SystemConsoleInterface.ConsoleInputMessage result = _systemConsoleInterface.pollInputMessage(waitMilliseconds);
+        SystemProcessorInterface.ConsoleInputMessage result = _systemConsoleInterface.pollInputMessage(waitMilliseconds);
         LOGGER.traceExit(em, result);
         return result;
     }
@@ -560,7 +560,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     }
 
     /**
-     * Updates the credentials required for using the SCIF
+     * Updates the credentials required for using the SPIF
      * @param credentials new credentials
      */
     void setCredentials(
@@ -588,8 +588,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
         boolean result = false;
         _httpPort = httpPort;
-        if (_systemConsoleInterface instanceof HTTPSystemControllerInterface) {
-            result = ((HTTPSystemControllerInterface) _systemConsoleInterface).setNewHttpPort(_httpPort);
+        if (_systemConsoleInterface instanceof HTTPSystemProcessorInterface) {
+            result = ((HTTPSystemProcessorInterface) _systemConsoleInterface).setNewHttpPort(_httpPort);
         }
 
         LOGGER.traceExit(em, result);
@@ -611,8 +611,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
         boolean result = false;
         _httpsPort = httpsPort;
-        if (_systemConsoleInterface instanceof HTTPSystemControllerInterface) {
-            result = ((HTTPSystemControllerInterface) _systemConsoleInterface).setNewHttpsPort(_httpsPort);
+        if (_systemConsoleInterface instanceof HTTPSystemProcessorInterface) {
+            result = ((HTTPSystemProcessorInterface) _systemConsoleInterface).setNewHttpsPort(_httpsPort);
         }
 
         LOGGER.traceExit(em, result);

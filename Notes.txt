@@ -5,17 +5,16 @@ Logging - what is the difference between source and entity?
 Console help for KEXEC console commands
 IPL page
   System status(?)
-  Dump button
   Maybe an indication of the number of sessions connected?
-  Help describing the KEXEC usage of the jump keys
+  Dump button
   Boot source (binary selection of tape boot, disk boot, other binary boot)
   Path and volume selection for tape and disk boots
 Hardware page
   Node configuration, basically
 System page
   All the non-hardware related configurables
-    Give SCIF the ability to control logging levels
-        The following, in Node.java, should be subject to management by SCIF / SoftwareConfiguration
+    Give SPIF the ability to control logging levels
+        The following, in Node.java, should be subject to management by SPIF / SoftwareConfiguration
             static final boolean LOG_CHANNEL_IOS = true;
             static final boolean LOG_CHANNEL_IO_BUFFERS = true;
             static final boolean LOG_DEVICE_IOS = true;
@@ -57,6 +56,7 @@ Set logger name to foo.class.getSimpleName()
 more FloatingPointComponent tests
 
 * hardwarelib
+Need a SystemLogTapeDevice
 Redo all the node and subclasses tests, many of which are commented out (Node has been done)
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction

@@ -4,13 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Abstract base class for a device such as a disk or tape unit
@@ -54,15 +52,15 @@ public abstract class Device extends Node {
         public static Model getValue(
             final int code
         ) {
-            switch (code) {
-                case 1:     return FileSystemDisk;
-                case 2:     return FileSystemPrinter;
-                case 3:     return FileSystemPunch;
-                case 4:     return FileSystemReader;
-                case 5:     return FileSystemTape;
-                case 6:     return RAMDisk;
-                default:    return None;
-            }
+            return switch (code) {
+                case 1 -> FileSystemDisk;
+                case 2 -> FileSystemPrinter;
+                case 3 -> FileSystemPunch;
+                case 4 -> FileSystemReader;
+                case 5 -> FileSystemTape;
+                case 6 -> RAMDisk;
+                default -> None;
+            };
         }
     }
 
@@ -84,12 +82,12 @@ public abstract class Device extends Node {
         public static Type getValue(
             final int code
         ) {
-            switch (code) {
-                case 1:     return Disk;
-                case 2:     return Symbiont;
-                case 3:     return Tape;
-                default:    return None;
-            }
+            return switch (code) {
+                case 1 -> Disk;
+                case 2 -> Symbiont;
+                case 3 -> Tape;
+                default -> None;
+            };
         }
     }
 
@@ -130,40 +128,24 @@ public abstract class Device extends Node {
         public static IOFunction getValue(
             final int code
         ) {
-            switch (code) {
-                case 1:
-                    return Close;
-                case 2:
-                    return GetInfo;
-                case 3:
-                    return MoveBlock;
-                case 4:
-                    return MoveBlockBackward;
-                case 5:
-                    return MoveFile;
-                case 6:
-                    return MoveFileBackward;
-                case 7:
-                    return Read;
-                case 8:
-                    return ReadBackward;
-                case 9:
-                    return Reset;
-                case 10:
-                    return Rewind;
-                case 11:
-                    return RewindInterlock;
-                case 12:
-                    return SetMode;
-                case 13:
-                    return Unload;
-                case 14:
-                    return Write;
-                case 15:
-                    return WriteEndOfFile;
-                default:
-                    return None;
-            }
+            return switch (code) {
+                case 1 -> Close;
+                case 2 -> GetInfo;
+                case 3 -> MoveBlock;
+                case 4 -> MoveBlockBackward;
+                case 5 -> MoveFile;
+                case 6 -> MoveFileBackward;
+                case 7 -> Read;
+                case 8 -> ReadBackward;
+                case 9 -> Reset;
+                case 10 -> Rewind;
+                case 11 -> RewindInterlock;
+                case 12 -> SetMode;
+                case 13 -> Unload;
+                case 14 -> Write;
+                case 15 -> WriteEndOfFile;
+                default -> None;
+            };
         }
 
         public boolean requiresBuffer() {
@@ -223,30 +205,30 @@ public abstract class Device extends Node {
         public static IOStatus getValue(
             final int code
         ) {
-            switch (code) {
-                case 0:     return Successful;
-                case 1:     return BufferTooSmall;
-                case 2:     return DeviceBusy;
-                case 3:     return EndOfTape;
-                case 4:     return FileMark;
-                case 5:     return InvalidBlockCount;
-                case 6:     return InvalidBlockId;
-                case 7:     return InvalidBlockSize;
-                case 010:   return InvalidFunction;
-                case 011:   return InvalidMode;
-                case 012:   return InvalidTransferSize;
-                case 013:   return LostPosition;
-                case 014:   return MediaError;
-                case 015:   return NoInput;
-                case 016:   return NotPrepped;
-                case 017:   return NotReady;
-                case 020:   return QueueFull;
-                case 021:   return SystemException;
-                case 022:   return UnitAttention;
-                case 023:   return WriteProtected;
-                case 040:   return InProgress;
-                default:    return InvalidStatus;
-            }
+            return switch (code) {
+                case 0 -> Successful;
+                case 1 -> BufferTooSmall;
+                case 2 -> DeviceBusy;
+                case 3 -> EndOfTape;
+                case 4 -> FileMark;
+                case 5 -> InvalidBlockCount;
+                case 6 -> InvalidBlockId;
+                case 7 -> InvalidBlockSize;
+                case 010 -> InvalidFunction;
+                case 011 -> InvalidMode;
+                case 012 -> InvalidTransferSize;
+                case 013 -> LostPosition;
+                case 014 -> MediaError;
+                case 015 -> NoInput;
+                case 016 -> NotPrepped;
+                case 017 -> NotReady;
+                case 020 -> QueueFull;
+                case 021 -> SystemException;
+                case 022 -> UnitAttention;
+                case 023 -> WriteProtected;
+                case 040 -> InProgress;
+                default -> InvalidStatus;
+            };
         }
     }
 
@@ -407,11 +389,11 @@ public abstract class Device extends Node {
         ) {
             return String.format("Source=%s Fcn=%s BlkId=%s Count=%s Xferd=%s Stat=%s",
                                  _source == null ? "<null>" : _source._name,
-                                 String.valueOf(_ioFunction),
-                                 String.valueOf(_blockId),
-                                 String.valueOf(_transferCount),
-                                 String.valueOf(_transferredCount),
-                                 String.valueOf(_status));
+                                 _ioFunction,
+                                 _blockId,
+                                 _transferCount,
+                                 _transferredCount,
+                                 _status);
         }
     }
 
@@ -419,8 +401,6 @@ public abstract class Device extends Node {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    private static final Logger LOGGER = LogManager.getLogger(Device.class);
 
     final Model _deviceModel;
     final Type _deviceType;
@@ -535,15 +515,15 @@ public abstract class Device extends Node {
         try {
             writer.write(String.format("  Type:            %s\n", _deviceType.toString()));
             writer.write(String.format("  Model:           %s\n", _deviceModel.toString()));
-            writer.write(String.format("  Ready:           %s\n", String.valueOf(_readyFlag)));
-            writer.write(String.format("  Unit Attention:  %s\n", String.valueOf(_unitAttentionFlag)));
-            writer.write(String.format("  Misc IO Count:   %d", _miscCount));
-            writer.write(String.format("  Read IO Count:   %d", _readCount));
-            writer.write(String.format("  Read Bytes:      %d", _readBytes));
-            writer.write(String.format("  Write IO Count:  %d", _writeCount));
-            writer.write(String.format("  Write Bytes:     %d", _writeBytes));
+            writer.write(String.format("  Ready:           %s\n", _readyFlag));
+            writer.write(String.format("  Unit Attention:  %s\n", _unitAttentionFlag));
+            writer.write(String.format("  Misc IO Count:   %d\n", _miscCount));
+            writer.write(String.format("  Read IO Count:   %d\n", _readCount));
+            writer.write(String.format("  Read Bytes:      %d\n", _readBytes));
+            writer.write(String.format("  Write IO Count:  %d\n", _writeCount));
+            writer.write(String.format("  Write Bytes:     %d\n", _writeBytes));
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
         }
     }
 
@@ -595,7 +575,7 @@ public abstract class Device extends Node {
     ) {
         if (LOG_IO_ERRORS) {
             if ((ioInfo._status != IOStatus.Successful) && (ioInfo._status != IOStatus.NoInput)) {
-                LOGGER.error(String.format("IoError:%s", ioInfo.toString()));
+                _logger.error(String.format("IoError:%s", ioInfo.toString()));
             }
         }
 
@@ -613,7 +593,7 @@ public abstract class Device extends Node {
         final IOInfo ioInfo
     ) {
         if (LOG_DEVICE_IOS) {
-            LOGGER.debug(String.format("IoStart:%s", ioInfo.toString()));
+            _logger.trace("ioStart():" + ioInfo.toString());
         }
 
         if (LOG_DEVICE_IO_BUFFERS) {
@@ -633,9 +613,10 @@ public abstract class Device extends Node {
     boolean setReady(
         final boolean state
     ) {
+        EntryMessage em = _logger.traceEntry("setReady(state={})", state);
         _readyFlag = state;
-        LOGGER.info(String.format("Device %s Ready %s", _name, state ? "Set" : "Cleared"));
         setUnitAttention(state);
+        _logger.traceExit(em, true);
         return true;
     }
 
@@ -645,7 +626,8 @@ public abstract class Device extends Node {
     void setUnitAttention(
         final boolean state
     ) {
+        EntryMessage em = _logger.traceEntry("setUnitAttention(state={})", state);
         _unitAttentionFlag = state;
-        LOGGER.info(String.format("Device %s Unit Attention %s", _name, state ? "Set" : "Cleared"));
+        _logger.traceExit(em);
     }
 }

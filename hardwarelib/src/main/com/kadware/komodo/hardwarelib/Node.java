@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
@@ -105,7 +106,15 @@ public abstract class Node {
      */
     Map<Integer, Node> _descendants = new HashMap<>();
 
-    private static final Logger LOGGER = LogManager.getLogger(Node.class);
+    /**
+     * Logger only for this class, and only for static methods
+     */
+    private static final Logger LOGGER = LogManager.getLogger(Node.class.getSimpleName());
+
+    /**
+     * Logger for all subclasses, for instance methods
+     */
+    protected final Logger _logger;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -121,6 +130,7 @@ public abstract class Node {
     ) {
         _category = category;
         _name = name;
+        _logger = LogManager.getLogger(_category.name() + "-" + _name);
     }
 
 
@@ -177,7 +187,7 @@ public abstract class Node {
 
             writer.newLine();
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
         }
     }
 
@@ -210,6 +220,11 @@ public abstract class Node {
         final int nodeAddress,
         final Node descendant
     ) throws CannotConnectException {
+        EntryMessage em = LOGGER.traceEntry("connect(ancestor=%s nodeAddress=%d descendant=%s",
+                                            ancestor._name,
+                                            nodeAddress,
+                                            descendant._name);
+
         if (!descendant.canConnect(ancestor)) {
             throw new CannotConnectException(String.format("Node %s cannot be an ancestor for Node %s",
                                                            ancestor._name,
@@ -233,10 +248,12 @@ public abstract class Node {
         //  Create the two-way link
         ancestor._descendants.put(nodeAddress, descendant);
         descendant._ancestors.add(ancestor);
+        LOGGER.traceExit(em);
     }
 
     /**
      * Deserializes a boolean from the current position in the buffer (see serializeBoolean())
+     * For Inquiry operations
      */
     static boolean deserializeBoolean(
         final ByteBuffer buffer
@@ -246,6 +263,7 @@ public abstract class Node {
 
     /**
      * Deserializes a string from the current position in the buffer (see serializeString())
+     * For Inquiry operations
      */
     static String deserializeString(
         final ByteBuffer buffer
@@ -265,6 +283,10 @@ public abstract class Node {
         final Node ancestor,
         final Node descendant
     ) {
+        EntryMessage em = LOGGER.traceEntry("disconnect(ancestor=%s descendant=%s",
+                                            ancestor._name,
+                                            descendant._name);
+
         descendant._ancestors.remove(ancestor);
         for (Map.Entry<Integer, Node> entry : ancestor._descendants.entrySet()) {
             if (entry.getValue() == descendant) {
@@ -272,6 +294,8 @@ public abstract class Node {
                 break;
             }
         }
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -330,6 +354,7 @@ public abstract class Node {
 
     /**
      * Adds a boolean value to the given ByteBuffer encoded as a single byte of value 0x00 or 0x01 for false and true
+     * For Inquiry operations
      */
     static void serializeBoolean(
         final ByteBuffer buffer,
@@ -341,6 +366,7 @@ public abstract class Node {
     /**
      * Serializes a string to the given ByteBuffer, represented as an integer indicating the length of the string
      * in character, and then the individual characters which comprise the string.
+     * For Inquiry operations
      */
     static void serializeString(
         final ByteBuffer buffer,
