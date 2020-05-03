@@ -28,7 +28,7 @@ let validationFailed = false;       //  previous validation attempt failed
 
 //  Set up tab panels
 $(function() {
-    $( "#sciTabs" ).tabs({
+    $("#sciTabs").tabs({
         activate: function(event, ui) {
             if (ui.newPanel[0].id === 'Console') {
                 consoleActivate();
@@ -132,7 +132,10 @@ function startPoll() {
                 consoleProcessNewMessages(newMessages);
             }
 
-            //  TODO jumpkey entries
+            const jks = xhr.response.jumpKeys;
+            if (jks != null) {
+                iplUpdateJumpKeys(jks.componentValues);
+            }
         } else if (xhr.status === 401) {
             console.debug("Session is no longer validated:" + xhr.statusText);
             clientIdent = '';

@@ -4,9 +4,12 @@ Logging - what is the difference between source and entity?
 *sci.js and related
 Console help for KEXEC console commands
 IPL page
-  Jump Keys
+  System status(?)
+  Dump button
+  Maybe an indication of the number of sessions connected?
   Help describing the KEXEC usage of the jump keys
   Boot source (binary selection of tape boot, disk boot, other binary boot)
+  Path and volume selection for tape and disk boots
 Hardware page
   Node configuration, basically
 System page

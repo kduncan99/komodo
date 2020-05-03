@@ -45,9 +45,6 @@ import org.apache.logging.log4j.message.EntryMessage;
  * Keeping it simple - we require clients to implement a 24x80 output screen, with a separate input text facility.
  * This can change by altering the screen size constants here; the client should be implemented such that it can
  * easily be changed as well.
- *
- * TODO ackshually, we *might* be able to push the console dimensions to the client when the session is established,
- * thus allowing us to have different console sizes according to a configuration tag.  maybe.
  */
 @SuppressWarnings("Duplicates")
 public class HTTPSystemControllerInterface implements SystemConsoleInterface {
@@ -164,23 +161,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
         }
     }
 
-//    /**
-//     * Object encapsulating certain other objects.
-//     * Client issues a GET on the /poll subdirectory, and we respond with all the updated information.
-//     * An entity will be null if that entity has not been updated in the interim.
-//     */
-//    private static class ConsolePollResult {
-//
-//        //  Output messages we send to the client.
-//        @JsonProperty("outputMessages")             public OutputMessage[] _outputMessages;
-//
-//        ConsolePollResult(
-//            final List<OutputMessage> messages
-//        ) {
-//            _outputMessages = messages.toArray(new OutputMessage[0]);
-//        }
-//    }
-
     /**
      * Client sends this to us whenever the operator hits 'enter'
      */
@@ -216,23 +196,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             _componentValues = new HashMap<>(componentValues);
         }
     }
-
-//    /**
-//     * Client issues a GET on the /poll/log subdirectory, and we respond with new log entries if and when any are posted.
-//     * After a particular timeout, we respond back to the user with an object in which the newLogEntries element
-//     * may be either null, or an empty array.
-//     */
-//    private static class LogPollResult {
-//
-//        //  Populated by us when any new log entries are available
-//        @JsonProperty("newLogEntries")              public SystemLogEntry[] _logEntries;
-//
-//        LogPollResult(
-//            final List<SystemLogEntry> logEntries
-//        ) {
-//            _logEntries = logEntries.toArray(new SystemLogEntry[0]);
-//        }
-//    }
 
     /**
      * Client issues a GET on the /poll subdirectory, and we respond with one of these objects whenever at least
@@ -997,68 +960,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
     //  Endpoint handlers, to be attached to the HTTP listeners
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-//    /**
-//     * Handle a console poll request (a GET to /poll/console).
-//     * Check to see if there is anything new.  If so, send it.
-//     * Otherwise, wait for some period of time to see whether anything new pops up.
-//     */
-//    private class APIConsolePollRequestHandler extends SCIHttpHandler {
-//
-//        private final Logger LOGGER = LogManager.getLogger(APIConsolePollRequestHandler.class.getSimpleName());
-//
-//        @Override
-//        public void handle(
-//            final HttpExchange exchange
-//        ) {
-//            EntryMessage em = LOGGER.traceEntry("handle()");
-//
-//            final Headers requestHeaders = exchange.getRequestHeaders();
-//            final String requestMethod = exchange.getRequestMethod();
-//            final String requestURI = exchange.getRequestURI().toString();
-//            LOGGER.trace("<--" + requestMethod + " " + requestURI);
-//
-//            try {
-//                SessionInfo sessionInfo = findClient(requestHeaders);
-//                if (sessionInfo == null) {
-//                    respondNoSession(exchange);
-//                    LOGGER.traceExit(em);
-//                    return;
-//                }
-//
-//                sessionInfo._lastActivity = System.currentTimeMillis();
-//                if (!requestMethod.equals(HttpMethod.GET._value)) {
-//                    respondBadMethod(exchange, requestMethod);
-//                    LOGGER.traceExit(em);
-//                    return;
-//                }
-//
-//                //  Check if there are any updates already waiting for the client to pick up.
-//                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-//                //  At the end of the wait construct and return a SystemProcessorPollResult object
-//                List<OutputMessage> oms;
-//                synchronized (sessionInfo._newOutputMessages) {
-//                    if (sessionInfo._newOutputMessages.isEmpty()) {
-//                        try {
-//                            sessionInfo._newOutputMessages.wait(DEFAULT_POLL_WAIT_MSECS);
-//                        } catch (InterruptedException ex) {
-//                            LOGGER.catching(ex);
-//                        }
-//                    }
-//
-//                    oms = new LinkedList<>(sessionInfo._newOutputMessages);
-//                    sessionInfo._newOutputMessages.clear();
-//                }
-//
-//                respondWithJSON(exchange, HttpURLConnection.HTTP_OK, new ConsolePollResult(oms));
-//            } catch (Throwable t) {
-//                LOGGER.catching(t);
-//                respondServerError(exchange, getStackTrace(t));
-//            }
-//
-//            LOGGER.traceExit(em);
-//        }
-//    }
-
     /**
      * Handles requests against the /jumpkeys path
      * GET retrieves the current settings as a WORD36 wrapped in a long.
@@ -1160,89 +1061,6 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
             LOGGER.traceExit(em);
         }
     }
-
-//    /**
-//     * Handle a poll request (a GET to /poll).
-//     * Check to see if there is anything new.  If so, send it.
-//     * Otherwise, wait for some period of time to see whether anything new pops up.
-//     */
-//    private class APILogPollRequestHandler extends SCIHttpHandler {
-//
-//        private final Logger LOGGER = LogManager.getLogger(APILogPollRequestHandler.class.getSimpleName());
-//
-//        private class PollThread extends Thread {
-//
-//            private final HttpExchange _exchange;
-//            private final SessionInfo _sessionInfo;
-//
-//            private PollThread(
-//                final HttpExchange exchange,
-//                final SessionInfo sessionInfo
-//            ) {
-//                _exchange = exchange;
-//                _sessionInfo = sessionInfo;
-//            }
-//
-//            public void run() {
-//                //  Check if there are any updates already waiting for the client to pick up.
-//                //  If not, go into a wait loop which will be interrupted if any updates eventuate during the wait.
-//                //  At the end of the wait construct and return a SystemProcessorPollResult object
-//                EntryMessage em = LOGGER.traceEntry("run()");
-//
-//                List<SystemLogEntry> sles;
-//                synchronized (_sessionInfo._newLogEntries) {
-//                    if (_sessionInfo._newLogEntries.isEmpty()) {
-//                        try {
-//                            _sessionInfo._newLogEntries.wait(DEFAULT_POLL_WAIT_MSECS);
-//                        } catch (InterruptedException ex) {
-//                            LOGGER.catching(ex);
-//                        }
-//                    }
-//
-//                    sles = new LinkedList<>(_sessionInfo._newLogEntries);
-//                    _sessionInfo._newLogEntries.clear();
-//                }
-//
-//                respondWithJSON(_exchange, HttpURLConnection.HTTP_OK, new LogPollResult(sles));
-//                LOGGER.traceExit(em);
-//            }
-//        }
-//
-//        @Override
-//        public void handle(
-//            final HttpExchange exchange
-//        ) {
-//            EntryMessage em = LOGGER.traceEntry("handle()");
-//
-//            final Headers requestHeaders = exchange.getRequestHeaders();
-//            final String requestMethod = exchange.getRequestMethod();
-//            final String requestURI = exchange.getRequestURI().toString();
-//            LOGGER.trace("<--" + requestMethod + " " + requestURI);
-//
-//            try {
-//                SessionInfo sessionInfo = findClient(requestHeaders);
-//                if (sessionInfo == null) {
-//                    respondNoSession(exchange);
-//                    LOGGER.traceExit(em);
-//                    return;
-//                }
-//
-//                sessionInfo._lastActivity = System.currentTimeMillis();
-//                if (!requestMethod.equals(HttpMethod.GET._value)) {
-//                    respondBadMethod(exchange, requestMethod);
-//                    LOGGER.traceExit(em);
-//                    return;
-//                }
-//
-//                new PollThread(exchange, sessionInfo).start();
-//            } catch (Throwable t) {
-//                LOGGER.catching(t);
-//                respondServerError(exchange, getStackTrace(t));
-//            }
-//
-//            LOGGER.traceExit(em);
-//        }
-//    }
 
     /**
      * Provides a method for injecting input to the system via POST to /message
@@ -1436,6 +1254,7 @@ public class HTTPSystemControllerInterface implements SystemConsoleInterface {
                 String clientId = UUID.randomUUID().toString();
                 SessionInfo sessionInfo = new SessionInfo(clientId, attr);
                 sessionInfo._remoteAddress = exchange.getRemoteAddress();
+                sessionInfo._jumpKeysUpdated = true;
 
                 List<SystemLogEntry> sles = new LinkedList<>();
                 synchronized (_cachedLogEntries) {
