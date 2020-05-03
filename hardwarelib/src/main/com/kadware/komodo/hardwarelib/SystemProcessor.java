@@ -283,6 +283,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
                 mask ^= 0_777777_777777L;
                 _jumpKeys &= mask;
             }
+            _systemConsoleInterface.jumpKeysUpdated();
         }
     }
 
@@ -291,6 +292,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final Word36 word36
     ) {
         _jumpKeys = word36.getW();
+        _systemConsoleInterface.jumpKeysUpdated();
     }
 
 

@@ -1039,12 +1039,7 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
                         return;
                     }
 
-                    for (SessionInfo sinfo : getSessions()) {
-                        synchronized (sinfo) {
-                            sinfo._jumpKeysUpdated = true;
-                            sinfo.notify();
-                        }
-                    }
+                    //  No need to notify the clients - the SP will call us back and it happens automagically
 
                     respondWithJSON(exchange, HttpURLConnection.HTTP_OK, jumpKeysResponse);
                     LOGGER.traceExit(em);
@@ -1677,6 +1672,19 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
     @Override
     public String getName() {
         return _name;
+    }
+
+    /**
+     * SP is telling us that the jump keys have been updated - let our clients know about it.
+     */
+    @Override
+    public void jumpKeysUpdated() {
+        for (SessionInfo sinfo : getSessions()) {
+            synchronized (sinfo) {
+                sinfo._jumpKeysUpdated = true;
+                sinfo.notify();
+            }
+        }
     }
 
     /**
