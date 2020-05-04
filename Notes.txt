@@ -9,6 +9,8 @@ IPL page
   Path and volume selection for tape and disk boots
 Hardware page
   Node configuration, basically
+  Add button to dump memory contents (optionally with analysis?)
+  Move Dump Config button here from the IPL page
 System page
   All the non-hardware related configurables
     Give SPIF the ability to control logging levels
@@ -31,6 +33,8 @@ Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemo
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 
 -- TODO BUGS
+WHEN I create a new session, outstanding read-reply messages have a numeric id... what is that about?
+
 * hardwarelib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.

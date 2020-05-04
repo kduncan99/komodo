@@ -1337,11 +1337,10 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
                 synchronized (_cachedReadReplyMessages) {
                     for (PendingReadReplyMessage prrm : _cachedReadReplyMessages) {
                         sessionInfo._newOutputMessages.add(OutputMessage.createDeleteRowMessage(0));
-                        String text = String.format("%d %s", prrm._messageId, prrm._text);
                         sessionInfo._newOutputMessages.add(OutputMessage.createWriteRowMessage(attr._screenSizeRows - 1,
                                                                                                READ_REPLY_FG_COLOR,
                                                                                                READ_REPLY_BG_COLOR,
-                                                                                               text,
+                                                                                               prrm._text,
                                                                                                false));
                     }
                 }
