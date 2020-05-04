@@ -1,5 +1,4 @@
 -- TODO InProgress
-Logging - what is the difference between source and entity?
 
 *sci.js and related
 Console help for KEXEC console commands
