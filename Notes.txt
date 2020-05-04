@@ -5,7 +5,6 @@ Console help for KEXEC console commands
 IPL page
   System status(?)
   Maybe an indication of the number of sessions connected?
-  Dump button
   Boot source (binary selection of tape boot, disk boot, other binary boot)
   Path and volume selection for tape and disk boots
 Hardware page

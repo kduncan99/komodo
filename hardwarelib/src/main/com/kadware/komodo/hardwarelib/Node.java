@@ -172,20 +172,17 @@ public abstract class Node {
         final BufferedWriter writer
     ) {
         try {
-            writer.write(String.format("Node %s  Category:%s", _name, _category.toString()));
+            writer.write(String.format("Node %s  Category:%s\n", _name, _category.toString()));
 
-            writer.write("  Ancestors:");
+            writer.write(String.format("  Ancestors:%s\n", _ancestors.isEmpty() ? " none" : ""));
             for (Node node : _ancestors) {
-                writer.write(node._name);
-                writer.write(" ");
+                writer.write("    " + node._name + "\n");
             }
 
-            writer.write("  Descendants:");
+            writer.write(String.format("  Descendants:%s\n", _descendants.isEmpty() ? " none" : ""));
             for (Map.Entry<Integer, Node> entry : _descendants.entrySet()) {
-                writer.write(String.format("[%d]:%s ", entry.getKey(), entry.getValue()._name));
+                writer.write(String.format("    [%d]:%s\n", entry.getKey(), entry.getValue()._name));
             }
-
-            writer.newLine();
         } catch (IOException ex) {
             _logger.catching(ex);
         }

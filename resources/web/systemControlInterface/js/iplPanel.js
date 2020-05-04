@@ -5,8 +5,8 @@
 let jumpKeyState = new Array(36);
 let jumpKeys = new Array(36);
 
-//  Catch mouse clicks on the various jump keys.
-//  Each click will send a PUT to /jumpkeys.
+//  Catch mouse clicks on the various jump keys.  Each click will send a PUT to /jumpkeys.
+//  Also set up dump button click handler.
 $(function() {
     for (let jkx = 0; jkx < jumpKeys.length; jkx++) {
         jumpKeyState[jkx] = false;
@@ -33,6 +33,34 @@ $(function() {
             xhr.send(json);
             return false;
         }
+    }
+
+    const dumpButton = document.getElementById("dumpButton");
+    dumpButton.onclick = function (e) {
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', '/dump', true);
+        xhr.setRequestHeader('Content-Type', 'text/text; charset=utf-8');
+        xhr.setRequestHeader('Client', clientIdent);
+        xhr.onload = function () {
+            consolePendingPostMessageXHR = null;
+            if (xhr.status === 200 || xhr.status === 201) {
+                //  input was accepted
+                alert('Dump file created:' + xhr.response);
+            } else if (xhr.status === 400) {
+                //  input was rejected for content
+                alert('Input rejected:' + xhr.statusText);
+            } else if (xhr.status === 401) {
+                alert('Session is no longer validated');
+            } else {
+                alert('Server is refusing input:' + xhr.statusText);
+            }
+        };
+        xhr.onerror = function () {
+            //  Some sort of network error occurred - complain and unclog input
+            alert('Network error - cannot submit console input');
+        };
+        xhr.send();
+        return false;
     }
 })
 

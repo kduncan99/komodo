@@ -16,6 +16,8 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +30,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -961,6 +964,66 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
+     * Handles requests against the /dump path
+     */
+    private class APIDumpHandler extends SCIHttpHandler {
+
+        private final Logger LOGGER = LogManager.getLogger(APIDumpHandler.class.getSimpleName());
+
+        @Override
+        public void handle(
+            final HttpExchange exchange
+        ) {
+            EntryMessage em = LOGGER.traceEntry("handle()");
+
+            final Headers requestHeaders = exchange.getRequestHeaders();
+            final String requestMethod = exchange.getRequestMethod();
+            final String requestURI = exchange.getRequestURI().toString();
+            LOGGER.trace("<--" + requestMethod + " " + requestURI);
+
+            BufferedWriter bw = null;
+            try {
+                SessionInfo sessionInfo = findClient(requestHeaders);
+                if (sessionInfo == null) {
+                    respondNoSession(exchange);
+                    LOGGER.traceExit(em);
+                    return;
+                }
+
+                sessionInfo._lastActivity = System.currentTimeMillis();
+
+                if (requestMethod.equalsIgnoreCase(HttpMethod.GET._value)) {
+                    String fileName = "Komodo-dump-" + Instant.now().toString();
+                    String fullName = PathNames.LOGS_ROOT_DIRECTORY + fileName;
+                    File f = new File(fullName);
+                    //noinspection ResultOfMethodCallIgnored
+                    f.createNewFile();
+                    FileWriter fw = new FileWriter(f);
+                    bw = new BufferedWriter(fw);
+                    InventoryManager.getInstance().dump(bw);
+                    respondWithText(exchange, HttpURLConnection.HTTP_CREATED, fileName);
+                } else {
+                    //  Neither a GET or a PUT - this is not allowed.
+                    respondBadMethod(exchange, requestMethod);
+                }
+            } catch (Throwable t) {
+                LOGGER.catching(t);
+                respondServerError(exchange, getStackTrace(t));
+            } finally {
+                try {
+                    if (bw != null) {
+                        bw.close();
+                    }
+                } catch (IOException ex2) {
+                    LOGGER.catching(ex2);
+                }
+            }
+
+            LOGGER.traceExit(em);
+        }
+    }
+
+    /**
      * Handles requests against the /jumpkeys path
      * GET retrieves the current settings as a WORD36 wrapped in a long.
      * PUT accepts the JK settings as a WORD36 wrapped in a long, and persists them to the singular system jump key panel.
@@ -1399,6 +1462,7 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
 
             super.setup();
             appendHandler("/", new WebHandler());
+            appendHandler("/dump", new APIDumpHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/poll", new APIPollRequestHandler());
@@ -1461,6 +1525,7 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
             String keystoreFullFilename = _keystoreDirectory + KEYSTORE_FILENAME;
             super.setup(keystoreFullFilename, KEYENTRY_ALIAS, KEYSTORE_PASSWORD, KEYENTRY_PASSWORD);
             appendHandler("/", new WebHandler());
+            appendHandler("/dump", new APIDumpHandler());
             appendHandler("/jumpkeys", new APIJumpKeysHandler());
             appendHandler("/message", new APIMessageHandler());
             appendHandler("/poll", new APIPollRequestHandler());

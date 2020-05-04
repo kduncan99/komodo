@@ -201,6 +201,7 @@ public abstract class Processor extends Node implements Worker {
                     sb.append(String.format("  %s(%d)", p._name, p._upiIndex));
                 }
             }
+            sb.append("\n");
             writer.write(sb.toString());
 
             sb = new StringBuilder();
@@ -210,6 +211,7 @@ public abstract class Processor extends Node implements Worker {
                     sb.append(String.format("  %s(%d)", p._name, p._upiIndex));
                 }
             }
+            sb.append("\n");
             writer.write(sb.toString());
         } catch (IOException ex) {
             _logger.catching(ex);

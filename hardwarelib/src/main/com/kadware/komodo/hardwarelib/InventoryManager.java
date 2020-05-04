@@ -6,11 +6,17 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.hardwarelib.exceptions.*;
-
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Creation and discarding of hardware things (i.e., anything extending Node) must occur via this manager.
@@ -54,11 +60,12 @@ public class InventoryManager {
     final static int MAIN_STORAGE_PROCESSOR_SIZE = 1024 * 1024;  //  One MWord should be enough static storage
 
     private final Map<Integer, Processor> _processors = new HashMap<>();
+    private final List<ChannelModule> _channelModules = new LinkedList<>();
+    private final List<Device> _devices = new LinkedList<>();
 
     private static InventoryManager _instance = null;
 
-    //TODO Need some more general node things here
-    //      Need to decide if we do connect/disconnect here (I think we need to disconnect at least, on Node remove)
+    private static final Logger LOGGER = LogManager.getLogger(InventoryManager.class.getSimpleName());
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -293,6 +300,33 @@ public class InventoryManager {
 
         processor.terminate();
         _processors.remove(upiIndex);
+    }
+
+    /**
+     * Generates a full hardware dump to the given output stream
+     */
+    public void dump(
+        final BufferedWriter writer
+    ) {
+        try {
+            writer.write(String.format("Komodo System Hardware Dump - %s\n", Instant.now().toString()));
+            writer.write("Processors ---------------------------------\n");
+            for (Processor p : _processors.values()) {
+                p.dump(writer);
+            }
+
+            writer.write("Channel Modules ----------------------------\n");
+            for (ChannelModule cm : _channelModules) {
+                cm.dump(writer);
+            }
+
+            writer.write("Devices ------------------------------------\n");
+            for (Device d : _devices) {
+                d.dump(writer);
+            }
+        } catch (IOException ex) {
+            LOGGER.catching(ex);
+        }
     }
 
     /**
