@@ -1,0 +1,70 @@
+<!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
+<!-- This is the HTML for the IPL panel for the system processor interface -->
+
+<div id="jumpKeySection" class="FlexBox">
+    <div id="jumpKeysPanel" class="JumpKeyFlexItem">
+        <p>Jump Keys</p>
+        <table>
+            <tr>
+                <td><button id="jk1" type="button" class="JumpKey">1</button></td>
+                <td><button id="jk2" type="button" class="JumpKey">2</button></td>
+                <td><button id="jk3" type="button" class="JumpKey">3</button></td>
+                <td><button id="jk4" type="button" class="JumpKey">4</button></td>
+                <td><button id="jk5" type="button" class="JumpKey">5</button></td>
+                <td><button id="jk6" type="button" class="JumpKey">6</button></td>
+                <td><button id="jk7" type="button" class="JumpKey">7</button></td>
+                <td><button id="jk8" type="button" class="JumpKey">8</button></td>
+                <td><button id="jk9" type="button" class="JumpKey">9</button></td>
+            </tr>
+            <tr>
+                <td><button id="jk10" type="button" class="JumpKey">10</button></td>
+                <td><button id="jk11" type="button" class="JumpKey">11</button></td>
+                <td><button id="jk12" type="button" class="JumpKey">12</button></td>
+                <td><button id="jk13" type="button" class="JumpKey">13</button></td>
+                <td><button id="jk14" type="button" class="JumpKey">14</button></td>
+                <td><button id="jk15" type="button" class="JumpKey">15</button></td>
+                <td><button id="jk16" type="button" class="JumpKey">16</button></td>
+                <td><button id="jk17" type="button" class="JumpKey">17</button></td>
+                <td><button id="jk18" type="button" class="JumpKey">18</button></td>
+            </tr>
+            <tr>
+                <td><button id="jk19" type="button" class="JumpKey">19</button></td>
+                <td><button id="jk20" type="button" class="JumpKey">20</button></td>
+                <td><button id="jk21" type="button" class="JumpKey">21</button></td>
+                <td><button id="jk22" type="button" class="JumpKey">22</button></td>
+                <td><button id="jk23" type="button" class="JumpKey">23</button></td>
+                <td><button id="jk24" type="button" class="JumpKey">24</button></td>
+                <td><button id="jk25" type="button" class="JumpKey">25</button></td>
+                <td><button id="jk26" type="button" class="JumpKey">26</button></td>
+                <td><button id="jk27" type="button" class="JumpKey">27</button></td>
+            </tr>
+            <tr>
+                <td><button id="jk28" type="button" class="JumpKey">28</button></td>
+                <td><button id="jk29" type="button" class="JumpKey">29</button></td>
+                <td><button id="jk30" type="button" class="JumpKey">30</button></td>
+                <td><button id="jk31" type="button" class="JumpKey">31</button></td>
+                <td><button id="jk32" type="button" class="JumpKey">32</button></td>
+                <td><button id="jk33" type="button" class="JumpKey">33</button></td>
+                <td><button id="jk34" type="button" class="JumpKey">34</button></td>
+                <td><button id="jk35" type="button" class="JumpKey">35</button></td>
+                <td><button id="jk36" type="button" class="JumpKey">36</button></td>
+            </tr>
+        </table>
+    </div>
+    <div id="jumpKeysHelp" class="FlexItem">
+        Jump Key Semantics for KEXEC:<BR>
+        <ul>
+            <li>JK3: If set, the system will NOT attempt an auto-recovery when an IP executes an IAR instruction</li>
+            <li>JK4: On a tape boot KEXEC will reload system libraries from the boot tape</li>
+            <li>JK5: On a recovery boot KEXEC will solicit the name of the device from which to load</li>
+            <li>JK7: KEXEC will re-initialize TIP</li>
+            <li>JK9: Upon boot, KEXEC will clear the various symbiont queues</li>
+            <li>JK13: KEXEC will clear the fixed storage items from the Master File Directory</li>
+        </ul>
+        Jump Keys 1 through 18 are generally reserved for operating system control.<br>
+        In certain configurations, Jump Keys 19 through 36 are available to applications.
+    </div>
+</div>
+<div>
+    <button type="button" id="dumpButton">Dump Config</button>
+</div>

@@ -31,9 +31,22 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.Queue;
+import java.util.concurrent.ScheduledFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
@@ -68,7 +81,7 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final long DEFAULT_POLL_WAIT_MSECS = 10000;              //  10 second (maximum) poll delay as a default
-    private static final String HTML_FILE_NAME = "sci.html";                //  relative to web directory
+//TODO remove    private static final String HTML_FILE_NAME = "sci.html";                //  relative to web directory
     private static final String FAVICON_FILE_NAME = "favicon.png";          //  relative to web directory
     private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
@@ -82,6 +95,9 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
     private static final String KEYSTORE_PASSWORD = "komodo";
     private static final String KEYENTRY_ALIAS = "default";
     private static final String KEYENTRY_PASSWORD = "komodo";
+
+    private static final Pattern INCLUDE_REXEC_PATTERN =
+        Pattern.compile("<!--\\s*#include\\s+file\\s*=\\s*\"[^\"]*\"\\s*-->");
 
     private static final String[] _logReportingBlackList = { SystemProcessor.class.getSimpleName(),
                                                              HTTPSystemProcessorInterface.class.getSimpleName(),
@@ -140,7 +156,7 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
         _httpListener = httpPort == 0 ? null : new HttpListener(httpPort);
         _httpsListener = httpsPort == 0 ? null : new HttpsListener(httpsPort);
         _keystoreDirectory = PathNames.WEB_ROOT_DIRECTORY;
-        _webDirectory = PathNames.WEB_ROOT_DIRECTORY + "systemControlInterface/";
+        _webDirectory = PathNames.WEB_ROOT_DIRECTORY + "systemProcessorInterface/";
     }
 
 
@@ -815,6 +831,85 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
             LOGGER.traceExit(em);
         }
 
+        //TODO move this where it belongs, and doc it
+        private List<String> readAllLinesWithInclude(
+            final String fileName
+        ) throws IOException {
+            EntryMessage em = LOGGER.traceEntry("readAllLinesWithInclude(fileName={})", fileName);
+
+            List<String> fileStrings = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
+            List<String> resultStrings = new LinkedList<>();
+            for (String fileString : fileStrings) {
+                Matcher matcher = INCLUDE_REXEC_PATTERN.matcher(fileString);
+                while (matcher.find()) {
+                    int s = matcher.start();// start index of the previous match
+                    int e = matcher.end();// offset after the last matched character
+                    resultStrings.add(fileString.substring(0, e));
+
+                    String includeString = fileString.substring(s, e);
+                    String includeFileName = includeString.split("\"")[1];
+                    String includeFullName = String.format("%s%s", _webDirectory, includeFileName);
+                    resultStrings.addAll(readAllLinesWithInclude(includeFullName));
+
+                    fileString = fileString.substring(e);
+                }
+                resultStrings.add(fileString);
+            }
+
+            LOGGER.traceExit(em);
+            return resultStrings;
+        }
+
+        /**
+         * When we need to send back an HTML file (possibly with included other html files)
+         * @param exchange The communications exchange
+         * @param mimeType mime type of the file to be sent
+         * @param fileName file name on this host machine, to be sent
+         */
+        void respondWithHTMLFile(
+            final HttpExchange exchange,
+            final String mimeType,
+            final String fileName
+        ) {
+            EntryMessage em = LOGGER.traceEntry("respondWithHTMLFile(mimeType={} fileName={})", mimeType, fileName);
+
+            List<String> textLines;
+            try {
+                textLines = readAllLinesWithInclude(fileName);
+            } catch (IOException ex) {
+                LOGGER.catching(ex);
+                byte[] bytes = String.format("Cannot find requested file '%s'", fileName).getBytes();
+                try {
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, bytes.length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(bytes);
+                } catch (IOException ex2) {
+                    LOGGER.catching(ex2);
+                    exchange.close();
+                }
+
+                LOGGER.traceExit(em);
+                return;
+            }
+
+            byte[] bytes = String.join("\r\n", textLines).getBytes();
+            exchange.getResponseHeaders().add("content-type", mimeType);
+            exchange.getResponseHeaders().add("Cache-Control", "no-store");
+            try {
+                Headers headers = exchange.getResponseHeaders();
+                headers.add("Content-Length", String.valueOf(bytes.length));
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(bytes);
+                os.close();
+            } catch (Exception ex) {
+                LOGGER.catching(ex);
+            }
+
+            exchange.close();
+            LOGGER.traceExit(em);
+        }
+
         /**
          * Convenient method for sending responses containing JSON
          * @param exchange The communications exchange
@@ -1381,43 +1476,44 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
                 if (fileName.startsWith("/")) {
                     fileName = fileName.substring(1);
                 }
-                if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
-                    fileName = HTML_FILE_NAME;
-                }
+                //TODO remove block
+//                if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
+//                    fileName = HTML_FILE_NAME;
+//                }
 
                 String mimeType;
-                boolean textFile;
-                if (fileName.contains("favicon.ico")) {
+                boolean htmlFile = false;
+                boolean textFile = false;
+                if (fileName.isEmpty()) {
+                    fileName = "index.html";
+                    mimeType = "text/html";
+                    htmlFile = true;
+                } else if (fileName.contains("favicon.ico")) {
                     fileName = FAVICON_FILE_NAME;
                     mimeType = "image/x-icon";
-                    textFile = false;
+                } else if (fileName.endsWith(".html")) {
+                    mimeType = "text/html";
+                    htmlFile = true;
+                } else if (fileName.endsWith(".css")) {
+                    mimeType = "text/css";
+                    textFile = true;
+                } else if (fileName.endsWith(".bmp")) {
+                    mimeType = "image/bmp";
+                } else if (fileName.endsWith(".png")) {
+                    mimeType = "image/png";
+                } else if (fileName.endsWith(".js")) {
+                    mimeType = "application/javascript";
+                } else if (fileName.endsWith(".json")) {
+                    mimeType = "text/json";
+                    textFile = true;
                 } else {
-                    if (fileName.endsWith(".html")) {
-                        mimeType = "text/html";
-                        textFile = true;
-                    } else if (fileName.endsWith(".css")) {
-                        mimeType = "text/css";
-                        textFile = true;
-                    } else if (fileName.endsWith(".bmp")) {
-                        mimeType = "image/bmp";
-                        textFile = false;
-                    } else if (fileName.endsWith(".png")) {
-                        mimeType = "image/png";
-                        textFile = false;
-                    } else if (fileName.endsWith(".js")) {
-                        mimeType = "application/javascript";
-                        textFile = false;
-                    } else if (fileName.endsWith(".json")) {
-                        mimeType = "text/json";
-                        textFile = true;
-                    } else {
-                        mimeType = "application/octet-stream";
-                        textFile = false;
-                    }
+                    mimeType = "application/octet-stream";
                 }
 
                 String fullName = String.format("%s%s", _webDirectory, fileName);
-                if (textFile) {
+                if (htmlFile) {
+                    respondWithHTMLFile(exchange, mimeType, fullName);
+                } else if (textFile) {
                     respondWithTextFile(exchange, mimeType, fullName);
                 } else {
                     respondWithBinaryFile(exchange, mimeType, fullName);

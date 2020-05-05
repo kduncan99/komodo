@@ -1,7 +1,38 @@
 -- TODO InProgress
-
-*sci.js and related
+*html/css/javascript
 Console help for KEXEC console commands
+
+* hardwarelib
+SCIF: Server-side include for .html files
+  Then break up html into multiple files, with one index.html that simply includes sci.html
+  Wherever the following pattern is found:
+      '<!--'
+       [ whitespace ] '$include'
+       [ whitespace ] '=' [ whitespace ]
+      '"' {filename} '"' [ whitespace ] '-->'
+  The pattern must not include anything else.
+  We insert a newline immediately thereafter, followed by the complete content of the indicated file.
+  We support nested includes.
+
+
+-- TODO BUGS
+ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
+Check to ensure breakpoints are all working.
+
+* minalib
+Assembler isn't returning null module when errors are detected... why?
+    Ensure all T diagnostics result in a rel module not being generated
+((077) + 5) does not generate a literal 077 as it should do
+String concatenation does not honor precision per MASM 5.3.1
+assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
+
+
+-- TODO Thoughts
+Do we need a high-level language for systems programming to supplement assembly?
+
+
+-- TODO implement
+*html/css/javascript
 IPL page
   System status(?)
   Maybe an indication of the number of sessions connected?
@@ -9,8 +40,8 @@ IPL page
   Path and volume selection for tape and disk boots
 Hardware page
   Node configuration, basically
-  Add button to dump memory contents (optionally with analysis?)
   Move Dump Config button here from the IPL page
+  Add button to dump memory contents (optionally with analysis?)
 System page
   All the non-hardware related configurables
     Give SPIF the ability to control logging levels
@@ -23,34 +54,6 @@ System page
 OS Configuration page (new page)
   KEXEC configuration items
 
-* hardwarelib
-SP: Move dayclock architecture to SystemProcessor
-IP: SYSC subfunctions need unit tests
-CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
-
-*minalib
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
-
--- TODO BUGS
-WHEN I create a new session, outstanding read-reply messages have a numeric id... what is that about?
-
-* hardwarelib
-ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
-Check to ensure breakpoints are all working.
-
-* minalib
-Assembler isn't returning null module when errors are detected... why?
-    Do all T diagnostics result in a rel module not being generated?
-((077) + 5) does not generate a literal 077 as it should do
-String concatenation does not honor precision per MASM 5.3.1
-assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
-
-
--- TODO Thoughts
-
-
--- TODO implement
 * every all
 Set logger name to foo.class.getSimpleName()
 
@@ -58,6 +61,9 @@ Set logger name to foo.class.getSimpleName()
 more FloatingPointComponent tests
 
 * hardwarelib
+SP: Move dayclock architecture to SystemProcessor
+IP: SYSC subfunctions need unit tests
+CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
 Need a SystemLogTapeDevice
 Redo all the node and subclasses tests, many of which are commented out (Node has been done)
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
@@ -71,6 +77,7 @@ IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
+IP: unit tests for interrupts (many of them already marked TODO)
 IP: unit tests
   LIJ, LBJ, LDJ
   LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
@@ -164,6 +171,9 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
+Define what a saved binary (absolute module) looks like, implement it
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 We really need to support identifiers > 12 characters
 more FloatingPointValue unit tests
 more unit tests for string value generation
@@ -177,7 +187,6 @@ remove UndefinedReferenceDiagnostic (I think...)
 use DiagnosticDirective for stuff.. now I forgot what this means
 do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
-add test cases for interrupts (many of them already marked TODO)
 can we do implicit base register (and do it right)?  also with the $LIT directive...
 support user-defined functions
 allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)

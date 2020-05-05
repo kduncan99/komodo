@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--suppress ALL -->
+
+<!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
+<!-- This is the main HTML for the system processor interface
+     It includes html code for IPL, Console, Log, systemConfig, and hardwareConfig panels, all implemented as tabbed panes
+     With the exception of ids used for tab captions, all DOM element ids are camel-case - i.e., identifierName
+     All class names are word case - i.e., ClassName -->
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Komodo System Console</title>
+    <link href="/css/jquery-ui.css" rel="stylesheet">
+    <link href="/css/spif.css" rel="stylesheet">
+    <link href="/css/iplPanel.css" rel="stylesheet">
+    <link href="/css/consolePanel.css" rel="stylesheet">
+    <link href="/css/logPanel.css" rel="stylesheet">
+    <script src="/js/jquery-3.5.0.min.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/jquery-ui.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/spif.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/iplPanel.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/consolePanel.js" rel="script" type="text/javascript" defer></script>
+    <script src="/js/logPanel.js" rel="script" type="text/javascript" defer></script>
+
+    <style>
+        #sciTabs{font-size: 14px;}
+        .ui-widget-header {
+            background: #4040ff;
+            border: 1px solid #b9cd6d;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body style="font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;">
+    <h1>Komodo System Control Interface v1.0</h1>
+    <div id="sciTabs">
+        <ul>
+            <li><a href="#IPL">IPL</a></li>
+            <li><a href="#Console">OS Console</a></li>
+            <li><a href="#Hardware">Hardware</a></li>
+            <li><a href="#System">System</a></li>
+            <li><a href="#Logging">Logging</a></li>
+        </ul>
+        <div id="IPL">
+            <!-- #include file="iplPanel.html" -->
+        </div>
+        <div id="Console">
+            <!-- #include file="consolePanel.html" -->
+        </div>
+        <div id="Hardware">
+            <p>Hardware Configuration Content</p>
+        </div>
+        <div id="System">
+            <p>System Content</p>
+        </div>
+        <div id="Logging">
+            <!-- #include file="logPanel.html" -->
+        </div>
+    </div>
+
+    <!-- credentials modal -->
+    <div id="credentials" class="SCIModal">
+        <form id="credentialsForm" class="SCIModalContent">
+            <div class="SCIModalHead">
+                <p id="credentialsPrompt">Please enter credentials for the System Control Interface</p>
+            </div>
+            <div class="SCIModalMain">
+                <label for="credentialsUsername">UserName:</label>
+                <input type="text" id="credentialsUsername" name="username"><br><br>
+                <label for="credentialsPassword">Password:</label>
+                <input type="password" id="credentialsPassword" name="password"><br><br>
+                <input type="submit" id="credentialsSubmit" value="Submit">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
