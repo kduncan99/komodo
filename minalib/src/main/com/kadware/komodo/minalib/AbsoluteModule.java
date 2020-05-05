@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,34 +15,34 @@ import java.util.TreeMap;
  */
 public class AbsoluteModule {
 
-    public final String _name;
-    public final Map<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
+    @JsonProperty("name")               public final String _name;
+    @JsonProperty("loadableBanks")      public final Map<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
 
     //  Arithmetic fault compatibility mode
-    public final boolean _afcmClear;
-    public final boolean _afcmSet;
+    @JsonProperty("afcmClear")          public final boolean _afcmClear;
+    @JsonProperty("afcmSet")            public final boolean _afcmSet;
 
     //  Third/Quarter word mode
-    public final boolean _setQuarter;
-    public final boolean _setThird;
+    @JsonProperty("setQuarter")         public final boolean _setQuarter;
+    @JsonProperty("setThird")           public final boolean _setThird;
 
     //  Entry point
-    public final Integer _entryPointAddress;
-    public final LoadableBank _entryPointBank;
+    @JsonProperty("entryPointAddress")  public final Integer _entryPointAddress;
+    @JsonProperty("entryPointBank")     public final LoadableBank _entryPointBank;
 
     /**
      * Constructor
-     * @param name name of the module
      */
+    @JsonCreator
     private AbsoluteModule(
-        final String name,
-        final LoadableBank[] loadableBanks,
-        final Integer entryPointAddress,
-        final LoadableBank entryPointBank,
-        final boolean afcmClear,
-        final boolean afcmSet,
-        final boolean setQuarter,
-        final boolean setThird
+        @JsonProperty("name")               final String name,
+        @JsonProperty("loadableBanks")      final LoadableBank[] loadableBanks,
+        @JsonProperty("entryPointAddress")  final Integer entryPointAddress,
+        @JsonProperty("entryPointBank")     final LoadableBank entryPointBank,
+        @JsonProperty("afcmClear")          final boolean afcmClear,
+        @JsonProperty("afcmSet")            final boolean afcmSet,
+        @JsonProperty("setQuarter")         final boolean setQuarter,
+        @JsonProperty("setThired")          final boolean setThird
     ) throws InvalidParameterException {
         _name = name;
 
@@ -76,7 +78,7 @@ public class AbsoluteModule {
                                              bank._bankDescriptorIndex,
                                              bank._startingAddress,
                                              bank._initialBaseRegister == null ? "n/a" : String.format("B%d", bank._initialBaseRegister),
-                                             String.valueOf(bank._isExtendedMode)));
+                                             bank._isExtendedMode));
 
             int address = bank._startingAddress;
             int arraySize = bank._content.getSize();

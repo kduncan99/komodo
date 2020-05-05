@@ -4,14 +4,17 @@
 
 package com.kadware.komodo.baselib;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Describes a particular set of permissions which some putative user/account/whatever has for some object, such as a bank
  */
 public class AccessPermissions {
 
-    public final boolean _enter;
-    public final boolean _read;
-    public final boolean _write;
+    @JsonProperty("enter")  public final boolean _enter;
+    @JsonProperty("read")   public final boolean _read;
+    @JsonProperty("write")  public final boolean _write;
 
     /**
      * Standard constructor
@@ -36,15 +39,16 @@ public class AccessPermissions {
     }
 
     /**
-     * Initial value constructor
+     * Initial value / JSON constructor
      * @param enter value for enter (jump, call, etc) permission
      * @param read value for read permission
      * @param write value for write permission
      */
+    @JsonCreator
     public AccessPermissions(
-        final boolean enter,
-        final boolean read,
-        final boolean write
+        @JsonProperty("entry")  final boolean enter,
+        @JsonProperty("read")   final boolean read,
+        @JsonProperty("write")  final boolean write
     ) {
         _enter = enter;
         _read = read;

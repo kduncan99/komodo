@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.minalib;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
@@ -18,52 +20,52 @@ public class LoadableBank {
     /**
      * Ring and domain for the bank
      */
-    public final AccessInfo _accessInfo;
+    @JsonProperty("accessInfo")             public final AccessInfo _accessInfo;
 
     /**
      * RWX privileges for less-privileged client
      */
-    public final AccessPermissions _generalPermissions;
+    @JsonProperty("generalPermissions")     public final AccessPermissions _generalPermissions;
 
     /**
      * RWX privileges for equal ore more-privileged client
      */
-    public final AccessPermissions _specialPermissions;
+    @JsonProperty("specialPermissions")     public final AccessPermissions _specialPermissions;
 
     /**
      * BDI for this bank
      */
-    public final int _bankDescriptorIndex;
+    @JsonProperty("bankDescriptorIndex")    public final int _bankDescriptorIndex;
 
     /**
      * Bank level for this bank
      */
-    public final int _bankLevel;
+    @JsonProperty("bankLevel")              public final int _bankLevel;
 
     /**
      * Bank name for the bank
      */
-    public final String _bankName;
+    @JsonProperty("bankName")               public final String _bankName;
 
     /**
      * BR upon which the bank should be based at load time
      */
-    public final Integer _initialBaseRegister;
+    @JsonProperty("initialBaseRegister")    public final Integer _initialBaseRegister;
 
     /**
      * true if this bank requires extended mode
      */
-    public final boolean _isExtendedMode;
+    @JsonProperty("isExtendedMode")         public final boolean _isExtendedMode;
 
     /**
      * starting address of the bank
      */
-    public final int _startingAddress;
+    @JsonProperty("startingAddress")        public final int _startingAddress;
 
     /**
      * content of this bank
      */
-    public final ArraySlice _content;
+    @JsonProperty("content")                public final ArraySlice _content;
 
     /**
      * Constructor
@@ -78,17 +80,18 @@ public class LoadableBank {
      * @param generalPermissions GAP permissions
      * @param specialPermissions GAP permissions
      */
+    @JsonCreator
     private LoadableBank(
-        final int bankDescriptorIndex,
-        final int bankLevel,
-        final String bankName,
-        final int startingAddress,
-        final ArraySlice content,
-        final Integer initialBaseRegister,
-        final boolean isExtendedMode,
-        final AccessInfo accessInfo,
-        final AccessPermissions generalPermissions,
-        final AccessPermissions specialPermissions
+        @JsonProperty("bankDescriptorIndex")    final int bankDescriptorIndex,
+        @JsonProperty("bankLevel")              final int bankLevel,
+        @JsonProperty("bankName")               final String bankName,
+        @JsonProperty("startingAddress")        final int startingAddress,
+        @JsonProperty("content")                final ArraySlice content,
+        @JsonProperty("initialBaseRegister")    final Integer initialBaseRegister,
+        @JsonProperty("isExtendedMode")         final boolean isExtendedMode,
+        @JsonProperty("accessInfo")             final AccessInfo accessInfo,
+        @JsonProperty("generalPermissions")     final AccessPermissions generalPermissions,
+        @JsonProperty("specialPermissions")     final AccessPermissions specialPermissions
     ) {
         _bankDescriptorIndex = bankDescriptorIndex;
         _bankLevel = bankLevel;

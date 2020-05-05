@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.baselib;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -14,8 +16,13 @@ import org.apache.logging.log4j.Logger;
  */
 public class ArraySlice {
 
+    @JsonProperty("array")
     public final long[] _array;     //  base array of which this slice is a (possibly complete) subset
+
+    @JsonProperty("length")
     public final int _length;       //  length of this array (must be <= length of base array)
+
+    @JsonProperty("offset")
     public final int _offset;       //  offset into the base array, at which this slice begins
                                     //      _length + _offset must not exceed the range of the base array
 
@@ -37,10 +44,11 @@ public class ArraySlice {
      * @param offset offset into the base array at which point this subset begins
      * @param length length of this subset
      */
+    @JsonCreator
     public ArraySlice(
-        final long[] array,
-        final int offset,
-        final int length
+        @JsonProperty("array")  final long[] array,
+        @JsonProperty("offset") final int offset,
+        @JsonProperty("length") final int length
     ) {
         if ((offset + length > array.length) || (offset < 0) || (length < 0)) {
             String msg = String.format("Invalid arguments array size=%d requested offset=%d length=%d",

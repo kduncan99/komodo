@@ -1,4 +1,12 @@
 -- TODO InProgress
+exlib:
+    external file formats for hosting SDFF and PF files
+
+minalib:
+    We really need to support identifiers > 12 characters
+    Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+    Define what a saved binary (absolute module) looks like, implement it
+        update: It's stored in a sort of JSON format
 
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
@@ -156,10 +164,7 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * minalib
-Define what a saved binary (absolute module) looks like, implement it
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
-We really need to support identifiers > 12 characters
 more FloatingPointValue unit tests
 more unit tests for string value generation
 unit tests for node references - need to check results
