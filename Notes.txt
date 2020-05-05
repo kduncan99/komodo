@@ -1,8 +1,4 @@
 -- TODO InProgress
-*html/css/javascript
-Console help for KEXEC console commands
-
-* hardwarelib
 
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests

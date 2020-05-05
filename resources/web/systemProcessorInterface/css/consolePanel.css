@@ -5,6 +5,10 @@
     color: white;
 }
 
+.ConsoleFlexItem {
+    width: 650px;
+}
+
 #consoleOutput {
     font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
     font-size: 12px;
@@ -16,6 +20,12 @@
     padding: 0;
 }
 
+#consoleHelp {
+    overflow: scroll;
+    height:380px;
+    margin-left: 30px;
+}
+
 .ConsoleOutputRow {
     background-color: black;
 }
@@ -25,7 +35,7 @@
     font-size: 12px;
     color: #00ff00;
     list-style-type: none;
-    margin: 1px;
+    margin: 2px 0;
     padding: 0;
 }
 

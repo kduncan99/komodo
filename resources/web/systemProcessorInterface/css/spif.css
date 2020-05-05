@@ -1,5 +1,13 @@
 /* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
 
+.FlexBox {
+    display: flex;
+}
+
+.FlexItem {
+    flex-grow: 1;
+}
+
 .SCIModal {
     display: none;
     position: fixed;
