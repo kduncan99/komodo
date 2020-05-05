@@ -3,17 +3,6 @@
 Console help for KEXEC console commands
 
 * hardwarelib
-SCIF: Server-side include for .html files
-  Then break up html into multiple files, with one index.html that simply includes sci.html
-  Wherever the following pattern is found:
-      '<!--'
-       [ whitespace ] '$include'
-       [ whitespace ] '=' [ whitespace ]
-      '"' {filename} '"' [ whitespace ] '-->'
-  The pattern must not include anything else.
-  We insert a newline immediately thereafter, followed by the complete content of the indicated file.
-  We support nested includes.
-
 
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
