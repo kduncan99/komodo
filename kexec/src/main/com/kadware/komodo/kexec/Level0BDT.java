@@ -11,7 +11,7 @@ public class Level0BDT {
         ". Copyright (C) 2019 by Kurt Duncan - All Rights Reserved",
         ".",
         ". This code represents the BDT for level 0, which is global to the whole system.",
-        ". It will contain BankDescriptors for all the Level 0 KOS banks.",
+        ". It will contain BankDescriptors for all the Level 0 KEXEC banks.",
         ". Currently, we plan for this to include kernel-level stuff, but maybe not lower-level things",
         ". such as SMOQUE, MFD, PF, things like that.",
         ". We DO expect it to contain top-level interrupt handling, task scheduling, and memory management.",

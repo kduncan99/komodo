@@ -1,6 +1,6 @@
 -- TODO InProgress
 exlib:
-    external file formats for hosting SDFF and PF files
+    external file formats for hosting SDFF and PF files (and maybe tape files?)
 
 minalib:
     We really need to support identifiers > 12 characters
