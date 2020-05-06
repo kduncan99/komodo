@@ -156,7 +156,7 @@ public class Test_FileSystemTapeDevice {
         assertFalse(d.canConnect(new WordChannelModule("CM1-1")));
         assertFalse(d.canConnect(new MainStorageProcessor("MSP0",
                                                           InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX,
-                                                          InventoryManager.MAIN_STORAGE_PROCESSOR_SIZE)));
+                                                          1024 * 1024)));
         assertFalse(d.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX)));
         assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
     }

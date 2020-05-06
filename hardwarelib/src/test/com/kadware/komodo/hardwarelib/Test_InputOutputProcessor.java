@@ -5,12 +5,14 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import org.junit.Test;
-
-import java.util.*;
-
 import static org.junit.Assert.*;
 
 /**
@@ -26,7 +28,7 @@ public class Test_InputOutputProcessor {
     private static class TestSystemProcessor extends SystemProcessor {
 
         TestSystemProcessor() {
-            super();
+            super("SP0", null, null, new Credentials("test", "test"));
         }
 
         @Override
@@ -177,7 +179,6 @@ public class Test_InputOutputProcessor {
     private InstructionProcessor _ip = null;
     private InputOutputProcessor _iop = null;
     private MainStorageProcessor _msp = null;
-    private TestSystemProcessor _sp = null;
     private final Random _random = new Random(System.currentTimeMillis());
 
 
@@ -189,13 +190,16 @@ public class Test_InputOutputProcessor {
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
              MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        _sp = new TestSystemProcessor();
-        InventoryManager.getInstance().addSystemProcessor(_sp);
-        _ip = InventoryManager.getInstance().createInstructionProcessor();
-        _iop = InventoryManager.getInstance().createInputOutputProcessor();
-        _msp = InventoryManager.getInstance().createMainStorageProcessor();
+             UPIConflictException,
+             NodeNameConflictException {
+        InventoryManager im = InventoryManager.getInstance();
+        TestSystemProcessor sp = new TestSystemProcessor();
+        sp.initialize();
+        im.addSystemProcessor(sp);
+
+        _ip = im.createInstructionProcessor("IP0");
+        _iop = im.createInputOutputProcessor("IOP0");
+        _msp = im.createMainStorageProcessor("MSP0", 1024 * 1024);
         _cm = new TestChannelModule();
         _dev = new TestDevice();
 
@@ -206,20 +210,16 @@ public class Test_InputOutputProcessor {
         _cm.initialize();
         _dev.initialize();
 
-        _sp.setupUPICommunications(_msp);
+        sp.setupUPICommunications(_msp);
     }
 
     private void teardown(
-    ) throws UPINotAssignedException {
+    ) {
         _dev.terminate();
         _dev = null;
         _cm.terminate();
         _cm = null;
-        _sp.terminate();
-        InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_sp._upiIndex);
+        InventoryManager.getInstance().clearConfiguration();
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -240,8 +240,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
         InputOutputProcessor iop = new InputOutputProcessor("IOP0", 2);
         assertFalse(iop.canConnect(new FileSystemDiskDevice("DISK0")));
@@ -259,8 +258,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
 
         try {
@@ -279,8 +277,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
 
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -304,8 +301,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
 
         int blockSize = 224;
@@ -348,8 +344,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
 
         long[] baseData = new long[224];
@@ -396,8 +391,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
 
         long[] baseData0 = new long[80];
@@ -474,8 +468,7 @@ public class Test_InputOutputProcessor {
              CannotConnectException,
              MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException {
+             UPIConflictException {
         setup();
         //TODO
         teardown();

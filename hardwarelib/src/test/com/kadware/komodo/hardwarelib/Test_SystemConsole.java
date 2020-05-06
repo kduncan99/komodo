@@ -4,10 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.configurator.Configurator;
-import com.kadware.komodo.baselib.configurator.HardwareConfiguration;
+import com.kadware.komodo.configlib.Configurator;
+import com.kadware.komodo.configlib.HardwareConfiguration;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-
+import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
@@ -736,7 +737,9 @@ public class Test_SystemConsole {
     @Test
     public void exercise(
     ) throws MaxNodesException,
-             IOException {
+             IOException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
         System.setProperty("BASE_DIR", "../test-deploy/");
         Deployer testDeployer = new Deployer();
         testDeployer.deploy();
@@ -744,20 +747,23 @@ public class Test_SystemConsole {
         //  Start up an SP
         Configurator config = Configurator.getInstance();
         HardwareConfiguration hc = (HardwareConfiguration) config.getConfiguration(Configurator.Domain.KOMODO_HARDWARE);
-        HardwareConfiguration.ProcessorDefinition pd = null;
-        for (HardwareConfiguration.ProcessorDefinition pdcheck : hc._processorDefinitions) {
-            if (pdcheck._systemProcessorDefinition != null) {
-                pd = pdcheck;
-                break;
-            }
-        }
-        Assert.assertNotNull(pd);
-
         InventoryManager im = InventoryManager.getInstance();
-        SystemProcessor sp = im.createSystemProcessor(pd._nodeName,
-                                                      pd._systemProcessorDefinition._httpPort,
-                                                      pd._systemProcessorDefinition._httpsPort,
-                                                      pd._systemProcessorDefinition._adminCredentials);
+        im.importConfiguration(hc);
+//        HardwareConfiguration.ProcessorDefinition pd = null;
+//        for (HardwareConfiguration.ProcessorDefinition pdcheck : hc._processorDefinitions) {
+//            if (pdcheck._systemProcessorDefinition != null) {
+//                pd = pdcheck;
+//                break;
+//            }
+//        }
+//        Assert.assertNotNull(pd);
+//
+//        InventoryManager im = InventoryManager.getInstance();
+//        SystemProcessor sp = im.createSystemProcessor(pd._nodeName,
+//                                                      pd._systemProcessorDefinition._httpPort,
+//                                                      pd._systemProcessorDefinition._httpsPort,
+//                                                      pd._systemProcessorDefinition._adminCredentials);
+        SystemProcessor sp = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         Context context = new Context(sp);
 
         //noinspection LoopConditionNotUpdatedInsideLoop
@@ -771,6 +777,7 @@ public class Test_SystemConsole {
         }
 
         context._systemProcessor.terminate();
+        im.clearConfiguration();
         testDeployer.remove();
     }
 }

@@ -55,8 +55,8 @@ public class Builder {
 
         //  Code - BDI 0,32
         Linker.LCPoolSpecification[] poolSpecs000040 = {
-            new Linker.LCPoolSpecification(sandboxRel, 1),
-            new Linker.LCPoolSpecification(sandboxRel, 0)
+            new Linker.LCPoolSpecification(sandboxRel, 0),
+            new Linker.LCPoolSpecification(sandboxRel, 1)
         };
 
         Linker.BankDeclaration bankDecl000040 =
@@ -74,8 +74,8 @@ public class Builder {
 
         //  Interrupt handlers - BDI 0,33
         Linker.LCPoolSpecification[] poolSpecs000041 = {
-            new Linker.LCPoolSpecification(intHandlersRel, 1),
-            new Linker.LCPoolSpecification(intHandlersRel, 0)
+            new Linker.LCPoolSpecification(intHandlersRel, 0),
+            new Linker.LCPoolSpecification(intHandlersRel, 1)
         };
 
         Linker.BankDeclaration bankDecl000041 =

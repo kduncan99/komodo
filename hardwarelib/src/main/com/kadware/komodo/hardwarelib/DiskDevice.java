@@ -124,7 +124,7 @@ public abstract class DiskDevice extends Device {
      *      Bit 3:  mounted
      *      Bit 4:  write_protected
      * MODEL:       integer code for the Model
-     * TYPE:        integer code for the Type
+     * TYPE:        integer code for the ProcessorType
      * PREP_FACTOR: indicates the block size in words, of a disk block
      * BLOCK_COUNT: number of blocks on the media
      */

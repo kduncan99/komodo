@@ -42,7 +42,7 @@ public class InputOutputProcessor extends Processor {
         final String name,
         final int upi
     ) {
-        super(Type.InputOutputProcessor, name, upi);
+        super(ProcessorType.InputOutputProcessor, name, upi);
     }
 
     /**
@@ -160,7 +160,7 @@ public class InputOutputProcessor extends Processor {
                         ChannelModule.ChannelProgram channelProgram = ChannelModule.ChannelProgram.create(mspStorage, addr._offset);
                         boolean started = startIO(source, channelProgram);
                         if (!started) {
-                            if (source._Type == Type.SystemProcessor) {
+                            if (source._Type == ProcessorType.SystemProcessor) {
                                 sendList.add(source);
                             } else {
                                 ++broadcastCount;

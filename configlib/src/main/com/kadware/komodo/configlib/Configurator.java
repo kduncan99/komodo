@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib.configurator;
+package com.kadware.komodo.configlib;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.baselib.PathNames;
@@ -37,8 +37,8 @@ public final class Configurator {
     }
 
     private static Configurator _instance = null;
-    private static Logger LOGGER = LogManager.getLogger(Configurator.class.getSimpleName());
-    private Map<Domain, Configuration> _cachedConfigurations = new HashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger(Configurator.class.getSimpleName());
+    private final Map<Domain, Configuration> _cachedConfigurations = new HashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------

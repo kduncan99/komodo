@@ -4,9 +4,6 @@
 
 package com.kadware.komodo.binaries.sandbox;
 
-import com.kadware.komodo.minalib.Assembler;
-import com.kadware.komodo.minalib.RelocatableModule;
-
 public class Sandbox {
 
     public static final String[] SOURCE = {
@@ -28,22 +25,8 @@ public class Sandbox {
         "          +         032,MSG             . L,BDI,Offset of text",
         "",
         "$(1)      .",
-        "START*",
+        "START$*",
         "          SYSC      SYSCPKT",
         "          HALT      0",
     };
-
-    public static void main(
-        final String[] args
-    ) {
-        Assembler.Option[] optionSet = {
-            Assembler.Option.EMIT_MODULE_SUMMARY,
-            Assembler.Option.EMIT_SOURCE,
-            Assembler.Option.EMIT_GENERATED_CODE,
-            Assembler.Option.EMIT_DICTIONARY,
-            };
-
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", SOURCE, optionSet);
-    }
 }

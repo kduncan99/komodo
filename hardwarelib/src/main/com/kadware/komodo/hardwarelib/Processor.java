@@ -28,17 +28,17 @@ public abstract class Processor extends Node implements Worker {
     //  Nested things
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    public enum Type {
+    public enum ProcessorType {
         SystemProcessor(0),
         InstructionProcessor(1),
         InputOutputProcessor(2),
         MainStorageProcessor(3);
 
         private final int _code;
-        Type(int code) { _code = code; }
+        ProcessorType(int code) { _code = code; }
         public int getCode() { return _code; }
 
-        public static Type getValue(
+        public static ProcessorType getValue(
             final int code
         ) {
             switch (code) {
@@ -48,7 +48,7 @@ public abstract class Processor extends Node implements Worker {
                 case 3:     return MainStorageProcessor;
             }
 
-            throw new RuntimeException("Invalid code for Type.getValue()");
+            throw new RuntimeException("Invalid code for ProcessorType.getValue()");
         }
     }
 
@@ -86,7 +86,7 @@ public abstract class Processor extends Node implements Worker {
 
     private static final Logger LOGGER = LogManager.getLogger(Processor.class);
 
-    final Type _Type;
+    final ProcessorType _Type;
 
     /**
      * Uniquely identifies each processor in the configuration, in a manner transparent to the configurating entity.
@@ -146,7 +146,7 @@ public abstract class Processor extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     public Processor(
-        final Type processorType,
+        final ProcessorType processorType,
         final String name,
         final int upiIndex
     ) {
@@ -192,7 +192,7 @@ public abstract class Processor extends Node implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Type:%s Running:%s Ready:%s\n", _Type.toString(), _isRunning, _isReady));
+            writer.write(String.format("  ProcessorType:%s Running:%s Ready:%s\n", _Type.toString(), _isRunning, _isReady));
 
             StringBuilder sb = new StringBuilder();
             sb.append("  Pending SENDs from: ");

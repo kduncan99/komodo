@@ -18,7 +18,7 @@ public class Test_Processor {
             final String name,
             final int upi
         ) {
-            super(Type.InstructionProcessor, name, upi);
+            super(ProcessorType.InstructionProcessor, name, upi);
         }
 
         @Override
@@ -48,6 +48,6 @@ public class Test_Processor {
         TestProcessor p = new TestProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
         assertEquals(Node.NodeCategory.Processor, p._category);
         assertEquals("IP0", p._name);
-        assertEquals(Processor.Type.InstructionProcessor, p._Type);
+        assertEquals(Processor.ProcessorType.InstructionProcessor, p._Type);
     }
 }

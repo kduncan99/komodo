@@ -5,11 +5,11 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.Credentials;
+import com.kadware.komodo.configlib.HardwareConfiguration;
+import com.kadware.komodo.configlib.ProcessorDefinition;
 import com.kadware.komodo.hardwarelib.exceptions.*;
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Creation and discarding of hardware things (i.e., anything extending Node) must occur via this manager.
@@ -56,8 +57,6 @@ public class InventoryManager {
     final static int FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX = FIRST_SYSTEM_PROCESSOR_UPI_INDEX + MAX_SYSTEM_PROCESSORS;
     final static int FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX + MAX_MAIN_STORAGE_PROCESSORS;
     public final static int FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX + MAX_INPUT_OUTPUT_PROCESSORS;
-
-    final static int MAIN_STORAGE_PROCESSOR_SIZE = 1024 * 1024;  //  One MWord should be enough static storage
 
     private final Map<Integer, Processor> _processors = new HashMap<>();
     private final List<ChannelModule> _channelModules = new LinkedList<>();
@@ -197,24 +196,36 @@ public class InventoryManager {
     }
 
     /**
-     * Creates a new MainStorageProcessor with a unique name and UPI.
-     * @return new processor object
-     * @throws MaxNodesException if too many processors of this type have been created
+     * Clears the configuration cleanly
      */
-    public MainStorageProcessor createMainStorageProcessor(
-    ) throws MaxNodesException {
-        int upiIndex = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX;
-        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upiIndex) {
-            if (_processors.get(upiIndex) == null) {
-                String name = String.format("MSP%d", px);
-                MainStorageProcessor msp = new MainStorageProcessor(name, upiIndex, MAIN_STORAGE_PROCESSOR_SIZE);
-                _processors.put(upiIndex, msp);
-                msp.initialize();
-                return msp;
+    public void clearConfiguration() {
+        EntryMessage em = LOGGER.traceEntry("clearConfiguration()");
+        for (Device device : _devices) {
+            for (Node ancestor : device._ancestors) {
+                Node.disconnect(ancestor, device);
             }
-        }
 
-        throw new MaxNodesException(MainStorageProcessor.class);
+            device.clear();
+            device.terminate();
+        }
+        _devices.clear();
+
+        for (ChannelModule chmod : _channelModules) {
+            for (Node ancestor : chmod._ancestors) {
+                Node.disconnect(ancestor, chmod);
+            }
+
+            chmod.clear();
+            chmod.terminate();
+        }
+        _channelModules.clear();
+
+        for (Processor proc : _processors.values()) {
+            proc.terminate();
+        }
+        _processors.clear();
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -223,11 +234,11 @@ public class InventoryManager {
      * @throws MaxNodesException if too many processors of this type have been created
      */
     public InputOutputProcessor createInputOutputProcessor(
+        final String name
     ) throws MaxNodesException {
         int upiIndex = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX;
         for (int px = 0; px < MAX_INPUT_OUTPUT_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
-                String name = String.format("IOP%d", px);
                 InputOutputProcessor iop = new InputOutputProcessor(name, upiIndex);
                 _processors.put(upiIndex, iop);
                 iop.initialize();
@@ -244,11 +255,11 @@ public class InventoryManager {
      * @throws MaxNodesException if too many processors of this type have been created
      */
     public InstructionProcessor createInstructionProcessor(
+        final String name
     ) throws MaxNodesException {
         int upiIndex = FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX;
         for (int px = 0; px < MAX_INSTRUCTION_PROCESSORS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
-                String name = String.format("IP%d", px);
                 InstructionProcessor ip = new InstructionProcessor(name, upiIndex);
                 _processors.put(upiIndex, ip);
                 ip.initialize();
@@ -260,15 +271,42 @@ public class InventoryManager {
     }
 
     /**
+     * Creates a new MainStorageProcessor with a unique name and UPI.
+     * @param name processor name
+     * @param fixedStorageSize size, in words, of the fixed storage portion of the MSP
+     * @return new processor object
+     * @throws MaxNodesException if too many processors of this type have been created
+     */
+    public MainStorageProcessor createMainStorageProcessor(
+        final String name,
+        final int fixedStorageSize
+    ) throws MaxNodesException {
+        int upiIndex = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX;
+        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upiIndex) {
+            if (_processors.get(upiIndex) == null) {
+                MainStorageProcessor msp = new MainStorageProcessor(name, upiIndex, fixedStorageSize);
+                _processors.put(upiIndex, msp);
+                msp.initialize();
+                return msp;
+            }
+        }
+
+        throw new MaxNodesException(MainStorageProcessor.class);
+    }
+
+    /**
      * Creates a new SystemProcessor with a unique name and UPI.
      * For SystemProcessors which have an HTTPSystemProcessorInterface (currently, that's all we have)
+     * @param name name of the system processor
+     * @param httpPort port on which to listen for nonsecure HTTP - null to disable
+     * @param httpsPort port on which to listen for secure HTTP - null to disable
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */
     public SystemProcessor createSystemProcessor(
         final String name,
-        final int httpPort,
-        final int httpsPort,
+        final Integer httpPort,
+        final Integer httpsPort,
         final Credentials credentials
     ) throws MaxNodesException {
         int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
@@ -289,7 +327,6 @@ public class InventoryManager {
      * @param upiIndex UPI of the processor to be deleted
      * @throws UPINotAssignedException if no processor can be found
      */
-    //TODO???? Need to change this to deleteNode, or something
     public void deleteProcessor(
         final int upiIndex
     ) throws UPINotAssignedException {
@@ -342,18 +379,10 @@ public class InventoryManager {
 
         for (Processor processor : _processors.values()) {
             switch (processor._Type) {
-                case InputOutputProcessor:
-                    iops++;
-                    break;
-                case InstructionProcessor:
-                    ips++;
-                    break;
-                case MainStorageProcessor:
-                    msps++;
-                    break;
-                case SystemProcessor:
-                    sps++;
-                    break;
+                case InputOutputProcessor -> iops++;
+                case InstructionProcessor -> ips++;
+                case MainStorageProcessor -> msps++;
+                case SystemProcessor -> sps++;
             }
         }
 
@@ -385,7 +414,7 @@ public class InventoryManager {
     List<InputOutputProcessor> getInputOutputProcessors() {
         List<InputOutputProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.Type.InputOutputProcessor) {
+            if (processor._Type == Processor.ProcessorType.InputOutputProcessor) {
                 result.add((InputOutputProcessor) processor);
             }
         }
@@ -417,7 +446,7 @@ public class InventoryManager {
     List<InstructionProcessor> getInstructionProcessors() {
         List<InstructionProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.Type.InstructionProcessor) {
+            if (processor._Type == Processor.ProcessorType.InstructionProcessor) {
                 result.add((InstructionProcessor) processor);
             }
         }
@@ -449,7 +478,7 @@ public class InventoryManager {
     List<MainStorageProcessor> getMainStorageProcessors() {
         List<MainStorageProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.Type.MainStorageProcessor) {
+            if (processor._Type == Processor.ProcessorType.MainStorageProcessor) {
                 result.add((MainStorageProcessor) processor);
             }
         }
@@ -504,10 +533,29 @@ public class InventoryManager {
     List<SystemProcessor> getSystemProcessors() {
         List<SystemProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.Type.SystemProcessor) {
+            if (processor._Type == Processor.ProcessorType.SystemProcessor) {
                 result.add((SystemProcessor) processor);
             }
         }
         return result;
+    }
+
+    /**
+     * Loads the configuration from a HardwareConfiguration object
+     * @param config hardware configuration object
+     * @throws MaxNodesException if there are too many nodes of any particular category
+     */
+    public void importConfiguration(
+        final HardwareConfiguration config
+    ) throws MaxNodesException {
+        clearConfiguration();
+        for (ProcessorDefinition pd : config._processorDefinitions) {
+            switch (pd._processorType) {
+                case MainStorageProcessor -> createMainStorageProcessor(pd._nodeName, pd._fixedStorageSize);
+                case InputOutputProcessor -> createInputOutputProcessor(pd._nodeName);
+                case InstructionProcessor -> createInstructionProcessor(pd._nodeName);
+                case SystemProcessor -> createSystemProcessor(pd._nodeName, pd._httpPort, pd._httpsPort, pd._adminCredentials);
+            }
+        }
     }
 }

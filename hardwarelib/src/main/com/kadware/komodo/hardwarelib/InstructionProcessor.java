@@ -37,7 +37,7 @@ public class InstructionProcessor extends Processor implements Worker {
         BasicMode(1),     //  Requires BD.S == 0
         Gate(2),          //  Requires BD.S == 0
         Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
-        //  Only BD.Type, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
+        //  Only BD.ProcessorType, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
         Queue(4),
         QueueRepository(6);
 
@@ -519,7 +519,7 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         /**
-         * @return Type of bank (has some impact on the validity/meaning of other fields
+         * @return ProcessorType of bank (has some impact on the validity/meaning of other fields
          *          BD.TYPE:Word 0 Bits 8-11
          */
         public BankType getBankType() {
@@ -576,7 +576,7 @@ public class InstructionProcessor extends Processor implements Worker {
          * @return large bank flag:
          *          If false, this is a single bank no greater than 0_777777.
          *              BD.Lower_Limit has 512-word granularity and BD.Upper_Limit has 1-word granularity.
-         *              This is required for BD.Type other than ExtendedMode.
+         *              This is required for BD.ProcessorType other than ExtendedMode.
          *          IF true, this is either a portion of a large bank no greater than 077_777777
          *              or of a very large bank no greater than 077777_777777.
          *              BD.Lower_Limit has 32768-word granularity, and BD.Upper_Limit has 64-word granularity.
@@ -8606,7 +8606,7 @@ public class InstructionProcessor extends Processor implements Worker {
         final String name,
         final int upiIndex
     ) {
-        super(Type.InstructionProcessor, name, upiIndex);
+        super(ProcessorType.InstructionProcessor, name, upiIndex);
 
         _storageLocks.put(this, new HashSet<AbsoluteAddress>());
 

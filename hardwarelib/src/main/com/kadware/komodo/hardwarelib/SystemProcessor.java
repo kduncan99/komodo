@@ -80,8 +80,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     Credentials _credentials;                           //  Current admin credentials for logging into the SPIF
     private long _dayclockComparatorMicros;             //  compared against emulator time to decide whether to cause interrupt
     private long _dayclockOffsetMicros = 0;             //  applied to host system time in micros, to obtain emulator time
-    private int _httpPort = 0;
-    private int _httpsPort = 0;
+    private Integer _httpPort = null;
+    private Integer _httpsPort = null;
     private long _jumpKeys = 0;
     private long _mostRecentLogIdentifier = 0;
 
@@ -93,16 +93,16 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     /**
      * constructor for SPs with an HTTPSystemProcessorInterface (currently, that's all we have)
      * @param name node name of the SP
-     * @param httpPort port number for HTTP interface - 0 if we don't want HTTP
-     * @param httpsPort port number for HTTPS interface - 0 if we don't want HTTPS
+     * @param httpPort port number for HTTP interface - null if we don't want HTTP
+     * @param httpsPort port number for HTTPS interface - null if we don't want HTTPS
      */
     SystemProcessor(
         final String name,
-        final int httpPort,
-        final int httpsPort,
+        final Integer httpPort,
+        final Integer httpsPort,
         final Credentials credentials
     ) {
-        super(Type.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        super(ProcessorType.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         _httpPort = httpPort;
         _httpsPort = httpsPort;
         _credentials = credentials;
@@ -117,7 +117,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * constructor for testing
      */
     public SystemProcessor() {
-        super(Type.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        super(ProcessorType.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -190,10 +190,10 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 //        int ax = 1;
 //
 //        for (Processor source : processors) {
-//            if ((source._Type == Type.InstructionProcessor)
-//                || (source._Type == Type.SystemProcessor)) {
+//            if ((source._Type == ProcessorType.InstructionProcessor)
+//                || (source._Type == ProcessorType.SystemProcessor)) {
 //                for (Processor destination : processors) {
-//                    if (destination._Type == Type.InputOutputProcessor) {
+//                    if (destination._Type == ProcessorType.InputOutputProcessor) {
 //                        Word36 w = new Word36();
 //                        w.setS1(source._upiIndex);
 //                        w.setS2(destination._upiIndex);
@@ -204,8 +204,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 //                        w.setS2(source._upiIndex);
 //                        commsArea.set(ax, w.getW());
 //                        ax += 3;
-//                    } else if ((source._Type == Type.SystemProcessor)
-//                               && (destination._Type == Type.InstructionProcessor)) {
+//                    } else if ((source._Type == ProcessorType.SystemProcessor)
+//                               && (destination._Type == ProcessorType.InstructionProcessor)) {
 //                        Word36 w = new Word36();
 //                        w.setS1(source._upiIndex);
 //                        w.setS2(destination._upiIndex);

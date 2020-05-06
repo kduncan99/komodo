@@ -1047,7 +1047,7 @@ class BaseFunctions {
                 for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
                     InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(br._storage, 8 * bdi);
                     if (bd.getBaseAddress()._upiIndex > 0) {
-                        System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o Type:%s",
+                        System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o ProcessorType:%s",
                                                          bdi,
                                                          bd.getBaseAddress()._upiIndex,
                                                          bd.getBaseAddress()._offset,

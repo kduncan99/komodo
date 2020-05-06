@@ -172,7 +172,7 @@ public abstract class TapeDevice extends Device {
      *      Bit 3:  mounted
      *      Bit 4:  write_protected
      * MODEL:       integer code for the Model
-     * TYPE:        integer code for the Type
+     * TYPE:        integer code for the ProcessorType
      * NOISE:       current noise constant
      * FLAGS2:
      *      Bit 30: load point

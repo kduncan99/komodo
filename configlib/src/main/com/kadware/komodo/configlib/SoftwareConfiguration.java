@@ -4,7 +4,7 @@
  * Represents the entirety of the hardware configuration
  */
 
-package com.kadware.komodo.baselib.configurator;
+package com.kadware.komodo.configlib;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

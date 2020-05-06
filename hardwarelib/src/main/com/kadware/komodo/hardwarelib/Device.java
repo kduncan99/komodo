@@ -513,7 +513,7 @@ public abstract class Device extends Node {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Type:            %s\n", _deviceType.toString()));
+            writer.write(String.format("  ProcessorType:            %s\n", _deviceType.toString()));
             writer.write(String.format("  Model:           %s\n", _deviceModel.toString()));
             writer.write(String.format("  Ready:           %s\n", _readyFlag));
             writer.write(String.format("  Unit Attention:  %s\n", _unitAttentionFlag));
@@ -552,7 +552,7 @@ public abstract class Device extends Node {
      * FLAGS:
      *      Bit 0:  device_ready
      * MODEL:       integer code for the Model
-     * TYPE:        integer code for the Type
+     * TYPE:        integer code for the ProcessorType
      */
     protected ArraySlice getInfo() {
         long[] buffer = new long[28];

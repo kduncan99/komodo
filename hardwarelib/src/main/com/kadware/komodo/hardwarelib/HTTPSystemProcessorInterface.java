@@ -81,7 +81,6 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
 
     private static final long CLIENT_AGE_OUT_MSECS = 10 * 60 * 1000;        //  10 minutes of no polling ages out a client
     private static final long DEFAULT_POLL_WAIT_MSECS = 10000;              //  10 second (maximum) poll delay as a default
-//TODO remove    private static final String HTML_FILE_NAME = "sci.html";                //  relative to web directory
     private static final String FAVICON_FILE_NAME = "favicon.png";          //  relative to web directory
     private static final int MAX_CACHED_LOG_ENTRIES = 200;                  //  max size of most-recent log entries
     private static final int MAX_CACHED_READ_ONLY_MESSAGES = 30;            //  max size of container of most-recent RO messages
@@ -142,19 +141,19 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
      * constructor
      * @param parentSystemProcessor reference to the SystemProcessor which contains us
      * @param name Name to be used for the console interface
-     * @param httpPort port number for HTTP interface - 0 to disable
-     * @param httpsPort port number for HTTPS interface - 0 to disable
+     * @param httpPort port number for HTTP interface - null to disable
+     * @param httpsPort port number for HTTPS interface - null to disable
      */
     public HTTPSystemProcessorInterface(
         final SystemProcessor parentSystemProcessor,
         final String name,
-        final int httpPort,
-        final int httpsPort
+        final Integer httpPort,
+        final Integer httpsPort
     ) {
         _parentSystemProcessor = parentSystemProcessor;
         _name = name;
-        _httpListener = httpPort == 0 ? null : new HttpListener(httpPort);
-        _httpsListener = httpsPort == 0 ? null : new HttpsListener(httpsPort);
+        _httpListener = httpPort == null ? null : new HttpListener(httpPort);
+        _httpsListener = httpsPort == null ? null : new HttpsListener(httpsPort);
         _keystoreDirectory = PathNames.WEB_ROOT_DIRECTORY;
         _webDirectory = PathNames.WEB_ROOT_DIRECTORY + "systemProcessorInterface/";
     }
@@ -731,6 +730,38 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
         }
 
         /**
+         * Implements a sort of readAllLines() which is aware of our lite version of server-side include semantics.
+         * Recursive, so that included html files can include other html files.
+         */
+        private List<String> readAllLinesWithInclude(
+            final String fileName
+        ) throws IOException {
+            EntryMessage em = LOGGER.traceEntry("readAllLinesWithInclude(fileName={})", fileName);
+
+            List<String> fileStrings = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
+            List<String> resultStrings = new LinkedList<>();
+            for (String fileString : fileStrings) {
+                Matcher matcher = INCLUDE_REXEC_PATTERN.matcher(fileString);
+                while (matcher.find()) {
+                    int s = matcher.start();// start index of the previous match
+                    int e = matcher.end();// offset after the last matched character
+                    resultStrings.add(fileString.substring(0, e));
+
+                    String includeString = fileString.substring(s, e);
+                    String includeFileName = includeString.split("\"")[1];
+                    String includeFullName = String.format("%s%s", _webDirectory, includeFileName);
+                    resultStrings.addAll(readAllLinesWithInclude(includeFullName));
+
+                    fileString = fileString.substring(e);
+                }
+                resultStrings.add(fileString);
+            }
+
+            LOGGER.traceExit(em);
+            return resultStrings;
+        }
+
+        /**
          * Convenient method for handling the situation where a method is requested which is not supported on the endpoint
          */
         void respondBadMethod(
@@ -829,35 +860,6 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
 
             exchange.close();
             LOGGER.traceExit(em);
-        }
-
-        //TODO move this where it belongs, and doc it
-        private List<String> readAllLinesWithInclude(
-            final String fileName
-        ) throws IOException {
-            EntryMessage em = LOGGER.traceEntry("readAllLinesWithInclude(fileName={})", fileName);
-
-            List<String> fileStrings = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
-            List<String> resultStrings = new LinkedList<>();
-            for (String fileString : fileStrings) {
-                Matcher matcher = INCLUDE_REXEC_PATTERN.matcher(fileString);
-                while (matcher.find()) {
-                    int s = matcher.start();// start index of the previous match
-                    int e = matcher.end();// offset after the last matched character
-                    resultStrings.add(fileString.substring(0, e));
-
-                    String includeString = fileString.substring(s, e);
-                    String includeFileName = includeString.split("\"")[1];
-                    String includeFullName = String.format("%s%s", _webDirectory, includeFileName);
-                    resultStrings.addAll(readAllLinesWithInclude(includeFullName));
-
-                    fileString = fileString.substring(e);
-                }
-                resultStrings.add(fileString);
-            }
-
-            LOGGER.traceExit(em);
-            return resultStrings;
         }
 
         /**
@@ -1476,10 +1478,6 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
                 if (fileName.startsWith("/")) {
                     fileName = fileName.substring(1);
                 }
-                //TODO remove block
-//                if (fileName.isEmpty() || fileName.equalsIgnoreCase("index.html")) {
-//                    fileName = HTML_FILE_NAME;
-//                }
 
                 String mimeType;
                 boolean htmlFile = false;

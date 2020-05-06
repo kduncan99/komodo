@@ -5,6 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.util.Arrays;
@@ -26,53 +27,11 @@ public class Test_ByteChannelModule {
     //  Stub classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private static class TestInputOutputProcessor extends InputOutputProcessor {
-
-        private final List<ChannelModule.ChannelProgram> _inFlight = new LinkedList<>();
-
-        TestInputOutputProcessor(
-        ) {
-            super("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX);
-            try {
-                InventoryManager.getInstance().addInputOutputProcessor(this);
-            } catch (NodeNameConflictException | UPIConflictException ex) {
-            }
-        }
-
-        @Override
-        public boolean startIO(
-            final Processor source,
-            final ChannelModule.ChannelProgram channelProgram
-        ) {
-            _inFlight.add(channelProgram);
-            return true;
-        }
-
-        @Override
-        public void finalizeIo(
-            final ChannelModule.ChannelProgram channelProgram,
-            final Processor source
-        ) {
-            _inFlight.remove(channelProgram);
-        }
-    }
-
-    private static class TestInstructionProcessor extends InstructionProcessor {
-
-        TestInstructionProcessor() {
-            super("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
-            try {
-                InventoryManager.getInstance().addInstructionProcessor(this);
-            } catch (NodeNameConflictException | UPIConflictException ex) {
-            }
-        }
-    }
-
     private static class TestTapeDevice extends Device {
 
-        interface Block {};
-        class FileMarkBlock implements Block {}
-        class DataBlock implements Block {
+        interface Block {}
+        static class FileMarkBlock implements Block {}
+        static class DataBlock implements Block {
             final byte[] _data;
             DataBlock(byte[] data) { _data = data; }
         }
@@ -94,7 +53,7 @@ public class Test_ByteChannelModule {
         ) {
             ioInfo._transferredCount = 0;
             switch (ioInfo._ioFunction) {
-                case MoveBlock: {
+                case MoveBlock -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -112,10 +71,8 @@ public class Test_ByteChannelModule {
                     } else {
                         ioInfo._status = IOStatus.Successful;
                     }
-                    break;
                 }
-
-                case MoveFile: {
+                case MoveFile -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -136,10 +93,8 @@ public class Test_ByteChannelModule {
                             }
                         }
                     }
-                    break;
                 }
-
-                case MoveBlockBackward: {
+                case MoveBlockBackward -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -158,10 +113,8 @@ public class Test_ByteChannelModule {
                     } else {
                         ioInfo._status = IOStatus.Successful;
                     }
-                    break;
                 }
-
-                case MoveFileBackward: {
+                case MoveFileBackward -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -181,10 +134,8 @@ public class Test_ByteChannelModule {
                             }
                         }
                     }
-                    break;
                 }
-
-                case Read: {
+                case Read -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -206,10 +157,8 @@ public class Test_ByteChannelModule {
                     ioInfo._byteBuffer = ((DataBlock) block)._data;
                     ioInfo._transferredCount = ioInfo._byteBuffer.length;
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case ReadBackward: {
+                case ReadBackward -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -237,27 +186,21 @@ public class Test_ByteChannelModule {
                         ++ioInfo._transferredCount;
                     }
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case Reset: {
+                case Reset -> {
                     _stream.clear();
                     _position = 0;
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case Rewind: {
+                case Rewind -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
                     }
                     _position = 0;
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case RewindInterlock: {
+                case RewindInterlock -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -265,10 +208,8 @@ public class Test_ByteChannelModule {
                     _position = 0;
                     _readyFlag = false;
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case Write: {
+                case Write -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -282,10 +223,8 @@ public class Test_ByteChannelModule {
                     _stream.add(_position++, new DataBlock(Arrays.copyOf(sourceArray, sourceArray.length)));
                     ioInfo._status = IOStatus.Successful;
                     ioInfo._transferredCount = sourceArray.length;
-                    break;
                 }
-
-                case WriteEndOfFile: {
+                case WriteEndOfFile -> {
                     if (!_readyFlag) {
                         ioInfo._status = IOStatus.NotReady;
                         break;
@@ -297,11 +236,8 @@ public class Test_ByteChannelModule {
 
                     _stream.add(_position++, new FileMarkBlock());
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                default:
-                    ioInfo._status = IOStatus.InvalidFunction;
+                default -> ioInfo._status = IOStatus.InvalidFunction;
             }
 
             //  We're always async, so we never 'schedule' an IO
@@ -343,9 +279,8 @@ public class Test_ByteChannelModule {
         ) {
             ioInfo._transferredCount = 0;
             switch (ioInfo._ioFunction) {
-                case Read:
-                {
-                    Long blockId = ioInfo._blockId;
+                case Read -> {
+                    long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = IOStatus.InvalidBlockId;
                     }
@@ -359,12 +294,7 @@ public class Test_ByteChannelModule {
                             return false;
                         }
 
-                        byte[] dataBlock = _dataStore.get(blockId);
-                        if (dataBlock == null) {
-                            dataBlock = new byte[BLOCK_SIZE];
-                            _dataStore.put(blockId, dataBlock);
-                        }
-
+                        byte[] dataBlock = _dataStore.computeIfAbsent(blockId, k -> new byte[BLOCK_SIZE]);
                         int sx = 0;
                         while ((bytesLeft > 0) && (sx < BLOCK_SIZE)) {
                             ioInfo._byteBuffer[dx++] = dataBlock[sx++];
@@ -376,13 +306,10 @@ public class Test_ByteChannelModule {
                     }
 
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                case Write:
-                {
+                case Write -> {
                     int bytesLeft = ioInfo._transferCount;
-                    Long blockId = ioInfo._blockId;
+                    long blockId = ioInfo._blockId;
                     if (blockId >= BLOCK_COUNT) {
                         ioInfo._status = IOStatus.InvalidBlockId;
                     }
@@ -394,12 +321,7 @@ public class Test_ByteChannelModule {
                             return false;
                         }
 
-                        byte[] dataBlock = _dataStore.get(blockId);
-                        if (dataBlock == null) {
-                            dataBlock = new byte[BLOCK_SIZE];
-                            _dataStore.put(blockId, dataBlock);
-                        }
-
+                        byte[] dataBlock = _dataStore.computeIfAbsent(blockId, k -> new byte[BLOCK_SIZE]);
                         for (int dx = 0;
                              (bytesLeft > 0) && (dx < BLOCK_SIZE);
                              ++ioInfo._transferredCount, --bytesLeft) {
@@ -410,11 +332,8 @@ public class Test_ByteChannelModule {
                     }
 
                     ioInfo._status = IOStatus.Successful;
-                    break;
                 }
-
-                default:
-                    ioInfo._status = IOStatus.InvalidFunction;
+                default -> ioInfo._status = IOStatus.InvalidFunction;
             }
 
             //  We're always async, so we never 'schedule' an IO
@@ -461,9 +380,14 @@ public class Test_ByteChannelModule {
     ) throws CannotConnectException,
              MaxNodesException {
         //  Create stub nodes and one real channel module
-        _ip = InventoryManager.getInstance().createInstructionProcessor();
-        _iop = InventoryManager.getInstance().createInputOutputProcessor();
-        _msp = InventoryManager.getInstance().createMainStorageProcessor();
+        InventoryManager im = InventoryManager.getInstance();
+        im.createSystemProcessor("SP0",
+                                 null,
+                                 null,
+                                 new Credentials("test", "test"));
+        _ip = im.createInstructionProcessor("IP0");
+        _iop = im.createInputOutputProcessor("IOP0");
+        _msp = im.createMainStorageProcessor("MSP0", 1024 * 1024);
         _cm = new ByteChannelModule("CM0-0");
         if (deviceType == Device.Type.Disk) {
             _device = new TestDiskDevice();
@@ -481,14 +405,12 @@ public class Test_ByteChannelModule {
     }
 
     private void teardown(
-    ) throws UPINotAssignedException {
+    ) {
         _cm.terminate();
         _device.terminate();
         _cm = null;
         _device = null;
-        InventoryManager.getInstance().deleteProcessor(_ip._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_iop._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(_msp._upiIndex);
+        InventoryManager.getInstance().clearConfiguration();
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -506,8 +428,7 @@ public class Test_ByteChannelModule {
     @Test
     public void canConnect_success(
     ) throws CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException{
+             MaxNodesException {
         setup(Device.Type.Disk);
         assertTrue(_cm.canConnect(_iop));
         teardown();
@@ -516,8 +437,7 @@ public class Test_ByteChannelModule {
     @Test
     public void canConnect_failure(
     ) throws CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException{
+             MaxNodesException {
         setup(Device.Type.Disk);
         ByteChannelModule cm = new ByteChannelModule("CM1-0");
         assertFalse(cm.canConnect(new FileSystemDiskDevice("DISK0")));
@@ -556,8 +476,7 @@ public class Test_ByteChannelModule {
     @Test
     public void unconfiguredDevice(
     ) throws CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException {
+             MaxNodesException {
         setup(Device.Type.Disk);
 
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -579,8 +498,7 @@ public class Test_ByteChannelModule {
     public void io_formatA(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException{
+             MaxNodesException {
         setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -714,10 +632,8 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatA_backward(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException {
+    ) throws CannotConnectException,
+             MaxNodesException {
         setup(Device.Type.Tape);
 
         int blockSize = 1800;
@@ -725,8 +641,6 @@ public class Test_ByteChannelModule {
         for (int dx = 0; dx < blockSize; ++dx) {
             sourceBuffer[dx] = _random.nextLong() & 0_377377_377377L;
         }
-
-        int dataSegmentIndex = _msp.createSegment(blockSize);
 
         //  Write data block
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -786,8 +700,7 @@ public class Test_ByteChannelModule {
     public void io_formatB(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException{
+             MaxNodesException {
         setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -918,8 +831,7 @@ public class Test_ByteChannelModule {
     public void io_formatC_oneBlock(
     ) throws AddressingExceptionInterrupt,
                  CannotConnectException,
-                 MaxNodesException,
-                 UPINotAssignedException {
+                 MaxNodesException {
         setup(Device.Type.Disk);
 
         //  Populate MSP storage
@@ -995,8 +907,7 @@ public class Test_ByteChannelModule {
     public void io_formatC_multipleBlocks(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             UPINotAssignedException {
+             MaxNodesException {
         setup(Device.Type.Disk);
 
         int maxBlocks = 16;
@@ -1076,8 +987,7 @@ public class Test_ByteChannelModule {
     public void io_formatC_residual(
     ) throws AddressingExceptionInterrupt,
             CannotConnectException,
-            MaxNodesException,
-            UPINotAssignedException {
+            MaxNodesException {
         setup(Device.Type.Disk);
 
         int maxBlockSize = 8 * TestDiskDevice.PREP_FACTOR;
