@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Worker;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
@@ -367,6 +368,39 @@ public abstract class Processor extends Node implements Worker {
         }
 
         return msp.getStorage(absoluteAddress._segment).get(absoluteAddress._offset);
+    }
+
+    /**
+     * Retrieves a slice of storage beginning at the indicated absolute address,
+     * an extending for the indicated count
+     * @param absoluteAddress MSP UPI and address of the first word within the MSP, to be retrieved
+     * @param count Number of words to be retrieved
+     * @return new ArraySlice
+     * @throws AddressingExceptionInterrupt for an invalid MSP or segment reference
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
+     */
+    static ArraySlice getStorageValues(
+        final AbsoluteAddress absoluteAddress,
+        final int offset,
+        final int count
+    ) throws AddressingExceptionInterrupt,
+             AddressLimitsException,
+             UPIProcessorTypeException,
+             UPINotAssignedException {
+        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(absoluteAddress._upiIndex);
+        if ((absoluteAddress._offset + offset < 0)
+            || (absoluteAddress._offset + offset > msp.getStorage(absoluteAddress._segment).getSize())) {
+            throw new AddressLimitsException(absoluteAddress);
+        }
+
+        ArraySlice mspStorage = msp.getStorage(absoluteAddress._segment);
+        if (absoluteAddress._offset + offset + count >= mspStorage.getSize()) {
+            throw new AddressLimitsException(absoluteAddress);
+        }
+
+        return new ArraySlice(mspStorage, absoluteAddress._offset + offset, count);
     }
 
     /**

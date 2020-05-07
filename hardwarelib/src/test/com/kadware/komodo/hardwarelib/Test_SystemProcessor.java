@@ -148,7 +148,8 @@ public class Test_SystemProcessor {
         ip.clear();
 
         sp.loadAbsoluteModule(abs, msp._upiIndex, false, ip._upiIndex);
-        ip.logState();
+        ip._traceExecuteInstruction = true;
+        ip._developmentMode = true;
         ip.start();
 
         //  TODO Improve this so that it can actually end properly

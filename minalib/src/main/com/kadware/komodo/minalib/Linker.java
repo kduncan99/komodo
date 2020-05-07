@@ -29,6 +29,7 @@ public class Linker {
         BDI("BDI$", 0),
         BDICALL("BDICALL$", 1),
         BDIREF("BDIREF$", 1),
+        FIRST("FIRST$", 0),
         LBDI("LBDI$", 0),
         LBDICALL("LBDICALL$", 1),
         LBDIREF("LBDIREF$", 1);
@@ -47,15 +48,16 @@ public class Linker {
         static SpecialLabel getFrom(
             final String text
         ) {
-            switch (text) {
-                case "BDI$":        return BDI;
-                case "BDICALL$":    return BDICALL;
-                case "BDIREF$":     return BDIREF;
-                case "LBDI$":       return LBDI;
-                case "LBDICALL$":   return LBDICALL;
-                case "LBDIREF$":    return LBDIREF;
-                default:            return null;
-            }
+            return switch (text) {
+                case "BDI$" -> BDI;
+                case "BDICALL$" -> BDICALL;
+                case "BDIREF$" -> BDIREF;
+                case "FIRST$" -> FIRST;
+                case "LBDI$" -> LBDI;
+                case "LBDICALL$" -> LBDICALL;
+                case "LBDIREF$" -> LBDIREF;
+                default -> null;
+            };
         }
     }
 
@@ -287,7 +289,7 @@ public class Linker {
      *  Maps an LCPoolSpecification to its starting virtual address
      *  (which is within the addressing range of the containing bank)
      */
-    private class LocationCounterPoolMap {
+    private static class LocationCounterPoolMap {
         private final Map<LCPoolSpecification, Integer> _map = new HashMap<>();
 
         /**
@@ -359,7 +361,7 @@ public class Linker {
     /**
      * Describes the options controlling this linkage
      */
-    private class Options {
+    private static class Options {
         private final Modes _modes = new Modes();
         private boolean _noEntryPoint = false;
         private boolean _emitDictionary = false;
@@ -371,37 +373,14 @@ public class Linker {
         ) {
             for (Option opt : optionSet) {
                 switch (opt) {
-                    case OPTION_NO_ENTRY_POINT:
-                        _noEntryPoint = true;
-                        break;
-
-                    case OPTION_ARITHMETIC_FAULT_COMPATIBILITY_MODE:
-                        _modes._afCompatibilityMode = true;
-                        break;
-
-                    case OPTION_ARITHMETIC_FAULT_NON_INTERRUPT_MODE:
-                        _modes._afNonInterruptMode = true;
-                        break;
-
-                    case OPTION_QUARTER_WORD_MODE:
-                        _modes._quarterWordMode = true;
-                        break;
-
-                    case OPTION_THIRD_WORD_MODE:
-                        _modes._thirdWordMode = true;
-                        break;
-
-                    case OPTION_EMIT_DICTIONARY:
-                        _emitDictionary = true;
-                        break;
-
-                    case OPTION_EMIT_GENERATED_CODE:
-                        _emitGeneratedCode = true;
-                        break;
-
-                    case OPTION_EMIT_SUMMARY:
-                        _emitSummary = true;
-                        break;
+                    case OPTION_NO_ENTRY_POINT -> _noEntryPoint = true;
+                    case OPTION_ARITHMETIC_FAULT_COMPATIBILITY_MODE -> _modes._afCompatibilityMode = true;
+                    case OPTION_ARITHMETIC_FAULT_NON_INTERRUPT_MODE -> _modes._afNonInterruptMode = true;
+                    case OPTION_QUARTER_WORD_MODE -> _modes._quarterWordMode = true;
+                    case OPTION_THIRD_WORD_MODE -> _modes._thirdWordMode = true;
+                    case OPTION_EMIT_DICTIONARY -> _emitDictionary = true;
+                    case OPTION_EMIT_GENERATED_CODE -> _emitGeneratedCode = true;
+                    case OPTION_EMIT_SUMMARY -> _emitSummary = true;
                 }
             }
         }
@@ -653,6 +632,21 @@ public class Linker {
     }
 
     /**
+     * Finds the BankDeclaration pertaining to the indicated BDI
+     */
+    private BankDeclaration findBankDeclaration(
+        final int bankDescriptorIndex
+    ) {
+        for (BankDeclaration bd : _bankDeclarations) {
+            if (bd._bankDescriptorIndex == bankDescriptorIndex) {
+                return bd;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Finds the L,BDI of the bank containing the given module/lcIndex:
      *      (level << 15) | (bdi)
      * Results are indeterminate if the lc is included in more than one bank
@@ -887,6 +881,13 @@ public class Linker {
                     } else {
                         raise("Incorrect parameter for " + labelType._text);
                     }
+                    break;
+
+                case FIRST:
+                    //  Get the lowest address assigned to the containing bank
+                    int bdi = findBankDescriptorIndex(sourcePoolSpec._module, sourcePoolSpec._lcIndex) & 077777;
+                    BankDeclaration bd = findBankDeclaration(bdi);
+                    newValue = bd._startingAddress;
                     break;
 
                 case LBDI:

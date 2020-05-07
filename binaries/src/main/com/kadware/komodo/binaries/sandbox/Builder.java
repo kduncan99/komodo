@@ -90,7 +90,6 @@ public class Builder {
 
         //  Code - BDI 0,043
         Linker.LCPoolSpecification[] poolSpecs000043 = {
-            new Linker.LCPoolSpecification(sandboxRel, 0),
             new Linker.LCPoolSpecification(sandboxRel, 1)
         };
 
@@ -108,12 +107,32 @@ public class Builder {
                 .setInitialBaseRegister(0)
                 .build();
 
+        //  Data - BDI 0,044
+        Linker.LCPoolSpecification[] poolSpecs000044 = {
+            new Linker.LCPoolSpecification(sandboxRel, 0),
+        };
+
+        Linker.BankDeclaration bankDecl000044 =
+            new Linker.BankDeclaration.Builder()
+                .setAccessInfo(new AccessInfo((byte) 0, (short) 0))
+                .setBankName("DATA")
+                .setBankDescriptorIndex(044)
+                .setBankLevel(0)
+                .setNeedsExtendedMode(true)
+                .setStartingAddress(0)          //  TODO must be 0 for now, due to VA and linker can't subtract FIRST$ properly
+                .setPoolSpecifications(poolSpecs000044)
+                .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                .setInitialBaseRegister(2)
+                .build();
+
         //  Bring it all together
         Linker.BankDeclaration[] bankDeclarations = {
             bankDecl000040,
             bankDecl000041,
             bankDecl000042,
-            bankDecl000043
+            bankDecl000043,
+            bankDecl000044
         };
 
         Linker linker = new Linker();

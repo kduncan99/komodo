@@ -92,6 +92,7 @@ public class Level0BDT {
         "          $RES 8 . for 041",
         "          $RES 8 . for 042",
         "          $RES 8 . for 043",
+        "          $RES 8 . for 044",
         "",
         "LEVEL0BDT$SZ* $EQU $-LEVEL0BDT$",
     };

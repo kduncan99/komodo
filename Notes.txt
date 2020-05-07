@@ -1,4 +1,14 @@
 -- TODO InProgress
+binaries:
+    Build and save to resources binary directory
+
+hwlib:
+    InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
+    SystemProcessor: loadBinary() Don't stuff values into pre-built level 0 BDTs except for absolute address
+    SystemProcessor: loadBinary() Handle fixed-storeage flag
+    SystemProcessor: loadBinary() which reads a binary json file from binaries directory
+    Test_SystemProcessor: absolute_load test - improve how this works
+
 exlib:
     external file formats for hosting SDFF and PF files (and maybe tape files?)
 
@@ -15,6 +25,7 @@ Check to ensure breakpoints are all working.
 * minalib
 Assembler isn't returning null module when errors are detected... why?
     Ensure all T diagnostics result in a rel module not being generated
+Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)

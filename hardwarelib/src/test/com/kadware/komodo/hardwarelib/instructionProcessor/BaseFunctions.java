@@ -23,11 +23,11 @@ class BaseFunctions {
      * Produced as a result of loadModule()
      */
     static class Processors {
-        final InstrumentedInstructionProcessor _instructionProcessor;
+        final InstructionProcessor _instructionProcessor;
         final InstrumentedMainStorageProcessor _mainStorageProcessor;
 
         Processors(
-            final InstrumentedInstructionProcessor ip,
+            final InstructionProcessor ip,
             final InstrumentedMainStorageProcessor msp
         ) {
             _instructionProcessor = ip;
@@ -638,7 +638,7 @@ class BaseFunctions {
      * @param msp the MSP in which we'll create the environment
      */
     private static void establishBankingEnvironment(
-        final InstrumentedInstructionProcessor ip,
+        final InstructionProcessor ip,
         final InstrumentedMainStorageProcessor msp
     ) throws MachineInterrupt {
         //  Does the bank control absolute module already exist?  If not, create it
@@ -798,7 +798,7 @@ class BaseFunctions {
      * @throws AddressingExceptionInterrupt for an invalid MSP reference
      */
     private static void loadBanks(
-        final InstrumentedInstructionProcessor ip,
+        final InstructionProcessor ip,
         final InstrumentedMainStorageProcessor msp,
         final AbsoluteModule module
     ) throws AddressingExceptionInterrupt {
@@ -873,10 +873,7 @@ class BaseFunctions {
         InventoryManager im = InventoryManager.getInstance();
 
         im.createSystemProcessor("SP0", 8080, null, new Credentials("test", "test"));
-
-        InstrumentedInstructionProcessor ip
-            = new InstrumentedInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
-        im.addInstructionProcessor(ip);
+        InstructionProcessor ip = im.createInstructionProcessor("IP0");
 
         InstrumentedMainStorageProcessor msp
             = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
@@ -918,7 +915,7 @@ class BaseFunctions {
     static void showDebugInfo(
         final Processors processors
     ) {
-        InstrumentedInstructionProcessor ip = processors._instructionProcessor;
+        InstructionProcessor ip = processors._instructionProcessor;
         InstrumentedMainStorageProcessor msp = processors._mainStorageProcessor;
         InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
         int oldpp = dr.getProcessorPrivilege();
