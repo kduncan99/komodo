@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -22,6 +23,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buySimple18(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -58,6 +60,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buySimple24(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -96,6 +99,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellSimple18(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -132,6 +136,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellSimple24(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -170,6 +175,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buyWithDisplacement(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -206,6 +212,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buyOverflow(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -243,6 +250,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellUnderflow(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

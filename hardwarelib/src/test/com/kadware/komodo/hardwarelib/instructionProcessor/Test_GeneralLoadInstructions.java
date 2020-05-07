@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -26,6 +27,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void generalLoadImmediate_Extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -85,6 +87,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void X_A_RegisterOverlap(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -124,6 +127,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void partialWordLoad_ThirdWordMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -195,6 +199,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void partialWordLoad_QuarterWordMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -252,6 +257,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_normal(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -307,6 +313,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_count1Empty(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -360,6 +367,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_nop(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -416,6 +424,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void generalLoadFromStorage_Extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

@@ -8,6 +8,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -24,6 +25,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -59,6 +61,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_posZeros(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -94,6 +97,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_negZeros(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -130,6 +134,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeAccumulator(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -166,6 +171,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addMagnitudeAccumulator_positive(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -202,6 +208,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addMagnitudeAccumulator_negative(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -238,6 +245,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeMagnitudeAccumulator(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -274,6 +282,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulatorUpper(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -307,6 +316,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeAccumulatorUpper(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -340,6 +350,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addIndexRegister(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -372,6 +383,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeIndexRegister(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -404,6 +416,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_Overflow(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -437,6 +450,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addHalves(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -471,6 +485,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeHalves(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -507,6 +522,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addThirds(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -544,6 +560,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeThirds(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -581,6 +598,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -619,6 +637,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -653,6 +672,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byZero_noInterrupt(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -692,6 +712,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byNegativeZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -727,6 +748,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -763,6 +785,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -797,6 +820,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byZero_noInterrupt(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -835,6 +859,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byNegativeZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -869,6 +894,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -907,6 +933,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -943,6 +970,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byZero_noInterrupt(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -982,6 +1010,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byNegativeZero(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1016,6 +1045,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void doubleAdd(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1056,6 +1086,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void doubleAddNegative(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1096,6 +1127,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplyInteger(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1136,6 +1168,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplySingleInteger(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1170,6 +1203,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplySingleInteger_overflow(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1203,10 +1237,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplyFractional(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1243,10 +1278,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void add1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 5",
@@ -1287,6 +1323,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void add1_badPrivilege(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1321,6 +1358,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void sub1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1366,6 +1404,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void sub1_badPrivilege(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1400,10 +1439,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void inc(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1450,10 +1490,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void dec(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1500,10 +1541,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void inc2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1549,10 +1591,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void dec2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1598,10 +1641,11 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void ienz(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
-        //  This minalib is per the hardware instruction guide
+        //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",

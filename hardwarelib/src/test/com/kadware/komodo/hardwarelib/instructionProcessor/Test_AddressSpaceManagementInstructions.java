@@ -9,6 +9,7 @@ import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -36,6 +37,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -96,6 +98,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -134,6 +137,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -172,6 +176,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error3(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -210,6 +215,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -261,6 +267,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -307,6 +314,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadBank_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -338,6 +346,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadBank_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -370,6 +379,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -412,6 +422,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadPP_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -455,6 +466,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -520,6 +532,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -586,6 +599,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -624,6 +638,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_BadPP_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -663,6 +678,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_basicBank_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -710,6 +726,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_basicBank_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -758,6 +775,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_extendedBank_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -805,6 +823,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_extendedBank_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -853,6 +872,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_badPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -889,6 +909,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_addrException_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -921,6 +942,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_addrException_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -954,6 +976,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_reserved_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -995,6 +1018,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterName_reserved_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1037,6 +1061,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1088,6 +1113,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1134,6 +1160,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1176,6 +1203,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_BadBank_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1207,6 +1235,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_BadBank_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1239,6 +1268,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBank_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1270,6 +1300,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBank_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1302,6 +1333,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR0_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1337,6 +1369,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR0_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1373,6 +1406,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR1_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1408,6 +1442,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR1_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1444,6 +1479,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1509,6 +1545,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1575,6 +1612,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1613,6 +1651,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_BadPP_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1652,6 +1691,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_InvalidBR0_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1687,6 +1727,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_InvalidBR0_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1723,6 +1764,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1820,6 +1862,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1914,6 +1957,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1950,6 +1994,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_BadPP_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1987,6 +2032,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2024,6 +2070,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_basic_errorPP(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2060,6 +2107,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2097,6 +2145,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2177,6 +2226,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2258,6 +2308,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_BadPP_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2292,6 +2343,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_BadPP_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2329,6 +2381,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddress_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2382,6 +2435,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressIndirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2424,6 +2478,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddress_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2478,6 +2533,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressNonRWBanks_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2610,6 +2666,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressNonRWBanks_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

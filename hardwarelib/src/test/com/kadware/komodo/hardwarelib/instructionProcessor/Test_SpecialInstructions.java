@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -23,6 +24,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -53,6 +55,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic_indirect_violation(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -81,6 +84,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic_indirect_noViolation(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -115,6 +119,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

@@ -9,6 +9,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="baselib" />
+    <orderEntry type="module" module-name="binaries" />
     <orderEntry type="module" module-name="configlib" />
     <orderEntry type="module" module-name="minalib" />
     <orderEntry type="library" name="lib" level="project" />

@@ -7,7 +7,6 @@ package com.kadware.komodo.minalib;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -16,7 +15,9 @@ import java.util.TreeMap;
 public class AbsoluteModule {
 
     @JsonProperty("name")               public final String _name;
-    @JsonProperty("loadableBanks")      public final Map<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
+
+    //  key is BDI - value is the LoadableBank
+    @JsonProperty("loadableBanks")      public final TreeMap<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
 
     //  Arithmetic fault compatibility mode
     @JsonProperty("afcmClear")          public final boolean _afcmClear;
@@ -26,7 +27,9 @@ public class AbsoluteModule {
     @JsonProperty("setQuarter")         public final boolean _setQuarter;
     @JsonProperty("setThird")           public final boolean _setThird;
 
-    //  Entry point
+    //  Entry point - if the entry point is in an extended mode bank, that bank should be set for initial basing on B0.
+    //  If the entry point is *not* an extended mode bank, it should be set for initial basing on B12, B13, B14, or B15.
+    //      (it *should* be B12, but the others will work. Probably.)
     @JsonProperty("entryPointAddress")  public final Integer _entryPointAddress;
     @JsonProperty("entryPointBank")     public final LoadableBank _entryPointBank;
 

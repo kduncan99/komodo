@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -22,6 +23,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalANDBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -52,6 +54,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalANDExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -83,6 +86,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalMLUBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -114,6 +118,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalMLUExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -146,6 +151,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalORBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -176,6 +182,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalORExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -207,6 +214,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalXORBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -237,6 +245,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalXORExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

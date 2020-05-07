@@ -550,7 +550,8 @@ public class InventoryManager {
     ) throws MaxNodesException {
         clearConfiguration();
         for (ProcessorDefinition pd : config._processorDefinitions) {
-            switch (pd._processorType) {
+            Processor.ProcessorType ptype = Processor.ProcessorType.valueOf(pd._processorType);
+            switch (ptype) {
                 case MainStorageProcessor -> createMainStorageProcessor(pd._nodeName, pd._fixedStorageSize);
                 case InputOutputProcessor -> createInputOutputProcessor(pd._nodeName);
                 case InstructionProcessor -> createInstructionProcessor(pd._nodeName);

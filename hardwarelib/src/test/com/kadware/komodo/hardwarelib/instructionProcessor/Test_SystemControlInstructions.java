@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -66,6 +67,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_badSubfunction(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -119,6 +121,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_good(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -173,6 +176,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_badUPI(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -220,6 +224,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_badSize(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -273,6 +278,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test (expected = AddressingExceptionInterrupt.class)
     public void sysc_delete_good(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -339,6 +345,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_delete_badUPI(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -405,6 +412,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_delete_badSegment(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -480,6 +488,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_good(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -548,6 +557,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badUPI(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -616,6 +626,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badSegment(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -685,6 +696,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badSize(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -26,6 +27,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_PartialWords_QuarterWordMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -90,6 +92,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_PartialWords_ThirdWordMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -136,6 +139,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -204,6 +208,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_FixedValues(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -260,6 +265,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void storeRegisterSet(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

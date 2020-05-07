@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -25,6 +26,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void erBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -54,6 +56,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void signalBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -82,6 +85,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void signalExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -111,6 +115,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void allowInterruptsAndJumpBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -144,6 +149,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void allowInterruptsAndJumpExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -179,6 +185,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void allowInterruptsAndJumpExtendedBadPP(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -213,6 +220,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void preventInterruptsAndJumpBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -247,6 +255,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void preventInterruptsAndJumpBasicBadPP(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -280,6 +289,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void preventInterruptsAndJumpExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -315,6 +325,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
     @Test
     public void preventInterruptsAndJumpExtendedBadPP(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

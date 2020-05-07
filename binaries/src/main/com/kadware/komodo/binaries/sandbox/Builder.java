@@ -23,58 +23,36 @@ public class Builder {
     private static final Linker.Option[] linkerOptions = {
         Linker.Option.OPTION_EMIT_SUMMARY,
         Linker.Option.OPTION_QUARTER_WORD_MODE,
-        Linker.Option.OPTION_EMIT_GENERATED_CODE,
-        Linker.Option.OPTION_NO_ENTRY_POINT
+        Linker.Option.OPTION_EMIT_GENERATED_CODE
     };
 
-    public static void main(
-        final String[] args
-    ) {
+    public static AbsoluteModule build() {
         Assembler asm = new Assembler();
         RelocatableModule level0BDTRel = asm.assemble("Level0BDT", Level0BDT.SOURCE, assemblerOptions);
         RelocatableModule intHandlersRel = asm.assemble("IntHandlers", IntHandlers.SOURCE, assemblerOptions);
+        RelocatableModule icsRel = asm.assemble("ICS", ICS.SOURCE, assemblerOptions);
         RelocatableModule sandboxRel = asm.assemble("Sandbox", Sandbox.SOURCE, assemblerOptions);
 
-        //  Level 0 BDT - BDI 0,0
-        Linker.LCPoolSpecification[] poolSpecs000000 = {
-            new Linker.LCPoolSpecification(level0BDTRel, 0)
-        };
-
-        Linker.BankDeclaration bankDecl000000 =
-            new Linker.BankDeclaration.Builder()
-                .setAccessInfo(new AccessInfo((byte) 0, (short) 0))
-                .setBankName("LEVEL0BDT")
-                .setBankDescriptorIndex(0)
-                .setBankLevel(0)
-                .setNeedsExtendedMode(true)
-                .setStartingAddress(0)
-                .setPoolSpecifications(poolSpecs000000)
-                .setGeneralAccessPermissions(new AccessPermissions(false, true, false))
-                .setSpecialAccessPermissions(new AccessPermissions(false, true, false))
-                .build();
-
-        //  Code - BDI 0,32
+        //  Level 0 BDT - BDI 0,040
         Linker.LCPoolSpecification[] poolSpecs000040 = {
-            new Linker.LCPoolSpecification(sandboxRel, 0),
-            new Linker.LCPoolSpecification(sandboxRel, 1)
+            new Linker.LCPoolSpecification(level0BDTRel, 0)
         };
 
         Linker.BankDeclaration bankDecl000040 =
             new Linker.BankDeclaration.Builder()
                 .setAccessInfo(new AccessInfo((byte) 0, (short) 0))
-                .setBankName("CODE")
+                .setBankName("LEVEL0BDT")
                 .setBankDescriptorIndex(040)
                 .setBankLevel(0)
                 .setNeedsExtendedMode(true)
-                .setStartingAddress(01000)
+                .setStartingAddress(0)
                 .setPoolSpecifications(poolSpecs000040)
-                .setGeneralAccessPermissions(new AccessPermissions(true, true, false))
-                .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
+                .setGeneralAccessPermissions(new AccessPermissions(false, true, false))
+                .setSpecialAccessPermissions(new AccessPermissions(false, true, false))
                 .build();
 
-        //  Interrupt handlers - BDI 0,33
+        //  Interrupt handlers - BDI 0,041
         Linker.LCPoolSpecification[] poolSpecs000041 = {
-            new Linker.LCPoolSpecification(intHandlersRel, 0),
             new Linker.LCPoolSpecification(intHandlersRel, 1)
         };
 
@@ -91,14 +69,60 @@ public class Builder {
                 .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
                 .build();
 
+        //  Interrupt Control Stack - BDI 0,042
+        Linker.LCPoolSpecification[] poolSpecs000042 = {
+            new Linker.LCPoolSpecification(icsRel, 0)
+        };
+
+        Linker.BankDeclaration bankDecl000042 =
+            new Linker.BankDeclaration.Builder()
+                .setAccessInfo(new AccessInfo((byte) 0, (short) 0))
+                .setBankName("ICS")
+                .setBankDescriptorIndex(042)
+                .setBankLevel(0)
+                .setNeedsExtendedMode(true)
+                .setStartingAddress(0)
+                .setPoolSpecifications(poolSpecs000042)
+                .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
+                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                .setInitialBaseRegister(26)
+                .build();
+
+        //  Code - BDI 0,043
+        Linker.LCPoolSpecification[] poolSpecs000043 = {
+            new Linker.LCPoolSpecification(sandboxRel, 0),
+            new Linker.LCPoolSpecification(sandboxRel, 1)
+        };
+
+        Linker.BankDeclaration bankDecl000043 =
+            new Linker.BankDeclaration.Builder()
+                .setAccessInfo(new AccessInfo((byte) 0, (short) 0))
+                .setBankName("CODE")
+                .setBankDescriptorIndex(043)
+                .setBankLevel(0)
+                .setNeedsExtendedMode(true)
+                .setStartingAddress(01000)
+                .setPoolSpecifications(poolSpecs000043)
+                .setGeneralAccessPermissions(new AccessPermissions(true, true, false))
+                .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
+                .setInitialBaseRegister(0)
+                .build();
+
         //  Bring it all together
         Linker.BankDeclaration[] bankDeclarations = {
-            bankDecl000000,
             bankDecl000040,
-            bankDecl000041
+            bankDecl000041,
+            bankDecl000042,
+            bankDecl000043
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs =  linker.link("SANDBOX", bankDeclarations, 0, linkerOptions);
+        return linker.link("SANDBOX", bankDeclarations, 0, linkerOptions);
+    }
+
+    public static void main(
+        final String[] args
+    ) {
+        build();
     }
 }

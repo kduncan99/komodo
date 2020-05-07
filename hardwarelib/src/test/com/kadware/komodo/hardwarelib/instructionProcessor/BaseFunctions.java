@@ -151,7 +151,7 @@ class BaseFunctions {
         "IH_35*    . Interrupt 29 Initial Program Load (IPL)",
         "          . Default action is to simply return from the interrupt.",
         "          . This happens every time the IP is started via start().",
-        "          UR        *0,EX1,B26-16 . should be 0,EX1,B26 but assembler is broken",
+        "          UR        *0,EX1,B26-16 . should be 0,EX1,B26 but assembler is broken",//TODO fix this after fixing minalib
         "",
         "IH_36*    . UPI Initial",
         "          HALT 01036",
@@ -688,7 +688,9 @@ class BaseFunctions {
             loadBank(ip, msp, ihBank, 0, 33);
 
             //  Establish an interrupt control stack - size is arbitrary
-            int stackSize = 8 * 32;
+            int frameSize = 16;
+            int entries = 32;
+            int stackSize = frameSize * entries;
             RegionTracker.SubRegion stackSubRegion =
                 msp._regions.assign(stackSize,
                                     new MSPRegionAttributes("ICS", 0, 0));
@@ -702,10 +704,8 @@ class BaseFunctions {
                                                       new AccessPermissions(false, true, true));
             ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, bReg);
             bReg._storage.load(msp.getStorage(0), (int) stackSubRegion._position, stackSize, 0);
-            Word36 reg = new Word36();
-            reg.setH1(8);
-            reg.setH2(stackSize);
-            ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, reg.getW());
+            long regValue = (((long) frameSize) << 18) | stackSize;
+            ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, regValue);
         } catch (RegionTracker.OutOfSpaceException ex) {
             throw new RuntimeException("Cannot find space in MSP for bank to be loaded");
         }
@@ -867,13 +867,20 @@ class BaseFunctions {
     static Processors loadModule(
         final AbsoluteModule absoluteModule
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
-        InstrumentedInstructionProcessor ip = new InstrumentedInstructionProcessor("IP0",
-                                                                                   InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
-        InventoryManager.getInstance().addInstructionProcessor(ip);
-        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-        InventoryManager.getInstance().addMainStorageProcessor(msp);
+        InventoryManager im = InventoryManager.getInstance();
+
+        im.createSystemProcessor("SP0", 8080, null, new Credentials("test", "test"));
+
+        InstrumentedInstructionProcessor ip
+            = new InstrumentedInstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
+        im.addInstructionProcessor(ip);
+
+        InstrumentedMainStorageProcessor msp
+            = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
+        im.addMainStorageProcessor(msp);
 
         establishBankingEnvironment(ip, msp);
         loadBanks(ip, msp, absoluteModule);

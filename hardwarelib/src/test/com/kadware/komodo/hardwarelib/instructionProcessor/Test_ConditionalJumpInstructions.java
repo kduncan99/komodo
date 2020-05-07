@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -24,6 +25,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void doubleJumpZero_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -60,6 +62,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void doubleJumpZero_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -97,6 +100,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpCarry_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -132,6 +136,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpCarry_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -168,6 +173,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_basic1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -205,6 +211,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_basic2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -242,6 +249,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_basic3(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -279,6 +287,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_extended1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -317,6 +326,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_extended2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -355,6 +365,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpDivideFault_extended3(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -393,6 +404,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpFloatingOverflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -432,6 +444,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpFloatingOverflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -472,6 +485,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpFloatingUnderflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -511,6 +525,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpFloatingUnderflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -551,6 +566,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpGreaterAndDecrement_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -591,6 +607,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpGreaterAndDecrement_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -632,6 +649,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpLowBit_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -668,6 +686,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpLowBit_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -705,6 +724,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpModifierGreaterAndIncrement_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -761,6 +781,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpModifierGreaterAndIncrement_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -818,6 +839,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNegative_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -864,6 +886,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNegative_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -911,6 +934,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNegativeAndShift_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -946,6 +970,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNegativeAndShift_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -982,6 +1007,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoCarry_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1018,6 +1044,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoCarry_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1055,6 +1082,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoDivideFault_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1092,6 +1120,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoDivideFault_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1130,6 +1159,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoFloatingOverflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1168,6 +1198,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoFloatingOverflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1207,6 +1238,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoFloatingUnderflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1245,6 +1277,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoFloatingUnderflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1285,6 +1318,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoLowBit_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1321,6 +1355,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoLowBit_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1358,6 +1393,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNonZero_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1393,6 +1429,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNonZero_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1428,6 +1465,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoOverflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1467,6 +1505,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpNoOverflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1507,6 +1546,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpOverflow_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1544,6 +1584,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpOverflow_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1583,6 +1624,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpPositive_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1625,6 +1667,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpPositive_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1668,6 +1711,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpPositiveAndShift_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1703,6 +1747,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpPositiveAndShift_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1739,6 +1784,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpZero_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1775,6 +1821,7 @@ public class Test_ConditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jumpZero_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

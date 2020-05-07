@@ -21,6 +21,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -55,6 +56,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_bankSelection(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -174,6 +176,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -212,6 +215,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -249,6 +253,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_indirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -295,6 +300,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -331,6 +337,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -369,6 +376,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_key_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -406,6 +414,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_05_normal_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -440,6 +449,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_normal_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -472,6 +482,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_normal_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -505,6 +516,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_pp1_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -532,6 +544,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_pp1_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -566,6 +579,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void storeLocationAndJump(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -603,6 +617,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void storeLocationAndJump_indirect(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -632,7 +647,6 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 
         InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
         InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-        long[] result = getBank(processors._instructionProcessor, 12);
 
         assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -643,6 +657,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -678,6 +693,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_indirect_basic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -715,6 +731,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_extended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -752,6 +769,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic_referenceViolation1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -782,6 +800,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic_referenceViolation2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -814,6 +833,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_extended_referenceViolation1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

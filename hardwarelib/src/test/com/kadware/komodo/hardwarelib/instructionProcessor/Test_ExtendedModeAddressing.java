@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -27,6 +28,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateUnsigned_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -56,6 +58,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Positive_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -85,6 +88,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_NegativeZero_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -115,6 +119,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Negative_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -145,6 +150,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void grs_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -175,6 +181,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -207,6 +214,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void grs_indexed_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -240,6 +248,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_18BitModifier_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -339,6 +348,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_24BitModifier_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -407,6 +417,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void execRegisterSelection_ExtendedMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

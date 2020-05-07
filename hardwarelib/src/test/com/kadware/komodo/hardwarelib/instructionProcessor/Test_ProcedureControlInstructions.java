@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -27,6 +28,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void callNormal(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -72,6 +74,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void gotoNormal(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -114,6 +117,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void loclNormal(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -154,6 +158,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnToCall(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -196,6 +201,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnToLocl(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -238,6 +244,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnNoFrame(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

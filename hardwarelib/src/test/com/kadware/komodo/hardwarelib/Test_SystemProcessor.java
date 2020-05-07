@@ -6,8 +6,16 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.configlib.Configurator;
+import com.kadware.komodo.configlib.HardwareConfiguration;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.komodo.minalib.AbsoluteModule;
+import java.io.IOException;
 import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
@@ -15,7 +23,7 @@ import org.junit.Test;
  */
 public class Test_SystemProcessor {
 
-    private class TestSystemProcessor extends SystemProcessor {
+    private static class TestSystemProcessor extends SystemProcessor {
         TestSystemProcessor() {
             super("SP0", 8080, 8443, new Credentials("test", "test"));
         }
@@ -111,5 +119,47 @@ public class Test_SystemProcessor {
         sp.setJumpKey(13, true);
         Word36 jktest = new Word36(0_140040_000000L);
         Assert.assertEquals(jktest, sp.getJumpKeys());
+    }
+
+    @Test
+    public void absolute_load(
+    ) throws BinaryLoadException,
+             IOException,
+             MachineInterrupt,
+             MaxNodesException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        System.setProperty("BASE_DIR", "../test-deploy/");
+        Deployer testDeployer = new Deployer();
+        testDeployer.deploy();
+
+        AbsoluteModule abs = com.kadware.komodo.binaries.sandbox.Builder.build();
+
+        Configurator config = Configurator.getInstance();
+        HardwareConfiguration hc = (HardwareConfiguration) config.getConfiguration(Configurator.Domain.KOMODO_HARDWARE);
+        InventoryManager im = InventoryManager.getInstance();
+        im.clearConfiguration();
+        im.importConfiguration(hc);
+
+        SystemProcessor sp = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        InstructionProcessor ip = im.getInstructionProcessor(InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
+        MainStorageProcessor msp = im.getMainStorageProcessor(InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX);
+        msp.clear();
+        ip.clear();
+
+        sp.loadAbsoluteModule(abs, msp._upiIndex, false, ip._upiIndex);
+        ip.logState();
+        ip.start();
+
+        //  TODO Improve this so that it can actually end properly
+        while (sp._isRunning) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                //TODO nothing
+            }
+        }
+
+        im.clearConfiguration();
     }
 }

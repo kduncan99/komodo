@@ -749,20 +749,6 @@ public class Test_SystemConsole {
         HardwareConfiguration hc = (HardwareConfiguration) config.getConfiguration(Configurator.Domain.KOMODO_HARDWARE);
         InventoryManager im = InventoryManager.getInstance();
         im.importConfiguration(hc);
-//        HardwareConfiguration.ProcessorDefinition pd = null;
-//        for (HardwareConfiguration.ProcessorDefinition pdcheck : hc._processorDefinitions) {
-//            if (pdcheck._systemProcessorDefinition != null) {
-//                pd = pdcheck;
-//                break;
-//            }
-//        }
-//        Assert.assertNotNull(pd);
-//
-//        InventoryManager im = InventoryManager.getInstance();
-//        SystemProcessor sp = im.createSystemProcessor(pd._nodeName,
-//                                                      pd._systemProcessorDefinition._httpPort,
-//                                                      pd._systemProcessorDefinition._httpsPort,
-//                                                      pd._systemProcessorDefinition._adminCredentials);
         SystemProcessor sp = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
         Context context = new Context(sp);
 

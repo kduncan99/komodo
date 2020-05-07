@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -22,6 +23,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEvenParityBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -62,6 +64,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEvenParityExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -103,6 +106,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testOddParityBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -139,6 +143,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testOddParityExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -176,6 +181,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testZeroBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -218,6 +224,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -261,6 +268,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNonZeroBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -305,6 +313,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNonZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -350,6 +359,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -397,6 +407,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMinusZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -442,6 +453,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -480,6 +492,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -519,6 +532,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNegBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -556,6 +570,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNegExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -596,6 +611,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNOPExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -635,6 +651,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testSkipExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -669,6 +686,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEqualBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -704,6 +722,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -740,6 +759,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotEqualBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -775,6 +795,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -811,6 +832,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessOrEqualToModifierBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -847,6 +869,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessOrEqualToModifierExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -886,6 +909,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -921,6 +945,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMinusZeroOrGreaterThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -956,6 +981,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotLessThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -991,6 +1017,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1026,6 +1053,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPositiveZeroOrLessThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1060,6 +1088,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotMinusZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1095,6 +1124,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotPositiveZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1130,6 +1160,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotGreaterThanZeroExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1163,6 +1194,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanOrEqualBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1196,6 +1228,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanOrEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1230,6 +1263,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1267,6 +1301,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1307,6 +1342,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterMagnitudeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1340,6 +1376,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testWithinRangeBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1390,6 +1427,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testWithinRangeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1441,6 +1479,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotWithinRangeBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1491,6 +1530,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotWithinRangeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1543,6 +1583,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testDoubleTestGreaterMagnitudeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1584,6 +1625,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1620,6 +1662,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestNotEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1657,6 +1700,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestLessThanOrEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1695,6 +1739,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestGreaterExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1731,6 +1776,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestWithinRangeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1768,6 +1814,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestNotWithinRangeExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1805,6 +1852,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedAlphaTestLessThanOrEqualExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1841,6 +1889,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedAlphaTestGreaterExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1875,6 +1924,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1910,6 +1960,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1946,6 +1997,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetAndSkipBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -1983,6 +2035,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetAndSkipExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2021,6 +2074,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndClearAndSkipBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2058,6 +2112,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndClearAndSkipExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2096,6 +2151,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceBasic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2138,6 +2194,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceBasicBadPP(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2176,6 +2233,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceExtended(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2219,6 +2277,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationBasic1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2252,6 +2311,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationBasic2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2283,6 +2343,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended1(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2317,6 +2378,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended2(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -2350,6 +2412,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended3(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -23,6 +24,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftAlgebraic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -56,6 +58,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftAlgebraic(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -92,6 +95,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftCircular(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -124,6 +128,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftCircular(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -160,6 +165,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftLogical(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -193,6 +199,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftLogical(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -229,6 +236,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void loadShiftAndCount(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -278,6 +286,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleLoadShiftAndCount(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -337,6 +346,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftSingleShiftCircular(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -370,6 +380,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftDoubleShiftCircular(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -405,6 +416,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftSingleShiftLogical(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -438,6 +450,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftDoubleShiftLogical(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

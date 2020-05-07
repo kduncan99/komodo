@@ -5,6 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
@@ -29,6 +30,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateUnsigned_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -57,6 +59,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Positive_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -85,6 +88,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_NegativeZero_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -114,6 +118,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Negative_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -142,6 +147,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -171,6 +177,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_indexed_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -203,6 +210,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_indirect_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -236,6 +244,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -291,7 +300,6 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
         long[] bankData = getBank(processors._instructionProcessor, 15);
-        showDebugInfo(processors);//TODO
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
         assertEquals(03, bankData[2]);
@@ -302,6 +310,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_indirect_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -343,6 +352,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void execRegisterSelection_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {
@@ -377,6 +387,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_BasicMode(
     ) throws MachineInterrupt,
+             MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
              UPINotAssignedException {

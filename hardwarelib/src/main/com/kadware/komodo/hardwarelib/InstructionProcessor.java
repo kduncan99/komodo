@@ -480,6 +480,12 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         @Override public int hashCode() { return _voidFlag ? 0 : _baseAddress.hashCode(); }
+
+        @Override
+        public String toString() {
+            long[] values = getBaseRegisterWords();
+            return String.format("%012o %012o %012o %012o", values[0], values[1], values[2], values[3]);
+        }
     }
 
     /**
@@ -2696,7 +2702,7 @@ public class InstructionProcessor extends Processor implements Worker {
     }
 
     /**
-     * Handles f/j-field function codes which require looking up the a-field in a sub-tablel
+     * Handles f/j-field function codes which require looking up the a-field in a sub-table
      */
     private class SubSubFunctionHandler extends FunctionHandler {
 
@@ -9686,7 +9692,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
         // Acquire a stack frame, and verify limits
         IndexRegister icsXReg = (IndexRegister) _generalRegisterSet.getRegister(ICS_INDEX_REGISTER);
-        _generalRegisterSet.setRegister(ICS_INDEX_REGISTER, IndexRegister.decrementModifier18(icsXReg.getW()));
+        icsXReg = icsXReg.decrementModifier18();
+        _generalRegisterSet.setRegister(ICS_INDEX_REGISTER, icsXReg.getW());
         long stackOffset = icsXReg.getH2();
         long stackFrameSize = icsXReg.getXI();
         long stackFrameLimit = stackOffset + stackFrameSize;
@@ -10707,7 +10714,17 @@ public class InstructionProcessor extends Processor implements Worker {
             }
         }
 
-        //TODO whatever it takes to clear things up
+        _designatorRegister.clear();
+        _programAddressRegister.set(0);
+
+        for (int brx = 0; brx < 32; ++brx) {
+            _baseRegisters[brx] = new BaseRegister();
+        }
+
+        for (int abx = 0; abx < 15; ++abx) {
+            _activeBaseTableEntries[abx] = new ActiveBaseTableEntry(0, 0, 0);
+        }
+
         _pendingUPISends.clear();
         super.clear();
         LOGGER.traceExit(em);
@@ -10726,6 +10743,32 @@ public class InstructionProcessor extends Processor implements Worker {
             writer.write("");//TODO actually, a whole lot to do here
         } catch (IOException ex) {
             LOGGER.catching(ex);
+        }
+    }
+
+    /**
+     * For debugging (eventually we should move this do dump(), above)
+     */
+    public void logState() {
+        _logger.trace("General Register Set:");
+        for (int grx = 0; grx < 128; grx += 8) {
+            StringBuilder sb = new StringBuilder();
+            for (int gry = 0; gry < 8; ++gry) {
+                long value = _generalRegisterSet.getRegister(grx + gry).getW();
+                sb.append(String.format("%012o ", value));
+            }
+            _logger.trace(String.format("  %06o  %s", grx, sb.toString()));
+        }
+
+        _logger.trace("Active Base Table:");
+        for (int abx = 0; abx < 15; ++abx) {
+            _logger.trace(String.format("  For B%d: %012o", abx + 1, _activeBaseTableEntries[abx]._value));
+        }
+
+        _logger.trace("Base Registers:");
+        for (int brx = 0; brx < 32; ++brx) {
+            BaseRegister br = _baseRegisters[brx];
+            _logger.trace(String.format("  B%02d: %s", brx, br.toString()));
         }
     }
 
