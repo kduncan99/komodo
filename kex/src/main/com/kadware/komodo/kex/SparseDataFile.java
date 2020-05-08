@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib.exdata;
+package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.Word36;
 import java.io.File;

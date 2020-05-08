@@ -3,7 +3,7 @@
  */
 
 
-package com.kadware.komodo.baselib.exdata;
+package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.Word36;
 import java.io.Closeable;
