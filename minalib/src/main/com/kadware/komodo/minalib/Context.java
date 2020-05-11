@@ -142,6 +142,7 @@ public class Context {
     private final Global _globalData;
     private final Local _localData;
     private final Context _parent;
+    private final Set<Assembler.Option> _optionSet;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -153,10 +154,12 @@ public class Context {
      */
     public Context(
         final Dictionary upperLevelDictionary,
-        final String[] sourceText
+        final String[] sourceText,
+        final Set<Assembler.Option> optionSet
     ) {
         _globalData = new Global(new Diagnostics());
         _localData = new Local(new Dictionary(upperLevelDictionary), sourceText);
+        _optionSet = optionSet;
         _parent = null;
     }
 
@@ -172,6 +175,7 @@ public class Context {
         _globalData = parent._globalData;
         _localData = new Local(new Dictionary(parent._localData._dictionary), nestedParsedCode);
         _parent = parent;
+        _optionSet = parent._optionSet;
     }
 
 

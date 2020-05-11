@@ -18,6 +18,7 @@ import com.kadware.komodo.minalib.expressions.ExpressionParser;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +48,21 @@ public class Assembler {
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
 
     //  Resulting diagnostics and the parsed code from a call to assemble()
-    private Diagnostics _diagnostics;
-    private TextLine[] _parsedCode;
+    public static class Result {
+        public final RelocatableModule _relocatableModule;
+        public final Diagnostics _diagnostics;
+        public final TextLine[] _parsedCode;
+
+        private Result (
+            final RelocatableModule relocatableModule,
+            final Diagnostics diagnostics,
+            final TextLine[] parsedCode
+        ) {
+            _relocatableModule = relocatableModule;
+            _diagnostics = diagnostics;
+            _parsedCode = parsedCode;
+        }
+    }
 
 
     //  ---------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +73,7 @@ public class Assembler {
      * Assemble a single TextLine object into the Relocatable Module
      * @param textLine entity to be assembled
      */
-    private void assembleTextLine(
+    private static void assembleTextLine(
         final Context context,
         final TextLine textLine
     ) {
@@ -146,16 +160,11 @@ public class Assembler {
             try {
                 Dictionary.ValueAndLevel val = dictionary.getValueAndLevel( label );
                 if (val._level < 2) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("  ");
-                    sb.append(label);
-                    for ( int x = 0; x < val._level; ++x ) {
-                        sb.append("*");
-                    }
-
-                    sb.append(": ");
-                    sb.append(val._value.toString());
-                    System.out.println(sb.toString());
+                    System.out.println("  " +
+                                       label +
+                                       "*".repeat(Math.max(0, val._level)) +
+                                       ": " +
+                                       val._value.toString());
                 }
             } catch (NotFoundException ex) {
                 //  can't happen
@@ -675,7 +684,7 @@ public class Assembler {
      * @param operandField represents the operand field, if any
      * @return true if we determined these inputs represent an instruction mnemonic code generation thing (or a blank line)
      */
-    private boolean processMnemonic(
+    private static boolean processMnemonic(
         final Context context,
         final LabelFieldComponents labelFieldComponents,
         final TextField operationField,
@@ -772,7 +781,7 @@ public class Assembler {
      * @param registerSubfield register (a-field) subfield text
      * @return value representing the A-field (which might have a flagged value)
      */
-    private IntegerValue processMnemonicGetAField(
+    private static IntegerValue processMnemonicGetAField(
         final Context context,
         final InstructionWord.InstructionInfo instructionInfo,
         final TextField operandField,
@@ -802,21 +811,17 @@ public class Assembler {
                             //  Reduce the value appropriately for the a-field
                             aValue = (IntegerValue) v;
                             int aInteger = aValue._value.get().intValue();
-                            switch (instructionInfo._aSemantics) {
-                                case A:
-                                    aValue = new IntegerValue.Builder().setFlagged(aValue._flagged)
-                                                                       .setValue(aInteger - 12)
-                                                                       .setReferences(aValue._references)
-                                                                       .build();
-                                    break;
-
-                                case R:
-                                    aValue = new IntegerValue.Builder().setFlagged(aValue._flagged)
-                                                                       .setValue(aInteger - 64)
-                                                                       .setReferences(aValue._references)
-                                                                       .build();
-                                    break;
-                            }
+                            aValue = switch (instructionInfo._aSemantics) {
+                                case A -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                                                    .setValue(aInteger - 12)
+                                                                    .setReferences(aValue._references)
+                                                                    .build();
+                                case R -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                                                    .setValue(aInteger - 64)
+                                                                    .setReferences(aValue._references)
+                                                                    .build();
+                                default -> aValue;
+                            };
                         }
                     }
                 } catch (ExpressionException ex) {
@@ -834,7 +839,7 @@ public class Assembler {
      * @param baseSubfield index (b-field) subfield text
      * @return value representing the B-field
      */
-    private IntegerValue processMnemonicGetBField(
+    private static IntegerValue processMnemonicGetBField(
         final Context context,
         final TextSubfield baseSubfield
     ) {
@@ -869,7 +874,7 @@ public class Assembler {
      * @param operationField operation field which might contain a j-field specification
      * @return value for instruction's j-field
      */
-    private int processMnemonicGetJField(
+    private static int processMnemonicGetJField(
         final Context context,
         final InstructionWord.InstructionInfo instructionInfo,
         final TextField operationField
@@ -910,7 +915,7 @@ public class Assembler {
      * @param baseSubfieldAllowed true if we are in extended mode and the instruction allows a base register specificaiton
      * @return array of four TextSubfield references, some of which might be null
      */
-    private TextSubfield[] processMnemonicGetOperandSubfields(
+    private static TextSubfield[] processMnemonicGetOperandSubfields(
         final Context context,
         final InstructionWord.InstructionInfo instructionInfo,
         final TextField operandField,
@@ -945,8 +950,7 @@ public class Assembler {
                                                               "Extraneous subfields in operand field ignored"));
         }
 
-        TextSubfield[] result = { sfRegister, sfValue, sfIndex, sfBase };
-        return result;
+        return new TextSubfield[]{sfRegister, sfValue, sfIndex, sfBase };
     }
 
     /**
@@ -957,7 +961,7 @@ public class Assembler {
      * @param valueSubfield value (u-field) subfield text
      * @return value representing the U-field (which might have a flagged value)
      */
-    private IntegerValue processMnemonicGetUField(
+    private static IntegerValue processMnemonicGetUField(
         final Context context,
         final TextField operandField,
         final TextSubfield valueSubfield
@@ -994,7 +998,7 @@ public class Assembler {
      * @param indexSubfield index (x-field) subfield text
      * @return value representing the X-field (which might have a flagged value)
      */
-    private IntegerValue processMnemonicGetXField(
+    private static IntegerValue processMnemonicGetXField(
         final Context context,
         final TextSubfield indexSubfield
     ) {
@@ -1028,7 +1032,7 @@ public class Assembler {
      * @return pointer to InstructionInfo object if found - note that it might not be appropriate for the given context
      * @throws NotFoundException if we don't find a valid mnemonic at all
      */
-    private InstructionWord.InstructionInfo processMnemonicOperationField(
+    private static InstructionWord.InstructionInfo processMnemonicOperationField(
         final Context context,
         final TextSubfield subfield
     ) throws NotFoundException {
@@ -1067,7 +1071,7 @@ public class Assembler {
      * @param procedureValue indicates the procedure to be invoked
      * @param textLine the parsed code from which we build the parameter list
      */
-    private void processProcedure(
+    private static void processProcedure(
         final Context context,
         final String procedureName,
         final ProcedureValue procedureValue,
@@ -1115,7 +1119,7 @@ public class Assembler {
      * These will be the forward-references we picked up along the way.
      * No point checking for loc ctr refs, those aren't resolved until link time.
      */
-    private IntegerValue resolveReferences(
+    private static IntegerValue resolveReferences(
         final Context context,
         final Locale locale,
         final IntegerValue originalValue
@@ -1166,7 +1170,7 @@ public class Assembler {
      * No point checking for loc ctr refs, those aren't resolved until link time.
      * @param context context of this sub-assembly
      */
-    private void resolveReferences(
+    private static void resolveReferences(
         final Context context
     ) {
         context.resetSource();
@@ -1189,6 +1193,19 @@ public class Assembler {
     //  ---------------------------------------------------------------------------------------------------------------------------
 
     /**
+     * Convenience wrapper for a 'quiet' assembly
+     * @param moduleName name to be given to the relocatable module
+     * @param source array of strings comprising the source code to be assembled
+     * @return RelocatableModule we create if successful, else null
+     */
+    public static Result assemble(
+        final String moduleName,
+        final String[] source
+    ) {
+        return assemble(moduleName, source, new HashSet<Option>());
+    }
+
+    /**
      * Assemble the source code in the object.
      * We do not do things quite in the same way as MASM.
      * @param moduleName name to be given to the relocatable module
@@ -1196,18 +1213,16 @@ public class Assembler {
      * @param optionSet Selection of options which should apply to this assembly
      * @return RelocatableModule we create if successful, else null
      */
-    public RelocatableModule assemble(
+    public static Result assemble(
         final String moduleName,
         final String[] source,
-        final Option[] optionSet
+        final Set<Option> optionSet
     ) {
         System.out.println(String.format("Assembling module %s -----------------------------------", moduleName));
 
         //  setup
         Dictionary globalDictionary = new Dictionary(new SystemDictionary());
-        Context context = new Context(globalDictionary, source);
-        _diagnostics = context.getDiagnostics();
-        _parsedCode = context.getParsedCode();
+        Context context = new Context(globalDictionary, source, optionSet);
 
         context.setCharacterMode(CharacterMode.ASCII);
         context.setCodeMode(CodeMode.Basic);
@@ -1225,35 +1240,13 @@ public class Assembler {
         resolveReferences(context);
         RelocatableModule module = generateRelocatableModule(context, moduleName, globalDictionary);
 
-        boolean displayCode = false;
-        boolean displayDictionary = false;
-        boolean displaySource = false;
-        boolean displayModuleSummary = false;
-        for (Option opt : optionSet) {
-            switch (opt) {
-                case EMIT_DICTIONARY:
-                    displayDictionary = true;
-                    break;
-                case EMIT_GENERATED_CODE:
-                    displayCode = true;
-                    displaySource = true;   //  implied
-                    break;
-                case EMIT_SOURCE:
-                    displaySource = true;
-                    break;
-                case EMIT_MODULE_SUMMARY:
-                    displayModuleSummary = true;
-                    break;
-            }
+        if (optionSet.contains(Option.EMIT_GENERATED_CODE) || optionSet.contains(Option.EMIT_SOURCE)) {
+            displayResults(context, optionSet.contains(Option.EMIT_GENERATED_CODE));
         }
-
-        if (displaySource) {
-            displayResults(context, displayCode);
-        }
-        if (displayModuleSummary && (module != null)) {
+        if (optionSet.contains(Option.EMIT_MODULE_SUMMARY) && (module != null)) {
             displayModuleSummary(module);
         }
-        if (displayDictionary) {
+        if (optionSet.contains(Option.EMIT_DICTIONARY)) {
             displayDictionary(context.getDictionary());
         }
 
@@ -1268,9 +1261,6 @@ public class Assembler {
 
         System.out.println("Assembly Ends -------------------------------------------------------");
 
-        return module;
+        return new Result(module, context.getDiagnostics(), context.getParsedCode());
     }
-
-    public Diagnostics getDiagnostics() { return _diagnostics; }
-    TextLine[] getParsedCode() { return _parsedCode; }
 }

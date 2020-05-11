@@ -10,6 +10,8 @@ import com.kadware.komodo.minalib.AbsoluteModule;
 import com.kadware.komodo.minalib.Assembler;
 import com.kadware.komodo.minalib.Linker;
 import com.kadware.komodo.minalib.RelocatableModule;
+import java.io.File;
+import java.io.IOException;
 
 public class Builder {
 
@@ -139,9 +141,11 @@ public class Builder {
         return linker.link("SANDBOX", bankDeclarations, 0, linkerOptions);
     }
 
+    //TODO temporary testing - remove later
     public static void main(
         final String[] args
-    ) {
-        build();
+    ) throws IOException {
+        AbsoluteModule abs = build();
+        abs.writeJson(new File("resources/binaries/sandbox.json"));
     }
 }

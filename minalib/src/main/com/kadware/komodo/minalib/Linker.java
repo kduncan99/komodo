@@ -887,7 +887,11 @@ public class Linker {
                     //  Get the lowest address assigned to the containing bank
                     int bdi = findBankDescriptorIndex(sourcePoolSpec._module, sourcePoolSpec._lcIndex) & 077777;
                     BankDeclaration bd = findBankDeclaration(bdi);
-                    newValue = bd._startingAddress;
+                    if (bd == null) {
+                        raise("Internal error - cannot find bank definition which should exist");
+                    } else {
+                        newValue = bd._startingAddress;
+                    }
                     break;
 
                 case LBDI:
@@ -995,7 +999,6 @@ public class Linker {
 
         return discreteValue;
     }
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  public methods

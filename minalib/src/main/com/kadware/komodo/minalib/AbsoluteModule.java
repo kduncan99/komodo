@@ -6,7 +6,10 @@ package com.kadware.komodo.minalib;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kadware.komodo.minalib.exceptions.InvalidParameterException;
+import java.io.File;
+import java.io.IOException;
 import java.util.TreeMap;
 
 /**
@@ -161,5 +164,15 @@ public class AbsoluteModule {
                                       _setQuarter,
                                       _setThird);
         }
+    }
+
+    /**
+     * Writes the content of this absolute module to an output file in JSON format
+     */
+    public void writeJson(
+        final File file
+    ) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(file, this);
     }
 }

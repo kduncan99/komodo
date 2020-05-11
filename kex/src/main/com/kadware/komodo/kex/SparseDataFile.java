@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.kex.exceptions.TrackNotAllocatedException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;

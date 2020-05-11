@@ -6,6 +6,8 @@
 package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.kex.exceptions.FileNotOpenException;
+import com.kadware.komodo.kex.exceptions.ParameterException;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;

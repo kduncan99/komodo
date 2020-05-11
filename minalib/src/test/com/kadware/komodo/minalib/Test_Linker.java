@@ -100,14 +100,13 @@ public class Test_Linker {
             "          LA        A2,DATA2,,B2",
         };
 
-        Assembler asm = new Assembler();
-        RelocatableModule rel = asm.assemble("TESTREL", source, new Assembler.Option[0]);
+        Assembler.Result result = Assembler.assemble("TESTREL", source);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(rel, 1),
+            new Linker.LCPoolSpecification(result._relocatableModule, 1),
         };
         Linker.LCPoolSpecification[] dbankPoolSpecs = {
-            new Linker.LCPoolSpecification(rel, 0),
+            new Linker.LCPoolSpecification(result._relocatableModule, 0),
         };
 
         Linker.BankDeclaration[] bds = {
@@ -179,14 +178,13 @@ public class Test_Linker {
             "          LA        A1,DATA2,,B2",
         };
 
-        Assembler asm = new Assembler();
-        RelocatableModule rel = asm.assemble("TESTREL", source, new Assembler.Option[0]);
+        Assembler.Result result = Assembler.assemble("TESTREL", source);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(rel, 1),
+            new Linker.LCPoolSpecification(result._relocatableModule, 1),
         };
         Linker.LCPoolSpecification[] dbankPoolSpecs = {
-            new Linker.LCPoolSpecification(rel, 0),
+            new Linker.LCPoolSpecification(result._relocatableModule, 0),
         };
 
         Linker.BankDeclaration[] bds = {
@@ -264,18 +262,16 @@ public class Test_Linker {
             "          J         0,X11",
         };
 
-        Assembler asm = new Assembler();
-        RelocatableModule rel1 = asm.assemble("TESTREL1", source1, new Assembler.Option[0]);
-        RelocatableModule rel2 = asm.assemble("TESTREL2", source2, new Assembler.Option[0]);
-        RelocatableModule rel3 = asm.assemble("TESTREL3", source3, new Assembler.Option[0]);
+        Assembler.Result result1 = Assembler.assemble("TESTREL1", source1);
+        Assembler.Result result2 = Assembler.assemble("TESTREL2", source2);
+        Assembler.Result result3 = Assembler.assemble("TESTREL3", source3);
 
         Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(rel3, 1),
-            new Linker.LCPoolSpecification(rel2, 1),
-            new Linker.LCPoolSpecification(rel1, 1),
+            new Linker.LCPoolSpecification(result3._relocatableModule, 1),
+            new Linker.LCPoolSpecification(result2._relocatableModule, 1),
+            new Linker.LCPoolSpecification(result1._relocatableModule, 1),
         };
-        Linker.LCPoolSpecification[] dbankPoolSpecs = {
-        };
+        Linker.LCPoolSpecification[] dbankPoolSpecs = { };
 
         Linker.BankDeclaration[] bds = {
             new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))

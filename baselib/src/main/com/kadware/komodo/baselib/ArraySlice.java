@@ -5,6 +5,7 @@
 package com.kadware.komodo.baselib;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;
 import org.apache.logging.log4j.Level;
@@ -171,6 +172,7 @@ public class ArraySlice {
      * Create a new array representing (but not backed by) the values of this subset
      * @return new array
      */
+    @JsonIgnore
     public long[] getAll() {
         long[] result = new long[_length];
         for (int ax = _offset, rx = 0; rx < _length; ++ax, ++rx) {
@@ -307,29 +309,23 @@ public class ArraySlice {
              remainingWords > 0;
              rowIndex += wordsPerRow, bufferIndex += wordsPerRow, remainingWords -= wordsPerRow) {
             //  Get a subset of the buffer
-            int wordBufferSize = remainingWords > wordsPerRow ? wordsPerRow : remainingWords;
+            int wordBufferSize = Math.min(remainingWords, wordsPerRow);
             ArraySlice subset = new ArraySlice(this, bufferIndex, wordBufferSize);
 
             //  Build octal string
             StringBuilder octalBuilder = new StringBuilder();
             octalBuilder.append(subset.toOctal(true));
-            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-                octalBuilder.append("             ");
-            }
+            octalBuilder.append("             ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
 
             //  Build fieldata string
             StringBuilder fieldataBuilder = new StringBuilder();
             fieldataBuilder.append(subset.toFieldata(true));
-            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-                fieldataBuilder.append("       ");
-            }
+            fieldataBuilder.append("       ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
 
             //  Build ASCII string
             StringBuilder asciiBuilder = new StringBuilder();
             asciiBuilder.append(subset.toASCII(true));
-            for (int wx = subset.getSize(); wx < wordsPerRow; ++wx) {
-                asciiBuilder.append("     ");
-            }
+            asciiBuilder.append("     ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
 
             //  Log the output
             logger.printf(logLevel, String.format("%06o:%s  %s  %s",
