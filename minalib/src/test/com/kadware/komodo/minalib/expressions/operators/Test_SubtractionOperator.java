@@ -11,11 +11,10 @@ import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.diagnostics.Diagnostics;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-import org.junit.Test;
-
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.Stack;
-
+import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class Test_SubtractionOperator {
@@ -27,7 +26,7 @@ public class Test_SubtractionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(10098).setFlagged(true).build());
         valueStack.push(new IntegerValue.Builder().setValue(512).setFlagged(true).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -50,7 +49,7 @@ public class Test_SubtractionOperator {
         valueStack.push(new IntegerValue.Builder().setValue(10000).setFlagged(true).build());
         valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(22.22222)).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -105,7 +104,7 @@ public class Test_SubtractionOperator {
         valueStack.push(addend1);
         valueStack.push(addend2);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);

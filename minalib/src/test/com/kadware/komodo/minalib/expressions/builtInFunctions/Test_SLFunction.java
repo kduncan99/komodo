@@ -4,9 +4,7 @@
 
 package com.kadware.komodo.minalib.expressions.builtInFunctions;
 
-import java.util.LinkedList;
-import java.util.List;
-
+import com.kadware.komodo.minalib.Assembler;
 import com.kadware.komodo.minalib.CharacterMode;
 import com.kadware.komodo.minalib.Context;
 import com.kadware.komodo.minalib.LineSpecifier;
@@ -19,6 +17,9 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.items.IExpressionItem;
 import com.kadware.komodo.minalib.expressions.items.ValueItem;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,7 +43,7 @@ public class Test_SLFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new SLFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Value result = bif.evaluate(context);
 
         IntegerValue expected = new IntegerValue.Builder().setValue(12).build();

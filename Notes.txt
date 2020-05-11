@@ -23,6 +23,8 @@ Check to ensure breakpoints are all working.
 * minalib
 Assembler isn't returning null module when errors are detected... why?
     Ensure all T diagnostics result in a rel module not being generated
+See Test_Diagnostics.formOK - we are getting a T we should not get.
+
 Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1

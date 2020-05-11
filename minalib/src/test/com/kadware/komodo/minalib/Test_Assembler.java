@@ -4,6 +4,9 @@
 
 package com.kadware.komodo.minalib;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -12,17 +15,22 @@ import static org.junit.Assert.*;
  */
 public class Test_Assembler {
 
+    private static final Assembler.Option[] OPTIONS = {
+        Assembler.Option.EMIT_MODULE_SUMMARY,
+        Assembler.Option.EMIT_SOURCE,
+        Assembler.Option.EMIT_GENERATED_CODE,
+        Assembler.Option.EMIT_DICTIONARY,
+        };
+    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
+
     @Test
     public void noSource(
     ) {
         String[] source = {};
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(0, asm.getParsedCode().length);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertEquals(0, result._parsedCode.length);
     }
 
     @Test
@@ -35,12 +43,9 @@ public class Test_Assembler {
             ". Blah blah blah",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        TextLine[] parsedCode = asm.getParsedCode();
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        TextLine[] parsedCode = result._parsedCode;
         assertEquals(4, parsedCode.length);
         for (TextLine tl : parsedCode) {
             assertEquals(0, tl._fields.size());
@@ -54,11 +59,8 @@ public class Test_Assembler {
             "  LA,U A0,0"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
     }
 
     @Test
@@ -68,13 +70,11 @@ public class Test_Assembler {
                 "START*  LA,U A0,0"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START")._references.length);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertTrue(result._relocatableModule._externalLabels.containsKey("START"));
+        assertEquals(1, result._relocatableModule._externalLabels.get("START")._references.length);
     }
 
     @Test
@@ -85,14 +85,12 @@ public class Test_Assembler {
                 "$(5)  LA,U      A0,1",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(2, module._storage.size());
-        assertTrue(module._storage.containsKey(3));
-        assertTrue(module._storage.containsKey(5));
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(2, result._relocatableModule._storage.size());
+        assertTrue(result._relocatableModule._storage.containsKey(3));
+        assertTrue(result._relocatableModule._storage.containsKey(5));
     }
 
     @Test
@@ -102,15 +100,13 @@ public class Test_Assembler {
                 "$(3),START*  LA,U      A0,0",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(1, module._storage.size());
-        assertTrue(module._storage.containsKey(3));
-        assertTrue(module._externalLabels.containsKey("START"));
-        assertEquals(1, module._externalLabels.get("START")._references.length);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(1, result._relocatableModule._storage.size());
+        assertTrue(result._relocatableModule._storage.containsKey(3));
+        assertTrue(result._relocatableModule._externalLabels.containsKey("START"));
+        assertEquals(1, result._relocatableModule._externalLabels.get("START")._references.length);
     }
 
     @Test
@@ -120,11 +116,8 @@ public class Test_Assembler {
                 "$%$%$ LA  A5,0",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertFalse(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertFalse(result._diagnostics.isEmpty());
     }
 
     @Test
@@ -134,11 +127,8 @@ public class Test_Assembler {
                 "$(25),%%% LA  A5,0",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertFalse(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertFalse(result._diagnostics.isEmpty());
     }
 
     @Test
@@ -148,11 +138,8 @@ public class Test_Assembler {
                 "LABEL,EXTRA LA  A5,0",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertFalse(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertFalse(result._diagnostics.isEmpty());
     }
 
     @Test
@@ -162,11 +149,8 @@ public class Test_Assembler {
                 "$(25),LABEL,EXTRA LA  A5,0",
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-
-        assertFalse(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertFalse(result._diagnostics.isEmpty());
     }
 
     @Test
@@ -176,14 +160,12 @@ public class Test_Assembler {
             "$(1)  + (5 + 3)*2"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
-
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(1, module._storage.size());
-        assertEquals(1, module._storage.get(1)._storage.length);
-        assertEquals(16, module._storage.get(1)._storage[0].getW());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(1, result._relocatableModule._storage.size());
+        assertEquals(1, result._relocatableModule._storage.get(1)._storage.length);
+        assertEquals(16, result._relocatableModule._storage.get(1)._storage[0].getW());
     }
 
     @Test
@@ -195,19 +177,17 @@ public class Test_Assembler {
             "      + ((0111+FOO, 0111), 0111+FEE+FOE)"
         };
 
-        Assembler.Option[] optionSet = { Assembler.Option.EMIT_MODULE_SUMMARY };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(2, result._relocatableModule._storage.size());
 
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(2, module._storage.size());
-
-        LocationCounterPool lcp0 = module._storage.get(0);
+        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
         assertNotEquals(null, lcp0);
         assertEquals(3, lcp0._storage.length);
         assertEquals(0_000077_000777L, lcp0._storage[0].getW());
 
-        LocationCounterPool lcp1 = module._storage.get(1);
+        LocationCounterPool lcp1 = result._relocatableModule._storage.get(1);
         assertNotEquals(null, lcp1);
         assertEquals(3, lcp1._storage.length);
         assertEquals(0_017L, lcp1._storage[0].getW());
@@ -224,21 +204,20 @@ public class Test_Assembler {
             "      + ((077000777) + 5)"
         };
 
-        Assembler.Option[] optionSet = { };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(2, result._relocatableModule._storage.size());
 
-        assertTrue(asm.getDiagnostics().isEmpty());
-        assertEquals(2, module._storage.size());
-
-        LocationCounterPool lcp0 = module._storage.get(0);
+        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
         assertNotEquals(null, lcp0);
         assertEquals(1, lcp0._storage.length);
+
         //TODO bug here assertEquals(0_77000777L, lcp0._storage[0].getW());
         //TODO and here assertEquals(5, lcp0._storage[1].getW());
         //TODO and here assertEquals(1, lcp0._storage[1]._references.length);
 
-        LocationCounterPool lcp1 = module._storage.get(1);
+        LocationCounterPool lcp1 = result._relocatableModule._storage.get(1);
         assertNotEquals(null, lcp1);
         assertEquals(2, lcp1._storage.length);
         assertEquals(0_017L, lcp1._storage[0].getW());
@@ -268,13 +247,11 @@ public class Test_Assembler {
             "          + 256.9375 .  1000000001111 = 400740..0"
         };
 
-        Assembler.Option[] optionSet = { };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
 
-        assertTrue(asm.getDiagnostics().isEmpty());
-
-        LocationCounterPool lcp0 = module._storage.get(0);
+        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
         assertNotNull(lcp0);
         assertEquals(8, lcp0._storage.length);
         assertEquals(0_2001_40000000L, lcp0._storage[0].getW());
@@ -286,7 +263,7 @@ public class Test_Assembler {
         assertEquals(0_5776_03777777L, lcp0._storage[6].getW());
         assertEquals(0_777777_777777L, lcp0._storage[7].getW());
 
-        LocationCounterPool lcp2 = module._storage.get(2);
+        LocationCounterPool lcp2 = result._relocatableModule._storage.get(2);
         assertNotNull(lcp2);
         assertEquals(4, lcp2._storage.length);
         assertEquals(0_201_400000000L, lcp2._storage[0].getW());
@@ -294,7 +271,7 @@ public class Test_Assembler {
         assertEquals(0_177_400000000L, lcp2._storage[2].getW());
         assertEquals(0_576_037777777L, lcp2._storage[3].getW());
 
-        LocationCounterPool lcp4 = module._storage.get(4);
+        LocationCounterPool lcp4 = result._relocatableModule._storage.get(4);
         assertNotNull(lcp4);
         assertEquals(10, lcp4._storage.length);
         assertEquals(0_2001_40000000L, lcp4._storage[0].getW());
@@ -322,12 +299,11 @@ public class Test_Assembler {
             "          'A'DR",
         };
 
-        Assembler.Option[] optionSet = { };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
 
-        assertTrue(asm.getDiagnostics().isEmpty());
-        LocationCounterPool lcp0 = module._storage.get(0);
+        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
         assertNotEquals(null, lcp0);
         assertEquals(7, lcp0._storage.length);
         assertEquals(0_101040040040L, lcp0._storage[0].getW());
@@ -352,12 +328,11 @@ public class Test_Assembler {
             "          'A'DR",
         };
 
-        Assembler.Option[] optionSet = { };
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
 
-        assertTrue(asm.getDiagnostics().isEmpty());
-        LocationCounterPool lcp0 = module._storage.get(0);
+        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
         assertNotEquals(null, lcp0);
         assertEquals(7, lcp0._storage.length);
         assertEquals(0_060505050505L, lcp0._storage[0].getW());

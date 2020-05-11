@@ -5,10 +5,22 @@
 package com.kadware.komodo.minalib.directives;
 
 import com.kadware.komodo.minalib.Assembler;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class Test_Equf {
+
+    private static final Assembler.Option[] OPTIONS = {
+        Assembler.Option.EMIT_MODULE_SUMMARY,
+        Assembler.Option.EMIT_SOURCE,
+        Assembler.Option.EMIT_GENERATED_CODE,
+        Assembler.Option.EMIT_DICTIONARY,
+        };
+    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
+
 
     @Test
     public void simple_basic(
@@ -19,16 +31,8 @@ public class Test_Equf {
             //TODO generate something
         };
 
-        Assembler.Option[] optionSet = {
-            Assembler.Option.EMIT_MODULE_SUMMARY,
-            Assembler.Option.EMIT_SOURCE,
-            Assembler.Option.EMIT_GENERATED_CODE,
-            Assembler.Option.EMIT_DICTIONARY,
-        };
-
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-        assertTrue(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
         //TODO test generated value
     }
 
@@ -41,16 +45,8 @@ public class Test_Equf {
             //TODO generate something
         };
 
-        Assembler.Option[] optionSet = {
-            Assembler.Option.EMIT_MODULE_SUMMARY,
-            Assembler.Option.EMIT_SOURCE,
-            Assembler.Option.EMIT_GENERATED_CODE,
-            Assembler.Option.EMIT_DICTIONARY,
-            };
-
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, optionSet);
-        assertTrue(asm.getDiagnostics().isEmpty());
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
         //TODO test generated value
     }
 }

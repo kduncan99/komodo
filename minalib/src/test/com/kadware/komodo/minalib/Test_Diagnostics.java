@@ -5,7 +5,9 @@
 package com.kadware.komodo.minalib;
 
 import com.kadware.komodo.minalib.diagnostics.Diagnostic;
-import com.kadware.komodo.minalib.diagnostics.Diagnostics;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -14,12 +16,13 @@ import static org.junit.Assert.*;
  */
 public class Test_Diagnostics {
 
-    private final Assembler.Option[] OPTIONS = {
+    private static final Assembler.Option[] OPTIONS = {
         Assembler.Option.EMIT_MODULE_SUMMARY,
-        Assembler.Option.EMIT_GENERATED_CODE,
         Assembler.Option.EMIT_SOURCE,
+        Assembler.Option.EMIT_GENERATED_CODE,
         Assembler.Option.EMIT_DICTIONARY,
-    };
+        };
+    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
     @Test
     public void formDiag1(
@@ -28,13 +31,11 @@ public class Test_Diagnostics {
             "F1       $FORM     12,12,12,12",
         };
 
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, OPTIONS);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
 
-        assertFalse(asm.getDiagnostics().isEmpty());
-        Diagnostics diags = asm.getDiagnostics();
-        assertFalse(diags.hasFatal());
-        assertEquals(1, (int)diags.getCounters().get(Diagnostic.Level.Form));
+        assertFalse(result._diagnostics.isEmpty());
+        assertFalse(result._diagnostics.hasFatal());
+        assertEquals(1, (int)result._diagnostics.getCounters().get(Diagnostic.Level.Form));
     }
 
     @Test
@@ -45,13 +46,11 @@ public class Test_Diagnostics {
             "         F1        1,2,3,4",
         };
 
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, OPTIONS);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
 
-        assertFalse(asm.getDiagnostics().isEmpty());
-        Diagnostics diags = asm.getDiagnostics();
-        assertFalse(diags.hasFatal());
-        assertEquals(1, (int)diags.getCounters().get(Diagnostic.Level.Form));
+        assertFalse(result._diagnostics.isEmpty());
+        assertFalse(result._diagnostics.hasFatal());
+        assertEquals(1, (int)result._diagnostics.getCounters().get(Diagnostic.Level.Form));
     }
 
     @Test
@@ -64,8 +63,8 @@ public class Test_Diagnostics {
             "         F1        1,-2,3",
         };
 
-        Assembler asm = new Assembler();
-        asm.assemble("TEST", source, OPTIONS);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        assertTrue(result._diagnostics.isEmpty());
     }
 
 }

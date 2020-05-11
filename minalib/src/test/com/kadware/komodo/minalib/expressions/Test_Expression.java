@@ -15,10 +15,11 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.items.IExpressionItem;
 import com.kadware.komodo.minalib.expressions.items.OperatorItem;
 import com.kadware.komodo.minalib.expressions.items.ValueItem;
-import java.util.LinkedList;
-import java.util.List;
 import com.kadware.komodo.minalib.expressions.operators.AdditionOperator;
 import com.kadware.komodo.minalib.expressions.operators.MultiplicationOperator;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -33,7 +34,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls, 1), val));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 
@@ -55,7 +56,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls10, 11), addend2));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 
@@ -81,7 +82,7 @@ public class Test_Expression {
         items.add(new ValueItem(new Locale(ls, 50), term3));
         Expression exp = new Expression(items);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diagnostics = new Diagnostics();
         Value result = exp.evaluate(context);
 

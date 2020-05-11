@@ -14,11 +14,10 @@ import com.kadware.komodo.minalib.exceptions.ExpressionException;
 import com.kadware.komodo.minalib.expressions.Expression;
 import com.kadware.komodo.minalib.expressions.items.IExpressionItem;
 import com.kadware.komodo.minalib.expressions.items.ValueItem;
-import org.junit.Test;
-
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -41,7 +40,7 @@ public class Test_CFSFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue("012345").setCharacterMode(CharacterMode.Fieldata).build();
@@ -64,7 +63,7 @@ public class Test_CFSFunction {
         LineSpecifier ls10 = new LineSpecifier(0, 10);
         BuiltInFunction bif = new CFSFunction(new Locale(ls10, 16), expressions);
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Value result = bif.evaluate(context);
 
         StringValue expected = new StringValue.Builder().setValue(" ABCDE234567").setCharacterMode(CharacterMode.Fieldata).build();

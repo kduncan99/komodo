@@ -9,16 +9,12 @@ import com.kadware.komodo.minalib.*;
 import com.kadware.komodo.minalib.diagnostics.*;
 import com.kadware.komodo.minalib.dictionary.*;
 import com.kadware.komodo.minalib.exceptions.ExpressionException;
-
+import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- *
- * @author kduncan
- */
 public class Test_ConcatenationOperator {
 
     //TODO needs lots of tests regarding mixing precision and justification values
@@ -29,7 +25,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.ASCII).build());
         valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.ASCII).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 12);
@@ -53,7 +49,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
         valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.Fieldata).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         context.setCharacterMode(CharacterMode.Fieldata);
         Diagnostics diags = new Diagnostics();
 
@@ -78,7 +74,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("ABC").setCharacterMode(CharacterMode.Fieldata).build());
         valueStack.push(new StringValue.Builder().setValue("DEF").setCharacterMode(CharacterMode.ASCII).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         Diagnostics diags = new Diagnostics();
 
         LineSpecifier ls = new LineSpecifier(0, 22);
@@ -102,7 +98,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("ABC").build());
         valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(1.0)).build());
 
-        Context context = new Context(new Dictionary(), new String[0]);
+        Context context = new Context(new Dictionary(), new String[0], new HashSet<>());
         LineSpecifier ls = new LineSpecifier(0, 123);
         Operator op = new ConcatenationOperator(new Locale(ls, 18));
         try {

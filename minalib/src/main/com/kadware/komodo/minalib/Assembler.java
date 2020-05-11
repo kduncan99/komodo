@@ -53,12 +53,23 @@ public class Assembler {
         public final Diagnostics _diagnostics;
         public final TextLine[] _parsedCode;
 
+        //  For normal returns
         private Result (
             final RelocatableModule relocatableModule,
             final Diagnostics diagnostics,
             final TextLine[] parsedCode
         ) {
             _relocatableModule = relocatableModule;
+            _diagnostics = diagnostics;
+            _parsedCode = parsedCode;
+        }
+
+        //  For error returns where no module was created
+        private Result (
+            final Diagnostics diagnostics,
+            final TextLine[] parsedCode
+        ) {
+            _relocatableModule = null;
             _diagnostics = diagnostics;
             _parsedCode = parsedCode;
         }
@@ -1233,7 +1244,7 @@ public class Assembler {
             assembleTextLine(context, textLine);
             if (context.getDiagnostics().hasFatal()) {
                 displayResults(context, false);
-                return null;
+                return new Result(context.getDiagnostics(), context.getParsedCode());
             }
         }
 

@@ -5,10 +5,21 @@
 package com.kadware.komodo.minalib.directives;
 
 import com.kadware.komodo.minalib.Assembler;
-import com.kadware.komodo.minalib.RelocatableModule;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class Test_Proc {
+
+    private static final Assembler.Option[] OPTIONS = {
+        Assembler.Option.EMIT_MODULE_SUMMARY,
+        Assembler.Option.EMIT_SOURCE,
+        Assembler.Option.EMIT_GENERATED_CODE,
+        Assembler.Option.EMIT_DICTIONARY,
+        };
+    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
     @Test
     public void simpleProc(
@@ -28,15 +39,8 @@ public class Test_Proc {
             "          HALT 0",
         };
 
-        Assembler.Option[] optionSet = {
-            Assembler.Option.EMIT_MODULE_SUMMARY,
-            Assembler.Option.EMIT_SOURCE,
-            Assembler.Option.EMIT_GENERATED_CODE,
-            Assembler.Option.EMIT_DICTIONARY,
-        };
-
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        Assert.assertNotNull(result._relocatableModule);
         //TODO check values
     }
 
@@ -61,15 +65,8 @@ public class Test_Proc {
             "          FOO,H2 A0,A1,A2 DATA,DATA1",
         };
 
-        Assembler.Option[] optionSet = {
-            Assembler.Option.EMIT_MODULE_SUMMARY,
-            Assembler.Option.EMIT_SOURCE,
-            Assembler.Option.EMIT_GENERATED_CODE,
-            Assembler.Option.EMIT_DICTIONARY,
-        };
-
-        Assembler asm = new Assembler();
-        RelocatableModule module = asm.assemble("TEST", source, optionSet);
+        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+        Assert.assertNotNull(result._relocatableModule);
         //TODO check values
     }
 }
