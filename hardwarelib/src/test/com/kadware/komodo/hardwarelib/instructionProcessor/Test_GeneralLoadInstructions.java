@@ -12,7 +12,7 @@ import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.minalib.AbsoluteModule;
+import com.kadware.komodo.kex.kasm.AbsoluteModule;
 import org.junit.*;
 
 /**

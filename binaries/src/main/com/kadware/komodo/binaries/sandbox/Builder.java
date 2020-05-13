@@ -6,10 +6,10 @@ package com.kadware.komodo.binaries.sandbox;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
-import com.kadware.komodo.minalib.AbsoluteModule;
-import com.kadware.komodo.minalib.Assembler;
-import com.kadware.komodo.minalib.Linker;
-import com.kadware.komodo.minalib.RelocatableModule;
+import com.kadware.komodo.kex.kasm.AbsoluteModule;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Linker;
+import com.kadware.komodo.kex.kasm.OldRelocatableModule;
 import java.io.File;
 import java.io.IOException;
 
@@ -30,10 +30,10 @@ public class Builder {
 
     public static AbsoluteModule build() {
         Assembler asm = new Assembler();
-        RelocatableModule level0BDTRel = asm.assemble("Level0BDT", Level0BDT.SOURCE, assemblerOptions);
-        RelocatableModule intHandlersRel = asm.assemble("IntHandlers", IntHandlers.SOURCE, assemblerOptions);
-        RelocatableModule icsRel = asm.assemble("ICS", ICS.SOURCE, assemblerOptions);
-        RelocatableModule sandboxRel = asm.assemble("Sandbox", Sandbox.SOURCE, assemblerOptions);
+        OldRelocatableModule level0BDTRel = asm.assemble("Level0BDT", Level0BDT.SOURCE, assemblerOptions);
+        OldRelocatableModule intHandlersRel = asm.assemble("IntHandlers", IntHandlers.SOURCE, assemblerOptions);
+        OldRelocatableModule icsRel = asm.assemble("ICS", ICS.SOURCE, assemblerOptions);
+        OldRelocatableModule sandboxRel = asm.assemble("Sandbox", Sandbox.SOURCE, assemblerOptions);
 
         //  Level 0 BDT - BDI 0,040
         Linker.LCPoolSpecification[] poolSpecs000040 = {

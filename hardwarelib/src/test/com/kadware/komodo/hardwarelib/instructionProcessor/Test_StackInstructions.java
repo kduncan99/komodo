@@ -11,7 +11,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
-import com.kadware.komodo.minalib.AbsoluteModule;
+import com.kadware.komodo.kex.kasm.AbsoluteModule;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 

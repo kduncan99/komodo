@@ -8,7 +8,7 @@ import com.kadware.komodo.baselib.*;
 import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.kex.kasm.*;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -86,7 +86,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         //  Special construction of the absolute
         Assembler.Option[] asmOptions = {};
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
+        OldRelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
 
         Linker.LCPoolSpecification[] bank4PoolSpecs = {
             new Linker.LCPoolSpecification(relModule, 1),

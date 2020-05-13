@@ -4,22 +4,38 @@
 
 package com.kadware.komodo.kex;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 
 /**
- * Represents a relocatable module - a portion of code which is collected with
- * potentially many other such portions to create an absolute module (loadable executable).
+ * Represents a relocatable module in the external (kex) environment.
+ * Contains a portion of code which is linked with potentially many other such portions
+ * to create an absolute module (loadable executable).
+ * This class is vaguely analagous to the SYSLIB ROR routines.
  */
 public class RelocatableModule {
 
-    //  Relocatable Word -------------------------------------------------------
+    //  Constants --------------------------------------------------------------
 
-    static class RelocatableWord {
+    public static final int MAX_LOCATION_COUNTER_INDEX = 511;
 
-        final Word36 _baseValue;
-        final RelocatableItem[] _relocatableItems;
 
-        RelocatableWord(
+    //  Inner classes ----------------------------------------------------------
+
+    /**
+     * Contains all the information necessary to describe a single relocatable word
+     */
+    public static class RelocatableWord extends Word36 {
+
+        public final Word36 _baseValue;
+        public final RelocatableItem[] _relocatableItems;
+
+        public RelocatableWord(
             final Word36 baseValue,
             final RelocatableItem[] relocatableItems
         ) {
@@ -28,70 +44,91 @@ public class RelocatableModule {
         }
     }
 
-    static abstract class RelocatableItem {
+    /**
+     * Base class for a single relocatable item
+     */
+    public static abstract class RelocatableItem {
 
-        final int _incrementFactor;
+        public final FieldDescriptor _fieldDescriptor;  //  indicates the bits affected by this relocation
+        public final boolean _subtraction;              //  indicates the relocation is negative (to be subtracted)
 
-        RelocatableItem(
-            final int incrementFactor
+        public RelocatableItem(
+            final FieldDescriptor fieldDescriptor,
+            final boolean subtraction
         ) {
-            _incrementFactor = incrementFactor;
+            _fieldDescriptor = fieldDescriptor;
+            _subtraction = subtraction;
         }
     }
 
-    static class LocationCounterRelocatableItem extends RelocatableItem {
+    /**
+     * Describes a relocatable item which depends upon the mapped location of a particular location counter
+     */
+    public static class LocationCounterRelocatableItem extends RelocatableItem {
 
         final int _locationCounterIndex;
 
-        LocationCounterRelocatableItem(
+        public LocationCounterRelocatableItem(
             final int locationCounterIndex,
-            final int incrementFactor
+            final FieldDescriptor fieldDescriptor,
+            final boolean subtraction
         ) {
-            super(incrementFactor);
+            super(fieldDescriptor, subtraction);
             _locationCounterIndex = locationCounterIndex;
+        }
+
+        @Override
+        public String toString() {
+            return _fieldDescriptor.toString() + (_subtraction ? "-" : "+") + "$(" + _locationCounterIndex + ")";
         }
     }
 
-    static class UndefinedSymbolRelocatableItem extends RelocatableItem {
+    /**
+     * Describes a relocatable item which depends upon the value of a currently-undefined symbol
+     */
+    public static class UndefinedSymbolRelocatableItem extends RelocatableItem {
 
         final String _undefinedSymbol;
 
-        UndefinedSymbolRelocatableItem(
+        public UndefinedSymbolRelocatableItem(
             final String undefinedSymbol,
-            final int incrementFactor
+            final FieldDescriptor fieldDescriptor,
+            final boolean subtraction
         ) {
-            super(incrementFactor);
+            super(fieldDescriptor, subtraction);
             _undefinedSymbol = undefinedSymbol;
+        }
+
+        @Override
+        public String toString() {
+            return _fieldDescriptor.toString() + (_subtraction ? "-" : "+") + _undefinedSymbol;
         }
     }
 
-    //  Location Counter Pools -------------------------------------------------
-
-    static class LocationCounterPool {
-
-    }
-
-    //  Undefined Symbols ------------------------------------------------------
-
-    static class UndefinedSymbol {
+    /**
+     * Represents a symbol which was not defined at the time the source code was converted to relocatable words
+     */
+    public static class UndefinedSymbol {
 
         final String _value;
 
-        UndefinedSymbol(
+        public UndefinedSymbol(
             final String value
         ) {
             _value = value;
         }
     }
 
-    //  Entry points -----------------------------------------------------------
-
-    static abstract class EntryPoint {
+    /**
+     * Describes an 'entry point' - in actuality, this is used for any symbol which is externalized
+     * such that the linker (or any other entity) has access thereto
+     */
+    public static abstract class EntryPoint {
 
         final String _name;
         final long _value;
 
-        EntryPoint(
+        public EntryPoint(
             final String name,
             final long value
         ) {
@@ -100,9 +137,12 @@ public class RelocatableModule {
         }
     }
 
-    static class AbsoluteEntryPoint extends EntryPoint {
+    /**
+     * An absolute value externalized from the generated code
+     */
+    public static class AbsoluteEntryPoint extends EntryPoint {
 
-        AbsoluteEntryPoint(
+        public AbsoluteEntryPoint(
             final String name,
             final long value
         ) {
@@ -110,11 +150,15 @@ public class RelocatableModule {
         }
     }
 
-    static class RelativeEntryPoint extends EntryPoint {
+    /**
+     * A location-counter-based symbol, externalized from the generated code.
+     * It *could* be used as an entry-point for execution.
+     */
+    public static class RelativeEntryPoint extends EntryPoint {
 
         final int _locationCounterIndex;
 
-        RelativeEntryPoint(
+        public RelativeEntryPoint(
             final String name,
             final int value,
             final int locationCounterIndex
@@ -124,18 +168,244 @@ public class RelocatableModule {
         }
     }
 
-    //  Control Information ----------------------------------------------------
+    /**
+     * Base class for all control information entities
+     */
+    public static abstract class ControlInformation {
 
-    static class ControlInformation {
-        //  TODO tbd
+        final int _infoClass;       //  identifies the class of this entry
+        final String _identifier;   //  meaning depends on the subclass - this could be null
+
+        ControlInformation(
+            final int infoClass
+        ) {
+            _infoClass = infoClass;
+            _identifier = null;
+        }
+
+        ControlInformation(
+            final int infoClass,
+            final String identifier
+        ) {
+            _infoClass = infoClass;
+            _identifier = identifier;
+        }
     }
 
-    //  Constants --------------------------------------------------------------
+    /**
+     * INFO 10 control information
+     * Used to describe location counter pools which require extended mode
+     */
+    public static class Info10ControlInformation extends ControlInformation {
 
-    private static final int TEXT_BLOCK_SIZE = 14;
+        final int _locationCounterIndex;
+
+        public Info10ControlInformation(
+            final int locationCounterIndex
+        ) throws ParameterException {
+            super(10);
+            if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
+                throw new ParameterException("Invalid location counter index");
+            }
+            _locationCounterIndex = locationCounterIndex;
+        }
+    }
+
 
     //  Data -------------------------------------------------------------------
 
+    /**
+     * Contains all the control info provided by the entity which is generating the code we contain.
+     * Keyed by the info class value.
+     */
+    private final TreeMap<Integer, List<ControlInformation>> _controlInformation = new TreeMap<>();
+
+    private final TreeMap<String, EntryPoint> _entryPoints = new TreeMap<>();
+
+    /**
+     * Contains all the information necessary to describe the contents of a single location counter pool.
+     * This includes (but is not limited to) the contiguous set of RelocatableWords defined for the pool.
+     * Note that a location counter pool can be empty - as is the case for LC's 0 and 1 (normally, anyway).
+     * Keyed by location counter index
+     */
+    private final TreeMap<Integer, List<RelocatableWord>> _locationCounterPools = new TreeMap<>();
+
+    private int _elementTableFlagBits;
+    private final String _moduleName;
+
+
+    //  Constructor ------------------------------------------------------------
+
+    public RelocatableModule(
+        final String moduleName
+    ) {
+        _moduleName = moduleName;
+    }
+
+
     //  Code -------------------------------------------------------------------
 
+    /**
+     * Adds a ControlInformation object to the current set of such objects
+     * @param infoObject object to be added
+     */
+    public void addControlInformation(
+        final ControlInformation infoObject
+    ) {
+        if (!_controlInformation.containsKey(infoObject._infoClass)) {
+            _controlInformation.put(infoObject._infoClass, new LinkedList<>());
+        }
+        _controlInformation.get(infoObject._infoClass).add(infoObject);
+    }
+
+    /**
+     * Adds a new entry point to the existing entry point table.
+     * If an entry point with the given name already exists, it is overwritten.
+     * Note that this module is case-sensitive; however, the output of this module on disk
+     * is in Fieldata, and therefore is *not* case-sensitive - thus, it is possible to
+     * create an invalid relocatable element by providing two entry points which have
+     * names differing only in case.
+     * @param entryPoint EntryPoint object to be added
+     */
+    public void addEntryPoint(
+        final EntryPoint entryPoint
+    ) {
+        _entryPoints.put(entryPoint._name, entryPoint);
+    }
+
+    /**
+     * Appends a single RelocatableWord to the end of the location counter pool
+     * associated with the given location counter index. If no pool has been
+     * established, one is first created.
+     * @param locationCounterIndex index of the location counter pool
+     * @param word value to be stored
+     */
+    public void appendRelocatableWord(
+        final int locationCounterIndex,
+        final RelocatableWord word
+    ) throws ParameterException {
+        if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
+            throw new ParameterException("Invalid location counter index");
+        }
+        if (!_locationCounterPools.containsKey(locationCounterIndex)) {
+            _locationCounterPools.put(locationCounterIndex, new LinkedList<>());
+        }
+        _locationCounterPools.get(locationCounterIndex).add(word);
+    }
+
+    /**
+     * Sets the entire content of ControlInformation objects for this module.
+     * Any existing content is removed.
+     */
+    public void establishControlInformation(
+        final ControlInformation[] content
+    ) {
+        _controlInformation.clear();
+        for (ControlInformation ci : content) {
+            if (!_controlInformation.containsKey(ci._infoClass)) {
+                _controlInformation.put(ci._infoClass, new LinkedList<>());
+            }
+            _controlInformation.get(ci._infoClass).add(ci);
+        }
+    }
+
+    /**
+     * Establishes the flag bits which will be stored in the element table index
+     * if and when this module is written to an element.
+     * @param flagBits The bits are normally stored in T1 of word +03 in the element table item.
+     *                 Bit 0: table item is deleted
+     *                 Bit 5: Arithmetic Fault non-interrupt mode requested
+     *                 Bit 6: Arithmetic Fault compatibility mode requested
+     *                 Bit 9: Code is third-word sensitive
+     *                 Bit 10: Code is quarter-word sensitive
+     *                 Bit 11: Element is marked in error
+     */
+    public void establishElementTableFlagBits(
+        final int flagBits
+    ) {
+        _elementTableFlagBits = flagBits;
+    }
+
+    /**
+     * Sets the entire content of EntryPoint objects for this module.
+     * Any existing content is removed.
+     */
+    public void establishEntryPoints(
+        final EntryPoint[] content
+    ) {
+        _entryPoints.clear();
+        for (EntryPoint ep : content) {
+            _entryPoints.put(ep._name, ep);
+        }
+    }
+
+    /**
+     * Establishes the entirety of a particular location counter pool.
+     * If a pool already exists for the given lc index, it is replaced.
+     * @param locationCounterIndex index of the location counter pool
+     * @param content content to be established
+     */
+    public void establishLocationCounterPool(
+        final int locationCounterIndex,
+        final RelocatableWord[] content
+    ) throws ParameterException {
+        if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
+            throw new ParameterException("Invalid location counter index");
+        }
+        _locationCounterPools.put(locationCounterIndex, Arrays.asList(content));
+    }
+
+    /**
+     * Retrieves the element table flag bits
+     */
+    public int getElementTableFlagBits() {
+        return _elementTableFlagBits;
+    }
+
+    public RelocatableWord[] getLocationCounterPool(
+        final int locationCounterIndex
+    ) throws ParameterException {
+        if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
+            throw new ParameterException("Invalid location counter index");
+        }
+        return _locationCounterPools.get(locationCounterIndex).toArray(new RelocatableWord[0]);
+    }
+
+    /**
+     * Retrieves the name of this module
+     */
+    public String getModuleName() {
+        return _moduleName;
+    }
+
+    /**
+     * Reads a relocatable element from a program-file-formatted external file.
+     * Only an undeleted element will be read.
+     * @param externalFileName host system name of the external file
+     * @param elementName element name to be located (should not be space-filled)
+     * @param elementVersion version name to be located (should not be space-filled)
+     */
+    public static RelocatableModule readElement(
+        final String externalFileName,
+        final String elementName,
+        final String elementVersion
+    ) {
+        return null;//TODO
+    }
+
+    /**
+     * Writes an element into a program-file-formatted external file.
+     * If an undeleted element with the given name/version combination already exists, it is marked deleted.
+     * If any cycles exist with the given name/version combination, the new cycle number will be set appropriately.
+     * @param externalFileName host system name of the external file
+     * @param elementName element name to be used  (should not be space-filled - will be stored in Fieldata)
+     * @param elementVersion verison name to be used  (should not be space-filled - will be stored in Fieldata)
+     */
+    public void writeElement(
+        final String externalFileName,
+        final String elementName,
+        final String elementVersion
+    ) {
+        //TODO
+    }
 }

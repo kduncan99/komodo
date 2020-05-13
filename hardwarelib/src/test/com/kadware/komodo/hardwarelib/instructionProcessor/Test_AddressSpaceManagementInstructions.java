@@ -17,10 +17,10 @@ import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import com.kadware.komodo.hardwarelib.AbsoluteAddress;
-import com.kadware.komodo.minalib.AbsoluteModule;
-import com.kadware.komodo.minalib.Assembler;
-import com.kadware.komodo.minalib.Linker;
-import com.kadware.komodo.minalib.RelocatableModule;
+import com.kadware.komodo.kex.kasm.AbsoluteModule;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Linker;
+import com.kadware.komodo.kex.kasm.OldRelocatableModule;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -2571,7 +2571,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Special construction of the absolute
         Assembler.Option[] asmOptions = {};
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
+        OldRelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
 
         Linker.LCPoolSpecification[] bank4PoolSpecs = {
             new Linker.LCPoolSpecification(relModule, 1),
@@ -2709,7 +2709,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         //  Special construction of the absolute
         Assembler.Option[] asmOptions = {};
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
+        OldRelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
 
         Linker.LCPoolSpecification[] bank4PoolSpecs = {
             new Linker.LCPoolSpecification(relModule, 1),

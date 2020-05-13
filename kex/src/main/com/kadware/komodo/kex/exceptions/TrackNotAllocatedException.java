@@ -6,7 +6,7 @@ package com.kadware.komodo.kex.exceptions;
 
 import java.io.IOException;
 
-public class TrackNotAllocatedException extends IOException {
+public class TrackNotAllocatedException extends KexIOException {
 
     public TrackNotAllocatedException(
         final long trackId

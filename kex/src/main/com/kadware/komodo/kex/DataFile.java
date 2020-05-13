@@ -7,7 +7,7 @@ package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.exceptions.FileNotOpenException;
-import com.kadware.komodo.kex.exceptions.ParameterException;
+import com.kadware.komodo.kex.exceptions.IOParameterException;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -132,7 +132,7 @@ public class DataFile implements Closeable {
         int length = sectorCount * BYTES_PER_SECTOR;
         int wordCount = sectorCount * WORDS_PER_SECTOR;
         if (buffer.length < wordCount) {
-            throw new ParameterException("Buffer is too small");
+            throw new IOParameterException("Buffer is too small");
         }
 
         byte[] byteBuffer = new byte[length];

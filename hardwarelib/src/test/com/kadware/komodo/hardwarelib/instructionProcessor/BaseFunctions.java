@@ -8,7 +8,7 @@ import com.kadware.komodo.baselib.*;
 import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.minalib.*;
+import com.kadware.komodo.kex.kasm.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -247,7 +247,7 @@ class BaseFunctions {
         final boolean display
     ) {
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
 
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
@@ -307,7 +307,7 @@ class BaseFunctions {
         final boolean display
     ) {
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
 
         List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
@@ -392,7 +392,7 @@ class BaseFunctions {
         final boolean display
     ) {
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
 
         List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
@@ -452,7 +452,7 @@ class BaseFunctions {
             final boolean display
     ) {
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
 
         Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
@@ -515,7 +515,7 @@ class BaseFunctions {
         final boolean display
     ) {
         Assembler asm = new Assembler();
-        RelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
+        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
         assert(relModule != null);
 
         Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
@@ -575,13 +575,13 @@ class BaseFunctions {
         //  Assemble banking source - there will be 8 location counter pools 0 through 7
         //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
         Assembler asm = new Assembler();
-        RelocatableModule bdtModule = asm.assemble("BDT", BDT_CODE, _assemblerDisplayNone);
+        OldRelocatableModule bdtModule = asm.assemble("BDT", BDT_CODE, _assemblerDisplayNone);
         assert(bdtModule != null);
 
         //  Assemble interrupt handler code into a separate relocatable module...
         //  we have no particular expectations with respect to location counters;
         //  For simplicity, we put all of this code into one IH bank - again, see linking step.
-        RelocatableModule ihModule = asm.assemble("IH", IH_CODE, _assemblerDisplayNone);
+        OldRelocatableModule ihModule = asm.assemble("IH", IH_CODE, _assemblerDisplayNone);
         assert(ihModule != null);
 
         //  Now we link - we need to create a separate bank for each of the Bank Descriptor Tables

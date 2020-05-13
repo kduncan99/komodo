@@ -6,7 +6,7 @@ package com.kadware.komodo.kex.exceptions;
 
 import java.io.IOException;
 
-public class FileNotOpenException extends IOException {
+public class FileNotOpenException extends KexIOException {
 
     public FileNotOpenException(
         final String fileName

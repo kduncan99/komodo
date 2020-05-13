@@ -6,7 +6,7 @@ package com.kadware.komodo.kex.exceptions;
 
 import java.io.IOException;
 
-public class FileAlreadyOpenException extends IOException {
+public class FileAlreadyOpenException extends KexIOException {
 
     public FileAlreadyOpenException(
         final String fileName
