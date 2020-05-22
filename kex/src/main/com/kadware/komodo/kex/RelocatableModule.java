@@ -8,9 +8,12 @@ import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Represents a relocatable module in the external (kex) environment.
@@ -66,7 +69,7 @@ public class RelocatableModule {
      */
     public static class LocationCounterRelocatableItem extends RelocatableItem {
 
-        final int _locationCounterIndex;
+        public final int _locationCounterIndex;
 
         public LocationCounterRelocatableItem(
             final int locationCounterIndex,
@@ -88,7 +91,7 @@ public class RelocatableModule {
      */
     public static class UndefinedSymbolRelocatableItem extends RelocatableItem {
 
-        final String _undefinedSymbol;
+        public final String _undefinedSymbol;
 
         public UndefinedSymbolRelocatableItem(
             final String undefinedSymbol,
@@ -121,12 +124,12 @@ public class RelocatableModule {
 
     /**
      * Describes an 'entry point' - in actuality, this is used for any symbol which is externalized
-     * such that the linker (or any other entity) has access thereto
+     * such that the linker (or any other entity) has access thereto.
      */
     public static abstract class EntryPoint {
 
-        final String _name;
-        final long _value;
+        public final String _name;
+        public final long _value;
 
         public EntryPoint(
             final String name,
@@ -156,7 +159,7 @@ public class RelocatableModule {
      */
     public static class RelativeEntryPoint extends EntryPoint {
 
-        final int _locationCounterIndex;
+        public final int _locationCounterIndex;
 
         public RelativeEntryPoint(
             final String name,
@@ -173,8 +176,8 @@ public class RelocatableModule {
      */
     public static abstract class ControlInformation {
 
-        final int _infoClass;       //  identifies the class of this entry
-        final String _identifier;   //  meaning depends on the subclass - this could be null
+        final int _infoClass;           //  identifies the class of this entry
+        final String _identifier;       //  meaning depends on the subclass - this could be null
 
         ControlInformation(
             final int infoClass
@@ -232,14 +235,29 @@ public class RelocatableModule {
 
     private int _elementTableFlagBits;
     private final String _moduleName;
+    private final boolean _afcmClear;               //  AFCM clear is required for the module
+    private final boolean _afcmSet;                 //  AFCM set is required for this module
+    private final boolean _quarterWordSet;          //  This module is QW sensitive
+    private final boolean _thirdWordSet;            //  This module is TW sensitive
+    private final RelativeEntryPoint _startAddress; //  If this module as a program start address
 
 
     //  Constructor ------------------------------------------------------------
 
     public RelocatableModule(
-        final String moduleName
+        final String moduleName,
+        final boolean afcmClear,
+        final boolean afcmSet,
+        final boolean qwSet,
+        final boolean twSet,
+        final RelativeEntryPoint startAddress   // could be null
     ) {
         _moduleName = moduleName;
+        _afcmClear = afcmClear;
+        _afcmSet = afcmSet;
+        _quarterWordSet = qwSet;
+        _thirdWordSet = twSet;
+        _startAddress = startAddress;
     }
 
 
@@ -356,6 +374,13 @@ public class RelocatableModule {
     }
 
     /**
+     * Retrieves an ordered copy of the set of all location counter indices
+     */
+    public Set<Integer> getEstablishedLocationCounterIndices() {
+        return new TreeSet<>(_locationCounterPools.keySet());
+    }
+
+    /**
      * Retrieves the element table flag bits
      */
     public int getElementTableFlagBits() {
@@ -376,6 +401,33 @@ public class RelocatableModule {
      */
     public String getModuleName() {
         return _moduleName;
+    }
+
+    /**
+     * Retrieves entry points (externalized symbols)
+     */
+    public Collection<EntryPoint> getEntryPoints() {
+        return _entryPoints.values();
+    }
+
+    public boolean getAFCMClearSensitivity() {
+        return _afcmClear;
+    }
+
+    public boolean getAFCMSetSensitivity() {
+        return _afcmSet;
+    }
+
+    public boolean getQuarterWordSensitivity() {
+        return _quarterWordSet;
+    }
+
+    public RelativeEntryPoint getStartAddress() {
+        return _startAddress;
+    }
+
+    public boolean getThirdWordSensitivity() {
+        return _thirdWordSet;
     }
 
     /**
@@ -400,11 +452,13 @@ public class RelocatableModule {
      * @param externalFileName host system name of the external file
      * @param elementName element name to be used  (should not be space-filled - will be stored in Fieldata)
      * @param elementVersion verison name to be used  (should not be space-filled - will be stored in Fieldata)
+     * @param format 0 for original format, 1 for new format
      */
     public void writeElement(
         final String externalFileName,
         final String elementName,
-        final String elementVersion
+        final String elementVersion,
+        final int format
     ) {
         //TODO
     }

@@ -4,11 +4,15 @@
 
 package com.kadware.komodo.kex.kasm.expressions.items;
 
-import com.kadware.komodo.kex.kasm.*;
-import com.kadware.komodo.kex.kasm.dictionary.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Form;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
+import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
+import java.util.Arrays;
 
 /**
  * expression item containing zero or more sub-expressions.
@@ -55,34 +59,28 @@ public class ExpressionGroupItem extends OperandItem {
 
     /**
      * Resolves the value of this item.
-     *
-     * @param assembler@return a Value representing this operand
-     * @throws ExpressionException if the underlying sub-expression throws it
      */
     @Override
     public Value resolve(
-        Assembler assembler) throws ExpressionException {
-        return (_isSubExpression ? resolveForCase1(context) : resolveForCase2(context));
+        final Assembler assembler
+    ) throws ExpressionException {
+        return (_isSubExpression ? resolveForCase1(assembler) : resolveForCase2(assembler));
     }
 
     /**
      * Represents a grouped sub-expression.
      * It must have exactly one expression, which we evaluate and propagate the return value
-     * @param context assembler context
-     * @return the resulting value
-     * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase1(
-        final Context context
+        final Assembler assembler
     ) throws ExpressionException {
         if (_expressions.length != 1) {
-            context.appendDiagnostic(
-                new ErrorDiagnostic(_locale,
-                                    "Expected one expression inside the grouping symbols"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(_locale,
+                                                           "Expected one expression inside the grouping symbols"));
             throw new ExpressionException();
         }
 
-        return _expressions[0].evaluate(context);
+        return _expressions[0].evaluate(assembler);
     }
 
     /**
@@ -91,15 +89,12 @@ public class ExpressionGroupItem extends OperandItem {
      * If more than one expression exists, all expressions must be IntegerValue's, and
      * the result is made up of one bitfield per expression, the sizes of which are the
      * dividend of 36 bits by the number of fields.
-     * @param context assembler context
-     * @return The offset and LC reference of the generated word containing the resulting composite values
-     * @throws ExpressionException if something is wrong with the expression
      */
     private Value resolveForCase2(
-        final Context context
+        final Assembler assembler
     ) throws ExpressionException {
         if ((_expressions.length < 1) || (_expressions.length > 36)) {
-            context.appendDiagnostic(
+            assembler.appendDiagnostic(
                 new ErrorDiagnostic(_locale,
                                     "Expected one to thirty-six expressions inside the literal pool specification"));
             throw new ExpressionException();
@@ -109,15 +104,15 @@ public class ExpressionGroupItem extends OperandItem {
         IntegerValue[] values;
         if (_expressions.length == 1) {
             int[] fs = { 36 };
-            IntegerValue[] ivs = { (IntegerValue) _expressions[0].evaluate(context) };
+            IntegerValue[] ivs = { (IntegerValue) _expressions[0].evaluate(assembler) };
             fieldSizes = fs;
             values = ivs;
         } else {
             values = new IntegerValue[_expressions.length];
             for (int ex = 0; ex < _expressions.length; ++ex) {
-                Value v = _expressions[ex].evaluate(context);
+                Value v = _expressions[ex].evaluate(assembler);
                 if (!(v instanceof IntegerValue)) {
-                    context.appendDiagnostic(
+                    assembler.appendDiagnostic(
                         new ErrorDiagnostic(_locale,
                                             "Bit-field values inside the literal pool specifier must be integers."));
                     throw new ExpressionException();
@@ -127,17 +122,15 @@ public class ExpressionGroupItem extends OperandItem {
 
             fieldSizes = new int[_expressions.length];
             int fieldSize = 36 / fieldSizes.length;
-            for (int fx = 0; fx < fieldSizes.length; ++fx) {
-                fieldSizes[fx] = fieldSize;
-            }
+            Arrays.fill(fieldSizes, fieldSize);
         }
 
         Form form = new Form(fieldSizes);
-        return context.generate(_locale.getLineSpecifier(),
-                                context.getCurrentLitLCIndex(),
-                                form,
-                                values,
-                                _locale);
+        return assembler.generate(_locale.getLineSpecifier(),
+                                  assembler.getCurrentLiteralLCIndex(),
+                                  form,
+                                  values,
+                                  _locale);
     }
 
     public void setIsSubExpression(boolean flag) { _isSubExpression = flag; }

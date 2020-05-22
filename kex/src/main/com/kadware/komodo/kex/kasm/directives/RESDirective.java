@@ -4,11 +4,19 @@
 
 package com.kadware.komodo.kex.kasm.directives;
 
-import com.kadware.komodo.kex.kasm.*;
-import com.kadware.komodo.kex.kasm.diagnostics.*;
-import com.kadware.komodo.kex.kasm.dictionary.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.LabelFieldComponents;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.TextLine;
+import com.kadware.komodo.kex.kasm.TextSubfield;
+import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.RelocationDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
+import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
-import com.kadware.komodo.kex.kasm.expressions.*;
+import com.kadware.komodo.kex.kasm.expressions.Expression;
+import com.kadware.komodo.kex.kasm.expressions.ExpressionParser;
 import java.math.BigInteger;
 
 @SuppressWarnings("Duplicates")
@@ -16,55 +24,55 @@ public class RESDirective extends Directive {
 
     @Override
     public void process(
-            final Context context,
+            final Assembler assembler,
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents
     ) {
         if (labelFieldComponents._label != null) {
-            context.establishLabel(labelFieldComponents._labelLocale,
-                                   labelFieldComponents._label,
-                                   labelFieldComponents._labelLevel,
-                                   context.getCurrentLocation());
+            assembler.establishLabel(labelFieldComponents._labelLocale,
+                                     labelFieldComponents._label,
+                                     labelFieldComponents._labelLevel,
+                                     assembler.getCurrentLocation());
         }
 
-        if (extractFields(, context, textLine, true, 3)) {
+        if (extractFields(assembler, textLine, true, 3)) {
             TextSubfield expSubField = _operandField._subfields.get(0);
             String expText = expSubField._text;
             Locale expLocale = expSubField._locale;
             try {
                 ExpressionParser p = new ExpressionParser(expText, expLocale);
-                Expression e = p.parse(context);
+                Expression e = p.parse(assembler);
                 if (e == null) {
-                    context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
+                    assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                     return;
                 }
 
-                Value v = e.evaluate(context);
+                Value v = e.evaluate(assembler);
                 if (!(v instanceof IntegerValue)) {
-                    context.appendDiagnostic(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(expLocale, "Wrong value type for $RES operand"));
                     return;
                 }
 
                 IntegerValue iv = (IntegerValue) v;
                 if (iv._value.get().compareTo(BigInteger.valueOf(0777777)) > 0) {
-                    context.appendDiagnostic(new ValueDiagnostic(expLocale, "Value to large for $RES directive"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(expLocale, "Value to large for $RES directive"));
                     return;
                 }
 
                 long intValue = iv._value.get().longValue();
                 if (iv.hasUndefinedReferences()) {
-                    context.appendDiagnostic(new RelocationDiagnostic(expLocale));
+                    assembler.appendDiagnostic(new RelocationDiagnostic(expLocale));
                 }
 
-                context.advanceLocation(context.getCurrentGenerationLCIndex(), (int) intValue);
+                assembler.advanceLocation(assembler.getCurrentGenerationLCIndex(), (int) intValue);
             } catch (ExpressionException ex) {
-                context.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
+                assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                 return;
             }
 
             if (_operandField._subfields.size() > 1) {
                 Locale loc = _operandField._subfields.get(1)._locale;
-                context.appendDiagnostic(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
+                assembler.appendDiagnostic(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
             }
         }
     }

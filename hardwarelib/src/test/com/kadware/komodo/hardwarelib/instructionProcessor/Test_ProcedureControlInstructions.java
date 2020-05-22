@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 public class Test_ProcedureControlInstructions extends BaseFunctions {
 
     //TODO need unit tests for LBJ, LDJ, LIJ
+    //TODO need unit tests for indirect banks, gate banks, etc
     @Test
     public void callNormal(
     ) throws MachineInterrupt,

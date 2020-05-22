@@ -5,7 +5,11 @@
 package com.kadware.komodo.kex.kasm.expressions.items;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.UndefinedReference;
+import com.kadware.komodo.kex.kasm.UndefinedReferenceToLabel;
+import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.dictionary.BuiltInFunctionValue;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.NodeValue;
@@ -16,7 +20,8 @@ import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Represents a dictionary reference within an expression.
@@ -59,17 +64,15 @@ public class ReferenceItem extends OperandItem {
 
     /**
      * Evaluates the reference based on the dictionary
-     *
-     * @param assembler@return true if successful, false to discontinue evaluation
-     * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     @Override
     public Value resolve(
-        Assembler assembler) throws ExpressionException {
+        final Assembler assembler
+    ) throws ExpressionException {
         try {
             //  Look up the reference in the dictionary.
             //  It must be a particular type of value, else we have an expression exception.
-            Value v = context.getDictionary().getValue(_reference);
+            Value v = assembler.getDictionary().getValue(_reference);
             switch (v.getType()) {
                 case Integer: {
                     //  If this has a location counter index associated with it, we don't want to resolve it yet
@@ -88,24 +91,24 @@ public class ReferenceItem extends OperandItem {
                     }
 
                     //  Otherwise, resolve the label
-                    return resolveLabel(context, v);
+                    return resolveLabel(assembler, v);
                 }
 
                 case FloatingPoint:
                 case String:
-                    return resolveLabel(context, v);
+                    return resolveLabel(assembler, v);
 
                 case BuiltInFunction:
-                    return resolveFunction(context, v);
+                    return resolveFunction(assembler, v);
 
                 case Node:
-                    return resolveNode(context, v);
+                    return resolveNode(assembler, v);
 
                 case UserFunction:
                     //TODO
 
                 default:
-                    context.appendDiagnostic(new ValueDiagnostic(_locale, "Wrong value type referenced"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(_locale, "Wrong value type referenced"));
                     throw new ExpressionException();
             }
         } catch (NotFoundException ex) {
@@ -122,13 +125,13 @@ public class ReferenceItem extends OperandItem {
 
     /**
      * Resolves a value on the assumption it is a function call
-     * @param context context of execution
+     * @param assembler context of execution
      * @param value the value which serves as the source of the resolution
      * @return true if successful, false to discontinue evaluation
      * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     private Value resolveFunction(
-        final Context context,
+        final Assembler assembler,
         final Value value
     ) throws ExpressionException {
         try {
@@ -140,7 +143,7 @@ public class ReferenceItem extends OperandItem {
                 _expressions == null ? new Expression[0] : _expressions
             };
             BuiltInFunction bif = (BuiltInFunction)(ctor.newInstance(ctorArgs));
-            return bif.evaluate(context);
+            return bif.evaluate(assembler);
         } catch (IllegalAccessException
                 | InstantiationException
                 | InvocationTargetException
@@ -151,19 +154,18 @@ public class ReferenceItem extends OperandItem {
 
     /**
      * Resolves a value on the assumption it is a simple label
-     * @param context context of execution
+     * @param assembler context of execution
      * @param value the value which serves as the source of the resolution
      * @return true if successful, false to discontinue evaluation
      * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     private Value resolveLabel(
-        final Context context,
+        final Assembler assembler,
         final Value value
     ) throws ExpressionException {
         if (_expressions != null) {
-            context.appendDiagnostic(
-                new ErrorDiagnostic(_locale,
-                                    "Attempt to apply node selectors to a non-node value"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(_locale,
+                                                           "Attempt to apply node selectors to a non-node value"));
             throw new ExpressionException();
         }
         return value;
@@ -171,32 +173,29 @@ public class ReferenceItem extends OperandItem {
 
     /**
      * Resolves a value on the assumption it is a node.
-     * @param context context of execution
+     * @param assembler context of execution
      * @param value the value which serves as the source of the resolution
      * @return true if successful, false to discontinue evaluation
      * @throws ExpressionException if something goes wrong with the process (we presume something has been posted to diagnostics)
      */
     private Value resolveNode(
-        final Context context,
+        final Assembler assembler,
         final Value value
     ) throws ExpressionException {
         Value currentValue = value;
         if (_expressions != null) {
             for (Expression exp : _expressions) {
                 if (!(currentValue instanceof NodeValue)) {
-                    context.appendDiagnostic(
-                        new ValueDiagnostic(_locale,
-                                            "Arity of reference exceeds arity of node"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(_locale,
+                                                                   "Arity of reference exceeds arity of node"));
                     throw new ExpressionException();
                 }
 
-                Value selectorValue = exp.evaluate(context);
+                Value selectorValue = exp.evaluate(assembler);
                 try {
                     currentValue = ((NodeValue) currentValue).getValue(selectorValue);
                 } catch (NotFoundException ex) {
-                    context.appendDiagnostic(
-                        new ValueDiagnostic(_locale,
-                                            "Selector not found in node reference"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(_locale, "Selector not found in node reference"));
                     throw new ExpressionException();
                 }
             }

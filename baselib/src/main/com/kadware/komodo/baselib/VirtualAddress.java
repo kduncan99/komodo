@@ -1,14 +1,17 @@
-package com.kadware.komodo.hardwarelib;
-
-import com.kadware.komodo.baselib.Word36;
+package com.kadware.komodo.baselib;
 
 /**
  * Represents a virtual address for Basic or Extended mode.
  */
-class VirtualAddress extends Word36 {
+public class VirtualAddress extends Word36 {
 
-    public VirtualAddress()         {}
-    VirtualAddress(long value)      { super(value); }
+    public VirtualAddress() {}
+
+    public VirtualAddress(
+        final long value
+    ) {
+        super(value);
+    }
 
     /**
      * Basic mode initial value constructor

@@ -4,8 +4,14 @@
 
 package com.kadware.komodo.kex.kasm.directives;
 
-import com.kadware.komodo.kex.kasm.*;
-import com.kadware.komodo.kex.kasm.diagnostics.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.LabelFieldComponents;
+import com.kadware.komodo.kex.kasm.LineSpecifier;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.TextField;
+import com.kadware.komodo.kex.kasm.TextLine;
+import com.kadware.komodo.kex.kasm.diagnostics.DuplicateDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.ProcedureValue;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,22 +52,22 @@ public class PROCDirective extends Directive {
      * The label is always assumed to be specified at the outer level, so it does not need to be externalized
      * to be accessible to the assembly which contains it.  Also, we do not (at least currently) implement the
      * $NAME, so it makes no sense to have a $PROC label accessible only within the proc.
-     * @param context reference to the context in which this directive is to execute
+     * @param assembler reference to the assembler in which this directive is to execute
      * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
      *                 make different usages of the fields - and $INFO even uses an extra field
      * @param labelFieldComponents LabelFieldComponents describing the label field on the line containing this directive
      */
     @Override
     public void process(
-            final Context context,
+            final Assembler assembler,
             final TextLine textLine,
             final LabelFieldComponents labelFieldComponents
     ) {
-        if (extractFields(, context, textLine, false, 3)) {
+        if (extractFields(assembler, textLine, false, 3)) {
             List<TextLine> textLines = new LinkedList<>();
             int nesting = 1;
-            while (context.hasNextSourceLine() && (nesting > 0)) {
-                TextLine nestedLine = context.getNextSourceLine();
+            while (assembler.hasNextSourceLine() && (nesting > 0)) {
+                TextLine nestedLine = assembler.getNextSourceLine();
                 nesting += checkNesting(nestedLine);
                 if (nesting > 0) {
                     textLines.add(nestedLine);
@@ -69,24 +75,24 @@ public class PROCDirective extends Directive {
             }
 
             if (nesting > 0) {
-                Locale loc = new Locale(new LineSpecifier(0, context.sourceLineCount() + 1), 1);
-                context.appendDiagnostic((new ErrorDiagnostic(loc,
-                                                              "Reached end of file before end of proc")));
+                Locale loc = new Locale(new LineSpecifier(0, assembler.sourceLineCount() + 1), 1);
+                assembler.appendDiagnostic((new ErrorDiagnostic(loc,
+                                                                "Reached end of file before end of proc")));
             }
 
             ProcedureValue procValue = new ProcedureValue.Builder().setValue(textLines.toArray(new TextLine[0]))
                                                                    .build();
             if (labelFieldComponents._label == null) {
                 Locale loc = new Locale(textLine._lineSpecifier, 1);
-                context.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
+                assembler.appendDiagnostic(new ErrorDiagnostic(loc, "Label required for $PROC directive"));
                 return;
             }
 
-            if (context.getDictionary().hasValue(labelFieldComponents._label)) {
+            if (assembler.getDictionary().hasValue(labelFieldComponents._label)) {
                 Locale loc = new Locale(textLine._lineSpecifier, 1);
-                context.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
+                assembler.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
             } else {
-                context.getDictionary().addValue(labelFieldComponents._labelLevel,
+                assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
                                                  labelFieldComponents._label,
                                                  procValue);
             }

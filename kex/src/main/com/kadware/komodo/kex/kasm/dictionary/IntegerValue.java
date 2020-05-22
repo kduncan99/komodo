@@ -209,7 +209,7 @@ public class IntegerValue extends Value {
         if (resultForm == null) {
             DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(operand1._value.get(), operand2._value.get());
             if (sar._overflow) {
-                diagnostics.append(new TruncationDiagnostic(locale, "Result of addition is truncated"));
+                diagnostics.append(new TruncationDiagnostic(locale, "LinkResult of addition is truncated"));
             }
             biResult = sar._value;
         } else {
@@ -227,7 +227,7 @@ public class IntegerValue extends Value {
                 BigInteger temp2 = DoubleWord36.extendSign(bi2.shiftRight(shift).and(mask), fd._fieldSize);
                 DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(temp1, temp2);
                 if (sar._overflow || !((sar._value.and(notMask)).equals(BigInteger.ZERO))) {
-                    String msg = String.format("Result of addition is truncated in field %s", fd.toString());
+                    String msg = String.format("LinkResult of addition is truncated in field %s", fd.toString());
                     diagnostics.append(new TruncationDiagnostic(locale, msg));
                 }
 
@@ -372,7 +372,7 @@ public class IntegerValue extends Value {
 
         DoubleWord36.MultiplicationResult mr = operand1._value.multiply(operand2._value);
         if (mr._overflow) {
-            diagnostics.append(new TruncationDiagnostic(locale, "Result of multiplication too large"));
+            diagnostics.append(new TruncationDiagnostic(locale, "LinkResult of multiplication too large"));
         }
 
         DoubleWord36 dw = new DoubleWord36(mr._value);

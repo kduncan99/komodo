@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,11 @@ import java.util.TreeMap;
 /**
  * Assembler for minalib
  */
+//TODO Move inner classes out
+//TODO Determine start address (requires $END - note that START$ is for generating object modules)
+//TODO Rework display, make it more like Linker
+//TODO Add SILENT option for no display at all
+//TODO sometime in the far future, allow kasm to create object modules
 @SuppressWarnings("Duplicates")
 public class Assembler {
 
@@ -53,6 +57,23 @@ public class Assembler {
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
 
     /**
+     * Describes the entry point for the start of a program
+     */
+    private static class ProgramStart {
+
+        final int _locationCounterIndex;
+        final int _locationCounterOffset;
+
+        ProgramStart(
+            final int locationCounterIndex,
+            final int locationCounterOffset
+        ) {
+            _locationCounterIndex = locationCounterIndex;
+            _locationCounterOffset = locationCounterOffset;
+        }
+    }
+
+    /**
      * Entities which are not local to a particular assembler level
      */
     private static class GlobalData {
@@ -66,6 +87,8 @@ public class Assembler {
         boolean _arithmeticFaultNonInterruptMode = false;
         boolean _quarterWordMode = false;
         boolean _thirdWordMode = false;
+
+        ProgramStart _programStart = null;
 
         //  Map of LC indices to the various GeneratedPool objects...
         //  Keyed by location counter index.
@@ -124,8 +147,8 @@ public class Assembler {
 
     private CharacterMode _characterMode = CharacterMode.ASCII;
     private CodeMode _codeMode = CodeMode.Basic;
-    private int _currentGenerationLCIndex = 1;
-    private int _currentLitLCIndex = 0;
+    private int _currentGenerationLCIndex = 0;
+    private int _currentLiteralLCIndex = 0;
     private int _nextSourceIndex = 0;
 
     private final GlobalData _global;
@@ -205,77 +228,8 @@ public class Assembler {
 
 
     //  ---------------------------------------------------------------------------------------------------------------------------
-    //  Methods
+    //  Private methods
     //  ---------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Advances the offset of a particular location counter by the given count value
-     * @param lcIndex index of the location counter
-     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
-     */
-    public void advanceLocation(
-        final int lcIndex,
-        final int count
-    ) {
-        obtainPool(lcIndex).advance(count);
-    }
-
-    /**
-     * Convenience method - adds the diagnostic to the master Diagnostics object as well as the affected
-     * top-level TextLine()
-     * @param diag diagnostic to be added
-     */
-    public void appendDiagnostic(
-        final Diagnostic diag
-    ) {
-        _global._diagnostics.append(diag);
-        getTopLevelTextLine()._diagnostics.add(diag);
-    }
-
-    /**
-     * Main code for the assembly process
-     * @return Result object describing the results of the assembly process
-     */
-    public Result assemble() {
-        _global._outputStream.println("KASM ---------------------------------------------------");
-        _global._outputStream.println("Assembling module " + _moduleName);
-
-        while (_nextSourceIndex < _sourceLines.length) {
-            TextLine textLine = _sourceLines[_nextSourceIndex++];
-            assembleTextLine(textLine);
-            if (_global._diagnostics.hasFatal()) {
-                displayResults(false);
-                return new Result(_global._diagnostics, _sourceLines);
-            }
-        }
-
-        resolveReferences();
-        RelocatableModule module = createRelocatableModule(_moduleName);
-
-        if (_global._options.contains(Option.EMIT_GENERATED_CODE)
-            || _global._options.contains(Option.EMIT_SOURCE)) {
-            displayResults(_global._options.contains(Option.EMIT_GENERATED_CODE));
-        }
-        if (_global._options.contains(Option.EMIT_MODULE_SUMMARY)) {
-            displayModuleSummary(module);
-        }
-        if (_global._options.contains(Option.EMIT_DICTIONARY)) {
-            displayDictionary(_dictionary);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
-        for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
-            if (entry.getValue() > 0) {
-                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
-            }
-        }
-        _global._outputStream.println(sb.toString());
-
-        _global._outputStream.println("Assembly Ends -------------------------------------------------------");
-
-        return new Result(module, _global._diagnostics, _sourceLines);
-    }
 
     /**
      * Assemble a single TextLine object
@@ -356,14 +310,26 @@ public class Assembler {
     }
 
     /**
-     * Generates the OldRelocatableModule based on the various internal structures we've built up
+     * Generates the RelocatableModule based on the various internal structures we've built up
      * @param moduleName name of the module
      * @return RelocatableModule object unless there's a fatal error (then we return null)
      */
     private RelocatableModule createRelocatableModule(
         final String moduleName
     ) {
-        RelocatableModule module = new RelocatableModule(moduleName);
+        RelocatableModule.RelativeEntryPoint entryPoint = null;
+        if (_global._programStart != null) {
+            entryPoint = new RelocatableModule.RelativeEntryPoint("START$",
+                                                                  _global._programStart._locationCounterOffset,
+                                                                  _global._programStart._locationCounterIndex);
+        }
+        RelocatableModule module = new RelocatableModule(moduleName,
+                                                         _global._arithmeticFaultNonInterruptMode,
+                                                         _global._arithmeticFaultCompatibilityMode,
+                                                         _global._quarterWordMode,
+                                                         _global._thirdWordMode,
+                                                         entryPoint);
+
         try {
             //  Create location counter pools and info 10 items
             for (Map.Entry<Integer, GeneratedPool> entry : _global._generatedPools.entrySet()) {
@@ -523,101 +489,6 @@ public class Assembler {
     }
 
     /**
-     * Establishes a label value in the current (or a super-ordinate) dictionary
-     * @param locale locale of label (for posting diagnostics)
-     * @param label label
-     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
-     * @param value value to be associated with the level
-     */
-    public void establishLabel(
-        final Locale locale,
-        final String label,
-        final int labelLevel,
-        final Value value
-    ) {
-        if (_dictionary.hasValue(label)) {
-            appendDiagnostic(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
-        } else {
-            _dictionary.addValue(labelLevel, label, value);
-        }
-    }
-
-    /**
-     * Generates a word with a form attached for a given location counter index and offset,
-     * and places it into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
-     * The values parameter is an array with as many entities as there are fields in the form.
-     * Each value must fit within the size of that value's respective field.
-     * The overall integer portion of the generated value is the respective component integer values
-     * shifted into their field positions, and or'd together.
-     * The individual values should not have forms attached, but they may have undefined references.
-     * All such undefined references are adjusted to match the field description of the particular
-     * field to which the reference applies.
-     * @param lineSpecifier location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param form form describing the fields for which values are specified in the values parameter
-     * @param values array of component values, each with potential undefined refereces but no attached forms
-     * @return value indicating the location which applies to the word which was just generated
-     */
-    public IntegerValue generate(
-        final LineSpecifier lineSpecifier,
-        final int lcIndex,
-        final Form form,
-        final IntegerValue[] values,
-        final Locale locale
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-        if (form._fieldSizes.length != values.length) {
-            appendDiagnostic(new FormDiagnostic(locale,
-                                                "Contradiction between number of values and number of fields in form"));
-            return new IntegerValue.Builder().setValue(lcOffset).build();
-        }
-
-        BigInteger genInt = BigInteger.ZERO;
-        int bit = form._leftSlop;
-        List<UndefinedReference> newRefs = new LinkedList<>();
-        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
-            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
-            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
-
-            BigInteger fieldValue = values[fx]._value.get();
-            boolean trunc;
-            if (values[fx]._value.isPositive()) {
-                trunc = !fieldValue.and(mask).equals(fieldValue);
-            } else {
-                trunc = !fieldValue.and(mask).equals(DoubleWord36.SHORT_BIT_MASK);
-            }
-
-            if (trunc) {
-                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
-                appendDiagnostic(new TruncationDiagnostic(locale, msg));
-            }
-
-            genInt = genInt.or(values[fx]._value.get().and(mask));
-            for (UndefinedReference ur : values[fx]._references) {
-                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
-            }
-
-            bit += form._fieldSizes[fx];
-        }
-
-        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(genInt))
-                                                    .setForm(form)
-                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
-                                                    .build();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
-        gp.store(gw);
-        gw._topLevelTextLine._generatedWords.add(gw);
-
-        UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
-                                         .setReferences(lcRefs)
-                                         .build();
-    }
-
-    /**
      * Generates the multiple words for a given location counter index and offset,
      * and places them into the appropriate location counter pool within the given context.
      * Also associates it with the current top-level text line.
@@ -745,70 +616,6 @@ public class Assembler {
         generate(locale.getLineSpecifier(), _currentGenerationLCIndex, slice._array);
     }
 
-    public boolean getArithmeticFaultCompatibilityMode() {
-        return _global._arithmeticFaultCompatibilityMode;
-    }
-
-    public boolean getArithmeticFaultNonInterruptMode() {
-        return _global._arithmeticFaultNonInterruptMode;
-    }
-
-    /**
-     * Retrieves the current character mode for this (sub)assembly
-     */
-    public CharacterMode getCharacterMode() { return _characterMode; }
-
-    /**
-     * Retrieves the current code mode for this (sub)assembly
-     */
-    public CodeMode getCodeMode() {
-        return _codeMode;
-    }
-
-    /**
-     * Retrieves the current LC index for code generation for this (sub)assembly
-     */
-    public int getCurrentGenerationLCIndex() {
-        return _currentGenerationLCIndex;
-    }
-
-    /**
-     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
-     * current generation location counter (e.g., for interpreting '$' or whatever).
-     * @return IntegerValue object as described
-     */
-    public IntegerValue getCurrentLocation(
-    ) {
-        GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
-        int lcOffset = gp.getNextOffset();
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
-                                                                              false,
-                                                                              _currentGenerationLCIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
-                                         .setReferences(refs)
-                                         .build();
-    }
-
-    /**
-     * Retrieves the global Diagnostics object
-     */
-    public Diagnostics getDiagnostics() { return _global._diagnostics; }
-
-    /**
-     * Retrieves the dictionary for this (sub)assembler
-     */
-    public Dictionary getDictionary() { return _dictionary; }
-
-    /**
-     * Retrieves the requires-quarter-word-mode setting
-     */
-    public boolean getQuarterWordMode() { return _global._quarterWordMode; }
-
-    /**
-     * Retrieves the requires-third-word-mode setting
-     */
-    public boolean getThirdWordMode() { return _global._thirdWordMode; }
-
     /**
      * Determines the zero-level text line involved in this particular retrieval
      */
@@ -881,23 +688,6 @@ public class Assembler {
         }
 
         return new LabelFieldComponents(lcIndex, lcLocale, label, labelLevel, labelLocale);
-    }
-
-    /**
-     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
-     * If such a pool does not exist, it is created.
-     * @param lcIndex index of the desired pool
-     * @return reference to the pool
-     */
-    public GeneratedPool obtainPool(
-        final int lcIndex
-    ) {
-        GeneratedPool gp = _global._generatedPools.get(lcIndex);
-        if (gp == null) {
-            gp = new GeneratedPool();
-            _global._generatedPools.put(lcIndex, gp);
-        }
-        return gp;
     }
 
     /**
@@ -1599,6 +1389,276 @@ public class Assembler {
         }
     }
 
+    //  ---------------------------------------------------------------------------------------------------------------------------
+    //  Public methods
+    //  ---------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Advances the offset of a particular location counter by the given count value
+     * @param lcIndex index of the location counter
+     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
+     */
+    public void advanceLocation(
+        final int lcIndex,
+        final int count
+    ) {
+        obtainPool(lcIndex).advance(count);
+    }
+
+    /**
+     * Convenience method - adds the diagnostic to the master Diagnostics object as well as the affected
+     * top-level TextLine()
+     * @param diag diagnostic to be added
+     */
+    public void appendDiagnostic(
+        final Diagnostic diag
+    ) {
+        _global._diagnostics.append(diag);
+        getTopLevelTextLine()._diagnostics.add(diag);
+    }
+
+    /**
+     * Main code for the assembly process
+     * @return LinkResult object describing the results of the assembly process
+     */
+    public Result assemble() {
+        _global._outputStream.println("KASM ---------------------------------------------------");
+        _global._outputStream.println("Assembling module " + _moduleName);
+
+        while (hasNextSourceLine()) {
+            TextLine textLine = getNextSourceLine();
+            assembleTextLine(textLine);
+            if (_global._diagnostics.hasFatal()) {
+                displayResults(false);
+                return new Result(_global._diagnostics, _sourceLines);
+            }
+        }
+
+        resolveReferences();
+        RelocatableModule module = createRelocatableModule(_moduleName);
+
+        if (_global._options.contains(Option.EMIT_GENERATED_CODE)
+            || _global._options.contains(Option.EMIT_SOURCE)) {
+            displayResults(_global._options.contains(Option.EMIT_GENERATED_CODE));
+        }
+        if (_global._options.contains(Option.EMIT_MODULE_SUMMARY)) {
+            displayModuleSummary(module);
+        }
+        if (_global._options.contains(Option.EMIT_DICTIONARY)) {
+            displayDictionary(_dictionary);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
+        for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
+            if (entry.getValue() > 0) {
+                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+            }
+        }
+        _global._outputStream.println(sb.toString());
+
+        _global._outputStream.println("Assembly Ends -------------------------------------------------------");
+
+        return new Result(module, _global._diagnostics, _sourceLines);
+    }
+
+    /**
+     * Establishes a label value in the current (or a super-ordinate) dictionary
+     * @param locale locale of label (for posting diagnostics)
+     * @param label label
+     * @param labelLevel label level - 0 to put it in the dictionary, 1 for the next highest, etc
+     * @param value value to be associated with the level
+     */
+    public void establishLabel(
+        final Locale locale,
+        final String label,
+        final int labelLevel,
+        final Value value
+    ) {
+        if (_dictionary.hasValue(label)) {
+            appendDiagnostic(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
+        } else {
+            _dictionary.addValue(labelLevel, label, value);
+        }
+    }
+
+    /**
+     * Generates a word with a form attached for a given location counter index and offset,
+     * and places it into the appropriate location counter pool within the given context.
+     * Also associates it with the current top-level text line.
+     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
+     * The values parameter is an array with as many entities as there are fields in the form.
+     * Each value must fit within the size of that value's respective field.
+     * The overall integer portion of the generated value is the respective component integer values
+     * shifted into their field positions, and or'd together.
+     * The individual values should not have forms attached, but they may have undefined references.
+     * All such undefined references are adjusted to match the field description of the particular
+     * field to which the reference applies.
+     * @param lineSpecifier location of the text entity generating this word
+     * @param lcIndex index of the location counter pool where-in the value is to be placed
+     * @param form form describing the fields for which values are specified in the values parameter
+     * @param values array of component values, each with potential undefined refereces but no attached forms
+     * @return value indicating the location which applies to the word which was just generated
+     */
+    public IntegerValue generate(
+        final LineSpecifier lineSpecifier,
+        final int lcIndex,
+        final Form form,
+        final IntegerValue[] values,
+        final Locale locale
+    ) {
+        GeneratedPool gp = obtainPool(lcIndex);
+        int lcOffset = gp.getNextOffset();
+        if (form._fieldSizes.length != values.length) {
+            appendDiagnostic(new FormDiagnostic(locale,
+                                                "Contradiction between number of values and number of fields in form"));
+            return new IntegerValue.Builder().setValue(lcOffset).build();
+        }
+
+        BigInteger genInt = BigInteger.ZERO;
+        int bit = form._leftSlop;
+        List<UndefinedReference> newRefs = new LinkedList<>();
+        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
+            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
+            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
+
+            BigInteger fieldValue = values[fx]._value.get();
+            boolean trunc;
+            if (values[fx]._value.isPositive()) {
+                trunc = !fieldValue.and(mask).equals(fieldValue);
+            } else {
+                trunc = !fieldValue.and(mask).equals(DoubleWord36.SHORT_BIT_MASK);
+            }
+
+            if (trunc) {
+                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
+                appendDiagnostic(new TruncationDiagnostic(locale, msg));
+            }
+
+            genInt = genInt.or(values[fx]._value.get().and(mask));
+            for (UndefinedReference ur : values[fx]._references) {
+                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
+            }
+
+            bit += form._fieldSizes[fx];
+        }
+
+        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(genInt))
+                                                    .setForm(form)
+                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .build();
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
+        gp.store(gw);
+        gw._topLevelTextLine._generatedWords.add(gw);
+
+        UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(lcRefs)
+                                         .build();
+    }
+
+    public boolean getArithmeticFaultCompatibilityMode() {
+        return _global._arithmeticFaultCompatibilityMode;
+    }
+
+    public boolean getArithmeticFaultNonInterruptMode() {
+        return _global._arithmeticFaultNonInterruptMode;
+    }
+
+    /**
+     * Retrieves the current character mode for this (sub)assembly
+     */
+    public CharacterMode getCharacterMode() { return _characterMode; }
+
+    /**
+     * Retrieves the current code mode for this (sub)assembly
+     */
+    public CodeMode getCodeMode() {
+        return _codeMode;
+    }
+
+    /**
+     * Retrieves the current LC index for code generation for this (sub)assembly
+     */
+    public int getCurrentGenerationLCIndex() {
+        return _currentGenerationLCIndex;
+    }
+
+    /**
+     * Retrieves the current LC index for code generation for this (sub)assembly
+     */
+    public int getCurrentLiteralLCIndex() {
+        return _currentLiteralLCIndex;
+    }
+
+    /**
+     * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
+     * current generation location counter (e.g., for interpreting '$' or whatever).
+     * @return IntegerValue object as described
+     */
+    public IntegerValue getCurrentLocation(
+    ) {
+        GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
+        int lcOffset = gp.getNextOffset();
+        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                                              false,
+                                                                              _currentGenerationLCIndex) };
+        return new IntegerValue.Builder().setValue(lcOffset)
+                                         .setReferences(refs)
+                                         .build();
+    }
+
+    /**
+     * Retrieves the global Diagnostics object
+     */
+    public Diagnostics getDiagnostics() { return _global._diagnostics; }
+
+    /**
+     * Retrieves the dictionary for this (sub)assembler
+     */
+    public Dictionary getDictionary() { return _dictionary; }
+
+    /**
+     * Retrieves the next source line from the source array
+     */
+    public TextLine getNextSourceLine() {
+        return _sourceLines[_nextSourceIndex++];
+    }
+
+    /**
+     * Retrieves the requires-quarter-word-mode setting
+     */
+    public boolean getQuarterWordMode() { return _global._quarterWordMode; }
+
+    /**
+     * Retrieves the requires-third-word-mode setting
+     */
+    public boolean getThirdWordMode() { return _global._thirdWordMode; }
+
+    /**
+     * Indicates whether there is a next source line
+     */
+    public boolean hasNextSourceLine() {
+        return _nextSourceIndex < _sourceLines.length;
+    }
+
+    /**
+     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
+     * If such a pool does not exist, it is created.
+     * @param lcIndex index of the desired pool
+     * @return reference to the pool
+     */
+    public GeneratedPool obtainPool(
+        final int lcIndex
+    ) {
+        GeneratedPool gp = _global._generatedPools.get(lcIndex);
+        if (gp == null) {
+            gp = new GeneratedPool();
+            _global._generatedPools.put(lcIndex, gp);
+        }
+        return gp;
+    }
+
     /**
      * Sets AFCM requirement to on
      */
@@ -1646,7 +1706,7 @@ public class Assembler {
     public void setCurrentLitLCIndex(
         final int index
     ) {
-        _currentLitLCIndex = index;
+        _currentLiteralLCIndex = index;
     }
 
     public void setQuarterWordMode() {
@@ -1655,5 +1715,12 @@ public class Assembler {
 
     public void setThirdWordMode() {
         _global._thirdWordMode = true;
+    }
+
+    /**
+     * Retrieves the number of lines of source
+     */
+    public int sourceLineCount() {
+        return _sourceLines.length;
     }
 }

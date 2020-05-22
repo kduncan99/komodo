@@ -6,6 +6,10 @@ package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.kex.klink.BankDeclaration;
+import com.kadware.komodo.kex.klink.LCPoolSpecification;
+import com.kadware.komodo.kex.klink.LinkOption;
+import com.kadware.komodo.kex.klink.Linker;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -14,37 +18,37 @@ public class Test_Linker {
     @Test
     public void test_empty() {
 
-        Linker.BankDeclaration[] bds = {
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 010))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                .setInitialBaseRegister(0)
-                                                .setBankLevel(02)
-                                                .setBankDescriptorIndex(04)
-                                                .setBankName("I1")
-                                                .setPoolSpecifications(new Linker.LCPoolSpecification[0])
-                                                .setStartingAddress(01000)
+        BankDeclaration[] bds = {
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 010))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                         .setInitialBaseRegister(0)
+                                         .setBankLevel(02)
+                                         .setBankDescriptorIndex(04)
+                                         .setBankName("I1")
+                                         .setPoolSpecifications(new LCPoolSpecification[0])
+                                         .setStartingAddress(01000)
                                                 .build(),
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 077))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                                .setInitialBaseRegister(2)
-                                                .setBankLevel(04)
-                                                .setBankDescriptorIndex(05)
-                                                .setBankName("D1")
-                                                .setPoolSpecifications(new Linker.LCPoolSpecification[0])
-                                                .setStartingAddress(02000)
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 077))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setInitialBaseRegister(2)
+                                         .setBankLevel(04)
+                                         .setBankDescriptorIndex(05)
+                                         .setBankName("D1")
+                                         .setPoolSpecifications(new LCPoolSpecification[0])
+                                         .setStartingAddress(02000)
                                                 .build(),
         };
 
-        Linker.Option[] options = {
-            Linker.Option.OPTION_NO_ENTRY_POINT,
-            Linker.Option.OPTION_EMIT_SUMMARY,
-            Linker.Option.OPTION_EMIT_DICTIONARY
+        LinkOption[] options = {
+            LinkOption.NO_ENTRY_POINT,
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_DICTIONARY
         };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
+        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertNull(abs._entryPointAddress);
@@ -102,45 +106,45 @@ public class Test_Linker {
 
         Assembler.Result result = Assembler.assemble("TESTREL", source);
 
-        Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(result._relocatableModule, 1),
+        LCPoolSpecification[] ibankPoolSpecs = {
+            new LCPoolSpecification(result._relocatableModule, 1),
         };
-        Linker.LCPoolSpecification[] dbankPoolSpecs = {
-            new Linker.LCPoolSpecification(result._relocatableModule, 0),
+        LCPoolSpecification[] dbankPoolSpecs = {
+            new LCPoolSpecification(result._relocatableModule, 0),
         };
 
-        Linker.BankDeclaration[] bds = {
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                .setInitialBaseRegister(0)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(04)
-                                                .setBankName("I1")
-                                                .setPoolSpecifications(ibankPoolSpecs)
-                                                .setStartingAddress(01000)
+        BankDeclaration[] bds = {
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                         .setInitialBaseRegister(0)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(04)
+                                         .setBankName("I1")
+                                         .setPoolSpecifications(ibankPoolSpecs)
+                                         .setStartingAddress(01000)
                                                 .build(),
 
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                                .setInitialBaseRegister(2)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(05)
-                                                .setBankName("D1")
-                                                .setPoolSpecifications(dbankPoolSpecs)
-                                                .setStartingAddress(01000)
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setInitialBaseRegister(2)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(05)
+                                         .setBankName("D1")
+                                         .setPoolSpecifications(dbankPoolSpecs)
+                                         .setStartingAddress(01000)
                                                 .build(),
         };
 
-        Linker.Option[] options = {
-            Linker.Option.OPTION_EMIT_SUMMARY,
-            Linker.Option.OPTION_EMIT_DICTIONARY,
-            Linker.Option.OPTION_EMIT_GENERATED_CODE,
-        };
+        LinkOption[] options = {
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_DICTIONARY,
+            LinkOption.EMIT_GENERATED_CODE,
+            };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, 32, options);
+        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 32, options);
 
         assertNotNull(abs);
         assertEquals(3, abs._loadableBanks.size());
@@ -180,45 +184,45 @@ public class Test_Linker {
 
         Assembler.Result result = Assembler.assemble("TESTREL", source);
 
-        Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(result._relocatableModule, 1),
+        LCPoolSpecification[] ibankPoolSpecs = {
+            new LCPoolSpecification(result._relocatableModule, 1),
         };
-        Linker.LCPoolSpecification[] dbankPoolSpecs = {
-            new Linker.LCPoolSpecification(result._relocatableModule, 0),
+        LCPoolSpecification[] dbankPoolSpecs = {
+            new LCPoolSpecification(result._relocatableModule, 0),
         };
 
-        Linker.BankDeclaration[] bds = {
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                .setInitialBaseRegister(12)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(04)
-                                                .setBankName("I1")
-                                                .setPoolSpecifications(ibankPoolSpecs)
-                                                .setStartingAddress(022000)
+        BankDeclaration[] bds = {
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                         .setInitialBaseRegister(12)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(04)
+                                         .setBankName("I1")
+                                         .setPoolSpecifications(ibankPoolSpecs)
+                                         .setStartingAddress(022000)
                 .build(),
 
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                                .setInitialBaseRegister(13)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(05)
-                                                .setBankName("D1")
-                                                .setPoolSpecifications(dbankPoolSpecs)
-                                                .setStartingAddress(040000)
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setInitialBaseRegister(13)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(05)
+                                         .setBankName("D1")
+                                         .setPoolSpecifications(dbankPoolSpecs)
+                                         .setStartingAddress(040000)
                 .build(),
         };
 
-        Linker.Option[] options = {
-            Linker.Option.OPTION_EMIT_SUMMARY,
-            Linker.Option.OPTION_EMIT_DICTIONARY,
-            Linker.Option.OPTION_EMIT_GENERATED_CODE,
-        };
+        LinkOption[] options = {
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_DICTIONARY,
+            LinkOption.EMIT_GENERATED_CODE,
+            };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
+        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertEquals(2, abs._loadableBanks.size());
@@ -266,45 +270,45 @@ public class Test_Linker {
         Assembler.Result result2 = Assembler.assemble("TESTREL2", source2);
         Assembler.Result result3 = Assembler.assemble("TESTREL3", source3);
 
-        Linker.LCPoolSpecification[] ibankPoolSpecs = {
-            new Linker.LCPoolSpecification(result3._relocatableModule, 1),
-            new Linker.LCPoolSpecification(result2._relocatableModule, 1),
-            new Linker.LCPoolSpecification(result1._relocatableModule, 1),
+        LCPoolSpecification[] ibankPoolSpecs = {
+            new LCPoolSpecification(result3._relocatableModule, 1),
+            new LCPoolSpecification(result2._relocatableModule, 1),
+            new LCPoolSpecification(result1._relocatableModule, 1),
         };
-        Linker.LCPoolSpecification[] dbankPoolSpecs = { };
+        LCPoolSpecification[] dbankPoolSpecs = { };
 
-        Linker.BankDeclaration[] bds = {
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-                                                .setInitialBaseRegister(12)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(04)
-                                                .setBankName("I1")
-                                                .setPoolSpecifications(ibankPoolSpecs)
-                                                .setStartingAddress(022000)
+        BankDeclaration[] bds = {
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
+                                         .setInitialBaseRegister(12)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(04)
+                                         .setBankName("I1")
+                                         .setPoolSpecifications(ibankPoolSpecs)
+                                         .setStartingAddress(022000)
                 .build(),
 
-            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-                                                .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-                                                .setInitialBaseRegister(13)
-                                                .setBankLevel(0)
-                                                .setBankDescriptorIndex(05)
-                                                .setBankName("D1")
-                                                .setPoolSpecifications(dbankPoolSpecs)
-                                                .setStartingAddress(040000)
+            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setInitialBaseRegister(13)
+                                         .setBankLevel(0)
+                                         .setBankDescriptorIndex(05)
+                                         .setBankName("D1")
+                                         .setPoolSpecifications(dbankPoolSpecs)
+                                         .setStartingAddress(040000)
                 .build(),
         };
 
-        Linker.Option[] options = {
-            Linker.Option.OPTION_EMIT_SUMMARY,
-            Linker.Option.OPTION_EMIT_DICTIONARY,
-            Linker.Option.OPTION_EMIT_GENERATED_CODE,
-        };
+        LinkOption[] options = {
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_DICTIONARY,
+            LinkOption.EMIT_GENERATED_CODE,
+            };
 
         Linker linker = new Linker();
-        AbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
+        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
 
         assertNotNull(abs);
         assertEquals(2, abs._loadableBanks.size());
