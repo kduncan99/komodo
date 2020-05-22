@@ -24,27 +24,29 @@ public class MultiplicationOperator extends ArithmeticOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, context.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, true, assembler.getDiagnostics());
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
                 //  both ops are integer
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                opResult = IntegerValue.multiply(iopLeft, iopRight, _locale, context.getDiagnostics());
+                opResult = IntegerValue.multiply(iopLeft, iopRight, _locale, assembler.getDiagnostics());
             } else {
                 //  both ops are floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                opResult = FloatingPointValue.multiply(iopLeft, iopRight, _locale, context.getDiagnostics());
+                opResult = FloatingPointValue.multiply(iopLeft, iopRight, _locale, assembler.getDiagnostics());
             }
 
             valueStack.push(opResult);

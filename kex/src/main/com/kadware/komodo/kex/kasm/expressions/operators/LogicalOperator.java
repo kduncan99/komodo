@@ -4,7 +4,8 @@
 
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
-import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
@@ -19,13 +20,15 @@ public abstract class LogicalOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException;
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException;
 
     /**
      * Retrieves the type of this operator
@@ -40,13 +43,13 @@ public abstract class LogicalOperator extends Operator {
      */
     protected Value[] getOperands(
         final Stack<Value> valueStack,
-        final Context context
+        final Assembler assembler
     ) throws ExpressionException {
         Value[] result = getOperands(valueStack);
         boolean error = false;
         for (int vx = 0; vx < result.length; ++vx) {
             if (!(result[vx] instanceof IntegerValue)) {
-                postValueDiagnostic((result.length > 1) && (vx == 0), context.getDiagnostics());
+                postValueDiagnostic((result.length > 1) && (vx == 0), assembler.getDiagnostics());
                 error = true;
             }
         }

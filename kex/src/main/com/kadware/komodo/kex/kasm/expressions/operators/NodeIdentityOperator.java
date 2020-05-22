@@ -4,8 +4,12 @@
 
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
-import com.kadware.komodo.kex.kasm.*;
-import com.kadware.komodo.kex.kasm.dictionary.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
+import com.kadware.komodo.kex.kasm.dictionary.NodeValue;
+import com.kadware.komodo.kex.kasm.dictionary.Value;
+import com.kadware.komodo.kex.kasm.dictionary.ValueType;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import java.util.Stack;
 
@@ -27,22 +31,24 @@ public class NodeIdentityOperator extends RelationalOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         Value[] operands = getOperands(valueStack);
 
         if (operands[0].getType() != ValueType.Node) {
-            postValueDiagnostic(true, context.getDiagnostics());
+            postValueDiagnostic(true, assembler.getDiagnostics());
             throw new ExpressionException();
         }
 
         if (operands[1].getType() != ValueType.Node) {
-            postValueDiagnostic(false, context.getDiagnostics());
+            postValueDiagnostic(false, assembler.getDiagnostics());
             throw new ExpressionException();
         }
 

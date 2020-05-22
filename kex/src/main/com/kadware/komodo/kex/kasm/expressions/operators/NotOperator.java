@@ -22,14 +22,16 @@ public class NotOperator extends LogicalOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
-        Value[] operands = getOperands(valueStack, context);
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
+        Value[] operands = getOperands(valueStack, assembler);
         IntegerValue ioperand = (IntegerValue) operands[0];
         IntegerValue iresult = ioperand.negate();
         valueStack.push(iresult);

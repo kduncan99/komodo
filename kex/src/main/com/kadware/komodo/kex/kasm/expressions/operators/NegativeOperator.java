@@ -4,10 +4,12 @@
 
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
-import com.kadware.komodo.kex.kasm.*;
-import com.kadware.komodo.kex.kasm.dictionary.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.dictionary.FloatingPointValue;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
+import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
-
 import java.util.Stack;
 
 /**
@@ -22,32 +24,33 @@ public class NegativeOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         Value operand = getOperands(valueStack)[0];
-        switch(operand.getType()) {
-            case Integer:
+        switch (operand.getType()) {
+            case Integer -> {
                 IntegerValue ioperand = (IntegerValue) operand;
                 IntegerValue iresult = ioperand.negate();
                 valueStack.push(iresult);
-                break;
-
-            case FloatingPoint:
+            }
+            case FloatingPoint -> {
                 FloatingPointValue fpoperand = (FloatingPointValue) operand;
                 FloatingPointValue fpresult = new FloatingPointValue.Builder().setValue(fpoperand._value.negate())
                                                                               .setPrecision(fpoperand._precision)
                                                                               .build();
                 valueStack.push(fpresult);
-                break;
-
-            default:
-                postValueDiagnostic(false, context.getDiagnostics());
+            }
+            default -> {
+                postValueDiagnostic(false, assembler.getDiagnostics());
                 throw new ExpressionException();
+            }
         }
     }
 }

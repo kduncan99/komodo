@@ -25,25 +25,28 @@ public class DivisionOperator extends ArithmeticOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, context.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, true, assembler.getDiagnostics());
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, context.getDiagnostics());
+                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, assembler.getDiagnostics());
                 valueStack.push(dres._quotient);
             } else {
                 //  both ops are floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                FloatingPointValue value = FloatingPointValue.divide(iopLeft, iopRight, _locale, context.getDiagnostics());
+                FloatingPointValue value = FloatingPointValue.divide(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+                valueStack.push(value);
             }
         } catch (TypeException ex) {
             throw new ExpressionException();

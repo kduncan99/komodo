@@ -4,20 +4,23 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
-import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.BuiltInFunction;
 
 /**
  * Class which represents a built-in-function name and related stuffs
  */
 public class BuiltInFunctionValue extends Value {
 
-    public final Class<BuiltInFunction> _class;
+    public final Class<?> _class;
 
     /**
      * Normal constructor
      * @param clazz class of the function handler
      */
-    private BuiltInFunctionValue(Class<BuiltInFunction> clazz) { _class = clazz; }
+    public BuiltInFunctionValue(
+        final Class<?> clazz
+    ) {
+        _class = clazz;
+    }
 
     /**
      * Compares an object to this object
@@ -88,28 +91,5 @@ public class BuiltInFunctionValue extends Value {
     public String toString(
     ) {
         return String.format("<bif:%s>", _class.getCanonicalName());
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Builder
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static class Builder {
-
-        Class<BuiltInFunction> _class;
-        boolean _flagged = false;
-
-        public Builder setClass(Class<BuiltInFunction> value)       { _class = value; return this; }
-        public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
-
-        public BuiltInFunctionValue build(
-        ) {
-            if (_class == null) {
-                throw new RuntimeException("Class not specified for BuiltInFunctionValue builder");
-            }
-
-            return new BuiltInFunctionValue(_class);
-        }
     }
 }

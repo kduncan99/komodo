@@ -31,22 +31,24 @@ public class NodeNonIdentityOperator extends RelationalOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         Value[] operands = getOperands(valueStack);
 
         if (operands[0].getType() != ValueType.Node) {
-            postValueDiagnostic(true, context.getDiagnostics());
+            postValueDiagnostic(true, assembler.getDiagnostics());
             throw new ExpressionException();
         }
 
         if (operands[1].getType() != ValueType.Node) {
-            postValueDiagnostic(false, context.getDiagnostics());
+            postValueDiagnostic(false, assembler.getDiagnostics());
             throw new ExpressionException();
         }
 

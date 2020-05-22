@@ -13,6 +13,7 @@ import com.kadware.komodo.kex.kasm.LabelFieldComponents;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
 import com.kadware.komodo.kex.kasm.TextSubfield;
+import com.kadware.komodo.kex.kasm.UndefinedReference;
 import com.kadware.komodo.kex.kasm.diagnostics.TruncationDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.EqufValue;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;

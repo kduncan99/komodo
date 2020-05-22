@@ -21,7 +21,7 @@ public class PositiveOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
@@ -29,15 +29,12 @@ public class PositiveOperator extends Operator {
     public void evaluate(
         Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
         Value operand = getOperands(valueStack)[0];
-        switch(operand.getType()) {
-            case Integer:
-            case FloatingPoint:
-                valueStack.push(operand);
-                break;
-
-            default:
-                postValueDiagnostic(false, context.getDiagnostics());
+        switch (operand.getType()) {
+            case Integer, FloatingPoint -> valueStack.push(operand);
+            default -> {
+                postValueDiagnostic(false, assembler.getDiagnostics());
                 throw new ExpressionException();
+            }
         }
     }
 }

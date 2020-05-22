@@ -5,7 +5,8 @@
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
 import com.kadware.komodo.baselib.DoubleWord36;
-import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.diagnostics.FormDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.RelocationDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.*;
@@ -25,27 +26,29 @@ public class ShiftOperator extends ArithmeticOperator {
     /**
      * Evaluator
      * We do *NOT* flag T's on left shifts out of MSBit, contra MASM.
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, context.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, false, assembler.getDiagnostics());
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];
 
             //  Forms are not allowed for either operand
             if ((iopLeft._form != null) || (iopRight._form != null)) {
-                context.appendDiagnostic(new FormDiagnostic(_locale));
+                assembler.appendDiagnostic(new FormDiagnostic(_locale));
             }
 
             //  Undefined references not allowed for either operand
             if (iopLeft.hasUndefinedReferences() || iopRight.hasUndefinedReferences()) {
-                context.appendDiagnostic(new RelocationDiagnostic(_locale));
+                assembler.appendDiagnostic(new RelocationDiagnostic(_locale));
             }
 
             BigInteger result = iopLeft._value.get();

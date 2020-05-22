@@ -25,13 +25,15 @@ public abstract class RelationalOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException;
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException;
 
     /**
      * Wrapper around base class getOperands() method.
@@ -47,8 +49,8 @@ public abstract class RelationalOperator extends Operator {
      * @throws TypeException if either operand is other than floating point, integer, or string
      */
     protected Value[] getTransformedOperands(
-        Stack<Value> valueStack,
-        Diagnostics diagnostics
+        final Stack<Value> valueStack,
+        final Diagnostics diagnostics
     ) throws TypeException {
         Value[] operands = super.getOperands(valueStack);
         ValueType opType0 = operands[0].getType();

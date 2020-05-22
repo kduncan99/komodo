@@ -26,16 +26,18 @@ public class RightJustificationOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if evaluation fails
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         Value operand = getOperands(valueStack)[0];
-        if ( operand.getType() != ValueType.String) {
-            context.appendDiagnostic(new ErrorDiagnostic(_locale, "Justification operator requires a string operand"));
+        if (operand.getType() != ValueType.String) {
+            assembler.appendDiagnostic(new ErrorDiagnostic(_locale, "Justification operator requires a string operand"));
             throw new ExpressionException();
         }
 

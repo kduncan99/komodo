@@ -5,8 +5,24 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.kex.kasm.Form;
-import com.kadware.komodo.kex.kasm.directives.*;
-import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.*;
+import com.kadware.komodo.kex.kasm.directives.ASCIIDirective;
+import com.kadware.komodo.kex.kasm.directives.BASICDirective;
+import com.kadware.komodo.kex.kasm.directives.EQUDirective;
+import com.kadware.komodo.kex.kasm.directives.EQUFDirective;
+import com.kadware.komodo.kex.kasm.directives.EXTENDDirective;
+import com.kadware.komodo.kex.kasm.directives.FDATADirective;
+import com.kadware.komodo.kex.kasm.directives.FORMDirective;
+import com.kadware.komodo.kex.kasm.directives.GFORMDirective;
+import com.kadware.komodo.kex.kasm.directives.INFODirective;
+import com.kadware.komodo.kex.kasm.directives.LITDirective;
+import com.kadware.komodo.kex.kasm.directives.PROCDirective;
+import com.kadware.komodo.kex.kasm.directives.RESDirective;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.CASFunction;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.CFSFunction;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SLFunction;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SRFunction;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SSFunction;
+import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.TYPEFunction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,26 +54,26 @@ public class SystemDictionary extends Dictionary {
         }
 
         //  directives
-        _initialValues.put("$ASCII", new DirectiveValue.Builder().setClass(ASCIIDirective.class).build());
-        _initialValues.put("$BASIC", new DirectiveValue.Builder().setClass(BASICDirective.class).build());
-        _initialValues.put("$EQU", new DirectiveValue.Builder().setClass(EQUDirective.class).build());
-        _initialValues.put("$EQUF", new DirectiveValue.Builder().setClass(EQUFDirective.class).build());
-        _initialValues.put("$EXTEND", new DirectiveValue.Builder().setClass(EXTENDDirective.class).build());
-        _initialValues.put("$FDATA", new DirectiveValue.Builder().setClass(FDATADirective.class).build());
-        _initialValues.put("$FORM", new DirectiveValue.Builder().setClass(FORMDirective.class).build());
-        _initialValues.put("$GFORM", new DirectiveValue.Builder().setClass(GFORMDirective.class).build());
-        _initialValues.put("$INFO", new DirectiveValue.Builder().setClass(INFODirective.class).build());
-        _initialValues.put("$LIT", new DirectiveValue.Builder().setClass(LITDirective.class).build());
-        _initialValues.put("$PROC", new DirectiveValue.Builder().setClass(PROCDirective.class).build());
-        _initialValues.put("$RES", new DirectiveValue.Builder().setClass(RESDirective.class).build());
+        _initialValues.put("$ASCII", new DirectiveValue(ASCIIDirective.class));
+        _initialValues.put("$BASIC", new DirectiveValue(BASICDirective.class));
+        _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
+        _initialValues.put("$EQUF", new DirectiveValue(EQUFDirective.class));
+        _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));
+        _initialValues.put("$FDATA", new DirectiveValue(FDATADirective.class));
+        _initialValues.put("$FORM", new DirectiveValue(FORMDirective.class));
+        _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
+        _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
+        _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
+        _initialValues.put("$PROC", new DirectiveValue(PROCDirective.class));
+        _initialValues.put("$RES", new DirectiveValue(RESDirective.class));
 
         //  built-in function names
-        _initialValues.put("$CAS", new BuiltInFunctionValue.Builder().setClass(CASFunction.class).build());
-        _initialValues.put("$CFS", new BuiltInFunctionValue.Builder().setClass(CFSFunction.class).build());
-        _initialValues.put("$SL", new BuiltInFunctionValue.Builder().setClass(SLFunction.class).build());
-        _initialValues.put("$SR", new BuiltInFunctionValue.Builder().setClass(SRFunction.class).build());
-        _initialValues.put("$SS", new BuiltInFunctionValue.Builder().setClass(SSFunction.class).build());
-        _initialValues.put("$TYPE", new BuiltInFunctionValue.Builder().setClass(TYPEFunction.class).build());
+        _initialValues.put("$CAS", new BuiltInFunctionValue(CASFunction.class));
+        _initialValues.put("$CFS", new BuiltInFunctionValue(CFSFunction.class));
+        _initialValues.put("$SL", new BuiltInFunctionValue(SLFunction.class));
+        _initialValues.put("$SR", new BuiltInFunctionValue(SRFunction.class));
+        _initialValues.put("$SS", new BuiltInFunctionValue(SSFunction.class));
+        _initialValues.put("$TYPE", new BuiltInFunctionValue(TYPEFunction.class));
 
         //  built-in procs
         //TODO

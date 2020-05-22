@@ -23,19 +23,19 @@ public class XorOperator extends LogicalOperator {
 
     /**
      * Evaluator
-     * <p>
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
-     * <p>
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
-        Value[] operands = getOperands(valueStack, context);
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
+        Value[] operands = getOperands(valueStack, assembler);
         IntegerValue leftValue = (IntegerValue) operands[0];
         IntegerValue rightValue = (IntegerValue) operands[1];
-        IntegerValue result = IntegerValue.xor(leftValue, rightValue, _locale, context.getDiagnostics());
+        IntegerValue result = IntegerValue.xor(leftValue, rightValue, _locale, assembler.getDiagnostics());
         valueStack.push(result);
     }
 }

@@ -11,13 +11,17 @@ import com.kadware.komodo.kex.kasm.exceptions.TypeException;
  */
 public class DirectiveValue extends Value {
 
-    public final Class _class;
+    public final Class<?> _class;
 
     /**
      * Normal constructor
      * @param clazz class of the function handler
      */
-    private DirectiveValue(Class clazz) { _class = clazz; }
+    public DirectiveValue(
+        final Class<?> clazz
+    ) {
+        _class = clazz;
+    }
 
     /**
      * Compares an object to this object
@@ -80,53 +84,6 @@ public class DirectiveValue extends Value {
     @Override public ValueType getType() { return ValueType.Directive; }
     @Override public int hashCode() { return _class.hashCode(); }
 
-//    /**
-//     * Transform the value to an FloatingPointValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException since we cannot actually do this
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
     /**
      * For display purposes
      * @return displayable string
@@ -135,28 +92,5 @@ public class DirectiveValue extends Value {
     public String toString(
     ) {
         return "<directive>";
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Builder
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static class Builder {
-
-        Class _class;
-        boolean _flagged = false;
-
-        public Builder setClass(Class value)                        { _class = value; return this; }
-        public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
-
-        public DirectiveValue build(
-        ) {
-            if (_class == null) {
-                throw new RuntimeException("Class not specified for DirectiveValue builder");
-            }
-
-            return new DirectiveValue(_class);
-        }
     }
 }

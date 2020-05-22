@@ -29,12 +29,14 @@ public abstract class Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     public abstract void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException;
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException;
 
     /**
      * Retrieves the precedence for this operator.
@@ -79,7 +81,7 @@ public abstract class Operator {
      * @return operand values
      */
     protected Value[] getOperands(
-        Stack<Value> valueStack
+        final Stack<Value> valueStack
     ) {
         if ((getType() == Type.Infix) && (valueStack.size() > 1)) {
             Value[] result = new Value[2];
@@ -97,13 +99,12 @@ public abstract class Operator {
 
     /**
      * Posts a ValueDiagnostic for the case where an operand is of the wrong type
-     * <p>
      * @param leftOperand true if the offending operand is on the left of the operator; otherwise, on the right
      * @param diagnostics Diagnostics object to which the new Diagnostic is appended
      */
     void postValueDiagnostic(
         final boolean leftOperand,
-        Diagnostics diagnostics
+        final Diagnostics diagnostics
     ) {
         String str = String.format("%s is of wrong type", leftOperand ? "left-hand" : "right-hand");
         diagnostics.append(new ValueDiagnostic(_locale, str));

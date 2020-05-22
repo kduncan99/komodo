@@ -25,24 +25,26 @@ public class LessThanOperator extends RelationalOperator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, context.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, assembler.getDiagnostics());
             int result = (operands[0].compareTo(operands[1]) < 0) ? 1 : 0;
             valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (FormException ex) {
             //  thrown by compareTo() - we need to post a diag
-            context.appendDiagnostic(new FormDiagnostic(_locale));
+            assembler.appendDiagnostic(new FormDiagnostic(_locale));
             throw new ExpressionException();
         } catch (RelocationException ex) {
             //  thrown by compareTo() - we need to post a diag
-            context.appendDiagnostic(new RelocationDiagnostic(_locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(_locale));
             throw new ExpressionException();
         } catch (TypeException ex) {
             //  thrown by getTransformedOperands() - diagnostic already posted

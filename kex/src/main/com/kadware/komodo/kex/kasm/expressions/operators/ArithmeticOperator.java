@@ -26,13 +26,15 @@ public abstract class ArithmeticOperator extends Operator {
 
     /**
      * Evaluator
-     * @param assembler
+     * @param assembler context
      * @param valueStack stack of values - we pop one or two from here, and push one back
      * @throws ExpressionException if something goes wrong with the process
      */
     @Override
     public abstract void evaluate(
-        Assembler assembler, Stack<Value> valueStack) throws ExpressionException;
+        final Assembler assembler,
+        final Stack<Value> valueStack
+    ) throws ExpressionException;
 
     /**
      * Wrapper around base class getOperands() method.

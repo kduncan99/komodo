@@ -5,6 +5,9 @@ hwlib:
     SystemProcessor: loadBinary() Handle fixed-storeage flag
     SystemProcessor: loadBinary() which reads a binary json file from binaries directory
     Test_SystemProcessor: absolute_load test - improve how this works
+    Test_Assembler: need to fix unit tests
+    Test_Linker: need to fix unit tests
+    Text_Expression: need to fix unit tests
 
 exlib:
     external file formats for hosting SDFF and PF files (and maybe tape files?)
