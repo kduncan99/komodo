@@ -9,4 +9,5 @@ public enum AssemblerOption {
     EMIT_GENERATED_CODE,
     EMIT_MODULE_SUMMARY,
     EMIT_SOURCE,
+    SILENT,
 }

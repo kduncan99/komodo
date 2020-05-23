@@ -90,50 +90,6 @@ public class ProcedureValue extends Value {
         return code;
     }
 
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode - we ignore this, as this applies only to conversions of something else
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        final CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
     /**
      * For display purposes
      * @return displayable string

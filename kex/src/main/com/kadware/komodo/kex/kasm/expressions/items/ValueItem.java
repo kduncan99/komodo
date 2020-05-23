@@ -34,7 +34,8 @@ public class ValueItem extends OperandItem {
      */
     @Override
     public Value resolve(
-        Assembler assembler) {
+        final Assembler assembler
+    ) {
         return _value;
     }
 }

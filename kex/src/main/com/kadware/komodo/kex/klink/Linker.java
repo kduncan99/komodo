@@ -804,7 +804,7 @@ public class Linker {
      */
     private long resolveRelocatableItem(
         final LCPoolSpecification lcpSpecification,
-        final RelocatableModule.LocationCounterRelocatableItem relocatableItem
+        final RelocatableModule.RelocatableItemLocationCounter relocatableItem
     ) {
         return resolveLocationCounterIndex(lcpSpecification._module,
                                            relocatableItem._locationCounterIndex,
@@ -822,7 +822,7 @@ public class Linker {
      */
     private long resolveRelocatableItem(
         final LCPoolSpecification lcpSpecification,
-        final RelocatableModule.UndefinedSymbolRelocatableItem relocatableItem,
+        final RelocatableModule.RelocatableItemSymbol relocatableItem,
         final Iterator<RelocatableModule.RelocatableItem> itemIterator
     ) {
         SpecialLabel specLabel = SpecialLabel.getFrom(relocatableItem._undefinedSymbol);
@@ -867,11 +867,11 @@ public class Linker {
         while (itemIter.hasNext()) {
             RelocatableModule.RelocatableItem ri = itemIter.next();
             long newValue = 0;
-            if (ri instanceof RelocatableModule.LocationCounterRelocatableItem) {
-                RelocatableModule.LocationCounterRelocatableItem lcri = (RelocatableModule.LocationCounterRelocatableItem) ri;
+            if (ri instanceof RelocatableModule.RelocatableItemLocationCounter) {
+                RelocatableModule.RelocatableItemLocationCounter lcri = (RelocatableModule.RelocatableItemLocationCounter) ri;
                 newValue = resolveRelocatableItem(lcpSpecification, lcri);
-            } else if (ri instanceof RelocatableModule.UndefinedSymbolRelocatableItem) {
-                RelocatableModule.UndefinedSymbolRelocatableItem usri = (RelocatableModule.UndefinedSymbolRelocatableItem) ri;
+            } else if (ri instanceof RelocatableModule.RelocatableItemSymbol) {
+                RelocatableModule.RelocatableItemSymbol usri = (RelocatableModule.RelocatableItemSymbol) ri;
                 newValue = resolveRelocatableItem(lcpSpecification, usri, itemIter);
             }
 
@@ -927,10 +927,10 @@ public class Linker {
         }
 
         RelocatableModule.RelocatableItem ri = itemIterator.next();
-        if (ri instanceof RelocatableModule.LocationCounterRelocatableItem) {
+        if (ri instanceof RelocatableModule.RelocatableItemLocationCounter) {
             //  module is asking for the BDI of an entry point for which it knows a location counter...
             //  The only thing unresolved is the LC offset, which we don't care about.
-            RelocatableModule.LocationCounterRelocatableItem lcri = (RelocatableModule.LocationCounterRelocatableItem) ri;
+            RelocatableModule.RelocatableItemLocationCounter lcri = (RelocatableModule.RelocatableItemLocationCounter) ri;
             LCPoolSpecification targetSpec = new LCPoolSpecification(lcpSpecification._module,
                                                                      lcri._locationCounterIndex);
             BankOffset bankOffset = _poolMap.get(targetSpec);
@@ -945,10 +945,10 @@ public class Linker {
             return bankOffset._bankDescriptorIndex & 0077777;
         }
 
-        if (ri instanceof RelocatableModule.UndefinedSymbolRelocatableItem) {
+        if (ri instanceof RelocatableModule.RelocatableItemSymbol) {
             //  module is asking for BDI of a symbol which is unresolved/undefined.
             //  We look it up in our symbol table and it's either an absolute value or an entry point
-            RelocatableModule.UndefinedSymbolRelocatableItem usri = (RelocatableModule.UndefinedSymbolRelocatableItem) ri;
+            RelocatableModule.RelocatableItemSymbol usri = (RelocatableModule.RelocatableItemSymbol) ri;
             SymbolEntry se = _symbolTable.get(usri._undefinedSymbol);
             if (se == null) {
                 raise("Undefined symbol for BDIREF$ in module " + lcpSpecification._module.getModuleName());

@@ -31,5 +31,6 @@ public abstract class FunctionItem extends OperandItem {
      */
     @Override
     public abstract Value resolve(
-        Assembler assembler) throws ExpressionException;
+        final Assembler assembler
+    ) throws ExpressionException;
 }

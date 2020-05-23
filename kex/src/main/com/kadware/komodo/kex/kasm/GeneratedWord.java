@@ -62,12 +62,12 @@ class GeneratedWord {
             UndefinedReference ur = _value._references[urx];
             if (ur instanceof UndefinedReferenceToLabel) {
                 UndefinedReferenceToLabel url = (UndefinedReferenceToLabel) ur;
-                relItems[urx] = new RelocatableModule.UndefinedSymbolRelocatableItem(url._label,
-                                                                                     url._fieldDescriptor,
-                                                                                     url._isNegative);
+                relItems[urx] = new RelocatableModule.RelocatableItemSymbol(url._label,
+                                                                            url._fieldDescriptor,
+                                                                            url._isNegative);
             } else if (ur instanceof UndefinedReferenceToLocationCounter) {
                 UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) ur;
-                relItems[urx] = new RelocatableModule.LocationCounterRelocatableItem(urlc._locationCounterIndex,
+                relItems[urx] = new RelocatableModule.RelocatableItemLocationCounter(urlc._locationCounterIndex,
                                                                                      urlc._fieldDescriptor,
                                                                                      urlc._isNegative);
             }

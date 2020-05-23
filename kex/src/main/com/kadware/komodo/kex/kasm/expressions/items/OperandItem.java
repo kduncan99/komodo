@@ -33,6 +33,6 @@ public abstract class OperandItem implements IExpressionItem {
      * @throws ExpressionException if something is wrong with the expression
      */
     public abstract Value resolve(
-        Assembler assembler
+        final Assembler assembler
     ) throws ExpressionException;
 }

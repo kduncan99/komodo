@@ -67,11 +67,11 @@ public class RelocatableModule {
     /**
      * Describes a relocatable item which depends upon the mapped location of a particular location counter
      */
-    public static class LocationCounterRelocatableItem extends RelocatableItem {
+    public static class RelocatableItemLocationCounter extends RelocatableItem {
 
         public final int _locationCounterIndex;
 
-        public LocationCounterRelocatableItem(
+        public RelocatableItemLocationCounter(
             final int locationCounterIndex,
             final FieldDescriptor fieldDescriptor,
             final boolean subtraction
@@ -89,11 +89,11 @@ public class RelocatableModule {
     /**
      * Describes a relocatable item which depends upon the value of a currently-undefined symbol
      */
-    public static class UndefinedSymbolRelocatableItem extends RelocatableItem {
+    public static class RelocatableItemSymbol extends RelocatableItem {
 
         public final String _undefinedSymbol;
 
-        public UndefinedSymbolRelocatableItem(
+        public RelocatableItemSymbol(
             final String undefinedSymbol,
             final FieldDescriptor fieldDescriptor,
             final boolean subtraction
@@ -108,19 +108,20 @@ public class RelocatableModule {
         }
     }
 
-    /**
-     * Represents a symbol which was not defined at the time the source code was converted to relocatable words
-     */
-    public static class UndefinedSymbol {
-
-        final String _value;
-
-        public UndefinedSymbol(
-            final String value
-        ) {
-            _value = value;
-        }
-    }
+    //TODO I don't think we need this...?
+//    /**
+//     * Represents a symbol which was not defined at the time the source code was converted to relocatable words
+//     */
+//    public static class UndefinedSymbol {
+//
+//        final String _value;
+//
+//        public UndefinedSymbol(
+//            final String value
+//        ) {
+//            _value = value;
+//        }
+//    }
 
     /**
      * Describes an 'entry point' - in actuality, this is used for any symbol which is externalized

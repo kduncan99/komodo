@@ -23,7 +23,8 @@ public class PROCDirective extends Directive {
      * Checks the textline for nest level change.
      * If the textline is $PROC or $FUNC, we return 1 to indicate a further level of nesting.
      * If the textline is an $END directive, we return -1 to indicate a level of nesting has ended.
-     * Otherwise, we return 0 to indicate no chnage
+     * Otherwise, we return 0 to indicate no change
+     * This is used purely for purposes of building a subset of source.
      * @param textLine textline to analyze
      * @return the nesting level change: -1, 0, or 1
      */

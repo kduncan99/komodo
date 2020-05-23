@@ -28,12 +28,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Assembler for kasm
  */
-//TODO Rework display, make it more like Linker
-//TODO Add SILENT option for no display at all
 //TODO sometime in the far future, allow kasm to create object modules
 @SuppressWarnings("Duplicates")
 public class Assembler {
@@ -274,6 +273,7 @@ public class Assembler {
                             } else {
                                 //TODO we allow only one reference, and that being a location counter index thing
                                 // make this a LocationCounterEntryPoint
+                                // pending verification with real @MASM
                                 ep = null;
                             }
                             module.addEntryPoint(ep);
@@ -329,47 +329,50 @@ public class Assembler {
     }
 
     /**
-     * Summary of module
-     * @param module module
+     * Summary of relocatable module
+     * @param module relocatable module
      */
-    private void displayModuleSummary(
+    private void displayRelocatableModuleSummary(
         final RelocatableModule module
     ) {
         _global._outputStream.println("Rel Module Settings:");
-        //TODO fix this
-//        _global._outputStream.println(String.format("  Modes:%s%s%s%s",
-//                                            module._requiresQuarterWordMode ? "QWORD " : "",
-//                                            module._requiresThirdWordMode ? "TWORD " : "",
-//                                            module._requiresArithmeticFaultCompatibilityMode ? "ACOMP " : "",
-//                                            module._requiresArithmeticFaultNonInterruptMode ? "ANON " : ""));
-//
-//        for (Map.Entry<Integer, LocationCounterPool> entry : module._storage.entrySet()) {
-//            int lcIndex = entry.getKey();
-//            LocationCounterPool lcp = entry.getValue();
-//            _global._outputStream.println(String.format("LCPool %d: %d word(s) generated %s",
-//                                                        lcIndex,
-//                                                        lcp._storage.length,
-//                                                        lcp._needsExtendedMode ? "$INFO 10" : ""));
-//        }
-//
-//        Set<String> references = new TreeSet<>();
-//        for (Map.Entry<Integer, LocationCounterPool> poolEntry : module._storage.entrySet()) {
-//            LocationCounterPool lcPool = poolEntry.getValue();
-//            for (RelocatableWord rw : lcPool._storage) {
-//                if (rw != null) {
-//                    for (UndefinedReference ur : rw._references) {
-//                        if (ur instanceof UndefinedReferenceToLabel) {
-//                            references.add(((UndefinedReferenceToLabel) ur)._label);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        _global._outputStream.println("Undefined References:");
-//        for (String ref : references) {
-//            _global._outputStream.println("  " + ref);
-//        }
+        _global._outputStream.println(String.format("  Modes:%s%s%s%s",
+                                            module.getQuarterWordSensitivity() ? "QWORD " : "",
+                                            module.getThirdWordSensitivity() ? "TWORD " : "",
+                                            module.getAFCMSetSensitivity() ? "AFCMSet " : "",
+                                            module.getAFCMClearSensitivity() ? "AFCMClear " : ""));
+
+        for (int lcIndex : module.getEstablishedLocationCounterIndices()) {
+            try {
+                RelocatableModule.RelocatableWord[] rwords = module.getLocationCounterPool(lcIndex);
+                _global._outputStream.println(String.format("LC$(%d): %d word(s) generated", lcIndex, rwords.length));
+            } catch (ParameterException ex) {
+                //  can't happen
+            }
+        }
+
+        Set<String> references = new TreeSet<>();
+        for (int lcIndex : module.getEstablishedLocationCounterIndices()) {
+            try {
+                for (RelocatableModule.RelocatableWord rw : module.getLocationCounterPool(lcIndex)) {
+                    if (rw != null) {
+                        for (RelocatableModule.RelocatableItem ri : rw._relocatableItems) {
+                            if (ri instanceof RelocatableModule.RelocatableItemSymbol) {
+                                RelocatableModule.RelocatableItemSymbol ris = (RelocatableModule.RelocatableItemSymbol) ri;
+                                references.add(ris._undefinedSymbol);
+                            }
+                        }
+                    }
+                }
+            } catch (ParameterException ex) {
+                //  can't happen
+            }
+        }
+
+        _global._outputStream.println("Undefined References:");
+        for (String ref : references) {
+            _global._outputStream.println("  " + ref);
+        }
     }
 
     /**
@@ -482,6 +485,70 @@ public class Assembler {
         } catch (CharacteristicUnderflowException ex) {
             appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic underflow"));
         }
+    }
+
+    /**
+     * Generates data into the given context representing this value.
+     */
+    private void generateInteger(
+        final TextField operandField,
+        final Locale sf0Locale,
+        final Value firstValue
+    ) {
+        int valueCount = (operandField._subfields.size());
+        if (valueCount > 36) {
+            appendDiagnostic(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
+            return;
+        }
+
+        int[] fieldSizes = new int[valueCount];
+        int fieldSize = 36 / valueCount;
+        for (int fx = 0; fx < valueCount; ++fx) {
+            fieldSizes[fx] = fieldSize;
+        }
+
+        BigInteger intValue = BigInteger.ZERO;
+        List<UndefinedReference> newRefs = new LinkedList<>();
+        int startingBit = 0;
+        for (int vx = 0; vx < valueCount; ++vx) {
+            if (vx > 0) {
+                intValue = intValue.shiftLeft(fieldSizes[vx - 1]);
+            }
+
+            TextSubfield sfNext = operandField._subfields.get(vx);
+            String sfNextText = sfNext._text;
+            Locale sfNextLocale = sfNext._locale;
+            try {
+                ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
+                Expression eNext = pNext.parse(this);
+                if (eNext == null) {
+                    appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Expression expected"));
+                    continue;
+                }
+
+                Value vNext = vx == 0 ? firstValue : eNext.evaluate(this);
+                if (vNext instanceof IntegerValue) {
+                    IntegerValue ivNext = (IntegerValue) vNext;
+                    FieldDescriptor fd = new FieldDescriptor(startingBit,fieldSizes[vx]);
+                    for (UndefinedReference ur : ((IntegerValue) vNext)._references) {
+                        newRefs.add(ur.copy(fd));
+                    }
+                    intValue = intValue.or(ivNext._value.get());
+                } else {
+                    appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
+                }
+            } catch (ExpressionException ex) {
+                appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+            }
+
+            startingBit += fieldSizes[vx];
+        }
+
+        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
+                                                    .setForm(new Form(fieldSizes))
+                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .build();
+        generate(operandField._locale.getLineSpecifier(), _currentGenerationLCIndex, iv);
     }
 
     /**
@@ -663,62 +730,8 @@ public class Assembler {
             return true;
         }
 
-        //TODO create generateInteger() and move this code thereto - later (it's not straight-forward how to do it)
         if (firstValue instanceof IntegerValue) {
-            int valueCount = (operandField._subfields.size());
-            if (valueCount > 36) {
-                appendDiagnostic(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
-                return true;
-            }
-
-            int[] fieldSizes = new int[valueCount];
-            int fieldSize = 36 / valueCount;
-            for (int fx = 0; fx < valueCount; ++fx) {
-                fieldSizes[fx] = fieldSize;
-            }
-
-            BigInteger intValue = BigInteger.ZERO;
-            List<UndefinedReference> newRefs = new LinkedList<>();
-            int startingBit = 0;
-            for (int vx = 0; vx < valueCount; ++vx) {
-                if (vx > 0) {
-                    intValue = intValue.shiftLeft(fieldSizes[vx - 1]);
-                }
-
-                TextSubfield sfNext = operandField._subfields.get(vx);
-                String sfNextText = sfNext._text;
-                Locale sfNextLocale = sfNext._locale;
-                try {
-                    ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
-                    Expression eNext = pNext.parse(this);
-                    if (eNext == null) {
-                        appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Expression expected"));
-                        continue;
-                    }
-
-                    Value vNext = vx == 0 ? firstValue : eNext.evaluate(this);
-                    if (vNext instanceof IntegerValue) {
-                        IntegerValue ivNext = (IntegerValue) vNext;
-                        FieldDescriptor fd = new FieldDescriptor(startingBit,fieldSizes[vx]);
-                        for (UndefinedReference ur : ((IntegerValue) vNext)._references) {
-                            newRefs.add(ur.copy(fd));
-                        }
-                        intValue = intValue.or(ivNext._value.get());
-                    } else {
-                        appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
-                    }
-                } catch (ExpressionException ex) {
-                    appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
-                }
-
-                startingBit += fieldSizes[vx];
-            }
-
-            IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
-                                                        .setForm(new Form(fieldSizes))
-                                                        .setReferences(newRefs.toArray(new UndefinedReference[0]))
-                                                        .build();
-            generate(operandField._locale.getLineSpecifier(), _currentGenerationLCIndex, iv);
+            generateInteger(operandField, sf0Locale, firstValue);
             return true;
         }
 
@@ -1342,21 +1355,20 @@ public class Assembler {
      * @return AssemblerResult object describing the results of the assembly process
      */
     public AssemblerResult assemble() {
-        _global._outputStream.println("KASM ---------------------------------------------------");
-        _global._outputStream.println("Assembling module " + _moduleName);
+        if (!_global._options.contains(AssemblerOption.SILENT)) {
+            _global._outputStream.println("KASM ---------------------------------------------------");
+            _global._outputStream.println("Assembling module " + _moduleName);
+        }
 
         while (hasNextSourceLine()) {
             TextLine textLine = getNextSourceLine();
             assembleTextLine(textLine);
             if (_global._diagnostics.hasFatal()) {
-                displayResults(false);
-                return new AssemblerResult(_global._diagnostics, _sourceLines);
+                if (!_global._options.contains(AssemblerOption.SILENT)) {
+                    displayResults(false);
+                    return new AssemblerResult(_global._diagnostics, _sourceLines);
+                }
             }
-        }
-
-        if (!_endFound) {
-            appendDiagnostic(new ErrorDiagnostic(new Locale(_sourceLines[_sourceLines.length - 1]._lineSpecifier, 1),
-                                                 "No $END directive on main assembly"));
         }
 
         if (_endValue != null) {
@@ -1380,27 +1392,29 @@ public class Assembler {
         resolveReferences();
         RelocatableModule module = createRelocatableModule(_moduleName);
 
-        if (_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE)
-            || _global._options.contains(AssemblerOption.EMIT_SOURCE)) {
-            displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE));
-        }
-        if (_global._options.contains(AssemblerOption.EMIT_MODULE_SUMMARY)) {
-            displayModuleSummary(module);
-        }
-        if (_global._options.contains(AssemblerOption.EMIT_DICTIONARY)) {
-            displayDictionary(_dictionary);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
-        for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
-            if (entry.getValue() > 0) {
-                sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+        if (!_global._options.contains(AssemblerOption.SILENT)) {
+            if (_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE)
+                || _global._options.contains(AssemblerOption.EMIT_SOURCE)) {
+                displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE));
             }
-        }
-        _global._outputStream.println(sb.toString());
+            if (_global._options.contains(AssemblerOption.EMIT_MODULE_SUMMARY)) {
+                displayRelocatableModuleSummary(module);
+            }
+            if (_global._options.contains(AssemblerOption.EMIT_DICTIONARY)) {
+                displayDictionary(_dictionary);
+            }
 
-        _global._outputStream.println("Assembly Ends ------------------------------------------");
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
+            for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
+                if (entry.getValue() > 0) {
+                    sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+                }
+            }
+            _global._outputStream.println(sb.toString());
+
+            _global._outputStream.println("Assembly Ends ------------------------------------------");
+        }
 
         return new AssemblerResult(module, _global._diagnostics, _sourceLines);
     }

@@ -1,6 +1,4 @@
 -- TODO InProgress
-Use ENDDirective in the $PROC directive code
-
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Don't stuff values into pre-built level 0 BDTs except for absolute address
@@ -13,14 +11,17 @@ hwlib:
 
 exlib:
     external file formats for hosting SDFF and PF files (and maybe tape files?)
-    support sym, rel, and abs elements both as files and as elements
-    lots of rework on mina (now kasm) and linker
+    support sym, rel, and abs elements
+    support various tape file formats
 
 kasm:
     We really need to support identifiers > 12 characters
     Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-    Define what a saved binary (absolute module) looks like, implement it
+
+klink:
+    Define what a saved binary looks like
         update: It's stored in a sort of JSON format
+        update: It's an array of BankDescriptors (stored in JSON format)
 
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests

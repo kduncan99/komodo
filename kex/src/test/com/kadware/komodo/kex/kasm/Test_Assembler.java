@@ -7,6 +7,10 @@ package com.kadware.komodo.kex.kasm;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for the Assembler class in this package
@@ -21,59 +25,78 @@ public class Test_Assembler {
         };
     private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
-//    @Test
-//    public void noSource(
-//    ) {
-//        String[] source = {};
-//
-//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
-//        assertTrue(result._diagnostics.isEmpty());
-//        assertEquals(0, result._parsedCode.length);
-//    }
+    @Test
+    public void noSource(
+    ) {
+        String[] source = {};
 
-//    @Test
-//    public void whiteSpace(
-//    ) {
-//        String[] source = {
-//            "",
-//            ". This is whitespace only source code",
-//            "",
-//            ". Blah blah blah",
-//        };
-//
-//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
-//        assertTrue(result._diagnostics.isEmpty());
-//        TextLine[] parsedCode = result._parsedCode;
-//        assertEquals(4, parsedCode.length);
-//        for (TextLine tl : parsedCode) {
-//            assertEquals(0, tl._fields.size());
-//        }
-//    }
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+        assertTrue(result._diagnostics.isEmpty());
+        assertEquals(0, result._parsedCode.length);
+    }
 
-//    @Test
-//    public void labelFieldEmpty(
-//    ) {
-//        String[] source = {
-//            "  LA,U A0,0"
-//        };
-//
-//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
-//        assertTrue(result._diagnostics.isEmpty());
-//    }
+    @Test
+    public void whiteSpace(
+    ) {
+        String[] source = {
+            "",
+            ". This is whitespace only source code",
+            "",
+            ". Blah blah blah",
+        };
 
-//    @Test
-//    public void labelFieldLabel(
-//    ) {
-//        String[] source = {
-//                "START*  LA,U A0,0"
-//        };
-//
-//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
-//        assertTrue(result._diagnostics.isEmpty());
-//        assertNotNull(result._relocatableModule);
-//        assertTrue(result._relocatableModule._externalLabels.containsKey("START"));
-//        assertEquals(1, result._relocatableModule._externalLabels.get("START")._references.length);
-//    }
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        TextLine[] parsedCode = result._parsedCode;
+        assertEquals(4, parsedCode.length);
+        for (TextLine tl : parsedCode) {
+            assertEquals(0, tl._fields.size());
+        }
+    }
+
+    @Test
+    public void labelFieldEmpty(
+    ) {
+        String[] source = {
+            "  LA,U A0,0"
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+    }
+
+    @Test
+    public void labelFieldLabel(
+    ) {
+        String[] source = {
+                "START*  LA,U A0,0"
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+//TODO        assertTrue(result._relocatableModule.getEntryPoints().contains("START"));
+//TODO        assertEquals(1, result._relocatableModule._externalLabels.get("START")._references.length);
+    }
 
 //    @Test
 //    public void labelFieldLCIndex(
