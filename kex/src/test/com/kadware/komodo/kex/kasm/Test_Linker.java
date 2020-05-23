@@ -91,25 +91,28 @@ public class Test_Linker {
         assertEquals(02000, bd05._lowerLimit);
     }
 
-//    @Test
-//    public void test_simpleExtendedMode() {
-//        //  simple extended mode program
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)",
-//            "DATA      + 077,077",
-//            "          $RES 16",
-//            "DATA2     + 0777777,0",
-//            "",
-//            "$(1),START$*",
-//            "          LA        A1,DATA,,B2",
-//            "          LA        A2,DATA2,,B2",
-//        };
-//
-//        Assembler.Result result = Assembler.assemble("TESTREL", source);
-//
+    @Test
+    public void test_simpleExtendedMode() {
+        //  simple extended mode program
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)",
+            "DATA      + 077,077",
+            "          $RES 16",
+            "DATA2     + 0777777,0",
+            "",
+            "$(1),START$*",
+            "          LA        A1,DATA,,B2",
+            "          LA        A2,DATA2,,B2",
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TESTREL")
+                                               .setSource(source)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
 //        LCPoolSpecification[] ibankPoolSpecs = {
 //            new LCPoolSpecification(result._relocatableModule, 1),
 //        };
@@ -168,7 +171,7 @@ public class Test_Linker {
 //        LoadableBank rcsbank = abs._loadableBanks.get(06);
 //        assertTrue(rcsbank._isExtendedMode);
 //        assertEquals(256, rcsbank._content.getSize());
-//    }
+    }
 
 //    @Test
 //    public void test_simpleBasicMode() {
@@ -186,7 +189,7 @@ public class Test_Linker {
 //            "          LA        A1,DATA2,,B2",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TESTREL", source);
+//        Assembler.AssemblerResult result = Assembler.assemble("TESTREL", source);
 //
 //        LCPoolSpecification[] ibankPoolSpecs = {
 //            new LCPoolSpecification(result._relocatableModule, 1),
@@ -270,9 +273,9 @@ public class Test_Linker {
 //            "          J         0,X11",
 //        };
 //
-//        Assembler.Result result1 = Assembler.assemble("TESTREL1", source1);
-//        Assembler.Result result2 = Assembler.assemble("TESTREL2", source2);
-//        Assembler.Result result3 = Assembler.assemble("TESTREL3", source3);
+//        Assembler.AssemblerResult result1 = Assembler.assemble("TESTREL1", source1);
+//        Assembler.AssemblerResult result2 = Assembler.assemble("TESTREL2", source2);
+//        Assembler.AssemblerResult result3 = Assembler.assemble("TESTREL3", source3);
 //
 //        LCPoolSpecification[] ibankPoolSpecs = {
 //            new LCPoolSpecification(result3._relocatableModule, 1),

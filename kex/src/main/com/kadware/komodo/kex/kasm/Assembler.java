@@ -28,25 +28,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
- * Assembler for minalib
+ * Assembler for kasm
  */
-//TODO Move inner classes out
-//TODO Determine start address (requires $END - note that START$ is for generating object modules)
 //TODO Rework display, make it more like Linker
 //TODO Add SILENT option for no display at all
 //TODO sometime in the far future, allow kasm to create object modules
 @SuppressWarnings("Duplicates")
 public class Assembler {
-
-    public enum Option {
-        EMIT_DICTIONARY,
-        EMIT_GENERATED_CODE,
-        EMIT_MODULE_SUMMARY,
-        EMIT_SOURCE,
-    }
 
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
@@ -55,83 +45,6 @@ public class Assembler {
     private static final Form _fjaxuForm = new Form(_fjaxuFields);
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
-
-    /**
-     * Describes the entry point for the start of a program
-     */
-    private static class ProgramStart {
-
-        final int _locationCounterIndex;
-        final int _locationCounterOffset;
-
-        ProgramStart(
-            final int locationCounterIndex,
-            final int locationCounterOffset
-        ) {
-            _locationCounterIndex = locationCounterIndex;
-            _locationCounterOffset = locationCounterOffset;
-        }
-    }
-
-    /**
-     * Entities which are not local to a particular assembler level
-     */
-    private static class GlobalData {
-
-        final Diagnostics _diagnostics = new Diagnostics();
-        final Dictionary _globalDictionary = new Dictionary(new SystemDictionary());
-        final Set<Option> _options;
-        final PrintStream _outputStream;
-
-        boolean _arithmeticFaultCompatibilityMode = false;
-        boolean _arithmeticFaultNonInterruptMode = false;
-        boolean _quarterWordMode = false;
-        boolean _thirdWordMode = false;
-
-        ProgramStart _programStart = null;
-
-        //  Map of LC indices to the various GeneratedPool objects...
-        //  Keyed by location counter index.
-        private final Map<Integer, GeneratedPool> _generatedPools = new TreeMap<>();
-
-        GlobalData(
-            Set<Option> options,
-            PrintStream outputStream
-        ) {
-            _options = options;
-            _outputStream = outputStream;
-        }
-    }
-
-    /**
-     * Resulting diagnostics and the parsed code from a call to assemble()
-     */
-    public static class Result {
-        public final RelocatableModule _relocatableModule;
-        public final Diagnostics _diagnostics;
-        public final TextLine[] _parsedCode;
-
-        //  For normal returns
-        private Result (
-            final RelocatableModule relocatableModule,
-            final Diagnostics diagnostics,
-            final TextLine[] parsedCode
-        ) {
-            _relocatableModule = relocatableModule;
-            _diagnostics = diagnostics;
-            _parsedCode = parsedCode;
-        }
-
-        //  For error returns where no module was created
-        private Result (
-            final Diagnostics diagnostics,
-            final TextLine[] parsedCode
-        ) {
-            _relocatableModule = null;
-            _diagnostics = diagnostics;
-            _parsedCode = parsedCode;
-        }
-    }
 
 
     //  ---------------------------------------------------------------------------------------------------------------------------
@@ -149,6 +62,8 @@ public class Assembler {
     private CodeMode _codeMode = CodeMode.Basic;
     private int _currentGenerationLCIndex = 0;
     private int _currentLiteralLCIndex = 0;
+    private boolean _endFound = false;      //  true if this (sub)assembly has processed an $END directive
+    private Value _endValue = null;         //  the value of {e} on the $END directive which ends this (sub)assembly (if any)
     private int _nextSourceIndex = 0;
 
     private final GlobalData _global;
@@ -168,7 +83,7 @@ public class Assembler {
     private Assembler(
         final String moduleName,
         final String[] source,
-        final Set<Option> options,
+        final Set<AssemblerOption> options,
         final OutputStream outputStream
     ) {
         _global = new GlobalData(options, new PrintStream(outputStream));
@@ -209,14 +124,14 @@ public class Assembler {
     public static class Builder {
 
         private String _moduleName = "<unnamed>";
-        private HashSet<Option> _options = new HashSet<>();
+        private HashSet<AssemblerOption> _options = new HashSet<>();
         private OutputStream _outputStream = System.out;
         private String[] _source = new String[0];
 
-        public Builder addOption(Option option) { _options.add(option); return this; }
+        public Builder addOption(AssemblerOption option) { _options.add(option); return this; }
         public Builder setModuleName(String moduleName) { _moduleName = moduleName; return this; }
-        public Builder setOptions(Option[] options) { _options = new HashSet<>(Arrays.asList(options)); return this; }
-        public Builder setOptions(Collection<Option> options) { _options = new HashSet<>(options); return this; }
+        public Builder setOptions(AssemblerOption[] options) { _options = new HashSet<>(Arrays.asList(options)); return this; }
+        public Builder setOptions(Collection<AssemblerOption> options) { _options = new HashSet<>(options); return this; }
         public Builder setOutputStream(OutputStream stream) { _outputStream = stream; return this; }
         public Builder setSource(String[] source) { _source = Arrays.copyOf(source, source.length); return this; }
         public Builder setSource(Collection<String> source) { _source = source.toArray(new String[0]); return this; }
@@ -245,6 +160,11 @@ public class Assembler {
         TextField labelField = textLine.getField(0);
         TextField operationField = textLine.getField(1);
         TextField operandField = textLine.getField(2);
+
+        if (_endFound) {
+            appendDiagnostic(new ErrorDiagnostic(labelField._locale, "Label and/or Code follows $END directive"));
+            return;
+        }
 
         //  Interpret label field and update current location counter index if appropriate.
         //  We can't do anything with the label at this point (what we do depends on the operator field),
@@ -1418,10 +1338,10 @@ public class Assembler {
     }
 
     /**
-     * Main code for the assembly process
-     * @return LinkResult object describing the results of the assembly process
+     * Main code for the assembly process - a top-level, or main assembly, as it were.
+     * @return AssemblerResult object describing the results of the assembly process
      */
-    public Result assemble() {
+    public AssemblerResult assemble() {
         _global._outputStream.println("KASM ---------------------------------------------------");
         _global._outputStream.println("Assembling module " + _moduleName);
 
@@ -1430,21 +1350,44 @@ public class Assembler {
             assembleTextLine(textLine);
             if (_global._diagnostics.hasFatal()) {
                 displayResults(false);
-                return new Result(_global._diagnostics, _sourceLines);
+                return new AssemblerResult(_global._diagnostics, _sourceLines);
+            }
+        }
+
+        if (!_endFound) {
+            appendDiagnostic(new ErrorDiagnostic(new Locale(_sourceLines[_sourceLines.length - 1]._lineSpecifier, 1),
+                                                 "No $END directive on main assembly"));
+        }
+
+        if (_endValue != null) {
+            if (_endValue instanceof IntegerValue) {
+                IntegerValue iv = (IntegerValue) _endValue;
+                if (iv._references.length == 1) {
+                    UndefinedReference ur = iv._references[0];
+                    if (ur instanceof UndefinedReferenceToLocationCounter) {
+                        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) ur;
+                        _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
+                    }
+                }
+            }
+
+            if (_global._programStart == null) {
+                appendDiagnostic(new ErrorDiagnostic(new Locale(_sourceLines[_sourceLines.length - 1]._lineSpecifier, 0),
+                                                     "Invalid operand for $END directive"));
             }
         }
 
         resolveReferences();
         RelocatableModule module = createRelocatableModule(_moduleName);
 
-        if (_global._options.contains(Option.EMIT_GENERATED_CODE)
-            || _global._options.contains(Option.EMIT_SOURCE)) {
-            displayResults(_global._options.contains(Option.EMIT_GENERATED_CODE));
+        if (_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE)
+            || _global._options.contains(AssemblerOption.EMIT_SOURCE)) {
+            displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE));
         }
-        if (_global._options.contains(Option.EMIT_MODULE_SUMMARY)) {
+        if (_global._options.contains(AssemblerOption.EMIT_MODULE_SUMMARY)) {
             displayModuleSummary(module);
         }
-        if (_global._options.contains(Option.EMIT_DICTIONARY)) {
+        if (_global._options.contains(AssemblerOption.EMIT_DICTIONARY)) {
             displayDictionary(_dictionary);
         }
 
@@ -1457,9 +1400,9 @@ public class Assembler {
         }
         _global._outputStream.println(sb.toString());
 
-        _global._outputStream.println("Assembly Ends -------------------------------------------------------");
+        _global._outputStream.println("Assembly Ends ------------------------------------------");
 
-        return new Result(module, _global._diagnostics, _sourceLines);
+        return new AssemblerResult(module, _global._diagnostics, _sourceLines);
     }
 
     /**
@@ -1619,6 +1562,13 @@ public class Assembler {
     public Dictionary getDictionary() { return _dictionary; }
 
     /**
+     * Retrieves the assembler level - 0 is the top-level, or main assembly
+     */
+    public int getLevel() {
+        return _level;
+    }
+
+    /**
      * Retrieves the next source line from the source array
      */
     public TextLine getNextSourceLine() {
@@ -1707,6 +1657,22 @@ public class Assembler {
         final int index
     ) {
         _currentLiteralLCIndex = index;
+    }
+
+    public void setEndFound() {
+        _endFound = true;
+    }
+
+    public void setEndValue(
+        final Value value
+    ) {
+        _endValue = value;
+    }
+
+    public void setProgramStart(
+        final ProgramStart programStart
+    ) {
+        _global._programStart = programStart;
     }
 
     public void setQuarterWordMode() {

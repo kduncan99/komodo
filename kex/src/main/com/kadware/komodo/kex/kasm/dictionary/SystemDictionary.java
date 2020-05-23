@@ -7,6 +7,7 @@ package com.kadware.komodo.kex.kasm.dictionary;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.directives.ASCIIDirective;
 import com.kadware.komodo.kex.kasm.directives.BASICDirective;
+import com.kadware.komodo.kex.kasm.directives.ENDDirective;
 import com.kadware.komodo.kex.kasm.directives.EQUDirective;
 import com.kadware.komodo.kex.kasm.directives.EQUFDirective;
 import com.kadware.komodo.kex.kasm.directives.EXTENDDirective;
@@ -56,6 +57,7 @@ public class SystemDictionary extends Dictionary {
         //  directives
         _initialValues.put("$ASCII", new DirectiveValue(ASCIIDirective.class));
         _initialValues.put("$BASIC", new DirectiveValue(BASICDirective.class));
+        _initialValues.put("$END", new DirectiveValue(ENDDirective.class));
         _initialValues.put("$EQU", new DirectiveValue(EQUDirective.class));
         _initialValues.put("$EQUF", new DirectiveValue(EQUFDirective.class));
         _initialValues.put("$EXTEND", new DirectiveValue(EXTENDDirective.class));

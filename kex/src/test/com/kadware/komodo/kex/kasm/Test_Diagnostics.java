@@ -16,13 +16,13 @@ import static org.junit.Assert.*;
  */
 public class Test_Diagnostics {
 
-    private static final Assembler.Option[] OPTIONS = {
-        Assembler.Option.EMIT_MODULE_SUMMARY,
-        Assembler.Option.EMIT_SOURCE,
-        Assembler.Option.EMIT_GENERATED_CODE,
-        Assembler.Option.EMIT_DICTIONARY,
+    private static final AssemblerOption[] OPTIONS = {
+        AssemblerOption.EMIT_MODULE_SUMMARY,
+        AssemblerOption.EMIT_SOURCE,
+        AssemblerOption.EMIT_GENERATED_CODE,
+        AssemblerOption.EMIT_DICTIONARY,
         };
-    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
+    private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
     @Test
     public void formDiag1(
@@ -34,7 +34,7 @@ public class Test_Diagnostics {
         Assembler assembler = new Assembler.Builder().setOptions(OPTION_SET)
                                                      .setSource(source)
                                                      .build();
-        Assembler.Result result = assembler.assemble();
+        AssemblerResult result = assembler.assemble();
 
         assertFalse(result._diagnostics.isEmpty());
         assertFalse(result._diagnostics.hasFatal());
@@ -52,7 +52,7 @@ public class Test_Diagnostics {
         Assembler assembler = new Assembler.Builder().setOptions(OPTION_SET)
                                                      .setSource(source)
                                                      .build();
-        Assembler.Result result = assembler.assemble();
+        AssemblerResult result = assembler.assemble();
 
         assertFalse(result._diagnostics.isEmpty());
         assertFalse(result._diagnostics.hasFatal());
@@ -72,7 +72,7 @@ public class Test_Diagnostics {
         Assembler assembler = new Assembler.Builder().setOptions(OPTION_SET)
                                                      .setSource(source)
                                                      .build();
-        Assembler.Result result = assembler.assemble();
+        AssemblerResult result = assembler.assemble();
 
         assertTrue(result._diagnostics.isEmpty());
     }

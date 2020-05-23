@@ -1,4 +1,6 @@
 -- TODO InProgress
+Use ENDDirective in the $PROC directive code
+
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Don't stuff values into pre-built level 0 BDTs except for absolute address
@@ -207,7 +209,6 @@ functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 directives
-  $END
   $FUNC (user-defined functions)
   $USE (implicit base register)
   $INSERT (maybe)

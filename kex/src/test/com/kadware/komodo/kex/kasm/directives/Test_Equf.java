@@ -5,6 +5,8 @@
 package com.kadware.komodo.kex.kasm.directives;
 
 import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.AssemblerOption;
+import com.kadware.komodo.kex.kasm.AssemblerResult;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,13 +15,13 @@ import static org.junit.Assert.*;
 
 public class Test_Equf {
 
-    private static final Assembler.Option[] OPTIONS = {
-        Assembler.Option.EMIT_MODULE_SUMMARY,
-        Assembler.Option.EMIT_SOURCE,
-        Assembler.Option.EMIT_GENERATED_CODE,
-        Assembler.Option.EMIT_DICTIONARY,
+    private static final AssemblerOption[] OPTIONS = {
+        AssemblerOption.EMIT_MODULE_SUMMARY,
+        AssemblerOption.EMIT_SOURCE,
+        AssemblerOption.EMIT_GENERATED_CODE,
+        AssemblerOption.EMIT_DICTIONARY,
         };
-    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
+    private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
 
     @Test
@@ -35,7 +37,7 @@ public class Test_Equf {
                                                .setOptions(OPTION_SET)
                                                .setSource(source)
                                                .build();
-        Assembler.Result result = asm.assemble();
+        AssemblerResult result = asm.assemble();
         assertTrue(result._diagnostics.isEmpty());
         //TODO test generated value
     }
@@ -53,7 +55,7 @@ public class Test_Equf {
                                                .setOptions(OPTION_SET)
                                                .setSource(source)
                                                .build();
-        Assembler.Result result = asm.assemble();
+        AssemblerResult result = asm.assemble();
         assertTrue(result._diagnostics.isEmpty());
         //TODO test generated value
     }

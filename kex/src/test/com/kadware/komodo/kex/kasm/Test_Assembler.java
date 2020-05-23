@@ -7,28 +7,26 @@ package com.kadware.komodo.kex.kasm;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for the Assembler class in this package
  */
 public class Test_Assembler {
 
-    private static final Assembler.Option[] OPTIONS = {
-        Assembler.Option.EMIT_MODULE_SUMMARY,
-        Assembler.Option.EMIT_SOURCE,
-        Assembler.Option.EMIT_GENERATED_CODE,
-        Assembler.Option.EMIT_DICTIONARY,
+    private static final AssemblerOption[] OPTIONS = {
+        AssemblerOption.EMIT_MODULE_SUMMARY,
+        AssemblerOption.EMIT_SOURCE,
+        AssemblerOption.EMIT_GENERATED_CODE,
+        AssemblerOption.EMIT_DICTIONARY,
         };
-    private static final Set<Assembler.Option> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
+    private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
 //    @Test
 //    public void noSource(
 //    ) {
 //        String[] source = {};
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertEquals(0, result._parsedCode.length);
 //    }
@@ -43,7 +41,7 @@ public class Test_Assembler {
 //            ". Blah blah blah",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        TextLine[] parsedCode = result._parsedCode;
 //        assertEquals(4, parsedCode.length);
@@ -59,7 +57,7 @@ public class Test_Assembler {
 //            "  LA,U A0,0"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //    }
 
@@ -70,7 +68,7 @@ public class Test_Assembler {
 //                "START*  LA,U A0,0"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertTrue(result._relocatableModule._externalLabels.containsKey("START"));
@@ -85,7 +83,7 @@ public class Test_Assembler {
 //                "$(5)  LA,U      A0,1",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertEquals(2, result._relocatableModule._storage.size());
@@ -100,7 +98,7 @@ public class Test_Assembler {
 //                "$(3),START*  LA,U      A0,0",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertEquals(1, result._relocatableModule._storage.size());
@@ -116,7 +114,7 @@ public class Test_Assembler {
 //                "$%$%$ LA  A5,0",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertFalse(result._diagnostics.isEmpty());
 //    }
 
@@ -127,7 +125,7 @@ public class Test_Assembler {
 //                "$(25),%%% LA  A5,0",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertFalse(result._diagnostics.isEmpty());
 //    }
 
@@ -138,7 +136,7 @@ public class Test_Assembler {
 //                "LABEL,EXTRA LA  A5,0",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertFalse(result._diagnostics.isEmpty());
 //    }
 
@@ -149,7 +147,7 @@ public class Test_Assembler {
 //                "$(25),LABEL,EXTRA LA  A5,0",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertFalse(result._diagnostics.isEmpty());
 //    }
 
@@ -160,7 +158,7 @@ public class Test_Assembler {
 //            "$(1)  + (5 + 3)*2"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertEquals(1, result._relocatableModule._storage.size());
@@ -177,7 +175,7 @@ public class Test_Assembler {
 //            "      + ((0111+FOO, 0111), 0111+FEE+FOE)"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertEquals(2, result._relocatableModule._storage.size());
@@ -204,7 +202,7 @@ public class Test_Assembler {
 //            "      + ((077000777) + 5)"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //        assertEquals(2, result._relocatableModule._storage.size());
@@ -247,7 +245,7 @@ public class Test_Assembler {
 //            "          + 256.9375 .  1000000001111 = 400740..0"
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //
@@ -299,7 +297,7 @@ public class Test_Assembler {
 //            "          'A'DR",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //
@@ -328,7 +326,7 @@ public class Test_Assembler {
 //            "          'A'DR",
 //        };
 //
-//        Assembler.Result result = Assembler.assemble("TEST", source, OPTION_SET);
+//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
 //        assertTrue(result._diagnostics.isEmpty());
 //        assertNotNull(result._relocatableModule);
 //
