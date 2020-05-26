@@ -15,7 +15,6 @@ exlib:
     support various tape file formats
 
 kasm:
-    We really need to support identifiers > 12 characters
     Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 
 klink:
@@ -30,6 +29,7 @@ Check to ensure breakpoints are all working.
 * kasm
 unit test lit2() nested literals don't work right
 See Test_Diagnostics.formOK - we are getting a T we should not get.
+
 
 * klink
 Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting

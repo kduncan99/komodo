@@ -1095,27 +1095,6 @@ public class Linker {
      * When loaded, control will be transfered to the first word of the bank, and the processor state
      * will be set for extended mode, ring/domain 0, and with neither stacks nor BDTs loaded.
      * The lower level address (and thus, the start address) is set at 01000.
-     * The SP will create
-     *      * Pre-allocated banks for
-     *          * Interrupt control stack (ICS)
-     *          * Return control stack (RCS)
-     *          * Configuration Bank
-     *      * A minimal set of interrupt handlers
-     *          For UPI Initial, a UR to the start address for the binary
-     *          For all others, an IAR instruction
-     *      * A level 0 BDT including
-     *          Interrupt Vectors
-     *          An entry at BDI 000040 for this bank
-     *          An entry at BDI 000041 for the ICS
-     *          An entry at BDI 000042 for the RCS
-     *          An entry at BDI 000043 for the configuration bank
-     * It will then set the appropriate registers
-     *      * B0 for the code bank
-     *      * B2 fo the configuration bank
-     *      * B25 and EX0 for the RCS
-     *      * B26 and EX1 for the ICS
-     *      * DR for an extended mode quarter-word sensitive execution environment with PP = 0
-     * It will then send a UPI Initial to the selected processor which will start the execution of the binary.
      */
     private LinkResult linkBinary() {
         _linkType = LinkType.BINARY;
@@ -1161,31 +1140,8 @@ public class Linker {
      * each containing the raw content for the associated bank.
      * Each bank descriptor defines the geometry of the bank along with access control,
      * whether (and where) the bank is initially based, and other bank attributes.
-     * The SP will create all necessary bank descriptor tables.
      * It is intended primarily for development/debug/test purposes.
      * NOTE: For now, we support only basic and extended mode normal banks - no gate, indirect, queue banks
-     *
-     * The SP will create
-     *      * Pre-allocated banks for
-     *          * Interrupt control stack (ICS)
-     *          * Return control stack (RCS)
-     *      * A minimal set of interrupt handlers
-     *          For UPI Initial, a UR to the start address for the binary
-     *          For all others, an IAR instruction
-     *      * A level 0 BDT including
-     *          Interrupt Vectors
-     *          Entries for all level-0 banks defined by the bank descriptors
-     *          An entry at the first unused BDI for the ICS
-     *          An entry at the next unused BDI for the RCS
-     *      * Other BDTs as defined by the bank descriptors
-     * It will then set the appropriate registers
-     *      * B0 for the code bank
-     *      * B25 and EX0 for the RCS
-     *      * B26 and EX1 for the ICS
-     *      * DR for an extended mode quarter-word sensitive execution environment with PP = 0
-     *      * Other base registers as defined by the bank descriptors
-     *          At least one bank must be initially based on B0
-     *          No bank should be initially based on B25 or B26, as this will conflict with the ICS and RCS
      */
     private LinkResult linkMultiBankedBinary() {
         _linkType = LinkType.MULTI_BANKED_BINARY;

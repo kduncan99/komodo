@@ -151,11 +151,14 @@ public class Dictionary {
      *      '$'
      *      '_'
      * @param label label to be checked
+     * @param maxLength maximum length allowed for a label
      * @return true if label is valid
      */
     public static boolean isValidLabel(
-        final String label
+        final String label,
+        final int maxLength
     ) {
-        return label.matches("[a-zA-Z_$][a-zA-Z0-9_$]{0,11}");
+        String pattern = String.format("[a-zA-Z_$][a-zA-Z0-9_$]{0,%d}", maxLength);
+        return label.matches(pattern);
     }
 }

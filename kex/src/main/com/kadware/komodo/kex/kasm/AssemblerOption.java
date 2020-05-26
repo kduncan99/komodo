@@ -9,5 +9,6 @@ public enum AssemblerOption {
     EMIT_GENERATED_CODE,
     EMIT_MODULE_SUMMARY,
     EMIT_SOURCE,
+    LONG_IDENTIFIERS,       //  expands max label length from 12 to 48 characters
     SILENT,
 }

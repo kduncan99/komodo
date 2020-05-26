@@ -240,6 +240,57 @@ public class Test_Assembler {
     }
 
     @Test
+    public void labelFieldLong_Good(
+    ) throws ParameterException {
+        String[] source = {
+            "$(1),THISLABELISNOTTOOLONG*  LA,U A0,077"
+        };
+
+        Set<AssemblerOption> extraOption = new HashSet<>(OPTION_SET);
+        extraOption.add(AssemblerOption.LONG_IDENTIFIERS);
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(extraOption)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        assertEquals(1, result._parsedCode.length);
+        assertEquals(1, result._relocatableModule.getEntryPoints().size());
+
+        RelocatableModule.EntryPoint ep = result._relocatableModule.getEntryPoints().get("THISLABELISNOTTOOLONG");
+        assertNotNull(ep);
+        assertTrue(ep instanceof RelocatableModule.RelativeEntryPoint);
+        RelocatableModule.RelativeEntryPoint rep = (RelocatableModule.RelativeEntryPoint) ep;
+        assertEquals(0, rep._value);
+        assertEquals(1, rep._locationCounterIndex);
+
+        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, lcPool.length);
+        assertEquals(0_107000_000077L, lcPool[0].getW());
+    }
+
+    @Test
+    public void labelFieldLong_Bad(
+    ) {
+        String[] source = {
+            "$(1),THISLABELISTOOLONG*  LA,U A0,077"
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertEquals(1, result._diagnostics.getDiagnostics().size());
+        assertNotNull(result._relocatableModule);
+        assertEquals(1, result._parsedCode.length);
+        assertEquals(0, result._relocatableModule.getEntryPoints().size());
+    }
+
+    @Test
     public void groupExpression(
     ) throws ParameterException {
         String[] source = {

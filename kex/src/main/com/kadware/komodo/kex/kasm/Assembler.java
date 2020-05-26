@@ -658,14 +658,15 @@ public class Assembler {
                     ++levelers;
                     sfText = sfText.substring(0, sfText.length() - 1);
                 }
-                if (Dictionary.isValidLabel(sfText)) {
+                int maxLabelLength = _global._options.contains(AssemblerOption.LONG_IDENTIFIERS) ? 48 : 12;
+                if (Dictionary.isValidLabel(sfText, maxLabelLength)) {
                     label = sfText;
                     labelLevel = levelers;
                     labelLocale = sfLocale;
-                    ++sfx;
                 } else {
                     appendDiagnostic(new ErrorDiagnostic(sfLocale, "Invalid label specified"));
                 }
+                ++sfx;
             }
 
             //  Warn on anything extra
@@ -1608,6 +1609,12 @@ public class Assembler {
      */
     public boolean hasNextSourceLine() {
         return _nextSourceIndex < _sourceLines.length;
+    }
+
+    public boolean isOptionSet(
+        final AssemblerOption option
+    ) {
+        return _global._options.contains(option);
     }
 
     /**

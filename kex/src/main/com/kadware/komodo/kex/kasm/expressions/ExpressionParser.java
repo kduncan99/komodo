@@ -6,6 +6,7 @@ package com.kadware.komodo.kex.kasm.expressions;
 
 import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.dictionary.*;
 import com.kadware.komodo.kex.kasm.diagnostics.*;
@@ -405,8 +406,9 @@ public class ExpressionParser {
                 break;
             }
 
-            if (sb.length() == 12) {
+            if (!assembler.isOptionSet(AssemblerOption.LONG_IDENTIFIERS) && (sb.length() >= 12)) {
                 assembler.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Label or Reference too long"));
+                break;
             }
 
             skipNextChar();
