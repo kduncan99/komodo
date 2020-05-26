@@ -186,15 +186,15 @@ public class Assembler {
 
         //  Check the dictionary...
         try {
-            Value v = _dictionary.getValue(operation);
-            if (v instanceof ProcedureValue) {
-                processProcedure(operation, (ProcedureValue) v, textLine);
+            Dictionary.ValueInfo valueInfo = _dictionary.getValueInfo(operation);
+            if (valueInfo._value instanceof ProcedureValue) {
+                processProcedure(operation, (ProcedureValue) valueInfo._value, textLine);
                 return;
-            } else if (v instanceof FormValue) {
-                processForm((FormValue) v, operandField);
+            } else if (valueInfo._value instanceof FormValue) {
+                processForm((FormValue) valueInfo._value, operandField);
                 return;
-            } else if (v instanceof DirectiveValue) {
-                processDirective((DirectiveValue) v, textLine, lfc, operationField);
+            } else if (valueInfo._value instanceof DirectiveValue) {
+                processDirective((DirectiveValue) valueInfo._value, textLine, lfc, operationField);
                 return;
             } else {
                 appendDiagnostic(new ErrorDiagnostic(operationField._locale,
@@ -261,26 +261,28 @@ public class Assembler {
             }
 
             //  External symbols
-            for (String label : _global._globalDictionary.getLabels()) {
-                try {
-                    Dictionary.ValueAndLevel val = _global._globalDictionary.getValueAndLevel(label);
-                    if (val._level == 0) {
-                        if (val._value.getType() == ValueType.Integer) {
-                            IntegerValue iv = (IntegerValue) val._value;
-                            RelocatableModule.EntryPoint ep;
-                            if ((iv._references == null) || (iv._references.length == 0)) {
-                                ep = new RelocatableModule.AbsoluteEntryPoint(label, iv._value.get().longValue());
-                            } else {
-                                //TODO we allow only one reference, and that being a location counter index thing
-                                // make this a LocationCounterEntryPoint
-                                // pending verification with real @MASM
-                                ep = null;
-                            }
-                            module.addEntryPoint(ep);
-                        }
+            for (Dictionary.ValueInfo vInfo : _global._globalDictionary.getAllValueInfos()) {
+                System.out.println(String.format("--> label:%s level:%d type:%s",
+                                                 vInfo._label,
+                                                 vInfo._level,
+                                                 vInfo._value.getType()));//TODO remove
+                //  At this point we should expect the value to be an integer
+                //  TODO enforce this where the label is created
+                if (vInfo._value.getType() == ValueType.Integer) {
+                    IntegerValue iv = (IntegerValue) vInfo._value;
+                    RelocatableModule.EntryPoint ep;
+                    if ((iv._references == null) || (iv._references.length == 0)) {
+                        ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
+                    } else {
+                        //TODO we allow only one reference, and that being a location counter index thing
+                        // Make this a LocationCounterEntryPoint (pending verification with real @MASM)
+                        // Enforce this restriction where the label is created
+                        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+                        ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
+                                                                      iv._value.get().intValue(),
+                                                                      urlc._locationCounterIndex);
                     }
-                } catch (NotFoundException ex) {
-                    throw new RuntimeException("Can't happen: " + ex.getMessage());
+                    module.addEntryPoint(ep);
                 }
             }
 
@@ -311,20 +313,20 @@ public class Assembler {
     private void displayDictionary(
         final Dictionary dictionary
     ) {
-        _global._outputStream.println("Dictionary:");
-        for ( String label : dictionary.getLabels() ) {
-            try {
-                Dictionary.ValueAndLevel val = dictionary.getValueAndLevel( label );
-                if (val._level < 2) {
-                    System.out.println("  " +
-                                       label +
-                                       "*".repeat(Math.max(0, val._level)) +
-                                       ": " +
-                                       val._value.toString());
-                }
-            } catch (NotFoundException ex) {
-                //  can't happen
-            }
+        _global._outputStream.println("Main Assembly Dictionary:");
+        for (Dictionary.ValueInfo vInfo : dictionary.getAllValueInfos()) {
+            System.out.println("  " +
+                               vInfo._label +
+                               ": " +
+                               vInfo._value.toString());
+        }
+
+        _global._outputStream.println("External Labels:");
+        for (Dictionary.ValueInfo vInfo : _global._globalDictionary.getAllValueInfos()) {
+            System.out.println("  " +
+                               vInfo._label +
+                               ": " +
+                               vInfo._value.toString());
         }
     }
 
@@ -1248,7 +1250,7 @@ public class Assembler {
             }
         }
 
-        subAssembler._dictionary.addValue(0, procedureName, mainNode);
+        subAssembler._dictionary.addValue(0, procedureName, new Locale(textLine._lineSpecifier, 1), mainNode);
         for (TextLine procTextLine : procedureValue._source) {
             subAssembler.assembleTextLine(procTextLine);
         }
@@ -1271,7 +1273,8 @@ public class Assembler {
                 if (uRef instanceof UndefinedReferenceToLabel) {
                     UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
                     try {
-                        Value lookupValue = _dictionary.getValue(lRef._label);
+                        Dictionary.ValueInfo vInfo = _dictionary.getValueInfo(lRef._label);
+                        Value lookupValue = vInfo._value;
                         if (lookupValue.getType() != ValueType.Integer) {
                             String msg = String.format("Reference '%s' does not resolve to an integer",
                                                        lRef._label);
@@ -1362,6 +1365,7 @@ public class Assembler {
 
         while (hasNextSourceLine()) {
             TextLine textLine = getNextSourceLine();
+            textLine.parseFields(_global._diagnostics);
             assembleTextLine(textLine);
             if (_global._diagnostics.hasFatal()) {
                 if (!_global._options.contains(AssemblerOption.SILENT)) {
@@ -1435,7 +1439,7 @@ public class Assembler {
         if (_dictionary.hasValue(label)) {
             appendDiagnostic(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
         } else {
-            _dictionary.addValue(labelLevel, label, value);
+            _dictionary.addValue(labelLevel, label, locale, value);
         }
     }
 
@@ -1455,7 +1459,8 @@ public class Assembler {
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param form form describing the fields for which values are specified in the values parameter
      * @param values array of component values, each with potential undefined refereces but no attached forms
-     * @return value indicating the location which applies to the word which was just generated
+     * @return value indicating the location which applies to the word which was just generated...
+     *          This value is used in generating literals, and is not used in other situations.
      */
     public IntegerValue generate(
         final LineSpecifier lineSpecifier,
@@ -1478,7 +1483,6 @@ public class Assembler {
         for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
             genInt = genInt.shiftLeft(form._fieldSizes[fx]);
             BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
-
             BigInteger fieldValue = values[fx]._value.get();
             boolean trunc;
             if (values[fx]._value.isPositive()) {
@@ -1505,8 +1509,8 @@ public class Assembler {
                                                     .setReferences(newRefs.toArray(new UndefinedReference[0]))
                                                     .build();
         GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
-        gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
+        gp.store(gw);
 
         UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
         return new IntegerValue.Builder().setValue(lcOffset)

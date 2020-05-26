@@ -168,8 +168,9 @@ public class EQUFDirective extends Directive {
             IntegerValue finalValue = workingValue.copy(form);
             EqufValue equfValue = new EqufValue.Builder().setValue(finalValue).build();
             assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
-                                             labelFieldComponents._label,
-                                             equfValue);
+                                               labelFieldComponents._label,
+                                               labelFieldComponents._labelLocale,
+                                               equfValue);
         }
     }
 }

@@ -11,6 +11,7 @@ import com.kadware.komodo.kex.kasm.UndefinedReference;
 import com.kadware.komodo.kex.kasm.UndefinedReferenceToLabel;
 import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.dictionary.BuiltInFunctionValue;
+import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.NodeValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
@@ -72,7 +73,8 @@ public class ReferenceItem extends OperandItem {
         try {
             //  Look up the reference in the dictionary.
             //  It must be a particular type of value, else we have an expression exception.
-            Value v = assembler.getDictionary().getValue(_reference);
+            Dictionary.ValueInfo vInfo = assembler.getDictionary().getValueInfo(_reference);
+            Value v = vInfo._value;
             switch (v.getType()) {
                 case Integer: {
                     //  If this has a location counter index associated with it, we don't want to resolve it yet

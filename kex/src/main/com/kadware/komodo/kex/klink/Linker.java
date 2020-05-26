@@ -587,7 +587,7 @@ public class Linker {
      */
     private void extractEntryPoints() {
         for (RelocatableModule rel : _relocatableModules) {
-            for (RelocatableModule.EntryPoint ep : rel.getEntryPoints()) {
+            for (RelocatableModule.EntryPoint ep : rel.getEntryPoints().values()) {
                 if (ep instanceof RelocatableModule.RelativeEntryPoint) {
                     RelocatableModule.RelativeEntryPoint rep = (RelocatableModule.RelativeEntryPoint) ep;
                     SymbolEntry se = new LocationCounterRelativeSymbolEntry(rep._name, rep._value, rel, rep._locationCounterIndex);
@@ -861,7 +861,7 @@ public class Linker {
         final LCPoolSpecification lcpSpecification,
         final RelocatableModule.RelocatableWord relocatableWord
     ) {
-        long result = relocatableWord._baseValue.getW();
+        long result = relocatableWord.getW();
         List<RelocatableModule.RelocatableItem> itemList = Arrays.asList(relocatableWord._relocatableItems);
         Iterator<RelocatableModule.RelocatableItem> itemIter = itemList.iterator();
         while (itemIter.hasNext()) {

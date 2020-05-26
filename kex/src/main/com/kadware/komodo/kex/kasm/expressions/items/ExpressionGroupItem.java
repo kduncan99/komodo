@@ -86,7 +86,7 @@ public class ExpressionGroupItem extends OperandItem {
     /**
      * Represents a value to be placed into the literal pool, with the result being the
      * location-counter-relative address thereof.
-     * If more than one expression exists, all expressions must be IntegerValue's, and
+     * If more than one expression exists, all expressions must be IntegerValues, and
      * the result is made up of one bitfield per expression, the sizes of which are the
      * dividend of 36 bits by the number of fields.
      */

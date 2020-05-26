@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.kex.kasm;
 
+import com.kadware.komodo.kex.RelocatableModule;
+import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -65,9 +67,9 @@ public class Test_Assembler {
 
     @Test
     public void labelFieldEmpty(
-    ) {
+    ) throws ParameterException {
         String[] source = {
-            "  LA,U A0,0"
+            "  LA,U A0,5"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -77,13 +79,19 @@ public class Test_Assembler {
         AssemblerResult result = asm.assemble();
 
         assertTrue(result._diagnostics.isEmpty());
+        assertEquals(1, result._parsedCode.length);
+        assertNotNull(result._relocatableModule);
+        assertEquals("TEST", result._relocatableModule.getModuleName());
+        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(0);
+        assertEquals(1, lcPool.length);
+        assertEquals(0_107000_000005L, lcPool[0].getW());
     }
 
     @Test
     public void labelFieldLabel(
     ) {
         String[] source = {
-                "START*  LA,U A0,0"
+            "$(1),START*  LA,U A0,077"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -94,8 +102,15 @@ public class Test_Assembler {
 
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
-//TODO        assertTrue(result._relocatableModule.getEntryPoints().contains("START"));
-//TODO        assertEquals(1, result._relocatableModule._externalLabels.get("START")._references.length);
+        assertEquals(1, result._parsedCode.length);
+        assertEquals(1, result._relocatableModule.getEntryPoints().size());
+
+        RelocatableModule.EntryPoint ep = result._relocatableModule.getEntryPoints().get("START");
+        assertNotNull(ep);
+        assertTrue(ep instanceof RelocatableModule.RelativeEntryPoint);
+        RelocatableModule.RelativeEntryPoint rep = (RelocatableModule.RelativeEntryPoint) ep;
+        assertEquals(0, rep._value);
+        assertEquals(1, rep._locationCounterIndex);
     }
 
 //    @Test

@@ -86,6 +86,7 @@ public class FORMDirective extends Directive {
             if (!err) {
                 assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
                                                    labelFieldComponents._label,
+                                                   labelFieldComponents._labelLocale,
                                                    new FormValue.Builder().setForm(new Form(fieldSizes)).build());
             }
         }

@@ -43,6 +43,7 @@ public class EQUDirective extends Directive {
 
                 assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
                                                    labelFieldComponents._label,
+                                                   labelFieldComponents._labelLocale,
                                                    e.evaluate(assembler));
             } catch (ExpressionException ex) {
                 assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));

@@ -8,9 +8,9 @@ import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -35,14 +35,13 @@ public class RelocatableModule {
      */
     public static class RelocatableWord extends Word36 {
 
-        public final Word36 _baseValue;
         public final RelocatableItem[] _relocatableItems;
 
         public RelocatableWord(
             final Word36 baseValue,
             final RelocatableItem[] relocatableItems
         ) {
-            _baseValue = baseValue;
+            super(baseValue);
             _relocatableItems = relocatableItems;
         }
     }
@@ -107,21 +106,6 @@ public class RelocatableModule {
             return _fieldDescriptor.toString() + (_subtraction ? "-" : "+") + _undefinedSymbol;
         }
     }
-
-    //TODO I don't think we need this...?
-//    /**
-//     * Represents a symbol which was not defined at the time the source code was converted to relocatable words
-//     */
-//    public static class UndefinedSymbol {
-//
-//        final String _value;
-//
-//        public UndefinedSymbol(
-//            final String value
-//        ) {
-//            _value = value;
-//        }
-//    }
 
     /**
      * Describes an 'entry point' - in actuality, this is used for any symbol which is externalized
@@ -375,6 +359,13 @@ public class RelocatableModule {
     }
 
     /**
+     * Retrieves entry points (externalized symbols)
+     */
+    public Map<String, EntryPoint> getEntryPoints() {
+        return _entryPoints;
+    }
+
+    /**
      * Retrieves an ordered copy of the set of all location counter indices
      */
     public Set<Integer> getEstablishedLocationCounterIndices() {
@@ -402,13 +393,6 @@ public class RelocatableModule {
      */
     public String getModuleName() {
         return _moduleName;
-    }
-
-    /**
-     * Retrieves entry points (externalized symbols)
-     */
-    public Collection<EntryPoint> getEntryPoints() {
-        return _entryPoints.values();
     }
 
     public boolean getAFCMClearSensitivity() {

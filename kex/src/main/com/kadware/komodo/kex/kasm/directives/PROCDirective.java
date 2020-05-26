@@ -90,12 +90,13 @@ public class PROCDirective extends Directive {
             }
 
             if (assembler.getDictionary().hasValue(labelFieldComponents._label)) {
-                Locale loc = new Locale(textLine._lineSpecifier, 1);
-                assembler.appendDiagnostic(new DuplicateDiagnostic(loc, "$PROC label duplicated"));
+                assembler.appendDiagnostic(new DuplicateDiagnostic(labelFieldComponents._labelLocale,
+                                                                   "$PROC label duplicated"));
             } else {
                 assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
-                                                 labelFieldComponents._label,
-                                                 procValue);
+                                                   labelFieldComponents._label,
+                                                   labelFieldComponents._labelLocale,
+                                                   procValue);
             }
         }
     }

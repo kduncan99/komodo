@@ -24,8 +24,8 @@ import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SLFunction;
 import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SRFunction;
 import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.SSFunction;
 import com.kadware.komodo.kex.kasm.expressions.builtInFunctions.TYPEFunction;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Represents a top-level dictionary which contains all the system labels
@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class SystemDictionary extends Dictionary {
 
-    private static final Map<String, Value> _initialValues = new HashMap<>();
+    private static final Map<String, Value> _initialValues = new TreeMap<>();
     static {
         for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("X%d", rx), new IntegerValue.Builder().setValue(rx).build());
@@ -94,7 +94,7 @@ public class SystemDictionary extends Dictionary {
     public SystemDictionary(
     ) {
         for (Map.Entry<String, Value> entry : _initialValues.entrySet()) {
-            addValue(0, entry.getKey(), entry.getValue());
+            addValue(0, entry.getKey(), null, entry.getValue());
         }
     }
 }

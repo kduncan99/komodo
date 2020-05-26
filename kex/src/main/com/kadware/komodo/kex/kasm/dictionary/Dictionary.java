@@ -5,10 +5,9 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
+import com.kadware.komodo.kex.kasm.Locale;
 import java.util.HashMap;
-import java.util.TreeSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Represents a collection of values, tagged with a label
@@ -20,27 +19,51 @@ import java.util.Set;
  */
 public class Dictionary {
 
-    public static class ValueAndLevel {
-        final public int _level;
-        final public Value _value;
+    private static class ValueEntry {
 
-        ValueAndLevel(
-            final int level,
+        public final Locale _locale;
+        public final Value _value;
+
+        private ValueEntry(
+            final Locale locale,
             final Value value
         ) {
-            _level = level;
+            _locale = locale;
             _value = value;
         }
     }
 
+    public static class ValueInfo {
+
+        public final String _label;
+        public final int _level;
+        public final Locale _locale;
+        public final Value _value;
+
+        private ValueInfo(
+            final String label,
+            final int level,
+            final Locale locale,
+            final Value value
+        ) {
+            _label = label;
+            _level = level;
+            _locale = locale;
+            _value = value;
+        }
+    }
+
+    private final int _level;
     private final Dictionary _upperLevelDictionary;
-    private final Map<String, Value> _values = new HashMap<>();
+    private final Map<String, ValueEntry> _values = new HashMap<>();
 
     /**
      * Constructor for top-level (System) dictionary
+     * To be invoked by SystemDictionary constructor only
      */
-    public Dictionary(
+    Dictionary(
     ) {
+        _level = 0;
         _upperLevelDictionary = null;
     }
 
@@ -51,6 +74,7 @@ public class Dictionary {
     public Dictionary(
         final Dictionary upperLevelDictionary
     ) {
+        _level = upperLevelDictionary._level;
         _upperLevelDictionary = upperLevelDictionary;
     }
 
@@ -58,76 +82,54 @@ public class Dictionary {
      * Adds or replaces a value corresponding to the given label, in either this dictionary
      * or some higher-level dictionary.
      * The label will be folded to uppercase.
-     * @param level - zero means this dictionary, one means the next higher-level, etc.
+     * @param relativeLevel - zero means this dictionary, one means the next higher-level, etc.
      * @param label label to be used
      * @param value value to be associated with the label
      */
     public void addValue(
-        final int level,
+        final int relativeLevel,
         final String label,
+        final Locale locale,
         final Value value
     ) {
-        if ((level > 0) && (_upperLevelDictionary != null) && !(_upperLevelDictionary instanceof SystemDictionary)) {
-            _upperLevelDictionary.addValue(level - 1, label, value);
+        if ((relativeLevel > 0) && (_upperLevelDictionary != null) && !(_upperLevelDictionary instanceof SystemDictionary)) {
+            _upperLevelDictionary.addValue(relativeLevel - 1, label, locale, value);
         } else {
-            _values.put(label.toUpperCase(), value);
+            _values.put(label.toUpperCase(), new ValueEntry(locale, value));
         }
     }
 
     /**
-     * Getter
-     * @return list of labels
+     * Retrieve ValueInfo objects for all values in this dictionary
      */
-    public Set<String> getLabels(
-    ) {
-        Set<String> result = new TreeSet<>();
-        if (_upperLevelDictionary != null) {
-            result.addAll(_upperLevelDictionary.getLabels());
+    public ValueInfo[] getAllValueInfos() {
+        ValueInfo[] result = new ValueInfo[_values.size()];
+        int rx = 0;
+        for (Map.Entry<String, ValueEntry> entry : _values.entrySet()) {
+            result[rx] = new ValueInfo(entry.getKey(), _level, entry.getValue()._locale, entry.getValue()._value);
         }
-        result.addAll(_values.keySet());
         return result;
     }
 
     /**
-     * Retrieves a particular Value object
-     * @param label label to be retrieved
+     * Retrieves a particular ValueEntry object
+     * @param label label of the object to be retrieved
      * @return object if found
      * @throws NotFoundException if the value is not found in this, or any upper-level dictionary
      */
-    public Value getValue(
+    public ValueInfo getValueInfo(
         final String label
     ) throws NotFoundException {
-        Value result = _values.get(label.toUpperCase());
-        if ((result == null) && (_upperLevelDictionary != null)) {
-            result = _upperLevelDictionary.getValue(label);
-        }
-        if (result == null) {
-            throw new NotFoundException(label);
-        }
-        return result;
-    }
-
-    /**
-     * Retrieves a particular Value object along with its level, 0 representing the current dictionary,
-     * anything greater representing higher-level dictionaries.
-     * @param label label to be retrieved
-     * @return object if found
-     * @throws NotFoundException if the value is not found in this, or any upper-level dictionary
-     */
-    public ValueAndLevel getValueAndLevel(
-            final String label
-    ) throws NotFoundException {
-        Value v = _values.get(label.toUpperCase());
-        if (v == null) {
-            if (_upperLevelDictionary != null) {
-                ValueAndLevel upperResult = _upperLevelDictionary.getValueAndLevel( label );
-                return new ValueAndLevel(upperResult._level + 1, upperResult._value);
-            } else {
-                throw new NotFoundException( label );
-            }
+        ValueEntry entry = _values.get(label.toUpperCase());
+        if (entry != null) {
+            return new ValueInfo(label.toUpperCase(), _level, entry._locale, entry._value);
         }
 
-        return new ValueAndLevel(0, v);
+        if (_upperLevelDictionary != null) {
+            return _upperLevelDictionary.getValueInfo(label);
+        }
+
+        throw new NotFoundException(label);
     }
 
     /**

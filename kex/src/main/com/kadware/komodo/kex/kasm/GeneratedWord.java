@@ -76,4 +76,15 @@ class GeneratedWord {
         //  TODO should we verify that _value is within 36 bits?
         return new RelocatableModule.RelocatableWord(new Word36(_value._value.get().longValue()), relItems);
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+               _lineSpecifier.toString() +
+               ":" +
+               _topLevelTextLine._text +
+               " -> " +
+               _value.toString() +
+               "}";
+    }
 }
