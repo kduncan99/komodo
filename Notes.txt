@@ -28,8 +28,10 @@ ByteChannelModule unit tests - they wait without being notify()able, which slows
 Check to ensure breakpoints are all working.
 
 * kasm
+unit test lit2() nested literals don't work right
 See Test_Diagnostics.formOK - we are getting a T we should not get.
 
+* klink
 Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting
 ((077) + 5) does not generate a literal 077 as it should do
 String concatenation does not honor precision per MASM 5.3.1
