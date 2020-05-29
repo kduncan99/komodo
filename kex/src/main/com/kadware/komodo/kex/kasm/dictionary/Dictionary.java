@@ -106,7 +106,7 @@ public class Dictionary {
         ValueInfo[] result = new ValueInfo[_values.size()];
         int rx = 0;
         for (Map.Entry<String, ValueEntry> entry : _values.entrySet()) {
-            result[rx] = new ValueInfo(entry.getKey(), _level, entry.getValue()._locale, entry.getValue()._value);
+            result[rx++] = new ValueInfo(entry.getKey(), _level, entry.getValue()._locale, entry.getValue()._value);
         }
         return result;
     }

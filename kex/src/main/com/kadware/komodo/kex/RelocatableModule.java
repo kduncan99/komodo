@@ -7,7 +7,6 @@ package com.kadware.komodo.kex;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -199,6 +198,26 @@ public class RelocatableModule {
         }
     }
 
+    /**
+     * Describes a location counter pool
+     */
+    public static class RelocatablePool {
+
+        public final int _locationCounterIndex;
+        public final boolean _requiresExtendedMode;
+        public final RelocatableWord[] _content;
+
+        RelocatablePool(
+            final int lcIndex,
+            final RelocatableWord[] content,
+            final boolean requiresExtendedMode
+        ) {
+            _content = content;
+            _locationCounterIndex = lcIndex;
+            _requiresExtendedMode = requiresExtendedMode;
+        }
+    }
+
 
     //  Data -------------------------------------------------------------------
 
@@ -216,7 +235,7 @@ public class RelocatableModule {
      * Note that a location counter pool can be empty - as is the case for LC's 0 and 1 (normally, anyway).
      * Keyed by location counter index
      */
-    private final TreeMap<Integer, List<RelocatableWord>> _locationCounterPools = new TreeMap<>();
+    private final TreeMap<Integer, RelocatablePool> _locationCounterPools = new TreeMap<>();
 
     private int _elementTableFlagBits;
     private final String _moduleName;
@@ -277,26 +296,6 @@ public class RelocatableModule {
     }
 
     /**
-     * Appends a single RelocatableWord to the end of the location counter pool
-     * associated with the given location counter index. If no pool has been
-     * established, one is first created.
-     * @param locationCounterIndex index of the location counter pool
-     * @param word value to be stored
-     */
-    public void appendRelocatableWord(
-        final int locationCounterIndex,
-        final RelocatableWord word
-    ) throws ParameterException {
-        if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
-            throw new ParameterException("Invalid location counter index");
-        }
-        if (!_locationCounterPools.containsKey(locationCounterIndex)) {
-            _locationCounterPools.put(locationCounterIndex, new LinkedList<>());
-        }
-        _locationCounterPools.get(locationCounterIndex).add(word);
-    }
-
-    /**
      * Sets the entire content of ControlInformation objects for this module.
      * Any existing content is removed.
      */
@@ -350,12 +349,15 @@ public class RelocatableModule {
      */
     public void establishLocationCounterPool(
         final int locationCounterIndex,
+        final boolean requiresExtendedMode,
         final RelocatableWord[] content
     ) throws ParameterException {
         if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
             throw new ParameterException("Invalid location counter index");
         }
-        _locationCounterPools.put(locationCounterIndex, Arrays.asList(content));
+
+        RelocatablePool relPool = new RelocatablePool(locationCounterIndex, content, requiresExtendedMode);
+        _locationCounterPools.put(locationCounterIndex, relPool);
     }
 
     /**
@@ -379,13 +381,13 @@ public class RelocatableModule {
         return _elementTableFlagBits;
     }
 
-    public RelocatableWord[] getLocationCounterPool(
+    public RelocatablePool getLocationCounterPool(
         final int locationCounterIndex
     ) throws ParameterException {
         if ((locationCounterIndex < 0) || (locationCounterIndex > MAX_LOCATION_COUNTER_INDEX)) {
             throw new ParameterException("Invalid location counter index");
         }
-        return _locationCounterPools.get(locationCounterIndex).toArray(new RelocatableWord[0]);
+        return _locationCounterPools.get(locationCounterIndex);
     }
 
     /**

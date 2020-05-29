@@ -4,6 +4,8 @@
 
 package com.kadware.komodo.kex.klink;
 
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.VirtualAddress;
 import com.kadware.komodo.baselib.Word36;
@@ -11,6 +13,7 @@ import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -120,7 +123,7 @@ public class Linker {
 
     public static class Builder {
 
-        private Map<Integer, BankDeclaration> _bankDeclarations = new TreeMap<>();
+        private final Map<Integer, BankDeclaration> _bankDeclarations = new TreeMap<>();
         private String _moduleName = "<unnamed>";
         private Set<LinkOption> _options = new HashSet<>();
         private PrintStream _printStream = new PrintStream(System.out);
@@ -294,6 +297,11 @@ public class Linker {
             BankType bankType = bankDecl._options.contains(BankDeclaration.BankDeclarationOption.EXTENDED_MODE)
                                 ? BankType.EXTENDED_MODE
                                 : BankType.BASIC_MODE;
+            int upperLimit = bankDecl._startingAddress + content.length - 1;
+            if (upperLimit == -1) {
+                upperLimit = (bankDecl._largeBank ? 0100_000000 : 01_000000) - 1;
+            }
+
             BankDescriptor bankDesc = new BankDescriptor(bankDecl._bankName,
                                                          bankDecl._bankLevel,
                                                          bankDecl._bankDescriptorIndex,
@@ -302,7 +310,7 @@ public class Linker {
                                                          bankDecl._generalAccessPermissions,
                                                          bankDecl._specialAccessPermissions,
                                                          bankDecl._startingAddress,
-                                                         bankDecl._startingAddress + content.length - 1,
+                                                         upperLimit,
                                                          content);
             _bankDescriptors.put(bdi, bankDesc);
         }
@@ -472,6 +480,10 @@ public class Linker {
                 _programStartInfo = new ProgramStartInfo(address, bdi, bankOffset, lcpSpec, lcpOffset);
             }
         }
+
+        if ((_programStartInfo == null) && !_options.contains(LinkOption.NO_ENTRY_POINT)) {
+            raise("No program starting address");
+        }
     }
 
     /**
@@ -495,16 +507,27 @@ public class Linker {
 
         if (summary) {
             _printStream.println("Link Module " + _moduleName + " Summary:");
-            String afcmMsg = switch (_afcmSensitivity) {
-                case SET -> "  AFCM-Cleared";
-                case CLEARED -> "  AFCM-Set";
-                case INSENSITIVE -> "  AFCM-Insensitive";
-            };
-            String pwMsg = switch (_partialWordSensitivty) {
-                case THIRD_WORD -> "ThirdWord-Sensitive";
-                case QUARTER_WORD -> "QuarterWord-Sensitive";
-                case INSENSITIVE -> "PartialWord-Insensitive";
-            };
+
+            String afcmMsg;
+            String pwMsg;
+            if (_afcmSensitivity != null) {
+                afcmMsg = switch (_afcmSensitivity) {
+                    case SET -> "  AFCM-Cleared";
+                    case CLEARED -> "  AFCM-Set";
+                    case INSENSITIVE -> "  AFCM-Insensitive";
+                };
+            } else {
+                afcmMsg = "n/a";
+            }
+            if (_partialWordSensitivty != null) {
+                pwMsg = switch (_partialWordSensitivty) {
+                    case THIRD_WORD -> "ThirdWord-Sensitive";
+                    case QUARTER_WORD -> "QuarterWord-Sensitive";
+                    case INSENSITIVE -> "PartialWord-Insensitive";
+                };
+            } else {
+                pwMsg = "n/a";
+            }
             _printStream.println("  Modes: " + afcmMsg + " " + pwMsg);
 
             if (_programStartInfo != null) {
@@ -677,8 +700,8 @@ public class Linker {
         for (LCPoolSpecification lcpSpec : bankDeclaration._poolSpecifications) {
             _poolMap.put(lcpSpec, new BankOffset(bankDeclaration._bankDescriptorIndex, bankOffset));
             try {
-                RelocatableModule.RelocatableWord[] pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
-                bankOffset += pool.length;
+                RelocatableModule.RelocatablePool pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
+                bankOffset += pool._content.length;
             } catch (ParameterException ex) {
                 raise ("Error in pool spec:LC "
                        + lcpSpec._lcIndex
@@ -711,7 +734,7 @@ public class Linker {
         long[] bankContent = _bankContent.get(bdi);
 
         try {
-            RelocatableModule.RelocatableWord[] pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
+            RelocatableModule.RelocatableWord[] pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex)._content;
 
             //  If no content has been generated so far for the bank, create a content array.
             //  If the content array exists and is of insufficient size, resize it.
@@ -1062,7 +1085,7 @@ public class Linker {
             if (_relocatableModules.isEmpty()) {
                 raise("No bank declarations and no relocatable modules specified - output will be empty");
             }
-            //TODO
+            //  TO DO create bank declarations
         } else {
             _bankImplied = false;
             if (!_relocatableModules.isEmpty()) {
@@ -1080,7 +1103,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        //TODO create AbsoluteModule
+        //  TO DO create AbsoluteModule
 
         raise("Not yet implemented");
         return new LinkResult(_errors, _moduleName);
@@ -1109,16 +1132,31 @@ public class Linker {
         }
 
         List<LCPoolSpecification> tempSpecs = new LinkedList<>();
+        boolean requiresExtendedMode = false;
         for (RelocatableModule module : _relocatableModules) {
             for (Integer lcIndex : module.getEstablishedLocationCounterIndices()) {
                 tempSpecs.add(new LCPoolSpecification(module, lcIndex));
+                try {
+                    RelocatableModule.RelocatablePool relPool = module.getLocationCounterPool(lcIndex);
+                    if (relPool._requiresExtendedMode) {
+                        requiresExtendedMode = true;
+                    }
+                } catch (ParameterException ex) {
+                    //  can't happen
+                }
             }
         }
 
         int bdi = 000040;   //  required for the bank declaration, but not used otherwise
+        AccessInfo accInfo = new AccessInfo(0, 0);
+        AccessPermissions gap = new AccessPermissions(false, false, false);
+        AccessPermissions sap = new AccessPermissions(true, true, true);
         BankDeclaration bd = new BankDeclaration.Builder().setBankDescriptorIndex(bdi)
                                                           .setBankName(_moduleName)
                                                           .setPoolSpecifications(tempSpecs)
+                                                          .setAccessInfo(accInfo)
+                                                          .setGeneralAccessPermissions(gap)
+                                                          .setSpecialAccessPermissions(sap)
                                                           .build();
         _bankDeclarations.put(bd._bankDescriptorIndex, bd);
 
@@ -1180,7 +1218,7 @@ public class Linker {
             if (_relocatableModules.isEmpty()) {
                 raise("No bank declarations and no relocatable modules specified - output will be empty");
             }
-            //TODO
+            //  TO DO create bank declarations
         } else {
             _bankImplied = false;
             if (!_relocatableModules.isEmpty()) {
@@ -1198,7 +1236,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        //TODO create ObjectModule
+        //  TO DO create ObjectModule
 
         raise("Not yet implemented");
         return new LinkResult(_errors, _moduleName);
@@ -1222,14 +1260,11 @@ public class Linker {
             case OBJECT -> linkObject();
         };
 
-        if ((_programStartInfo == null) && !_options.contains(LinkOption.NO_ENTRY_POINT)) {
-            raise("No program starting address");
-        }
-
         if (!_options.contains(LinkOption.SILENT)) {
             displaySummary();
             System.out.println("Linking Ends Errors=" + _errors + " -----------------------------------");
         }
+
         return result;
     }
 }

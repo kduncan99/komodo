@@ -30,6 +30,17 @@ public class LCPoolSpecification {
             LCPoolSpecification lcps = (LCPoolSpecification) obj;
             return ((lcps._module == _module) && (lcps._lcIndex == _lcIndex));
         }
+
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (_module.hashCode() << 9) | _lcIndex;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{%s(%d).%d}", _module.getModuleName(), _module.hashCode(), _lcIndex);//TODO remove hashcode
     }
 }

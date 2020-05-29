@@ -33,9 +33,12 @@ import java.util.TreeSet;
 /**
  * Assembler for kasm
  */
-//TODO sometime in the far future, allow kasm to create object modules
 @SuppressWarnings("Duplicates")
 public class Assembler {
+
+    //  ---------------------------------------------------------------------------------------------------------------------------
+    //  Data
+    //  ---------------------------------------------------------------------------------------------------------------------------
 
     //  Common forms we use for generating instructions
     private static final int[] _fjaxhiuFields = { 6, 4, 4, 4, 1, 1, 16 };
@@ -44,11 +47,6 @@ public class Assembler {
     private static final Form _fjaxuForm = new Form(_fjaxuFields);
     private static final int[] _fjaxhibdFields = { 6, 4, 4, 4, 1, 1, 4, 12 };
     private static final Form _fjaxhibdForm = new Form(_fjaxhibdFields);
-
-
-    //  ---------------------------------------------------------------------------------------------------------------------------
-    //  Data
-    //  ---------------------------------------------------------------------------------------------------------------------------
 
     private final int _level;
     private final String _moduleName;
@@ -98,12 +96,12 @@ public class Assembler {
     }
 
     /**
-     * Constructor for an inner-level assembler
+     * Constructor for an inner-level assembler - only for SubAssembler to invoke
      * @param outerLevel the assembler directly above this one
      * @param subModuleName name of the submodule being assembled
      * @param sourceLines subset of code to be assembled, presented as TextLine objects
      */
-    private Assembler(
+    Assembler(
         final Assembler outerLevel,
         final String subModuleName,
         final TextLine[] sourceLines
@@ -254,7 +252,7 @@ public class Assembler {
             for (Map.Entry<Integer, GeneratedPool> entry : _global._generatedPools.entrySet()) {
                 int lcIndex = entry.getKey();
                 GeneratedPool gp = entry.getValue();
-                module.establishLocationCounterPool(lcIndex, gp.produceLocationCounterPool());
+                module.establishLocationCounterPool(lcIndex, gp.getExtendedModeFlag(), gp.produceLocationCounterPool());
                 if (gp.getExtendedModeFlag()) {
                     module.addControlInformation(new RelocatableModule.Info10ControlInformation(lcIndex));
                 }
@@ -262,28 +260,21 @@ public class Assembler {
 
             //  External symbols
             for (Dictionary.ValueInfo vInfo : _global._globalDictionary.getAllValueInfos()) {
-                System.out.println(String.format("--> label:%s level:%d type:%s",
-                                                 vInfo._label,
-                                                 vInfo._level,
-                                                 vInfo._value.getType()));//TODO remove
-                //  At this point we should expect the value to be an integer
-                //  TODO enforce this where the label is created
-                if (vInfo._value.getType() == ValueType.Integer) {
-                    IntegerValue iv = (IntegerValue) vInfo._value;
-                    RelocatableModule.EntryPoint ep;
-                    if ((iv._references == null) || (iv._references.length == 0)) {
-                        ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
-                    } else {
-                        //TODO we allow only one reference, and that being a location counter index thing
-                        // Make this a LocationCounterEntryPoint (pending verification with real @MASM)
-                        // Enforce this restriction where the label is created
-                        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
-                        ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
-                                                                      iv._value.get().intValue(),
-                                                                      urlc._locationCounterIndex);
-                    }
-                    module.addEntryPoint(ep);
+                //  At this point we should expect the value to be an integer with proper relocation
+                IntegerValue iv = (IntegerValue) vInfo._value;
+                RelocatableModule.EntryPoint ep;
+                if ((iv._references == null) || (iv._references.length == 0)) {
+                    ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
+                } else {
+                    //TODO we allow only one reference, and that being a location counter index thing
+                    // Make this a LocationCounterEntryPoint (pending verification with real @MASM)
+                    // Enforce this restriction where the label is created
+                    UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+                    ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
+                                                                  iv._value.get().intValue(),
+                                                                  urlc._locationCounterIndex);
                 }
+                module.addEntryPoint(ep);
             }
 
             //  Control info objects not already created elsewhere
@@ -346,8 +337,8 @@ public class Assembler {
 
         for (int lcIndex : module.getEstablishedLocationCounterIndices()) {
             try {
-                RelocatableModule.RelocatableWord[] rwords = module.getLocationCounterPool(lcIndex);
-                _global._outputStream.println(String.format("LC$(%d): %d word(s) generated", lcIndex, rwords.length));
+                RelocatableModule.RelocatablePool rcPool = module.getLocationCounterPool(lcIndex);
+                _global._outputStream.println(String.format("LC$(%d): %d word(s) generated", lcIndex, rcPool._content.length));
             } catch (ParameterException ex) {
                 //  can't happen
             }
@@ -356,7 +347,8 @@ public class Assembler {
         Set<String> references = new TreeSet<>();
         for (int lcIndex : module.getEstablishedLocationCounterIndices()) {
             try {
-                for (RelocatableModule.RelocatableWord rw : module.getLocationCounterPool(lcIndex)) {
+                RelocatableModule.RelocatablePool rcPool = module.getLocationCounterPool(lcIndex);
+                for (RelocatableModule.RelocatableWord rw : rcPool._content) {
                     if (rw != null) {
                         for (RelocatableModule.RelocatableItem ri : rw._relocatableItems) {
                             if (ri instanceof RelocatableModule.RelocatableItemSymbol) {
@@ -1220,7 +1212,7 @@ public class Assembler {
         final ProcedureValue procedureValue,
         final TextLine textLine
     ) {
-        Assembler subAssembler = new Assembler(this, procedureName, procedureValue._source);
+        Assembler subAssembler = new ProcedureAssembler(this, procedureName, procedureValue._source);
 
         NodeValue mainNode = new NodeValue.Builder().build();
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
@@ -1377,21 +1369,10 @@ public class Assembler {
         }
 
         if (_endValue != null) {
-            if (_endValue instanceof IntegerValue) {
-                IntegerValue iv = (IntegerValue) _endValue;
-                if (iv._references.length == 1) {
-                    UndefinedReference ur = iv._references[0];
-                    if (ur instanceof UndefinedReferenceToLocationCounter) {
-                        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) ur;
-                        _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
-                    }
-                }
-            }
-
-            if (_global._programStart == null) {
-                appendDiagnostic(new ErrorDiagnostic(new Locale(_sourceLines[_sourceLines.length - 1]._lineSpecifier, 0),
-                                                     "Invalid operand for $END directive"));
-            }
+            //  ENDDiagnostic guarantees that the end value is a properly-relocated IntegerValue (for the main assembly)
+            IntegerValue iv = (IntegerValue) _endValue;
+            UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+            _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
         }
 
         resolveReferences();
@@ -1611,6 +1592,27 @@ public class Assembler {
         return _nextSourceIndex < _sourceLines.length;
     }
 
+    /*
+     * What type of assembly is this?
+     */
+    public boolean isMainAssembly() {
+        return true; }
+
+    public boolean isSubAssembly() {
+        return false;
+    }
+
+    public boolean isFunctionSubAssembly() {
+        return false;
+    };
+
+    public boolean isProcedureSubAssembly() {
+        return false;
+    };
+
+    /**
+     * Quick way to check for an option
+     */
     public boolean isOptionSet(
         final AssemblerOption option
     ) {

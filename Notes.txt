@@ -1,21 +1,14 @@
 -- TODO InProgress
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
-    SystemProcessor: loadBinary() Don't stuff values into pre-built level 0 BDTs except for absolute address
-    SystemProcessor: loadBinary() Handle fixed-storeage flag
-    SystemProcessor: loadBinary() which reads a binary json file from binaries directory
+    SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
-    Test_Assembler: need to fix unit tests
     Test_Linker: need to fix unit tests
-    Text_Expression: need to fix unit tests
 
 exlib:
     external file formats for hosting SDFF and PF files (and maybe tape files?)
     support sym, rel, and abs elements
     support various tape file formats
-
-kasm:
-    Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 
 klink:
     Define what a saved binary looks like
@@ -27,15 +20,16 @@ ByteChannelModule unit tests - they wait without being notify()able, which slows
 Check to ensure breakpoints are all working.
 
 * kasm
-unit test lit2() nested literals don't work right
 See Test_Diagnostics.formOK - we are getting a T we should not get.
+unit test lit2() nested literals don't work right
+    ((077) + 5) does not generate a literal 077 as it should do
+    Test_Assembler test case commented out for now
+String concatenation does not honor precision per MASM 5.3.1
+assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
 
 
 * klink
 Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting
-((077) + 5) does not generate a literal 077 as it should do
-String concatenation does not honor precision per MASM 5.3.1
-assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
 
 
 -- TODO Thoughts
@@ -185,6 +179,8 @@ IP: search and masked search instructions (and unit tests)
   MASG
 
 * kasm
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+Need to support $(n) as a relocated reference to location counter n offset by 0 (for expressions)
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 more FloatingPointValue unit tests
 more unit tests for string value generation
@@ -201,6 +197,7 @@ $USE (A.2.8) specifies base register to use if none given
 can we do implicit base register (and do it right)?  also with the $LIT directive...
 support user-defined functions
 allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
+create object modules directly (has some implications with how kasm generates code)
 functions
   $ILCN
   $L0
@@ -222,6 +219,10 @@ directives
   $GEN
   $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
+
+* klink
+  Create absolute modules
+  Create object modules
 
 * Exec
 Subsystems:

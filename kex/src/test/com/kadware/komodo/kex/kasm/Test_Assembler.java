@@ -83,9 +83,9 @@ public class Test_Assembler {
         assertEquals(1, result._parsedCode.length);
         assertNotNull(result._relocatableModule);
         assertEquals("TEST", result._relocatableModule.getModuleName());
-        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(0);
-        assertEquals(1, lcPool.length);
-        assertEquals(0_107000_000005L, lcPool[0].getW());
+        RelocatableModule.RelocatablePool lcPool = result._relocatableModule.getLocationCounterPool(0);
+        assertEquals(1, lcPool._content.length);
+        assertEquals(0_107000_000005L, lcPool._content[0].getW());
     }
 
     @Test
@@ -113,9 +113,9 @@ public class Test_Assembler {
         assertEquals(0, rep._value);
         assertEquals(1, rep._locationCounterIndex);
 
-        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(1, lcPool.length);
-        assertEquals(0_107000_000077L, lcPool[0].getW());
+        RelocatableModule.RelocatablePool lcPool = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, lcPool._content.length);
+        assertEquals(0_107000_000077L, lcPool._content[0].getW());
     }
 
     @Test
@@ -137,13 +137,13 @@ public class Test_Assembler {
         assertNotNull(result._relocatableModule);
         assertEquals(3, result._parsedCode.length);
 
-        RelocatableModule.RelocatableWord[] lcPool3 = result._relocatableModule.getLocationCounterPool(3);
-        assertEquals(1, lcPool3.length);
-        assertEquals(0_107020_001000L, lcPool3[0].getW());
-        RelocatableModule.RelocatableWord[] lcPool5 = result._relocatableModule.getLocationCounterPool(5);
-        assertEquals(2, lcPool5.length);
-        assertEquals(0_107040_001010L, lcPool5[0].getW());
-        assertEquals(0_107060_001020L, lcPool5[1].getW());
+        RelocatableModule.RelocatablePool lcPool3 = result._relocatableModule.getLocationCounterPool(3);
+        assertEquals(1, lcPool3._content.length);
+        assertEquals(0_107020_001000L, lcPool3._content[0].getW());
+        RelocatableModule.RelocatablePool lcPool5 = result._relocatableModule.getLocationCounterPool(5);
+        assertEquals(2, lcPool5._content.length);
+        assertEquals(0_107040_001010L, lcPool5._content[0].getW());
+        assertEquals(0_107060_001020L, lcPool5._content[1].getW());
     }
 
     @Test
@@ -163,9 +163,9 @@ public class Test_Assembler {
         assertNotNull(result._relocatableModule);
         assertEquals(1, result._parsedCode.length);
 
-        RelocatableModule.RelocatableWord[] lcPool3 = result._relocatableModule.getLocationCounterPool(3);
-        assertEquals(1, lcPool3.length);
-        assertEquals(0_107000_000000L, lcPool3[0].getW());
+        RelocatableModule.RelocatablePool lcPool3 = result._relocatableModule.getLocationCounterPool(3);
+        assertEquals(1, lcPool3._content.length);
+        assertEquals(0_107000_000000L, lcPool3._content[0].getW());
 
         RelocatableModule.EntryPoint ep = result._relocatableModule.getEntryPoints().get("START");
         assertNotNull(ep);
@@ -266,9 +266,9 @@ public class Test_Assembler {
         assertEquals(0, rep._value);
         assertEquals(1, rep._locationCounterIndex);
 
-        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(1, lcPool.length);
-        assertEquals(0_107000_000077L, lcPool[0].getW());
+        RelocatableModule.RelocatablePool lcPool = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, lcPool._content.length);
+        assertEquals(0_107000_000077L, lcPool._content[0].getW());
     }
 
     @Test
@@ -306,9 +306,9 @@ public class Test_Assembler {
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
 
-        RelocatableModule.RelocatableWord[] lcPool3 = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(1, lcPool3.length);
-        assertEquals(16, lcPool3[0].getW());
+        RelocatableModule.RelocatablePool lcPool3 = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, lcPool3._content.length);
+        assertEquals(16, lcPool3._content[0].getW());
     }
 
     @Test
@@ -329,17 +329,17 @@ public class Test_Assembler {
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
 
-        RelocatableModule.RelocatableWord[] lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
         assertNotNull(lcPool0);
-        assertEquals(3, lcPool0.length);
-        assertEquals(0_000077_000777L, lcPool0[0].getW());
+        assertEquals(3, lcPool0._content.length);
+        assertEquals(0_000077_000777L, lcPool0._content[0].getW());
 
-        RelocatableModule.RelocatableWord[] lcPool1 = result._relocatableModule.getLocationCounterPool(1);
+        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
         assertNotNull(lcPool1);
-        assertEquals(3, lcPool1.length);
-        assertEquals(0_017L, lcPool1[0].getW());
-        assertEquals(0, lcPool1[1].getW());
-        assertEquals(1, lcPool1[1]._relocatableItems.length);
+        assertEquals(3, lcPool1._content.length);
+        assertEquals(0_017L, lcPool1._content[0].getW());
+        assertEquals(0, lcPool1._content[1].getW());
+        assertEquals(1, lcPool1._content[1]._relocatableItems.length);
     }
 
 //    @Test
@@ -403,40 +403,40 @@ public class Test_Assembler {
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
 
-        RelocatableModule.RelocatableWord[] lcPool0 = result._relocatableModule.getLocationCounterPool(0);
-        RelocatableModule.RelocatableWord[] lcPool2 = result._relocatableModule.getLocationCounterPool(2);
-        RelocatableModule.RelocatableWord[] lcPool4 = result._relocatableModule.getLocationCounterPool(4);
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        RelocatableModule.RelocatablePool lcPool2 = result._relocatableModule.getLocationCounterPool(2);
+        RelocatableModule.RelocatablePool lcPool4 = result._relocatableModule.getLocationCounterPool(4);
         assertNotNull(lcPool0);
         assertNotNull(lcPool2);
         assertNotNull(lcPool4);
 
-        assertEquals(8, lcPool0.length);
-        assertEquals(0_2001_40000000L, lcPool0[0].getW());
-        assertEquals(0_000000_000000L, lcPool0[1].getW());
-        assertEquals(0_2001_74000000L, lcPool0[2].getW());
-        assertEquals(0_000000_000000L, lcPool0[3].getW());
-        assertEquals(0_1777_40000000L, lcPool0[4].getW());
-        assertEquals(0_000000_000000L, lcPool0[5].getW());
-        assertEquals(0_5776_03777777L, lcPool0[6].getW());
-        assertEquals(0_777777_777777L, lcPool0[7].getW());
+        assertEquals(8, lcPool0._content.length);
+        assertEquals(0_2001_40000000L, lcPool0._content[0].getW());
+        assertEquals(0_000000_000000L, lcPool0._content[1].getW());
+        assertEquals(0_2001_74000000L, lcPool0._content[2].getW());
+        assertEquals(0_000000_000000L, lcPool0._content[3].getW());
+        assertEquals(0_1777_40000000L, lcPool0._content[4].getW());
+        assertEquals(0_000000_000000L, lcPool0._content[5].getW());
+        assertEquals(0_5776_03777777L, lcPool0._content[6].getW());
+        assertEquals(0_777777_777777L, lcPool0._content[7].getW());
 
-        assertEquals(4, lcPool2.length);
-        assertEquals(0_201_400000000L, lcPool2[0].getW());
-        assertEquals(0_201_740000000L, lcPool2[1].getW());
-        assertEquals(0_177_400000000L, lcPool2[2].getW());
-        assertEquals(0_576_037777777L, lcPool2[3].getW());
+        assertEquals(4, lcPool2._content.length);
+        assertEquals(0_201_400000000L, lcPool2._content[0].getW());
+        assertEquals(0_201_740000000L, lcPool2._content[1].getW());
+        assertEquals(0_177_400000000L, lcPool2._content[2].getW());
+        assertEquals(0_576_037777777L, lcPool2._content[3].getW());
 
-        assertEquals(10, lcPool4.length);
-        assertEquals(0_2001_40000000L, lcPool4[0].getW());
-        assertEquals(0_000000_000000L, lcPool4[1].getW());
-        assertEquals(0_2001_74000000L, lcPool4[2].getW());
-        assertEquals(0_000000_000000L, lcPool4[3].getW());
-        assertEquals(0_1777_40000000L, lcPool4[4].getW());
-        assertEquals(0_000000_000000L, lcPool4[5].getW());
-        assertEquals(0_5776_03777777L, lcPool4[6].getW());
-        assertEquals(0_777777_777777L, lcPool4[7].getW());
-        assertEquals(0_2011_40074000L, lcPool4[8].getW());
-        assertEquals(0_000000_000000L, lcPool4[9].getW());
+        assertEquals(10, lcPool4._content.length);
+        assertEquals(0_2001_40000000L, lcPool4._content[0].getW());
+        assertEquals(0_000000_000000L, lcPool4._content[1].getW());
+        assertEquals(0_2001_74000000L, lcPool4._content[2].getW());
+        assertEquals(0_000000_000000L, lcPool4._content[3].getW());
+        assertEquals(0_1777_40000000L, lcPool4._content[4].getW());
+        assertEquals(0_000000_000000L, lcPool4._content[5].getW());
+        assertEquals(0_5776_03777777L, lcPool4._content[6].getW());
+        assertEquals(0_777777_777777L, lcPool4._content[7].getW());
+        assertEquals(0_2011_40074000L, lcPool4._content[8].getW());
+        assertEquals(0_000000_000000L, lcPool4._content[9].getW());
     }
 
     @Test
@@ -461,16 +461,16 @@ public class Test_Assembler {
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
 
-        RelocatableModule.RelocatableWord[] lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
         assertNotNull(lcPool0);
-        assertEquals(7, lcPool0.length);
-        assertEquals(0_101040040040L, lcPool0[0].getW());
-        assertEquals(0_101040040040L, lcPool0[1].getW());
-        assertEquals(0_000000000101L, lcPool0[2].getW());
-        assertEquals(0_101040040040L, lcPool0[3].getW());
-        assertEquals(0_040040040040L, lcPool0[4].getW());
-        assertEquals(0_000000000000L, lcPool0[5].getW());
-        assertEquals(0_000000000101L, lcPool0[6].getW());
+        assertEquals(7, lcPool0._content.length);
+        assertEquals(0_101040040040L, lcPool0._content[0].getW());
+        assertEquals(0_101040040040L, lcPool0._content[1].getW());
+        assertEquals(0_000000000101L, lcPool0._content[2].getW());
+        assertEquals(0_101040040040L, lcPool0._content[3].getW());
+        assertEquals(0_040040040040L, lcPool0._content[4].getW());
+        assertEquals(0_000000000000L, lcPool0._content[5].getW());
+        assertEquals(0_000000000101L, lcPool0._content[6].getW());
     }
 
     @Test
@@ -495,15 +495,15 @@ public class Test_Assembler {
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
 
-        RelocatableModule.RelocatableWord[] lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
         assertNotNull(lcPool0);
-        assertEquals(7, lcPool0.length);
-        assertEquals(0_060505050505L, lcPool0[0].getW());
-        assertEquals(0_060505050505L, lcPool0[1].getW());
-        assertEquals(0_000000000006L, lcPool0[2].getW());
-        assertEquals(0_060505050505L, lcPool0[3].getW());
-        assertEquals(0_050505050505L, lcPool0[4].getW());
-        assertEquals(0_000000000000L, lcPool0[5].getW());
-        assertEquals(0_000000000006L, lcPool0[6].getW());
+        assertEquals(7, lcPool0._content.length);
+        assertEquals(0_060505050505L, lcPool0._content[0].getW());
+        assertEquals(0_060505050505L, lcPool0._content[1].getW());
+        assertEquals(0_000000000006L, lcPool0._content[2].getW());
+        assertEquals(0_060505050505L, lcPool0._content[3].getW());
+        assertEquals(0_050505050505L, lcPool0._content[4].getW());
+        assertEquals(0_000000000000L, lcPool0._content[5].getW());
+        assertEquals(0_000000000006L, lcPool0._content[6].getW());
     }
 }

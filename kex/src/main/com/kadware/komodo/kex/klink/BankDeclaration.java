@@ -33,6 +33,7 @@ public class BankDeclaration {
     public final int _bankLevel;
     public final String _bankName;
     public final AccessPermissions _generalAccessPermissions;
+    public final boolean _largeBank;
     public final LCPoolSpecification[] _poolSpecifications;
     public final AccessPermissions _specialAccessPermissions;
     public final int _startingAddress;
@@ -45,6 +46,7 @@ public class BankDeclaration {
      * @param bankLevel level 0-7 for the bank
      * @param accessInfo ring and domain for the bank
      * @param generalAccessPermissions GAP permissions
+     * @param largeBank true if this bank is a 'large' bank
      * @param specialAccessPermissions SAP permissions
      * @param startingAddress beginning address for the bank - i.e., 01000, 022000, etc
      * @param poolSpecifications set of LCPoolSpecification objects indicating the LCPools to be included in this bank
@@ -56,6 +58,7 @@ public class BankDeclaration {
         final int bankLevel,
         final AccessInfo accessInfo,
         final AccessPermissions generalAccessPermissions,
+        final boolean largeBank,
         final AccessPermissions specialAccessPermissions,
         final Integer startingAddress,
         final LCPoolSpecification[] poolSpecifications,
@@ -66,6 +69,7 @@ public class BankDeclaration {
         _bankLevel = bankLevel;
         _bankName = bankName;
         _generalAccessPermissions = generalAccessPermissions;
+        _largeBank = largeBank;
         _poolSpecifications = poolSpecifications;
         _specialAccessPermissions = specialAccessPermissions;
         _startingAddress = startingAddress;
@@ -78,6 +82,7 @@ public class BankDeclaration {
         private int _bankLevel;
         private String _bankName = null;
         private AccessPermissions _generalAccessPermissions = new AccessPermissions();
+        private boolean _largeBank = false;
         private LCPoolSpecification[] _poolSpecifications = null;
         private AccessPermissions _specialAccessPermissions = new AccessPermissions();
         private int _startingAddress;
@@ -125,8 +130,15 @@ public class BankDeclaration {
             return this;
         }
 
+        public Builder setLargeBank(
+            final boolean value
+        ) {
+            _largeBank = value;
+            return this;
+        }
+
         public Builder setOptions(
-            Set<BankDeclarationOption> options
+            final Set<BankDeclarationOption> options
         ) {
             _options = options;
             return this;
@@ -166,6 +178,7 @@ public class BankDeclaration {
                                        _bankLevel,
                                        _accessInfo,
                                        _generalAccessPermissions,
+                                       _largeBank,
                                        _specialAccessPermissions,
                                        _startingAddress,
                                        _poolSpecifications,

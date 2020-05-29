@@ -53,5 +53,9 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     @Override public int hashCode() {
         return _locationCounterIndex;
     }
-    @Override public String toString() { return String.format("%s$LC(%d)", _isNegative ? "-" : "+", _locationCounterIndex); }
+
+    @Override
+    public String toString() {
+        return String.format("%s$LC(%d)", _isNegative ? "-" : "+", _locationCounterIndex);
+    }
 }

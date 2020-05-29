@@ -20,4 +20,26 @@ class BankOffset {
         _bankDescriptorIndex = bankDescriptorIndex;
         _offset = offset;
     }
+
+    @Override
+    public boolean equals(
+        final Object obj
+    ) {
+        if (obj instanceof BankOffset) {
+            return (((BankOffset) obj)._bankDescriptorIndex == _bankDescriptorIndex)
+                && (((BankOffset) obj)._offset == _offset);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (_bankDescriptorIndex << 18) | _offset;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{bdi:%06o offset:%012o}", _bankDescriptorIndex, _offset);
+    }
 }

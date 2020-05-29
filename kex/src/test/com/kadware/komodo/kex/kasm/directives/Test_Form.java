@@ -42,9 +42,9 @@ public class Test_Form {
         AssemblerResult result = asm.assemble();
         assertTrue(result._diagnostics.isEmpty());
         assertNotNull(result._relocatableModule);
-        RelocatableModule.RelocatableWord[] lcPool = result._relocatableModule.getLocationCounterPool(0);
+        RelocatableModule.RelocatablePool lcPool = result._relocatableModule.getLocationCounterPool(0);
         assertNotNull(lcPool);
-        assertEquals(1, lcPool.length);
-        assertEquals(0_005_006_007_10_0L, lcPool[0].getW());
+        assertEquals(1, lcPool._content.length);
+        assertEquals(0_005_006_007_10_0L, lcPool._content[0].getW());
     }
 }
