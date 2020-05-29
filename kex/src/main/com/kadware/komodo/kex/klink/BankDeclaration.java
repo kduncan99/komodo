@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class BankDeclaration {
 
-    enum BankDeclarationOption {
+    public enum BankDeclarationOption {
         DYNAMIC,
         DBANK,
         WRITE_PROTECT,

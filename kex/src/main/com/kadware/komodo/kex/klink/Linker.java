@@ -1148,6 +1148,12 @@ public class Linker {
         }
 
         int bdi = 000040;   //  required for the bank declaration, but not used otherwise
+        Set<BankDeclaration.BankDeclarationOption> bdOptions = new HashSet<>();
+        bdOptions.add(BankDeclaration.BankDeclarationOption.DYNAMIC);
+        if (requiresExtendedMode) {
+            bdOptions.add(BankDeclaration.BankDeclarationOption.EXTENDED_MODE);
+        }
+
         AccessInfo accInfo = new AccessInfo(0, 0);
         AccessPermissions gap = new AccessPermissions(false, false, false);
         AccessPermissions sap = new AccessPermissions(true, true, true);
@@ -1157,6 +1163,7 @@ public class Linker {
                                                           .setAccessInfo(accInfo)
                                                           .setGeneralAccessPermissions(gap)
                                                           .setSpecialAccessPermissions(sap)
+                                                          .setOptions(bdOptions)
                                                           .build();
         _bankDeclarations.put(bd._bankDescriptorIndex, bd);
 

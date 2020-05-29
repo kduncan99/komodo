@@ -7,8 +7,10 @@ package com.kadware.komodo.kex.kasm;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.kex.RelocatableModule;
+import com.kadware.komodo.kex.klink.BankDeclaration;
 import com.kadware.komodo.kex.klink.BankDescriptor;
 import com.kadware.komodo.kex.klink.BankType;
+import com.kadware.komodo.kex.klink.LCPoolSpecification;
 import com.kadware.komodo.kex.klink.LinkOption;
 import com.kadware.komodo.kex.klink.LinkResult;
 import com.kadware.komodo.kex.klink.LinkType;
@@ -89,18 +91,18 @@ public class Test_Linker {
             "DATA2     + 0777777,0",
             "",
             "$(1),START$*",
-            "          LA        A1,DATA,,B2",
-            "          LA        A2,DATA2,,B2",
+            "          LA        A1,DATA,,B0",
+            "          LA        A2,DATA2,,B0",
             "          $END START$",
         };
 
-        AssemblerOption[] opts = { AssemblerOption.EMIT_SOURCE,
-                                   AssemblerOption.EMIT_GENERATED_CODE,
-                                   AssemblerOption.EMIT_DICTIONARY,
-                                   AssemblerOption.EMIT_MODULE_SUMMARY };
+        AssemblerOption[] asmOpts = { AssemblerOption.EMIT_SOURCE,
+                                      AssemblerOption.EMIT_GENERATED_CODE,
+                                      AssemblerOption.EMIT_DICTIONARY,
+                                      AssemblerOption.EMIT_MODULE_SUMMARY };
         Assembler asm = new Assembler.Builder().setModuleName("TESTREL")
                                                .setSource(source)
-                                               .setOptions(opts)
+                                               .setOptions(asmOpts)
                                                .build();
         AssemblerResult asmResult = asm.assemble();
         assertFalse(asmResult._diagnostics.hasError());
@@ -125,8 +127,8 @@ public class Test_Linker {
 
         assertEquals(0_000077_000077L, bd._content[lc0Offset + 0]);
         assertEquals(0_777777_000000L, bd._content[lc0Offset + 17]);
-        assertEquals(0_100020_021000L, bd._content[lc1Offset + 0]);
-        assertEquals(0_100040_021021L, bd._content[lc1Offset + 1]);
+        assertEquals(0_100020_000000L, bd._content[lc1Offset + 0]);
+        assertEquals(0_100040_000021L, bd._content[lc1Offset + 1]);
     }
 
     //  TODO - need more tests
@@ -155,6 +157,93 @@ public class Test_Linker {
         assertNull(result._absoluteModule);
         assertNull(result._objectModule);
         assertNull(result._bankDescriptors);
+    }
+
+    /**
+     * Single relocatable module, extended mode required
+     */
+    @Test
+    public void binarymb_simple() {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)",
+            "DATA      + 077,077",
+            "          $RES 16",
+            "DATA2     + 0777777,0",
+            "",
+            "$(1),START$*",
+            "          LA        A1,DATA,,B0",
+            "          LA        A2,DATA2,,B0",
+            "          $END START$",
+            };
+
+        AssemblerOption[] asmOpts = { AssemblerOption.EMIT_SOURCE,
+                                      AssemblerOption.EMIT_GENERATED_CODE,
+                                      AssemblerOption.EMIT_DICTIONARY,
+                                      AssemblerOption.EMIT_MODULE_SUMMARY };
+        Assembler asm = new Assembler.Builder().setModuleName("TESTREL")
+                                               .setSource(source)
+                                               .setOptions(asmOpts)
+                                               .build();
+        AssemblerResult asmResult = asm.assemble();
+        assertFalse(asmResult._diagnostics.hasError());
+
+        Set<BankDeclaration.BankDeclarationOption> bdOptions = new HashSet<>();
+        bdOptions.add(BankDeclaration.BankDeclarationOption.DYNAMIC);
+        bdOptions.add(BankDeclaration.BankDeclarationOption.EXTENDED_MODE);
+
+        AccessInfo accessInfo = new AccessInfo(1, 1);
+        AccessPermissions gap = new AccessPermissions(false, true, false);
+        AccessPermissions sap = new AccessPermissions(false, true, true);
+
+        LCPoolSpecification lcPoolSpecs[] = {
+            new LCPoolSpecification(asmResult._relocatableModule, 0),
+            new LCPoolSpecification(asmResult._relocatableModule, 1),
+        };
+
+        BankDeclaration[] bankDeclarations = {
+            new BankDeclaration.Builder().setGeneralAccessPermissions(gap)
+                                         .setSpecialAccessPermissions(sap)
+                                         .setBankLevel(1)
+                                         .setBankDescriptorIndex(0100)
+                                         .setBankName("TESTBANK")
+                                         .setOptions(bdOptions)
+                                         .setPoolSpecifications(lcPoolSpecs)
+                                         .setAccessInfo(accessInfo)
+                                         .setStartingAddress(01000)
+                                         .build()
+        };
+
+        Linker linker = new Linker.Builder().setModuleName("TEST")
+                                            .setBankDeclarations(bankDeclarations)
+                                            .setOptions(BASE_OPTIONS)
+                                            .build();
+        LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
+        assertNotNull(linkResult);
+        assertEquals(0, linkResult._errorCount);
+        assertNotNull(linkResult._bankDescriptors);
+        assertEquals("TEST", linkResult._moduleName);
+        assertEquals(1, linkResult._bankDescriptors.length);
+
+        BankDescriptor bd = linkResult._bankDescriptors[0];
+
+        assertEquals(BankType.EXTENDED_MODE, bd._bankType);
+        assertEquals(1, bd._bankLevel);
+        assertEquals(0100, bd._bankDescriptorIndex);
+        assertEquals("TESTBANK", bd._bankName);
+        assertEquals(accessInfo, bd._accessInfo);
+        assertEquals(01000, bd._lowerLimit);
+        assertEquals(01023, bd._upperLimit);
+        assertEquals(20, bd._content.length);
+        int lc0Offset = 0;
+        int lc1Offset = 18;
+
+        assertEquals(0_000077_000077L, bd._content[lc0Offset + 0]);
+        assertEquals(0_777777_000000L, bd._content[lc0Offset + 17]);
+        assertEquals(0_100020_001000L, bd._content[lc1Offset + 0]);
+        assertEquals(0_100040_001021L, bd._content[lc1Offset + 1]);
     }
 
     //  TODO - need more tests
