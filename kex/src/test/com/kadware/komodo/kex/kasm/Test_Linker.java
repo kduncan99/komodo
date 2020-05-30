@@ -134,7 +134,7 @@ public class Test_Linker {
     //  TODO - need more tests
 
 
-    //  binary multi-bank tests
+    //  multi-bank binary tests
 
     /**
      * No input code provided - should produce an error, as binarymb requires at least one bank declaration
@@ -255,87 +255,6 @@ public class Test_Linker {
     //  TODO afcm sensitive tests
     //  TODO partial-word mode sensitive tests
 
-//    @Test
-//    public void test_simpleExtendedMode() {
-//        //  simple extended mode program
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)",
-//            "DATA      + 077,077",
-//            "          $RES 16",
-//            "DATA2     + 0777777,0",
-//            "",
-//            "$(1),START$*",
-//            "          LA        A1,DATA,,B2",
-//            "          LA        A2,DATA2,,B2",
-//        };
-//
-//        Assembler asm = new Assembler.Builder().setModuleName("TESTREL")
-//                                               .setSource(source)
-//                                               .build();
-//        AssemblerResult result = asm.assemble();
-//
-//        LCPoolSpecification[] ibankPoolSpecs = {
-//            new LCPoolSpecification(result._relocatableModule, 1),
-//        };
-//        LCPoolSpecification[] dbankPoolSpecs = {
-//            new LCPoolSpecification(result._relocatableModule, 0),
-//        };
-//
-//        BankDeclaration[] bds = {
-//            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-//                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-//                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                         .setInitialBaseRegister(0)
-//                                         .setBankLevel(0)
-//                                         .setBankDescriptorIndex(04)
-//                                         .setBankName("I1")
-//                                         .setPoolSpecifications(ibankPoolSpecs)
-//                                         .setStartingAddress(01000)
-//                                                .build(),
-//
-//            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-//                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-//                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                         .setInitialBaseRegister(2)
-//                                         .setBankLevel(0)
-//                                         .setBankDescriptorIndex(05)
-//                                         .setBankName("D1")
-//                                         .setPoolSpecifications(dbankPoolSpecs)
-//                                         .setStartingAddress(01000)
-//                                                .build(),
-//        };
-//
-//        LinkOption[] options = {
-//            LinkOption.EMIT_SUMMARY,
-//            LinkOption.EMIT_DICTIONARY,
-//            LinkOption.EMIT_GENERATED_CODE,
-//            };
-//
-//        Linker linker = new Linker();
-//        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 32, options);
-//
-//        assertNotNull(abs);
-//        assertEquals(3, abs._loadableBanks.size());
-//
-//        LoadableBank ibank = abs._loadableBanks.get(04);
-//        assertTrue(ibank._isExtendedMode);
-//        assertEquals(2, ibank._content.getSize());
-//        assertEquals(0_100020_021000L, ibank._content.get(0));
-//        assertEquals(0_100040_021021L, ibank._content.get(1));
-//
-//        LoadableBank dbank = abs._loadableBanks.get(05);
-//        assertFalse(dbank._isExtendedMode);
-//        assertEquals(18, dbank._content.getSize());
-//        assertEquals(0_000077_000077L, dbank._content.get(0));
-//        assertEquals(0_777777_000000L, dbank._content.get(17));
-//
-//        LoadableBank rcsbank = abs._loadableBanks.get(06);
-//        assertTrue(rcsbank._isExtendedMode);
-//        assertEquals(256, rcsbank._content.getSize());
-//    }
 
 //    @Test
 //    public void test_simpleBasicMode() {

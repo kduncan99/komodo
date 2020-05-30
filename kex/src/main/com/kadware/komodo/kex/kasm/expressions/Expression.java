@@ -9,8 +9,11 @@ import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.expressions.items.*;
 import com.kadware.komodo.kex.kasm.expressions.operators.Operator;
 import com.kadware.komodo.kex.kasm.exceptions.*;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -41,22 +44,6 @@ public class Expression {
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
-
-        //  Special case - if there is an ExpressionGroupItem here and it has no other operand siblings,
-        //  then it needs to become a case-2 e-g-item.
-        ExpressionGroupItem egItem = null;
-        IExpressionItem nonEgItem = null;
-        for (IExpressionItem item : _items) {
-            if (item instanceof ExpressionGroupItem) {
-                egItem = (ExpressionGroupItem) item;
-            } else if (item instanceof OperandItem) {
-                nonEgItem = item;
-            }
-        }
-
-        if ((egItem != null) && (nonEgItem == null)) {
-            egItem.setIsSubExpression(false);
-        }
 
         for (IExpressionItem item : _items) {
             //  Take items off the item list...
@@ -91,5 +78,9 @@ public class Expression {
         }
 
         return valueStack.pop();
+    }
+
+    public Collection<IExpressionItem> getItems() {
+        return new LinkedList<>(_items);
     }
 }

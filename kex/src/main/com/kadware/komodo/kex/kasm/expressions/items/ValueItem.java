@@ -38,4 +38,9 @@ public class ValueItem extends OperandItem {
     ) {
         return _value;
     }
+
+    @Override
+    public String toString() {
+        return "ValueItem:" + _value.toString();
+    }
 }

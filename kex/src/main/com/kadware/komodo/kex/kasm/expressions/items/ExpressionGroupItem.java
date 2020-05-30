@@ -13,6 +13,7 @@ import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
 import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * expression item containing zero or more sub-expressions.
@@ -42,7 +43,7 @@ public class ExpressionGroupItem extends OperandItem {
     //  Prior to evaluation, the calling code must make that determination and set the sub-expression
     //  flag accordingly - it defaults to true.
     private final Expression[] _expressions;
-    private boolean _isSubExpression = true;        //  true if case 1 applies (above), false for case 2.
+    private boolean _isSubExpression = false;       //  true if case 1 applies (above), false for case 2.
 
     /**
      * Constructor
@@ -55,6 +56,21 @@ public class ExpressionGroupItem extends OperandItem {
     ) {
         super(locale);
         _expressions = expressions;
+
+        //  Is this a literal or a sub-expression?
+        //      If it has one expression and that expression contains any operators, it's a subgroup.
+        //      Otherwise, it is a literal.
+        if (expressions.length == 1) {
+            for (Expression e : expressions) {
+                Collection<IExpressionItem> items = e.getItems();
+                for (IExpressionItem item : items) {
+                    if (item instanceof OperatorItem) {
+                        _isSubExpression = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -133,5 +149,15 @@ public class ExpressionGroupItem extends OperandItem {
                                   _locale);
     }
 
-    public void setIsSubExpression(boolean flag) { _isSubExpression = flag; }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Expression e : _expressions) {
+            if (sb.length() > 0) {
+                sb.append(",");
+            }
+            sb.append(e.toString());
+        }
+        return "ExpressionGroupItem:(" + sb.toString() + ")";
+    }
 }

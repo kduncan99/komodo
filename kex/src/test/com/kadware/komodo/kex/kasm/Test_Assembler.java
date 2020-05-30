@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kex.kasm;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
@@ -342,35 +343,159 @@ public class Test_Assembler {
         assertEquals(1, lcPool1._content[1]._relocatableItems.length);
     }
 
-//    @Test
-//    public void lit2(
-//    ) {
-//        //TODO inner value is not generated as a literal
-//        String[] source = {
-//            "$(1)  + 15",
-//            "      + ((077000777) + 5)"
-//        };
-//
-//        Assembler.AssemblerResult result = Assembler.assemble("TEST", source, OPTION_SET);
-//        assertTrue(result._diagnostics.isEmpty());
-//        assertNotNull(result._relocatableModule);
-//        assertEquals(2, result._relocatableModule._storage.size());
-//
-//        LocationCounterPool lcp0 = result._relocatableModule._storage.get(0);
-//        assertNotEquals(null, lcp0);
-//        assertEquals(1, lcp0._storage.length);
-//
-//        //TODO bug here assertEquals(0_77000777L, lcp0._storage[0].getW());
-//        //TODO and here assertEquals(5, lcp0._storage[1].getW());
-//        //TODO and here assertEquals(1, lcp0._storage[1]._references.length);
-//
-//        LocationCounterPool lcp1 = result._relocatableModule._storage.get(1);
-//        assertNotEquals(null, lcp1);
-//        assertEquals(2, lcp1._storage.length);
-//        assertEquals(0_017L, lcp1._storage[0].getW());
-//        assertEquals(0, lcp1._storage[1].getW());
-//        assertEquals(1, lcp1._storage[1]._references.length);
-//    }
+
+    @Test
+    public void lit2(
+    ) throws ParameterException {
+        String[] source = {
+            "$(0)  $LIT",
+            "$(1)  + 0777000777",
+            "$(2)  $LIT",
+            "$(3)  + (0777000777)",
+            "$(4)  $LIT",
+            "$(5)  + ((0777000777))",
+            "$(6)  $LIT",
+            "$(7)  + (((0777000777)))"
+        };
+        //  Expected:
+        //  $(0) empty
+        //  $(1) 000000: 000777000777
+        //  $(2) 000000: 000777000777
+        //  $(3) 000000: 000000000000[0:35]$(2)
+        //  $(4) 000000: 000777000777
+        //       000000: 000000000000[0:35]$(4)
+        //  $(5) 000000: 000000000001[0:35]$(4)
+        //  $(6) 000000: 000777000777
+        //       000001: 000000000000[0:35]$(6)
+        //       000002: 000000000001[0:35]$(6)
+        //  $(7) 000000: 000000000002[0:35]$(6)
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        Set<Integer> lcIndices = result._relocatableModule.getEstablishedLocationCounterIndices();
+        assertEquals(7, lcIndices.size());
+
+        {
+            RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
+            assertEquals(1, lcPool1._content.length);
+            assertEquals(0_777000777L, lcPool1._content[0].getW());
+        }
+
+        {
+            RelocatableModule.RelocatablePool lcPool2 = result._relocatableModule.getLocationCounterPool(2);
+            assertEquals(1, lcPool2._content.length);
+            assertEquals(0_777000777L, lcPool2._content[0].getW());
+
+            RelocatableModule.RelocatablePool lcPool3 = result._relocatableModule.getLocationCounterPool(3);
+            assertEquals(1, lcPool3._content.length);
+            assertEquals(0L, lcPool3._content[0].getW());
+            assertEquals(1, lcPool3._content[0]._relocatableItems.length);
+            RelocatableModule.RelocatableItem ri = lcPool3._content[0]._relocatableItems[0];
+            assertTrue(ri instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) ri;
+            assertEquals(new FieldDescriptor(0, 36), rilc._fieldDescriptor);
+            assertEquals(2, rilc._locationCounterIndex);
+            assertFalse(rilc._subtraction);
+        }
+
+        {
+            RelocatableModule.RelocatablePool lcPool4 = result._relocatableModule.getLocationCounterPool(4);
+            assertEquals(2, lcPool4._content.length);
+            assertEquals(0_777000777L, lcPool4._content[0].getW());
+            assertEquals(0L, lcPool4._content[1].getW());
+            RelocatableModule.RelocatableItem ri1 = lcPool4._content[1]._relocatableItems[0];
+            assertTrue(ri1 instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter ri1lc = (RelocatableModule.RelocatableItemLocationCounter) ri1;
+            assertEquals(4, ri1lc._locationCounterIndex);
+
+            RelocatableModule.RelocatablePool lcPool5 = result._relocatableModule.getLocationCounterPool(5);
+            assertEquals(1, lcPool5._content.length);
+            assertEquals(1L, lcPool5._content[0].getW());
+            assertEquals(1, lcPool5._content[0]._relocatableItems.length);
+            RelocatableModule.RelocatableItem ri2 = lcPool5._content[0]._relocatableItems[0];
+            assertTrue(ri2 instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter ri2lc = (RelocatableModule.RelocatableItemLocationCounter) ri2;
+            assertEquals(4, ri2lc._locationCounterIndex);
+        }
+
+        {
+            RelocatableModule.RelocatablePool lcPool6 = result._relocatableModule.getLocationCounterPool(6);
+            assertEquals(3, lcPool6._content.length);
+            assertEquals(0_777000777L, lcPool6._content[0].getW());
+            assertEquals(0, lcPool6._content[0]._relocatableItems.length);
+
+            assertEquals(0L, lcPool6._content[1].getW());
+            assertEquals(1, lcPool6._content[1]._relocatableItems.length);
+            RelocatableModule.RelocatableItem ri1 = lcPool6._content[1]._relocatableItems[0];
+            assertTrue(ri1 instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter ri1lc = (RelocatableModule.RelocatableItemLocationCounter) ri1;
+            assertEquals(6, ri1lc._locationCounterIndex);
+
+            assertEquals(1L, lcPool6._content[2].getW());
+            assertEquals(1, lcPool6._content[2]._relocatableItems.length);
+            RelocatableModule.RelocatableItem ri2 = lcPool6._content[1]._relocatableItems[0];
+            assertTrue(ri2 instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter ri2lc = (RelocatableModule.RelocatableItemLocationCounter) ri2;
+            assertEquals(6, ri2lc._locationCounterIndex);
+
+            RelocatableModule.RelocatablePool lcPool7 = result._relocatableModule.getLocationCounterPool(7);
+            assertEquals(1, lcPool7._content.length);
+            assertEquals(2L, lcPool7._content[0].getW());
+            assertEquals(1, lcPool7._content[0]._relocatableItems.length);
+            RelocatableModule.RelocatableItem ri3 = lcPool7._content[0]._relocatableItems[0];
+            assertTrue(ri3 instanceof RelocatableModule.RelocatableItemLocationCounter);
+            RelocatableModule.RelocatableItemLocationCounter ri3lc = (RelocatableModule.RelocatableItemLocationCounter) ri2;
+            assertEquals(6, ri3lc._locationCounterIndex);
+        }
+    }
+
+    @Test
+    public void lit3(
+    ) throws ParameterException {
+        String[] source = {
+            "$(1)  + 15",
+            "      + ((077000777) + 5)"
+        };
+        //  Expected:
+        //  $(0) 000000: 000077000777
+        //  $(1) 000000: 000000000017
+        //       000001: 000000000005[0:35]$(0)
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        Set<Integer> lcIndices = result._relocatableModule.getEstablishedLocationCounterIndices();
+        assertEquals(2, lcIndices.size());
+        assertTrue(lcIndices.contains(0));
+        assertTrue(lcIndices.contains(1));
+
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        assertEquals(1, lcPool0._content.length);
+        assertEquals(0_77000777L, lcPool0._content[0].getW());
+
+        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(2, lcPool1._content.length);
+        assertEquals(0_017L, lcPool1._content[0].getW());
+        assertEquals(0_05L, lcPool1._content[1].getW());
+        assertEquals(1, lcPool1._content[1]._relocatableItems.length);
+        RelocatableModule.RelocatableItem ri = lcPool1._content[1]._relocatableItems[0];
+        assertTrue(ri instanceof RelocatableModule.RelocatableItemLocationCounter);
+        RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) ri;
+        assertEquals(new FieldDescriptor(0, 36), rilc._fieldDescriptor);
+        assertEquals(0, rilc._locationCounterIndex);
+        assertFalse(rilc._subtraction);
+    }
 
     @Test
     public void genFloating(

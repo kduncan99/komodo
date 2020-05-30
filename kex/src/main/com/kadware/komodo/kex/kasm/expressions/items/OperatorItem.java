@@ -22,4 +22,9 @@ public class OperatorItem implements IExpressionItem {
     ) {
         _operator = operator;
     }
+
+    @Override
+    public String toString() {
+        return "OperatorItem:" + _operator.toString();
+    }
 }

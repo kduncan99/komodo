@@ -109,4 +109,10 @@ public abstract class Operator {
         String str = String.format("%s is of wrong type", leftOperand ? "left-hand" : "right-hand");
         diagnostics.append(new ValueDiagnostic(_locale, str));
     }
+
+
+    @Override
+    public String toString() {
+        return String.format("(%s) %s Precedence:%d", getType(), getClass().getSimpleName(), getPrecedence());
+    }
 }

@@ -10,20 +10,15 @@ exlib:
     support sym, rel, and abs elements
     support various tape file formats
 
-klink:
-    Define what a saved binary looks like
-        update: It's stored in a sort of JSON format
-        update: It's an array of BankDescriptors (stored in JSON format)
 
 -- TODO BUGS
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
 
 * kasm
+Locale columns are wrongly all over the place for parsed exceptions
+  Need to add some unit testing to cover this
 See Test_Diagnostics.formOK - we are getting a T we should not get.
-unit test lit2() nested literals don't work right
-    ((077) + 5) does not generate a literal 077 as it should do
-    Test_Assembler test case commented out for now
 String concatenation does not honor precision per MASM 5.3.1
 assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
 
@@ -34,7 +29,7 @@ Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead
 
 -- TODO Thoughts
 Do we need a high-level language for systems programming to supplement assembly?
-It appears that absolute elements must always start in Basic mode. ?
+It appears that collector-generated absolute elements must always start in Basic mode. ?
 "For absolutes that are executed as programs, the Exec loads all banks produced by the Collector at level 2."
 
 
@@ -223,6 +218,9 @@ directives
 * klink
   Create absolute modules
   Create object modules
+  Define what a saved binary looks like
+    update: It's stored in a sort of JSON format
+    update: It's an array of BankDescriptors (stored in JSON format)
 
 * Exec
 Subsystems:
