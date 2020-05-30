@@ -498,6 +498,45 @@ public class Test_Assembler {
     }
 
     @Test
+    public void lit4(
+    ) throws ParameterException {
+        String[] source = {
+            "$(1)  + ((5, 013) + 5)"
+        };
+        //  Expected:
+        //  $(0) 000000: 000005000013
+        //  $(1) 000000: 000000000005[0:35]$(0)
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        Set<Integer> lcIndices = result._relocatableModule.getEstablishedLocationCounterIndices();
+        assertEquals(2, lcIndices.size());
+        assertTrue(lcIndices.contains(0));
+        assertTrue(lcIndices.contains(1));
+
+        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
+        assertEquals(1, lcPool0._content.length);
+        assertEquals(0_000005_000013L, lcPool0._content[0].getW());
+
+        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, lcPool1._content.length);
+        assertEquals(0_05L, lcPool1._content[0].getW());
+        assertEquals(1, lcPool1._content[0]._relocatableItems.length);
+        RelocatableModule.RelocatableItem ri = lcPool1._content[0]._relocatableItems[0];
+        assertTrue(ri instanceof RelocatableModule.RelocatableItemLocationCounter);
+        RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) ri;
+        assertEquals(new FieldDescriptor(0, 36), rilc._fieldDescriptor);
+        assertEquals(0, rilc._locationCounterIndex);
+        assertFalse(rilc._subtraction);
+    }
+
+    @Test
     public void genFloating(
     ) throws ParameterException {
         String[] source = {

@@ -16,11 +16,12 @@ ByteChannelModule unit tests - they wait without being notify()able, which slows
 Check to ensure breakpoints are all working.
 
 * kasm
-Locale columns are wrongly all over the place for parsed exceptions
-  Need to add some unit testing to cover this
 See Test_Diagnostics.formOK - we are getting a T we should not get.
+See other unit test failures - these are regressions.
+assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field) - need unit tests
 String concatenation does not honor precision per MASM 5.3.1
-assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
+Locale columns are wrongly all over the place for parsed expressions
+  Need to add some unit testing to cover this
 
 
 * klink
@@ -175,7 +176,8 @@ IP: search and masked search instructions (and unit tests)
 
 * kasm
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-Need to support $(n) as a relocated reference to location counter n offset by 0 (for expressions)
+Need to support "$(n)" as a relocated reference to location counter n offset by 0 (for expressions)
+  Can we implement this as a built-in function?
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 more FloatingPointValue unit tests
 more unit tests for string value generation
@@ -191,7 +193,6 @@ do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
 can we do implicit base register (and do it right)?  also with the $LIT directive...
 support user-defined functions
-allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
 create object modules directly (has some implications with how kasm generates code)
 functions
   $ILCN

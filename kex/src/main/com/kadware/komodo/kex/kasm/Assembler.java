@@ -266,9 +266,6 @@ public class Assembler {
                 if ((iv._references == null) || (iv._references.length == 0)) {
                     ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
                 } else {
-                    //TODO we allow only one reference, and that being a location counter index thing
-                    // Make this a LocationCounterEntryPoint (pending verification with real @MASM)
-                    // Enforce this restriction where the label is created
                     UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
                     ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
                                                                   iv._value.get().intValue(),
