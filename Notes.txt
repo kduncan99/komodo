@@ -23,10 +23,6 @@ Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
 
 
-* klink
-Linker problem - Linker is using twos-complement in resolving relocations
-
-
 -- TODO Thoughts
 Do we need a high-level language for systems programming to supplement assembly?
 It appears that collector-generated absolute elements must always start in Basic mode. ?
