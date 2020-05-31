@@ -60,8 +60,7 @@ public abstract class Diagnostic {
      * Get the level associated with this instance
      * @return value
      */
-    public abstract Level getLevel(
-    );
+    public abstract Level getLevel();
 
     /**
      * Private getter, retrieve severity level as a displayable character

@@ -166,7 +166,7 @@ public class FloatingPointValue extends Value {
         } else if (integerValue._value.isNegativeZero()) {
             return new FloatingPointValue(false, FloatingPointComponents.COMP_NEGATIVE_ZERO, ValuePrecision.Default);
         } else {
-            FloatingPointComponents fpc = new FloatingPointComponents(integerValue._value);
+            FloatingPointComponents fpc = new FloatingPointComponents(integerValue._value.get());
             return new FloatingPointValue(false, fpc, ValuePrecision.Default);
         }
     }
