@@ -6,6 +6,7 @@ package com.kadware.komodo.kex.klink;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.BankType;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.VirtualAddress;
 import com.kadware.komodo.baselib.Word36;
@@ -82,7 +83,7 @@ public class Linker {
     /**
      * Generated bank descriptors
      */
-    private final Map<Integer, BankDescriptor> _bankDescriptors = new TreeMap<>();
+    private final Map<Integer, LoadableBank> _bankDescriptors = new TreeMap<>();
 
     /**
      * Raw content of the various banks
@@ -283,7 +284,7 @@ public class Linker {
 
     /**
      * One of the last things we do...
-     * Creates BankDescriptor objects for all the BankDeclaration objects we have on hand
+     * Creates LoadableBank objects for all the BankDeclaration objects we have on hand
      */
     private void createBankDescriptors() {
         for (BankDeclaration bankDecl : _bankDeclarations.values()) {
@@ -294,23 +295,23 @@ public class Linker {
             }
 
             BankType bankType = bankDecl._options.contains(BankDeclaration.BankDeclarationOption.EXTENDED_MODE)
-                                ? BankType.EXTENDED_MODE
-                                : BankType.BASIC_MODE;
+                                ? BankType.ExtendedMode
+                                : BankType.BasicMode;
             int upperLimit = bankDecl._startingAddress + content.length - 1;
             if (upperLimit == -1) {
                 upperLimit = (bankDecl._largeBank ? 0100_000000 : 01_000000) - 1;
             }
 
-            BankDescriptor bankDesc = new BankDescriptor(bankDecl._bankName,
-                                                         bankDecl._bankLevel,
-                                                         bankDecl._bankDescriptorIndex,
-                                                         bankDecl._accessInfo,
-                                                         bankType,
-                                                         bankDecl._generalAccessPermissions,
-                                                         bankDecl._specialAccessPermissions,
-                                                         bankDecl._startingAddress,
-                                                         upperLimit,
-                                                         content);
+            LoadableBank bankDesc = new LoadableBank(bankDecl._bankName,
+                                                     bankDecl._bankLevel,
+                                                     bankDecl._bankDescriptorIndex,
+                                                     bankDecl._accessInfo,
+                                                     bankType,
+                                                     bankDecl._generalAccessPermissions,
+                                                     bankDecl._specialAccessPermissions,
+                                                     bankDecl._startingAddress,
+                                                     upperLimit,
+                                                     content);
             _bankDescriptors.put(bdi, bankDesc);
         }
     }
@@ -538,7 +539,7 @@ public class Linker {
                                                    _programStartInfo._lcpOffset));
             }
 
-            for (BankDescriptor bankDesc : _bankDescriptors.values()) {
+            for (LoadableBank bankDesc : _bankDescriptors.values()) {
                 _printStream.println(String.format("  Bank %s Level:%d BDI:%06o %s Lower:%08o Upper:%08o Size:%08o",
                                                    bankDesc._bankName,
                                                    bankDesc._bankLevel,
@@ -1180,7 +1181,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new BankDescriptor[0]));
+        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new LoadableBank[0]));
     }
 
     /**
@@ -1214,7 +1215,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new BankDescriptor[0]));
+        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new LoadableBank[0]));
     }
 
     /**

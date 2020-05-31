@@ -4,13 +4,9 @@
 
 package com.kadware.komodo.kex.klink;
 
-import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.AssemblerResult;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -66,9 +62,9 @@ public class Test_First$ {
         LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
 
         assertEquals(0, linkResult._errorCount);
-        assertNotNull(linkResult._bankDescriptors);
-        assertEquals(1, linkResult._bankDescriptors.length);
-        BankDescriptor bankDesc = linkResult._bankDescriptors[0];
+        assertNotNull(linkResult._loadableBanks);
+        assertEquals(1, linkResult._loadableBanks.length);
+        LoadableBank bankDesc = linkResult._loadableBanks[0];
         assertEquals(4, bankDesc._content.length);
         assertEquals(02000L, bankDesc._content[0]);
         assertEquals(03000L, bankDesc._content[1]);

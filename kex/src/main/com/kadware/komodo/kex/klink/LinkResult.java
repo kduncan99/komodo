@@ -14,7 +14,7 @@ public class LinkResult {
     public final int _errorCount;
     public final String _moduleName;
     public final AbsoluteModule _absoluteModule;
-    public final BankDescriptor[] _bankDescriptors;
+    public final LoadableBank[] _loadableBanks;
     public final Object _objectModule;
 
     /**
@@ -27,7 +27,7 @@ public class LinkResult {
         _errorCount = errorCount;
         _moduleName = moduleName;
         _absoluteModule = null;
-        _bankDescriptors = null;
+        _loadableBanks = null;
         _objectModule = null;
     }
 
@@ -37,13 +37,13 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
-        final BankDescriptor[] bankDescriptors,
+        final LoadableBank[] loadableBanks,
         final AbsoluteModule absoluteModule
     ) {
         _errorCount = errorCount;
         _moduleName = moduleName;
         _absoluteModule = absoluteModule;
-        _bankDescriptors = bankDescriptors;
+        _loadableBanks = loadableBanks;
         _objectModule = null;
     }
 
@@ -53,13 +53,13 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
-        final BankDescriptor[] bankDescriptors,
+        final LoadableBank[] loadableBanks,
         final Object object
     ) {
         _errorCount = errorCount;
         _moduleName = moduleName;
         _absoluteModule = null;
-        _bankDescriptors = bankDescriptors;
+        _loadableBanks = loadableBanks;
         _objectModule = object;
     }
 
@@ -69,12 +69,12 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
-        final BankDescriptor[] bankDescriptors
+        final LoadableBank[] loadableBanks
     ) {
         _errorCount = errorCount;
         _moduleName = moduleName;
         _absoluteModule = null;
-        _bankDescriptors = bankDescriptors;
+        _loadableBanks = loadableBanks;
         _objectModule = null;
     }
 }

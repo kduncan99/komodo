@@ -4,9 +4,38 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.exceptions.*;
-import com.kadware.komodo.hardwarelib.interrupts.*;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.BankType;
+import com.kadware.komodo.baselib.DoubleWord36;
+import com.kadware.komodo.baselib.GeneralRegister;
+import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.IndexRegister;
+import com.kadware.komodo.baselib.InstructionWord;
+import com.kadware.komodo.baselib.VirtualAddress;
+import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.baselib.Worker;
+import com.kadware.komodo.hardwarelib.exceptions.AddressLimitsException;
+import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.komodo.hardwarelib.exceptions.UnresolvedAddressException;
+import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.ArithmeticExceptionInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.BreakpointInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.InitialProgramLoadInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.JumpHistoryFullInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.OperationTrapInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.QuantumTimerInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.RCSGenericStackUnderflowOverflowInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.SignalInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.SoftwareBreakInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.TestAndSetInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.UPIInitialInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.UPINormalInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -26,38 +55,6 @@ public class InstructionProcessor extends Processor implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested enumerations
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Indicates the type of the bank
-     */
-    public enum BankType {
-        ExtendedMode(0),
-        BasicMode(1),     //  Requires BD.S == 0
-        Gate(2),          //  Requires BD.S == 0
-        Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
-        //  Only BD.ProcessorType, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
-        Queue(4),
-        QueueRepository(6);
-
-        final int _code;
-
-        BankType(int code) { _code = code; }
-
-        public static BankType get(
-            final int code
-        ) {
-            switch (code) {
-                case 0:     return ExtendedMode;
-                case 1:     return BasicMode;
-                case 2:     return Gate;
-                case 3:     return Indirect;
-                case 4:     return Queue;
-                case 6:     return QueueRepository;
-            }
-
-            throw new RuntimeException(String.format("Bad code passed to BankType.get:%d", code));
-        }
-    }
 
     public enum BreakpointComparison {
         Fetch,
@@ -146,7 +143,7 @@ public class InstructionProcessor extends Processor implements Worker {
          * @throws AddressingExceptionInterrupt if something is wrong with the values
          */
         private ArraySlice getStorage(
-        ) throws AddressingExceptionInterrupt{
+        ) throws AddressingExceptionInterrupt {
             if ((_voidFlag) || (_lowerLimitNormalized > _upperLimitNormalized)) {
                 return null;
             }
@@ -10660,7 +10657,7 @@ public class InstructionProcessor extends Processor implements Worker {
                     InventoryManager im = InventoryManager.getInstance();
                     _systemProcessor = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
                     _preservedProgramAddressRegister.set(_programAddressRegister.get());
-                    raiseInterrupt(new InitialProgramLoadInterrupt());
+//TODO remove this                    raiseInterrupt(new InitialProgramLoadInterrupt());
                     _currentRunMode = RunMode.Normal;
                     this.notify();
                     result = true;

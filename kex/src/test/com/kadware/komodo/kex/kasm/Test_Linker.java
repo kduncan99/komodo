@@ -6,10 +6,10 @@ package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.BankType;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.klink.BankDeclaration;
-import com.kadware.komodo.kex.klink.BankDescriptor;
-import com.kadware.komodo.kex.klink.BankType;
+import com.kadware.komodo.kex.klink.LoadableBank;
 import com.kadware.komodo.kex.klink.LCPoolSpecification;
 import com.kadware.komodo.kex.klink.LinkOption;
 import com.kadware.komodo.kex.klink.LinkResult;
@@ -56,20 +56,20 @@ public class Test_Linker {
         assertEquals(0, result._errorCount);
         assertNull(result._absoluteModule);
         assertNull(result._objectModule);
-        assertNotNull(result._bankDescriptors);
-        assertEquals(1, result._bankDescriptors.length);
+        assertNotNull(result._loadableBanks);
+        assertEquals(1, result._loadableBanks.length);
 
         AccessInfo accInfo = new AccessInfo(0, 0);
         AccessPermissions gap = new AccessPermissions(false, false, false);
         AccessPermissions sap = new AccessPermissions(true, true, true);
 
-        BankDescriptor bd040 = result._bankDescriptors[0];
+        LoadableBank bd040 = result._loadableBanks[0];
         assertEquals("TEST", bd040._bankName);
         assertEquals(0, bd040._bankLevel);
         assertEquals(040, bd040._bankDescriptorIndex);
         assertEquals(0, bd040._lowerLimit);
         assertEquals(0_777777, bd040._upperLimit);
-        assertEquals(BankType.BASIC_MODE, bd040._bankType);
+        assertEquals(BankType.BasicMode, bd040._bankType);
         assertEquals(accInfo, bd040._accessInfo);
         assertEquals(gap, bd040._generalPermissions);
         assertEquals(sap, bd040._specialPermissions);
@@ -115,12 +115,12 @@ public class Test_Linker {
         LinkResult linkResult = linker.link(LinkType.BINARY);
         assertNotNull(linkResult);
         assertEquals(0, linkResult._errorCount);
-        assertNotNull(linkResult._bankDescriptors);
-        assertEquals(1, linkResult._bankDescriptors.length);
+        assertNotNull(linkResult._loadableBanks);
+        assertEquals(1, linkResult._loadableBanks.length);
 
-        BankDescriptor bd = linkResult._bankDescriptors[0];
+        LoadableBank bd = linkResult._loadableBanks[0];
 
-        assertEquals(BankType.EXTENDED_MODE, bd._bankType);
+        assertEquals(BankType.ExtendedMode, bd._bankType);
         assertEquals(20, bd._content.length);
         int lc0Offset = 0;
         int lc1Offset = 18;
@@ -156,7 +156,7 @@ public class Test_Linker {
         assertEquals(1, result._errorCount);
         assertNull(result._absoluteModule);
         assertNull(result._objectModule);
-        assertNull(result._bankDescriptors);
+        assertNull(result._loadableBanks);
     }
 
     /**
@@ -223,13 +223,13 @@ public class Test_Linker {
         LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
         assertNotNull(linkResult);
         assertEquals(0, linkResult._errorCount);
-        assertNotNull(linkResult._bankDescriptors);
+        assertNotNull(linkResult._loadableBanks);
         assertEquals("TEST", linkResult._moduleName);
-        assertEquals(1, linkResult._bankDescriptors.length);
+        assertEquals(1, linkResult._loadableBanks.length);
 
-        BankDescriptor bd = linkResult._bankDescriptors[0];
+        LoadableBank bd = linkResult._loadableBanks[0];
 
-        assertEquals(BankType.EXTENDED_MODE, bd._bankType);
+        assertEquals(BankType.ExtendedMode, bd._bankType);
         assertEquals(1, bd._bankLevel);
         assertEquals(0100, bd._bankDescriptorIndex);
         assertEquals("TESTBANK", bd._bankName);

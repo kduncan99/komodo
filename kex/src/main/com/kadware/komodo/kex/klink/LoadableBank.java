@@ -6,13 +6,14 @@ package com.kadware.komodo.kex.klink;
 
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.BankType;
 
 /**
  * Resulting bank descriptor information - should be similar to, although possibly not exactly,
  * the information provided in the corresponding BankDeclaration object. This information is not
  * specific to either absolute or object module banking schemes - it is a superset of both of those.
  */
-public class BankDescriptor {
+public class LoadableBank {
 
     public final AccessInfo _accessInfo;
     public final int _bankDescriptorIndex;
@@ -25,7 +26,7 @@ public class BankDescriptor {
     public final AccessPermissions _specialPermissions;
     public int _upperLimit;                                 //  address of last word in the bank
 
-    BankDescriptor(
+    LoadableBank(
         final String bankName,
         final int bankLevel,
         final int bankDescriptorIndex,

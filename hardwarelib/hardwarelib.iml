@@ -8,6 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="kex" />
     <orderEntry type="module" module-name="baselib" />
     <orderEntry type="module" module-name="binaries" />
     <orderEntry type="module" module-name="configlib" />

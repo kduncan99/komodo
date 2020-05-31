@@ -766,7 +766,7 @@ class BaseFunctions {
             ArraySlice bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
             InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
             bd.setAccessLock(bank._accessInfo);
-            bd.setBankType(bank._isExtendedMode ? InstructionProcessor.BankType.ExtendedMode : InstructionProcessor.BankType.BasicMode);
+            bd.setBankType(bank._isExtendedMode ? BankType.ExtendedMode : BankType.BasicMode);
             bd.setBaseAddress(absAddr);
             bd.setGeneralAccessPermissions(bank._generalPermissions);
             bd.setGeneralFault(false);

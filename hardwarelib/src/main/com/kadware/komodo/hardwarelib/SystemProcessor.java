@@ -8,21 +8,18 @@ import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Credentials;
-import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
+import com.kadware.komodo.baselib.VirtualAddress;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.kex.kasm.AbsoluteModule;
-import com.kadware.komodo.kex.kasm.LoadableBank;
+import com.kadware.komodo.kex.klink.LoadableBank;
 import java.io.BufferedWriter;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -587,171 +584,358 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     }
 
     /**
-     * Loads an AbsoluteModule object into the processor complex.
-     * This module has some specific requirements:
-     *      It *must* have only level 0 bank descriptors
-     *      It *must not* have any BDI's < 000040.
-     *      It *may* have a bank 000040 defined - if so, this is the pre-built level 0 BDT
-     *      It *must* have a bank dedicated to the ICS, initially based on B26
-     *      Any bank which is NOT a level 0 BDT *must* have a BDI >= 000041.
-     *      It *must* have an entry point defined.
-     *      The entry point bank must be initially based on B0 if EXTENDED MODE, or B12-B15 if BASIC MODE
-     * Caller should clear the dynamic segments out of the MSP before calling here, but it's not critical to do so.
-     * Caller should quite definitely stop the IP and clear it, before claling here.
-     * @param module AbsoluteModule to be loaded
-     * @param mainStorageProcessorUPI UPI of the MSP to be loaded
-     * @param useFixedStorage true to use fixed MSP storage; false to use dynamically-allocated segments
-     * @param instructionProcessorUPI UPI of the IP to be loaded
+     * Allocates a chunk of storage from the indicated main storage processor
      */
-    void loadAbsoluteModule(
-        final AbsoluteModule module,
-        final int mainStorageProcessorUPI,
-        final boolean useFixedStorage,
-        final int instructionProcessorUPI
+    AbsoluteAddress iplAllocate(
+        final String moduleName,
+        final MainStorageProcessor mainStorageProcessor,
+        final int words,
+        final boolean useFixedStorage
     ) throws AddressingExceptionInterrupt,
-             BinaryLoadException,
+             BinaryLoadException {
+        if (useFixedStorage) {
+            //  Word 0 is a sentinel, word 1 is the next free offset, word 2 is the remaining space
+            ArraySlice fixedSlice = mainStorageProcessor.getStorage(0);
+            long sentinel = fixedSlice.get(0);
+            int nextOffset = (int) fixedSlice.get(1);
+            int remaining = (int) fixedSlice.get(2);
+
+            if (sentinel != 0_777000_777000L) {
+                throw new BinaryLoadException(moduleName, "Fixed arena not established");
+            }
+
+            if (words > remaining) {
+                throw new BinaryLoadException(moduleName, "Out of fixed space");
+            }
+
+            AbsoluteAddress result = new AbsoluteAddress(mainStorageProcessor._upiIndex, 0, nextOffset);
+            nextOffset += words;
+            remaining -= words;
+            fixedSlice.set(1, nextOffset);
+            fixedSlice.set(2, remaining);
+
+            return result;
+        } else {
+            int segIndex = mainStorageProcessor.createSegment(words);
+            return new AbsoluteAddress(mainStorageProcessor._upiIndex, segIndex, 0);
+        }
+    }
+
+    /**
+     * Loads a single or multi-banked binary produced by the linker, into cleared memory.
+     * Produces a level 0 bank descriptor table and any other necessary BDTs.
+     * Sets up minimal interrupt handling, sufficient for IPL to succeed
+     * - presumes the starting address is the first word of the first-defined bank
+     * Sets up bank registers in the given IP to represent the bank descriptor tables
+     * Sets up the designator register for ring 0, level 0, exec mode, etc
+     * Sets the PAR,PC per the starting address (see above)
+     * Optionally creates a configuration bank, and bases it on B2 for extended mode, or B13 for basic mode
+     *      this bank is NOT in any bank descriptor table, so if you unbase it, you cannot get it back
+     * Finally, sends an IPL to the indicated instruction processor to get things rolling.
+     * @param moduleName name of the module being loaded
+     * @param loadableBanks Represents the code to be loaded
+     * @param mainStorageProcessorUPI UPI of the MSP to be loaded
+     * @param instructionProcessorUPI UPI of the IP to be loaded
+     * @param useFixedStorage true to use fixed MSP storage; false to use dynamically-allocated segments
+     */
+    void iplBinary(
+        final String moduleName,
+        final LoadableBank[] loadableBanks,
+        final int mainStorageProcessorUPI,
+        final int instructionProcessorUPI,
+        final boolean useFixedStorage,
+        final boolean createConfigBank
+    ) throws BinaryLoadException,
              MachineInterrupt,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        EntryMessage em = _logger.traceEntry("loadAbsoluteModule(module=%s mspupi=%d fixed=%s ipupi=%d",
-                                             module._name,
-                                             mainStorageProcessorUPI,
-                                             useFixedStorage,
-                                             instructionProcessorUPI);
+        EntryMessage em = LOGGER.traceEntry("iplLoadBinary(module=%s mspupi=%d ipupi=%d, fixed=%s config=%s",
+                                            moduleName,
+                                            mainStorageProcessorUPI,
+                                            instructionProcessorUPI,
+                                            useFixedStorage,
+                                            createConfigBank);
 
+        //  check BDIs - we need bank descriptor tables for level 0, and for all other levels indicated
+        //  the vector indicates the highest BDI for each level, where the level is the index.
+        int[] bdtVector = { 32, -1, -1, -1, -1, -1, -1, -1 };
+        for (LoadableBank lb : loadableBanks) {
+            if ((lb._bankLevel < 0) || (lb._bankLevel > 7)) {
+                throw new BinaryLoadException(moduleName, "Invalid bank level");
+            }
+
+            if ( (lb._bankDescriptorIndex > 077777)
+                || ((lb._bankLevel == 0) && (lb._bankDescriptorIndex < 31))
+                || (lb._bankDescriptorIndex < 0) ) {
+                throw new BinaryLoadException(moduleName, "Invalid bank descriptor index");
+            }
+
+            if (lb._bankDescriptorIndex > bdtVector[lb._bankLevel]) {
+                bdtVector[lb._bankLevel] = lb._bankDescriptorIndex;
+            }
+        }
+
+        //  Clear things out, then (maybe) set up the fixed arena
+        //  Word 0 is a sentinel, word 1 is the next free offset, word 2 is the remaining space
         InventoryManager im = InventoryManager.getInstance();
         MainStorageProcessor msp = im.getMainStorageProcessor(mainStorageProcessorUPI);
         InstructionProcessor ip = im.getInstructionProcessor(instructionProcessorUPI);
+        msp.clear();
+        ip.clear();
 
-        if (module._entryPointBank == null) {
-            throw new BinaryLoadException(module._name, "Module does not have an entry point defined");
+        if (useFixedStorage) {
+            ArraySlice fixedSlice = msp.getStorage(0);
+            int fixedSize = msp.getStorage(0).getSize();
+            int nextOffset = 3;
+            int remaining = fixedSize - 3;
+            fixedSlice.set(0, 0_777000_777000L);
+            fixedSlice.set(1, nextOffset);
+            fixedSlice.set(2, remaining);
         }
 
-        LoadableBank entryPointBank = module._entryPointBank;
-        if (entryPointBank._initialBaseRegister == null) {
-            throw new BinaryLoadException(module._name, "Entry point bank is not initially based");
-        } else if (entryPointBank._isExtendedMode && (entryPointBank._initialBaseRegister != 0)) {
-            throw new BinaryLoadException(module._name, "Extended mode entry point is in a bank not initially based on B0");
-        } else if (!entryPointBank._isExtendedMode &&
-                   ((entryPointBank._initialBaseRegister < 12 || (entryPointBank._initialBaseRegister > 15)))) {
-            throw new BinaryLoadException(module._name, "Basic mode entry point is in a bank not initially based on B12-B15");
+        //  Create all necessary bank descriptor tables
+        AbsoluteAddress[] bdtAddresses = new AbsoluteAddress[8];
+        for (int bx = 0; bx < 8; ++bx) {
+            int highestBDI = bdtVector[bx];
+            if (highestBDI >= 0) {
+                int bdtSize = 8 * (highestBDI + 1);
+                bdtAddresses[bx] = iplAllocate(moduleName, msp, bdtSize, useFixedStorage);
+            }
         }
-        int entryPointAddress = module._entryPointAddress == null ? entryPointBank._startingAddress : module._entryPointAddress;
 
-        //  map of allocated banks - keyed by BDI, value is the initialized bank descriptor (in the BDT) for the loaded bank
-        Map<Integer, InstructionProcessor.BankDescriptor> bankMap = new HashMap<>();
-        ArraySlice level0Storage = null;
+        //  Load the banks, creating bank descriptors along the way
+        for (LoadableBank lb : loadableBanks) {
+            AbsoluteAddress bdtAddr = bdtAddresses[lb._bankLevel];
+            InstructionProcessor.BankDescriptor bd =
+                new InstructionProcessor.BankDescriptor(msp.getStorage(bdtAddr._segment), bdtAddr._offset);
 
-        //  If the module doesn't have a level 0 BDT, create one.
-        //  If it *does* have one, it will be the first bank we encounter in the subsequent loop.
-        int level0BDTBDI = 000040;
-        if (!module._loadableBanks.containsKey(level0BDTBDI)) {
-            int highestBDI = module._loadableBanks.lastEntry().getKey();
-            int bdtSize = (highestBDI + 1) * 8;
-            int lowerAddressingLimit = 01000;
+            AbsoluteAddress bankAddr = iplAllocate(moduleName, msp, lb._content.length, useFixedStorage);
+            ArraySlice bankStorage = msp.getStorage(bankAddr._segment);
+            bankStorage.load(lb._content, 0, lb._content.length, bankAddr._offset);
 
-            //  TODO handle fixed storage flag
-            int segmentIndex = msp.createSegment(bdtSize);
-            level0Storage = msp.getStorage(segmentIndex);
-            AbsoluteAddress addr = new AbsoluteAddress(mainStorageProcessorUPI, segmentIndex, 0);
-
-            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(level0Storage, level0BDTBDI * 8);
-            bd.setGeneralAccessPermissions(new AccessPermissions(true, true, true));
-            bd.setSpecialAccessPermissions(new AccessPermissions(true, true, true));
-            bd.setBankType(InstructionProcessor.BankType.ExtendedMode);
-            bd.setGeneralFault(false);
-            bd.setLargeBank(false);
+            bd.setBaseAddress(bankAddr);
+            bd.setLowerLimit(lb._lowerLimit);
+            bd.setUpperLimit(lb._upperLimit);
+            bd.setAccessLock(lb._accessInfo);
             bd.setUpperLimitSuppressionControl(false);
-            bd.setAccessLock(new AccessInfo(0, 0));
-            bd.setBaseAddress(addr);
-            bd.setLowerLimit(lowerAddressingLimit);
-            bd.setUpperLimit(lowerAddressingLimit + bdtSize - 1);
-
-            bankMap.put(level0BDTBDI, bd);
-        }
-
-        //  Load the banks from the module
-        for (LoadableBank loadableBank : module._loadableBanks.values()) {
-            int bdi = loadableBank._bankDescriptorIndex;
-            if (bdi < 000040) {
-                throw new BinaryLoadException(module._name,
-                                              String.format("Invalid BDI %06o", bdi));
-            }
-
-            int level = loadableBank._bankLevel;
-            if (level != 0) {
-                throw new BinaryLoadException(module._name,
-                                              String.format("Bank with BDI %06o has a non-zero bank-level", bdi));
-            }
-
-            //  TODO handle fixed storage flag
-            System.out.println(String.format("Loading bank %06o size=%d", bdi, loadableBank._content.getSize()));//TODO remove
-            int segmentIndex = msp.createSegment(loadableBank._content.getSize());
-            ArraySlice arraySlice = msp.getStorage(segmentIndex);
-            arraySlice.load(loadableBank._content, 0);
-            AbsoluteAddress addr = new AbsoluteAddress(mainStorageProcessorUPI, segmentIndex, 0);
-
-            if (bdi == 000040) {
-                level0Storage = arraySlice;
-            }
-
-            //  TODO if the level 0 BDT is pre-built, why do we have to fill in anything other than the base address?
-            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(level0Storage, bdi * 8);
-            bd.setGeneralAccessPermissions(loadableBank._generalPermissions);
-            bd.setSpecialAccessPermissions(loadableBank._specialPermissions);
-            bd.setBankType(loadableBank._isExtendedMode
-                           ? InstructionProcessor.BankType.ExtendedMode
-                           : InstructionProcessor.BankType.BasicMode);
-            bd.setGeneralFault(false);
             bd.setLargeBank(false);
-            bd.setUpperLimitSuppressionControl(false);
-            bd.setAccessLock(loadableBank._accessInfo);
-            bd.setBaseAddress(addr);
-            bd.setLowerLimit(loadableBank._startingAddress >> 9);
-            bd.setUpperLimit(loadableBank._startingAddress + arraySlice.getSize() - 1);
+            bd.setGeneralAccessPermissions(lb._generalPermissions);
+            bd.setSpecialAccessPermissions(lb._specialPermissions);
+            bd.setGeneralFault(false);
+            bd.setBankType(lb._bankType);
+        }
 
-            bankMap.put(loadableBank._bankDescriptorIndex, bd);
+        //  Set up the initial program load (class 29) interrupt vector to point to the first word in the first bank
+        ArraySlice ihVectors = msp.getStorage(bdtAddresses[0]._segment);
+        VirtualAddress ihAddr = new VirtualAddress(loadableBanks[0]._bankLevel,
+                                                   loadableBanks[0]._bankDescriptorIndex,
+                                                   loadableBanks[0]._lowerLimit);
+        ihVectors.set(29, ihAddr.getW());
 
-            if (loadableBank._initialBaseRegister != null) {
-                int brx = loadableBank._initialBaseRegister;
-                ip.setBaseRegister(brx, new InstructionProcessor.BaseRegister(bd));
-                if ((brx > 0) && (brx < 16)) {
-                    InstructionProcessor.ActiveBaseTableEntry abte
-                        = new InstructionProcessor.ActiveBaseTableEntry(loadableBank._bankLevel,
-                                                                        loadableBank._bankDescriptorIndex,
-                                                                        0);
-                    ip.loadActiveBaseTableEntry(brx, abte);
-                }
+        //  Establish bank registers B16 and upwards corresponding to the created bank descriptor tables
+        for (int bdtLevel = 0; bdtLevel < 8; ++bdtLevel) {
+            int highestBDI = bdtVector[bdtLevel];
+            if (highestBDI >= 0) {
+                int bdtSize = 8 * (highestBDI + 1);
+                InstructionProcessor.BaseRegister br =
+                    new InstructionProcessor.BaseRegister(bdtAddresses[bdtLevel],
+                                                          false,
+                                                          0,
+                                                          bdtSize - 1,
+                                                          new AccessInfo(0, 0),
+                                                          new AccessPermissions(false, false, false),
+                                                          new AccessPermissions(true, true, true));
+                ip.setBaseRegister(16 + bdtLevel, br);
             }
         }
 
-        //  Set up certain processor registers.
-        ip.setBaseRegister(16, new InstructionProcessor.BaseRegister(bankMap.get(level0BDTBDI)));
-        InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
-        dr.clear();
-        dr.setArithmeticExceptionEnabled(module._afcmSet);
-        dr.setBasicModeBaseRegisterSelection(!entryPointBank._isExtendedMode);
-        dr.setBasicModeEnabled(!entryPointBank._isExtendedMode);
-        dr.setDeferrableInterruptEnabled(true);
-        dr.setExecRegisterSetSelected(true);
-        dr.setExecutive24BitIndexingEnabled(true);
-        dr.setQuarterWordModeEnabled(module._setQuarter);
-        dr.setProcessorPrivilege(0);
-
-        InstructionProcessor.ProgramAddressRegister par = ip.getProgramAddressRegister();
-        par.setProgramCounter(entryPointAddress);
-        par.setLBDI(entryPointBank._bankDescriptorIndex);
-
-        InstructionProcessor.BaseRegister b26 = ip.getBaseRegister(26);
-        if ((b26 == null) || (b26._voidFlag)) {
-            throw new BinaryLoadException(module._name, "Missing or invalid ICS bank");
+        //  Create and base the config bank
+        if (createConfigBank) {
+            //  TODO
         }
 
-        long ex1Value = (16L << 18) | (b26._upperLimitNormalized + 1);
-        ip.setGeneralRegister(GeneralRegisterSet.EX1, ex1Value);
+        //  Set up a small interrupt control stack (ICS)
+        int icsSize = 4 * 16;
+        AbsoluteAddress icsAddr = iplAllocate(moduleName, msp, icsSize, useFixedStorage);
+        InstructionProcessor.BaseRegister icsBaseReg =
+            new InstructionProcessor.BaseRegister(icsAddr,
+                                                  false,
+                                                  0,
+                                                  icsSize - 1,
+                                                  new AccessInfo(0, 0),
+                                                  new AccessPermissions(false, false, false),
+                                                  new AccessPermissions(true, true, false));
+        ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, icsBaseReg);
+        ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, (4 << 18) | icsSize);
 
-        _logger.traceExit(em);
+        //TODO do we need to set anything else up on the IP? I don't think so...?
+        upiSendDirected(instructionProcessorUPI);
+
+        LOGGER.traceExit(em);
     }
+
+//    /**
+//     * Loads an AbsoluteModule object into the processor complex.
+//     * This module has some specific requirements:
+//     *      It *must* have only level 0 bank descriptors
+//     *      It *must not* have any BDI's < 000040.
+//     *      It *may* have a bank 000040 defined - if so, this is the pre-built level 0 BDT
+//     *      It *must* have a bank dedicated to the ICS, initially based on B26
+//     *      Any bank which is NOT a level 0 BDT *must* have a BDI >= 000041.
+//     *      It *must* have an entry point defined.
+//     *      The entry point bank must be initially based on B0 if EXTENDED MODE, or B12-B15 if BASIC MODE
+//     * Caller should clear the dynamic segments out of the MSP before calling here, but it's not critical to do so.
+//     * Caller should quite definitely stop the IP and clear it, before claling here.
+//     * @param module AbsoluteModule to be loaded
+//     * @param mainStorageProcessorUPI UPI of the MSP to be loaded
+//     * @param useFixedStorage true to use fixed MSP storage; false to use dynamically-allocated segments
+//     * @param instructionProcessorUPI UPI of the IP to be loaded
+//     */
+//    void loadAbsoluteModule(
+//        final AbsoluteModule module,
+//        final int mainStorageProcessorUPI,
+//        final boolean useFixedStorage,
+//        final int instructionProcessorUPI
+//    ) throws AddressingExceptionInterrupt,
+//             BinaryLoadException,
+//             MachineInterrupt,
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
+//        EntryMessage em = _logger.traceEntry("loadAbsoluteModule(module=%s mspupi=%d fixed=%s ipupi=%d",
+//                                             module._name,
+//                                             mainStorageProcessorUPI,
+//                                             useFixedStorage,
+//                                             instructionProcessorUPI);
+//
+//        InventoryManager im = InventoryManager.getInstance();
+//        MainStorageProcessor msp = im.getMainStorageProcessor(mainStorageProcessorUPI);
+//        InstructionProcessor ip = im.getInstructionProcessor(instructionProcessorUPI);
+//
+//        if (module._entryPointBank == null) {
+//            throw new BinaryLoadException(module._name, "Module does not have an entry point defined");
+//        }
+//
+//        LoadableBank entryPointBank = module._entryPointBank;
+//        if (entryPointBank._initialBaseRegister == null) {
+//            throw new BinaryLoadException(module._name, "Entry point bank is not initially based");
+//        } else if (entryPointBank._isExtendedMode && (entryPointBank._initialBaseRegister != 0)) {
+//            throw new BinaryLoadException(module._name, "Extended mode entry point is in a bank not initially based on B0");
+//        } else if (!entryPointBank._isExtendedMode &&
+//                   ((entryPointBank._initialBaseRegister < 12 || (entryPointBank._initialBaseRegister > 15)))) {
+//            throw new BinaryLoadException(module._name, "Basic mode entry point is in a bank not initially based on B12-B15");
+//        }
+//        int entryPointAddress = module._entryPointAddress == null ? entryPointBank._startingAddress : module._entryPointAddress;
+//
+//        //  map of allocated banks - keyed by BDI, value is the initialized bank descriptor (in the BDT) for the loaded bank
+//        Map<Integer, InstructionProcessor.BankDescriptor> bankMap = new HashMap<>();
+//        ArraySlice level0Storage = null;
+//
+//        //  If the module doesn't have a level 0 BDT, create one.
+//        //  If it *does* have one, it will be the first bank we encounter in the subsequent loop.
+//        int level0BDTBDI = 000040;
+//        if (!module._loadableBanks.containsKey(level0BDTBDI)) {
+//            int highestBDI = module._loadableBanks.lastEntry().getKey();
+//            int bdtSize = (highestBDI + 1) * 8;
+//            int lowerAddressingLimit = 01000;
+//
+//            int segmentIndex = msp.createSegment(bdtSize);
+//            level0Storage = msp.getStorage(segmentIndex);
+//            AbsoluteAddress addr = new AbsoluteAddress(mainStorageProcessorUPI, segmentIndex, 0);
+//
+//            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(level0Storage, level0BDTBDI * 8);
+//            bd.setGeneralAccessPermissions(new AccessPermissions(true, true, true));
+//            bd.setSpecialAccessPermissions(new AccessPermissions(true, true, true));
+//            bd.setBankType(InstructionProcessor.BankType.ExtendedMode);
+//            bd.setGeneralFault(false);
+//            bd.setLargeBank(false);
+//            bd.setUpperLimitSuppressionControl(false);
+//            bd.setAccessLock(new AccessInfo(0, 0));
+//            bd.setBaseAddress(addr);
+//            bd.setLowerLimit(lowerAddressingLimit);
+//            bd.setUpperLimit(lowerAddressingLimit + bdtSize - 1);
+//
+//            bankMap.put(level0BDTBDI, bd);
+//        }
+//
+//        //  Load the banks from the module
+//        for (LoadableBank loadableBank : module._loadableBanks.values()) {
+//            int bdi = loadableBank._bankDescriptorIndex;
+//            if (bdi < 000040) {
+//                throw new BinaryLoadException(module._name,
+//                                              String.format("Invalid BDI %06o", bdi));
+//            }
+//
+//            int level = loadableBank._bankLevel;
+//            if (level != 0) {
+//                throw new BinaryLoadException(module._name,
+//                                              String.format("Bank with BDI %06o has a non-zero bank-level", bdi));
+//            }
+//
+//            int segmentIndex = msp.createSegment(loadableBank._content.getSize());
+//            ArraySlice arraySlice = msp.getStorage(segmentIndex);
+//            arraySlice.load(loadableBank._content, 0);
+//            AbsoluteAddress addr = new AbsoluteAddress(mainStorageProcessorUPI, segmentIndex, 0);
+//
+//            if (bdi == 000040) {
+//                level0Storage = arraySlice;
+//            }
+//
+//            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(level0Storage, bdi * 8);
+//            bd.setGeneralAccessPermissions(loadableBank._generalPermissions);
+//            bd.setSpecialAccessPermissions(loadableBank._specialPermissions);
+//            bd.setBankType(loadableBank._isExtendedMode
+//                           ? InstructionProcessor.BankType.ExtendedMode
+//                           : InstructionProcessor.BankType.BasicMode);
+//            bd.setGeneralFault(false);
+//            bd.setLargeBank(false);
+//            bd.setUpperLimitSuppressionControl(false);
+//            bd.setAccessLock(loadableBank._accessInfo);
+//            bd.setBaseAddress(addr);
+//            bd.setLowerLimit(loadableBank._startingAddress >> 9);
+//            bd.setUpperLimit(loadableBank._startingAddress + arraySlice.getSize() - 1);
+//
+//            bankMap.put(loadableBank._bankDescriptorIndex, bd);
+//
+//            if (loadableBank._initialBaseRegister != null) {
+//                int brx = loadableBank._initialBaseRegister;
+//                ip.setBaseRegister(brx, new InstructionProcessor.BaseRegister(bd));
+//                if ((brx > 0) && (brx < 16)) {
+//                    InstructionProcessor.ActiveBaseTableEntry abte
+//                        = new InstructionProcessor.ActiveBaseTableEntry(loadableBank._bankLevel,
+//                                                                        loadableBank._bankDescriptorIndex,
+//                                                                        0);
+//                    ip.loadActiveBaseTableEntry(brx, abte);
+//                }
+//            }
+//        }
+//
+//        //  Set up certain processor registers.
+//        ip.setBaseRegister(16, new InstructionProcessor.BaseRegister(bankMap.get(level0BDTBDI)));
+//        InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
+//        dr.clear();
+//        dr.setArithmeticExceptionEnabled(module._afcmSet);
+//        dr.setBasicModeBaseRegisterSelection(!entryPointBank._isExtendedMode);
+//        dr.setBasicModeEnabled(!entryPointBank._isExtendedMode);
+//        dr.setDeferrableInterruptEnabled(true);
+//        dr.setExecRegisterSetSelected(true);
+//        dr.setExecutive24BitIndexingEnabled(true);
+//        dr.setQuarterWordModeEnabled(module._setQuarter);
+//        dr.setProcessorPrivilege(0);
+//
+//        InstructionProcessor.ProgramAddressRegister par = ip.getProgramAddressRegister();
+//        par.setProgramCounter(entryPointAddress);
+//        par.setLBDI(entryPointBank._bankDescriptorIndex);
+//
+//        InstructionProcessor.BaseRegister b26 = ip.getBaseRegister(26);
+//        if ((b26 == null) || (b26._voidFlag)) {
+//            throw new BinaryLoadException(module._name, "Missing or invalid ICS bank");
+//        }
+//
+//        long ex1Value = (16L << 18) | (b26._upperLimitNormalized + 1);
+//        ip.setGeneralRegister(GeneralRegisterSet.EX1, ex1Value);
+//
+//        _logger.traceExit(em);
+//    }
 
     /**
      * Updates the credentials required for using the SPIF
