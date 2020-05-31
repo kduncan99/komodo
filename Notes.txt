@@ -16,7 +16,6 @@ ByteChannelModule unit tests - they wait without being notify()able, which slows
 Check to ensure breakpoints are all working.
 
 * kasm
-See Test_Diagnostics.formOK - we are getting a T we should not get.
 See other unit test failures - these are regressions.
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions

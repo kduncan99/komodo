@@ -1473,7 +1473,7 @@ public class Assembler {
             if (values[fx]._value.isPositive()) {
                 trunc = !fieldValue.and(mask).equals(fieldValue);
             } else {
-                trunc = !fieldValue.and(mask).equals(DoubleWord36.SHORT_BIT_MASK);
+                trunc = !fieldValue.or(mask).equals(DoubleWord36.BIT_MASK);
             }
 
             if (trunc) {

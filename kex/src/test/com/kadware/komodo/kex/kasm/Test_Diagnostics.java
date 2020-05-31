@@ -4,7 +4,9 @@
 
 package com.kadware.komodo.kex.kasm;
 
+import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
+import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -61,7 +63,7 @@ public class Test_Diagnostics {
 
     @Test
     public void formOK(
-    ) {
+    ) throws ParameterException {
         String[] source = {
             "F1       $FORM     12,12,12",
             "         -2",
@@ -75,6 +77,12 @@ public class Test_Diagnostics {
         AssemblerResult result = assembler.assemble();
 
         assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+        RelocatableModule.RelocatablePool lcPool = result._relocatableModule.getLocationCounterPool(0);
+        assertEquals(3, lcPool._content.length);
+        assertEquals(0_777777_777775L, lcPool._content[0].getW());
+        assertEquals(0_777777_777775L, lcPool._content[1].getW());
+        assertEquals(0_0001_7775_0003L, lcPool._content[2].getW());
     }
 
 }
