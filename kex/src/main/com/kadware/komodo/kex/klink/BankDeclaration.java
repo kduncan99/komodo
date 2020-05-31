@@ -7,6 +7,7 @@ package com.kadware.komodo.kex.klink;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -134,6 +135,14 @@ public class BankDeclaration {
             final boolean value
         ) {
             _largeBank = value;
+            return this;
+        }
+
+        public Builder setOptions(
+            final BankDeclarationOption[] options
+        ) {
+            _options = new HashSet<>();
+            Collections.addAll(_options, options);
             return this;
         }
 

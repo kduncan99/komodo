@@ -13,7 +13,6 @@ import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -658,7 +657,11 @@ public class Linker {
             tempValue |= notMask;
         }
 
-        tempValue = Word36.addSimple(tempValue, (subtraction ? -1 : 1) * newValue);
+        if (subtraction) {
+            tempValue = Word36.addSimple(tempValue, (Word36.negate(newValue)));
+        } else {
+            tempValue = Word36.addSimple(tempValue, newValue);
+        }
 
         //  Check for field overflow...
         boolean trunc;
@@ -899,6 +902,7 @@ public class Linker {
             }
 
             if (newValue != 0) {
+                System.out.println("---->" + newValue);//TODO remove
                 result = integrateValue(result, ri._fieldDescriptor, newValue, ri._subtraction, lcpSpecification);
             }
         }

@@ -18,14 +18,13 @@ Check to ensure breakpoints are all working.
 * kasm
 See Test_Diagnostics.formOK - we are getting a T we should not get.
 See other unit test failures - these are regressions.
-assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field) - need unit tests
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
 
 
 * klink
-Linker problem - if you code FOO-FIRST$, linker resolves FIRST$ but adds instead of subtracting
+Linker problem - Linker is using twos-complement in resolving relocations
 
 
 -- TODO Thoughts

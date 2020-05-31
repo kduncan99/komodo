@@ -670,4 +670,30 @@ public class Test_Assembler {
         assertEquals(0_000000000000L, lcPool0._content[5].getW());
         assertEquals(0_000000000006L, lcPool0._content[6].getW());
     }
+
+    @Test
+    public void bField_ExecRegisters(
+    ) throws ParameterException {
+        String[] source = {
+            "          $EXTEND",
+            "$(1)      .",
+            "          LA        A5,0,,B16",
+            "          LA        A6,0,,B31"
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(OPTION_SET)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNotNull(result._relocatableModule);
+
+        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
+        assertNotNull(lcPool1);
+        assertEquals(2, lcPool1._content.length);
+        assertEquals(0_100120_200000L, lcPool1._content[0].getW());
+        assertEquals(0_100140_370000L, lcPool1._content[1].getW());
+    }
 }

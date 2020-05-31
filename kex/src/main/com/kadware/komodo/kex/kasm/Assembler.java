@@ -908,8 +908,14 @@ public class Assembler {
             values[2] = aValue;
             values[3] = xValue;
             values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
-            values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
-            values[6] = bValue;
+            int bInt = bValue._value.get().intValue();
+            if (bInt < 017) {
+                values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
+                values[6] = bValue;
+            } else {
+                values[5] = new IntegerValue.Builder().setValue(1).build();
+                values[6] = new IntegerValue.Builder().setValue(bInt & 017).build();
+            }
             values[7] = uValue;
         }
 
