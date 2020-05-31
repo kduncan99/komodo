@@ -66,7 +66,9 @@ public class Linker {
     //  Class data
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    //  Bank declarations keyed by L,BDI (3-bit L, 15-bit BDI)
     private final Map<Integer, BankDeclaration> _bankDeclarations;
+
     private final String _moduleName;
     private final Set<LinkOption> _options;
     private final PrintStream _printStream;
@@ -86,7 +88,7 @@ public class Linker {
     private final Map<Integer, LoadableBank> _bankDescriptors = new TreeMap<>();
 
     /**
-     * Raw content of the various banks
+     * Raw content of the various banks, keyed by bank L,BDI in vaddr format
      */
     private final Map<Integer, long[]> _bankContent = new TreeMap<>();
 
@@ -99,7 +101,7 @@ public class Linker {
      * Maps location counter pools to the banks which will eventually (or now do) contain them.
      * Also used for resolving undefined references.
      */
-    private final Map<LCPoolSpecification, BankOffset> _poolMap = new HashMap<>();
+    private final Map<LCPoolSpecification, VirtualAddress> _poolMap = new HashMap<>();
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -169,7 +171,8 @@ public class Linker {
         ) {
             _bankDeclarations.clear();
             for (BankDeclaration bd : declarations) {
-                _bankDeclarations.put(bd._bankDescriptorIndex, bd);
+                int lbdi = ((bd._bankLevel & 07) << 15) | (bd._bankDescriptorIndex & 077777);
+                _bankDeclarations.put(lbdi, bd);
             }
             return this;
         }
@@ -184,7 +187,8 @@ public class Linker {
         ) {
             _bankDeclarations.clear();
             for (BankDeclaration bd : declarations) {
-                _bankDeclarations.put(bd._bankDescriptorIndex, bd);
+                int lbdi = ((bd._bankLevel & 07) << 15) | (bd._bankDescriptorIndex & 077777);
+                _bankDeclarations.put(lbdi, bd);
             }
             return this;
         }
@@ -288,8 +292,8 @@ public class Linker {
      */
     private void createBankDescriptors() {
         for (BankDeclaration bankDecl : _bankDeclarations.values()) {
-            int bdi = bankDecl._bankDescriptorIndex;
-            long[] content = _bankContent.get(bdi);
+            int lbdi = (bankDecl._bankLevel << 15) | bankDecl._bankDescriptorIndex;
+            long[] content = _bankContent.get(lbdi);
             if (content == null) {
                 content = new long[0];
             }
@@ -312,7 +316,7 @@ public class Linker {
                                                      bankDecl._startingAddress,
                                                      upperLimit,
                                                      content);
-            _bankDescriptors.put(bdi, bankDesc);
+            _bankDescriptors.put(lbdi, bankDesc);
         }
     }
 
@@ -461,23 +465,25 @@ public class Linker {
             RelocatableModule.RelativeEntryPoint rep = rel.getStartAddress();
             if (rep != null) {
                 LCPoolSpecification lcpSpec = new LCPoolSpecification(rel, rep._locationCounterIndex);
-                BankOffset bankOffsetInfo = _poolMap.get(lcpSpec);
+                VirtualAddress lcpVAddr = _poolMap.get(lcpSpec);    //  L,BDI of bank, offset from start of bank of lcpool
 
-                //  We'll need the containing bank's BDI...
-                int bdi = bankOffsetInfo._bankDescriptorIndex;
+                //  Develop the starting address.
+                //      = containing_bank_lower_limit
+                //          + offset_of_lcpool_from_start_of_bank
+                //          + offset_of_entry_point_from_start_of_lcpool
+                BankDeclaration bankDecl = _bankDeclarations.get(lcpVAddr.getLBDI());
+                int bankStart = bankDecl._startingAddress;
+                int offsetFromBank = lcpVAddr.getOffset();
+                int offsetFromLCPool = (int) rep._value;
+                int address = bankStart + offsetFromBank + offsetFromLCPool;
 
-                //  Offset from the beginning of the lcpool is the value attribute from the RelEntryPoint
-                int lcpOffset = (int) rep._value;
-
-                //  Offset from the beginning of the bank is the lcpool offset from the beginning of the bank,
-                //  added to the offset from the lcpool.
-                int bankOffset = bankOffsetInfo._offset + lcpOffset;
-
-                //  Address is the bank's lowerlimit, added to the bankOffset value above
-                BankDeclaration bankDecl = _bankDeclarations.get(bdi);
-                int address = bankDecl._startingAddress + bankOffset;
-
-                _programStartInfo = new ProgramStartInfo(address, bdi, bankOffset, lcpSpec, lcpOffset);
+                VirtualAddress startAddress = new VirtualAddress(lcpVAddr.getLevel(),
+                                                                 lcpVAddr.getBankDescriptorIndex(),
+                                                                 address);
+                _programStartInfo = new ProgramStartInfo(startAddress,
+                                                         address - bankStart,
+                                                         lcpSpec,
+                                                         offsetFromLCPool);
             }
         }
 
@@ -531,9 +537,8 @@ public class Linker {
             _printStream.println("  Modes: " + afcmMsg + " " + pwMsg);
 
             if (_programStartInfo != null) {
-                _printStream.println(String.format("  Entry Point Bank:%06o Address:%08o (%s $(%d)+%d",
-                                                   _programStartInfo._bankDescriptorIndex,
-                                                   _programStartInfo._address,
+                _printStream.println(String.format("  Entry Point Bank Address:%s %s $(%d)+%d",
+                                                   _programStartInfo._vAddress,
                                                    _programStartInfo._lcpSpecification._module.getModuleName(),
                                                    _programStartInfo._lcpSpecification._lcIndex,
                                                    _programStartInfo._lcpOffset));
@@ -702,7 +707,10 @@ public class Linker {
     ) {
         int bankOffset = 0;
         for (LCPoolSpecification lcpSpec : bankDeclaration._poolSpecifications) {
-            _poolMap.put(lcpSpec, new BankOffset(bankDeclaration._bankDescriptorIndex, bankOffset));
+            VirtualAddress vAddr = new VirtualAddress(bankDeclaration._bankLevel,
+                                                      bankDeclaration._bankDescriptorIndex,
+                                                      bankOffset);
+            _poolMap.put(lcpSpec, vAddr);
             try {
                 RelocatableModule.RelocatablePool pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
                 bankOffset += pool._content.length;
@@ -719,10 +727,10 @@ public class Linker {
      * Populate the bank content array with resolved relocatable words.
      */
     private void populateBanks() {
-        for (Map.Entry<LCPoolSpecification, BankOffset> entry : _poolMap.entrySet()) {
+        for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
             LCPoolSpecification lcpSpec = entry.getKey();
-            BankOffset bankOffset = entry.getValue();
-            populateBanks(lcpSpec, bankOffset);
+            VirtualAddress vAddr = entry.getValue();
+            populateBanks(lcpSpec, vAddr);
         }
     }
 
@@ -731,11 +739,11 @@ public class Linker {
      */
     private void populateBanks(
         final LCPoolSpecification lcpSpec,
-        final BankOffset bankOffset
+        final VirtualAddress virtualAddress
     ) {
-        int bdi = bankOffset._bankDescriptorIndex;
-        int bx = bankOffset._offset;
-        long[] bankContent = _bankContent.get(bdi);
+        int bx = virtualAddress.getOffset();
+        int lbdi = virtualAddress.getLBDI();
+        long[] bankContent = _bankContent.get(lbdi);
 
         try {
             RelocatableModule.RelocatableWord[] pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex)._content;
@@ -744,10 +752,10 @@ public class Linker {
             //  If the content array exists and is of insufficient size, resize it.
             if (bankContent == null) {
                 bankContent = new long[bx + pool.length];
-                _bankContent.put(bdi, bankContent);
+                _bankContent.put(lbdi, bankContent);
             } else if (bankContent.length < bx + pool.length) {
                 bankContent = Arrays.copyOf(bankContent, bx + pool.length);
-                _bankContent.put(bdi, bankContent);
+                _bankContent.put(lbdi, bankContent);
             }
 
             for (RelocatableModule.RelocatableWord rw : pool) {
@@ -808,8 +816,8 @@ public class Linker {
         final RelocatableModule requestingModule
     ) {
         LCPoolSpecification lookupSpec = new LCPoolSpecification(relocatableModule, lcIndex);
-        BankOffset bankOffset = _poolMap.get(lookupSpec);
-        if (bankOffset == null) {
+        VirtualAddress bankVAddr = _poolMap.get(lookupSpec);
+        if (bankVAddr == null) {
             raise("LC " + lcIndex
                   + " in module " + relocatableModule.getModuleName()
                   + " referenced by module " + requestingModule.getModuleName()
@@ -817,8 +825,8 @@ public class Linker {
             return 0;
         }
 
-        BankDeclaration bd = _bankDeclarations.get(bankOffset._bankDescriptorIndex);
-        return bd._startingAddress + bankOffset._offset;
+        BankDeclaration bd = _bankDeclarations.get(bankVAddr.getLBDI());
+        return bd._startingAddress + bankVAddr.getOffset();
     }
 
     /**
@@ -903,7 +911,6 @@ public class Linker {
             }
 
             if (newValue != 0) {
-                System.out.println("---->" + newValue);//TODO remove
                 result = integrateValue(result, ri._fieldDescriptor, newValue, ri._subtraction, lcpSpecification);
             }
         }
@@ -914,27 +921,24 @@ public class Linker {
     /**
      * Resolves a BDI$ or LBDI$ reference
      * See collector PRM 4.5.4, 4.6.1
-     * Retrieve the BDI which contains the BDI$ reference
+     * Retrieve the BDI of the code which contains the BDI$ reference
      * For LBDI$, include the level as well, in extended mode virtual address form.
      */
     private long resolveSpecialBDI(
         final LCPoolSpecification lcpSpecification,
         final boolean includeLevel
     ) {
-        BankOffset bankOffset = _poolMap.get(lcpSpecification);
-        if (bankOffset == null) {
+        VirtualAddress bankVAddr = _poolMap.get(lcpSpecification);
+        if (bankVAddr == null) {
             raise("Internal Error - cannot satisfy BDI$ reference");
             return 0;
         }
 
-        int bdi = bankOffset._bankDescriptorIndex & 0077777;
-        BankDeclaration bankDecl = _bankDeclarations.get(bdi);
-        long result = bdi;
         if (includeLevel) {
-            result |= (bankDecl._bankLevel & 03) << 15;
+            return bankVAddr.getLBDI();
+        } else {
+            return bankVAddr.getBankDescriptorIndex();
         }
-
-        return result;
     }
 
     /**
@@ -942,7 +946,7 @@ public class Linker {
      * BDIREF$ + bank_name retrieves the BDI of a bank defined as an absolute value
      * BDIREF$ + entrypoint retrieves the BDI for a bank containing the entry point defined as an absolute value
      * Resolve the next reference and find the BDI which contains it.
-     * For EXEC mode LBDIREF$ the virtual address is in basic mode format.
+     * We differ slightly from convention, in that we always return L,BDI in extended mode virtual address format.
      */
     private long resolveSpecialBDIREF(
         final LCPoolSpecification lcpSpecification,
@@ -958,11 +962,14 @@ public class Linker {
         if (ri instanceof RelocatableModule.RelocatableItemLocationCounter) {
             //  module is asking for the BDI of an entry point for which it knows a location counter...
             //  The only thing unresolved is the LC offset, which we don't care about.
+            //  If we're not doing an exec collection
+            //  If we're doing an exec collection and includeLevel is set, return LBDI in extended mode virtual address form
+            //  For exec collection and includeLevel is not set, return LBDI in basic mode virtual address form
             RelocatableModule.RelocatableItemLocationCounter lcri = (RelocatableModule.RelocatableItemLocationCounter) ri;
             LCPoolSpecification targetSpec = new LCPoolSpecification(lcpSpecification._module,
                                                                      lcri._locationCounterIndex);
-            BankOffset bankOffset = _poolMap.get(targetSpec);
-            if (bankOffset == null) {
+            VirtualAddress bankVAddr = _poolMap.get(targetSpec);
+            if (bankVAddr == null) {
                 raise("Internal error cannot find bank for module "
                       + lcpSpecification._module
                       + " lc "
@@ -970,7 +977,11 @@ public class Linker {
                 return 0;
             }
 
-            return bankOffset._bankDescriptorIndex & 0077777;
+            if (includeLevel) {
+                return bankVAddr.getLBDI();
+            } else {
+                return bankVAddr.getBankDescriptorIndex();
+            }
         }
 
         if (ri instanceof RelocatableModule.RelocatableItemSymbol) {
@@ -988,8 +999,8 @@ public class Linker {
                 return ase._baseValue & 0777777;
             } else if (se instanceof LocationCounterRelativeSymbolEntry) {
                 LocationCounterRelativeSymbolEntry lcrse = (LocationCounterRelativeSymbolEntry) se;
-                BankOffset bankOffset = _poolMap.get(lcrse._lcPoolSpecification);
-                if (bankOffset == null) {
+                VirtualAddress bankVAddr = _poolMap.get(lcrse._lcPoolSpecification);
+                if (bankVAddr == null) {
                     raise("Internal error cannot find bank for module "
                           + lcrse._lcPoolSpecification._module
                           + " lc "
@@ -997,25 +1008,11 @@ public class Linker {
                     return 0;
                 }
 
-                int bdi = bankOffset._bankDescriptorIndex & 0077777;
-                BankDeclaration bankDecl = _bankDeclarations.get(bdi);
-                if (bankDecl == null) {
-                    raise("Internal error cannot find bank declaration for bdi which should exist");
-                    return 0;
-                }
-
-                long result;
-                if (_options.contains(LinkOption.EXEC_MODE) && !includeLevel) {
-                    long vaddrWord = VirtualAddress.translateToBasicMode(bankDecl._bankLevel, bdi, 0);
-                    result = vaddrWord >> 18;
-                } else if (includeLevel) {
-                    VirtualAddress vaddr = new VirtualAddress(bankDecl._bankLevel, bdi, 0);
-                    result = vaddr.getH1();
+                if (includeLevel) {
+                    return bankVAddr.getLBDI();
                 } else {
-                    result = bdi;
+                    return bankVAddr.getBankDescriptorIndex();
                 }
-
-                return result;
             } else if (se instanceof UndefinedSymbolRelativeSymbolEntry) {
                 //  TODO is this even a thing?
                 return 0;
@@ -1032,16 +1029,16 @@ public class Linker {
     private long resolveSpecialFirst(
         final LCPoolSpecification lcpSpecification
     ) {
-        BankOffset bankOffset = _poolMap.get(lcpSpecification);
-        if (bankOffset == null) {
+        VirtualAddress vAddr = _poolMap.get(lcpSpecification);
+        if (vAddr == null) {
             raise("Internal Error - cannot satisfy FIRST$ reference");
             return 0;
         }
 
-        BankDeclaration bankDecl = _bankDeclarations.get(bankOffset._bankDescriptorIndex);
+        int lbdi = vAddr.getLBDI();
+        BankDeclaration bankDecl = _bankDeclarations.get(lbdi);
         if (bankDecl == null) {
-            raise(String.format("Internal Error - cannot find bank declaration for BDI %06o",
-                                bankOffset._bankDescriptorIndex));
+            raise(String.format("Internal Error - cannot find bank declaration for L,BDI %06o", lbdi));
             return 0;
         }
 
@@ -1169,6 +1166,7 @@ public class Linker {
                                                           .setGeneralAccessPermissions(gap)
                                                           .setSpecialAccessPermissions(sap)
                                                           .setOptions(bdOptions)
+                                                          .setStartingAddress(01000)
                                                           .build();
         _bankDeclarations.put(bd._bankDescriptorIndex, bd);
 

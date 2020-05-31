@@ -1,4 +1,6 @@
 -- TODO InProgress
+Rebuilding all the hwlib unit tests
+
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
@@ -20,6 +22,12 @@ String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
 
+* klink/kasm
+Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool
+  When klink resolves it, it adds the BDI to the base value instead of just overlaying it.
+  What should we do about this?
+    Maybe... klink should, in this case, clear out the field-descriptor described by the reference
+    before integrating the BDI value...
 
 -- TODO Thoughts
 Do we need a high-level language for systems programming to supplement assembly?

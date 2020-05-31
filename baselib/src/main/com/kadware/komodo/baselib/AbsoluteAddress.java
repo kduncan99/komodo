@@ -2,9 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.hardwarelib;
-
-import com.kadware.komodo.baselib.ArraySlice;
+package com.kadware.komodo.baselib;
 
 /**
 * Represents an absolute address - this is a composite value which identifies a particular

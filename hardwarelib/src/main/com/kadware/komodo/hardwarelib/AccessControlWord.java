@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
 

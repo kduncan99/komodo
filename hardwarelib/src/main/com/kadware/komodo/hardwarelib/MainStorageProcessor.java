@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Class which models a Main Storage Processor.
@@ -194,7 +195,7 @@ public class MainStorageProcessor extends Processor {
     @Override
     public void run() {
         _isRunning = true;
-        LOGGER.info(_name + " worker thread starting");
+        EntryMessage em = _logger.traceEntry("worker thread");
 
         _isReady = true;
         while (!_workerTerminate) {
@@ -219,7 +220,7 @@ public class MainStorageProcessor extends Processor {
             }
         }
 
-        LOGGER.info(_name + " worker thread terminating");
+        _logger.traceExit(em);
         _isReady = false;
         _isRunning = false;
     }

@@ -4,9 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.BankDescriptor;
 import com.kadware.komodo.baselib.Credentials;
 import com.kadware.komodo.baselib.KomodoLoggingAppender;
 import com.kadware.komodo.baselib.VirtualAddress;
@@ -83,7 +85,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
     private static final long LOG_PERIODICITY_MSECS = 1000;             //  check the log every 1 second
 
-    private static final Logger LOGGER = LogManager.getLogger(SystemProcessor.class.getSimpleName());
+    private final Logger _logger = LogManager.getLogger(SystemProcessor.class.getSimpleName());
 
     private KomodoLoggingAppender _appender;            //  Log appender, so we can catch log entries
     private SystemProcessorInterface _systemConsoleInterface;
@@ -313,7 +315,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     @Override
     public void run() {
         _isRunning = true;
-        LOGGER.info(_name + " worker thread starting");
+        EntryMessage em = _logger.traceEntry("worker thread");
 
         _systemConsoleInterface = new HTTPSystemProcessorInterface(this,
                                                                     _name + "-SPIF",
@@ -322,7 +324,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         _systemConsoleInterface.start();
 
         _isReady = true;
-        LOGGER.info(_systemConsoleInterface.getName() + " Ready");
+        _logger.info(_systemConsoleInterface.getName() + " Ready");
         long nextLogCheck = System.currentTimeMillis() + LOG_PERIODICITY_MSECS;
         while (!_workerTerminate) {
             long now = System.currentTimeMillis();
@@ -344,7 +346,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             synchronized (_upiPendingAcknowledgements) {
                 for (Processor source : _upiPendingAcknowledgements) {
                     //TODO
-                    LOGGER.error(String.format("%s received a UPI ACK from %s", _name, source._name));
+                    _logger.trace(String.format("%s received a UPI ACK from %s", _name, source._name));
                     didSomething = true;
                 }
                 _upiPendingAcknowledgements.clear();
@@ -354,7 +356,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             synchronized (_upiPendingInterrupts) {
                 for (Processor source : _upiPendingInterrupts) {
                     //TODO
-                    LOGGER.error(String.format("%s received a UPI interrupt from %s", _name, source._name));
+                    _logger.trace(String.format("%s received a UPI interrupt from %s", _name, source._name));
                     didSomething = true;
                 }
                 _upiPendingInterrupts.clear();
@@ -366,14 +368,14 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
                         wait(25);
                     }
                 } catch (InterruptedException ex) {
-                    LOGGER.catching(ex);
+                    _logger.catching(ex);
                 }
             }
         }
 
         _systemConsoleInterface.stop();
         _systemConsoleInterface = null;
-        LOGGER.info(_name + " worker thread terminating");
+        _logger.traceExit(em);
         _isReady = false;
         _isRunning = false;
     }
@@ -392,13 +394,12 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int messageId,
         final String replacementText
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d messageId=%d text='%s')",
-                                            this.getClass().getSimpleName(),
-                                            "consoleCancelReadReplyMessage",
-                                            consoleId,
-                                            messageId,
-                                            replacementText);
+        EntryMessage em = _logger.traceEntry("consoleCancelReadReplyMessage(consoleId={} messageId={} text='{}')",
+                                             consoleId,
+                                             messageId,
+                                             replacementText);
         _systemConsoleInterface.cancelReadReplyMessage(consoleId, messageId, replacementText);
+        _logger.traceExit(em);
     }
 
     /**
@@ -411,12 +412,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     SystemProcessorInterface.ConsoleInputMessage consolePollInputMessage(
         final long waitMilliseconds
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(waitMilliseconds=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "consolePollInputMessage",
-                                            waitMilliseconds);
+        EntryMessage em = _logger.traceEntry("consolePollInputMessage(waitMilliseconds=%d)", waitMilliseconds);
         SystemProcessorInterface.ConsoleInputMessage result = _systemConsoleInterface.pollInputMessage(waitMilliseconds);
-        LOGGER.traceExit(em, result);
+        _logger.traceExit(em, result);
         return result;
     }
 
@@ -424,11 +422,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * Resets the conceptual system console
      */
     void consoleReset() {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "consoleReset");
+        EntryMessage em = _logger.traceEntry("consoleReset()");
         _systemConsoleInterface.reset();
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -445,15 +441,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final Boolean rightJustified,
         final Boolean cached
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d message='%s' rightJust=%s cached=%s)",
-                                            this.getClass().getSimpleName(),
-                                            "consoleSendReadOnlyMessage",
-                                            consoleId,
-                                            message,
-                                            rightJustified,
-                                            cached);
+        EntryMessage em = _logger.traceEntry("consoleSendReadOnlyMessage(consoleId={} message='{}' rightJust={} cached={})",
+                                             consoleId,
+                                             message,
+                                             rightJustified,
+                                             cached);
         _systemConsoleInterface.postReadOnlyMessage(consoleId, message, rightJustified, cached);
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -463,13 +457,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int consoleId,
         final String message
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d message='%s')",
-                                            this.getClass().getSimpleName(),
-                                            "consoleSendReadOnlyMessage",
-                                            consoleId,
-                                            message);
+        EntryMessage em = _logger.traceEntry("consoleSendReadOnlyMessage(consoleId=%d message='%s')", consoleId, message);
         _systemConsoleInterface.postReadOnlyMessage(consoleId, message, false, true);
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -496,15 +486,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final String message,
         final int maxReplyLength
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(consoleId=%d messageId=%s message='%s' maxReplyLength=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "consoleSendReadReplyMessage",
-                                            consoleId,
-                                            messageId,
-                                            message,
-                                            maxReplyLength);
+        EntryMessage em = _logger.traceEntry("consoleSendReadReplyMessage(cnsId={} msgId={} msg='{}' maxReplyLength={})",
+                                             consoleId,
+                                             messageId,
+                                             message,
+                                             maxReplyLength);
         _systemConsoleInterface.postReadReplyMessage(consoleId, messageId, message, maxReplyLength);
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -517,12 +505,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void consoleSendStatusMessage(
         final String[] messages
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(#messages=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "consoleSendStatusMessage",
-                                            messages.length);
+        EntryMessage em = _logger.traceEntry("consoleSendStatusMessage(#messages={})", messages.length);
         _systemConsoleInterface.postStatusMessages(messages);
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -531,9 +516,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * to differ from the host system.
      */
     long dayclockGetMicros() {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "dayclockGetMicros");
+        EntryMessage em = _logger.traceEntry("dayclockGetMicros()");
 
         Instant i = Instant.now();
         long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
@@ -541,7 +524,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
         long result = systemMicros + _dayclockOffsetMicros;
 
-        LOGGER.traceExit(em, result);
+        _logger.traceExit(em, result);
         return result;
     }
 
@@ -554,13 +537,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void dayclockSetComparatorMicros(
         final long value
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "dayclockSetComparatorMicros");
-
+        EntryMessage em = _logger.traceEntry("dayclockSetComparatorMicros({})", value);
         _dayclockComparatorMicros = value;
-
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -570,9 +549,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void dayclockSetMicros(
         final long value
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "dayclockSetMicros");
+        EntryMessage em = _logger.traceEntry("dayclockSetMicros({})", value);
 
         Instant i = Instant.now();
         long instantSeconds = i.getLong(ChronoField.INSTANT_SECONDS);
@@ -580,7 +557,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         long systemMicros = (instantSeconds * 1000 * 1000) + microOfSecond;
         _dayclockOffsetMicros = value - systemMicros;
 
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -593,6 +570,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final boolean useFixedStorage
     ) throws AddressingExceptionInterrupt,
              BinaryLoadException {
+        EntryMessage em = _logger.traceEntry("iplAllocate({} msp:{} words:{} fixed:{})",
+                                             moduleName,
+                                             mainStorageProcessor._name,
+                                             words,
+                                             useFixedStorage);
+
+        AbsoluteAddress result;
         if (useFixedStorage) {
             //  Word 0 is a sentinel, word 1 is the next free offset, word 2 is the remaining space
             ArraySlice fixedSlice = mainStorageProcessor.getStorage(0);
@@ -608,17 +592,18 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
                 throw new BinaryLoadException(moduleName, "Out of fixed space");
             }
 
-            AbsoluteAddress result = new AbsoluteAddress(mainStorageProcessor._upiIndex, 0, nextOffset);
+            result = new AbsoluteAddress(mainStorageProcessor._upiIndex, 0, nextOffset);
             nextOffset += words;
             remaining -= words;
             fixedSlice.set(1, nextOffset);
             fixedSlice.set(2, remaining);
-
-            return result;
         } else {
             int segIndex = mainStorageProcessor.createSegment(words);
-            return new AbsoluteAddress(mainStorageProcessor._upiIndex, segIndex, 0);
+            result = new AbsoluteAddress(mainStorageProcessor._upiIndex, segIndex, 0);
         }
+
+        _logger.traceExit(em, result);
+        return result;
     }
 
     /**
@@ -637,24 +622,27 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * @param mainStorageProcessorUPI UPI of the MSP to be loaded
      * @param instructionProcessorUPI UPI of the IP to be loaded
      * @param useFixedStorage true to use fixed MSP storage; false to use dynamically-allocated segments
+     * @param developerMode true to enable development debug facilities
      */
-    void iplBinary(
+    public void iplBinary(
         final String moduleName,
         final LoadableBank[] loadableBanks,
         final int mainStorageProcessorUPI,
         final int instructionProcessorUPI,
         final boolean useFixedStorage,
-        final boolean createConfigBank
+        final boolean createConfigBank,
+        final boolean developerMode
     ) throws BinaryLoadException,
              MachineInterrupt,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        EntryMessage em = LOGGER.traceEntry("iplLoadBinary(module=%s mspupi=%d ipupi=%d, fixed=%s config=%s",
+        EntryMessage em = _logger.traceEntry("iplLoadBinary(module={} mspupi={} ipupi={}, fixed={} config={} dev={}",
                                             moduleName,
                                             mainStorageProcessorUPI,
                                             instructionProcessorUPI,
                                             useFixedStorage,
-                                            createConfigBank);
+                                            createConfigBank,
+                                            developerMode);
 
         //  check BDIs - we need bank descriptor tables for level 0, and for all other levels indicated
         //  the vector indicates the highest BDI for each level, where the level is the index.
@@ -706,16 +694,18 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         //  Load the banks, creating bank descriptors along the way
         for (LoadableBank lb : loadableBanks) {
             AbsoluteAddress bdtAddr = bdtAddresses[lb._bankLevel];
-            InstructionProcessor.BankDescriptor bd =
-                new InstructionProcessor.BankDescriptor(msp.getStorage(bdtAddr._segment), bdtAddr._offset);
+            ArraySlice bdtSlice = msp.getStorage(bdtAddr._segment);
+            int bdtOffset = bdtAddr._offset;
+            int bdOffset = bdtOffset + (8 * lb._bankDescriptorIndex);
+            BankDescriptor bd = new BankDescriptor(bdtSlice, bdOffset);
 
             AbsoluteAddress bankAddr = iplAllocate(moduleName, msp, lb._content.length, useFixedStorage);
             ArraySlice bankStorage = msp.getStorage(bankAddr._segment);
             bankStorage.load(lb._content, 0, lb._content.length, bankAddr._offset);
 
             bd.setBaseAddress(bankAddr);
-            bd.setLowerLimit(lb._lowerLimit);
-            bd.setUpperLimit(lb._upperLimit);
+            bd.setLowerLimitNormalized(lb._lowerLimit);
+            bd.setUpperLimitNormalized(lb._upperLimit);
             bd.setAccessLock(lb._accessInfo);
             bd.setUpperLimitSuppressionControl(false);
             bd.setLargeBank(false);
@@ -754,8 +744,10 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             //  TODO
         }
 
-        //  Set up a small interrupt control stack (ICS)
-        int icsSize = 4 * 16;
+        //  Set up a small interrupt control stack (ICS).
+        int icsFrameSize = 16;
+        int icsStackEntries = 4;
+        int icsSize = icsFrameSize * icsStackEntries;
         AbsoluteAddress icsAddr = iplAllocate(moduleName, msp, icsSize, useFixedStorage);
         InstructionProcessor.BaseRegister icsBaseReg =
             new InstructionProcessor.BaseRegister(icsAddr,
@@ -766,12 +758,17 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
                                                   new AccessPermissions(false, false, false),
                                                   new AccessPermissions(true, true, false));
         ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, icsBaseReg);
-        ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, (4 << 18) | icsSize);
+        ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, (icsFrameSize << 18) | icsSize);
 
+        //  Set any other aspects of processor state
+        if (developerMode) {
+            ip._developmentMode = true;
+            ip._traceExecuteInstruction = true;
+        }
         //TODO do we need to set anything else up on the IP? I don't think so...?
-        upiSendDirected(instructionProcessorUPI);
 
-        LOGGER.traceExit(em);
+        upiSendDirected(instructionProcessorUPI);
+        _logger.traceExit(em);
     }
 
 //    /**
@@ -944,11 +941,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     void setCredentials(
         final Credentials credentials
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}()",
-                                            this.getClass().getSimpleName(),
-                                            "setCredentials");
+        EntryMessage em = _logger.traceEntry("setCredentials(<sensitive data>)");
         _credentials = credentials;
-        LOGGER.traceExit(em);
+        _logger.traceExit(em);
     }
 
     /**
@@ -959,10 +954,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     boolean setHttpPort(
         final int httpPort
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "setHttpPort",
-                                            httpPort);
+        EntryMessage em = _logger.traceEntry("setHttpPort({})", httpPort);
 
         boolean result = false;
         _httpPort = httpPort;
@@ -970,7 +962,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             result = ((HTTPSystemProcessorInterface) _systemConsoleInterface).setNewHttpPort(_httpPort);
         }
 
-        LOGGER.traceExit(em, result);
+        _logger.traceExit(em, result);
         return result;
     }
 
@@ -982,10 +974,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     boolean setHttpsPort(
         final int httpsPort
     ) {
-        EntryMessage em = LOGGER.traceEntry("{}.{}(httpPort=%d)",
-                                            this.getClass().getSimpleName(),
-                                            "setHttpsPort",
-                                            httpsPort);
+        EntryMessage em = _logger.traceEntry("setHttpsPort({})", httpsPort);
 
         boolean result = false;
         _httpsPort = httpsPort;
@@ -993,7 +982,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             result = ((HTTPSystemProcessorInterface) _systemConsoleInterface).setNewHttpsPort(_httpsPort);
         }
 
-        LOGGER.traceExit(em, result);
+        _logger.traceExit(em, result);
         return result;
     }
 }

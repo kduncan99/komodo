@@ -46,6 +46,7 @@ public class VirtualAddress extends Word36 {
     public int getBankDescriptorIndex() { return (int) (getH1() & 077777); }
     public int getLevel()               { return (int) (getW() >> 33); }
     public int getOffset()              { return (int) getH2(); }
+    public int getLBDI()                { return (getLevel() << 15) | getBankDescriptorIndex(); }
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer

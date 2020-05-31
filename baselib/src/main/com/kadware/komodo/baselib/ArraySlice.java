@@ -76,7 +76,7 @@ public class ArraySlice {
         final int length
     ) {
         if ((offset + length > baseSlice._length) || (offset < 0) || (length < 0)) {
-            String msg = String.format("Invalid arguments base slice size=%d requested offset=%d length=%d",
+            String msg = String.format("Invalid arguments baseSliceSize=%d requestedOffset=%d length=%d",
                                        baseSlice._length,
                                        offset,
                                        length);

@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Worker;
 import com.kadware.komodo.hardwarelib.exceptions.*;
@@ -247,7 +248,7 @@ public abstract class Processor extends Node implements Worker {
      */
     @Override
     public final void terminate() {
-        EntryMessage em = _logger.traceEntry("initialize()");
+        EntryMessage em = _logger.traceEntry("terminate()");
         _workerTerminate = true;
         synchronized (this) { notify(); }
         while (_workerThread.isAlive()) {

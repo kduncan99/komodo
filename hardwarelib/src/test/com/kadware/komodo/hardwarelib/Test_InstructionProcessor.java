@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.hardwarelib.exceptions.*;

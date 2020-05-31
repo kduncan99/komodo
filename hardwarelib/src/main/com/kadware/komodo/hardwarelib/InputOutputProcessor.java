@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
@@ -12,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Class which models an IO Processor node.
@@ -131,7 +133,7 @@ public class InputOutputProcessor extends Processor {
     @Override
     public void run() {
         _isRunning = true;
-        LOGGER.info(_name + " worker thread starting");
+        EntryMessage em = _logger.traceEntry("worker thread starting");
 
         _isReady = true;
         while (!_workerTerminate) {
@@ -236,7 +238,7 @@ public class InputOutputProcessor extends Processor {
             }
         }
 
-        LOGGER.info(_name + " worker thread terminating");
+        _logger.traceExit(em);
         _isReady = false;
         _isRunning = false;
     }

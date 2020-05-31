@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.exceptions;
 
-import com.kadware.komodo.hardwarelib.AbsoluteAddress;
+import com.kadware.komodo.baselib.AbsoluteAddress;
 
 /**
  * Exception thrown when some entity discovers a specified address is outside of the limits for that address

@@ -4,14 +4,14 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.kex.kasm.AbsoluteModule;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -22,30 +22,39 @@ public class Test_Interrupts extends BaseFunctions {
 
     @Test
     public void illegalOperation(
-    ) throws MachineInterrupt,
+    ) throws BinaryLoadException,
+             MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
-             UPINotAssignedException {
+             UPINotAssignedException,
+             UPIProcessorTypeException {
 
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
-            "$(1),START$*",
+            "$(1),START",
+            "          . Set up IH for interrupt class 016",
+            "          LXI,U     A0,LBDI$",
+            "          LXM,U     A0,ih",
+            "          SA        A0,016,,B16",
+            "",
+            "          . Perform the illegal operation",
             "          +0 . illegal operation",
-            "          HALT      07777",
+            "          HALT      07777 . should not get here",
+            "",
+            "ih        . Interrupt handler",
+            "          HALT      01016 . should stop here",
+            "          $END      START"
         };
 
-        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-        assert(absoluteModule != null);
-        Processors processors = loadModule(absoluteModule);
-        startAndWait(processors._instructionProcessor);
+        Bundle bundle = buildSimple(source);
+        ipl(bundle, true);
 
-        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+        assertEquals(InstructionProcessor.StopReason.Debug, bundle._instructionProcessor.getLatestStopReason());
+        assertEquals(01016, bundle._instructionProcessor.getLatestStopDetail());
 
-        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+        shutdown(bundle);
     }
 
     //  TODO make sure maskable interrupts are prevented by PAIJ

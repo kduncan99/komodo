@@ -336,7 +336,6 @@ public class InstructionWord extends Word36 {
     /**
      * Mnemonics of the various Executive Requests, indexed by the ER number
      */
-    //TODO These don't really belong here...
     private static final Map<Integer, String> ER_NAMES = new HashMap<>();
     static {
         ER_NAMES.put(01,    "IO$");
@@ -512,6 +511,7 @@ public class InstructionWord extends Word36 {
         ER_NAMES.put(02055, "BT$ENA");
         ER_NAMES.put(02056, "FLAGBOX");
         ER_NAMES.put(02060, "RT$PSI");
+        //  TODO one of the following is wrong...
         ER_NAMES.put(02061, "RT$PSD");
         ER_NAMES.put(02061, "TPLIB$");
         ER_NAMES.put(02065, "XFR$");
@@ -1166,9 +1166,9 @@ public class InstructionWord extends Word36 {
 
     /**
      * Replace the X, H, I, and U fields of an initial value with those of the new value, returning the result
-     * @param initialValue
-     * @param newValue
-     * @return
+     * @param initialValue 36-bit value into which the new partial-word value is to be injected
+     * @param newValue the value to be injected into the partial-word
+     * @return the result of the injection operation
      */
     public static long setXHIU(
         final long initialValue,
@@ -1285,14 +1285,20 @@ public class InstructionWord extends Word36 {
         long hiu = getHIU(instruction);
         long b = getB(instruction);
         long d = getD(instruction);
+        if (extendedMode && !forceBMSemantics) {
+            if (i > 0) {
+                i = 0;
+                b += 16;
+            }
+        }
 
         //  are we going to convert the u (or d) field to a GRS register?
         //  If this is normal grs conversion, but ,u or ,xu, no.
         //  If we are in extended mode and not using B0, no.
         //  If we are indexing at all, no.
         //  In each of these cases, it is exceedingly unlikely that the coder
-        //  meant to reference the GRS.  Possible, but unlikely.
-        // ???? Apparently there is a bug here, at least in some cases... we're not always seeing the GRS name when we should
+        //    meant to reference the GRS.  Possible, but unlikely.
+        // TODO Apparently there is a bug here, at least in some cases... we're not always seeing the GRS name when we should
         boolean grsConvert = grsFlag;
         if ((grsConvert && (j >= 016)) || (extendedMode && (b > 0)) || (x > 0)) {
             grsConvert = false;
@@ -1386,13 +1392,7 @@ public class InstructionWord extends Word36 {
             if (x == 0) {
                 builder.append(",");
             }
-
-            int effective_b = (int)b;
-            if (i > 0) {
-                effective_b += 16;
-            }
-
-            builder.append(String.format(",B%d", effective_b));
+            builder.append(String.format(",B%d", b));
         }
 
         return builder.toString();

@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import static org.junit.Assert.*;
 
 import org.junit.*;
