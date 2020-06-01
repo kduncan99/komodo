@@ -67,8 +67,8 @@ public class Test_Linker {
         assertEquals("TEST", bd040._bankName);
         assertEquals(0, bd040._bankLevel);
         assertEquals(040, bd040._bankDescriptorIndex);
-        assertEquals(0, bd040._lowerLimit);
-        assertEquals(0_777777, bd040._upperLimit);
+        assertEquals(01000, bd040._lowerLimit);
+        assertEquals(0777, bd040._upperLimit);
         assertEquals(BankType.BasicMode, bd040._bankType);
         assertEquals(accInfo, bd040._accessInfo);
         assertEquals(gap, bd040._generalPermissions);
@@ -127,8 +127,8 @@ public class Test_Linker {
 
         assertEquals(0_000077_000077L, bd._content[lc0Offset + 0]);
         assertEquals(0_777777_000000L, bd._content[lc0Offset + 17]);
-        assertEquals(0_100020_000000L, bd._content[lc1Offset + 0]);
-        assertEquals(0_100040_000021L, bd._content[lc1Offset + 1]);
+        assertEquals(0_100020_001000L, bd._content[lc1Offset + 0]);
+        assertEquals(0_100040_001021L, bd._content[lc1Offset + 1]);
     }
 
     //  TODO - need more tests

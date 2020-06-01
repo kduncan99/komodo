@@ -162,6 +162,110 @@ class BaseFunctions {
     /**
      * Convenient wrapper
      */
+    static Bundle buildMultiBank(
+        final String[] source
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        return buildMultiBank(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
+    }
+
+    /**
+     * Builds a binary executable consisting of one bank per location counter.
+     * Odd-number BDIs are static read-only
+     * Even-number BDIs are dynamic dbanks, read-write, no enter
+     */
+    static Bundle buildMultiBank(
+        final String[] source,
+        final Set<AssemblerOption> asmOptions,
+        final Set<LinkOption> linkOptions
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        Assembler asm = new Assembler.Builder().setSource(source)
+                                               .setOptions(asmOptions)
+                                               .setModuleName("BINARY-REL")
+                                               .build();
+        AssemblerResult asmResult = asm.assemble();
+        assertNotNull(asmResult._relocatableModule);
+        assertFalse(asmResult._diagnostics.hasError());
+
+        List<BankDeclaration> bankDeclarations = new LinkedList<>();
+
+        BankDeclaration.BankDeclarationOption[] codeBankOpts = {
+            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
+            BankDeclaration.BankDeclarationOption.WRITE_PROTECT,
+        };
+        BankDeclaration.BankDeclarationOption[] dataBankOpts = {
+            BankDeclaration.BankDeclarationOption.DBANK,
+            BankDeclaration.BankDeclarationOption.DYNAMIC
+        };
+
+        AccessPermissions codeSAP = new AccessPermissions(true, true, false);
+        AccessPermissions dataSAP = new AccessPermissions(false, true, true);
+        AccessPermissions gap = new AccessPermissions(false, false, false);
+        AccessInfo accessLock = new AccessInfo(0, 0);
+
+        int bdIndex = 000004;
+        for (int lcIndex : asmResult._relocatableModule.getEstablishedLocationCounterIndices()) {
+            LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(asmResult._relocatableModule, lcIndex) };
+            if ((lcIndex & 1) == 1) {
+                String bankName = String.format("IBANK%06o", bdIndex);
+                BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
+                                                                        .setBankLevel(1)
+                                                                        .setBankName(bankName)
+                                                                        .setPoolSpecifications(lcpSpecs)
+                                                                        .setSpecialAccessPermissions(codeSAP)
+                                                                        .setGeneralAccessPermissions(gap)
+                                                                        .setStartingAddress(01000)
+                                                                        .setAccessInfo(accessLock)
+                                                                        .setOptions(codeBankOpts)
+                                                                        .build();
+                bankDeclarations.add(bankDecl);
+            } else {
+                String bankName = String.format("DBANK%06o", bdIndex);
+                BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
+                                                                        .setBankLevel(1)
+                                                                        .setBankName(bankName)
+                                                                        .setPoolSpecifications(lcpSpecs)
+                                                                        .setSpecialAccessPermissions(dataSAP)
+                                                                        .setGeneralAccessPermissions(gap)
+                                                                        .setStartingAddress(0)
+                                                                        .setAccessInfo(accessLock)
+                                                                        .setOptions(dataBankOpts)
+                                                                        .build();
+                bankDeclarations.add(bankDecl);
+            }
+
+            bdIndex++;
+        }
+
+        Linker linker = new Linker.Builder().setModuleName("BINARY")
+                                            .setOptions(linkOptions)
+                                            .setBankDeclarations(bankDeclarations)
+                                            .build();
+        LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
+        assertNotNull(linkResult._loadableBanks);
+        assertNotEquals(0, linkResult._loadableBanks.length);
+        assertEquals(0, linkResult._errorCount);
+
+        InventoryManager im = InventoryManager.getInstance();
+        SystemProcessor sp = im.createSystemProcessor("SP0",
+                                                      8080,
+                                                      null,
+                                                      new Credentials("test", "test"));
+        InstructionProcessor ip = im.createInstructionProcessor("IP0");
+        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0",
+                                                                                    (short) 1,
+                                                                                    8 * 1024 * 1024);
+        im.addMainStorageProcessor(msp);
+
+        return new Bundle(asmResult, linkResult, sp, msp, ip);
+    }
+
+    /**
+     * Convenient wrapper
+     */
     static Bundle buildSimple(
         final String[] source
     ) throws MaxNodesException,
