@@ -5,10 +5,12 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
@@ -23,82 +25,112 @@ public class Test_Algorithms extends BaseFunctions {
 
     //TODO fibonacci numbers less than 1000
 
-//    @Test
-//    public void factorial(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            ".",
-//            "$(0)      $LIT",
-//            "STACKSIZE $EQU      128",
-//            "STACK     $RES      STACKSIZE",
-//            ".",
-//            "$(1),START$*",
-//            ".",
-//            "          LXI,U     X2,0",
-//            "          LXM,U     X2,STACK+STACKSIZE",
-//            ".",
-//            "          BUY       2,X2,B2",
-//            "          LA,U      A5,10               . calculate 10!",
-//            "          SA        A5,0,X2,B2",
-//            "          LOCL      FACTORIAL",
-//            "          LA        A5,1,X2,B2",
-//            "          SELL      2,X2,B2",
-//            ".",
-//            "          HALT      0",
-//            ".",
-//            ". .............................................................................",
-//            ". Assumes generic stack exists on B2/X2, with a two-word stack frame allocated.",
-//            ". The first word of the stack frame is the parameter - i.e., for 5, we return",
-//            ". 5!.  The second word of the stack frame is where we place the returned value.",
-//            ". .............................................................................",
-//            ".",
-//            "FACTORIAL .",
-//            "          LA        A5,0,X2,B2",
-//            "          TP        A5",
-//            "          HALT      077                 . We don't like negative numbers",
-//            "          TNZ       A5",
-//            "          HALT      076                 . We also don't like zero",
-//            "          TNE,U     A5,1",
-//            "          J         FACTORIAL1",
-//            ".",
-//            "          . Operand greater than one, recurse with operand - 1.",
-//            "          BUY       2,X2,B2",
-//            "          ANA,U     A5,1",
-//            "          SA        A5,0,X2,B2",
-//            "          LOCL      FACTORIAL",
-//            ".",
-//            "          . Get result, multiply by original operand, and return it",
-//            "          LA        A5,1,X2,B2",
-//            "          SELL      2,X2,B2",
-//            "          MSI       A5,0,X2,B2",
-//            "          SA        A5,1,X2,B2",
-//            "          RTN       0",
-//            ".",
-//            "FACTORIAL1 . Operand is one - return one",
-//            "          SP1       1,X2,B2",
-//            "          RTN       0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(3628800, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-//    }
-//
+    @Test
+    public void factorial(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            ".",
+            "$(0)",
+            ". STACK FOR GENERAL USE",
+            "STACKSIZE $EQU      128",
+            "STACK     $RES      STACKSIZE",
+            "",
+            "$(2)",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(3)      $LIT",
+            "          . Literals go in here so they are accessible before",
+            "          . the DBank is based on B2.",
+            "",
+            "$(1),START",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        (000021,0)",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
+            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
+            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
+            "          LBE       B25-16,(LBDIREF$+STACK, 0)",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        (000020,0)",
+            ".",
+            "          . ESTABLISH GENERAL STACK ON B2/X2",
+            "          LBU       B2,(LBDIREF$+RCSTACK, 0)",
+            "          LXI,U     X2,0",
+            "          LXM,U     X2,STACK+STACKSIZE",
+            ".",
+            "          BUY       2,X2,B2",
+            "          LA,U      A5,10               . calculate 10!",
+            "          SA        A5,0,X2,B2",
+            "          LOCL      FACTORIAL",
+            "          LA        A5,1,X2,B2",
+            "          SELL      2,X2,B2",
+            ".",
+            "          HALT      0",
+            ".",
+            ". .............................................................................",
+            ". Assumes generic stack exists on B2/X2, with a two-word stack frame allocated.",
+            ". The first word of the stack frame is the parameter - i.e., for 5, we return",
+            ". 5!.  The second word of the stack frame is where we place the returned value.",
+            ". .............................................................................",
+            ".",
+            "FACTORIAL .",
+            "          LA        A5,0,X2,B2",
+            "          TP        A5",
+            "          HALT      077                 . We don't like negative numbers",
+            "          TNZ       A5",
+            "          HALT      076                 . We also don't like zero",
+            "          TNE,U     A5,1",
+            "          J         FACTORIAL1",
+            ".",
+            "          . Operand greater than one, recurse with operand - 1.",
+            "          BUY       2,X2,B2",
+            "          ANA,U     A5,1",
+            "          SA        A5,0,X2,B2",
+            "          LOCL      FACTORIAL",
+            ".",
+            "          . Get result, multiply by original operand, and return it",
+            "          LA        A5,1,X2,B2",
+            "          SELL      2,X2,B2",
+            "          MSI       A5,0,X2,B2",
+            "          SA        A5,1,X2,B2",
+            "          RTN       0",
+            ".",
+            "FACTORIAL1 . Operand is one - return one",
+            "          SP1       1,X2,B2",
+            "          RTN       0",
+            ".",
+            "DESREG    $RES      1",
+            ".",
+            "          $END START"
+        };
+
+        Bundle bundle = buildDualBank(source);
+        ipl(bundle, true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, bundle._instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, bundle._instructionProcessor.getLatestStopDetail());
+        Assert.assertEquals(3628800, bundle._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+
+        shutdown(bundle);
+    }
+
 //    /**
 //     * Sieve of Eratosthenes - Primes from 2 to 1000
 //     */

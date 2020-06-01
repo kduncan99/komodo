@@ -21,6 +21,9 @@ Check to ensure breakpoints are all working.
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
+When we code exec registers in U we get the user registers instead...
+  i.e., TP  EA5 gets turned into TP  A5
+  How does @MASM work?
 
 * klink/kasm
 Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool

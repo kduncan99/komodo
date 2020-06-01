@@ -9667,8 +9667,9 @@ public class InstructionProcessor extends Processor implements Worker {
         final int framePointer
     ) {
         BaseRegister rcsBReg = _baseRegisters[InstructionProcessor.RCS_BASE_REGISTER];
-        IndexRegister rcsXReg = getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
-        setExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER, IndexRegister.setXM(rcsXReg.getW(), framePointer));
+        IndexRegister rcsXReg = (IndexRegister) _generalRegisterSet.getRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+        _generalRegisterSet.setRegister(InstructionProcessor.RCS_INDEX_REGISTER,
+                                        IndexRegister.setXM(rcsXReg.getW(), framePointer));
 
         long reentry = (long) _programAddressRegister.getLBDI() << 18;
         reentry |= (_programAddressRegister.getProgramCounter() + 1) & 0777777;
@@ -9720,7 +9721,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 0);
         }
 
-        IndexRegister rcsXReg = getExecOrUserXRegister(InstructionProcessor.RCS_INDEX_REGISTER);
+        IndexRegister rcsXReg = (IndexRegister) _generalRegisterSet.getRegister(InstructionProcessor.RCS_INDEX_REGISTER);
 
         int framePointer = (int) rcsXReg.getXM() - 2;
         if (framePointer < rcsBReg._lowerLimitNormalized) {

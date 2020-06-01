@@ -108,7 +108,6 @@ public class Linker {
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO provide starting address override mechanism
     private Linker(
         final String moduleName,
         final Map<Integer, BankDeclaration> bankDeclarations,
@@ -499,6 +498,7 @@ public class Linker {
         boolean summary = false;
         boolean dictionary = false;
         boolean code = false;
+        boolean lcpoolMap = false;
         if (_options.contains(LinkOption.EMIT_SUMMARY)) {
             summary = true;
         }
@@ -507,8 +507,13 @@ public class Linker {
             dictionary = true;
         }
         if (_options.contains(LinkOption.EMIT_GENERATED_CODE)) {
+            summary = true;
             code = true;
             dictionary = true;
+        }
+        if (_options.contains(LinkOption.EMIT_LCPOOL_MAP)) {
+            summary = true;
+            lcpoolMap = true;
         }
 
         if (summary) {
@@ -566,6 +571,17 @@ public class Linker {
                         }
                         _printStream.println(sb.toString());
                     }
+                }
+            }
+
+            if (lcpoolMap) {
+                _printStream.println("  LCPool Map:");
+                for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
+                    _printStream.println(String.format("  %16s $(%2d): Bank %06o Offset %06o",
+                                                       entry.getKey()._module.getModuleName(),
+                                                       entry.getKey()._lcIndex,
+                                                       entry.getValue().getLBDI(),
+                                                       entry.getValue().getOffset()));
                 }
             }
 
@@ -1179,7 +1195,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new LoadableBank[0]));
+        return new LinkResult(_errors, _moduleName, _programStartInfo, _bankDescriptors.values().toArray(new LoadableBank[0]));
     }
 
     /**
@@ -1213,7 +1229,7 @@ public class Linker {
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _bankDescriptors.values().toArray(new LoadableBank[0]));
+        return new LinkResult(_errors, _moduleName, _programStartInfo, _bankDescriptors.values().toArray(new LoadableBank[0]));
     }
 
     /**

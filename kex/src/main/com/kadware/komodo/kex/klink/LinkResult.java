@@ -16,6 +16,7 @@ public class LinkResult {
     public final AbsoluteModule _absoluteModule;
     public final LoadableBank[] _loadableBanks;
     public final Object _objectModule;
+    public final ProgramStartInfo _programStartInfo;
 
     /**
      * Constructor for the case where no content could be generated due to errors
@@ -29,6 +30,7 @@ public class LinkResult {
         _absoluteModule = null;
         _loadableBanks = null;
         _objectModule = null;
+        _programStartInfo = null;
     }
 
     /**
@@ -37,6 +39,7 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
+        final ProgramStartInfo programStartInfo,
         final LoadableBank[] loadableBanks,
         final AbsoluteModule absoluteModule
     ) {
@@ -45,6 +48,7 @@ public class LinkResult {
         _absoluteModule = absoluteModule;
         _loadableBanks = loadableBanks;
         _objectModule = null;
+        _programStartInfo = programStartInfo;
     }
 
     /**
@@ -53,6 +57,7 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
+        final ProgramStartInfo programStartInfo,
         final LoadableBank[] loadableBanks,
         final Object object
     ) {
@@ -61,6 +66,7 @@ public class LinkResult {
         _absoluteModule = null;
         _loadableBanks = loadableBanks;
         _objectModule = object;
+        _programStartInfo = programStartInfo;
     }
 
     /**
@@ -69,6 +75,7 @@ public class LinkResult {
     public LinkResult(
         final int errorCount,
         final String moduleName,
+        final ProgramStartInfo programStartInfo,
         final LoadableBank[] loadableBanks
     ) {
         _errorCount = errorCount;
@@ -76,5 +83,6 @@ public class LinkResult {
         _absoluteModule = null;
         _loadableBanks = loadableBanks;
         _objectModule = null;
+        _programStartInfo = programStartInfo;
     }
 }

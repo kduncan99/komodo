@@ -11,11 +11,15 @@ import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.kex.klink.BankDeclaration;
+import com.kadware.komodo.kex.klink.LCPoolSpecification;
 import com.kadware.komodo.kex.klink.LinkOption;
 import com.kadware.komodo.kex.klink.LinkResult;
 import com.kadware.komodo.kex.klink.LinkType;
 import com.kadware.komodo.kex.klink.Linker;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import static org.junit.Assert.*;
 
@@ -33,6 +37,7 @@ class BaseFunctions {
     static final Set<LinkOption> DEFAULT_LINK_OPTIONS = new HashSet<>();
     static {
         DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_SUMMARY);
+        DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_LCPOOL_MAP);
         DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_GENERATED_CODE);
     }
 
@@ -58,6 +63,105 @@ class BaseFunctions {
         }
     }
 
+    /**
+     * Convenient wrapper
+     */
+    static Bundle buildDualBank(
+        final String[] source
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        return buildDualBank(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
+    }
+
+    /**
+     * Builds a binary executable consisting of a code bank and a data bank, which contains all the code generated from source.
+     * All even location counter pools go in the data bank, all odd location counter pools go in the code bank.
+     */
+    static Bundle buildDualBank(
+        final String[] source,
+        final Set<AssemblerOption> asmOptions,
+        final Set<LinkOption> linkOptions
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        Assembler asm = new Assembler.Builder().setSource(source)
+                                               .setOptions(asmOptions)
+                                               .setModuleName("BINARY-REL")
+                                               .build();
+        AssemblerResult asmResult = asm.assemble();
+        assertNotNull(asmResult._relocatableModule);
+        assertFalse(asmResult._diagnostics.hasError());
+
+        List<LCPoolSpecification> poolSpecsCode = new LinkedList<>();
+        List<LCPoolSpecification> poolSpecsData = new LinkedList<>();
+        for (int lcIndex : asmResult._relocatableModule.getEstablishedLocationCounterIndices()) {
+            LCPoolSpecification lcpSpec = new LCPoolSpecification(asmResult._relocatableModule, lcIndex);
+            if ((lcIndex & 1) == 0) {
+                poolSpecsData.add(lcpSpec);
+            } else {
+                poolSpecsCode.add(lcpSpec);
+            }
+        }
+
+        BankDeclaration.BankDeclarationOption[] codeBankOpts = {
+            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
+            BankDeclaration.BankDeclarationOption.WRITE_PROTECT
+        };
+        BankDeclaration.BankDeclarationOption[] dataBankOpts = {
+            BankDeclaration.BankDeclarationOption.DBANK,
+            BankDeclaration.BankDeclarationOption.DYNAMIC
+        };
+
+        BankDeclaration[] bankDeclarations = {
+            new BankDeclaration.Builder().setBankName("CODE")
+                                         .setStartingAddress(01000)
+                                         .setBankLevel(1)
+                                         .setBankDescriptorIndex(4)
+                                         .setOptions(codeBankOpts)
+                                         .setAccessInfo(new AccessInfo(0, 0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
+                                         .setPoolSpecifications(poolSpecsCode)
+                                         .build(),
+            new BankDeclaration.Builder().setBankName("DATA")
+                                         .setStartingAddress(0)
+                                         .setBankLevel(1)
+                                         .setBankDescriptorIndex(5)
+                                         .setOptions(dataBankOpts)
+                                         .setAccessInfo(new AccessInfo(0, 0))
+                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
+                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
+                                         .setPoolSpecifications(poolSpecsData)
+                                         .build(),
+        };
+
+        Linker linker = new Linker.Builder().setModuleName("BINARY")
+                                            .setOptions(linkOptions)
+                                            .setBankDeclarations(bankDeclarations)
+                                            .build();
+        LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
+        assertNotNull(linkResult._loadableBanks);
+        assertNotEquals(0, linkResult._loadableBanks.length);
+        assertEquals(0, linkResult._errorCount);
+
+        InventoryManager im = InventoryManager.getInstance();
+        SystemProcessor sp = im.createSystemProcessor("SP0",
+                                                      8080,
+                                                      null,
+                                                      new Credentials("test", "test"));
+        InstructionProcessor ip = im.createInstructionProcessor("IP0");
+        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0",
+                                                                                    (short) 1,
+                                                                                    8 * 1024 * 1024);
+        im.addMainStorageProcessor(msp);
+
+        return new Bundle(asmResult, linkResult, sp, msp, ip);
+    }
+
+    /**
+     * Convenient wrapper
+     */
     static Bundle buildSimple(
         final String[] source
     ) throws MaxNodesException,
@@ -66,6 +170,9 @@ class BaseFunctions {
         return buildSimple(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
     }
 
+    /**
+     * Builds a binary executable consisting of a single bank, which contains all the code generated from source
+     */
     static Bundle buildSimple(
         final String[] source,
         final Set<AssemblerOption> asmOptions,
@@ -114,6 +221,7 @@ class BaseFunctions {
              UPIProcessorTypeException {
         bundle._systemProcessor.iplBinary("TEST",
                                           bundle._linkResult._loadableBanks,
+                                          bundle._linkResult._programStartInfo._vAddress,
                                           bundle._mainStorageProcessor._upiIndex,
                                           bundle._instructionProcessor._upiIndex,
                                           false,

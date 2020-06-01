@@ -9,12 +9,12 @@ import com.kadware.komodo.baselib.VirtualAddress;
 /**
  * Contains useful info regarding the address at which the program starts.
  */
-class ProgramStartInfo {
+public class ProgramStartInfo {
 
-    final VirtualAddress _vAddress;                 //  level, bdi, and offset of start address
-    final int _bankOffset;                          //  offset from the start of the containing bank, of the address
-    final int _lcpOffset;                           //  offset from the start of the LC pool, of the address
-    final LCPoolSpecification _lcpSpecification;    //  describes the module and LC pool containing the start address
+    public final VirtualAddress _vAddress;              //  level, bdi, and offset of start address
+    public final int _bankOffset;                       //  offset from the start of the containing bank, of the address
+    public final int _lcpOffset;                        //  offset from the start of the LC pool, of the address
+    public final LCPoolSpecification _lcpSpecification; //  describes the module and LC pool containing the start address
 
     ProgramStartInfo(
         final VirtualAddress vAddress,
