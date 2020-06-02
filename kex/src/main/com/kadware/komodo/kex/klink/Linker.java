@@ -887,14 +887,20 @@ public class Linker {
             return 0;
         }
 
+        //TODO remove block start
+        if (se._symbol.equalsIgnoreCase("IH$INIT")) {
+            System.out.println("FOO!");
+        }
+        //TODO remove block end
         if (se instanceof AbsoluteSymbolEntry) {
             AbsoluteSymbolEntry ase = (AbsoluteSymbolEntry) se;
             return ase._baseValue;
         } else if (se instanceof LocationCounterRelativeSymbolEntry) {
             LocationCounterRelativeSymbolEntry lcrse = (LocationCounterRelativeSymbolEntry) se;
-            return resolveLocationCounterIndex(lcrse._lcPoolSpecification._module,
-                                               lcrse._lcPoolSpecification._lcIndex,
-                                               lcpSpecification._module);
+            long lcBase = resolveLocationCounterIndex(lcrse._lcPoolSpecification._module,
+                                                      lcrse._lcPoolSpecification._lcIndex,
+                                                      lcpSpecification._module);
+            return lcBase + lcrse._baseValue;
         } else {
             raise("Internal error - unknown entry point type for symbol " + relocatableItem._undefinedSymbol);
             return 0;

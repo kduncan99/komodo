@@ -8213,7 +8213,7 @@ public class InstructionProcessor extends Processor implements Worker {
     private final Set<Processor> _pendingUPISends = new HashSet<>();
 
     //  debugging tools - they should be settable from the SPIF
-    boolean                                 _traceExecuteInstruction = false;
+    boolean _traceInstructions = false;
     boolean                                 _developmentMode = false;
 
 
@@ -8280,6 +8280,8 @@ public class InstructionProcessor extends Processor implements Worker {
         _baseRegisters[index] = baseRegister;
     }
 
+    public void setDevelopmentMode(final boolean value) { _developmentMode = value; }
+
     public void setGeneralRegister(
         final int index,
         final long value
@@ -8290,6 +8292,8 @@ public class InstructionProcessor extends Processor implements Worker {
 
         _generalRegisterSet.setRegister(index, value);
     }
+
+    public void setTraceInstructions(final boolean value) { _traceInstructions = value; }
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -8514,7 +8518,7 @@ public class InstructionProcessor extends Processor implements Worker {
         //      * properly store instruction mid-point state if it returns mid-instruction
         //      * detect and restore instruction mid-point state if it is subsequently called
         //          after returning in mid-point state.
-        if (_traceExecuteInstruction) {
+        if (_traceInstructions) {
             String msg = String.format("Executing Instruction at %012o --> %s",
                                        getProgramAddressRegister().get(),
                                        _currentInstruction.interpret(!getDesignatorRegister().getBasicModeEnabled(),
@@ -9083,8 +9087,7 @@ public class InstructionProcessor extends Processor implements Worker {
      * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
      * @return immediate operand value
      */
-    private long getImmediateOperand(
-    ) {
+    private long getImmediateOperand() {
         boolean exec24Index = _designatorRegister.getExecutive24BitIndexingEnabled();
         int privilege = _designatorRegister.getProcessorPrivilege();
         boolean valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (_currentInstruction.getI() != 0));
@@ -9521,9 +9524,10 @@ public class InstructionProcessor extends Processor implements Worker {
     ) {
         switch (partialWordIndicator) {
             case InstructionWord.W:     return newValue;
-            case InstructionWord.H2:    return Word36.setH2(originalValue, newValue);
+            case InstructionWord.H2:
+            case InstructionWord.XH2:
+                return Word36.setH2(originalValue, newValue);
             case InstructionWord.H1:    return Word36.setH1(originalValue, newValue);
-            case InstructionWord.XH2:   return Word36.setH2(originalValue, newValue);
             case InstructionWord.XH1:   // XH1 or Q2
                 if (quarterWordMode) {
                     return Word36.setQ2(originalValue, newValue);
@@ -9588,13 +9592,16 @@ public class InstructionProcessor extends Processor implements Worker {
 
     /**
      * Stores the given ActiveBaseTableEntry in our internal table for the given base register index
-     * @param baseRegisterIndex base register index 0 to 31
+     * @param baseRegisterIndex base register index 1 to 16 (the other BRs don't have ABTEs)
      * @param entry new ActiveBaseTableEntry
      */
     public void loadActiveBaseTableEntry(
         final int baseRegisterIndex,
         ActiveBaseTableEntry entry
     ) {
+        if ((baseRegisterIndex < 1) || (baseRegisterIndex > 16)) {
+            throw new RuntimeException("Invalid baseRegisterIndex:" + baseRegisterIndex);
+        }
         _activeBaseTableEntries[baseRegisterIndex] = entry;
     }
 
@@ -9911,7 +9918,6 @@ public class InstructionProcessor extends Processor implements Worker {
                 _generalRegisterSet.setRegister(grsIndex, operands[ox]);
             }
 
-            incrementIndexRegisterInF0();
         } else {
             //  Get base register and check storage and access limits
             if (basicMode) {
@@ -9932,8 +9938,9 @@ public class InstructionProcessor extends Processor implements Worker {
                 bReg._storage.set(offset++, operand);
             }
 
-            incrementIndexRegisterInF0();
         }
+
+        incrementIndexRegisterInF0();
     }
 
     /**

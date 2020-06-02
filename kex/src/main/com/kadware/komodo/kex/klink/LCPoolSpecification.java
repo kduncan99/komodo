@@ -41,6 +41,6 @@ public class LCPoolSpecification {
 
     @Override
     public String toString() {
-        return String.format("{%s(%d).%d}", _module.getModuleName(), _module.hashCode(), _lcIndex);//TODO remove hashcode
+        return String.format("{%s.$(%d)}", _module.getModuleName(), _lcIndex);
     }
 }

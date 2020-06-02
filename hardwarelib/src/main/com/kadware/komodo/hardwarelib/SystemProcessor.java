@@ -616,13 +616,13 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * Optionally creates a configuration bank, and bases it on B2 for extended mode, or B13 for basic mode
      *      this bank is NOT in any bank descriptor table, so if you unbase it, you cannot get it back
      * Finally, sends an IPL to the indicated instruction processor to get things rolling.
+     * Does NOT clear the processors - calling code must set desired state before invoking here.
      * @param moduleName name of the module being loaded
      * @param loadableBanks Represents the code to be loaded
      * @param startAddress Virtual address at which execution begins
      * @param mainStorageProcessorUPI UPI of the MSP to be loaded
      * @param instructionProcessorUPI UPI of the IP to be loaded
      * @param useFixedStorage true to use fixed MSP storage; false to use dynamically-allocated segments
-     * @param developerMode true to enable development debug facilities
      */
     public void iplBinary(
         final String moduleName,
@@ -631,20 +631,18 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int mainStorageProcessorUPI,
         final int instructionProcessorUPI,
         final boolean useFixedStorage,
-        final boolean createConfigBank,
-        final boolean developerMode
+        final boolean createConfigBank
     ) throws BinaryLoadException,
              MachineInterrupt,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        EntryMessage em = _logger.traceEntry("iplLoadBinary({} start={} msp={} ip={}, fixed={} config={} dev={}",
+        EntryMessage em = _logger.traceEntry("iplLoadBinary({} start={} msp={} ip={}, fixed={} config={}",
                                             moduleName,
                                             startAddress,
                                             mainStorageProcessorUPI,
                                             instructionProcessorUPI,
                                             useFixedStorage,
-                                            createConfigBank,
-                                            developerMode);
+                                            createConfigBank);
 
         //  check BDIs - we need bank descriptor tables for level 0, and for all other levels indicated
         //  the vector indicates the highest BDI for each level, where the level is the index.
@@ -758,13 +756,6 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
                                                   new AccessPermissions(true, true, false));
         ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, icsBaseReg);
         ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, (icsFrameSize << 18) | icsSize);
-
-        //  Set any other aspects of processor state
-        if (developerMode) {
-            ip._developmentMode = true;
-            ip._traceExecuteInstruction = true;
-        }
-        //TODO do we need to set anything else up on the IP? I don't think so...?
 
         upiSendDirected(instructionProcessorUPI);
         _logger.traceExit(em);

@@ -4,195 +4,296 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
+import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
+import java.util.Arrays;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
  */
 public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
-//    //  No basic mode version of DABT
-//
-//    @Test
-//    public void decelerateActiveBaseTable_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 30",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,1",
-//            "          LXM,U     X2,15",
-//            "          DABT      DATA,*X2,B2",
-//            "          HALT      0",
-//        };
-//
-//        InstructionProcessor.ActiveBaseTableEntry[] expectedValues = {
-//            null,
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000004_001000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000005_002000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000006_001000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000007_002000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000010_001000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000011_002000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_000000_000000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_201025_022000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_201026_022000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_201027_022000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_201030_022000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_404037_040000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_404777_047777L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_720020_050000L),
-//            new InstructionProcessor.ActiveBaseTableEntry(0_720030_050050L),
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        for (int brx = 0; brx < 16; ++brx) {
-//            processors._instructionProcessor.loadActiveBaseTableEntry(brx, expectedValues[brx]);
-//        }
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(1, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getH1());
-//        Assert.assertEquals(16, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getH2());
-//
-//        Assert.assertArrayEquals(expectedValues, processors._instructionProcessor.getActiveBaseTableEntries());
-//    }
-//
-//    @Test
-//    public void decelerateActiveBaseTable_extended_error1(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 30",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,1",
-//            "          LXM,U     X2,15",
-//            "          DABT      DATA,*X2,B8",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
-//        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-//    @Test
-//    public void decelerateActiveBaseTable_extended_error2(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 30",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,1",
-//            "          LXM,U     X2,150",
-//            "          DABT      DATA,*X2,B2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
-//        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-//    @Test
-//    public void decelerateActiveBaseTable_extended_error3(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 30",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,1",
-//            "          LXM,U     X2,15",
-//            "          DABT      DATA,*X2,B8",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(2);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
+    //  No basic mode version of DABT
+
+    @Test
+    public void decelerateActiveBaseTable_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(2)      $LIT",
+            "DATA      $RES 30",
+            "",
+            "$(1),START",
+            "          LD        DESREG,,B0",
+            "          LBU       B2,DBANKBDI,,B0",
+            "          LBU       B3,DBANKBDI,,B0",
+            "          LBU       B4,DBANKBDI,,B0",
+            "          LBU       B5,DBANKBDI,,B0",
+            "          LBU       B6,DBANKBDI,,B0",
+            "          LBU       B7,DBANKBDI,,B0",
+            "          LBU       B8,DBANKBDI,,B0",
+            "          LBU       B9,DBANKBDI,,B0",
+            "          LBU       B10,DBANKBDI,,B0",
+            "          LBU       B11,DBANKBDI,,B0",
+            "          LBU       B12,DBANKBDI,,B0",
+            "          LBU       B13,DBANKBDI,,B0",
+            "          LBU       B14,DBANKBDI,,B0",
+            "          LBU       B15,DBANKBDI,,B0",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15 . NOTE the offset here!",
+            "          DABT      DATA,*X2,B2",
+            "          HALT      0",
+            "",
+            "DESREG    +000024, 0 . ext mode, normal regs, processor privilege 1",
+            "DBANKBDI  + LBDIREF$+DATA,0",
+            "          $END      START",
+        };
+
+        buildDualBank(source);
+        ipl(true);
+
+        long[] expected = {
+            0,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+            0_100005_000000L,
+        };
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        Assert.assertEquals(1, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getH1());
+        Assert.assertEquals(16, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getH2());
+        long[] dataBank = getBankByBaseRegister(2);
+        long[] subset = Arrays.copyOfRange(dataBank, 15, 30);
+        Assert.assertArrayEquals(expected, subset);
+
+        clear();
+    }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error1(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)",
+            "DATA      $RES 30",
+            "",
+            "$(2)",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
+            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
+            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
+            "          LBE       B25-16,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          CALL      TARGET",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "          DABT      DATA,*X2,B8",
+            "          HALT      0",
+            "",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "DESREG1   + 000021,000000",
+            "DESREG2   + 000020,000000",
+            "TARGET    + LBDIREF$+IH$INIT,IH$INIT",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
+                     _instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
+        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+
+        clear();
+    }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error2(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)",
+            "DATA      $RES 30",
+            "",
+            "$(2)",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
+            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
+            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
+            "          LBE       B25-16,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          CALL      TARGET",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,150",
+            "          DABT      DATA,*X2,B2",
+            "          HALT      0",
+            "",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "DESREG1   + 000021,000000",
+            "DESREG2   + 000020,000000",
+            "TARGET    + LBDIREF$+IH$INIT,IH$INIT",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.ReferenceViolation.getCode(),
+                     _instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
+        assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+
+        clear();
+    }
+
+    @Test
+    public void decelerateActiveBaseTable_extended_error3(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(0)",
+            "DATA      $RES 30",
+            "",
+            "$(2)",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
+            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
+            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
+            "          LBE       B25-16,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          CALL      TARGET",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            ".",
+            "          . GET DESIGNATOR REGISTER FOR PROCESSOR PRIVILEGE = 2",
+            "          LD        DESREG3,,B0",
+            "          DABT      DATA,*X2,B8",
+            "          HALT      0",
+            "",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "DESREG1   + 000021,000000",
+            "DESREG2   + 000020,000000",
+            "DESREG3   + 000034,000000 . proc priv = 3",
+            "TARGET    + LBDIREF$+IH$INIT,IH$INIT",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     _instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+
+        clear();
+    }
+
 //    @Test
 //    public void loadBaseRegisterExec_basic(
 //    ) throws MachineInterrupt,

@@ -48,13 +48,13 @@ public class Test_Interrupts extends BaseFunctions {
             "          $END      START"
         };
 
-        Bundle bundle = buildSimple(source);
-        ipl(bundle, true);
+        buildSimple(source);
+        ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, bundle._instructionProcessor.getLatestStopReason());
-        assertEquals(01016, bundle._instructionProcessor.getLatestStopDetail());
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 
-        shutdown(bundle);
+        clear();
     }
 
     //  TODO make sure maskable interrupts are prevented by PAIJ

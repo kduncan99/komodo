@@ -13,7 +13,6 @@ import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
 import java.util.Arrays;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -121,14 +120,14 @@ public class Test_Algorithms extends BaseFunctions {
             "          $END START"
         };
 
-        Bundle bundle = buildDualBank(source);
-        ipl(bundle, true);
+        buildDualBank(source);
+        ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, bundle._instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, bundle._instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(3628800, bundle._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        Assert.assertEquals(3628800, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
 
-        shutdown(bundle);
+        clear();
     }
 
     /**
@@ -237,11 +236,11 @@ public class Test_Algorithms extends BaseFunctions {
             "          $END      START",
         };
 
-        Bundle bundle = buildMultiBank(source);
-        ipl(bundle, true);
+        buildMultiBank(source, false);
+        ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, bundle._instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, bundle._instructionProcessor.getLatestStopDetail());
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
         long[] expected = {
             168,    //  number of prime values following
@@ -264,9 +263,9 @@ public class Test_Algorithms extends BaseFunctions {
             947, 953, 967, 971, 977, 983, 991, 997
         };
 
-        long[] result = getBank(bundle, 3);
+        long[] result = getBankByBaseRegister(3);
         assertArrayEquals(Arrays.copyOf(expected, result.length), result);
 
-        shutdown(bundle);
+        clear();
     }
 }

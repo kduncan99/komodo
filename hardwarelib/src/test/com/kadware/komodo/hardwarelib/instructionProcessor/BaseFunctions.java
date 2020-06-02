@@ -30,73 +30,177 @@ class BaseFunctions {
 
     static final Set<AssemblerOption> DEFAULT_ASSEMBLER_OPTIONS = new HashSet<>();
     static {
+        DEFAULT_ASSEMBLER_OPTIONS.add(AssemblerOption.EMIT_SOURCE);
         DEFAULT_ASSEMBLER_OPTIONS.add(AssemblerOption.EMIT_MODULE_SUMMARY);
+        DEFAULT_ASSEMBLER_OPTIONS.add(AssemblerOption.EMIT_DICTIONARY);
         DEFAULT_ASSEMBLER_OPTIONS.add(AssemblerOption.EMIT_GENERATED_CODE);
     }
 
     static final Set<LinkOption> DEFAULT_LINK_OPTIONS = new HashSet<>();
     static {
         DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_SUMMARY);
+        DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_DICTIONARY);
         DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_LCPOOL_MAP);
         DEFAULT_LINK_OPTIONS.add(LinkOption.EMIT_GENERATED_CODE);
     }
 
-    static class Bundle {
-        final AssemblerResult _asmResult;
-        final LinkResult _linkResult;
-        final InstructionProcessor _instructionProcessor;
-        final InstrumentedMainStorageProcessor _mainStorageProcessor;
-        final SystemProcessor _systemProcessor;
+    Assembler _assembler = null;
+    Set<AssemblerOption> _assemblerOptions = DEFAULT_ASSEMBLER_OPTIONS;
+    AssemblerResult _assemblerResult = null;
 
-        private Bundle(
-            AssemblerResult asmResult,
-            LinkResult linkResult,
-            SystemProcessor systemProcessor,
-            InstrumentedMainStorageProcessor mainStorageProcessor,
-            InstructionProcessor instructionProcessor
-        ) {
-            _asmResult = asmResult;
-            _linkResult = linkResult;
-            _systemProcessor = systemProcessor;
-            _mainStorageProcessor = mainStorageProcessor;
-            _instructionProcessor = instructionProcessor;
-        }
-    }
+    Linker _linker = null;
+    Set<LinkOption> _linkOptions = DEFAULT_LINK_OPTIONS;
+    LinkResult _linkResult = null;
 
-    /**
-     * Convenient wrapper
-     */
-    static Bundle buildDualBank(
-        final String[] source
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        return buildDualBank(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
-    }
+    InventoryManager _inventoryManager = null;
+    InstructionProcessor _instructionProcessor = null;
+    InstrumentedMainStorageProcessor _mainStorageProcessor = null;
+    SystemProcessor _systemProcessor = null;
+
+
+    //  Assembler source for the interrupt handlers
+    static private final String[] IH_CODE = {
+        "          $EXTEND",
+        "          $INFO 1 3",
+        "          $INFO 10 1",
+        "",
+        "$(1)      . Interrupt handlers",
+        "IH_00     . Interrupt 0:Reserved - Hardware Default",
+        "          HALT 01000",
+        "",
+        "IH_01     . Interrupt 1:Hardware Check",
+        "          HALT 01001",
+        "",
+        "IH_02     . Interrupt 2:Diagnostic",
+        "          HALT 01002",
+        "",
+        "IH_03     . Interrupt 3:Reserved",
+        "          HALT 01003",
+        "",
+        "IH_04     . Interrupt 4:Reserved",
+        "          HALT 01004",
+        "",
+        "IH_05     . Interrupt 5:Reserved",
+        "          HALT 01005",
+        "",
+        "IH_06     . Interrupt 6:Reserved",
+        "          HALT 01006",
+        "",
+        "IH_07     . Interrupt 7:Reserved",
+        "          HALT 01007",
+        "",
+        "IH_10     . Interrupt 8:Reference Violation",
+        "          HALT 01010",
+        "",
+        "IH_11     . Interrupt 9:Addressing Exception",
+        "          HALT 01011",
+        "",
+        "IH_12     . Interrupt 10 Terminal Addressing Exception",
+        "          HALT 01012",
+        "",
+        "IH_13     . Interrupt 11 RCS/Generic Stack Under/Overflow",
+        "          HALT 01013",
+        "",
+        "IH_14     . Interrupt 12 Signal",
+        "          HALT 01014",
+        "",
+        "IH_15     . Interrupt 13 Test & Set",
+        "          HALT 01015",
+        "",
+        "IH_16     . Interrupt 14 Invalid Instruction",
+        "          HALT 01016",
+        "",
+        "IH_17     . Interrupt 15 Page Exception",
+        "          HALT 01017",
+        "",
+        "IH_20     . Interrupt 16 Arithmetic Exception",
+        "          HALT 01020",
+        "",
+        "IH_21     . Interrupt 17 Data Exception",
+        "          HALT 01021",
+        "",
+        "IH_22     . Interrupt 18 Operation Trap",
+        "          HALT 01022",
+        "",
+        "IH_23     . Interrupt 19 Breakpoint",
+        "          HALT 01023",
+        "",
+        "IH_24     . Interrupt 20 Quantum Timer",
+        "          HALT 01024",
+        "",
+        "IH_25     . Interrupt 21 Reserved",
+        "          HALT 01025",
+        "",
+        "IH_26     . Interrupt 22 Reserved",
+        "          HALT 01026",
+        "",
+        "IH_27     . Interrupt 23 Page(s) Zeroed",
+        "          HALT 01027",
+        "",
+        "IH_30     . Interrupt 24 Software Break",
+        "          HALT 01030",
+        "",
+        "IH_31     . Interrupt 25 Jump History Full",
+        "          HALT 01031",
+        "",
+        "IH_32     . Interrupt 26 Reserved",
+        "          HALT 01032",
+        "",
+        "IH_33     . Interrupt 27 Dayclock",
+        "          HALT 01033",
+        "",
+        "IH_34     . Interrupt 28 Performance Monitoring",
+        "          HALT 01034",
+        "",
+        "IH_35     . Interrupt 29 Initial Program Load (IPL)",
+        "          HALT 01035",
+        "",
+        "IH_36     . UPI Initial",
+        "          HALT 01036",
+        "",
+        "IH_37     . UPI Normal",
+        "          HALT 01037",
+        "",
+        "IH$INIT*  . CALL this to establish interrupt handler vectors",
+        "          . which we expect to be based on B16.",
+        "          . Do not be in exec-register-set-selection, nor 24-bit index mode.",
+        "          . Also, be in PPriv < 2.",
+        "          . It is highly recommended to be in PAIJ, but not required.",
+        "          LXI,U     X1,1",
+        "          LXM,U     X1,0",
+        "          LXI,U     A0,LBDIREF$+IH_00",
+        "          LXM,U     A0,IH_00",
+        "          LA,U      A1,31",
+        "LOOP      SA        A0,0,*X1,B16",
+        "          AA,U      A0,1",
+        "          JGD       A1,LOOP",
+        "          RTN       0",
+    };
+
+    private static RelocatableModule _ihRelocatable = null;
+
 
     /**
      * Builds a binary executable consisting of a code bank and a data bank, which contains all the code generated from source.
      * All even location counter pools go in the data bank, all odd location counter pools go in the code bank.
      */
-    static Bundle buildDualBank(
-        final String[] source,
-        final Set<AssemblerOption> asmOptions,
-        final Set<LinkOption> linkOptions
+    void buildDualBank(
+        final String[] source
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
-        Assembler asm = new Assembler.Builder().setSource(source)
-                                               .setOptions(asmOptions)
-                                               .setModuleName("BINARY-REL")
-                                               .build();
-        AssemblerResult asmResult = asm.assemble();
-        assertNotNull(asmResult._relocatableModule);
-        assertFalse(asmResult._diagnostics.hasError());
+        _assembler = new Assembler.Builder().setSource(source)
+                                            .setOptions(_assemblerOptions)
+                                            .setModuleName("BINARY-REL")
+                                            .build();
+        _assemblerResult = _assembler.assemble();
+        assertNotNull(_assemblerResult._relocatableModule);
+        assertFalse(_assemblerResult._diagnostics.hasError());
 
         List<LCPoolSpecification> poolSpecsCode = new LinkedList<>();
         List<LCPoolSpecification> poolSpecsData = new LinkedList<>();
-        for (int lcIndex : asmResult._relocatableModule.getEstablishedLocationCounterIndices()) {
-            LCPoolSpecification lcpSpec = new LCPoolSpecification(asmResult._relocatableModule, lcIndex);
+        for (int lcIndex : _assemblerResult._relocatableModule.getEstablishedLocationCounterIndices()) {
+            LCPoolSpecification lcpSpec = new LCPoolSpecification(_assemblerResult._relocatableModule, lcIndex);
             if ((lcIndex & 1) == 0) {
                 poolSpecsData.add(lcpSpec);
             } else {
@@ -136,38 +240,28 @@ class BaseFunctions {
                                          .build(),
         };
 
-        Linker linker = new Linker.Builder().setModuleName("BINARY")
-                                            .setOptions(linkOptions)
-                                            .setBankDeclarations(bankDeclarations)
-                                            .build();
-        LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
-        assertNotNull(linkResult._loadableBanks);
-        assertNotEquals(0, linkResult._loadableBanks.length);
-        assertEquals(0, linkResult._errorCount);
+        _linker = new Linker.Builder().setModuleName("BINARY")
+                                      .setOptions(_linkOptions)
+                                      .setBankDeclarations(bankDeclarations)
+                                      .build();
+        _linkResult = _linker.link(LinkType.MULTI_BANKED_BINARY);
+        assertNotNull(_linkResult._loadableBanks);
+        assertNotEquals(0, _linkResult._loadableBanks.length);
+        assertEquals(0, _linkResult._errorCount);
 
-        InventoryManager im = InventoryManager.getInstance();
-        SystemProcessor sp = im.createSystemProcessor("SP0",
-                                                      8080,
-                                                      null,
-                                                      new Credentials("test", "test"));
-        InstructionProcessor ip = im.createInstructionProcessor("IP0");
-        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0",
-                                                                                    (short) 1,
-                                                                                    8 * 1024 * 1024);
-        im.addMainStorageProcessor(msp);
-
-        return new Bundle(asmResult, linkResult, sp, msp, ip);
+        createProcessors();
     }
 
-    /**
-     * Convenient wrapper
-     */
-    static Bundle buildMultiBank(
-        final String[] source
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        return buildMultiBank(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
+    private void buildInterruptHandlerModule() {
+        if (_ihRelocatable == null) {
+            Assembler asm = new Assembler.Builder().setModuleName("IH")
+                                                   .setSource(IH_CODE)
+                                                   .setOptions(DEFAULT_ASSEMBLER_OPTIONS)
+                                                   .build();
+            AssemblerResult asmResult = asm.assemble();
+            assertNotNull(asmResult._relocatableModule);
+            _ihRelocatable = asmResult._relocatableModule;
+        }
     }
 
     /**
@@ -175,20 +269,19 @@ class BaseFunctions {
      * Odd-number BDIs are static read-only
      * Even-number BDIs are dynamic dbanks, read-write, no enter
      */
-    static Bundle buildMultiBank(
+    void buildMultiBank(
         final String[] source,
-        final Set<AssemblerOption> asmOptions,
-        final Set<LinkOption> linkOptions
+        final boolean includeInterruptHandlers
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
-        Assembler asm = new Assembler.Builder().setSource(source)
-                                               .setOptions(asmOptions)
-                                               .setModuleName("BINARY-REL")
-                                               .build();
-        AssemblerResult asmResult = asm.assemble();
-        assertNotNull(asmResult._relocatableModule);
-        assertFalse(asmResult._diagnostics.hasError());
+        _assembler = new Assembler.Builder().setSource(source)
+                                            .setOptions(_assemblerOptions)
+                                            .setModuleName("BINARY-REL")
+                                            .build();
+        _assemblerResult = _assembler.assemble();
+        assertNotNull(_assemblerResult._relocatableModule);
+        assertFalse(_assemblerResult._diagnostics.hasError());
 
         List<BankDeclaration> bankDeclarations = new LinkedList<>();
 
@@ -207,8 +300,8 @@ class BaseFunctions {
         AccessInfo accessLock = new AccessInfo(0, 0);
 
         int bdIndex = 000004;
-        for (int lcIndex : asmResult._relocatableModule.getEstablishedLocationCounterIndices()) {
-            LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(asmResult._relocatableModule, lcIndex) };
+        for (int lcIndex : _assemblerResult._relocatableModule.getEstablishedLocationCounterIndices()) {
+            LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(_assemblerResult._relocatableModule, lcIndex) };
             if ((lcIndex & 1) == 1) {
                 String bankName = String.format("IBANK%06o", bdIndex);
                 BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
@@ -240,106 +333,94 @@ class BaseFunctions {
             bdIndex++;
         }
 
-        Linker linker = new Linker.Builder().setModuleName("BINARY")
-                                            .setOptions(linkOptions)
-                                            .setBankDeclarations(bankDeclarations)
-                                            .build();
-        LinkResult linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
-        assertNotNull(linkResult._loadableBanks);
-        assertNotEquals(0, linkResult._loadableBanks.length);
-        assertEquals(0, linkResult._errorCount);
+        if (includeInterruptHandlers) {
+            buildInterruptHandlerModule();
+            LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(_ihRelocatable, 1) };
+            BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
+                                                                    .setBankLevel(1)
+                                                                    .setBankName("IHBANK")
+                                                                    .setPoolSpecifications(lcpSpecs)
+                                                                    .setSpecialAccessPermissions(codeSAP)
+                                                                    .setGeneralAccessPermissions(gap)
+                                                                    .setStartingAddress(01000)
+                                                                    .setAccessInfo(new AccessInfo(0, 0))
+                                                                    .setOptions(codeBankOpts)
+                                                                    .build();
+            bankDeclarations.add(bankDecl);
+        }
 
-        InventoryManager im = InventoryManager.getInstance();
-        SystemProcessor sp = im.createSystemProcessor("SP0",
-                                                      8080,
-                                                      null,
-                                                      new Credentials("test", "test"));
-        InstructionProcessor ip = im.createInstructionProcessor("IP0");
-        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0",
-                                                                                    (short) 1,
-                                                                                    8 * 1024 * 1024);
-        im.addMainStorageProcessor(msp);
+        _linker = new Linker.Builder().setModuleName("BINARY")
+                                      .setOptions(_linkOptions)
+                                      .setBankDeclarations(bankDeclarations)
+                                      .build();
+        _linkResult = _linker.link(LinkType.MULTI_BANKED_BINARY);
+        assertNotNull(_linkResult._loadableBanks);
+        assertNotEquals(0, _linkResult._loadableBanks.length);
+        assertEquals(0, _linkResult._errorCount);
 
-        return new Bundle(asmResult, linkResult, sp, msp, ip);
-    }
-
-    /**
-     * Convenient wrapper
-     */
-    static Bundle buildSimple(
-        final String[] source
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        return buildSimple(source, DEFAULT_ASSEMBLER_OPTIONS, DEFAULT_LINK_OPTIONS);
+        createProcessors();
     }
 
     /**
      * Builds a binary executable consisting of a single bank, which contains all the code generated from source
      */
-    static Bundle buildSimple(
-        final String[] source,
-        final Set<AssemblerOption> asmOptions,
-        final Set<LinkOption> linkOptions
+    void buildSimple(
+        final String[] source
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
-        Assembler asm = new Assembler.Builder().setSource(source)
-                                               .setOptions(asmOptions)
-                                               .setModuleName("BINARY-REL")
-                                               .build();
-        AssemblerResult asmResult = asm.assemble();
-        assertNotNull(asmResult._relocatableModule);
-        assertFalse(asmResult._diagnostics.hasError());
+        _assembler = new Assembler.Builder().setSource(source)
+                                            .setOptions(_assemblerOptions)
+                                            .setModuleName("BINARY-REL")
+                                            .build();
+        _assemblerResult = _assembler.assemble();
+        assertNotNull(_assemblerResult._relocatableModule);
+        assertFalse(_assemblerResult._diagnostics.hasError());
 
-        RelocatableModule[] relModules = { asmResult._relocatableModule };
+        RelocatableModule[] relModules = { _assemblerResult._relocatableModule };
         Linker linker = new Linker.Builder().setRelocatableModules(relModules)
-                                            .setOptions(linkOptions)
+                                            .setOptions(_linkOptions)
                                             .setModuleName("BINARY")
                                             .build();
-        LinkResult linkResult = linker.link(LinkType.BINARY);
-        assertNotNull(linkResult._loadableBanks);
-        assertNotEquals(0, linkResult._loadableBanks.length);
-        assertEquals(0, linkResult._errorCount);
+        _linkResult = linker.link(LinkType.BINARY);
+        assertNotNull(_linkResult._loadableBanks);
+        assertNotEquals(0, _linkResult._loadableBanks.length);
+        assertEquals(0, _linkResult._errorCount);
 
-        InventoryManager im = InventoryManager.getInstance();
-        SystemProcessor sp = im.createSystemProcessor("SP0",
-                                                      8080,
-                                                      null,
-                                                      new Credentials("test", "test"));
-        InstructionProcessor ip = im.createInstructionProcessor("IP0");
-        InstrumentedMainStorageProcessor msp = new InstrumentedMainStorageProcessor("MSP0",
-                                                                                    (short) 1,
-                                                                                    8 * 1024 * 1024);
-        im.addMainStorageProcessor(msp);
-
-        return new Bundle(asmResult, linkResult, sp, msp, ip);
+        createProcessors();
     }
 
-    static void ipl(
-        final Bundle bundle,
+    void ipl(
         final boolean wait
     ) throws BinaryLoadException,
              MachineInterrupt,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        bundle._systemProcessor.iplBinary("TEST",
-                                          bundle._linkResult._loadableBanks,
-                                          bundle._linkResult._programStartInfo._vAddress,
-                                          bundle._mainStorageProcessor._upiIndex,
-                                          bundle._instructionProcessor._upiIndex,
-                                          false,
-                                          false,
-                                          true);
+        assertNotNull(_linkResult);
+        assertNotNull(_linkResult._loadableBanks);
+        assertNotNull(_linkResult._programStartInfo);
+        assertNotNull(_instructionProcessor);
+        assertNotNull(_mainStorageProcessor);
+        assertNotNull(_systemProcessor);
+
+        _instructionProcessor.setDevelopmentMode(true);
+        _instructionProcessor.setTraceInstructions(true);
+        _systemProcessor.iplBinary("TEST",
+                                   _linkResult._loadableBanks,
+                                   _linkResult._programStartInfo._vAddress,
+                                   _mainStorageProcessor._upiIndex,
+                                   _instructionProcessor._upiIndex,
+                                   false,
+                                   false);
 
         //  wait for IP to start
-        while (bundle._instructionProcessor.isStopped()) {
+        while (_instructionProcessor.isStopped()) {
             Thread.onSpinWait();
         }
 
         //  maybe wait for IP to stop
         if (wait) {
-            while (!bundle._instructionProcessor.isStopped()) {
+            while (!_instructionProcessor.isStopped()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
@@ -349,157 +430,7 @@ class BaseFunctions {
         }
     }
 
-    static void shutdown(
-        final Bundle bundle
-    ) throws UPINotAssignedException {
-        bundle._instructionProcessor.stop(InstructionProcessor.StopReason.Cleared, 0);
-        while (!bundle._instructionProcessor.isStopped()) {
-            Thread.onSpinWait();
-        }
-        bundle._instructionProcessor.terminate();
-        bundle._mainStorageProcessor.terminate();
-        bundle._systemProcessor.terminate();
 
-        InventoryManager.getInstance().deleteProcessor(bundle._instructionProcessor._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(bundle._mainStorageProcessor._upiIndex);
-        InventoryManager.getInstance().deleteProcessor(bundle._systemProcessor._upiIndex);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-//    private static class MSPRegionAttributes implements RegionTracker.IAttributes {
-//        final String _bankName;
-//        final int _bankLevel;
-//        final int _bankDescriptorIndex;
-//
-//        MSPRegionAttributes(
-//            final String bankName,
-//            final int bankLevel,
-//            final int bankDescriptorIndex
-//        ) {
-//            _bankName = bankName;
-//            _bankLevel = bankLevel;
-//            _bankDescriptorIndex = bankDescriptorIndex;
-//        }
-//    }
-//
-//    //  Assembler source for the interrupt handlers
-//    static private final String[] IH_CODE = {
-//        "          $EXTEND",
-//        "          $INFO 1 3",
-//        "          $INFO 10 1",
-//        "",
-//        "$(0)",
-//        "          $LIT",
-//        "",
-//        "$(1)      . Interrupt handlers",
-//        "IH_00*    . Interrupt 0:Reserved - Hardware Default",
-//        "          HALT 01000",
-//        "",
-//        "IH_01*    . Interrupt 1:Hardware Check",
-//        "          HALT 01001",
-//        "",
-//        "IH_02*    . Interrupt 2:Diagnostic",
-//        "          HALT 01002",
-//        "",
-//        "IH_03*    . Interrupt 3:Reserved",
-//        "          HALT 01003",
-//        "",
-//        "IH_04*    . Interrupt 4:Reserved",
-//        "          HALT 01004",
-//        "",
-//        "IH_05*    . Interrupt 5:Reserved",
-//        "          HALT 01005",
-//        "",
-//        "IH_06*    . Interrupt 6:Reserved",
-//        "          HALT 01006",
-//        "",
-//        "IH_07*    . Interrupt 7:Reserved",
-//        "          HALT 01007",
-//        "",
-//        "IH_10*    . Interrupt 8:Reference Violation",
-//        "          HALT 01010",
-//        "",
-//        "IH_11*    . Interrupt 9:Addressing Exception",
-//        "          HALT 01011",
-//        "",
-//        "IH_12*    . Interrupt 10 Terminal Addressing Exception",
-//        "          HALT 01012",
-//        "",
-//        "IH_13*    . Interrupt 11 RCS/Generic Stack Under/Overflow",
-//        "          HALT 01013",
-//        "",
-//        "IH_14*    . Interrupt 12 Signal",
-//        "          HALT 01014",
-//        "",
-//        "IH_15*    . Interrupt 13 Test & Set",
-//        "          HALT 01015",
-//        "",
-//        "IH_16*    . Interrupt 14 Invalid Instruction",
-//        "          HALT 01016",
-//        "",
-//        "IH_17*    . Interrupt 15 Page Exception",
-//        "          HALT 01017",
-//        "",
-//        "IH_20*    . Interrupt 16 Arithmetic Exception",
-//        "          HALT 01020",
-//        "",
-//        "IH_21*    . Interrupt 17 Data Exception",
-//        "          HALT 01021",
-//        "",
-//        "IH_22*    . Interrupt 18 Operation Trap",
-//        "          HALT 01022",
-//        "",
-//        "IH_23*    . Interrupt 19 Breakpoint",
-//        "          HALT 01023",
-//        "",
-//        "IH_24*    . Interrupt 20 Quantum Timer",
-//        "          HALT 01024",
-//        "",
-//        "IH_25*    . Interrupt 21 Reserved",
-//        "          HALT 01025",
-//        "",
-//        "IH_26*    . Interrupt 22 Reserved",
-//        "          HALT 01026",
-//        "",
-//        "IH_27*    . Interrupt 23 Page(s) Zeroed",
-//        "          HALT 01027",
-//        "",
-//        "IH_30*    . Interrupt 24 Software Break",
-//        "          HALT 01030",
-//        "",
-//        "IH_31*    . Interrupt 25 Jump History Full",
-//        "          HALT 01031",
-//        "",
-//        "IH_32*    . Interrupt 26 Reserved",
-//        "          HALT 01032",
-//        "",
-//        "IH_33*    . Interrupt 27 Dayclock",
-//        "          HALT 01033",
-//        "",
-//        "IH_34*    . Interrupt 28 Performance Monitoring",
-//        "          HALT 01034",
-//        "",
-//        "IH_35*    . Interrupt 29 Initial Program Load (IPL)",
-//        "          . Default action is to simply return from the interrupt.",
-//        "          . This happens every time the IP is started via start().",
-//        "          UR        0,EX1,B26
-//        "",
-//        "IH_36*    . UPI Initial",
-//        "          HALT 01036",
-//        "",
-//        "IH_37*    . UPI Normal",
-//        "          HALT 01037",
-//    };
 //
 //    static private final String[] BDT_CODE = {
 //        "          $EXTEND",
@@ -633,434 +564,69 @@ class BaseFunctions {
 //                           display ? _linkerDisplayAll : _linkerDisplayNone);
 //    }
 //
-//    /**
-//     * Assembles source code into a relocatable module, then links it, producing four banks containing:
-//     *  BDI 04 IBANK:   LC pool 1 - base register 12
-//     *  BDI 05 DBANK:   LC pool 0 - base register 13
-//     *  BDI 06 IBANK:   All other odd location counter pools - base register 14
-//     *  BDI 07 DBANK:   All other even location counter pools - base register 15
-//     * @param code arrays of text comprising the source code we assemble
-//     * @param display true to display assembler/linker output
-//     * @return linked absolute module
-//     */
-//    static AbsoluteModule buildCodeBasicMultibank(
-//        final String[] code,
-//        final boolean display
-//    ) {
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-//        assert(relModule != null);
-//
-//        List<Linker.LCPoolSpecification> poolSpecs04 = new LinkedList<>();
-//        List<Linker.LCPoolSpecification> poolSpecs05 = new LinkedList<>();
-//        List<Linker.LCPoolSpecification> poolSpecs06 = new LinkedList<>();
-//        List<Linker.LCPoolSpecification> poolSpecs07 = new LinkedList<>();
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//            if (lcIndex == 0) {
-//                poolSpecs05.add(poolSpec);
-//            } else if (lcIndex == 1) {
-//                poolSpecs04.add(poolSpec);
-//            } else if ((lcIndex & 01) == 01) {
-//                poolSpecs06.add(poolSpec);
-//            } else {
-//                poolSpecs07.add(poolSpec);
-//            }
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("I1")
-//                                                                 .setBankDescriptorIndex(000004)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(01000)
-//                                                                 .setPoolSpecifications(poolSpecs04.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(12)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .build());
-//
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("D1")
-//                                                                 .setBankDescriptorIndex(000005)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(040000)
-//                                                                 .setPoolSpecifications(poolSpecs05.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(13)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .build());
-//
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("I2")
-//                                                                 .setBankDescriptorIndex(000006)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(020000)
-//                                                                 .setPoolSpecifications(poolSpecs06.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(14)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .build());
-//
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("D2")
-//                                                                 .setBankDescriptorIndex(000007)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(060000)
-//                                                                 .setPoolSpecifications(poolSpecs07.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(15)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .build());
-//
-//        Linker linker = new Linker();
-//        return linker.link("TEST",
-//                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-//                           0,
-//                           display ? _linkerDisplayAll : _linkerDisplayNone);
-//    }
-//
-//    /**
-//     * Assembles sets of code into a relocatable module, then links it such that the odd-numbered lc pools
-//     * are placed in an IBANK with BDI 04 and the even-number pools in a DBANK with BDI 05.
-//     * Initial base registers will be 0 for instructions and 2 for data.
-//     * @param code arrays of text comprising the source code we assemble
-//     * @param display true to display assembler/linker output
-//     * @return linked absolute module
-//     */
-//    static AbsoluteModule buildCodeExtended(
-//        final String[] code,
-//        final boolean display
-//    ) {
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-//        assert(relModule != null);
-//
-//        List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
-//        List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            if ((lcIndex & 01) == 01) {
-//                Linker.LCPoolSpecification oddPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//                poolSpecsOdd.add(oddPoolSpec);
-//            } else {
-//                Linker.LCPoolSpecification evenPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//                poolSpecsEven.add(evenPoolSpec);
-//            }
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("I1")
-//                                                                 .setBankDescriptorIndex(000004)
-//                                                                 .setBankLevel(06)
-//                                                                 .setNeedsExtendedMode(true)
-//                                                                 .setStartingAddress(01000)
-//                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(0)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, false))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, false))
-//                                                                 .build());
-//
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("D1")
-//                                                                 .setBankDescriptorIndex(000005)
-//                                                                 .setBankLevel(06)
-//                                                                 .setNeedsExtendedMode(true)
-//                                                                 .setStartingAddress(01000)
-//                                                                 .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(2)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .build());
-//
-//        Linker linker = new Linker();
-//        return linker.link("TEST",
-//                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-//                           32,
-//                           display ? _linkerDisplayAll : _linkerDisplayNone);
-//    }
-//
-//    /**
-//     * Assembles source code into a relocatable module, then links it, producing multiple banks where:
-//     *  BDI 000004 contains all odd-numbered lc pools, based on B0
-//     *  Each unique even-numbered lc pool generates a unique bank BDI >= 5, based on B2 and up
-//     * @param code arrays of text comprising the source code we assemble
-//     * @param display true to display assembler/linker output
-//     * @return linked absolute module
-//     */
-//    static AbsoluteModule buildCodeExtendedMultibank(
-//            final String[] code,
-//            final boolean display
-//    ) {
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-//        assert(relModule != null);
-//
-//        Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
-//        int nextDBankBDI = 05;
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//            if ((lcIndex & 01) == 01) {
-//                if (!poolSpecMap.containsKey(4)) {
-//                    poolSpecMap.put(4, new LinkedList<>());
-//                }
-//                poolSpecMap.get(4).add(poolSpec);
-//            } else {
-//                poolSpecMap.put(nextDBankBDI, new LinkedList<>());
-//                poolSpecMap.get(nextDBankBDI).add(poolSpec);
-//                ++nextDBankBDI;
-//            }
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        int bReg = 0;
-//        for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
-//            if (bReg == 1) { ++bReg; }
-//
-//            int bdi = entry.getKey();
-//            List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
-//            bankDeclarations.add(
-//                new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                    .setBankName(String.format("BANK%06o", bdi))
-//                                                    .setBankDescriptorIndex(bdi)
-//                                                    .setBankLevel(6)
-//                                                    .setNeedsExtendedMode(true)
-//                                                    .setStartingAddress(01000)
-//                                                    .setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]))
-//                                                    .setInitialBaseRegister(bReg++)
-//                                                    .setGeneralAccessPermissions(new AccessPermissions(bdi == 04,
-//                                                                                                       true,
-//                                                                                                       bReg > 0))
-//                                                    .setSpecialAccessPermissions(new AccessPermissions(bdi == 04,
-//                                                                                                       true,
-//                                                                                                       bReg > 0))
-//                                                    .build());
-//        }
-//
-//        Linker linker = new Linker();
-//        return linker.link("TEST",
-//                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-//                           32,
-//                           display ? _linkerDisplayAll : _linkerDisplayNone);
-//    }
-//
-//    /**
-//     * Assembles source code into a relocatable module, then links it, producing multiple banks where
-//     * every LC number encountered is placed in a bank with a BDI which is set to LC number + 4.
-//     * @param code arrays of text comprising the source code we assemble
-//     * @param display true to display assembler/linker output
-//     * @return linked absolute module
-//     */
-//    static AbsoluteModule buildCodeExtendedMultibank2(
-//        final String[] code,
-//        final boolean display
-//    ) {
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-//        assert(relModule != null);
-//
-//        Map<Integer, List<Linker.LCPoolSpecification>> poolSpecMap = new HashMap<>(); //  keyed by BDI
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            Linker.LCPoolSpecification poolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//            int bdi = lcIndex + 4;
-//            if (!poolSpecMap.containsKey(bdi)) {
-//                poolSpecMap.put(bdi, new LinkedList<>());
-//            }
-//            poolSpecMap.get(bdi).add(poolSpec);
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        int dataBReg = 2;
-//        for (Map.Entry<Integer, List<Linker.LCPoolSpecification>> entry : poolSpecMap.entrySet()) {
-//            int bdi = entry.getKey();
-//            List<Linker.LCPoolSpecification> poolSpecs = entry.getValue();
-//            Linker.BankDeclaration.Builder builder = new Linker.BankDeclaration.Builder();
-//            builder.setAccessInfo(new AccessInfo(3, 0));
-//            builder.setBankName(String.format("BANK%06o", bdi));
-//            builder.setBankDescriptorIndex(bdi);
-//            builder.setBankLevel(6);
-//            builder.setNeedsExtendedMode(true);
-//            builder.setStartingAddress(01000);
-//            builder.setPoolSpecifications(poolSpecs.toArray(new Linker.LCPoolSpecification[0]));
-//            if (bdi == 05) {
-//                //  first code bank
-//                builder.setInitialBaseRegister(0);
-//                builder.setSpecialAccessPermissions(new AccessPermissions(true, true, false));
-//                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
-//            }
-//            else if ((bdi & 01) == 0) {
-//                //  all data banks
-//                builder.setInitialBaseRegister(dataBReg++);
-//                builder.setSpecialAccessPermissions(new AccessPermissions(false, true, true));
-//                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
-//            } else {
-//                //  all other code banks
-//                builder.setSpecialAccessPermissions(new AccessPermissions(true, true, true));
-//                builder.setGeneralAccessPermissions(new AccessPermissions(false, false, false));
-//            }
-//
-//            bankDeclarations.add(builder.build());
-//        }
-//
-//        Linker linker = new Linker();
-//        return linker.link("TEST",
-//                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-//                           32,
-//                           display ? _linkerDisplayAll : _linkerDisplayNone);
-//    }
-//
-//    /**
-//     * Creates the banking environment absolute module
-//     */
-//    static private void createBankingModule() {
-//        //  Assemble banking source - there will be 8 location counter pools 0 through 7
-//        //  which correspond to BDT's 0 through 7 - see linking step for the reasons why
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule bdtModule = asm.assemble("BDT", BDT_CODE, _assemblerDisplayNone);
-//        assert(bdtModule != null);
-//
-//        //  Assemble interrupt handler code into a separate relocatable module...
-//        //  we have no particular expectations with respect to location counters;
-//        //  For simplicity, we put all of this code into one IH bank - again, see linking step.
-//        OldRelocatableModule ihModule = asm.assemble("IH", IH_CODE, _assemblerDisplayNone);
-//        assert(ihModule != null);
-//
-//        //  Now we link - we need to create a separate bank for each of the Bank Descriptor Tables
-//        //  (to make loading it into the MSP easier), and one bank for the interrupt handler code.
-//        //  BDI's for the BDT banks are 000 through 007; BDI for the IH code is 010.
-//        Linker.BankDeclaration[] bankDeclarations = new Linker.BankDeclaration[9];
-//
-//        for (int lcIndex = 0; lcIndex < 8; ++lcIndex) {
-//            Linker.LCPoolSpecification[] bdtPoolSpecs = {
-//                new Linker.LCPoolSpecification(bdtModule, lcIndex)
-//            };
-//
-//            bankDeclarations[lcIndex] =
-//                new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 0))
-//                                                    .setBankName(String.format("BDTLEVEL%d", lcIndex))
-//                                                    .setBankDescriptorIndex(lcIndex)
-//                                                    .setBankLevel(0)
-//                                                    .setNeedsExtendedMode(false)
-//                                                    .setStartingAddress(0)
-//                                                    .setPoolSpecifications(bdtPoolSpecs)
-//                                                    .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-//                                                    .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                                    .build();
-//        }
-//
-//        List<Linker.LCPoolSpecification> ihPoolSpecList = new LinkedList<>();
-//        for (Integer lcIndex : ihModule._storage.keySet()) {
-//            ihPoolSpecList.add(new Linker.LCPoolSpecification(ihModule, lcIndex));
-//        }
-//
-//        bankDeclarations[8] =
-//            new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 0, (short) 0))
-//                                                .setBankName("IHBANK")
-//                                                .setBankDescriptorIndex(010)
-//                                                .setBankLevel(0)
-//                                                .setNeedsExtendedMode(true)
-//                                                .setStartingAddress(01000)
-//                                                .setPoolSpecifications(ihPoolSpecList.toArray(new Linker.LCPoolSpecification[0]))
-//                                                .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-//                                                .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                                .build();
-//
-//        Linker.Option[] options = {
-//            Linker.Option.OPTION_NO_ENTRY_POINT,
-//        };
-//        Linker linker = new Linker();
-//        _bankModule = linker.link("BDT-IH", bankDeclarations, 0, options);
-//        assert(_bankModule != null);
-//    }
-//
-//    /**
-//     * Establishes the banking environment
-//     * @param ip the IP which will have its various registers set appropriately to account for the created environment
-//     * @param msp the MSP in which we'll create the environment
-//     */
-//    private static void establishBankingEnvironment(
-//        final InstructionProcessor ip,
-//        final InstrumentedMainStorageProcessor msp
-//    ) throws MachineInterrupt {
-//        //  Does the bank control absolute module already exist?  If not, create it
-//        if (_bankModule == null) {
-//            createBankingModule();
-//        }
-//
-//        try {
-//            //  Load the BDT banks from the bank control module into the given MSP and set the IP registers accordingly.
-//            //  The BDT banks are located in banks with BDI 0 to 7 for levels 0 through 7.
-//            for (int level = 0; level < 8; ++level) {
-//                LoadableBank bdtBank = _bankModule._loadableBanks.get(level);
-//                long bdtBankSize = bdtBank._content.getSize();
-//                MSPRegionAttributes bdtAttributes = new MSPRegionAttributes(bdtBank._bankName,
-//                                                                            0,
-//                                                                            bdtBank._bankDescriptorIndex);
-//                RegionTracker.SubRegion bdtSub = msp._regions.assign(bdtBankSize, bdtAttributes);
-//                msp.getStorage(0).load(bdtBank._content, (int) bdtSub._position);
-//                System.out.println(String.format("Loaded BDT bank at MSP offset %d for %d words",
-//                                                 bdtSub._position,
-//                                                 bdtSub._extent));
-//
-//                int bankLower = bdtBank._startingAddress;
-//                int bankUpper = bdtBank._startingAddress + bdtBank._content.getSize() - 1;
-//                String attrString = String.format("BDT%d", level);
-//
-//                RegionTracker.SubRegion subRegion =
-//                    msp._regions.assign(bdtBank._content.getSize(),
-//                                        new MSPRegionAttributes(attrString, 0, level));
-//                AbsoluteAddress absAddr = new AbsoluteAddress(msp._upiIndex, 0, (int) subRegion._position);
-//
-//                InstructionProcessor.BaseRegister bReg =
-//                    new InstructionProcessor.BaseRegister(absAddr,
-//                                                          false,
-//                                                          bankLower,
-//                                                          bankUpper,
-//                                                          bdtBank._accessInfo,
-//                                                          bdtBank._generalPermissions,
-//                                                          bdtBank._specialPermissions);
-//                ip.setBaseRegister(16 + level, bReg);
-//                bReg._storage.load(bdtBank._content, 0);
-//            }
-//
-//            //  Now we can load the IH bank using the generic mechanism.
-//            //  Put it in level 0, BDI 33 (in case we want to use 32 for something)
-//            LoadableBank ihBank = _bankModule._loadableBanks.get(8);
-//            loadBank(ip, msp, ihBank, 0, 33);
-//
-//            //  Establish an interrupt control stack - size is arbitrary
-//            int frameSize = 16;
-//            int entries = 32;
-//            int stackSize = frameSize * entries;
-//            RegionTracker.SubRegion stackSubRegion =
-//                msp._regions.assign(stackSize,
-//                                    new MSPRegionAttributes("ICS", 0, 0));
-//            InstructionProcessor.BaseRegister bReg =
-//                new InstructionProcessor.BaseRegister(new AbsoluteAddress(msp._upiIndex, 0, (int) stackSubRegion._position),
-//                                                      false,
-//                                                      0,
-//                                                      stackSize - 1,
-//                                                      new AccessInfo((byte) 0, (short) 0),
-//                                                      new AccessPermissions(false, false, false),
-//                                                      new AccessPermissions(false, true, true));
-//            ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, bReg);
-//            bReg._storage.load(msp.getStorage(0), (int) stackSubRegion._position, stackSize, 0);
-//            long regValue = (((long) frameSize) << 18) | stackSize;
-//            ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, regValue);
-//        } catch (RegionTracker.OutOfSpaceException ex) {
-//            throw new RuntimeException("Cannot find space in MSP for bank to be loaded");
-//        }
-//    }
+    /**
+     * Clears the class state for a subsequent build/ipl process
+     */
+    void clear(
+    ) throws UPINotAssignedException {
+        if (_instructionProcessor != null) {
+            _instructionProcessor.stop(InstructionProcessor.StopReason.Cleared, 0);
+            while (!_instructionProcessor.isStopped()) {
+                Thread.onSpinWait();
+            }
+            _instructionProcessor.terminate();
+            InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+            _instructionProcessor = null;
+        }
+
+        if (_mainStorageProcessor != null) {
+            _mainStorageProcessor.terminate();
+            InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
+            _mainStorageProcessor = null;
+        }
+
+        if (_systemProcessor != null) {
+            _systemProcessor.terminate();
+            InventoryManager.getInstance().deleteProcessor(_systemProcessor._upiIndex);
+            _systemProcessor = null;
+        }
+
+        _assembler = null;
+        _assemblerOptions = DEFAULT_ASSEMBLER_OPTIONS;
+        _assemblerResult = null;
+
+        _linker = null;
+        _linkOptions = DEFAULT_LINK_OPTIONS;
+        _linkResult = null;
+    }
+
+    /**
+     * Common processor creation code
+     */
+    private void createProcessors(
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        _inventoryManager = InventoryManager.getInstance();
+        _systemProcessor = _inventoryManager.createSystemProcessor("SP0",
+                                                                   8080,
+                                                                   null,
+                                                                   new Credentials("test", "test"));
+        _instructionProcessor = _inventoryManager.createInstructionProcessor("IP0");
+        _mainStorageProcessor = new InstrumentedMainStorageProcessor("MSP0",
+                                                                     (short) 1,
+                                                                     8 * 1024 * 1024);
+        _inventoryManager.addMainStorageProcessor(_mainStorageProcessor);
+    }
 
     /**
      * Retrieves the contents of a bank represented by a base register.
      * This is a copy of the content, so if you update the result, you don't screw up the actual content in the MSP.
      */
-    static long[] getBank(
-        final Bundle bundle,
+    long[] getBankByBaseRegister(
         final int baseRegisterIndex
     ) {
-        ArraySlice array = bundle._instructionProcessor.getBaseRegister(baseRegisterIndex)._storage;
+        ArraySlice array = _instructionProcessor.getBaseRegister(baseRegisterIndex)._storage;
         long[] result = new long[array.getSize()];
         for (int ax = 0; ax < array.getSize(); ++ax) {
             result[ax] = array.get(ax);
@@ -1068,192 +634,13 @@ class BaseFunctions {
         return result;
     }
 
-//    /**
-//     * Loads a bank into the banking environment previously established for the indicated MSP
-//     * and referenced by the B16 - B23 register of the indicated IP
-//     * @param ip IP with base registers set according to the BDT loaded into the MSP
-//     * @param msp the MSP into which we load the given bank
-//     * @param bank bank to be loaded
-//     * @param bankLevel BDT level where the bank is to be loaded
-//     * @param bankDescriptorIndex BDI of the bank within the BDT
-//     * @return the bank descriptor describing the bank we just loaded
-//     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-//     */
-//    private static InstructionProcessor.BankDescriptor loadBank(
-//        final InstructionProcessor ip,
-//        final InstrumentedMainStorageProcessor msp,
-//        final LoadableBank bank,
-//        final int bankLevel,
-//        final int bankDescriptorIndex
-//    ) throws AddressingExceptionInterrupt {
-//        assert(bankLevel >= 0) && (bankLevel < 8);
-//
-//        //  Load the bank into memory
-//        try {
-//            int bankLower = bank._startingAddress;
-//            int bankUpper = bank._startingAddress + bank._content.getSize() - 1;
-//            String attrString = String.format("BDT%d", bankLevel);
-//
-//            RegionTracker.SubRegion subRegion =
-//                msp._regions.assign(bank._content.getSize(),
-//                                    new MSPRegionAttributes(attrString, bankLevel, bankDescriptorIndex));
-//            AbsoluteAddress absAddr = new AbsoluteAddress(msp._upiIndex, 0, (int) subRegion._position);
-//            msp.getStorage(0).load(bank._content, absAddr._offset);
-//
-//            //  Create a bank descriptor for it in the appropriate bdt
-//            ArraySlice bankDescriptorTable = ip.getBaseRegister(16 + bankLevel)._storage;
-//            InstructionProcessor.BankDescriptor bd = new InstructionProcessor.BankDescriptor(bankDescriptorTable, 8 * bankDescriptorIndex);
-//            bd.setAccessLock(bank._accessInfo);
-//            bd.setBankType(bank._isExtendedMode ? BankType.ExtendedMode : BankType.BasicMode);
-//            bd.setBaseAddress(absAddr);
-//            bd.setGeneralAccessPermissions(bank._generalPermissions);
-//            bd.setGeneralFault(false);
-//            bd.setLargeBank(false);
-//            bd.setLowerLimit(bankLower >> 9);
-//            bd.setSpecialAccessPermissions(bank._specialPermissions);
-//            bd.setUpperLimit(bankUpper);
-//            bd.setUpperLimitSuppressionControl(false);
-//
-//            System.out.println(String.format("Loaded bank %s level %d BDI %06o MSP offset:%d length:%d",
-//                                             bank._bankName,
-//                                             bankLevel,
-//                                             bankDescriptorIndex,
-//                                             subRegion._position,
-//                                             subRegion._extent));
-//
-//            return bd;
-//        } catch (RegionTracker.OutOfSpaceException ex) {
-//            throw new RuntimeException("Cannot find space in MSP for bank to be loaded");
-//        }
-//    }
-//
-//    /**
-//     * Loads the various banks from the given absolute module into the given MSP
-//     * and applies initial base registers for the given IP as directed by that module.
-//     * @param ip instruction processor of interest
-//     * @param msp main storage processor of interest
-//     * @param module absolute module to be loaded
-//     * @throws AddressingExceptionInterrupt for an invalid MSP reference
-//     */
-//    private static void loadBanks(
-//        final InstructionProcessor ip,
-//        final InstrumentedMainStorageProcessor msp,
-//        final AbsoluteModule module
-//    ) throws AddressingExceptionInterrupt {
-//        for (LoadableBank loadableBank : module._loadableBanks.values()) {
-//            InstructionProcessor.BankDescriptor bd = loadBank(ip,
-//                                                              msp,
-//                                                              loadableBank,
-//                                                              loadableBank._bankLevel,
-//                                                              loadableBank._bankDescriptorIndex);
-//
-//            if (loadableBank._initialBaseRegister != null) {
-//                int brIndex = loadableBank._initialBaseRegister;
-//                ArraySlice storageSubset =
-//                    new ArraySlice(msp.getStorage(0),
-//                                   bd.getBaseAddress()._offset,
-//                                   bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1);
-//                int bankLower = loadableBank._startingAddress;
-//                int bankUpper = loadableBank._startingAddress + loadableBank._content.getSize() - 1;
-//                InstructionProcessor.BaseRegister bReg = new InstructionProcessor.BaseRegister(bd.getBaseAddress(),
-//                                                                                               false,
-//                                                                                               bankLower,
-//                                                                                               bankUpper,
-//                                                                                               loadableBank._accessInfo,
-//                                                                                               loadableBank._generalPermissions,
-//                                                                                               loadableBank._specialPermissions);
-//                ip.setBaseRegister(brIndex, bReg);
-//                // storage is null because of limits
-//                if (!bReg._voidFlag) {
-//                    bReg._storage.load(storageSubset, 0);
-//                }
-//
-//                if (brIndex == 0) {
-//                    //  based on B0 - put L,BDI in PAR
-//                    int lbdi = (loadableBank._bankLevel << 15) | loadableBank._bankDescriptorIndex;
-//                    ip.getProgramAddressRegister().setLBDI(lbdi);
-//                } else if (brIndex == 25) {
-//                    //  this is a return control stack to be based on B25 - load the appropriate X register EX0
-//                    try {
-//                        long value = loadableBank._startingAddress + loadableBank._content.getSize();
-//                        ip.setGeneralRegister(GeneralRegisterSet.EX0, value);
-//                    } catch (MachineInterrupt ex) {
-//                        System.out.println("Caught " + ex.getMessage());
-//                    }
-//                } else {
-//                    //  based on something other than B0, set active base table
-//                    InstructionProcessor.ActiveBaseTableEntry abte =
-//                        new InstructionProcessor.ActiveBaseTableEntry(loadableBank._bankLevel,
-//                                                                      loadableBank._bankDescriptorIndex,
-//                                                                      0);
-//                    ip.loadActiveBaseTableEntry(brIndex, abte);
-//                }
-//
-//                System.out.println(String.format("  To be based on B%d llNorm=0%o ulNorm=0%o",
-//                                                 loadableBank._initialBaseRegister,
-//                                                 bReg._lowerLimitNormalized,
-//                                                 bReg._upperLimitNormalized));
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Instantiates IP and MSP, loads a module, and sets up the processor state as needed
-//     * @param absoluteModule module to be loaded
-//     * @return Processors object so that calling code has access to the created IP and MSP
-//     */
-//    static Processors loadModule(
-//        final AbsoluteModule absoluteModule
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException {
-//        InventoryManager im = InventoryManager.getInstance();
-//
-//        im.createSystemProcessor("SP0", 8080, null, new Credentials("test", "test"));
-//        InstructionProcessor ip = im.createInstructionProcessor("IP0");
-//
-//        InstrumentedMainStorageProcessor msp
-//            = new InstrumentedMainStorageProcessor("MSP0", (short) 1, 8 * 1024 * 1024);
-//        im.addMainStorageProcessor(msp);
-//
-//        establishBankingEnvironment(ip, msp);
-//        loadBanks(ip, msp, absoluteModule);
-//
-//        //  Update designator register if directed by the absolute module
-//        InstructionProcessor.DesignatorRegister dReg = ip.getDesignatorRegister();
-//
-//        if (absoluteModule._setQuarter) {
-//            dReg.setQuarterWordModeEnabled(true);
-//        } else if (absoluteModule._setThird) {
-//            dReg.setQuarterWordModeEnabled(false);
-//        }
-//
-//        if (absoluteModule._afcmSet) {
-//            dReg.setArithmeticExceptionEnabled(true);
-//        } else if (absoluteModule._afcmClear) {
-//            dReg.setArithmeticExceptionEnabled(false);
-//        }
-//
-//        dReg.setBasicModeEnabled(!absoluteModule._entryPointBank._isExtendedMode);
-//        dReg.setProcessorPrivilege(3);
-//
-//        //  Set processor address
-//        InstructionProcessor.ProgramAddressRegister par = ip.getProgramAddressRegister();
-//        par.setProgramCounter(absoluteModule._entryPointAddress);
-//
-//        return new Processors(ip, msp);
-//    }
-
     /**
      * Brute-force dump of almost everything we might want to know.
      * Includes elements of IP state, as well as the content of all loaded banks in the MSP
      */
-    static void showDebugInfo(
-        final Bundle bundle
-    ) {
-        InstructionProcessor ip = bundle._instructionProcessor;
-        InstrumentedMainStorageProcessor msp = bundle._mainStorageProcessor;
+    void showDebugInfo() {
+        InstructionProcessor ip = _instructionProcessor;
+        InstrumentedMainStorageProcessor msp = _mainStorageProcessor;
         InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
         int oldpp = dr.getProcessorPrivilege();
         dr.setProcessorPrivilege(0);
@@ -1328,11 +715,10 @@ class BaseFunctions {
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
                 InstructionProcessor.BaseRegister br = ip.getBaseRegister(bx);
-                System.out.println(String.format("    BR%d base:%s(UPI:%d Offset:%08o) lower:%d upper:%d",
+                System.out.println(String.format("    B%d base:%s(%s) lower:%d upper:%d",
                                                  bx,
                                                  br._voidFlag ? "(VOID)" : "",
-                                                 br._baseAddress._upiIndex,
-                                                 br._baseAddress._offset,
+                                                 br._baseAddress.toString(),
                                                  br._lowerLimitNormalized,
                                                  br._upperLimitNormalized));
                 if (bx >= 16 && bx < 24) {
@@ -1393,10 +779,9 @@ class BaseFunctions {
                             BankDescriptor bd =
                                 new BankDescriptor(br._storage, 8 * bdi);
                             if (bd.getBaseAddress()._upiIndex > 0) {
-                                System.out.println(String.format("    BDI=%06o AbsAddr=%o:%o Lower:%o Upper:%o ProcessorType:%s",
+                                System.out.println(String.format("    BDI=%06o AbsAddr=%s Lower:%o Upper:%o ProcessorType:%s",
                                                                  bdi,
-                                                                 bd.getBaseAddress()._upiIndex,
-                                                                 bd.getBaseAddress()._offset,
+                                                                 bd.getBaseAddress().toString(),
                                                                  bd.getLowerLimitNormalized(),
                                                                  bd.getUpperLimitNormalized(),
                                                                  bd.getBankType().name()));
