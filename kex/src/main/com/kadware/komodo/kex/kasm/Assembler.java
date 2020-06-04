@@ -968,6 +968,10 @@ public class Assembler {
                                                                     .setValue(aInteger - 12)
                                                                     .setReferences(aValue._references)
                                                                     .build();
+                                case B_EXEC -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                                                         .setValue(aInteger - 16)
+                                                                         .setReferences(aValue._references)
+                                                                         .build();
                                 case R -> new IntegerValue.Builder().setFlagged(aValue._flagged)
                                                                     .setValue(aInteger - 64)
                                                                     .setReferences(aValue._references)

@@ -209,7 +209,7 @@ class BaseFunctions {
         }
 
         BankDeclaration.BankDeclarationOption[] codeBankOpts = {
-            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
+//            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
             BankDeclaration.BankDeclarationOption.WRITE_PROTECT
         };
         BankDeclaration.BankDeclarationOption[] dataBankOpts = {
@@ -286,7 +286,7 @@ class BaseFunctions {
         List<BankDeclaration> bankDeclarations = new LinkedList<>();
 
         BankDeclaration.BankDeclarationOption[] codeBankOpts = {
-            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
+//            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
             BankDeclaration.BankDeclarationOption.WRITE_PROTECT,
         };
         BankDeclaration.BankDeclarationOption[] dataBankOpts = {

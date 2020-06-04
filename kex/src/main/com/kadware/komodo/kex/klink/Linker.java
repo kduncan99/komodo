@@ -85,7 +85,7 @@ public class Linker {
     /**
      * Generated bank descriptors
      */
-    private final Map<Integer, LoadableBank> _bankDescriptors = new TreeMap<>();
+    private final Map<Integer, LoadableBank> _loadableBanks = new TreeMap<>();
 
     /**
      * Raw content of the various banks, keyed by bank L,BDI in vaddr format
@@ -289,7 +289,7 @@ public class Linker {
      * One of the last things we do...
      * Creates LoadableBank objects for all the BankDeclaration objects we have on hand
      */
-    private void createBankDescriptors() {
+    private void createLoadableBanks() {
         for (BankDeclaration bankDecl : _bankDeclarations.values()) {
             int lbdi = (bankDecl._bankLevel << 15) | bankDecl._bankDescriptorIndex;
             long[] content = _bankContent.get(lbdi);
@@ -297,9 +297,25 @@ public class Linker {
                 content = new long[0];
             }
 
-            BankType bankType = bankDecl._options.contains(BankDeclaration.BankDeclarationOption.EXTENDED_MODE)
-                                ? BankType.ExtendedMode
-                                : BankType.BasicMode;
+            boolean extMode = bankDecl._options.contains(BankDeclaration.BankDeclarationOption.EXTENDED_MODE);
+            Map<Integer, LCPoolSpecification> contentMap = new HashMap<>();
+            for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
+                VirtualAddress vaddr = entry.getValue();
+                if (vaddr.getLBDI() == lbdi) {
+                    LCPoolSpecification lcpSpec = entry.getKey();
+                    contentMap.put(vaddr.getOffset(), lcpSpec);
+                    try {
+                        RelocatableModule.RelocatablePool rcPool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
+                        if (rcPool._requiresExtendedMode) {
+                            extMode = true;
+                        }
+                    } catch (ParameterException ex) {
+                        raise("Cannot find relocatable pool $(" + lcpSpec._lcIndex + ") for " + lcpSpec._module.getModuleName());
+                    }
+                }
+            }
+
+            BankType bankType = extMode ? BankType.ExtendedMode : BankType.BasicMode;
             int upperLimit = bankDecl._startingAddress + content.length - 1;
             if (upperLimit == -1) {
                 upperLimit = (bankDecl._largeBank ? 0100_000000 : 01_000000) - 1;
@@ -314,8 +330,9 @@ public class Linker {
                                                      bankDecl._specialAccessPermissions,
                                                      bankDecl._startingAddress,
                                                      upperLimit,
-                                                     content);
-            _bankDescriptors.put(lbdi, bankDesc);
+                                                     content,
+                                                     contentMap);
+            _loadableBanks.put(lbdi, bankDesc);
         }
     }
 
@@ -549,7 +566,7 @@ public class Linker {
                                                    _programStartInfo._lcpOffset));
             }
 
-            for (LoadableBank bankDesc : _bankDescriptors.values()) {
+            for (LoadableBank bankDesc : _loadableBanks.values()) {
                 _printStream.println(String.format("  Bank %s Level:%d BDI:%06o %s Lower:%08o Upper:%08o Size:%08o",
                                                    bankDesc._bankName,
                                                    bankDesc._bankLevel,
@@ -558,6 +575,10 @@ public class Linker {
                                                    bankDesc._lowerLimit,
                                                    bankDesc._upperLimit,
                                                    bankDesc._upperLimit - bankDesc._lowerLimit + 1));
+
+                for (Map.Entry<Integer, LCPoolSpecification> entry : bankDesc._contentMap.entrySet()) {
+                    _printStream.println(String.format("    %08o: %s", entry.getKey(), entry.getValue()));
+                }
 
                 if (code) {
                     int wordsPerLine = 8;
@@ -887,11 +908,6 @@ public class Linker {
             return 0;
         }
 
-        //TODO remove block start
-        if (se._symbol.equalsIgnoreCase("IH$INIT")) {
-            System.out.println("FOO!");
-        }
-        //TODO remove block end
         if (se instanceof AbsoluteSymbolEntry) {
             AbsoluteSymbolEntry ase = (AbsoluteSymbolEntry) se;
             return ase._baseValue;
@@ -1123,7 +1139,7 @@ public class Linker {
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
-        createBankDescriptors();
+        createLoadableBanks();
         determineProgramStartAddress();
         determineModes();
 
@@ -1197,11 +1213,11 @@ public class Linker {
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
-        createBankDescriptors();
+        createLoadableBanks();
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _programStartInfo, _bankDescriptors.values().toArray(new LoadableBank[0]));
+        return new LinkResult(_errors, _moduleName, _programStartInfo, _loadableBanks.values().toArray(new LoadableBank[0]));
     }
 
     /**
@@ -1231,11 +1247,11 @@ public class Linker {
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
-        createBankDescriptors();
+        createLoadableBanks();
         determineProgramStartAddress();
         determineModes();
 
-        return new LinkResult(_errors, _moduleName, _programStartInfo, _bankDescriptors.values().toArray(new LoadableBank[0]));
+        return new LinkResult(_errors, _moduleName, _programStartInfo, _loadableBanks.values().toArray(new LoadableBank[0]));
     }
 
     /**
@@ -1264,7 +1280,7 @@ public class Linker {
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
-        createBankDescriptors();
+        createLoadableBanks();
         determineProgramStartAddress();
         determineModes();
 

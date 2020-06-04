@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
@@ -18,6 +19,8 @@ import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import java.util.Arrays;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**
@@ -128,10 +131,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          LD        DESREG1,,B0",
             ".",
             "          . ESTABLISH RCS ON B25/EX0",
-            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
-            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
-            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
-            "          LBE       B25-16,RCSBDI",
+            "          LBE       B25,RCSBDI",
             "          LXI,U     EX0,0",
             "          LXM,U     EX0,RCSTACK+RCSSIZE",
             ".",
@@ -191,10 +191,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          LD        DESREG1,,B0",
             ".",
             "          . ESTABLISH RCS ON B25/EX0",
-            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
-            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
-            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
-            "          LBE       B25-16,RCSBDI",
+            "          LBE       B25,RCSBDI",
             "          LXI,U     EX0,0",
             "          LXM,U     EX0,RCSTACK+RCSSIZE",
             ".",
@@ -254,10 +251,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          LD        DESREG1,,B0",
             ".",
             "          . ESTABLISH RCS ON B25/EX0",
-            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
-            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
-            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
-            "          LBE       B25-16,RCSBDI",
+            "          LBE       B25,RCSBDI",
             "          LXI,U     EX0,0",
             "          LXM,U     EX0,RCSTACK+RCSSIZE",
             ".",
@@ -294,41 +288,48 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         clear();
     }
 
-//    @Test
-//    public void loadBaseRegisterExec_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY1  + 0600006,0 . 16 words of data",
-//            "BDENTRY2  + 0600007,0 . void",
-//            "BDENTRY3  + 0,0       . void",
-//            "",
-//            "$(2)      . void bank data, will be BDI 07",
-//            "$(3)      . useful bank data, will be BDI 06",
-//            "          $res 16",
-//            "",
-//            "$(1),START$*",
-//            "          LBE       B27,BDENTRY1",
-//            "          LBE       B28,BDENTRY2",
-//            "          LBE       B29,BDENTRY2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasicMultibank(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+    @Test
+    public void loadBaseRegisterExec_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(2)      . void bank data, will be BDI 100005",
+            "$(3)      . useful bank data, will be BDI 100006",
+            "          $res 16",
+            "",
+            "$(1)      . Will be BDI 100004,",
+            "START",
+            "          LD        DESREG",
+            "          LBE       B27,BDENTRY1",
+            "          LBE       B28,BDENTRY2",
+            "          LBE       B29,BDENTRY2",
+            "          HALT      0",
+            "",
+            "DESREG    + 000002,0",
+            "BDENTRY1  + 0100006,0 . 16 words of data",
+            "BDENTRY2  + 0100005,0 . void",
+            "BDENTRY3  + 0,0       . void",
+            "",
+            "          $END      START"
+        };
+
+        //  TODO
+        //   We are not generating an empty pool for $(2) as we should (also, should be generating for $(0))...
+        //      which might break previous tests as BDIs will be different in multibank builds
+        //      maybe linker doesn't generate a bank for $(0) if it is empty, but does for all other lc's...?
+        //      or maybe assembler doesn't generate pool for $(0) until at least one word is generated, or until
+        //      we specifically set $(0) in the label field... ?
+        //      That last bit is actually a good idea...
+        buildMultiBank(source, false);
+        ipl(true);
+        showDebugInfo();//TODO remove
 //
 //        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
@@ -344,8 +345,10 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
 //        assertTrue(br29._voidFlag);
-//    }
-//
+
+        clear();
+    }
+
 //    @Test
 //    public void loadBaseRegisterExec_extended(
 //    ) throws MachineInterrupt,

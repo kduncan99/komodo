@@ -59,10 +59,7 @@ public class Test_Algorithms extends BaseFunctions {
             "          LD        (000021,0)",
             ".",
             "          . ESTABLISH RCS ON B25/EX0",
-            //  TODO We want to code B25 in the a-field, but that has a value of 25 which is too large
-            //      According to the IP book, we affect register B(a+16), so MASM should be smart enough in this case
-            //      (and a few others) to subtract 16 from the a-field.  Should we do this with a proc?
-            "          LBE       B25-16,(LBDIREF$+STACK, 0)",
+            "          LBE       B25,(LBDIREF$+STACK, 0)",
             "          LXI,U     EX0,0",
             "          LXM,U     EX0,RCSTACK+RCSSIZE",
             ".",
