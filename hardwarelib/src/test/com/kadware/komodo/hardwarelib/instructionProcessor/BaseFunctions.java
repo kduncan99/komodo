@@ -390,180 +390,6 @@ class BaseFunctions {
         createProcessors();
     }
 
-    void ipl(
-        final boolean wait
-    ) throws BinaryLoadException,
-             MachineInterrupt,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
-        assertNotNull(_linkResult);
-        assertNotNull(_linkResult._loadableBanks);
-        assertNotNull(_linkResult._programStartInfo);
-        assertNotNull(_instructionProcessor);
-        assertNotNull(_mainStorageProcessor);
-        assertNotNull(_systemProcessor);
-
-        _instructionProcessor.setDevelopmentMode(true);
-        _instructionProcessor.setTraceInstructions(true);
-        _systemProcessor.iplBinary("TEST",
-                                   _linkResult._loadableBanks,
-                                   _linkResult._programStartInfo._vAddress,
-                                   _mainStorageProcessor._upiIndex,
-                                   _instructionProcessor._upiIndex,
-                                   false,
-                                   false);
-
-        //  wait for IP to start
-        while (_instructionProcessor.isStopped()) {
-            Thread.onSpinWait();
-        }
-
-        //  maybe wait for IP to stop
-        if (wait) {
-            while (!_instructionProcessor.isStopped()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    //  do nothing
-                }
-            }
-        }
-    }
-
-
-//
-//    static private final String[] BDT_CODE = {
-//        "          $EXTEND",
-//        "",
-//        "BANKSPERLVL* $EQU 64",
-//        "BANKTABLESZ* $EQU 8*BANKSPERLVL . 8 words per BD",
-//        "",
-//        "$(0),BDT_LEVEL0* . Interrupt handler vectors (total of 64 vectors)",
-//        "                 . L,BDI is 000000+33, assuming the IH code is in bank 33",
-//        "          + 33,IH_00",
-//        "          + 33,IH_01",
-//        "          + 33,IH_02",
-//        "          + 33,IH_03",
-//        "          + 33,IH_04",
-//        "          + 33,IH_05",
-//        "          + 33,IH_06",
-//        "          + 33,IH_07",
-//        "          + 33,IH_10",
-//        "          + 33,IH_11",
-//        "          + 33,IH_12",
-//        "          + 33,IH_13",
-//        "          + 33,IH_14",
-//        "          + 33,IH_15",
-//        "          + 33,IH_16",
-//        "          + 33,IH_17",
-//        "          + 33,IH_20",
-//        "          + 33,IH_21",
-//        "          + 33,IH_22",
-//        "          + 33,IH_23",
-//        "          + 33,IH_24",
-//        "          + 33,IH_25",
-//        "          + 33,IH_26",
-//        "          + 33,IH_27",
-//        "          + 33,IH_30",
-//        "          + 33,IH_31",
-//        "          + 33,IH_32",
-//        "          + 33,IH_33",
-//        "          + 33,IH_34",
-//        "          + 33,IH_35",
-//        "          + 33,IH_36",
-//        "          + 33,IH_37",
-//        "          $RES      32                  . Interrupts 32-63 are not defined",
-//        "          $RES      (8*32)-64           . Unused remainder of 32 BDs not valid",
-//        "          $RES      8*32                . Space for 32 exec banks, BDI 32 to 41",
-//        "",
-//        "$(1),BDT_LEVEL1* $RES BANKTABLESZ",
-//        "$(2),BDT_LEVEL2* $RES BANKTABLESZ",
-//        "$(3),BDT_LEVEL3* $RES BANKTABLESZ",
-//        "$(4),BDT_LEVEL4* $RES BANKTABLESZ",
-//        "$(5),BDT_LEVEL5* $RES BANKTABLESZ",
-//        "$(6),BDT_LEVEL6* $RES BANKTABLESZ",
-//        "$(7),BDT_LEVEL7* $RES BANKTABLESZ",
-//    };
-//
-//    //  Absolute module for the above code...
-//    //  The BDT will be in banks 0 through 7, one per BDT level (0 for 0, 1 for 1, etc)
-//    //  IH code will be in bank 33 (2nd BD in level 0 BDT) (our convention, it'll work)
-//    static private AbsoluteModule _bankModule = null;
-//
-//    private static final Assembler.Option[] _assemblerDisplayAll = {
-//        Assembler.Option.EMIT_MODULE_SUMMARY,
-//        Assembler.Option.EMIT_DICTIONARY,
-//        Assembler.Option.EMIT_GENERATED_CODE,
-//        Assembler.Option.EMIT_SOURCE,
-//    };
-//
-//    private static final Assembler.Option[] _assemblerDisplayNone = {};
-//
-//    private static final Linker.Option[] _linkerDisplayAll = {
-//        Linker.Option.OPTION_EMIT_DICTIONARY,
-//        Linker.Option.OPTION_EMIT_GENERATED_CODE,
-//        Linker.Option.OPTION_EMIT_SUMMARY,
-//    };
-//
-//    private static final Linker.Option[] _linkerDisplayNone = {};
-//
-//    /**
-//     * Assembles sets of code into a relocatable module, then links it such that the odd-numbered lc pools
-//     * are placed in an IBANK with BDI 04 and the even-number pools in a DBANK with BDI 05.
-//     * @param code arrays of text comprising the source code we assemble
-//     * @param display true to display assembler/linker output
-//     * @return linked absolute module
-//     */
-//    static AbsoluteModule buildCodeBasic(
-//        final String[] code,
-//        final boolean display
-//    ) {
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", code, display ? _assemblerDisplayAll : _assemblerDisplayNone);
-//        assert(relModule != null);
-//
-//        List<Linker.LCPoolSpecification> poolSpecsEven = new LinkedList<>();
-//        List<Linker.LCPoolSpecification> poolSpecsOdd = new LinkedList<>();
-//        for (Integer lcIndex : relModule._storage.keySet()) {
-//            if ((lcIndex & 01) == 01) {
-//                Linker.LCPoolSpecification oddPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//                poolSpecsOdd.add(oddPoolSpec);
-//            } else {
-//                Linker.LCPoolSpecification evenPoolSpec = new Linker.LCPoolSpecification(relModule, lcIndex);
-//                poolSpecsEven.add(evenPoolSpec);
-//            }
-//        }
-//
-//        List<Linker.BankDeclaration> bankDeclarations = new LinkedList<>();
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("I1")
-//                                                                 .setBankDescriptorIndex(000004)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(022000)
-//                                                                 .setPoolSpecifications(poolSpecsOdd.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(12)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                                                 .build());
-//
-//        bankDeclarations.add(new Linker.BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte) 3, (short) 0))
-//                                                                 .setBankName("D1")
-//                                                                 .setBankDescriptorIndex(000005)
-//                                                                 .setBankLevel(06)
-//                                                                 .setStartingAddress(040000)
-//                                                                 .setPoolSpecifications(poolSpecsEven.toArray(new Linker.LCPoolSpecification[0]))
-//                                                                 .setInitialBaseRegister(13)
-//                                                                 .setGeneralAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                                                 .build());
-//
-//        Linker linker = new Linker();
-//        return linker.link("TEST",
-//                           bankDeclarations.toArray(new Linker.BankDeclaration[0]),
-//                           0,
-//                           display ? _linkerDisplayAll : _linkerDisplayNone);
-//    }
-//
     /**
      * Clears the class state for a subsequent build/ipl process
      */
@@ -632,6 +458,50 @@ class BaseFunctions {
             result[ax] = array.get(ax);
         }
         return result;
+    }
+
+    /**
+     * Using the results of a previous build, we call on the SP to load the created banks and start the IP
+     * @param wait true to wait until the IP halts, false to return immediately after starting the IP
+     */
+    void ipl(
+        final boolean wait
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        assertNotNull(_linkResult);
+        assertNotNull(_linkResult._loadableBanks);
+        assertNotNull(_linkResult._programStartInfo);
+        assertNotNull(_instructionProcessor);
+        assertNotNull(_mainStorageProcessor);
+        assertNotNull(_systemProcessor);
+
+        _instructionProcessor.setDevelopmentMode(true);
+        _instructionProcessor.setTraceInstructions(true);
+        _systemProcessor.iplBinary("TEST",
+                                   _linkResult._loadableBanks,
+                                   _linkResult._programStartInfo._vAddress,
+                                   _mainStorageProcessor._upiIndex,
+                                   _instructionProcessor._upiIndex,
+                                   false,
+                                   false);
+
+        //  wait for IP to start
+        while (_instructionProcessor.isStopped()) {
+            Thread.onSpinWait();
+        }
+
+        //  maybe wait for IP to stop
+        if (wait) {
+            while (!_instructionProcessor.isStopped()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    //  do nothing
+                }
+            }
+        }
     }
 
     /**
