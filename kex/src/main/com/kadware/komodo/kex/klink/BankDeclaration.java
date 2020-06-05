@@ -30,6 +30,7 @@ public class BankDeclaration {
     }
 
     public final AccessInfo _accessInfo;
+    public final boolean _avoidCollision;
     public final int _bankDescriptorIndex;
     public final int _bankLevel;
     public final String _bankName;
@@ -50,6 +51,8 @@ public class BankDeclaration {
      * @param largeBank true if this bank is a 'large' bank
      * @param specialAccessPermissions SAP permissions
      * @param startingAddress beginning address for the bank - i.e., 01000, 022000, etc
+     * @param avoidCollision true to adjust this bank's starting address as necessary to avoid address overlap
+     *                       (intended for basic mode dbanks)
      * @param poolSpecifications set of LCPoolSpecification objects indicating the LCPools to be included in this bank
      * @param options bank declaration options
      */
@@ -62,10 +65,12 @@ public class BankDeclaration {
         final boolean largeBank,
         final AccessPermissions specialAccessPermissions,
         final Integer startingAddress,
+        final boolean avoidCollision,
         final LCPoolSpecification[] poolSpecifications,
         final Collection<BankDeclarationOption> options
     ) {
         _accessInfo = accessInfo;
+        _avoidCollision = avoidCollision;
         _bankDescriptorIndex = bankDescriptorIndex;
         _bankLevel = bankLevel;
         _bankName = bankName;
@@ -79,6 +84,7 @@ public class BankDeclaration {
 
     public static class Builder{
         private AccessInfo _accessInfo = new AccessInfo((byte) 0,(short) 0);
+        private boolean _avoidCollision = false;
         private int _bankDescriptorIndex;
         private int _bankLevel;
         private String _bankName = null;
@@ -100,6 +106,13 @@ public class BankDeclaration {
             final AccessInfo value
         ) {
             _accessInfo = value;
+            return this;
+        }
+
+        public Builder setAvoidCollision(
+            final boolean value
+        ) {
+            _avoidCollision = value;
             return this;
         }
 
@@ -190,6 +203,7 @@ public class BankDeclaration {
                                        _largeBank,
                                        _specialAccessPermissions,
                                        _startingAddress,
+                                       _avoidCollision,
                                        _poolSpecifications,
                                        _options);
         }

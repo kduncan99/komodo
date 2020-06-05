@@ -74,6 +74,7 @@ public class Linker {
     private final PrintStream _printStream;
     private final List<RelocatableModule> _relocatableModules;  //  some day the order might be important
 
+    private final BankGeometryMap _bankGeometries = new BankGeometryMap();
     private boolean _bankImplied;
     private int _errors = 0;
     private LinkType _linkType;
@@ -316,11 +317,7 @@ public class Linker {
             }
 
             BankType bankType = extMode ? BankType.ExtendedMode : BankType.BasicMode;
-            int upperLimit = bankDecl._startingAddress + content.length - 1;
-            if (upperLimit == -1) {
-                upperLimit = (bankDecl._largeBank ? 0100_000000 : 01_000000) - 1;
-            }
-
+            BankGeometry bg = _bankGeometries.get(lbdi);
             LoadableBank bankDesc = new LoadableBank(bankDecl._bankName,
                                                      bankDecl._bankLevel,
                                                      bankDecl._bankDescriptorIndex,
@@ -328,8 +325,8 @@ public class Linker {
                                                      bankType,
                                                      bankDecl._generalAccessPermissions,
                                                      bankDecl._specialAccessPermissions,
-                                                     bankDecl._startingAddress,
-                                                     upperLimit,
+                                                     bg._lowerLimit,
+                                                     bg._upperLimit,
                                                      content,
                                                      contentMap);
             _loadableBanks.put(lbdi, bankDesc);
@@ -401,6 +398,39 @@ public class Linker {
             } else {
                 _afcmSensitivity = AFCMSensitivity.INSENSITIVE;
             }
+        }
+    }
+
+    /**
+     * After we've mapped LCPools to banks, we need to determine the bank geometry
+     * such that each bank has proper lower and upper addressing limits.
+     * This is done *before* we try to generate output, which would require knowing the
+     * lower and upper limits for any location counter references (which there always are).
+     * This is where we populate _bankContent (although empty for now) and _bankGeometries.
+     */
+    private void determineBankGeometry() {
+        try {
+            for (BankDeclaration bankDecl : _bankDeclarations.values()) {
+                int bankUpperAddress = -1;
+                for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
+                    VirtualAddress va = entry.getValue();
+                    if ((va.getLevel() == bankDecl._bankLevel) && (va.getBankDescriptorIndex() == bankDecl._bankDescriptorIndex)) {
+                        LCPoolSpecification lcpSpec = entry.getKey();
+                        RelocatableModule.RelocatablePool relPool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
+                        int poolUpperAddress = va.getOffset() + relPool._content.length - 1;
+                        if (poolUpperAddress > bankUpperAddress) {
+                            bankUpperAddress = poolUpperAddress;
+                        }
+                    }
+                }
+
+                int contentLength = bankUpperAddress + 1;
+                _bankGeometries.mapBankDeclaration(bankDecl, contentLength);
+                int lbdi = (bankDecl._bankLevel << 15) | bankDecl._bankDescriptorIndex;
+                _bankContent.put(lbdi, new long[contentLength]);
+            }
+        } catch (ParameterException ex) {
+            raise("Internal Error:" + ex.getMessage());
         }
     }
 
@@ -584,10 +614,10 @@ public class Linker {
                     int wordsPerLine = 8;
                     for (int ix = 0; ix < bankDesc._content.length; ix += wordsPerLine) {
                         StringBuilder sb = new StringBuilder();
-                        sb.append(String.format("      %08o:", ix + bankDesc._lowerLimit));
+                        sb.append(String.format("      +%08o:", ix + bankDesc._lowerLimit));
                         for (int iy = 0; iy < wordsPerLine; ++iy) {
                             if (ix + iy < bankDesc._content.length) {
-                                sb.append(String.format(" %012o", bankDesc._content[ix + iy]));
+                                sb.append(String.format("  %012o", bankDesc._content[ix + iy]));
                             }
                         }
                         _printStream.println(sb.toString());
@@ -784,17 +814,6 @@ public class Linker {
 
         try {
             RelocatableModule.RelocatableWord[] pool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex)._content;
-
-            //  If no content has been generated so far for the bank, create a content array.
-            //  If the content array exists and is of insufficient size, resize it.
-            if (bankContent == null) {
-                bankContent = new long[bx + pool.length];
-                _bankContent.put(lbdi, bankContent);
-            } else if (bankContent.length < bx + pool.length) {
-                bankContent = Arrays.copyOf(bankContent, bx + pool.length);
-                _bankContent.put(lbdi, bankContent);
-            }
-
             for (RelocatableModule.RelocatableWord rw : pool) {
                 if (rw != null) {
                     bankContent[bx] = resolveRelocatableWord(lcpSpec, rw);
@@ -839,7 +858,9 @@ public class Linker {
     }
 
     /**
-     * Resolves a location counter reference.
+     * Resolves a location counter reference into the proper final address which refers to the
+     * first word of the particular location counter pool, accounting for the lcpool's offset
+     * from the start of the bank, and the bank's starting address.
      * For the case where some module contains a reference which is provided by some (possibly other)
      * module, which is relative to a location counter.
      * @param relocatableModule module which contains the lcpool of interest
@@ -855,15 +876,15 @@ public class Linker {
         LCPoolSpecification lookupSpec = new LCPoolSpecification(relocatableModule, lcIndex);
         VirtualAddress bankVAddr = _poolMap.get(lookupSpec);
         if (bankVAddr == null) {
-            raise("LC " + lcIndex
-                  + " in module " + relocatableModule.getModuleName()
-                  + " referenced by module " + requestingModule.getModuleName()
-                  + " does not exist.");
+            raise(String.format("LC $%d in module %s referenced by module %s does not exist.",
+                                lcIndex,
+                                relocatableModule.getModuleName(),
+                                requestingModule.getModuleName()));
             return 0;
         }
 
-        BankDeclaration bd = _bankDeclarations.get(bankVAddr.getLBDI());
-        return bd._startingAddress + bankVAddr.getOffset();
+        BankGeometry bg = _bankGeometries.get(bankVAddr.getLBDI());
+        return bg._lowerLimit + bankVAddr.getOffset();
     }
 
     /**
@@ -1008,10 +1029,9 @@ public class Linker {
                                                                      lcri._locationCounterIndex);
             VirtualAddress bankVAddr = _poolMap.get(targetSpec);
             if (bankVAddr == null) {
-                raise("Internal error cannot find bank for module "
-                      + lcpSpecification._module
-                      + " lc "
-                      + lcri._locationCounterIndex);
+                raise(String.format("Internal error cannot find bank for module %s LC $%d",
+                                    lcpSpecification._module,
+                                    lcri._locationCounterIndex));
                 return 0;
             }
 
@@ -1039,10 +1059,9 @@ public class Linker {
                 LocationCounterRelativeSymbolEntry lcrse = (LocationCounterRelativeSymbolEntry) se;
                 VirtualAddress bankVAddr = _poolMap.get(lcrse._lcPoolSpecification);
                 if (bankVAddr == null) {
-                    raise("Internal error cannot find bank for module "
-                          + lcrse._lcPoolSpecification._module
-                          + " lc "
-                          + lcrse._lcPoolSpecification._lcIndex);
+                    raise(String.format("Internal error cannot find bank for module %s LC $%d",
+                                        lcrse._lcPoolSpecification._module,
+                                        lcrse._lcPoolSpecification._lcIndex));
                     return 0;
                 }
 
@@ -1136,6 +1155,7 @@ public class Linker {
 
         //  Collect information we need for resolving undefined references and populate the banks
         mapPools();
+        determineBankGeometry();
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
@@ -1210,6 +1230,7 @@ public class Linker {
 
         //  Collect information we need for resolving undefined references and populate the banks
         mapPools();
+        determineBankGeometry();
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
@@ -1244,6 +1265,7 @@ public class Linker {
 
         //  Collect information we need for resolving undefined references and populate the banks
         mapPools();
+        determineBankGeometry();
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
@@ -1277,6 +1299,7 @@ public class Linker {
 
         //  Collect information we need for resolving undefined references and populate the banks
         mapPools();
+        determineBankGeometry();
         establishBankNameSymbols();
         extractEntryPoints();
         populateBanks();
@@ -1300,6 +1323,9 @@ public class Linker {
         if (!_options.contains(LinkOption.SILENT)) {
             _printStream.println("Linking module " + _moduleName + " -----------------------------------");
         }
+
+        _bankGeometries.clear();
+        _poolMap.clear();
 
         LinkResult result = switch (linkType) {
             case ABSOLUTE -> linkAbsolute();

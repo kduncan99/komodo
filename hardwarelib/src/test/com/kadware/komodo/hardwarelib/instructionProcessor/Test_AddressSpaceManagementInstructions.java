@@ -151,7 +151,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true);
+        buildMultiBank(source, true, false);
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -211,7 +211,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true);
+        buildMultiBank(source, true, false);
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -275,7 +275,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true);
+        buildMultiBank(source, true, false);
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -300,51 +300,66 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         String[] source = {
             "          $BASIC",
             "",
-            "$(2)      . void bank data, will be BDI 100005",
-            "$(3)      . useful bank data, will be BDI 100006",
-            "          $res 16",
+            "$(2)      . BDI 100005, starts at 02000",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(4)      . BDI 100007, starts at 03000",
+            "          . Useful bank data, will be BDI 100006",
+            "DATA      $res 16",
             "",
-            "$(1)      . Will be BDI 100004,",
+            "$(1)      . BDI 100004, starts at 01000",
+            "          . Needs extended mode",
+            "          . since we are the IPL interrupt handler.",
+            "          . Just CALL into a basic mode bank for the real test.",
+            "          . Of course, we need an RCS first...",
+            "          $EXTEND",
+            "          $INFO 10 1",
             "START",
-            "          LD        DESREG",
-            "          LBE       B27,BDENTRY1",
-            "          LBE       B28,BDENTRY2",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "          CALL      BMLBI,,B0",
+            "",
+            "DESREG1   + 000021,000000",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "BMLBI     + LBDIREF$+BMSTART,BMSTART",
+            "",
+            "$(3)      . BDI 100006, starts at 01000",
+            "          . Needs to NOT be extended mode",
+            "          $BASIC",
+            "BMSTART",
+            "          LBE       B28,BDENTRY1",
             "          LBE       B29,BDENTRY2",
             "          HALT      0",
             "",
-            "DESREG    + 000002,0",
-            "BDENTRY1  + 0100006,0 . 16 words of data",
-            "BDENTRY2  + 0100005,0 . void",
-            "BDENTRY3  + 0,0       . void",
+            "BDENTRY1  + LBDIREF$+DATA,0    . 16 words of data",
+            "BDENTRY2  + 0,0                . void",
             "",
             "          $END      START"
         };
 
-        //  TODO
-        //   We are not generating an empty pool for $(2) as we should (also, should be generating for $(0))...
-        //      which might break previous tests as BDIs will be different in multibank builds
-        //      maybe linker doesn't generate a bank for $(0) if it is empty, but does for all other lc's...?
-        //      or maybe assembler doesn't generate pool for $(0) until at least one word is generated, or until
-        //      we specifically set $(0) in the label field... ?
-        //      That last bit is actually a good idea...
-        buildMultiBank(source, false);
+        buildMultiBank(source, false, true);
         ipl(true);
         showDebugInfo();//TODO remove
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
-//        assertFalse(br27._voidFlag);
-//        assertFalse(br27._largeSizeFlag);
-//        assertEquals(020000, br27._lowerLimitNormalized);
-//        assertEquals(020017, br27._upperLimitNormalized);
-//        assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
-//
-//        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
-//        assertTrue(br28._voidFlag);
-//
-//        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
-//        assertTrue(br29._voidFlag);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        InstructionProcessor.BaseRegister b28 = _instructionProcessor.getBaseRegister(28);
+        assertFalse(b28._voidFlag);
+        assertFalse(b28._largeSizeFlag);
+        assertEquals(03000, b28._lowerLimitNormalized);
+        assertEquals(03017, b28._upperLimitNormalized);
+
+        InstructionProcessor.BaseRegister b29 = _instructionProcessor.getBaseRegister(29);
+        assertTrue(b29._voidFlag);
 
         clear();
     }

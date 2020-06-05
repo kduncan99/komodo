@@ -209,7 +209,6 @@ class BaseFunctions {
         }
 
         BankDeclaration.BankDeclarationOption[] codeBankOpts = {
-//            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
             BankDeclaration.BankDeclarationOption.WRITE_PROTECT
         };
         BankDeclaration.BankDeclarationOption[] dataBankOpts = {
@@ -271,7 +270,8 @@ class BaseFunctions {
      */
     void buildMultiBank(
         final String[] source,
-        final boolean includeInterruptHandlers
+        final boolean includeInterruptHandlers,
+        final boolean avoidDBankCollision
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
@@ -286,7 +286,6 @@ class BaseFunctions {
         List<BankDeclaration> bankDeclarations = new LinkedList<>();
 
         BankDeclaration.BankDeclarationOption[] codeBankOpts = {
-//            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
             BankDeclaration.BankDeclarationOption.WRITE_PROTECT,
         };
         BankDeclaration.BankDeclarationOption[] dataBankOpts = {
@@ -324,6 +323,7 @@ class BaseFunctions {
                                                                         .setSpecialAccessPermissions(dataSAP)
                                                                         .setGeneralAccessPermissions(gap)
                                                                         .setStartingAddress(0)
+                                                                        .setAvoidCollision(avoidDBankCollision)
                                                                         .setAccessInfo(accessLock)
                                                                         .setOptions(dataBankOpts)
                                                                         .build();

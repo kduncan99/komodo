@@ -12,18 +12,25 @@ exlib:
     support sym, rel, and abs elements
     support various tape file formats
 
+What happens when $(LIT) is the same as the generation LC, and we do:
+    LA       A0,(5,10)
+  Right now, we generate the literal in the code stream, which is a bad thing.
+  But what does MASM do?
+  Because we *could* defer all literal generation to the end of the lc pool... i think.
 
 -- TODO BUGS
+* hwlib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
+
+everywhere:
+    Max real bank size is 0_077777_777777 (with large bit set), which requires a long.
+    We have code all over the place which uses an int for bank size, bank addresses, etc.
 
 * kasm
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
-When we code exec registers in U we get the user registers instead...
-  i.e., TP  EA5 gets turned into TP  A5
-  How does @MASM work?
 
 * klink/kasm
 Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool

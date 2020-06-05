@@ -1685,7 +1685,8 @@ public class Assembler {
     }
 
     /**
-     * Sets the LC index for literal data for this (sub)assembler
+     * Sets the LC index for literal data for this (sub)assembler.
+     * Creaes an empty LC pool (if necessary) to represent the pool.
      */
     public void setCurrentLitLCIndex(
         final int index

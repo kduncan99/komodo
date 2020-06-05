@@ -233,7 +233,7 @@ public class Test_Algorithms extends BaseFunctions {
             "          $END      START",
         };
 
-        buildMultiBank(source, false);
+        buildMultiBank(source, false, false);
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

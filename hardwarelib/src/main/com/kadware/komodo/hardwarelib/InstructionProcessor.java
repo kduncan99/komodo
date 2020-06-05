@@ -991,7 +991,7 @@ public class InstructionProcessor extends Processor implements Worker {
                         //  (interfaceSpec == 1 and target BD is extended with enter access, or gate)
                         //  Because we must do this for IS == 1 and source BD is basic, and it is too early in
                         //  the algorithm to know the source BD bank type.
-                        int abtx;
+                        int abtx;   //  (active base table index)
                         if (bmInfo._instruction == Instruction.LBJ) {
                             abtx = bmInfo._lxjBankSelector + 12;
                         } else if (bmInfo._instruction == Instruction.LDJ) {
@@ -1925,8 +1925,11 @@ public class InstructionProcessor extends Processor implements Worker {
                 final BankManipulationInfo bmInfo
             ) throws AddressingExceptionInterrupt {
                 if (bmInfo._targetBankDescriptor == null) {
+                    //  There is no bank descriptor - set up a void base register
                     _baseRegisters[bmInfo._baseRegisterIndex] = new BaseRegister();
                 } else if (bmInfo._loadInstruction && (bmInfo._targetBankOffset != 0)) {
+                    //  we have subsetting info (in targetBankOffset)
+                    //  set up a real Base Register with subsetting.
                     try {
                         _baseRegisters[bmInfo._baseRegisterIndex] =
                             new BaseRegister(bmInfo._targetBankDescriptor, bmInfo._targetBankOffset);
@@ -1937,6 +1940,7 @@ public class InstructionProcessor extends Processor implements Worker {
                                                                ex.getBankDescriptorIndex());
                     }
                 } else {
+                    //  A normal non-subsetting base register - make it so.
                     try {
                         _baseRegisters[bmInfo._baseRegisterIndex] = new BaseRegister(bmInfo._targetBankDescriptor);
                     } catch (AddressingExceptionInterrupt ex) {
