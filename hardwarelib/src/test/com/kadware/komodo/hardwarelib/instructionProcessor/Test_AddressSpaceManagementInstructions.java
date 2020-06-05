@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;

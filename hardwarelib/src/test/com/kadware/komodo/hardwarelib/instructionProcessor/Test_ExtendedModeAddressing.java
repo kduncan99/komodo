@@ -5,12 +5,13 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -20,40 +21,43 @@ import static org.junit.Assert.*;
  */
 public class Test_ExtendedModeAddressing extends BaseFunctions {
 
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//    //  Tests for addressing modes
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//
-//    @Test
-//    public void immediateUnsigned_ExtendedMode(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,01000",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(01000, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//    }
-//
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Tests for addressing modes
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    @Test
+    public void immediateUnsigned_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(1),START",
+            "          LD        DESREG",
+            "          LA,U      A0,01000",
+            "          HALT      0",
+            "",
+            "DESREG    + 014,0   . PP=3, ExtMode, Normal Regs",
+            "          $END      START"
+        };
+
+        buildDualBank(source);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        Assert.assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+
+        clear();
+    }
+
 //    @Test
 //    public void immediateSignedExtended_Positive_ExtendedMode(
 //    ) throws MachineInterrupt,

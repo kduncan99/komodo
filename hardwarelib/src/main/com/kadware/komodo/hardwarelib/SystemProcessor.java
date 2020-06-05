@@ -691,7 +691,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             }
         }
 
-        //  Load the banks, creating bank descriptors along the way
+        //  Load the banks, creating bank descriptors along the way.
+        //  Banks with no content are created such that they will be treated as void banks
+        //  if and when they are based.
         for (LoadableBank lb : loadableBanks) {
             AbsoluteAddress bdtAddr = bdtAddresses[lb._bankLevel];
             ArraySlice bdtSlice = msp.getStorage(bdtAddr._segment);
@@ -699,13 +701,21 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             int bdOffset = bdtOffset + (8 * lb._bankDescriptorIndex);
             BankDescriptor bd = new BankDescriptor(bdtSlice, bdOffset);
 
-            AbsoluteAddress bankAddr = iplAllocate(moduleName, msp, lb._content.length, useFixedStorage);
-            ArraySlice bankStorage = msp.getStorage(bankAddr._segment);
-            bankStorage.load(lb._content, 0, lb._content.length, bankAddr._offset);
+            if (lb._content.length > 0) {
 
-            bd.setBaseAddress(bankAddr);
-            bd.setLowerLimitNormalized(lb._lowerLimit);
-            bd.setUpperLimitNormalized(lb._upperLimit);
+                AbsoluteAddress bankAddr = iplAllocate(moduleName, msp, lb._content.length, useFixedStorage);
+                ArraySlice bankStorage = msp.getStorage(bankAddr._segment);
+                bankStorage.load(lb._content, 0, lb._content.length, bankAddr._offset);
+
+                bd.setBaseAddress(bankAddr);
+                bd.setLowerLimitNormalized(lb._lowerLimit);
+                bd.setUpperLimitNormalized(lb._upperLimit);
+            } else {
+                bd.setBaseAddress(new AbsoluteAddress(0,0,0));
+                bd.setLowerLimitNormalized(01000);
+                bd.setUpperLimitNormalized(0777);
+            }
+
             bd.setAccessLock(lb._accessInfo);
             bd.setUpperLimitSuppressionControl(false);
             bd.setLargeBank(false);
