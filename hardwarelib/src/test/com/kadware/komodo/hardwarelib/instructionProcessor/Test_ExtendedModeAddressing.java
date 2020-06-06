@@ -512,17 +512,92 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         clear();
     }
 
-    //TODO read reference violation GAP
+    @Test
+    public void referenceViolationGAPExecute_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1,2",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINIT",
+            "",
+            "          LD        DESREG3",
+            "          CALL      CALLADDR,,B0              . should fail on execute privilege",
+            "                                              . since the dbank is not executable",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "CALLADDR  + LBDIREF$+CALLFUNC,CALLFUNC",
+            "",
+            "$(2)      . Code, BDI 100006",
+            "CALLFUNC  .",
+            "          HALT      0 . shouldn't get here either",
+            "",
+            "          $END      START"
+        };
 
-    //TODO write reference violation GAP
+        buildMultiBank(source, true, false);
+        ipl(true);
 
-    //TODO execute reference violation GAP
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 
-    //TODO read reference violation SAP
+        clear();
+    }
 
-    //TODO write reference violation SAP
+    @Test
+    public void referenceViolationGAPRead_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //TODO
 
-    //TODO execute reference violation SAP
+        clear();
+    }
+
+    @Test
+    public void referenceViolationGAPWrite_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //TODO
+
+        clear();
+    }
 
     @Test
     public void referenceOutOfLimits_ExtendedMode(
@@ -578,7 +653,89 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     }
 
     @Test
-    public void unbasedBaseRegisterRef_ExtendedMode(
+    public void referenceViolationSAPExecute_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //TODO
+//        String[] source = {
+//            "          $EXTEND",
+//            "          $INFO 1 3",
+//            "          $INFO 10 1",
+//            "",
+//            "$(2)      . RCS, BDI 100005",
+//            "RCDEPTH   $EQU      32",
+//            "RCSSIZE   $EQU      2*RCDEPTH",
+//            "RCSTACK   $RES      RCSSIZE",
+//            "",
+//            "$(1)      . Code, BDI 100004",
+//            "START",
+//            "          . Set up RCS",
+//            "          LD        DESREG1",
+//            "          LBE       B25,RCSBDI",
+//            "          LXI,U     EX0,0",
+//            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+//            "",
+//            "          . Set up interrupt handlers",
+//            "          LD        DESREG2",
+//            "          CALL      IHINIT",
+//            "",
+//            "          LD        DESREG3",
+//            "          LA        A0,07777,B0",
+//            "          HALT      0 . shouldn't get here",
+//            "",
+//            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
+//            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
+//            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
+//            "RCSBDI    + LBDIREF$+RCSTACK,0",
+//            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+//            "",
+//            "          $END      START"
+//        };
+//
+//        buildMultiBank(source, true, false);
+//        ipl(true);
+//
+//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+
+        clear();
+    }
+
+    @Test
+    public void referenceViolationSAPRead_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //TODO
+
+        clear();
+    }
+
+    @Test
+    public void referenceViolationSAPWrite_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //TODO
+
+        clear();
+    }
+
+    @Test
+    public void referenceViolationUnbasedBaseRegisterRef_ExtendedMode(
     ) throws BinaryLoadException,
              MachineInterrupt,
              MaxNodesException,
@@ -631,5 +788,4 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         clear();
     }
-
 }

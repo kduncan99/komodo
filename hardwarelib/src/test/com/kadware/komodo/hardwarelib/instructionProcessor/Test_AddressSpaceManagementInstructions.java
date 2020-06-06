@@ -363,6 +363,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         clear();
     }
 
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExec_extended(
 //    ) throws MachineInterrupt,
@@ -410,6 +411,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertTrue(br29._voidFlag);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExec_BadBank_basic(
 //    ) throws MachineInterrupt,
@@ -442,6 +444,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExec_BadBank_extended(
 //    ) throws MachineInterrupt,
@@ -475,6 +478,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExec_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -518,6 +522,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExec_BadPP_extended(
 //    ) throws MachineInterrupt,
@@ -562,6 +567,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExecDirect_basic(
 //    ) throws MachineInterrupt,
@@ -628,6 +634,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExecDirect_extended(
 //    ) throws MachineInterrupt,
@@ -695,6 +702,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExecDirect_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -734,6 +742,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterExecDirect_BadPP_extended(
 //    ) throws MachineInterrupt,
@@ -774,6 +783,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_basicBank_basic(
 //    ) throws MachineInterrupt,
@@ -822,6 +832,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_basicBank_extended(
 //    ) throws MachineInterrupt,
@@ -871,6 +882,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_extendedBank_basic(
 //    ) throws MachineInterrupt,
@@ -919,6 +931,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_extendedBank_extended(
 //    ) throws MachineInterrupt,
@@ -968,6 +981,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_badPP_basic(
 //    ) throws MachineInterrupt,
@@ -1005,6 +1019,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_addrException_basic(
 //    ) throws MachineInterrupt,
@@ -1038,6 +1053,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_addrException_extended(
 //    ) throws MachineInterrupt,
@@ -1072,6 +1088,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_reserved_basic(
 //    ) throws MachineInterrupt,
@@ -1114,6 +1131,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterName_reserved_extended(
 //    ) throws MachineInterrupt,
@@ -1157,6 +1175,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_basic(
 //    ) throws MachineInterrupt,
@@ -1209,6 +1228,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertTrue(br9._voidFlag);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_extended(
 //    ) throws MachineInterrupt,
@@ -1256,6 +1276,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertTrue(br9._voidFlag);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -1299,6 +1320,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_BadBank_basic(
 //    ) throws MachineInterrupt,
@@ -1331,6 +1353,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_BadBank_extended(
 //    ) throws MachineInterrupt,
@@ -1364,6 +1387,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBank_basic(
 //    ) throws MachineInterrupt,
@@ -1396,6 +1420,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBank_extended(
 //    ) throws MachineInterrupt,
@@ -1429,6 +1454,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBR0_basic(
 //    ) throws MachineInterrupt,
@@ -1465,6 +1491,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBR0_extended(
 //    ) throws MachineInterrupt,
@@ -1502,6 +1529,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBR1_basic(
 //    ) throws MachineInterrupt,
@@ -1538,6 +1566,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUser_InvalidBR1_extended(
 //    ) throws MachineInterrupt,
@@ -1575,6 +1604,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_basic(
 //    ) throws MachineInterrupt,
@@ -1641,6 +1671,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br7._baseAddress);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_extended(
 //    ) throws MachineInterrupt,
@@ -1708,6 +1739,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br7._baseAddress);
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -1747,6 +1779,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_BadPP_extended(
 //    ) throws MachineInterrupt,
@@ -1787,6 +1820,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_InvalidBR0_basic(
 //    ) throws MachineInterrupt,
@@ -1823,6 +1857,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadBaseRegisterUserDirect_InvalidBR0_extended(
 //    ) throws MachineInterrupt,
@@ -1860,6 +1895,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterExecDirect_basic(
 //    ) throws MachineInterrupt,
@@ -1958,6 +1994,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterExecDirect_extended(
 //    ) throws MachineInterrupt,
@@ -2053,6 +2090,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterExecDirect_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -2090,6 +2128,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterExecDirect_BadPP_extended(
 //    ) throws MachineInterrupt,
@@ -2128,6 +2167,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUser_basic(
 //    ) throws MachineInterrupt,
@@ -2166,6 +2206,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertEquals(0_600005_000000L, data[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUser_basic_errorPP(
 //    ) throws MachineInterrupt,
@@ -2203,6 +2244,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUser_extended(
 //    ) throws MachineInterrupt,
@@ -2241,6 +2283,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assertEquals(0_600005_000000L, data[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUserDirect_basic(
 //    ) throws MachineInterrupt,
@@ -2322,6 +2365,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUserDirect_extended(
 //    ) throws MachineInterrupt,
@@ -2404,6 +2448,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUserDirect_BadPP_basic(
 //    ) throws MachineInterrupt,
@@ -2439,6 +2484,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeBaseRegisterUserDirect_BadPP_extended(
 //    ) throws MachineInterrupt,
@@ -2477,6 +2523,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testRelativeAddress_basic(
 //    ) throws MachineInterrupt,
@@ -2531,6 +2578,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testRelativeAddressIndirect_basic(
 //    ) throws MachineInterrupt,
@@ -2574,6 +2622,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testRelativeAddress_extended(
 //    ) throws MachineInterrupt,
@@ -2629,6 +2678,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testRelativeAddressNonRWBanks_basic(
 //    ) throws MachineInterrupt,
@@ -2762,6 +2812,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testRelativeAddressNonRWBanks_extended(
 //    ) throws MachineInterrupt,

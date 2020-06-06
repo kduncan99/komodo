@@ -51,11 +51,6 @@ public class INFODirective extends Directive {
                 assembler.appendDiagnostic(new ErrorDiagnostic(sf._locale, "Syntax error"));
             }
         }
-
-//        if (_additionalOperandField._subfields.size() > 1) {
-//            assembler.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
-//                                                           "Ignoring extraneous subfields"));
-//        }
     }
 
     /**
