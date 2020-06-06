@@ -52,10 +52,10 @@ public class INFODirective extends Directive {
             }
         }
 
-        if (_additionalOperandField._subfields.size() > 1) {
-            assembler.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
-                                                           "Ignoring extraneous subfields"));
-        }
+//        if (_additionalOperandField._subfields.size() > 1) {
+//            assembler.appendDiagnostic(new ErrorDiagnostic(_additionalOperandField._locale,
+//                                                           "Ignoring extraneous subfields"));
+//        }
     }
 
     /**
