@@ -39,7 +39,7 @@ public class ENDDirective extends Directive {
             //  For PROC subassemblies, we subsequently ignore it (with a diagnostic, though)
             //  For FUNC subassemblies, we store it without further ado
             //  For main assemblies, we ensure the value is suitable for use as a code entry point.
-            if (_operandField._subfields.size() > 0) {
+            if ((_operandField != null) && (_operandField._subfields.size() > 0)) {
                 TextSubfield expSubField = _operandField._subfields.get(0);
                 String expText = expSubField._text;
                 Locale expLocale = expSubField._locale;
