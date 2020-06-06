@@ -543,16 +543,17 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
             "          LD        DESREG2",
             "          CALL      IHINIT",
             "",
-            "          LD        DESREG3",
+            "          KCHG      NEWKEY,,B0",
             "          CALL      CALLADDR,,B0              . should fail on execute privilege",
             "                                              . since the dbank is not executable",
             "          HALT      0 . shouldn't get here",
             "",
-            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
-            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
-            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
+            "DESREG1   + 000001,000000             . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000             . PP=0, ExtMode, Normal Regs",
             "RCSBDI    + LBDIREF$+RCSTACK,0",
             "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "NEWKEY    + 0600777,0                 . ring=3, domain=0777, Desreg per DESREG2",
+            "                                      . to force GAP instead of SAP",
             "CALLADDR  + LBDIREF$+CALLFUNC,CALLFUNC",
             "",
             "$(2)      . Code, BDI 100006",
@@ -566,7 +567,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01011, _instructionProcessor.getLatestStopDetail());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
@@ -580,7 +581,47 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        //TODO
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1,2",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINIT",
+            "",
+            "          KCHG      NEWKEY,,B0",
+            "          LA        A5,DESREG1,,B0    . should fail due to GAP having no read access",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1   + 000001,000000             . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000             . PP=0, ExtMode, Normal Regs",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "NEWKEY    + 0600777,0                 . ring=3, domain=0777, Desreg per DESREG2",
+            "                                      . to force GAP instead of SAP",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
@@ -594,7 +635,48 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        //TODO
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1,2",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINIT",
+            "",
+            "          KCHG      NEWKEY,,B0",
+            "          SA        A5,SCRATCH,,B0    . should fail due to GAP having no write access",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1   + 000001,000000             . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000             . PP=0, ExtMode, Normal Regs",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "NEWKEY    + 0600777,0                 . ring=3, domain=0777, Desreg per DESREG2",
+            "                                      . to force GAP instead of SAP",
+            "SCRATCH   $RES 1",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
