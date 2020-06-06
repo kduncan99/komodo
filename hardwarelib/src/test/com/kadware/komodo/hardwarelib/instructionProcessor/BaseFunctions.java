@@ -163,8 +163,8 @@ class BaseFunctions {
         "",
         "IH$INIT*  . CALL this to establish interrupt handler vectors",
         "          . which we expect to be based on B16.",
+        "          . Do be in extended mode with PPriv < 2.",
         "          . Do not be in exec-register-set-selection, nor 24-bit index mode.",
-        "          . Also, be in PPriv < 2.",
         "          . It is highly recommended to be in PAIJ, but not required.",
         "          LXI,U     X1,1",
         "          LXM,U     X1,0",
@@ -183,6 +183,7 @@ class BaseFunctions {
     /**
      * Builds a binary executable consisting of a code bank and a data bank, which contains all the code generated from source.
      * All even location counter pools go in the data bank, all odd location counter pools go in the code bank.
+     * @param source source code to be built
      */
     void buildDualBank(
         final String[] source
@@ -267,6 +268,9 @@ class BaseFunctions {
      * Builds a binary executable consisting of one bank per location counter.
      * Odd-number BDIs are static read-only
      * Even-number BDIs are dynamic dbanks, read-write, no enter
+     * @param source source code to be built
+     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
+     * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
      */
     void buildMultiBank(
         final String[] source,
@@ -363,6 +367,7 @@ class BaseFunctions {
 
     /**
      * Builds a binary executable consisting of a single bank, which contains all the code generated from source
+     * @param source source code to be built
      */
     void buildSimple(
         final String[] source

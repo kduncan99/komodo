@@ -362,7 +362,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         buildMultiBank(source, false, true);
         ipl(true);
-        showDebugInfo();
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
@@ -394,125 +393,243 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         clear();
     }
 
-//    @Test
-//    public void storage_indexed_24BitModifier_ExtendedMode(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)",
-//            "DATA1     0",
-//            "          01",
-//            "          0",
-//            "          0",
-//            "          02",
-//            "          0",
-//            "          0",
-//            "          03",
-//            "          0",
-//            "          0",
-//            "          05",
-//            "          0",
-//            "          0",
-//            "          010",
-//            "",
-//            "$(2),DATA2",
-//            "          $RES 8",
-//            "",
-//            "$(1),START$*",
-//            "          LXM,U     X5,1",
-//            "          LXI,U     X5,0300",
-//            "          LXM,U     X7,0",
-//            "          LXI,U     X7,0100",
-//            "          LA        A3,DATA1,*X5,B2",
-//            "          SA        A3,DATA2,*X7,B3",
-//            "          LA        A3,DATA1,*X5,B2",
-//            "          SA        A3,DATA2,*X7,B3",
-//            "          LA        A3,DATA1,*X5,B2",
-//            "          SA        A3,DATA2,*X7,B3",
-//            "          LA        A3,DATA1,*X5,B2",
-//            "          SA        A3,DATA2,*X7,B3",
-//            "          LA        A3,DATA1,*X5,B2",
-//            "          SA        A3,DATA2,*X7,B3",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setExecutive24BitIndexingEnabled(true);
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bankData = getBank(processors._instructionProcessor, 3);
-//        assertEquals(01, bankData[0]);
-//        assertEquals(02, bankData[1]);
-//        assertEquals(03, bankData[2]);
-//        assertEquals(05, bankData[3]);
-//        assertEquals(010, bankData[4]);
-//    }
-//
-//    @Test
-//    public void execRegisterSelection_ExtendedMode(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      EA5,01",
-//            "          LX,U      EX5,05",
-//            "          LR,U      ER5,077",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setExecRegisterSetSelected(true);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        Assert.assertEquals(01, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EA5).getW());
-//        Assert.assertEquals(05, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX5).getW());
-//        Assert.assertEquals(077, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.ER5).getW());
-//    }
-//
-//    //TODO read reference violation GAP
-//
-//    //TODO write reference violation GAP
-//
-//    //TODO execute reference violation GAP
-//
-//    //TODO read reference violation SAP
-//
-//    //TODO write reference violation SAP
-//
-//    //TODO execute reference violation SAP
-//
-//    //TODO reference out of limits EXTENDED mode
-//
-//    //TODO unbased Base Register reference EXTENDED mode
+    @Test
+    public void storage_indexed_24BitModifier_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(0)      . Bank 100004, B2",
+            "DATA1     0",
+            "          01",
+            "          0",
+            "          0",
+            "          02",
+            "          0",
+            "          0",
+            "          03",
+            "          0",
+            "          0",
+            "          05",
+            "          0",
+            "          0",
+            "          010",
+            "",
+            "$(2)      . Bank 100006, B3",
+            "DATA2     $RES 8",
+            "",
+            "$(1)      . Bank 100005, B0",
+            "START",
+            "          LD        DESREG,,B0",
+            "          LBU       B2,DATA1BDI,,B0",
+            "          LBU       B3,DATA2BDI,,B0",
+            "",
+            "          LX,U      X5,1",
+            "          LXSI,U    X5,03",
+            "          LX,U      X7,0",
+            "          LXSI,U    X7,01",
+            "",
+            "          LA        A3,DATA1,*X5,B2",
+            "          SA        A3,DATA2,*X7,B3",
+            "          LA        A3,DATA1,*X5,B2",
+            "          SA        A3,DATA2,*X7,B3",
+            "          LA        A3,DATA1,*X5,B2",
+            "          SA        A3,DATA2,*X7,B3",
+            "          LA        A3,DATA1,*X5,B2",
+            "          SA        A3,DATA2,*X7,B3",
+            "          LA        A3,DATA1,*X5,B2",
+            "          SA        A3,DATA2,*X7,B3",
+            "",
+            "          HALT      0",
+            "",
+            "DESREG    + 000100,0 . PP=0, ExtMode, Normal Regs, 24-bit XMods",
+            "DATA1BDI  + LBDIREF$+DATA1,0",
+            "DATA2BDI  + LBDIREF$+DATA2,0",
+            "",
+            "          $END      START",
+        };
+
+        buildMultiBank(source, false, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        long[] bankData = getBankByBaseRegister(3);
+        assertEquals(01, bankData[0]);
+        assertEquals(02, bankData[1]);
+        assertEquals(03, bankData[2]);
+        assertEquals(05, bankData[3]);
+        assertEquals(010, bankData[4]);
+
+        clear();
+    }
+
+    @Test
+    public void execRegisterSelection_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(1)      . Bank 100005, B0",
+            "START",
+            "          LD        DESREG,,B0",
+            "          LA,U      EA5,01",
+            "          LX,U      EX5,05",
+            "          LR,U      ER5,077",
+            "          HALT      0",
+            "",
+            "DESREG    + 000001,0 . PP=0, ExtMode, Exec Regs",
+            "",
+            "          $END      START",
+        };
+
+        buildMultiBank(source, false, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+        Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EA5).getW());
+        Assert.assertEquals(05, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX5).getW());
+        Assert.assertEquals(077, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.ER5).getW());
+
+        clear();
+    }
+
+    //TODO read reference violation GAP
+
+    //TODO write reference violation GAP
+
+    //TODO execute reference violation GAP
+
+    //TODO read reference violation SAP
+
+    //TODO write reference violation SAP
+
+    //TODO execute reference violation SAP
+
+    @Test
+    public void referenceOutOfLimits_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINIT",
+            "",
+            "          LD        DESREG3",
+            "          LA        A0,07777,B0",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+
+        clear();
+    }
+
+    @Test
+    public void unbasedBaseRegisterRef_ExtendedMode(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINIT",
+            "",
+            "          LD        DESREG3",
+            "          LBU       B5,ZEROBDI,,B0",
+            "          LA        A0,01000,,B5",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "ZEROBDI   + 0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+
+        clear();
+    }
 
 }

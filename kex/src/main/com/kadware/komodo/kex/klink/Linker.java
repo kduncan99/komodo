@@ -317,7 +317,18 @@ public class Linker {
             }
 
             BankType bankType = extMode ? BankType.ExtendedMode : BankType.BasicMode;
-            BankGeometry bg = _bankGeometries.get(lbdi);
+            int llimit;
+            int ulimit;
+            if (content.length == 0) {
+                //  void bank
+                llimit = bankDecl._startingAddress == 0 ? 01000 : bankDecl._startingAddress;
+                ulimit = llimit - 1;
+            } else {
+                BankGeometry bg = _bankGeometries.get(lbdi);
+                llimit = bg._lowerLimit;
+                ulimit = bg._upperLimit;
+            }
+
             LoadableBank bankDesc = new LoadableBank(bankDecl._bankName,
                                                      bankDecl._bankLevel,
                                                      bankDecl._bankDescriptorIndex,
@@ -325,8 +336,8 @@ public class Linker {
                                                      bankType,
                                                      bankDecl._generalAccessPermissions,
                                                      bankDecl._specialAccessPermissions,
-                                                     bg._lowerLimit,
-                                                     bg._upperLimit,
+                                                     llimit,
+                                                     ulimit,
                                                      content,
                                                      contentMap);
             _loadableBanks.put(lbdi, bankDesc);
@@ -407,27 +418,39 @@ public class Linker {
      * This is done *before* we try to generate output, which would require knowing the
      * lower and upper limits for any location counter references (which there always are).
      * This is where we populate _bankContent (although empty for now) and _bankGeometries.
+     * ...
+     * Note that we do this in two stages - first for banks which are not marked for collision avoidance,
+     * then for those which are. This makes our alogirhtm easier to construct.
      */
     private void determineBankGeometry() {
         try {
-            for (BankDeclaration bankDecl : _bankDeclarations.values()) {
-                int bankUpperAddress = -1;
-                for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
-                    VirtualAddress va = entry.getValue();
-                    if ((va.getLevel() == bankDecl._bankLevel) && (va.getBankDescriptorIndex() == bankDecl._bankDescriptorIndex)) {
-                        LCPoolSpecification lcpSpec = entry.getKey();
-                        RelocatableModule.RelocatablePool relPool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
-                        int poolUpperAddress = va.getOffset() + relPool._content.length - 1;
-                        if (poolUpperAddress > bankUpperAddress) {
-                            bankUpperAddress = poolUpperAddress;
+            boolean first = true;
+            boolean done = false;
+            while (!done) {
+                for (BankDeclaration bankDecl : _bankDeclarations.values()) {
+                    if (first != bankDecl._avoidCollision) {
+                        int bankUpperAddress = -1;
+                        for (Map.Entry<LCPoolSpecification, VirtualAddress> entry : _poolMap.entrySet()) {
+                            VirtualAddress va = entry.getValue();
+                            if ((va.getLevel() == bankDecl._bankLevel) && (va.getBankDescriptorIndex() == bankDecl._bankDescriptorIndex)) {
+                                LCPoolSpecification lcpSpec = entry.getKey();
+                                RelocatableModule.RelocatablePool relPool = lcpSpec._module.getLocationCounterPool(lcpSpec._lcIndex);
+                                int poolUpperAddress = va.getOffset() + relPool._content.length - 1;
+                                if (poolUpperAddress > bankUpperAddress) {
+                                    bankUpperAddress = poolUpperAddress;
+                                }
+                            }
                         }
+
+                        int contentLength = bankUpperAddress + 1;
+                        _bankGeometries.mapBankDeclaration(bankDecl, contentLength);
+                        int lbdi = (bankDecl._bankLevel << 15) | bankDecl._bankDescriptorIndex;
+                        _bankContent.put(lbdi, new long[contentLength]);
                     }
                 }
 
-                int contentLength = bankUpperAddress + 1;
-                _bankGeometries.mapBankDeclaration(bankDecl, contentLength);
-                int lbdi = (bankDecl._bankLevel << 15) | bankDecl._bankDescriptorIndex;
-                _bankContent.put(lbdi, new long[contentLength]);
+                done = !first;
+                first = !first;
             }
         } catch (ParameterException ex) {
             raise("Internal Error:" + ex.getMessage());
