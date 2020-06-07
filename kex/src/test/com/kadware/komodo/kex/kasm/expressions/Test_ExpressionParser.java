@@ -50,6 +50,33 @@ public class Test_ExpressionParser {
     }
 
     @Test
+    public void parseLocationToken(
+    ) throws ExpressionException {
+        LineSpecifier ls = new LineSpecifier(0, 10);
+        Locale locale = new Locale(ls, 10);
+        ExpressionParser parser = new ExpressionParser("$", locale);
+
+        String[] source = {
+            "$(1) $RES 16"
+        };
+        Assembler asm = new Assembler.Builder().setSource(source).build();
+        asm.assemble();
+        Expression exp = parser.parse(asm);
+        assertEquals(1, exp._items.size());
+
+        IExpressionItem item0 = exp._items.get(0);
+        assertTrue(item0 instanceof ValueItem);
+        ValueItem vItem = (ValueItem) item0;
+        assertTrue(vItem._value instanceof IntegerValue);
+        IntegerValue iValue = (IntegerValue) vItem._value;
+        assertEquals(020, iValue._value.get().intValue());
+        assertEquals(1, iValue._references.length);
+        assertTrue(iValue._references[0] instanceof UndefinedReferenceToLocationCounter);
+        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iValue._references[0];
+        assertEquals(1, urlc._locationCounterIndex);
+    }
+
+    @Test
     public void parseNegativeIntegerLiteral(
     ) throws ExpressionException {
         LineSpecifier ls = new LineSpecifier(0, 10);

@@ -439,6 +439,38 @@ public class ExpressionParser {
     }
 
     /**
+     * Parses a current-location token - i.e., '$'
+     * @param assembler Current (sub)assembler
+     * @return OperandItem representing the literal if found, else null
+     */
+    private ValueItem parseLocationToken(
+        final Assembler assembler
+    ) {
+        if (atEnd()) {
+            return null;
+        }
+
+        //  Is the next character a $ ?
+        int oldIndex = _index;
+        char ch = getNextChar();
+        if (ch != '$') {
+            _index = oldIndex;
+            return null;
+        }
+
+        //  Is the $ the first character of a longer identifier?
+        if (!atEnd()) {
+            ch = nextChar();
+            if (Character.isAlphabetic(ch) || Character.isDigit(ch)) {
+                _index = oldIndex;
+                return null;
+            }
+        }
+
+        return new ValueItem(getLocale(), assembler.getCurrentLocation());
+    }
+
+    /**
      * Parses anything which could be an operand
      * @param assembler Current (sub)assembler
      * @return parsed OperandItem if found, else null
@@ -453,6 +485,9 @@ public class ExpressionParser {
         }
 
         OperandItem opItem = parseLiteral(assembler);
+        if (opItem == null) {
+            opItem = parseLocationToken(assembler);
+        }
         if (opItem == null) {
             opItem = parseReference(assembler);
         }
@@ -506,8 +541,8 @@ public class ExpressionParser {
      * Parses a reference to a label, node, or function.
      * Because they are all formatted as such:
      *      {identifier} [ '(' {expression_list} ')' ]
-     * we don't know at this time which is which - that can only be determined from the dictionary,
-     * when the value is to be resolved.
+     * We don't know at this time which is which -
+     * that can only be determined from the dictionary when the value is to be resolved.
      * @param assembler Current (sub)assembler
      * @return newly created ReferenceItem object
      * @throws ExpressionException if something is syntactically wrong
