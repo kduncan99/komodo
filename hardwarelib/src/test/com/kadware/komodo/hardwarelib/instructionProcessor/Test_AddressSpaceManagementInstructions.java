@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
@@ -346,7 +347,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         buildMultiBank(source, false, true);
         ipl(true);
-        showDebugInfo();//TODO remove
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
@@ -363,54 +363,51 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         clear();
     }
 
-    //TODO
-//    @Test
-//    public void loadBaseRegisterExec_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY1  + 0600006,0 . 16 words of data",
-//            "BDENTRY3  + 0,0       . void",
-//            "",
-//            "$(2)      . useful bank data, will be BDI 06",
-//            "          $res 16",
-//            "",
-//            "$(1),START$*",
-//            "          LBE       B27,BDENTRY1,,B2",
-//            "          LBE       B29,BDENTRY3,,B2",
-//            "          HALT      0                . should not get here",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtendedMultibank(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
-//        assertFalse(br27._voidFlag);
-//        assertFalse(br27._largeSizeFlag);
-//        assertEquals(01000, br27._lowerLimitNormalized);
-//        assertEquals(01017, br27._upperLimitNormalized);
-//        assertEquals(new AccessInfo((short) 3, 0), br27._accessLock);
-//
-//        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
-//        assertTrue(br29._voidFlag);
-//    }
-//
+    @Test
+    public void loadBaseRegisterExec_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(2)                . BDI 100005",
+            "          $RES      16",
+            ".",
+            "$(1),START          . BDI 100004",
+            "          LBE       B27,BDENTRY1,,B0",
+            "          LBE       B29,BDENTRY3,,B0",
+            "          HALT      0",
+            "",
+            "BDENTRY1  + 0100005,0 . 16 words of data",
+            "BDENTRY3  + 0,0       . void",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, false, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        assertFalse(br27._voidFlag);
+        assertFalse(br27._largeSizeFlag);
+        assertEquals(02000, br27._lowerLimitNormalized);
+        assertEquals(02017, br27._upperLimitNormalized);
+        assertEquals(new AccessInfo((short) 0, 0), br27._accessLock);
+
+        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        assertTrue(br29._voidFlag);
+
+        clear();
+    }
+
     //TODO
 //    @Test
 //    public void loadBaseRegisterExec_BadBank_basic(

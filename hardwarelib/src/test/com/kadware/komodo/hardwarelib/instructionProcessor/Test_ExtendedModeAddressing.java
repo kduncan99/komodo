@@ -743,47 +743,61 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        //TODO
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//            "$(2)      . RCS, BDI 100005",
-//            "RCDEPTH   $EQU      32",
-//            "RCSSIZE   $EQU      2*RCDEPTH",
-//            "RCSTACK   $RES      RCSSIZE",
-//            "",
-//            "$(1)      . Code, BDI 100004",
-//            "START",
-//            "          . Set up RCS",
-//            "          LD        DESREG1",
-//            "          LBE       B25,RCSBDI",
-//            "          LXI,U     EX0,0",
-//            "          LXM,U     EX0,RCSTACK+RCSSIZE",
-//            "",
-//            "          . Set up interrupt handlers",
-//            "          LD        DESREG2",
-//            "          CALL      IHINIT",
-//            "",
-//            "          LD        DESREG3",
-//            "          LA        A0,07777,B0",
-//            "          HALT      0 . shouldn't get here",
-//            "",
-//            "DESREG1   + 000001,000000 . PP=0, ExtMode, Exec Regs",
-//            "DESREG2   + 000000,000000 . PP=0, ExtMode, Normal Regs",
-//            "DESREG3   + 000014,000000 . PP=3, ExtMode, Normal Regs",
-//            "RCSBDI    + LBDIREF$+RCSTACK,0",
-//            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
-//            "",
-//            "          $END      START"
-//        };
-//
-//        buildMultiBank(source, true, false);
-//        ipl(true);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINITADDR",
+            "",
+            "          . Change SAP for bankdesc for 100006 to disallow execute",
+            "          . The bankdesc is in 8-word entry 6 (zero-biased) in",
+            "          . BDT level 1, which is based on B17.",
+            "          . This bank would normally have the execute bit set.",
+            "          LXM,U     X1,06*8",
+            "          LA        A0,0,X1,B17",
+            "          AND       A0,MASK,,B0",
+            "          SA        A1,0,X1,B17",
+            "",
+            "          . Change our key to 3:0777 and try executing SUB (should fail)",
+            "          KCHG      KEY,,B0",
+            "          CALL      SUBADDR,,B0",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1    + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2    + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "RCSBDI     + LBDIREF$+RCSTACK,0",
+            "IHINITADDR + LBDIREF$+IH$INIT,IH$INIT",
+            "SUBADDR    + LBDIREF$+SUB,SUB",
+            "KEY        + 0600777,0     . Key in H1, DesReg.H1 in H2",
+            "MASK       + 0737777,0777777",
+            "",
+            "$(3)      . Code, BDI 100006",
+            "SUB       HALT      0 . shouldn't get here either",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
@@ -797,7 +811,64 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        //TODO
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(4)      . Data, BDI 100006",
+            "DATA      HALT      0 . shouldn't get here either",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINITADDR",
+            "",
+            "          . Change SAP for bankdesc for 100006 to disallow read",
+            "          . The bankdesc is in 8-word entry 6 (zero-biased) in",
+            "          . BDT level 1, which is based on B17.",
+            "          . This bank would normally have the read bit set.",
+            "          LXM,U     X1,06*8",
+            "          LA        A0,0,X1,B17",
+            "          AND       A0,MASK,,B0",
+            "          SA        A1,0,X1,B17",
+            "",
+            "          . Base 100006 on B2",
+            "          LBU       B2,DATABDI,,B0",
+            "",
+            "          . Change our key to 3:0777 and try writing to DATA (should fail)",
+            "          KCHG      KEY,,B0",
+            "          SA        A0,DATA,,B2",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1    + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2    + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "RCSBDI     + LBDIREF$+RCSTACK,0",
+            "DATABDI    + LBDIREF$+DATA,0",
+            "IHINITADDR + LBDIREF$+IH$INIT,IH$INIT",
+            "KEY        + 0600777,0     . Key in H1, DesReg.H1 in H2",
+            "MASK       + 0757777,0777777",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
@@ -811,7 +882,48 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-        //TODO
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . RCS, BDI 100005",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            "",
+            "$(1)      . Code, BDI 100004",
+            "START",
+            "          . Set up RCS",
+            "          LD        DESREG1",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . Set up interrupt handlers",
+            "          LD        DESREG2",
+            "          CALL      IHINITADDR",
+            "",
+            "          . Change our key to 3:0777 and try writing to B0." +
+            "          . The code bank is always write-disabled, so this should fail.",
+            "          KCHG      KEY,,B0",
+            "          SA        A0,$,,B0",
+            "          HALT      0 . shouldn't get here",
+            "",
+            "DESREG1    + 000001,000000 . PP=0, ExtMode, Exec Regs",
+            "DESREG2    + 000000,000000 . PP=0, ExtMode, Normal Regs",
+            "RCSBDI     + LBDIREF$+RCSTACK,0",
+            "IHINITADDR + LBDIREF$+IH$INIT,IH$INIT",
+            "KEY        + 0600777,0     . Key in H1, DesReg.H1 in H2",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 
         clear();
     }
