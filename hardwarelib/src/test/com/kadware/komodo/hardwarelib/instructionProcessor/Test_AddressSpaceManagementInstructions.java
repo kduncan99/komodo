@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
@@ -688,141 +689,162 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         clear();
     }
 
-    //TODO
-//    @Test
-//    public void loadBaseRegisterExecDirect_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY1  . void bank with void flag",
-//            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
-//            "          + 0               . lower/upper limits 0",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "BDENTRY2  . void bank with lower > upper",
-//            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
-//            "          + 001000,000177   . lower limit 01000, upper limit 0177",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "BDENTRY3  . void bank with lower > upper",
-//            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
-//            "          + 001000,01777    . lower limit 01000, upper limit 01777",
-//            "          + 0               . base address segment 0",
-//            "          + 040000,070000   . base address UPI,offset 01,070000",
-//            "",
-//            "$(1),START$*",
-//            "          LBED      B27,BDENTRY1   . void bank",
-//            "          LBED      B28,BDENTRY2   . effectively void",
-//            "          LBED      B29,BDENTRY3   . not void",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//
-//        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
-//        assertTrue(br27._voidFlag);
-//        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
-//
-//        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
-//        assertTrue(br28._voidFlag);
-//        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
-//
-//        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
-//        assertFalse(br29._voidFlag);
-//        assertFalse(br29._largeSizeFlag);
-//        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
-//        assertEquals(01, br29.getLowerLimit());
-//        assertEquals(01777, br29.getUpperLimit());
-//        Assert.assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
-//    }
-//
-    //TODO
-//    @Test
-//    public void loadBaseRegisterExecDirect_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY1  . void bank with void flag",
-//            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
-//            "          + 0               . lower/upper limits 0",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "BDENTRY2  . void bank with lower > upper",
-//            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
-//            "          + 001000,000177   . lower limit 01000, upper limit 0177",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "BDENTRY3  . void bank with lower > upper",
-//            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
-//            "          + 001000,01777    . lower limit 01000, upper limit 01777",
-//            "          + 0               . base address segment 0",
-//            "          + 040000,070000   . base address UPI,offset 01,070000",
-//            "",
-//            "$(1),START$*",
-//            "          LBED      B27,BDENTRY1,,B2   . void bank",
-//            "          LBED      B28,BDENTRY2,,B2   . effectively void",
-//            "          LBED      B29,BDENTRY3,,B2   . not void",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//
-//        InstructionProcessor.BaseRegister br27 = processors._instructionProcessor.getBaseRegister(27);
-//        assertTrue(br27._voidFlag);
-//        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
-//
-//        InstructionProcessor.BaseRegister br28 = processors._instructionProcessor.getBaseRegister(28);
-//        assertTrue(br28._voidFlag);
-//        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
-//
-//        InstructionProcessor.BaseRegister br29 = processors._instructionProcessor.getBaseRegister(29);
-//        assertFalse(br29._voidFlag);
-//        assertFalse(br29._largeSizeFlag);
-//        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
-//        assertEquals(01, br29.getLowerLimit());
-//        assertEquals(01777, br29.getUpperLimit());
-//        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
-//    }
-//
+    @Test
+    public void loadBaseRegisterExecDirect_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . BDI 100005, starts at 0",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START . We start in extended mode, we have to call to basic mode bank.",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          CALL      BMODE",
+            "DESREG1   + 000001,000000 . extended mode, exec registers, pp=0",
+            "DESREG2   + 000000,000000 . extended mode, user registers, pp=0",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "BMODE     + LBDIREF$+BMENTRY,BMENTRY",
+            "",
+            "$(3)",
+            "          $BASIC",
+            "BMENTRY",
+            "          LBED      B27,BDENTRY1   . void bank",
+            "          LBED      B28,BDENTRY2   . effectively void",
+            "          LBED      B29,BDENTRY3   . not void",
+            "          HALT      0",
+            "",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 01000, upper limit 01777",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, false, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        assertTrue(br27._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
+
+        InstructionProcessor.BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
+        assertTrue(br28._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
+
+        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        assertFalse(br29._voidFlag);
+        assertFalse(br29._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
+        assertEquals(01, br29.getLowerLimit());
+        assertEquals(01777, br29.getUpperLimit());
+        Assert.assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
+
+        clear();
+    }
+
+    @Test
+    public void loadBaseRegisterExecDirect_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1),START",
+            "          LBED      B27,BDENTRY1,,B0   . void bank",
+            "          LBED      B28,BDENTRY2,,B0   . effectively void",
+            "          LBED      B29,BDENTRY3,,B0   . not void",
+            "          HALT      0",
+            "",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY2  . void bank with lower > upper",
+            "          + 0000000,0000014 . GAP/SAP clear, void clear, ring=0 domain=014",
+            "          + 001000,000177   . lower limit 01000, upper limit 0177",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "BDENTRY3  . void bank with lower > upper",
+            "          + 0770000,0400100 . GAP/SAP erw set, ring=2 domain=0100",
+            "          + 001000,01777    . lower limit 01000, upper limit 01777",
+            "          + 0               . base address segment 0",
+            "          + 040000,070000   . base address UPI,offset 01,070000",
+            "",
+            "          $END      START",
+        };
+
+        buildMultiBank(source, false, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        assertTrue(br27._voidFlag);
+        assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
+
+        InstructionProcessor.BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
+        assertTrue(br28._voidFlag);
+        assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
+
+        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        assertFalse(br29._voidFlag);
+        assertFalse(br29._largeSizeFlag);
+        assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
+        assertEquals(01, br29.getLowerLimit());
+        assertEquals(01777, br29.getUpperLimit());
+        assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
+
+        clear();
+    }
+
     //TODO
 //    @Test
 //    public void loadBaseRegisterExecDirect_BadPP_basic(
@@ -850,17 +872,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -891,17 +913,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -940,17 +962,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
 //        //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        InstructionProcessor.BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
-//        processors._instructionProcessor.setBaseRegister(20, br13);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        InstructionProcessor.BaseRegister br13 = _instructionProcessor.getBaseRegister(13);
+//        _instructionProcessor.setBaseRegister(20, br13);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_400004_000000L, _instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
     //TODO
@@ -990,17 +1012,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
 //        //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        InstructionProcessor.BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
-//        processors._instructionProcessor.setBaseRegister(20, br2);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        InstructionProcessor.BaseRegister br2 = _instructionProcessor.getBaseRegister(2);
+//        _instructionProcessor.setBaseRegister(20, br2);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_400004_000000L, _instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
     //TODO
@@ -1039,17 +1061,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        //  Sets up B20 to reference the same BDT as B13, as the BDT for level 4.
 //        //  B13 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        InstructionProcessor.BaseRegister br13 = processors._instructionProcessor.getBaseRegister(13);
-//        processors._instructionProcessor.setBaseRegister(20, br13);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        InstructionProcessor.BaseRegister br13 = _instructionProcessor.getBaseRegister(13);
+//        _instructionProcessor.setBaseRegister(20, br13);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_400004_000000L, _instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
     //TODO
@@ -1089,17 +1111,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        //  Sets up B20 to reference the same BDT as B2, as the BDT for level 4.
 //        //  B2 refers to our data bank, which we've formatted as a BDT... sort of.  Close enough.
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        InstructionProcessor.BaseRegister br2 = processors._instructionProcessor.getBaseRegister(2);
-//        processors._instructionProcessor.setBaseRegister(20, br2);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        InstructionProcessor.BaseRegister br2 = _instructionProcessor.getBaseRegister(2);
+//        _instructionProcessor.setBaseRegister(20, br2);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_400004_000000L, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_400004_000000L, _instructionProcessor.getExecOrUserXRegister(5).getW());
 //    }
 //
     //TODO
@@ -1126,18 +1148,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(1);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1164,14 +1186,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1199,14 +1221,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(3);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(3);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1238,18 +1260,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_000001_000002, processors._instructionProcessor.getExecOrUserXRegister(1).getW());
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(31, processors._instructionProcessor.getExecOrUserXRegister(6).getH1());
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_000001_000002, _instructionProcessor.getExecOrUserXRegister(1).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(31, _instructionProcessor.getExecOrUserXRegister(6).getH1());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(6).getH2());
 //    }
 //
     //TODO
@@ -1282,18 +1304,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(0_000001_000002, processors._instructionProcessor.getExecOrUserXRegister(1).getW());
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(31, processors._instructionProcessor.getExecOrUserXRegister(6).getH1());
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(6).getH2());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(0_000001_000002, _instructionProcessor.getExecOrUserXRegister(1).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(31, _instructionProcessor.getExecOrUserXRegister(6).getH1());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(6).getH2());
 //    }
 //
     //TODO
@@ -1327,25 +1349,25 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
 //        assertFalse(br7._voidFlag);
 //        assertFalse(br7._largeSizeFlag);
 //        assertEquals(020000, br7._lowerLimitNormalized);
 //        assertEquals(020017, br7._upperLimitNormalized);
 //        assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
 //
-//        InstructionProcessor.BaseRegister br8 = processors._instructionProcessor.getBaseRegister(8);
+//        InstructionProcessor.BaseRegister br8 = _instructionProcessor.getBaseRegister(8);
 //        assertTrue(br8._voidFlag);
 //
-//        InstructionProcessor.BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+//        InstructionProcessor.BaseRegister br9 = _instructionProcessor.getBaseRegister(9);
 //        assertTrue(br9._voidFlag);
 //    }
 //
@@ -1378,22 +1400,22 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
 //        assertFalse(br7._voidFlag);
 //        assertFalse(br7._largeSizeFlag);
 //        assertEquals(01000, br7._lowerLimitNormalized);
 //        assertEquals(01017, br7._upperLimitNormalized);
 //        assertEquals(new AccessInfo((short) 3, 0), br7._accessLock);
 //
-//        InstructionProcessor.BaseRegister br9 = processors._instructionProcessor.getBaseRegister(9);
+//        InstructionProcessor.BaseRegister br9 = _instructionProcessor.getBaseRegister(9);
 //        assertTrue(br9._voidFlag);
 //    }
 //
@@ -1428,17 +1450,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1464,14 +1486,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1498,14 +1520,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1531,14 +1553,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1565,14 +1587,14 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01011, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
@@ -1598,18 +1620,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1636,18 +1658,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1673,18 +1695,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1711,18 +1733,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1766,24 +1788,24 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        InstructionProcessor.BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+//        InstructionProcessor.BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
 //        assertTrue(br5._voidFlag);
 //        assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 //
-//        InstructionProcessor.BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+//        InstructionProcessor.BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
 //        assertTrue(br6._voidFlag);
 //        assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 //
-//        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+//        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
 //        assertFalse(br7._voidFlag);
 //        assertFalse(br7._largeSizeFlag);
 //        assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -1834,24 +1856,24 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        InstructionProcessor.BaseRegister br5 = processors._instructionProcessor.getBaseRegister(5);
+//        InstructionProcessor.BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
 //        assertTrue(br5._voidFlag);
 //        assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 //
-//        InstructionProcessor.BaseRegister br6 = processors._instructionProcessor.getBaseRegister(6);
+//        InstructionProcessor.BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
 //        assertTrue(br6._voidFlag);
 //        assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 //
-//        InstructionProcessor.BaseRegister br7 = processors._instructionProcessor.getBaseRegister(7);
+//        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
 //        assertFalse(br7._voidFlag);
 //        assertTrue(br7._largeSizeFlag);
 //        assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -1887,17 +1909,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1928,17 +1950,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -1964,18 +1986,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2002,18 +2024,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidBaseRegister.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2059,7 +2081,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        //  set up some fake banks - 30 and 31 are void banks
 //        for (int bx = 24; bx < 30; ++bx) {
 //            if (bx != 26) {
-//                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
 //                InstructionProcessor.BaseRegister br =
 //                    new InstructionProcessor.BaseRegister(addr,
 //                                                          false,
@@ -2068,12 +2090,12 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                          new AccessInfo(0, bx),
 //                                                          new AccessPermissions(false, true, true),
 //                                                          new AccessPermissions(false, true, true));
-//                processors._instructionProcessor.setBaseRegister(bx, br);
+//                _instructionProcessor.setBaseRegister(bx, br);
 //            }
 //        }
 //
 //        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister();
-//        processors._instructionProcessor.setBaseRegister(30, br30);
+//        _instructionProcessor.setBaseRegister(30, br30);
 //        InstructionProcessor.BaseRegister br31 =
 //            new InstructionProcessor.BaseRegister(new AbsoluteAddress((short) 0, 0, 0),
 //                                                  false,
@@ -2082,18 +2104,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                  new AccessInfo(0, 0),
 //                                                  new AccessPermissions(false, false, false),
 //                                                  new AccessPermissions(false, false, false));
-//        processors._instructionProcessor.setBaseRegister(31, br31);
+//        _instructionProcessor.setBaseRegister(31, br31);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
 //        //  create BaseRegister objects for all the data that has been created via SBED
-//        Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
 //        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[32];
-//        long[] data = getBank(processors._instructionProcessor, 13);
+//        long[] data = getBank(_instructionProcessor, 13);
 //        for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
 //            if (bx != 26) {
 //                long[] subData = new long[4];
@@ -2107,12 +2129,12 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
 //        for (int bx = 16; bx < 32; ++bx) {
 //            if (bx != 26) {
-//                Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+//                Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
 //            }
 //        }
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //    }
 //
     //TODO
@@ -2159,7 +2181,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        //  set up some fake banks - 30 and 31 are void banks, 26 is the ICS (leave it alone)
 //        for (int bx = 24; bx < 30; ++bx) {
 //            if (bx != 26) {
-//                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
 //                InstructionProcessor.BaseRegister br =
 //                    new InstructionProcessor.BaseRegister(addr,
 //                                                          false,
@@ -2168,12 +2190,12 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                          new AccessInfo(0, bx),
 //                                                          new AccessPermissions(false, true, true),
 //                                                          new AccessPermissions(false, true, true));
-//                processors._instructionProcessor.setBaseRegister(bx, br);
+//                _instructionProcessor.setBaseRegister(bx, br);
 //            }
 //        }
 //
 //        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister();
-//        processors._instructionProcessor.setBaseRegister(30, br30);
+//        _instructionProcessor.setBaseRegister(30, br30);
 //        AbsoluteAddress addr = new AbsoluteAddress((short) 0, 0, 0);
 //        InstructionProcessor.BaseRegister br31 =
 //            new InstructionProcessor.BaseRegister(addr,
@@ -2183,17 +2205,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                  new AccessInfo(0, 0),
 //                                                  new AccessPermissions(false, false, false),
 //                                                  new AccessPermissions(false, false, false));
-//        processors._instructionProcessor.setBaseRegister(31, br31);
+//        _instructionProcessor.setBaseRegister(31, br31);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
 //        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[32];
-//        long[] data = getBank(processors._instructionProcessor, 2);
+//        long[] data = getBank(_instructionProcessor, 2);
 //        for (int bx = 16, dx = 0; bx < 32; ++bx, dx += 4) {
 //            long[] subData = new long[4];
 //            subData[0] = data[dx];
@@ -2204,11 +2226,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        }
 //
 //        for (int bx = 16; bx < 32; ++bx) {
-//            Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+//            Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
 //        }
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //    }
 //
     //TODO
@@ -2236,17 +2258,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2275,17 +2297,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2313,16 +2335,16 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        long[] data = getBank(processors._instructionProcessor, 13);
+//        long[] data = getBank(_instructionProcessor, 13);
 //        assertEquals(0_600004_000000L, data[0]);
 //        assertEquals(0_600005_000000L, data[1]);
 //    }
@@ -2352,17 +2374,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2391,15 +2413,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        long[] data = getBank(processors._instructionProcessor, 2);
+//        long[] data = getBank(_instructionProcessor, 2);
 //        assertEquals(0_600004_000000L, data[0]);
 //        assertEquals(0_600005_000000L, data[1]);
 //    }
@@ -2447,7 +2469,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        //  set up some fake banks - leave 12 and 13 alone
 //        for (int bx = 0; bx < 16; ++bx) {
 //            if ((bx < 12) || (bx > 13)) {
-//                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
 //                InstructionProcessor.BaseRegister br =
 //                    new InstructionProcessor.BaseRegister(addr,
 //                                                          false,
@@ -2456,19 +2478,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                          new AccessInfo(0, bx),
 //                                                          new AccessPermissions(false, true, true),
 //                                                          new AccessPermissions(false, true, true));
-//                processors._instructionProcessor.setBaseRegister(bx, br);
+//                _instructionProcessor.setBaseRegister(bx, br);
 //            }
 //        }
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
 //        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
-//        long[] data = getBank(processors._instructionProcessor, 13);
+//        long[] data = getBank(_instructionProcessor, 13);
 //        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
 //            long[] subData = new long[4];
 //            subData[0] = data[dx];
@@ -2479,11 +2501,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        }
 //
 //        for (int bx = 0; bx < 16; ++bx) {
-//            Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+//            Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
 //        }
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //    }
 //
     //TODO
@@ -2530,7 +2552,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        //  set up some fake banks - leave 0 through 2 alone
 //        for (int bx = 0; bx < 16; ++bx) {
 //            if (bx > 2) {
-//                AbsoluteAddress addr = new AbsoluteAddress(processors._mainStorageProcessor._upiIndex, 0, bx * 1024);
+//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
 //                InstructionProcessor.BaseRegister br =
 //                    new InstructionProcessor.BaseRegister(addr,
 //                                                          false,
@@ -2539,19 +2561,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //                                                          new AccessInfo(0, bx),
 //                                                          new AccessPermissions(false, true, true),
 //                                                          new AccessPermissions(false, true, true));
-//                processors._instructionProcessor.setBaseRegister(bx, br);
+//                _instructionProcessor.setBaseRegister(bx, br);
 //            }
 //        }
 //
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0_000004_000100, processors._instructionProcessor.getExecOrUserXRegister(8).getW());
+//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
 //        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
-//        long[] data = getBank(processors._instructionProcessor, 2);
+//        long[] data = getBank(_instructionProcessor, 2);
 //        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
 //            long[] subData = new long[4];
 //            subData[0] = data[dx];
@@ -2562,11 +2584,11 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        }
 //
 //        for (int bx = 0; bx < 16; ++bx) {
-//            Assert.assertEquals(processors._instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
+//            Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
 //        }
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //    }
 //
     //TODO
@@ -2594,15 +2616,15 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2631,17 +2653,17 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     processors._instructionProcessor.getLastInterrupt().getInterruptClass());
+//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
 //        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
+//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
     //TODO
@@ -2684,19 +2706,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(0400000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
-//        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
-//        Assert.assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
-//        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(0400000_000000L, _instructionProcessor.getExecOrUserXRegister(12).getW());
+//        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(13).getW());
+//        Assert.assertEquals(0500000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
+//        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
     //TODO
@@ -2731,16 +2753,16 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(12).getW());
 //    }
 //
     //TODO
@@ -2784,19 +2806,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(0400000_000000L, processors._instructionProcessor.getExecOrUserXRegister(12).getW());
-//        Assert.assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
-//        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
-//        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(0400000_000000L, _instructionProcessor.getExecOrUserXRegister(12).getW());
+//        Assert.assertEquals(0500000_000000L, _instructionProcessor.getExecOrUserXRegister(13).getW());
+//        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
+//        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
     //TODO
@@ -2918,19 +2940,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //        showDebugInfo(processors);//TODO
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0, processors._instructionProcessor.getExecOrUserXRegister(5).getW());
-//        Assert.assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
-//        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
-//        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+//        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
+//        Assert.assertEquals(0500000_000000L, _instructionProcessor.getExecOrUserXRegister(13).getW());
+//        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
+//        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
     //TODO
@@ -3072,18 +3094,18 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
 //
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //        showDebugInfo(processors);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //
-//        Assert.assertEquals(0500000_000000L, processors._instructionProcessor.getExecOrUserXRegister(13).getW());
-//        Assert.assertEquals(0600000_000000L, processors._instructionProcessor.getExecOrUserXRegister(14).getW());
-//        Assert.assertEquals(0700000_000000L, processors._instructionProcessor.getExecOrUserXRegister(15).getW());
+//        Assert.assertEquals(0500000_000000L, _instructionProcessor.getExecOrUserXRegister(13).getW());
+//        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
+//        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
 //
 //    //  TODO testRelativeAddressRange ... some day when we care more about it
