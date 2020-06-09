@@ -817,7 +817,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          + 0               . base address segment 0",
             "          + 040000,070000   . base address UPI,offset 01,070000",
             "",
-            "          $END      START",
+            "          $END      START"
         };
 
         buildMultiBank(source, false, false);
@@ -845,87 +845,148 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         clear();
     }
 
-    //TODO
-//    @Test
-//    public void loadBaseRegisterExecDirect_BadPP_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY   . void bank with void flag",
-//            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
-//            "          + 0               . lower/upper limits 0",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "$(1),START$*",
-//            "          LBED      B31,BDENTRY    . should cause trouble (bad PP)",
-//            "          HALT      077            . should not get here",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-    //TODO
-//    @Test
-//    public void loadBaseRegisterExecDirect_BadPP_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "BDENTRY   . void bank with void flag",
-//            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
-//            "          + 0               . lower/upper limits 0",
-//            "          + 0               . base address 0",
-//            "          + 0               . base address 0",
-//            "",
-//            "$(1),START$*",
-//            "          LBED      B31,BDENTRY,,B2 . should cause trouble (bad PP)",
-//            "          HALT      077             . should not get here",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
+    @Test
+    public void loadBaseRegisterExecDirect_BadPP_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . BDI 100005, starts at 0",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START . We start in extended mode, we have to call to basic mode bank.",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          . ESTABLISH INTERRUPT HANDLER VECTOR",
+            "          CALL      IHINIT",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "",
+            "          LD        DESREG3",
+            "          CALL      BMODE",
+            "",
+            "DESREG1   + 000001,000000 . extended mode, exec registers, pp=0",
+            "DESREG2   + 000000,000000 . extended mode, user registers, pp=0",
+            "DESREG3   + 000014,000000 . extended mode, user registers, pp=3",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "BMODE     + LBDIREF$+BMENTRY,BMENTRY",
+            "",
+            "$(3)",
+            "          $BASIC",
+            "BMENTRY",
+            "          LBED      B27,BDENTRY1   . void bank",
+            "          HALT      0",
+            "",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     _instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+
+        clear();
+    }
+
+    @Test
+    public void loadBaseRegisterExecDirect_BadPP_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(2)      . BDI 100005, starts at 0",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1),START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        DESREG1,,B0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,RCSBDI",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        DESREG2,,B0",
+            ".",
+            "          . ESTABLISH INTERRUPT HANDLER VECTOR",
+            "          CALL      IHINIT",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "",
+            "          LD        DESREG3",
+            "          LBED      B27,BDENTRY1,,B0   . void bank",
+            "          HALT      0",
+            "",
+            "BDENTRY1  . void bank with void flag",
+            "          + 0330200,0600010 . GAP/SAP rw set, void set, ring=3 domain=010",
+            "          + 0               . lower/upper limits 0",
+            "          + 0               . base address 0",
+            "          + 0               . base address 0",
+            "",
+            "DESREG1   + 000001,000000 . extended mode, exec registers, pp=0",
+            "DESREG2   + 000000,000000 . extended mode, user registers, pp=0",
+            "DESREG3   + 000014,000000 . extended mode, user registers, pp=3",
+            "IHINIT    + LBDIREF$+IH$INIT,IH$INIT",
+            "RCSBDI    + LBDIREF$+RCSTACK,0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     _instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+
+        clear();
+    }
+
     //TODO
 //    @Test
 //    public void loadBaseRegisterName_basicBank_basic(
