@@ -1,0 +1,58 @@
+/* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
+
+#Console {
+    background-color: #373737;
+    color: white;
+}
+
+.ConsoleFlexItem {
+    width: 650px;
+}
+
+#consoleOutput {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
+    font-size: 12px;
+    color: #00ff00;
+    list-style-type: none;
+    border-style: none;
+    border-spacing: 0 0;
+    margin: 0;
+    padding: 0;
+}
+
+#consoleHelp {
+    overflow: scroll;
+    height:380px;
+    margin-left: 30px;
+}
+
+.ConsoleOutputRow {
+    background-color: black;
+}
+
+.ConsoleStatus {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
+    font-size: 12px;
+    color: #00ff00;
+    list-style-type: none;
+    margin: 2px 0;
+    padding: 0;
+}
+
+.ConsoleStatusRow {
+    border-style: none;
+    border-spacing: 0 0;
+    margin: 0;
+    padding: 0;
+}
+
+#consoleInput input[type=text] {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
+    font-size: 12px;
+    background-color: black;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    border-style: none;
+    border-spacing: 0 0;
+}

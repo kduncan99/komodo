@@ -4,13 +4,16 @@
 
 package com.kadware.komodo.baselib;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Describes a ring/domain combination
  */
 public class AccessInfo {
 
-    public final long _domain;
-    public final int _ring;
+    @JsonProperty("domain") public final long _domain;
+    @JsonProperty("ring")   public final int _ring;
 
     /**
      * Standard constructor
@@ -44,13 +47,14 @@ public class AccessInfo {
     }
 
     /**
-     * Initial value constructor
+     * Initial value / JSON constructor
      * @param ring ring value
      * @param domain domain value
      */
+    @JsonCreator
     public AccessInfo(
-        final int ring,
-        final long domain
+        @JsonProperty("ring")   final int ring,
+        @JsonProperty("domain") final long domain
     ) {
         _ring = ring & 03;
         _domain = domain & 0xFFFF;

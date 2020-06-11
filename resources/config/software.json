@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "copyright": "Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved",
+  "notes": [
+    "Contains the initial software configuration file for Komodo"
+    ],
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0,
+    "build": 0
+  },
+  "systemIdentifier": "EM2200",
+  "_versionString": "1.0.0.0"
+}

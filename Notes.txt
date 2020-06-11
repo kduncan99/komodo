@@ -1,46 +1,87 @@
 -- TODO InProgress
-Okay, FUCK jackson with a ten-foot long rusty pole infected with SARS-2.
-Forget JSON completely, since there isn't a native library for it.
-Write our own RPC thing, and fuck all this HTTP back and forth bullshit.
+Rebuilding all the hwlib unit tests
 
-* hardwarelib
-IP: SYSC console routines need clarification wrt pinned messages
-IP: SYSC subfunctions need unit tests
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
+hwlib:
+    InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
+    SystemProcessor: loadBinary() Completely rework this
+    Test_SystemProcessor: absolute_load test - improve how this works
+    Test_Linker: need to fix unit tests
 
-* kconsole
-In progress
+exlib:
+    external file formats for hosting SDFF and PF files (and maybe tape files?)
+    support sym, rel, and abs elements
+    support various tape file formats
 
+What happens when $(LIT) is the same as the generation LC, and we do:
+    LA       A0,(5,10)
+  Right now, we generate the literal in the code stream, which is a bad thing.
+  But what does MASM do?
+  Because we *could* defer all literal generation to the end of the lc pool... i think.
 
 -- TODO BUGS
-* kconsole
-When the server goes away, kconsole just dies - need to post an alert, then go back to connect dialog
-
-* hardwarelib
+* hwlib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
 
-* minalib
-Assembler isn't returning null module when errors are detected... why?
-    Do all T diagnostics result in a rel module not being generated?
-((077) + 5) does not generate a literal 077 as it should do
-String concatenation does not honor precision per MASM 5.3.1
-assembler needs to be smart enough to do the right thing with B16-B31 (move msbit to .i field)
+everywhere:
+    Max real bank size is 0_077777_777777 (with large bit set), which requires a long.
+    We have code all over the place which uses an int for bank size, bank addresses, etc.
 
+* kasm
+String concatenation does not honor precision per MASM 5.3.1
+Locale columns are wrongly all over the place for parsed expressions
+  Need to add some unit testing to cover this
+
+* klink/kasm
+Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool
+  When klink resolves it, it adds the BDI to the base value instead of just overlaying it.
+  What should we do about this?
+    Maybe... klink should, in this case, clear out the field-descriptor described by the reference
+    before integrating the BDI value...
 
 -- TODO Thoughts
+Do we need a high-level language for systems programming to supplement assembly?
+It appears that collector-generated absolute elements must always start in Basic mode. ?
+"For absolutes that are executed as programs, the Exec loads all banks produced by the Collector at level 2."
+
 
 
 -- TODO implement
+*html/css/javascript
+IPL page
+  System status(?)
+  Maybe an indication of the number of sessions connected?
+  Boot source (binary selection of tape boot, disk boot, other binary boot)
+  Path and volume selection for tape and disk boots
+Hardware page
+  Node configuration, basically
+  Move Dump Config button here from the IPL page
+  Add button to dump memory contents (optionally with analysis?)
+System page
+  All the non-hardware related configurables
+    Give SPIF the ability to control logging levels
+        The following, in Node.java, should be subject to management by SPIF / SoftwareConfiguration
+            static final boolean LOG_CHANNEL_IOS = true;
+            static final boolean LOG_CHANNEL_IO_BUFFERS = true;
+            static final boolean LOG_DEVICE_IOS = true;
+            static final boolean LOG_DEVICE_IO_BUFFERS = true;
+            static final boolean LOG_IO_ERRORS = true;
+OS Configuration page (new page)
+  KEXEC configuration items
+
+* every all
+Set logger name to foo.class.getSimpleName()
+
 * baselib
 more FloatingPointComponent tests
 
 * hardwarelib
-Redo all the node and subclasses tests, many of which are commented out
+SP: Move dayclock architecture to SystemProcessor
+IP: SYSC subfunctions need unit tests
+CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
+Need a SystemLogTapeDevice
+Redo all the node and subclasses tests, many of which are commented out (Node has been done)
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
-SystemProcessor: For starting/monitoring/stopping system, and for console communication
-  Move dayclock architecture to SystemProcessor
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
 RAMTapeDevice byte interface, optional compression, optional backing store
@@ -51,6 +92,7 @@ IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode
+IP: unit tests for interrupts (many of them already marked TODO)
 IP: unit tests
   LIJ, LBJ, LDJ
   LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
@@ -143,8 +185,11 @@ IP: search and masked search instructions (and unit tests)
   MASL
   MASG
 
-* minalib
-We really need to support identifiers > 12 characters
+* kasm
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+Need to support "$(n)" as a relocated reference to location counter n offset by 0 (for expressions)
+  Can we implement this as a built-in function?
+Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
 more FloatingPointValue unit tests
 more unit tests for string value generation
 unit tests for node references - need to check results
@@ -157,10 +202,9 @@ remove UndefinedReferenceDiagnostic (I think...)
 use DiagnosticDirective for stuff.. now I forgot what this means
 do we need microstrings?
 $USE (A.2.8) specifies base register to use if none given
-add test cases for interrupts (many of them already marked TODO)
 can we do implicit base register (and do it right)?  also with the $LIT directive...
 support user-defined functions
-allow expression list inside literal which is part of expression e.g., ((005, 007) + 12)
+create object modules directly (has some implications with how kasm generates code)
 functions
   $ILCN
   $L0
@@ -172,7 +216,7 @@ functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 directives
-  $END
+  $FUNC (user-defined functions)
   $USE (implicit base register)
   $INSERT (maybe)
   $BASE (maybe)
@@ -183,9 +227,14 @@ directives
   $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
 
-* Mina - wrapper around minalib
+* klink
+  Create absolute modules
+  Create object modules
+  Define what a saved binary looks like
+    update: It's stored in a sort of JSON format
+    update: It's an array of BankDescriptors (stored in JSON format)
 
-* Exec - using Mina (or minalib, but hopefully mina)
+* Exec
 Subsystems:
   Init
   Console (can we farm this out to SCP?)

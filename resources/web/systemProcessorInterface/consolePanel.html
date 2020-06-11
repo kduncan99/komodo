@@ -1,0 +1,138 @@
+<!-- Copyright (c) 2020 by Kurt Duncan - All Rights Reserved -->
+<!-- This is the HTML file for the OS console panel -->
+
+<p>Operating System Console</p>
+<div id="consoleSection" class="FlexBox">
+    <div id="console" class="ConsoleFlexItem">
+        <div>
+            <ul id="consoleOutput">
+                <!-- hard coding to 24 rows... if the .js file changes, then we should change this here -->
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+                <li class="ConsoleOutputRow"></li>
+            </ul>
+        </div>
+        <div>
+            <ul id="consoleStatus" class="ConsoleStatus">
+                <li class="ConsoleStatusRow" id="consoleStatusRow"></li>
+            </ul>
+        </div>
+        <div>
+            <form id="consoleInput">
+                <label for="consoleInputRow" hidden></label>
+                <input type="text" id="consoleInputRow" size="80" maxlength="80">
+                <input type="submit" id="consoleSubmit" hidden>
+            </form>
+        </div>
+    </div>
+    <div id="consoleHelp" class="FlexItem">
+        <b>KEXEC Console Commands</b>
+        <hr>
+        <table>
+            <tr><td>AP n DN</td><td>Brings down an application group</td></tr>
+            <tr><td>AP [ALL | n] FS</td><td>Displays the status of one or all application group(s)</td></tr>
+            <tr><td>AP n UP [REBUILD | SUTIL | INIT]</td><td>Brings up an application group</td></tr>
+            <tr><td>AT n CL</td><td>Closes the audit trail for application group {n}</td></tr>
+            <tr><td>AT n DF</td><td>Puts the audit trail for application group {n} into the deferred state</td></tr>
+            <tr><td>AT n DN</td><td>Puts a closed audit trail into the down state</td></tr>
+            <tr><td>AT [ALL | n] FS</td><td>Displays the status of one or all application group(s)</td></tr>
+            <tr><td>AT n IN</td><td>Initializes an audit trail (beginning recovery)</td></tr>
+            <tr><td>AT n LD</td><td>Displays media information for the audit trail</td></tr>
+            <tr><td>AT [ALL | n] NR</td><td>Places one or all audit trail(s) into deferred state</td></tr>
+            <tr><td>AT n OP</td><td>Opens an audit trail</td></tr>
+            <tr><td>AT n UP</td><td>Changes an audit trail from down to closed state</td></tr>
+            <tr><td>B n</td><td>Limits the maximum number of open batch runs to n</td></tr>
+            <tr><td>BL [ D ]</td><td>Displays jobs currently in the backlog</td></tr>
+            <tr><td>BP 0</td><td>Clears the system breakpoint</td></tr>
+            <tr><td>BP l,bdi,offset [ P | R | W ]</td><td>Sets the system breakpoint and specifies the operation to be trapped</td></tr>
+            <tr><td>C l,bdi,offset [ value ]</td><td>Displays or alters the value at a given address</td></tr>
+            <tr><td>CJ n,...</td><td>Clears the indicated jump keys</td></tr>
+            <tr><td>CS A [ runid ]</td><td>Removes the master hold on backlog, or on a specific job</td></tr>
+            <tr><td>CS AD</td><td>Removes a pevious hold on demand run scheduling</td></tr>
+            <tr><td>CS ALL</td><td>Removes master and all individual holds on jobs in backlog</td></tr>
+            <tr><td>CS AT</td><td>Removes hold on all inactive demand sessions</td></tr>
+            <tr><td>CS H [ runid ]</td><td>Sets a master hold on all jobs in backlog, or an individual hold on a specific job</td></tr>
+            <tr><td>CS HD</td><td>Places a hold on all demand run scheduling</td></tr>
+            <tr><td>CS HT</td><td>Places a hold on inactive sessions</td></tr>
+            <tr><td>CS runid*[Px][Dhhmm][Shhmm][Ly]F]</td><td>Alters the job priority, deadline time, start time, or processor priority for a job in backlog, and/or forces it out of backlog</td></tr>
+            <tr><td>D</td><td>Displays the current system time</td></tr>
+            <tr><td>D ENTER</td><td>Specify at boot time, the system date and time to be used for KEXEC</td></tr>
+            <tr><td>DJ</td><td>Displays all of the jump keys currently set</td></tr>
+            <tr><td>DN node,...</td><td>Prevents KEXEC from accessing the indicated node(s)</td></tr>
+            <tr><td>DU [ runid ]</td><td>Dumps the contents of all allocated memory (or for a specific job) to tape</td></tr>
+            <tr><td>E job</td><td>Error terminates a job allowing it to process contingencies</td></tr>
+            <tr><td>FA device</td><td>Raises a unit attention for the indicated device</td></tr>
+            <tr><td>FB [ bit ]</td><td>Displays all or a specific flagbox setting(s)</td></tr>
+            <tr><td>FB LST</td><td>Displays the list of all flagbox bit names</td></tr>
+            <tr><td>FB [ ON | OFF ] bit</td><td>Turns on or off a particular flagbox setting</td></tr>
+            <tr><td>FF [ dir# ] qualifiter*filename [(fcycle)] [.]</td><td>Displays information for the given fileset or filecycle</td></tr>
+            <tr><td>FS node</td><td>Displays facility status of the given node</td></tr>
+            <tr><td>FS,[ ADISK | ATAPES | CM | DRS | IOP | IP | MEM | MS | RDISKS | TAPES ]</td><td>Displays facility status for all nodes of the indicated type</td></tr>
+            <tr><td>FS,ALL node</td><td>Displays facility status of the given node and all descendants of that node</td></tr>
+            <tr><td>HELP command</td><td>Displays detailed usage information for a particular console command</td></tr>
+            <tr><td>II runid [ instruction ]</td><td>Interrupts a particular job, optionally sending a particular instruction</td></tr>
+            <tr><td>IN device</td><td>Reinitializes the directory of the pack on the given device</td></tr>
+            <tr><td>LG [ *runid ] message</td><td>Posts a message to the KEXEC log, or to an individual job log</td></tr>
+            <tr><td>MS</td><td>Displays mass storage capacity and usage information</td></tr>
+            <tr><td>MU [ runid ]</td><td>Displays memory use for the entire system or for an individual job</td></tr>
+            <tr><td>MU,ALL</td><td>Displays memory use for all individual jobs</td></tr>
+            <tr><td>RC runid</td><td>Display information pertaining to a specific job</td></tr>
+            <tr><td>RE runid</td><td>Resume a previously-suspended job</td></tr>
+            <tr><td>RL bankname</td><td>Reloads a particular commonbank from its system file</td></tr>
+            <tr><td>RM runid</td><td>Remove a particular job from backlog</td></tr>
+            <tr><td>RV node</td><td>Sets a particular node to the reserved state</td></tr>
+            <tr><td>SEC,[ SAVE | RESTORE ] </td>Saves all security files to tape, or restores them from tape</tr>
+            <tr><td>SJ n,...</td><td>Sets the indicated jump keys</td></tr>
+            <tr><td>SM sym</td><td>Displays the status of the indicated symbiont device</td></tr>
+            <tr><td>SM sym I</td><td>Initiate / resume operation of a symbiont device</td></tr>
+            <tr><td>SM sym L</td><td>Lock out a symbiont device</td></tr>
+            <tr><td>SP runid</td><td>Suspends a particular job</td></tr>
+            <tr><td>SQ [ name ] [ * ]</td><td>Displays the state of all symbiont devices and queues, or of a particular device or queue</td></tr>
+            <tr><td>SQ runid [ * ] R</td>Displays all files queued by the indicated job</tr>
+            <tr><td>SQ userid [ * ] U</td>Displays all files queued by the indicated user</tr>
+            <tr><td>SQ runid [ file ] priority</td><td>Changes the priority of all files, or a particular file queued by the indicated job</td></tr>
+            <tr><td>SQ sname QTO sname</td><td>Requeues all files queued to the first symbiont device or queue, to the second</td></tr>
+            <tr><td>SQ runid [ file ] sname</td><td>Redirects all files or a specific file queued by a job, to the indicated symbiont device or queue</td></tr>
+            <tr><td>SS</td><td>Display system status</td></tr>
+            <tr><td>ST[,...] name[,...]</td><td>Starts a stored runstream with a variety of optional parameters</td></tr>
+            <tr><td>SU node</td><td>Suspends a node</td></tr>
+            <tr><td>SX A/F [ name ]</td><td>Deletes all queued files, or all files on a particular queue</td></tr>
+            <tr><td>SX A/F runid [ filename ]</td><td>Deletes all files, or a specific file queued by a particular job</td></tr>
+            <tr><td>SX A/F userid *U</td><td>Deletes all files queued by a particular user</td></tr>
+            <tr><td>T [ D ]</td><td>Displays status of all batch and demand jobs</td></tr>
+            <tr><td>T,B [ D ]</td><td>Displays status of all batch jobs</td></tr>
+            <tr><td>T,D [ D ]</td><td>Displays status of all demand jobs</td></tr>
+            <tr><td>T H</td><td>Displays status of all runs held by 'S' option, and by certain other holds</td></tr>
+            <tr><td>T S</td><td>Displays the status of all suspended jobs</td></tr>
+            <tr><td>TB [ /I ] message</td><td>Displays a message on all active demand terminals</td></tr>
+            <tr><td>TIP [ DF | DN | UP ]</td>Sets TIP automatic recovery to down, deferred, or up</tr>
+            <tr><td>TIP FS</td><td>Displays status of TIP automatic recovery</td></tr>
+            <tr><td>TIP RS</td><td>Restarts the TIP application group</td></tr>
+            <tr><td>TM [ runid/R | userid/U ] message</td>Sends a message to a demand session by runid or userid</tr>
+            <tr><td>UP node</td><td>Sets the indicated node to the UP state</td></tr>
+            <tr><td>X {job}</td><td>Aborts a job, preventing it from processing contingencies</td></tr>
+            <tr><td>$!</td><td>Initiates auto-recovery</td></tr>
+        </table>
+    </div>
+</div>

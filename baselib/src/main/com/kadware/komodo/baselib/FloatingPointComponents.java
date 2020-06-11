@@ -145,7 +145,7 @@ public class FloatingPointComponents {
     }
 
     /**
-     * Creates a not-necessarily-normalized from a 36-bit floating point value stored in a Word36 object
+     * Creates a not-necessarily-normalized FPC from a 36-bit floating point value stored in a Word36 object
      */
     public FloatingPointComponents(
         final Word36 value
@@ -165,7 +165,7 @@ public class FloatingPointComponents {
     }
 
     /**
-     * Creates a not-necessarily-normalized from a 72-bit floating point value stored in a DoubleWord36 object
+     * Creates a not-necessarily-normalized FPC from a 72-bit floating point value stored in a DoubleWord36 object.
      */
     public FloatingPointComponents(
         final DoubleWord36 value
@@ -185,6 +185,26 @@ public class FloatingPointComponents {
             _exponent = absValue.and(DW36_CHARACTERISTIC_MASK).shiftRight(DW36_MANTISSA_BITS).subtract(DW36BI_EXPONENT_BIAS).intValue();
             _mantissa = absValue.and(DW36_MANTISSA_MASK).longValue();
         }
+    }
+
+    /**
+     * Creates a definitely not normalized FPC from a 72-bit integer stored as a BigInteger -
+     * Note that, if the integer value has > 60 significant bits, the result will be truncated on the low end.
+     */
+    public FloatingPointComponents(
+        final BigInteger integerValue
+    ) {
+        _isNegative = integerValue.compareTo(BigInteger.ZERO) < 0;
+        BigInteger workingValue = integerValue.abs();
+        BigInteger highMask = BigInteger.valueOf(0xfff).shiftLeft(64);
+        int exp = 0;
+        while (!workingValue.and(highMask).equals(BigInteger.ZERO)) {
+            workingValue = workingValue.shiftRight(1);
+            ++exp;
+        }
+        _integral = workingValue.longValue();
+        _mantissa = 0;
+        _exponent = exp;
     }
 
 

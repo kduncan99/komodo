@@ -1,0 +1,97 @@
+Designed to be run as a container, presumably via Docker
+
+The following terms apply to the subsequent descriptions and notes:
+    {sysid} A system identifier consisting of 1 to 6 digits or uppercase letters
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+A container shall be created which is comprised of JRE version 13 (as a minimum).
+That container will be configured to run Komodo at container startup.
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Source entities are located in the /resources project folder
+/resources
+    /config
+        Initial configuration artifacts, copied into the production /config directory at deployment time
+    /media
+        /binaries
+            any necessary loadable binaries such as diagnostics, dprep, etc
+            copied to the /binaries directory at deployment
+        /disks
+            preformatted, preloaded disk pack(s) which are copied to the /disks directory at deployment
+        /tapes
+            prewritten tape volumes (including a boot tape) which are copied to the /tapes directory at deployment
+    /web
+        Contains the various web-related directories, including the system console and terminal javascript code
+        Copied to the /web directory at deployment time
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+External volumes shall be mapped to the following directories.
+This directory structure is to be implemented by an initialization deployment script.
+These directories are subject to hard-coding in Komodo, although in practice such hard-coding is likely to be
+    restricted to a common file of constant definitions.
+
+/binaries
+        Contains binary files each of which contains loadable mainframe code
+        One file shall be the bootstrap code loaded into an emulated system by the SP
+        Additional files comprise the body of offline diagnostic tools (such as a DPREP tool) invoked via the SP
+
+/config
+    System configuration is kept here
+    /config/hardware.json
+        Current hardware configuration of the system
+        Defines the various virtual hardware nodes along with their particular attributes
+    /config/software.json
+        Current software configuration of the system
+    /config/log4j2.xml
+        System logging configuration
+
+/disks
+    Where all disk volumes are kept.
+    These volumes are assigned on to each disk device
+    System file names are formatted as {sysid}.disk
+    {sysid} shall match the pack name as stored in the volume record
+    Disk Device objects may be (probably will be) configured to mount one of these .dsk volumes at instantiation or startup
+
+/logs
+    System logs are written to this subdirectory
+
+/symbionts
+    Represent input and output directories for virtual card and print devices
+    This directory consists of multiple subdirectories, one per symbiont device
+    Each directory name is formatted as {sysid} where the name matches the name of the symbiont device
+    card reader devices read files from their corresponding directory as they appear, and convert them to
+        SDF files in the general swap file area, for eventual processing as batch jobs.
+        The format of the filenames in this directory is arbitrary
+        The data format is a simple text file
+    card punch devices place their output into their corresponding directory as simple text files
+    printer devices place their output into their corresponding directory
+
+    Note - it is envisioned that certain types of symbionts will exist, which accept input and product output
+        over secure network sockets; the protocols for doing so are as yet TBD, and do not affect deployment
+        in any particular way, excepting if and as they require opened network ports
+
+/tapes
+    Where all tape volumes are kept.
+    The files in this directory and its subdirectories represent individual (virtual) reels/volumes of tape
+    System file names are formatted as {sysid}.tape
+    {sysid} corresponds to the volume number of the tape
+    A file having the read-only attribute corresponds to a reel which does not have a write-ring inserted
+    Reels formatted as SYnnnn.tape are deployed at installation, contain released software, and can never be overwritten
+
+/web
+    This directory is the presumed base directory for all files which are read from the HTTP server(s)
+    Thus, GET of /foo.js will retrieve /resources/web/foo.js
+/web/library
+    Contains third-party .js and .css files
+/web/systemConsole
+    Contains .js, .css, and .html files for the system console web application
+    Implements all functionality necessary to configure and operate Komodo
+    Contains favicon.ico as well
+/web/terminal
+    Contains .js, .css, and .html files for the attached terminal application
+    This application implements a variation of a standard Uniscope(TM) terminal
+    Contains favicon.ico as well

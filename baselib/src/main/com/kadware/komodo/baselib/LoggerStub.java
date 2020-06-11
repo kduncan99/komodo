@@ -1,14 +1,12 @@
 /*
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
- */
-
-package com.kadware.komodo.baselib;
-
-/**
+ *
  * An empty stub class which implements the apache log4j 2 Logger, doing nothing.
  * For minalib cases, we might extend this so we can unit minalib our logging.
  * For working code, we might extend this somehow so that we can send stuff to various displays, or something like that.
  */
+
+package com.kadware.komodo.baselib;
 
 import org.apache.logging.log4j.spi.AbstractLogger;
 import org.apache.logging.log4j.Level;

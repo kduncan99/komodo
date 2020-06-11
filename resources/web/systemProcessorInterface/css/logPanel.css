@@ -1,0 +1,18 @@
+/* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
+
+#Logging {
+    background-color: #373737;
+    color: white;
+}
+
+#loggingScreen {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,monospace;
+    font-size: 12px;
+    min-height: 288px;
+    max-height: 600px;
+    min-width: 560px;
+    max-width: 947px;
+    overflow: scroll;
+    background-color: white;
+    color: black;
+}

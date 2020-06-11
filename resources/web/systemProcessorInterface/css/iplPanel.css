@@ -1,0 +1,32 @@
+/* Copyright (c) 2020 by Kurt Duncan - All Rights Reserved */
+
+#IPL {
+    background-color: #373737;
+    color: white;
+}
+
+.JumpKeyFlexItem {
+    width: 300px;
+}
+
+.JumpKey {
+    color: #7f7f7f;
+    background-color: #3f3f3f;
+    width: 25px;
+    padding: 3px;
+}
+
+.JumpKeyDim {
+    color: #bfbfbf;
+    background-color: #00003f;
+    width: 25px;
+    padding: 3px;
+}
+
+.JumpKeyLit {
+    color: #ffffff;
+    background-color: #3f3fff;
+    width: 25px;
+    padding: 3px;
+}
+
