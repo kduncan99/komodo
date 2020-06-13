@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.kex.kasm.Form;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 
 /**
@@ -16,9 +17,26 @@ public class FormValue extends Value {
 
     /**
      * constructor
+     * @param locale where this form was defined
      * @param form form to be used
      */
-    private FormValue(Form form) { _form = form; }
+    public FormValue(
+        final Locale locale,
+        final Form form
+    ) {
+        super(locale);
+        _form = form;
+    }
+
+    /**
+     * constructor
+     * @param form form to be used
+     */
+    public FormValue(
+        final Form form
+    ) {
+        _form = form;
+    }
 
     /**
      * Compares an object to this object
@@ -37,11 +55,13 @@ public class FormValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value (since we ignore 'flagged', this simply does a copy)
+     * @param locale new value for Locale
      * @param newFlagged new value for Flagged attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) throws TypeException {
         throw new TypeException();
@@ -49,12 +69,14 @@ public class FormValue extends Value {
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      * @throws TypeException if object cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();
@@ -93,50 +115,6 @@ public class FormValue extends Value {
         return code;
     }
 
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-//
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param characterMode desired character mode - we ignore this, as this applies only to conversions of something else
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new Value
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        final CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
     /**
      * For display purposes
      * @return displayable string
@@ -144,26 +122,5 @@ public class FormValue extends Value {
     @Override
     public String toString() {
         return String.format("%s%s", _flagged ? "*" : "", _form.toString());
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Builder
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static class Builder {
-
-        Form _form = null;
-
-        public Builder setForm(Form value)                          { _form = value; return this; }
-
-        public FormValue build(
-        ) {
-            if (_form == null) {
-                throw new RuntimeException("Value not specified for FormValue builder");
-            }
-
-            return new FormValue(_form);
-        }
     }
 }

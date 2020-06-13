@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 
 /**
@@ -40,12 +41,14 @@ public class DirectiveValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale if known/appropriate; otherwise the existing value is used
      * @param newFlagged new attribute value
      * @return new value
      * @throws TypeException always - cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) throws TypeException {
         throw new TypeException();
@@ -53,12 +56,14 @@ public class DirectiveValue extends Value {
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale if known/appropriate; otherwise the existing value is used
      * @param newPrecision new value for precision attribute
      * @return new Value
      * @throws TypeException if object cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();

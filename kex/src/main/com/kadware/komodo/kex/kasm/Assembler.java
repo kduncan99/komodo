@@ -406,12 +406,12 @@ public class Assembler {
      * Generates the multiple words for a given location counter index and offset,
      * and places them into the appropriate location counter pool within the given context.
      * Also associates it with the current top-level text line.
-     * @param lineSpecifier location of the text entity generating this word
+     * @param locale location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param values the values to be used
      */
     void generate(
-        final LineSpecifier lineSpecifier,
+        final Locale locale,
         final int lcIndex,
         final long[] values
     ) {
@@ -419,9 +419,9 @@ public class Assembler {
         int lcOffset = gp.getNextOffset();
 
         for (int vx = 0; vx < values.length; ++vx) {
-            IntegerValue iv = new IntegerValue.Builder().setValue(values[vx]).build();
+            IntegerValue iv = new IntegerValue.Builder().setLocale(locale).setValue(values[vx]).build();
             GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
-                                                 lineSpecifier,
+                                                 locale.getLineSpecifier(),
                                                  lcIndex,
                                                  lcOffset + vx,
                                                  iv);
@@ -434,18 +434,18 @@ public class Assembler {
      * Generates a word (with possibly a form attached) for a given location counter index and offset,
      * and places it into the appropriate location counter pool within the given context.
      * Also associates it with the current top-level text line.
-     * @param lineSpecifier location of the text entity generating this word
+     * @param locale location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param value the integer/intrinsic value to be used
      */
     void generate(
-        final LineSpecifier lineSpecifier,
+        final Locale locale,
         final int lcIndex,
         final IntegerValue value
     ) {
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp.getNextOffset();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, value);
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale.getLineSpecifier(), lcIndex, lcOffset, value);
         gp.store(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
     }
@@ -463,13 +463,13 @@ public class Assembler {
             if (fpValue._precision == ValuePrecision.Single) {
                 Word36 w36 = fpValue._value.toWord36();
                 long[] word36 = { w36.getW() };
-                generate(locale.getLineSpecifier(), _currentGenerationLCIndex, word36);
+                generate(locale, _currentGenerationLCIndex, word36);
             } else {
                 //  double precision generation is the default...
                 DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
                 Word36[] word36s = dw36.getWords();
                 long[] word36 = { word36s[0].getW(), word36s[1].getW() };
-                generate(locale.getLineSpecifier(), _currentGenerationLCIndex, word36);
+                generate(locale, _currentGenerationLCIndex, word36);
             }
         } catch (CharacteristicOverflowException ex) {
             appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
@@ -483,7 +483,7 @@ public class Assembler {
      */
     private void generateInteger(
         final TextField operandField,
-        final Locale sf0Locale,
+        final Locale locale,
         final Value firstValue
     ) {
         int valueCount = (operandField._subfields.size());
@@ -513,7 +513,7 @@ public class Assembler {
                 ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
                 Expression eNext = pNext.parse(this);
                 if (eNext == null) {
-                    appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Expression expected"));
+                    appendDiagnostic(new ErrorDiagnostic(locale, "Expression expected"));
                     continue;
                 }
 
@@ -529,17 +529,18 @@ public class Assembler {
                     appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
                 }
             } catch (ExpressionException ex) {
-                appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+                appendDiagnostic(new ErrorDiagnostic(locale, "Syntax error in expression"));
             }
 
             startingBit += fieldSizes[vx];
         }
 
-        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
+        IntegerValue iv = new IntegerValue.Builder().setLocale(locale)
+                                                    .setValue(new DoubleWord36(intValue))
                                                     .setForm(new Form(fieldSizes))
-                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .setReferences(newRefs)
                                                     .build();
-        generate(operandField._locale.getLineSpecifier(), _currentGenerationLCIndex, iv);
+        generate(operandField._locale, _currentGenerationLCIndex, iv);
     }
 
     /**
@@ -591,7 +592,7 @@ public class Assembler {
             slice = ArraySlice.stringToWord36Fieldata(effectiveString);
         }
 
-        generate(locale.getLineSpecifier(), _currentGenerationLCIndex, slice._array);
+        generate(locale, _currentGenerationLCIndex, slice._array);
     }
 
     /**
@@ -822,8 +823,7 @@ public class Assembler {
                 }
             }
 
-            LineSpecifier lSpec = operandField._locale.getLineSpecifier();
-            generate(lSpec, _currentGenerationLCIndex, formValue._form, realValues, operandField._locale);
+            generate(operandField._locale, _currentGenerationLCIndex, formValue._form, realValues);
         }
     }
 
@@ -874,7 +874,7 @@ public class Assembler {
                                       && (iinfo._jFlag || (jField < 016));
 
         TextSubfield[] opSubfields = processMnemonicGetOperandSubfields(iinfo, operandField, baseSubfieldAllowed);
-        IntegerValue aValue = processMnemonicGetAField(iinfo, operandField, opSubfields[0]);
+        IntegerValue aValue = processMnemonicGetAField(iinfo, operationField, operandField, opSubfields[0]);
         IntegerValue uValue = processMnemonicGetUField(operandField, opSubfields[1]);
         IntegerValue xValue = processMnemonicGetXField(opSubfields[2]);
         IntegerValue bValue = baseSubfieldAllowed ? processMnemonicGetBField(opSubfields[3]) : IntegerValue.POSITIVE_ZERO;
@@ -882,68 +882,69 @@ public class Assembler {
         //  Create the instruction word
         Form form;
         IntegerValue[] values;
+        Locale jLocale = operandField._subfields.size() > 1 ? operandField._subfields.get(1)._locale : operandField._locale;
         if (!iinfo._jFlag && (jField >= 016)) {
             form = _fjaxuForm;
             values = new IntegerValue[5];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
         } else if ((_codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
             form = _fjaxhiuForm;
             values = new IntegerValue[7];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
-            values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
+            values[4] = new IntegerValue.Builder().setLocale(xValue._locale).setValue(xValue._flagged ? 1 : 0).build();
+            values[5] = new IntegerValue.Builder().setLocale(uValue._locale).setValue(uValue._flagged ? 1 : 0).build();
             values[6] = uValue;
         } else {
             form = _fjaxhibdForm;
             values = new IntegerValue[8];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
+            values[4] = new IntegerValue.Builder().setLocale(xValue._locale).setValue(xValue._flagged ? 1 : 0).build();
             int bInt = bValue._value.get().intValue();
             if (bInt < 017) {
-                values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
+                values[5] = new IntegerValue.Builder().setLocale(uValue._locale).setValue(uValue._flagged ? 1 : 0).build();
                 values[6] = bValue;
             } else {
-                values[5] = new IntegerValue.Builder().setValue(1).build();
-                values[6] = new IntegerValue.Builder().setValue(bInt & 017).build();
+                values[5] = new IntegerValue.Builder().setLocale(bValue._locale).setValue(1).build();
+                values[6] = new IntegerValue.Builder().setLocale(bValue._locale).setValue(bInt & 017).build();
             }
             values[7] = uValue;
         }
 
-        generate(operationField._locale.getLineSpecifier(),
-                 _currentGenerationLCIndex,
-                 form,
-                 values,
-                 operationField._locale);
+        generate(operationField._locale, _currentGenerationLCIndex, form, values);
         return true;
     }
 
     /**
      * Determine the value for the instruction's a-field
      * @param instructionInfo InstructionInfo for the instruction we're generating
+     * @param operationField operator field in case we need that locale
      * @param operandField operand field in case we need that locale
      * @param registerSubfield register (a-field) subfield text
      * @return value representing the A-field (which might have a flagged value)
      */
     private IntegerValue processMnemonicGetAField(
         final InstructionWord.InstructionInfo instructionInfo,
+        final TextField operationField,
         final TextField operandField,
         final TextSubfield registerSubfield
     ) {
         IntegerValue aValue = IntegerValue.POSITIVE_ZERO;
 
         if (instructionInfo._aFlag) {
-            aValue = new IntegerValue.Builder().setValue(instructionInfo._aField).build();
+            //  a-field comes from the instruction info object
+            aValue = new IntegerValue.Builder().setLocale(operationField._locale).setValue(instructionInfo._aField).build();
         } else {
+            //  a-field comes from the first subfield in the operand field
             if ((registerSubfield == null) || (registerSubfield._text.isEmpty())) {
                 appendDiagnostic(new ErrorDiagnostic(operandField._locale,
                                                      "Missing register specification"));
@@ -964,15 +965,18 @@ public class Assembler {
                             aValue = (IntegerValue) v;
                             int aInteger = aValue._value.get().intValue();
                             aValue = switch (instructionInfo._aSemantics) {
-                                case A -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case A -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                    .setFlagged(aValue._flagged)
                                                                     .setValue(aInteger - 12)
                                                                     .setReferences(aValue._references)
                                                                     .build();
-                                case B_EXEC -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case B_EXEC -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                         .setFlagged(aValue._flagged)
                                                                          .setValue(aInteger - 16)
                                                                          .setReferences(aValue._references)
                                                                          .build();
-                                case R -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case R -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                    .setFlagged(aValue._flagged)
                                                                     .setValue(aInteger - 64)
                                                                     .setReferences(aValue._references)
                                                                     .build();
@@ -1221,28 +1225,32 @@ public class Assembler {
     ) {
         Assembler subAssembler = new ProcedureAssembler(this, procedureName, procedureValue._source);
 
-        NodeValue mainNode = new NodeValue.Builder().build();
+        //  Main node contains the proc name and operation subfields, and operand subfields,
+        //  and all subsequent fields thereafter.
+        //  Its locale corresponds to the operation field of the invoking text line
+        NodeValue mainNode = new NodeValue(textLine._fields.get(1)._locale, false);
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
-            NodeValue subNode = new NodeValue.Builder().build();
-            mainNode.setValue(new IntegerValue.Builder().setValue(fx - 1).build(), subNode);
             TextField field = textLine._fields.get(fx);
+            NodeValue subNode = new NodeValue(field._locale, false);
+            mainNode.setValue(new IntegerValue.Builder().setValue(fx - 1).build(), subNode);
             for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
                 TextSubfield subField = field._subfields.get(sfx);
                 if ((fx == 1) && (sfx == 0)) {
                     //  This is the proc name - handle it accordingly (no expression evaluation)
-                    subNode.setValue(IntegerValue.POSITIVE_ZERO,
-                                     new StringValue.Builder().setValue(subField._text)
-                                                              .setCharacterMode(CharacterMode.ASCII)
-                                                              .build());
+                    StringValue sValue = new StringValue.Builder().setLocale(subNode._locale)
+                                                                  .setValue(subField._text)
+                                                                  .build();
+                    subNode.setValue(IntegerValue.POSITIVE_ZERO, sValue);
                 } else {
+                    IntegerValue nodeIndex = new IntegerValue.Builder().setValue(sfx).build();
                     try {
                         //  Evaluate the given subfield, and place the result in the appropriate position of nv
                         ExpressionParser sfParser = new ExpressionParser(subField._text, subField._locale);
                         Expression sfExpression = sfParser.parse(this);
                         Value sfValue = sfExpression.evaluate(this);
-                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), sfValue);
+                        subNode.setValue(nodeIndex, sfValue);
                     } catch (ExpressionException ex) {
-                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), IntegerValue.POSITIVE_ZERO);
+                        subNode.setValue(nodeIndex, IntegerValue.POSITIVE_ZERO);
                         Diagnostic diag = new ErrorDiagnostic(subField._locale, "Syntax error");
                         appendDiagnostic(diag);
                     }
@@ -1297,9 +1305,10 @@ public class Assembler {
                 }
             }
 
-            newValue = new IntegerValue.Builder().setValue(new DoubleWord36(newDiscreteValue))
+            newValue = new IntegerValue.Builder().setLocale(locale)
+                                                 .setValue(new DoubleWord36(newDiscreteValue))
                                                  .setForm(originalValue._form)
-                                                 .setReferences(newURefs.toArray(new UndefinedReference[0]))
+                                                 .setReferences(newURefs)
                                                  .build();
         }
 
@@ -1444,7 +1453,7 @@ public class Assembler {
      * The individual values should not have forms attached, but they may have undefined references.
      * All such undefined references are adjusted to match the field description of the particular
      * field to which the reference applies.
-     * @param lineSpecifier location of the text entity generating this word
+     * @param locale location of the text entity generating this word
      * @param lcIndex index of the location counter pool where-in the value is to be placed
      * @param form form describing the fields for which values are specified in the values parameter
      * @param values array of component values, each with potential undefined refereces but no attached forms
@@ -1452,18 +1461,17 @@ public class Assembler {
      *          This value is used in generating literals, and is not used in other situations.
      */
     public IntegerValue generate(
-        final LineSpecifier lineSpecifier,
+        final Locale locale,
         final int lcIndex,
         final Form form,
-        final IntegerValue[] values,
-        final Locale locale
+        final IntegerValue[] values
     ) {
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp.getNextOffset();
         if (form._fieldSizes.length != values.length) {
             appendDiagnostic(new FormDiagnostic(locale,
                                                 "Contradiction between number of values and number of fields in form"));
-            return new IntegerValue.Builder().setValue(lcOffset).build();
+            return new IntegerValue.Builder().setLocale(locale).setValue(lcOffset).build();
         }
 
         BigInteger genInt = BigInteger.ZERO;
@@ -1493,16 +1501,18 @@ public class Assembler {
             bit += form._fieldSizes[fx];
         }
 
-        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(genInt))
+        IntegerValue iv = new IntegerValue.Builder().setLocale(locale)
+                                                    .setValue(genInt)
                                                     .setForm(form)
-                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .setReferences(newRefs)
                                                     .build();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale.getLineSpecifier(), lcIndex, lcOffset, iv);
         gw._topLevelTextLine._generatedWords.add(gw);
         gp.store(gw);
 
         UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
+        return new IntegerValue.Builder().setLocale(locale)
+                                         .setValue(lcOffset)
                                          .setReferences(lcRefs)
                                          .build();
     }

@@ -88,7 +88,10 @@ public class ReferenceItem extends OperandItem {
                                                               false,
                                                               _reference)
                             };
-                            return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
+                            return new IntegerValue.Builder().setLocale(_locale)
+                                                             .setValue(0)
+                                                             .setReferences(refs)
+                                                             .build();
                         }
                     }
 

@@ -48,12 +48,14 @@ public class CFSFunction extends BuiltInFunction {
         if (arguments[0] instanceof IntegerValue) {
             IntegerValue iv = (IntegerValue) arguments[0];
             if (iv._precision == ValuePrecision.Double) {
-                return new StringValue.Builder().setValue(iv._value.toStringFromFieldata())
+                return new StringValue.Builder().setLocale(getLocale())
+                                                .setValue(iv._value.toStringFromFieldata())
                                                 .setCharacterMode(CharacterMode.Fieldata)
                                                 .build();
             } else {
                 String str = iv._value.getWords()[1].toStringFromFieldata();
-                return new StringValue.Builder().setValue(str)
+                return new StringValue.Builder().setLocale(getLocale())
+                                                .setValue(str)
                                                 .setCharacterMode(CharacterMode.Fieldata)
                                                 .build();
             }

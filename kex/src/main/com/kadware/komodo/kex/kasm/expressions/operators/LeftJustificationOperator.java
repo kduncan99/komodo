@@ -40,6 +40,6 @@ public class LeftJustificationOperator extends Operator {
             throw new ExpressionException();
         }
 
-        valueStack.push(((StringValue) operand).copy(ValueJustification.Left));
+        valueStack.push(((StringValue) operand).copy(_locale, ValueJustification.Left));
     }
 }

@@ -23,21 +23,23 @@ public class FloatingPointValue extends Value {
 
     public final FloatingPointComponents _value;
 
-    private static final FloatingPointValue POSITIVE_ZERO =
-        new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+    private static final FloatingPointValue POSITIVE_ZERO = new Builder().setValue(FloatingPointComponents.COMP_POSITIVE_ZERO)
+                                                                         .build();
 
     /**
      * constructor
+     * @param locale - where this value was defined
      * @param flagged - leading asterisk
      * @param value - value encoded into a FloatingPointComponents object
      * @param precision - indicates single or double precision (or default)
      */
-    public FloatingPointValue(
+    private FloatingPointValue(
+        final Locale locale,
         final boolean flagged,
         final FloatingPointComponents value,
         final ValuePrecision precision
     ) {
-        super(flagged, precision);
+        super(locale, flagged, precision);
         _value = value;
     }
 
@@ -63,26 +65,30 @@ public class FloatingPointValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new value
      * @return new object
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) {
-        return new FloatingPointValue(newFlagged, _value, _precision);
+        return new FloatingPointValue(locale, newFlagged, _value, _precision);
     }
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) {
-        return new FloatingPointValue(_flagged, _value, newPrecision);
+        return new FloatingPointValue(locale, _flagged, _value, newPrecision);
     }
 
     /**
@@ -145,7 +151,7 @@ public class FloatingPointValue extends Value {
     ) {
         try {
             FloatingPointComponents fpc = operand1._value.normalize().add(operand2._value.normalize());
-            return new FloatingPointValue.Builder().setValue(fpc).build();
+            return new FloatingPointValue(locale, false, fpc, ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
             diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
             return FloatingPointValue.POSITIVE_ZERO;
@@ -159,15 +165,25 @@ public class FloatingPointValue extends Value {
      * Create a FloatingPointValue from an IntegerValue.
      */
     public static FloatingPointValue convertFromInteger(
+        final Locale locale,
         final IntegerValue integerValue
     ) {
         if (integerValue._value.isPositiveZero()) {
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO,
+                                          ValuePrecision.Default);
         } else if (integerValue._value.isNegativeZero()) {
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_NEGATIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_NEGATIVE_ZERO,
+                                          ValuePrecision.Default);
         } else {
             FloatingPointComponents fpc = new FloatingPointComponents(integerValue._value.get());
-            return new FloatingPointValue(false, fpc, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          fpc,
+                                          ValuePrecision.Default);
         }
     }
 
@@ -182,16 +198,28 @@ public class FloatingPointValue extends Value {
     ) {
         try {
             FloatingPointComponents fpc = dividend._value.divide(divisor._value);
-            return new FloatingPointValue(false, fpc, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          fpc,
+                                          ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
             diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO,
+                                          ValuePrecision.Default);
         } catch (CharacteristicUnderflowException ex) {
             diagnostics.append(new ErrorDiagnostic(locale, "Characteristic underflow"));
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO,
+                                          ValuePrecision.Default);
         } catch (DivideByZeroException ex) {
             diagnostics.append(new TruncationDiagnostic(locale, "Divide by zero"));
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO,
+                                          ValuePrecision.Default);
         }
     }
 
@@ -206,13 +234,21 @@ public class FloatingPointValue extends Value {
     ) {
         try {
             FloatingPointComponents fpc = dividend._value.multiply(divisor._value);
-            return new FloatingPointValue(false, fpc, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          fpc,
+                                          ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
             diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO,
+                                          ValuePrecision.Default);
         } catch (CharacteristicUnderflowException ex) {
             diagnostics.append(new ErrorDiagnostic(locale, "Characteristic underflow"));
-            return new FloatingPointValue(false, FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
+            return new FloatingPointValue(locale,
+                                          false,
+                                          FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);
         }
     }
 
@@ -220,10 +256,14 @@ public class FloatingPointValue extends Value {
      * Produces the additive inverse of the given value
      */
     public static FloatingPointValue negate(
+        final Locale locale,
         final FloatingPointValue value
     ) {
         FloatingPointComponents fpc = value._value.negate();
-        return new FloatingPointValue(false, fpc, value._precision);
+        return new FloatingPointValue(locale,
+                                      false,
+                                      fpc,
+                                      value._precision);
     }
 
 
@@ -234,10 +274,12 @@ public class FloatingPointValue extends Value {
     public static class Builder {
 
         boolean _flagged = false;
+        Locale _locale = null;
         ValuePrecision _precision = ValuePrecision.Default;
         FloatingPointComponents _value = null;
 
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
+        public Builder setLocale(Locale value)                      { _locale = value; return this; }
         public Builder setPrecision(ValuePrecision value)           { _precision = value; return this; }
         public Builder setValue(FloatingPointComponents value)      { _value = value; return this; }
 
@@ -247,7 +289,7 @@ public class FloatingPointValue extends Value {
                 throw new RuntimeException("Value not specified for FloatingPointValue builder");
             }
 
-            return new FloatingPointValue(_flagged, _value, _precision);
+            return new FloatingPointValue(_locale, _flagged, _value, _precision);
         }
     }
 }

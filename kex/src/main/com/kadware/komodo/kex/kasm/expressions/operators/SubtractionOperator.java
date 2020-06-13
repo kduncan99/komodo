@@ -64,7 +64,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                 FloatingPointValue iopLeft = (FloatingPointValue) operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue) operands[1];
                 opResult = FloatingPointValue.add(iopLeft,
-                                                  FloatingPointValue.negate(iopRight),
+                                                  FloatingPointValue.negate(_locale, iopRight),
                                                   _locale,
                                                   assembler.getDiagnostics());
             }

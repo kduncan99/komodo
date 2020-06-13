@@ -68,7 +68,7 @@ public abstract class ArithmeticOperator extends Operator {
             if (opType0 != ValueType.FloatingPoint) {
                 if (opType0 == ValueType.Integer) {
                     IntegerValue iv = (IntegerValue) operands[0];
-                    operands[0] = FloatingPointValue.convertFromInteger(iv);
+                    operands[0] = FloatingPointValue.convertFromInteger(_locale, iv);
                 } else {
                     diagnostics.append(new ValueDiagnostic(_locale, "Incompatible operands"));
                     throw new TypeException();
@@ -78,7 +78,7 @@ public abstract class ArithmeticOperator extends Operator {
             if (opType1 != ValueType.FloatingPoint) {
                 if (opType1 == ValueType.Integer) {
                     IntegerValue iv = (IntegerValue) operands[1];
-                    operands[1] = FloatingPointValue.convertFromInteger(iv);
+                    operands[1] = FloatingPointValue.convertFromInteger(_locale, iv);
                 } else {
                     diagnostics.append(new ValueDiagnostic(_locale, "Incompatible operands"));
                     throw new TypeException();

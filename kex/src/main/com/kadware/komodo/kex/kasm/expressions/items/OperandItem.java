@@ -12,9 +12,7 @@ import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
  * Base class for an expression item which represents an operand.
  * This could be a value, a built-in function reference, etc.
  */
-public abstract class OperandItem implements IExpressionItem {
-
-    public final Locale _locale;
+public abstract class OperandItem extends ExpressionItem {
 
     /**
      * constructor
@@ -23,7 +21,7 @@ public abstract class OperandItem implements IExpressionItem {
     OperandItem(
         final Locale locale
     ) {
-        _locale = locale;
+        super(locale);
     }
 
     /**

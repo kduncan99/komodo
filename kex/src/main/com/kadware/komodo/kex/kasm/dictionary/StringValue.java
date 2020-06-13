@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.kex.kasm.CharacterMode;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 
 /**
@@ -20,6 +21,7 @@ public class StringValue extends Value {
 
     /**
      * constructor
+     * @param locale where this is defined
      * @param flagged (leading asterisk)
      * @param value actual string content
      * @param characterMode ASCII or Fieldata
@@ -27,13 +29,14 @@ public class StringValue extends Value {
      * @param justification left/right/default
      */
     private StringValue(
+        final Locale locale,
         final boolean flagged,
         final String value,
         final CharacterMode characterMode,
         final ValuePrecision precision,
         final ValueJustification justification
     ) {
-        super(flagged, precision);
+        super(locale, flagged, precision);
         _characterMode = characterMode;
         _value = value;
         _justification = justification;
@@ -61,48 +64,56 @@ public class StringValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new value for Flagged attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) {
-        return new StringValue(newFlagged, _value, _characterMode, _precision, _justification);
+        return new StringValue(locale, newFlagged, _value, _characterMode, _precision, _justification);
     }
 
     /**
      * Creates a new copy of this object, with the given justification
+     * @param locale new value for Locale
      * @param newJustification new value for ValueJustification attribute
      * @return new Value
      */
     public Value copy(
+        final Locale locale,
         final ValueJustification newJustification
     ) {
-        return new StringValue(_flagged, _value, _characterMode, _precision, newJustification);
+        return new StringValue(locale, _flagged, _value, _characterMode, _precision, newJustification);
     }
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) {
-        return new StringValue(_flagged, _value, _characterMode, newPrecision, _justification);
+        return new StringValue(locale, _flagged, _value, _characterMode, newPrecision, _justification);
     }
 
     /**
      * Creates a new copy of this object, with the given character mode
+     * @param locale new value for Locale
      * @param newMode new value for Mode attribute
      * @return new Value
      */
     public Value copy(
+        final Locale locale,
         final CharacterMode newMode
     ) {
-        return new StringValue(_flagged, _value, newMode, _precision, _justification);
+        return new StringValue(locale, _flagged, _value, newMode, _precision, _justification);
     }
 
     /**
@@ -161,12 +172,14 @@ public class StringValue extends Value {
         CharacterMode _characterMode = CharacterMode.Default;
         boolean _flagged = false;
         ValueJustification _justification = ValueJustification.Default;
+        Locale _locale = null;
         ValuePrecision _precision = ValuePrecision.Default;
         String _value = null;
 
         public Builder setCharacterMode(CharacterMode value)        { _characterMode = value; return this; }
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
         public Builder setJustification(ValueJustification value)   { _justification = value; return this; }
+        public Builder setLocale(Locale value)                      { _locale = value; return this; }
         public Builder setPrecision(ValuePrecision value)           { _precision = value; return this; }
         public Builder setValue(String value)                       { _value = value; return this; }
 
@@ -176,7 +189,7 @@ public class StringValue extends Value {
                 throw new RuntimeException("Value not specified for IntegerValue builder");
             }
 
-            return new StringValue(_flagged, _value, _characterMode, _precision, _justification);
+            return new StringValue(_locale, _flagged, _value, _characterMode, _precision, _justification);
         }
     }
 }

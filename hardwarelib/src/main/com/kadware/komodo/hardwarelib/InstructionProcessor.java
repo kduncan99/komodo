@@ -1254,6 +1254,8 @@ public class InstructionProcessor extends Processor implements Worker {
                         break;
 
                     case BasicMode:
+                        //  Per PRM, interrupt processing always transfers to B0...
+                        //  Implying that the interrupt handler must be extended mode.
                         if (bmInfo._interrupt != null) {
                             stop(InstructionProcessor.StopReason.InterruptHandlerInvalidBankType,
                                  (bmInfo._sourceBankLevel << 15) | bmInfo._sourceBankDescriptorIndex);
@@ -1522,7 +1524,13 @@ public class InstructionProcessor extends Processor implements Worker {
                 } else if (bmInfo._instruction == Instruction.LBU) {
                     bmInfo._baseRegisterIndex = (int) _currentInstruction.getA();
                     bmInfo._nextStep = 18;
-                } else if ((bmInfo._instruction == Instruction.UR) || (bmInfo._interrupt != null)) {
+                } else if (bmInfo._instruction == Instruction.UR) {
+                    //  TODO is this right for UR back to basic mode? Wouldn't the base register be 12,13,14, or 15?
+                    //      In that case, we're doing an EM to BM transfer (see further below). BUG!
+                    bmInfo._baseRegisterIndex = 0;
+                    bmInfo._nextStep = 16;
+                } else if (bmInfo._interrupt != null) {
+                    //  Per step 10 in the PRM, interrupts are always to B0
                     bmInfo._baseRegisterIndex = 0;
                     bmInfo._nextStep = 16;
                 } else {
@@ -4959,6 +4967,11 @@ public class InstructionProcessor extends Processor implements Worker {
      * If the virtual address is between 0,0 and 0,31 (L,BDI) then that becomes the true bank name.
      * Otherwise L,BDI indicates a bank descriptor from which we get the true bank name,
      * subject to indirect and gate banks.
+     * Designed for deriving the BDI of a chain of Banks with offsets, where-in a very-large-bank is
+     * divided into several large banks, with particular offsets. We do some simple BDI/displacement math
+     * (i.e., actual bank name BDI is the given BDI - the displacement in the bank descriptor for the given BDI).
+     * The level of the given bank is always the returned level.
+     * Skip NI if the bank indicated by the true bank name is *not* a basic mode bank.
      */
     private class LBNFunctionHandler extends InstructionHandler {
 
@@ -4979,6 +4992,7 @@ public class InstructionProcessor extends Processor implements Worker {
                 skip = true;
             } else {
                 BankDescriptor bd = getBankDescriptor(origLevel, origBDI, false);
+                //  Per spec, QBR's produce address exception interrupt
                 if (bd.getBankType() == BankType.QueueRepository) {
                     throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
                                                            origLevel,

@@ -59,14 +59,14 @@ public abstract class RelationalOperator extends Operator {
         if (opType0 != opType1) {
             if (opType0 == ValueType.FloatingPoint) {
                 if (opType1 == ValueType.Integer) {
-                    operands[1] = FloatingPointValue.convertFromInteger((IntegerValue) operands[1]);
+                    operands[1] = FloatingPointValue.convertFromInteger(_locale, (IntegerValue) operands[1]);
                 } else {
                     postValueDiagnostic(false, diagnostics);
                     throw new TypeException();
                 }
             } else if (opType0 == ValueType.Integer) {
                 if (opType1 == ValueType.FloatingPoint) {
-                    operands[0] = FloatingPointValue.convertFromInteger((IntegerValue) operands[0]);
+                    operands[0] = FloatingPointValue.convertFromInteger(_locale, (IntegerValue) operands[0]);
                 } else {
                     postValueDiagnostic(false, diagnostics);
                     throw new TypeException();

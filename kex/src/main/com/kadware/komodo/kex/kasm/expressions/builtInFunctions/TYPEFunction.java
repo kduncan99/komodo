@@ -55,6 +55,8 @@ public class TYPEFunction extends BuiltInFunction {
             case Equf -> 11;    //  this one too
         };
 
-        return new IntegerValue.Builder().setValue(iType).build();
+        return new IntegerValue.Builder().setLocale(getLocale())
+                                         .setValue(iType)
+                                         .build();
     }
 }

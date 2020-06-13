@@ -33,7 +33,7 @@ public class NotOperator extends LogicalOperator {
     ) throws ExpressionException {
         Value[] operands = getOperands(valueStack, assembler);
         IntegerValue ioperand = (IntegerValue) operands[0];
-        IntegerValue iresult = ioperand.negate();
+        IntegerValue iresult = ioperand.negate(_locale);
         valueStack.push(iresult);
     }
 }

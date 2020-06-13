@@ -112,11 +112,7 @@ public class GFORMDirective extends Directive {
                                              assembler.getCurrentLocation());
                 }
 
-                assembler.generate(_operandField._locale.getLineSpecifier(),
-                                   assembler.getCurrentGenerationLCIndex(),
-                                   new Form(fieldSizes),
-                                   values,
-                                   _operationField._locale);
+                assembler.generate(_operandField._locale, assembler.getCurrentGenerationLCIndex(), new Form(fieldSizes), values);
             }
         }
     }

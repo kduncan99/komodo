@@ -38,14 +38,8 @@ public class SystemDictionary extends Dictionary {
         for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("X%d", rx), new IntegerValue.Builder().setValue(rx).build());
             _initialValues.put(String.format("EX%d", rx), new IntegerValue.Builder().setValue(rx).build());
-        }
-
-        for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("A%d", rx), new IntegerValue.Builder().setValue(rx + 12).build());
             _initialValues.put(String.format("EA%d", rx), new IntegerValue.Builder().setValue(rx + 12).build());
-        }
-
-        for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("R%d", rx), new IntegerValue.Builder().setValue(rx + 64).build());
             _initialValues.put(String.format("ER%d", rx), new IntegerValue.Builder().setValue(rx + 64).build());
         }
@@ -81,11 +75,11 @@ public class SystemDictionary extends Dictionary {
         //TODO
 
         //  forms
-        _initialValues.put("I$", new FormValue.Builder().setForm(Form.I$Form).build());
-        _initialValues.put("EI$", new FormValue.Builder().setForm(Form.EI$Form).build());
-        _initialValues.put("PF$FJAXHIU", new FormValue.Builder().setForm(Form.FJAXHIU$Form).build());
-        _initialValues.put("PF$FJAXU", new FormValue.Builder().setForm(Form.FJAXU$Form).build());
-        _initialValues.put("PF$FJAXHIBD", new FormValue.Builder().setForm(Form.FJAXHIBD$Form).build());
+        _initialValues.put("I$", new FormValue(Form.I$Form));
+        _initialValues.put("EI$", new FormValue(Form.EI$Form));
+        _initialValues.put("PF$FJAXHIU", new FormValue(Form.FJAXHIU$Form));
+        _initialValues.put("PF$FJAXU", new FormValue(Form.FJAXU$Form));
+        _initialValues.put("PF$FJAXHIBD", new FormValue(Form.FJAXHIBD$Form));
     }
 
     /**

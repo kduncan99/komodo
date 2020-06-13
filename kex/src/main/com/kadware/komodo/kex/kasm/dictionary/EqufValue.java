@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.kex.kasm.Form;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.FormException;
 import com.kadware.komodo.kex.kasm.exceptions.RelocationException;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
@@ -22,16 +23,18 @@ public class EqufValue extends Value {
 
     /**
      * constructor
+     * @param locale - where this was defined
      * @param flagged - leading asterisk
      * @param value - integer value, with optional undefined references applied
      * @param form - attached form (can be, but shouldn't be null)
      */
     private EqufValue(
+        final Locale locale,
         final boolean flagged,
         final IntegerValue value,
         final Form form
     ) {
-        super(flagged);
+        super(locale, flagged);
         _value = value;
         _form = form;
     }
@@ -61,24 +64,28 @@ public class EqufValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new value for Flagged attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) {
-        return new EqufValue(newFlagged, _value, _form);
+        return new EqufValue(locale, newFlagged, _value, _form);
     }
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      * @throws TypeException if object cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();
@@ -105,37 +112,8 @@ public class EqufValue extends Value {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s%s%s",
-                                _flagged ? "*" : "",
-                                _form == null ? "" : _form.toString(),
-                                _value.toString()));
-
-        return sb.toString();
-    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Builder
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static class Builder {
-
-        boolean _flagged = false;
-        Form _form = null;
-        IntegerValue _value = null;
-
-        public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
-        public Builder setForm(Form value)                          {_form = value; return this; }
-        public Builder setValue(IntegerValue value)                 { _value = value; return this; }
-
-        public EqufValue build(
-        ) {
-            if (_value == null) {
-                throw new RuntimeException("Value not specified for EqufValue builder");
-            }
-
-            return new EqufValue(_flagged, _value, _form);
-        }
+        return (_flagged ? "*" : "")
+            + (_form == null ? "" : _form.toString())
+            + _value.toString();
     }
 }

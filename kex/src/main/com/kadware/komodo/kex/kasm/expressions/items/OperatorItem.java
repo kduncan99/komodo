@@ -4,12 +4,13 @@
 
 package com.kadware.komodo.kex.kasm.expressions.items;
 
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.expressions.operators.Operator;
 
 /**
  * Allows us to stack an operator on the expression item stack
  */
-public class OperatorItem implements IExpressionItem {
+public class OperatorItem extends ExpressionItem {
 
     public final Operator _operator;
 
@@ -20,6 +21,7 @@ public class OperatorItem implements IExpressionItem {
     public OperatorItem(
         final Operator operator
     ) {
+        super(operator._locale);
         _operator = operator;
     }
 

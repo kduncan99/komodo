@@ -1,6 +1,23 @@
 -- TODO InProgress
 Rebuilding all the hwlib unit tests
 
+Change kasm->exasm, klink->exlink
+
+exasm:$EQUF
+  We need the concept of a SubExpression, such that the main expression is made up of
+  various subfields in described by a form, and each subfield has a corresponding SubExpression.
+  Each SubExpression has a parent expression such that any reference to a label which is an $EQUF
+  is then applied to the various subfields of the expression.
+  This will be applied at parsing time, such that the actual evaluation need to concern itself with
+  such annoyances... this is done by applying the following rules:
+    An EQUF reference can only be on the left side of a binary expression
+    Only one EQUF reference is allowed per expression
+    An EQUF reference may only be specified in a U or a D field
+    When encountered in parsing, the EQUF is applied to all SubExpressions in the containing Expression.
+    Upon evaluation of a SubExpression, the EQUF value corresponding to that subexpression is added to
+      the result of the SubExpression's evaluation.
+    I.... *think* this will work
+
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
@@ -22,6 +39,7 @@ What happens when $(LIT) is the same as the generation LC, and we do:
 * hwlib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
 Check to ensure breakpoints are all working.
+UR instruction, bank manipulation, see TODO - need to account for UR to basic mode
 
 everywhere:
     Max real bank size is 0_077777_777777 (with large bit set), which requires a long.

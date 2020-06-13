@@ -26,7 +26,7 @@ public class Test_ExpressionParser {
 
         Expression exp = parser.parse(new Assembler.Builder().build());
         assertEquals(1, exp._items.size());
-        IExpressionItem item = exp._items.get(0);
+        ExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof FloatingPointValue);
@@ -42,7 +42,7 @@ public class Test_ExpressionParser {
 
         Expression exp = parser.parse(new Assembler.Builder().build());
         assertEquals(1, exp._items.size());
-        IExpressionItem item = exp._items.get(0);
+        ExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof IntegerValue);
@@ -64,7 +64,7 @@ public class Test_ExpressionParser {
         Expression exp = parser.parse(asm);
         assertEquals(1, exp._items.size());
 
-        IExpressionItem item0 = exp._items.get(0);
+        ExpressionItem item0 = exp._items.get(0);
         assertTrue(item0 instanceof ValueItem);
         ValueItem vItem = (ValueItem) item0;
         assertTrue(vItem._value instanceof IntegerValue);
@@ -86,11 +86,11 @@ public class Test_ExpressionParser {
         Expression exp = parser.parse(new Assembler.Builder().build());
         assertEquals(2, exp._items.size());
 
-        IExpressionItem item0 = exp._items.get(0);
+        ExpressionItem item0 = exp._items.get(0);
         assertTrue(item0 instanceof OperatorItem);
 //        Operator op = ((OperatorItem) item0)._operator; //  TODO check this value if we can, somehow
 
-        IExpressionItem item1 = exp._items.get(1);
+        ExpressionItem item1 = exp._items.get(1);
         assertTrue(item1 instanceof ValueItem);
         Value v1 = ((ValueItem)item1)._value;
         assertTrue(v1 instanceof IntegerValue);
@@ -106,7 +106,7 @@ public class Test_ExpressionParser {
 
         Expression exp = parser.parse(new Assembler.Builder().build());
         assertEquals(1, exp._items.size());
-        IExpressionItem item = exp._items.get(0);
+        ExpressionItem item = exp._items.get(0);
         assertTrue(item instanceof ValueItem);
         Value v = ((ValueItem)item)._value;
         assertTrue(v instanceof StringValue);
