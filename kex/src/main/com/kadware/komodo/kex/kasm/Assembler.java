@@ -400,6 +400,12 @@ public class Assembler {
                 }
             }
         }
+
+        for (Diagnostic d : _global._diagnostics.getDiagnostics()) {
+            if (d._locale == null) {
+                _global._outputStream.println(d.getMessage());
+            }
+        }
     }
 
     /**
