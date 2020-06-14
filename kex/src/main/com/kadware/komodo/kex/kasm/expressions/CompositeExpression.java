@@ -4,9 +4,11 @@
 
 package com.kadware.komodo.kex.kasm.expressions;
 
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.FatalDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
@@ -96,7 +98,8 @@ public class CompositeExpression {
     public Value evaluate(
         final Assembler assembler
     ) throws ExpressionException {
-        if (_form.getFieldDescriptors().length != _discreteExpressions.length) {
+        FieldDescriptor[] fieldDescriptors = _form.getFieldDescriptors();
+        if (fieldDescriptors.length != _discreteExpressions.length) {
             String msg = "Mismatch between field descriptor count and discrete expression count";
             assembler.appendDiagnostic(new FatalDiagnostic(_locale, msg));
             return IntegerValue.POSITIVE_ZERO;
@@ -108,60 +111,26 @@ public class CompositeExpression {
             return IntegerValue.POSITIVE_ZERO;
         }
 
-        long integerResult = 0;
+        IntegerValue[] discreteValues = new IntegerValue[_discreteExpressions.length];
         for (int dx = 0; dx < _discreteExpressions.length; ++dx) {
             Value discreteResult = _discreteExpressions[dx].evaluate(assembler);
-            if (!(discreteResult instanceof IntegerValue)) {
+            if (discreteResult instanceof IntegerValue) {
+                discreteValues[dx] = (IntegerValue) discreteResult;
+            } else {
                 String msg = String.format("Expression in subfield %d returning a non-integer value", dx);
                 assembler.appendDiagnostic(new ValueDiagnostic(_locale, msg));
-                continue;
+                discreteValues[dx] = IntegerValue.POSITIVE_ZERO;
             }
         }
 
-        return null;//TODO
-//        long mask = (1L << fieldDescriptor._fieldSize) - 1;
-//        long msbMask = 1L << (fieldDescriptor._fieldSize - 1);
-//        long notMask = mask ^ 0_777777_777777L;
-//        int shift = 36 - (fieldDescriptor._fieldSize + fieldDescriptor._startingBit);
-//
-//        //  A special note - we recognize that the source word is in ones-complement.
-//        //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
-//        //  as we don't know whether the field we slice out is signed or unsigned.
-//        //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
-//        //  negative, convert to twos-complement, add or subtract the reference, then convert it
-//        //  back to ones-complement.  This works regardless, via magic.
-//        long tempValue = (initialValue & mask) >> shift;
-//        if ((tempValue & msbMask) != 0) {
-//            //  original field value is negative...  sign-extend it.
-//            tempValue |= notMask;
-//        }
-//
-//        if (subtraction) {
-//            tempValue = Word36.addSimple(tempValue, (Word36.negate(newValue)));
-//        } else {
-//            tempValue = Word36.addSimple(tempValue, newValue);
-//        }
-//
-//        //  Check for field overflow...
-//        boolean trunc;
-//        if (Word36.isPositive(tempValue)) {
-//            trunc = (tempValue & notMask) != 0;
-//        } else {
-//            trunc = (tempValue | mask) != 0_777777_777777L;
-//        }
-//
-//        if (trunc) {
-//            raise(String.format("Truncation resolving value in %s for module %s LC %d",
-//                                fieldDescriptor.toString(),
-//                                lcpSpecification._module.getModuleName(),
-//                                lcpSpecification._lcIndex));
-//        }
-//
-//        //  splice it back into the discrete value
-//        tempValue = tempValue & mask;
-//        long shiftedNotMask = (mask << shift) ^ 0_777777_777777L;
-//        return (initialValue & shiftedNotMask) | (tempValue << shift);
+        IntegerValue.IntegrateResult integrateResult = IntegerValue.integrate(IntegerValue.POSITIVE_ZERO,
+                                                                              fieldDescriptors,
+                                                                              discreteValues,
+                                                                              _locale);
+        for (Diagnostic diag : integrateResult._diagnostics.getDiagnostics()) {
+            assembler.appendDiagnostic(diag);
+        }
 
-
+        return integrateResult._value;
     }
 }

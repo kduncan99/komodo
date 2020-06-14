@@ -50,6 +50,9 @@ String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
 
+* klink
+integrateValue() is maybe wrong. See IntegerValue for proper code.
+
 * klink/kasm
 Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool
   When klink resolves it, it adds the BDI to the base value instead of just overlaying it.

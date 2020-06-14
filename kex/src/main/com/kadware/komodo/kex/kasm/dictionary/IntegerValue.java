@@ -396,7 +396,6 @@ public class IntegerValue extends Value {
      *      component values' reference sets, suitably shifted to represent the component value field descriptor.
      * The resulting value's form will be the initial value's form, if any.
      * The integration is performed by adding the component value to a particular field of the initial value.
-     * All values are assumed to be unsigned, thus we can easily check for field overflow.
      * This process is designed only for 36-bit integer values. If larger values are given, we might throw a diagnostic,
      *      or we might just work through it - results are largely undefined.
      * Resulting precision is always taken from the initial value (should be default or single, but whatever).
@@ -423,7 +422,7 @@ public class IntegerValue extends Value {
         final Locale locale
     ) {
         Diagnostics diags = new Diagnostics();
-        BigInteger workingValue = initialValue._value.get();
+        long workingValue = initialValue._value.get().longValue();
         List<UndefinedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
 
         if (fieldDescriptors.length != componentValues.length) {
@@ -436,19 +435,40 @@ public class IntegerValue extends Value {
             //  add the component value, and check whether we've overflowed the allowed field space.
             FieldDescriptor fd = fieldDescriptors[fx];
             int shiftCount = 36 - (fd._startingBit + fd._fieldSize);
-            BigInteger limitValue = BigInteger.valueOf((long) Math.pow(2, fd._fieldSize));
-            BigInteger subShiftMask = limitValue.subtract(BigInteger.ONE);
-            BigInteger subValue = workingValue.shiftRight(shiftCount).and(subShiftMask).add(componentValues[fx]._value.get());
-            BigInteger subMasked = subValue.and(subShiftMask);
-            if (!subMasked.equals(subValue)) {
-                String msg = String.format("Value %o cannot fit into a field of %d bits", subValue, fd._fieldSize);
+            long rightShiftedMask = (1L << fd._fieldSize) - 1;
+            long rightShiftedMSBit= 1L << (fd._fieldSize - 1);
+            long rightShiftedNotMask = rightShiftedMask ^ 0_777777_777777L;
+            long positionMask = rightShiftedMask << shiftCount;
+            long positionNotMask = positionMask ^ 0_777777_777777L;
+
+            //  A special note - we recognize that the source word is in ones-complement.
+            //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
+            //  as we don't know whether the field we slice out is signed or unsigned.
+            //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
+            //  negative, convert to twos-complement, add or subtract the reference, then convert it
+            //  back to ones-complement.  This works regardless, via magic.
+            long tempValue = (workingValue >> shiftCount) & rightShiftedMask;
+            if ((tempValue & rightShiftedMSBit) != 0) {
+                //  original field value is negative...  sign-extend it.
+                tempValue |= rightShiftedNotMask;
+            }
+            tempValue = Word36.addSimple(tempValue, componentValues[fx]._value.get().longValue());
+
+            //  Check for field overflow...
+            boolean trunc;
+            if (Word36.isPositive(tempValue)) {
+                trunc = (tempValue & rightShiftedNotMask) != 0;
+            } else {
+                trunc = (tempValue | rightShiftedMask) != 0_777777_777777L;
+            }
+
+            if (trunc) {
+                String msg = "Truncating value in subfield " + fd.toString();
                 diags.append(new TruncationDiagnostic(locale, msg));
             }
 
-            //  Shift the mask back into position according to the field starting bit and not it,
-            //  and use that to mask-out the original value in the workingValue and mask-in the new value.
-            BigInteger andMask = subShiftMask.shiftLeft(shiftCount).xor(BigInteger.valueOf(Word36.BIT_MASK));
-            workingValue = workingValue.and(andMask).or(subMasked.shiftLeft(shiftCount));
+            //  splice the temporary subvalue back into the working value.
+            workingValue = (workingValue & positionNotMask) | (tempValue << shiftCount);
 
             //  Any references to look at?
             for (UndefinedReference ur : componentValues[fx]._references) {

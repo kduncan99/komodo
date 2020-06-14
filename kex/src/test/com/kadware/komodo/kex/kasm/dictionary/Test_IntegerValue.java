@@ -10,9 +10,9 @@ import com.kadware.komodo.kex.kasm.LineSpecifier;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.UndefinedReference;
 import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
+import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -47,6 +47,10 @@ public class Test_IntegerValue {
         Locale intLocale = new Locale(new LineSpecifier(2, 25), 30);
         IntegerValue.IntegrateResult result = IntegerValue.integrate(initial, compFDs ,compValues, intLocale);
 
+        for (Diagnostic d : result._diagnostics.getDiagnostics()) {
+            System.out.println(d.getMessage());
+        }
+
         assertTrue(result._diagnostics.isEmpty());
         assertEquals(intLocale, result._value._locale);
         assertEquals(Form.EI$Form, result._value._form);
@@ -66,4 +70,8 @@ public class Test_IntegerValue {
         assertEquals(compFD1, urlc1._fieldDescriptor);
         assertFalse(urlc1._isNegative);
     }
+
+    //  TODO need goodpath with negative numbers
+
+    //  TODO need some negative test cases
 }
