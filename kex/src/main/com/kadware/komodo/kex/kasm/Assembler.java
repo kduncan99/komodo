@@ -1619,7 +1619,8 @@ public class Assembler {
      * What type of assembly is this?
      */
     public boolean isMainAssembly() {
-        return true; }
+        return true;
+    }
 
     public boolean isSubAssembly() {
         return false;
