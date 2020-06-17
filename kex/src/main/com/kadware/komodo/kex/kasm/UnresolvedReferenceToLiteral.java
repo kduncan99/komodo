@@ -73,6 +73,6 @@ public class UnresolvedReferenceToLiteral extends UnresolvedReference {
 
     @Override
     public String toString() {
-        return String.format("%s$LC(%d)+%d", _isNegative ? "-" : "+", _locationCounterIndex, _literalOffset);
+        return String.format("%slitPool(%d)+%d", _isNegative ? "-" : "+", _locationCounterIndex, _literalOffset);
     }
 }

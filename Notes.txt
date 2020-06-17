@@ -1,4 +1,7 @@
 -- TODO InProgress
+Literals are supposed to be generated into the various LC pools at the end of compilation
+  We wrongly generate them at the point at which they are calculated
+
 Rebuilding all the hwlib unit tests
 
 Change kasm->exasm, klink->exlink
@@ -25,8 +28,6 @@ hwlib:
 
 -- TODO BUGS
 * kasm
-Literals are supposed to be generated into the various LC pools at the end of compilation
-  We wrongly generate them at the point at which they are calculated
 Still a problem with address-of...
   + (010)
   is supposed to just generate the 010 value because of the leading '+'

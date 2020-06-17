@@ -33,8 +33,7 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final int lcIndex,
         final int count
     ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        gp.advance(count);
+        obtainPool(lcIndex).advance(count);
     }
 
     /**
@@ -52,8 +51,7 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final int lcIndex,
         final IntegerValue value
     ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        gp.generate(textLine, locale, value);
+        obtainPool(lcIndex).generate(textLine, locale, value);
     }
 
     /**
@@ -71,13 +69,42 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final int lcIndex,
         final long[] values
     ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        gp.generate(textLine, locale, values);
+        obtainPool(lcIndex).generate(textLine, locale, values);
     }
 
     /**
-     * Generates a word with a form attached at the next generated-word offset.
-     * Also associates it with the given text line.
+     * Generates a word with a form attached starting at the next generated-word offset, associating it with the given text line.
+     *
+     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
+     * The values parameter is an array with as many entities as there are fields in the form.
+     * Each value must fit within the size of that value's respective field.
+     * The overall integer portion of the generated value is the respective component integer values
+     * shifted into their field positions, and or'd together.
+     * The individual values should not have forms attached, but they may have undefined references.
+     * All such undefined references are adjusted to match the field description of the particular
+     * field to which the reference applies.
+     * @param textLine the top-level TextLine object which is responsible for generating this code
+     * @param locale location of the text entity generating this word
+     * @param lcIndex index of the location counter pool where-in the value is to be placed
+     * @param form form describing the fields for which values are specified in the values parameter
+     * @param values array of component values, each with potential undefined refereces but no attached forms
+     * @param assembler where we post diagnostics if any need to be generated
+     */
+    public void generate(
+        final TextLine textLine,
+        final Locale locale,
+        final int lcIndex,
+        final Form form,
+        final IntegerValue[] values,
+        final Assembler assembler
+    ) {
+        obtainPool(lcIndex).generate(textLine, locale, form, values, assembler);
+    }
+
+    /**
+     * Generates a word with a form attached into the literal pool for the indicated lc index
+     * and associates it with the given text line.
+     *
      * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
      * The values parameter is an array with as many entities as there are fields in the form.
      * Each value must fit within the size of that value's respective field.
@@ -93,9 +120,8 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
      * @param values array of component values, each with potential undefined refereces but no attached forms
      * @param assembler where we post diagnostics if any need to be generated
      * @return value indicating the location which applies to the word which was just generated...
-     *          This value is used in generating literals, and is not used in other situations.
      */
-    public IntegerValue generate(
+    public IntegerValue generateLiteral(
         final TextLine textLine,
         final Locale locale,
         final int lcIndex,
@@ -103,8 +129,7 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final IntegerValue[] values,
         final Assembler assembler
     ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        return gp.generate(textLine, locale, form, values, assembler);
+        return obtainPool(lcIndex).generateLiteral(textLine, locale, form, values, assembler);
     }
 
     /**
@@ -168,14 +193,19 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
                 } else if (uRef instanceof UnresolvedReferenceToLiteral) {
                     //  Any errors in resolving the reference are an internal error.
                     //  i.e., Should Never Happen.  Thus, producing a fatal exception with some debug info.
+                    //  We calculate the offset from the location counter by adding the offset-from-literal-pool
+                    //  to the offset-from-lc-of-literal-pool, and generate a URLC to replace the URLIT.
                     UnresolvedReferenceToLiteral litRef = (UnresolvedReferenceToLiteral) uRef;
                     GeneratedPool referredPool = get(litRef._locationCounterIndex);
                     if (referredPool == null) {
                         String msg = "Internal error resolving a reference to a literal";
                         assembler.appendDiagnostic(new FatalDiagnostic(null, msg));
                     } else {
-                        int offset = referredPool.getNextOffset() + litRef._literalOffset;
+                        int offset = referredPool.getLiteralPoolOffset() + litRef._literalOffset;
                         newDiscreteValue = newDiscreteValue.add(BigInteger.valueOf(offset));
+                        newURefs.add(new UnresolvedReferenceToLocationCounter(litRef._fieldDescriptor,
+                                                                              litRef._isNegative,
+                                                                              litRef._locationCounterIndex));
                     }
                 } else {
                     newURefs.add(uRef);
@@ -200,16 +230,15 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final Assembler assembler
     ) {
         for (GeneratedPool pool : values()) {
+            pool.coalesceLiterals();
+        }
+
+        for (GeneratedPool pool : values()) {
             Iterator<Map.Entry<Integer, GeneratedWord>> gwIter = pool.getGeneratedWordsIterator();
             while (gwIter.hasNext()) {
                 Map.Entry<Integer, GeneratedWord> entry = gwIter.next();
-                Integer lcOffset = entry.getKey();
-                GeneratedWord gwOriginal = entry.getValue();
-                IntegerValue originalValue = gwOriginal._value;
-                IntegerValue newValue = resolveReferences(originalValue, assembler);
-                if (!newValue.equals(originalValue)) {
-                    pool.storeGeneratedWord(lcOffset, gwOriginal.copy(newValue));
-                }
+                GeneratedWord gw = entry.getValue();
+                gw._value = resolveReferences(gw._value, assembler);
             }
         }
     }

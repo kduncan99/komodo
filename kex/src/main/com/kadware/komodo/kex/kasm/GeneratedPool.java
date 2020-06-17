@@ -4,14 +4,10 @@
 
 package com.kadware.komodo.kex.kasm;
 
-import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.RelocatableModule;
-import com.kadware.komodo.kex.kasm.diagnostics.Diagnostics;
-import com.kadware.komodo.kex.kasm.diagnostics.FormDiagnostic;
-import com.kadware.komodo.kex.kasm.diagnostics.TruncationDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
-import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +23,7 @@ import java.util.TreeMap;
 public class GeneratedPool {
 
     //  LC Index for this pool
-    private final int _locationCounterIndex;
+    final int _locationCounterIndex;
 
     //  Code which is directly generated into this pool
     private final Map<Integer, GeneratedWord> _generatedWords = new TreeMap<>();
@@ -42,6 +38,8 @@ public class GeneratedPool {
     //  Set by $INFO directives... indicates this location counter pool should be in a bank
     //  which has the extended mode flag set.
     private boolean _extendedModeFlag;
+
+    private int _generatedSize = 0;
 
     /**
      * Constructor
@@ -60,6 +58,20 @@ public class GeneratedPool {
         final int count
     ) {
         _nextOffset += count;
+        _generatedSize = _nextOffset;
+    }
+
+    /**
+     * Moves literals from the literal pool to the end of the generated words collection.
+     * Do this after assembly, but before resolving references.
+     */
+    public void coalesceLiterals() {
+        for (GeneratedWord lit : _literalPool) {
+            lit._locationCounterOffset = _nextOffset++;
+            _generatedWords.put(lit._locationCounterOffset, lit);
+        }
+
+        _literalPool.clear();
     }
 
     /**
@@ -78,6 +90,8 @@ public class GeneratedPool {
         GeneratedWord gw = new GeneratedWord(textLine, locale, _locationCounterIndex, lcOffset, value);
         _generatedWords.put(lcOffset, gw);
         gw._topLevelTextLine._generatedWords.add(gw);
+
+        _generatedSize = _nextOffset;
     }
 
     /**
@@ -100,11 +114,13 @@ public class GeneratedPool {
             _generatedWords.put(lcOffset, gw);
             gw._topLevelTextLine._generatedWords.add(gw);
         }
+
+        _generatedSize = _nextOffset;
     }
 
     /**
-     * Generates a word with a form attached at the next generated-word offset.
-     * Also associates it with the given text line.
+     * Generates a word with a form attached at the next generated-word offset, associating it with the given text line.
+     *
      * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
      * The values parameter is an array with as many entities as there are fields in the form.
      * Each value must fit within the size of that value's respective field.
@@ -118,65 +134,77 @@ public class GeneratedPool {
      * @param form form describing the fields for which values are specified in the values parameter
      * @param values array of component values, each with potential undefined refereces but no attached forms
      * @param assembler where we post diagnostics if any need to be generated
-     * @return value indicating the location which applies to the word which was just generated...
-     *          This value is used in generating literals, and is not used in other situations.
      */
-    IntegerValue generate(
+    void generate(
         final TextLine textLine,
         final Locale locale,
         final Form form,
         final IntegerValue[] values,
         final Assembler assembler
     ) {
+        IntegerValue.IntegrateResult integrateResult =
+            IntegerValue.integrate(IntegerValue.POSITIVE_ZERO, form.getFieldDescriptors(), values, locale);
+        for (Diagnostic diag : integrateResult._diagnostics.getDiagnostics()) {
+            assembler.appendDiagnostic(diag);
+        }
+        if (integrateResult._diagnostics.hasFatal()) {
+            return;
+        }
+
         int lcOffset = _nextOffset++;
-        if (form._fieldSizes.length != values.length) {
-            String msg = "Contradiction between number of values and number of fields in form";
-            assembler.appendDiagnostic(new FormDiagnostic(locale, msg));
-            return new IntegerValue.Builder().setLocale(locale).setValue(lcOffset).build();
-        }
-
-        BigInteger genInt = BigInteger.ZERO;
-        int bit = form._leftSlop;
-        List<UnresolvedReference> newRefs = new LinkedList<>();
-        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
-            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
-            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
-            BigInteger fieldValue = values[fx]._value.get();
-            boolean trunc;
-            if (values[fx]._value.isPositive()) {
-                trunc = !fieldValue.and(mask).equals(fieldValue);
-            } else {
-                trunc = !fieldValue.or(mask).equals(DoubleWord36.BIT_MASK);
-            }
-
-            if (trunc) {
-                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
-                assembler.appendDiagnostic(new TruncationDiagnostic(locale, msg));
-            }
-
-            genInt = genInt.or(values[fx]._value.get().and(mask));
-            for (UnresolvedReference ur : values[fx]._references) {
-                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
-            }
-
-            bit += form._fieldSizes[fx];
-        }
-
-        IntegerValue iv = new IntegerValue.Builder().setLocale(locale)
-                                                    .setValue(genInt)
-                                                    .setForm(form)
-                                                    .setReferences(newRefs)
-                                                    .build();
-        GeneratedWord gw = new GeneratedWord(textLine, locale, _locationCounterIndex, lcOffset, iv);
+        GeneratedWord gw = new GeneratedWord(textLine, locale, _locationCounterIndex, lcOffset, integrateResult._value);
         gw._topLevelTextLine._generatedWords.add(gw);
         _generatedWords.put(lcOffset, gw);
 
+        _generatedSize = _nextOffset;
+    }
+
+    /**
+     * Generates a word with a form attached and places it into the next position of the literal pool.
+     * Associates it with the given text line.
+     *
+     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
+     * The values parameter is an array with as many entities as there are fields in the form.
+     * Each value must fit within the size of that value's respective field.
+     * The overall integer portion of the generated value is the respective component integer values
+     * shifted into their field positions, and or'd together.
+     * The individual values should not have forms attached, but they may have undefined references.
+     * All such undefined references are adjusted to match the field description of the particular
+     * field to which the reference applies.
+     * @param textLine the top-level TextLine object which is responsible for generating this code
+     * @param locale location of the text entity generating this word
+     * @param form form describing the fields for which values are specified in the values parameter
+     * @param values array of component values, each with potential undefined refereces but no attached forms
+     * @param assembler where we post diagnostics if any need to be generated
+     * @return value indicating the location which applies to the first word which was just generated...
+     */
+    IntegerValue generateLiteral(
+        final TextLine textLine,
+        final Locale locale,
+        final Form form,
+        final IntegerValue[] values,
+        final Assembler assembler
+    ) {
+        IntegerValue.IntegrateResult integrateResult =
+            IntegerValue.integrate(IntegerValue.POSITIVE_ZERO, form.getFieldDescriptors(), values, locale);
+        for (Diagnostic diag : integrateResult._diagnostics.getDiagnostics()) {
+            assembler.appendDiagnostic(diag);
+        }
+        if (integrateResult._diagnostics.hasFatal()) {
+            return integrateResult._value;
+        }
+
+        int lpOffset = _literalPool.size();
+        GeneratedWord gw = new GeneratedWord(textLine, locale, _locationCounterIndex, lpOffset, integrateResult._value);
+        gw._topLevelTextLine._generatedWords.add(gw);
+        _literalPool.add(gw);
+
         UnresolvedReference[] lcRefs = {
-            new UnresolvedReferenceToLocationCounter(FieldDescriptor.W, false, _locationCounterIndex)
+            new UnresolvedReferenceToLiteral(FieldDescriptor.W, false, _locationCounterIndex, lpOffset)
         };
 
         return new IntegerValue.Builder().setLocale(locale)
-                                         .setValue(lcOffset)
+                                         .setValue(0)
                                          .setReferences(lcRefs)
                                          .build();
     }
@@ -193,6 +221,14 @@ public class GeneratedPool {
      */
     public Iterator<Map.Entry<Integer, GeneratedWord>> getGeneratedWordsIterator() {
         return _generatedWords.entrySet().iterator();
+    }
+
+    /**
+     * Retrieves the offset of the first word of the literal pool.
+     * Not meaningful if invoked before coalesceLiterals().
+     */
+    public int getLiteralPoolOffset() {
+        return _generatedSize;
     }
 
     /**
@@ -213,42 +249,6 @@ public class GeneratedPool {
     }
 
     /**
-     * Store a new GeneratedWord at the next location in this pool, and advance the offset
-     * @param value value to be stored
-     */
-    public void storeGeneratedWord(
-        final GeneratedWord value
-    ) {
-        _generatedWords.put(_nextOffset++, value);
-    }
-
-    /**
-     * Store a new GeneratedWord at the specified location in this pool.
-     * Does not alter _nextOffset.
-     * @param offset offset at which this word is to be stored
-     * @param value value to be stored
-     */
-    public void storeGeneratedWord(
-        final int offset,
-        final GeneratedWord value
-    ) {
-        _generatedWords.put(offset, value);
-    }
-
-    /**
-     * Stores a new GeneratedWord in the temporary literal pool for this location counter pool
-     * @param value value to be stored
-     * @return literal offset where the word is stored
-     */
-    public int storeLiteral(
-        final GeneratedWord value
-    ) {
-        int offset = _literalPool.size();
-        _literalPool.add(value);
-        return offset;
-    }
-
-    /**
      * Produces an array of RelocatableWord objects to represent the content of this pool
      * Do not invoke this until the literal pool has been collapsed into the generated word map
      * for all generated pools.
@@ -261,11 +261,6 @@ public class GeneratedPool {
             int lcOffset = wordEntry.getKey();
             GeneratedWord gw = wordEntry.getValue();
             pool[lcOffset] = gw.produceRelocatableWord();
-        }
-
-        int lcOffset = _nextOffset;
-        for (GeneratedWord gw : _literalPool) {
-            pool[lcOffset++] = gw.produceRelocatableWord();
         }
 
         return pool;

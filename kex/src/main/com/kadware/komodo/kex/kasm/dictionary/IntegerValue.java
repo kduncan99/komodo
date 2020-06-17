@@ -472,11 +472,6 @@ public class IntegerValue extends Value {
 
             //  Any references to look at?
             for (UnresolvedReference ur : componentValues[fx]._references) {
-                if (ur._fieldDescriptor._fieldSize > fd._fieldSize) {
-                    String msg = "Subfield has an attached reference which might overflow the target subfield";
-                    diags.append(new WarningDiagnostic(locale, msg));
-                }
-
                 references.add(ur.copy(fd));
             }
         }

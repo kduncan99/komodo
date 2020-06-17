@@ -25,8 +25,8 @@ public class Test_Assembler {
         AssemblerOption.EMIT_MODULE_SUMMARY,
         AssemblerOption.EMIT_SOURCE,
         AssemblerOption.EMIT_GENERATED_CODE,
-        AssemblerOption.EMIT_DICTIONARY,
-        };
+        AssemblerOption.EMIT_DICTIONARY
+    };
     private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
     @Test
@@ -316,6 +316,7 @@ public class Test_Assembler {
     public void lit1(
     ) throws ParameterException {
         String[] source = {
+            "$(0)  $LIT",
             "$(1)  + 15",
             "      + (077, 0777)",
             "      + ((0111+FOO, 0111), 0111+FEE+FOE)"
