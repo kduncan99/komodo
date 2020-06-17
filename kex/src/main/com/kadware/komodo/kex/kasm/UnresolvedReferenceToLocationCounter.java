@@ -10,11 +10,11 @@ import com.kadware.komodo.baselib.FieldDescriptor;
  * Describes a LC offset for an undefined reference,
  * and will be replaced by the virtual address of the start of the indicated LC pool.
  */
-public class UndefinedReferenceToLocationCounter extends UndefinedReference {
+public class UnresolvedReferenceToLocationCounter extends UnresolvedReference {
 
     public final int _locationCounterIndex;
 
-    public UndefinedReferenceToLocationCounter(
+    public UnresolvedReferenceToLocationCounter(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final int locationCounterIndex
@@ -24,25 +24,25 @@ public class UndefinedReferenceToLocationCounter extends UndefinedReference {
     }
 
     @Override
-    public UndefinedReference copy(
+    public UnresolvedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceToLocationCounter(_fieldDescriptor, isNegative, _locationCounterIndex);
+        return new UnresolvedReferenceToLocationCounter(_fieldDescriptor, isNegative, _locationCounterIndex);
     }
 
     @Override
-    public UndefinedReference copy(
+    public UnresolvedReference copy(
         final FieldDescriptor fieldDescriptor
     ) {
-        return new UndefinedReferenceToLocationCounter(fieldDescriptor, _isNegative, _locationCounterIndex);
+        return new UnresolvedReferenceToLocationCounter(fieldDescriptor, _isNegative, _locationCounterIndex);
     }
 
     @Override
     public boolean equals(
         final Object obj
     ) {
-        if (obj instanceof UndefinedReferenceToLocationCounter) {
-            UndefinedReferenceToLocationCounter refObj = (UndefinedReferenceToLocationCounter) obj;
+        if (obj instanceof UnresolvedReferenceToLocationCounter) {
+            UnresolvedReferenceToLocationCounter refObj = (UnresolvedReferenceToLocationCounter) obj;
             return (_isNegative == refObj._isNegative)
                    && (_fieldDescriptor.equals(refObj._fieldDescriptor))
                    && (_locationCounterIndex == refObj._locationCounterIndex);

@@ -38,10 +38,10 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         IntegerValue newValue = originalValue;
         if (originalValue._references.length > 0) {
             BigInteger newDiscreteValue = originalValue._value.get();
-            List<UndefinedReference> newURefs = new LinkedList<>();
-            for (UndefinedReference uRef : originalValue._references) {
-                if (uRef instanceof UndefinedReferenceToLabel) {
-                    UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
+            List<UnresolvedReference> newURefs = new LinkedList<>();
+            for (UnresolvedReference uRef : originalValue._references) {
+                if (uRef instanceof UnresolvedReferenceToLabel) {
+                    UnresolvedReferenceToLabel lRef = (UnresolvedReferenceToLabel) uRef;
                     try {
                         Dictionary.ValueInfo vInfo = assembler.getDictionary().getValueInfo(lRef._label);
                         Value lookupValue = vInfo._value;
@@ -56,7 +56,7 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
                                 addend = addend.negate();
                             }
                             newDiscreteValue = newDiscreteValue.add(addend);
-                            for (UndefinedReference urSub : lookupIntegerValue._references) {
+                            for (UnresolvedReference urSub : lookupIntegerValue._references) {
                                 newURefs.add(urSub.copy(lRef._fieldDescriptor));
                             }
                         }

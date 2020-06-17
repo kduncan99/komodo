@@ -7,9 +7,9 @@ package com.kadware.komodo.kex.kasm.expressions.items;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Locale;
-import com.kadware.komodo.kex.kasm.UndefinedReference;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLabel;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
+import com.kadware.komodo.kex.kasm.UnresolvedReference;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLabel;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.dictionary.BuiltInFunctionValue;
 import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
@@ -81,12 +81,12 @@ public class ReferenceItem extends OperandItem {
                     //  because we might need it for a linker special thing such as LBDICALL$.
                     //  If this is the case, then we produce an undefined reference instead of resolving...
                     IntegerValue iv = (IntegerValue) v;
-                    for (UndefinedReference ur : iv._references) {
-                        if (ur instanceof UndefinedReferenceToLocationCounter) {
-                            UndefinedReference[] refs = {
-                                new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
-                                                              false,
-                                                              _reference)
+                    for (UnresolvedReference ur : iv._references) {
+                        if (ur instanceof UnresolvedReferenceToLocationCounter) {
+                            UnresolvedReference[] refs = {
+                                new UnresolvedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                               false,
+                                                               _reference)
                             };
                             return new IntegerValue.Builder().setLocale(_locale)
                                                              .setValue(0)
@@ -118,11 +118,11 @@ public class ReferenceItem extends OperandItem {
             }
         } catch (NotFoundException ex) {
             //  reference not found - create an IntegerValue with a value of zero
-            //  and an attached positive UndefinedReference.
-            UndefinedReference[] refs = {
-                new UndefinedReferenceToLabel(new FieldDescriptor(0, 36),
-                                              false,
-                                              _reference)
+            //  and an attached positive UnresolvedReference.
+            UnresolvedReference[] refs = {
+                new UnresolvedReferenceToLabel(new FieldDescriptor(0, 36),
+                                               false,
+                                               _reference)
             };
             return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
         }

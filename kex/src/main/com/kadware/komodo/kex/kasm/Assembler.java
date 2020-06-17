@@ -28,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -302,7 +301,7 @@ public class Assembler {
                 if ((iv._references == null) || (iv._references.length == 0)) {
                     ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
                 } else {
-                    UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+                    UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) iv._references[0];
                     ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
                                                                   iv._value.get().intValue(),
                                                                   urlc._locationCounterIndex);
@@ -541,7 +540,7 @@ public class Assembler {
         }
 
         BigInteger intValue = BigInteger.ZERO;
-        List<UndefinedReference> newRefs = new LinkedList<>();
+        List<UnresolvedReference> newRefs = new LinkedList<>();
         int startingBit = 0;
         for (int vx = 0; vx < valueCount; ++vx) {
             if (vx > 0) {
@@ -563,7 +562,7 @@ public class Assembler {
                 if (vNext instanceof IntegerValue) {
                     IntegerValue ivNext = (IntegerValue) vNext;
                     FieldDescriptor fd = new FieldDescriptor(startingBit,fieldSizes[vx]);
-                    for (UndefinedReference ur : ((IntegerValue) vNext)._references) {
+                    for (UnresolvedReference ur : ((IntegerValue) vNext)._references) {
                         newRefs.add(ur.copy(fd));
                     }
                     intValue = intValue.or(ivNext._value.get());
@@ -1359,7 +1358,7 @@ public class Assembler {
         if (_endValue != null) {
             //  ENDDiagnostic guarantees that the end value is a properly-relocated IntegerValue (for the main assembly)
             IntegerValue iv = (IntegerValue) _endValue;
-            UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+            UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) iv._references[0];
             _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
         }
 
@@ -1448,7 +1447,7 @@ public class Assembler {
 
         BigInteger genInt = BigInteger.ZERO;
         int bit = form._leftSlop;
-        List<UndefinedReference> newRefs = new LinkedList<>();
+        List<UnresolvedReference> newRefs = new LinkedList<>();
         for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
             genInt = genInt.shiftLeft(form._fieldSizes[fx]);
             BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
@@ -1466,7 +1465,7 @@ public class Assembler {
             }
 
             genInt = genInt.or(values[fx]._value.get().and(mask));
-            for (UndefinedReference ur : values[fx]._references) {
+            for (UnresolvedReference ur : values[fx]._references) {
                 newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
             }
 
@@ -1482,7 +1481,7 @@ public class Assembler {
         gw._topLevelTextLine._generatedWords.add(gw);
         gp.storeGeneratedWord(gw);
 
-        UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
+        UnresolvedReference[] lcRefs = {new UnresolvedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
         return new IntegerValue.Builder().setLocale(locale)
                                          .setValue(lcOffset)
                                          .setReferences(lcRefs)
@@ -1532,9 +1531,9 @@ public class Assembler {
     ) {
         GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
         int lcOffset = gp.getNextOffset();
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
-                                                                              false,
-                                                                              _currentGenerationLCIndex) };
+        UnresolvedReference[] refs = {new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                                               false,
+                                                                               _currentGenerationLCIndex) };
         return new IntegerValue.Builder().setValue(lcOffset)
                                          .setReferences(refs)
                                          .build();

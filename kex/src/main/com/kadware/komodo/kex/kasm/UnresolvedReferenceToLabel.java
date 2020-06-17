@@ -9,11 +9,11 @@ import com.kadware.komodo.baselib.FieldDescriptor;
 /**
  * Describes a label for an undefined reference.
  */
-public class UndefinedReferenceToLabel extends UndefinedReference {
+public class UnresolvedReferenceToLabel extends UnresolvedReference {
 
     public final String _label;
 
-    public UndefinedReferenceToLabel(
+    public UnresolvedReferenceToLabel(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
         final String label
@@ -23,25 +23,25 @@ public class UndefinedReferenceToLabel extends UndefinedReference {
     }
 
     @Override
-    public UndefinedReference copy(
+    public UnresolvedReference copy(
         final boolean isNegative
     ) {
-        return new UndefinedReferenceToLabel(_fieldDescriptor, isNegative, _label);
+        return new UnresolvedReferenceToLabel(_fieldDescriptor, isNegative, _label);
     }
 
     @Override
-    public UndefinedReference copy(
+    public UnresolvedReference copy(
         final FieldDescriptor fieldDescriptor
     ) {
-        return new UndefinedReferenceToLabel(fieldDescriptor, _isNegative, _label);
+        return new UnresolvedReferenceToLabel(fieldDescriptor, _isNegative, _label);
     }
 
     @Override
     public boolean equals(
         final Object obj
     ) {
-        if (obj instanceof UndefinedReferenceToLabel) {
-            UndefinedReferenceToLabel refObj = (UndefinedReferenceToLabel) obj;
+        if (obj instanceof UnresolvedReferenceToLabel) {
+            UnresolvedReferenceToLabel refObj = (UnresolvedReferenceToLabel) obj;
             return (_isNegative == refObj._isNegative)
                    && (_fieldDescriptor.equals(refObj._fieldDescriptor))
                    && (_label.equals( refObj._label));

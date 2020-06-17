@@ -59,14 +59,14 @@ class GeneratedWord {
     RelocatableModule.RelocatableWord produceRelocatableWord() {
         RelocatableModule.RelocatableItem[] relItems = new RelocatableModule.RelocatableItem[_value._references.length];
         for (int urx = 0; urx < _value._references.length; ++urx) {
-            UndefinedReference ur = _value._references[urx];
-            if (ur instanceof UndefinedReferenceToLabel) {
-                UndefinedReferenceToLabel url = (UndefinedReferenceToLabel) ur;
+            UnresolvedReference ur = _value._references[urx];
+            if (ur instanceof UnresolvedReferenceToLabel) {
+                UnresolvedReferenceToLabel url = (UnresolvedReferenceToLabel) ur;
                 relItems[urx] = new RelocatableModule.RelocatableItemSymbol(url._label,
                                                                             url._fieldDescriptor,
                                                                             url._isNegative);
-            } else if (ur instanceof UndefinedReferenceToLocationCounter) {
-                UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) ur;
+            } else if (ur instanceof UnresolvedReferenceToLocationCounter) {
+                UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) ur;
                 relItems[urx] = new RelocatableModule.RelocatableItemLocationCounter(urlc._locationCounterIndex,
                                                                                      urlc._fieldDescriptor,
                                                                                      urlc._isNegative);

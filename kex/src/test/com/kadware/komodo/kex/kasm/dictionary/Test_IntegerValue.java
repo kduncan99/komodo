@@ -8,8 +8,8 @@ import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.LineSpecifier;
 import com.kadware.komodo.kex.kasm.Locale;
-import com.kadware.komodo.kex.kasm.UndefinedReference;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
+import com.kadware.komodo.kex.kasm.UnresolvedReference;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -21,8 +21,8 @@ public class Test_IntegerValue {
     @Test
     public void integrate_good() {
         FieldDescriptor fdur1 = new FieldDescriptor(18, 18);
-        UndefinedReference[] initialRefs = {
-            new UndefinedReferenceToLocationCounter(fdur1, false, 25)
+        UnresolvedReference[] initialRefs = {
+            new UnresolvedReferenceToLocationCounter(fdur1, false, 25)
         };
         IntegerValue initial = new IntegerValue.Builder().setValue(0_111111_222222L)
                                                          .setReferences(initialRefs)
@@ -31,8 +31,8 @@ public class Test_IntegerValue {
                                                          .build();
 
         FieldDescriptor fdur2 = new FieldDescriptor(30, 6);
-        UndefinedReference[] refs1 = {
-            new UndefinedReferenceToLocationCounter(fdur2, false, 13)
+        UnresolvedReference[] refs1 = {
+            new UnresolvedReferenceToLocationCounter(fdur2, false, 13)
         };
         FieldDescriptor compFD1 = new FieldDescriptor(12, 6);
         IntegerValue compValue1 = new IntegerValue.Builder().setValue(025).setReferences(refs1).build();
@@ -57,12 +57,12 @@ public class Test_IntegerValue {
         assertFalse(result._value._flagged);
         assertEquals(ValuePrecision.Default, result._value._precision);
         assertEquals(0_311136_233332L, result._value._value.get().longValue());
-        UndefinedReference[] urs = result._value._references;
+        UnresolvedReference[] urs = result._value._references;
         assertEquals(2, urs.length);
-        assertTrue(urs[0] instanceof UndefinedReferenceToLocationCounter);
-        assertTrue(urs[1] instanceof UndefinedReferenceToLocationCounter);
-        UndefinedReferenceToLocationCounter urlc0 = (UndefinedReferenceToLocationCounter) urs[0];
-        UndefinedReferenceToLocationCounter urlc1 = (UndefinedReferenceToLocationCounter) urs[1];
+        assertTrue(urs[0] instanceof UnresolvedReferenceToLocationCounter);
+        assertTrue(urs[1] instanceof UnresolvedReferenceToLocationCounter);
+        UnresolvedReferenceToLocationCounter urlc0 = (UnresolvedReferenceToLocationCounter) urs[0];
+        UnresolvedReferenceToLocationCounter urlc1 = (UnresolvedReferenceToLocationCounter) urs[1];
         assertEquals(25, urlc0._locationCounterIndex);
         assertEquals(fdur1, urlc0._fieldDescriptor);
         assertFalse(urlc0._isNegative);

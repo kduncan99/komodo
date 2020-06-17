@@ -4,26 +4,12 @@
 
 package com.kadware.komodo.kex.kasm.directives;
 
-import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Assembler;
-import com.kadware.komodo.kex.kasm.CodeMode;
-import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.LabelFieldComponents;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
-import com.kadware.komodo.kex.kasm.TextSubfield;
-import com.kadware.komodo.kex.kasm.UndefinedReference;
-import com.kadware.komodo.kex.kasm.diagnostics.TruncationDiagnostic;
-import com.kadware.komodo.kex.kasm.dictionary.EqufValue;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
-import com.kadware.komodo.kex.kasm.dictionary.Value;
-import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
-import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
-import com.kadware.komodo.kex.kasm.expressions.Expression;
-import com.kadware.komodo.kex.kasm.expressions.ExpressionParser;
-import java.math.BigInteger;
-import java.util.Arrays;
 
 @SuppressWarnings("Duplicates")
 public class EQUFDirective extends Directive {
@@ -59,7 +45,7 @@ public class EQUFDirective extends Directive {
 //        long shiftedInt = maskedInt.longValue() << (36 - fieldDescriptor._startingBit - fieldDescriptor._fieldSize);
 //        BigInteger finalInt = baseValue._value.get().or(BigInteger.valueOf(shiftedInt));
 //
-//        UndefinedReference[] finalRefs = new UndefinedReference[baseValue._references.length + fieldValue._references.length];
+//        UnresolvedReference[] finalRefs = new UnresolvedReference[baseValue._references.length + fieldValue._references.length];
 //        int finalrx = 0;
 //        for (int brx = 0; brx < baseValue._references.length; ++brx, ++finalrx) {
 //            finalRefs[finalrx] = baseValue._references[brx];

@@ -47,7 +47,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                 }
 
                 //  Coalesce like-references, remove inverses, etc
-                UndefinedReference[] temp = new UndefinedReference[iopLeft._references.length + iopRight._references.length];
+                UnresolvedReference[] temp = new UnresolvedReference[iopLeft._references.length + iopRight._references.length];
                 int tx = 0;
                 for (int ix = 0; ix < iopLeft._references.length; ++tx, ++ix) {
                     temp[tx] = iopLeft._references[ix];
@@ -56,7 +56,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                     temp[tx] = iopRight._references[ix].copy(!iopRight._references[ix]._isNegative);
                 }
 
-                UndefinedReference[] coalesced = UndefinedReference.coalesce(temp);
+                UnresolvedReference[] coalesced = UnresolvedReference.coalesce(temp);
                 opResult = new IntegerValue.Builder().setValue(ar._value)
                                                      .setReferences(coalesced)
                                                      .build();

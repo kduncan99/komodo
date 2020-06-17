@@ -71,8 +71,8 @@ public class Test_ExpressionParser {
         IntegerValue iValue = (IntegerValue) vItem._value;
         assertEquals(020, iValue._value.get().intValue());
         assertEquals(1, iValue._references.length);
-        assertTrue(iValue._references[0] instanceof UndefinedReferenceToLocationCounter);
-        UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iValue._references[0];
+        assertTrue(iValue._references[0] instanceof UnresolvedReferenceToLocationCounter);
+        UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) iValue._references[0];
         assertEquals(1, urlc._locationCounterIndex);
     }
 

@@ -56,7 +56,7 @@ public class IntegerValue extends Value {
     public static final IntegerValue POSITIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.POSITIVE_ZERO)).build();
 
     public final Form _form;
-    public final UndefinedReference[] _references;
+    public final UnresolvedReference[] _references;
     public final DoubleWord36 _value;
 
     /**
@@ -74,7 +74,7 @@ public class IntegerValue extends Value {
         final DoubleWord36 value,
         final ValuePrecision precision,
         final Form form,
-        final UndefinedReference[] references
+        final UnresolvedReference[] references
     ) {
         super(locale, flagged, precision);
         _value = value;
@@ -107,7 +107,7 @@ public class IntegerValue extends Value {
                 throw new FormException();
             }
 
-            if (!UndefinedReference.equals(_references, iobj._references)) {
+            if (!UnresolvedReference.equals(_references, iobj._references)) {
                 throw new RelocationException();
             }
 
@@ -165,7 +165,7 @@ public class IntegerValue extends Value {
                 if (!_form.equals(iv._form)) { return false; }
             } else if (iv._form != null) { return false; }
 
-            return UndefinedReference.equals(_references, iv._references);
+            return UnresolvedReference.equals(_references, iv._references);
         }
 
         return false;
@@ -185,7 +185,7 @@ public class IntegerValue extends Value {
                                 _flagged ? "*" : "",
                                 _form == null ? "" : _form.toString(),
                                 _value.toString()));
-        for (UndefinedReference ur : _references) {
+        for (UnresolvedReference ur : _references) {
             sb.append(ur.toString());
             sb.append(ur._fieldDescriptor.toString());
         }
@@ -256,15 +256,15 @@ public class IntegerValue extends Value {
         }
 
         //  Now deal with the undefined references (if any).
-        UndefinedReference[] resultRefs = new UndefinedReference[operand1._references.length + operand2._references.length];
+        UnresolvedReference[] resultRefs = new UnresolvedReference[operand1._references.length + operand2._references.length];
         int tx = 0;
-        for (UndefinedReference ur : operand1._references) {
+        for (UnresolvedReference ur : operand1._references) {
             resultRefs[tx++] = ignoreReferenceFields ? ur.copy(FieldDescriptor.W) : ur;
         }
-        for (UndefinedReference ur : operand2._references) {
+        for (UnresolvedReference ur : operand2._references) {
             resultRefs[tx++] = ignoreReferenceFields ? ur.copy(FieldDescriptor.W) : ur;
         }
-        resultRefs = UndefinedReference.coalesce(resultRefs);
+        resultRefs = UnresolvedReference.coalesce(resultRefs);
 
         return new IntegerValue.Builder().setLocale(locale)
                                          .setValue(new DoubleWord36(biResult))
@@ -299,7 +299,7 @@ public class IntegerValue extends Value {
             resultPrecision = ValuePrecision.Double;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -423,7 +423,7 @@ public class IntegerValue extends Value {
     ) {
         Diagnostics diags = new Diagnostics();
         long workingValue = initialValue._value.get().longValue();
-        List<UndefinedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
+        List<UnresolvedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
 
         if (fieldDescriptors.length != componentValues.length) {
             diags.append(new FatalDiagnostic(locale, "Internal error:Arrays of unequal length in integrateValues()"));
@@ -471,7 +471,7 @@ public class IntegerValue extends Value {
             workingValue = (workingValue & positionNotMask) | (tempValue << shiftCount);
 
             //  Any references to look at?
-            for (UndefinedReference ur : componentValues[fx]._references) {
+            for (UnresolvedReference ur : componentValues[fx]._references) {
                 if (ur._fieldDescriptor._fieldSize > fd._fieldSize) {
                     String msg = "Subfield has an attached reference which might overflow the target subfield";
                     diags.append(new WarningDiagnostic(locale, msg));
@@ -527,7 +527,7 @@ public class IntegerValue extends Value {
     public IntegerValue negate(
         final Locale locale
     ) {
-        UndefinedReference[] negRefs = new UndefinedReference[_references.length];
+        UnresolvedReference[] negRefs = new UnresolvedReference[_references.length];
         for (int ux = 0; ux < _references.length; ++ux) {
             negRefs[ux] = _references[ux].copy(!_references[ux]._isNegative);
         }
@@ -578,7 +578,7 @@ public class IntegerValue extends Value {
             resultPrecision = ValuePrecision.Double;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -591,7 +591,7 @@ public class IntegerValue extends Value {
                                 newValue,
                                 resultPrecision,
                                 resultForm,
-                                refList.toArray(new UndefinedReference[0]));
+                                refList.toArray(new UnresolvedReference[0]));
     }
 
     /**
@@ -620,7 +620,7 @@ public class IntegerValue extends Value {
             resultPrecision = ValuePrecision.Double;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -633,7 +633,7 @@ public class IntegerValue extends Value {
                                 newValue,
                                 resultPrecision,
                                 resultForm,
-                                refList.toArray(new UndefinedReference[0]));
+                                refList.toArray(new UnresolvedReference[0]));
     }
 
 
@@ -673,19 +673,19 @@ public class IntegerValue extends Value {
         Form _form = null;
         Locale _locale = null;
         ValuePrecision _precision = ValuePrecision.Default;
-        UndefinedReference[] _references = new UndefinedReference[0];
+        UnresolvedReference[] _references = new UnresolvedReference[0];
         DoubleWord36 _value = null;
 
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
         public Builder setForm(Form value)                          { _form = value; return this; }
         public Builder setLocale(Locale value)                      { _locale = value; return this; }
         public Builder setPrecision(ValuePrecision value)           { _precision = value; return this; }
-        public Builder setReferences(UndefinedReference[] values)   { _references = Arrays.copyOf(values, values.length); return this; }
+        public Builder setReferences(UnresolvedReference[] values)   { _references = Arrays.copyOf(values, values.length); return this; }
 
         public Builder setReferences(
-            Collection<UndefinedReference> values
+            Collection<UnresolvedReference> values
         ) {
-            _references = values.toArray(new UndefinedReference[0]);
+            _references = values.toArray(new UnresolvedReference[0]);
             return this;
         }
 

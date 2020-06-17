@@ -1,7 +1,6 @@
 package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import org.junit.Test;
@@ -9,10 +8,10 @@ import org.junit.Test;
 /**
  * Temporary 'program' to analyse the content of a binary file
  */
-public class Test_Foo {
+public class Test_VTAnalysis {
 
-    private static long TB_SENTINEL = 0_505031_075050L;
-    private static long TF_SENTINEL = 0_505031_135050L;
+    private static final long TB_SENTINEL = 0_505031_075050L;
+    private static final long TF_SENTINEL = 0_505031_135050L;
 
     public ArraySlice readSector(
         RandomAccessFile raf,
@@ -64,8 +63,8 @@ public class Test_Foo {
             try {
                 ArraySlice buffer = readSector(raf, sector);
 
-                int dumpWords = 0;
-                int blockLength = 0;
+                int dumpWords;
+                int blockLength;
                 if (buffer.get(0) == TB_SENTINEL) {
                     dumpWords = 7;
                     blockLength = 6 + (int)buffer.get(3);
@@ -79,7 +78,7 @@ public class Test_Foo {
                     blockLength = 28;
                 }
 
-                for (int wx = 0, bx = 0; wx < dumpWords; wx += 7) {
+                for (int wx = 0; wx < dumpWords; wx += 7) {
                     ArraySlice subSlice = new ArraySlice(buffer, wx, 7);
                     String disp = String.format("%012o.%03o:  %s  %s  %s",
                                                 sector,
@@ -101,51 +100,5 @@ public class Test_Foo {
         }
 
         raf.close();
-    }
-
-    @Test
-    public void first_pass(
-    ) throws IOException {
-        //  A file has a 10(?)-word header
-        //      +0      '**TF**' in fieldata
-        //      +1      volume number in fieldata, LJSF
-        //      +3      site identifier in fieldata, LJSF
-        //      +9      run-id in fieldata
-        //  A block has a 6-word header
-        //      +0      '**TB**' in fieldata
-        //      +1,H1   file sequence number, starting at 1 ?
-        //      +1,H2   block sequence number, starting at 1 ?
-        //      +2      block sequence number, starting at 1 ?
-        //      +3      block size in words
-
-        //  0       **TF** - one full sector
-        //  00034   **TB** (034 block length) - wrapped in two full sectors
-        //  00124   **TB** (03402 block length) - wrapped in 03434 words = 0101 (65) full sectors
-        //  03560   **TB**
-        int wordBufferSize = 128 * 28;
-        int byteBufferSize = wordBufferSize / 2 * 9;
-        String fileName = "/home/kduncan/PS2200Share/VT_1000.bin";
-
-        byte[] byteBuffer = new byte[byteBufferSize];
-        long[] wordBuffer = new long[wordBufferSize];
-
-        FileInputStream fis = new FileInputStream(fileName);
-        int bytes = fis.read(byteBuffer);
-
-        int words = bytes * 9 / 2;
-        ArraySlice as = new ArraySlice(wordBuffer);
-        as.unpack(byteBuffer, 0, bytes, false);
-
-        for (int wx = 0; wx < words; wx += 7) {
-            ArraySlice subSlice = new ArraySlice(as, wx, 7);
-            String msg = String.format("%06o:  %s  %s  %s",
-                                       wx,
-                                       subSlice.toOctal(true),
-                                       subSlice.toFieldata(true),
-                                       subSlice.toASCII(true));
-            System.out.println(msg);
-        }
-
-        fis.close();
     }
 }
