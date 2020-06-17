@@ -16,7 +16,7 @@ import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 class GeneratedWord {
 
     final TextLine _topLevelTextLine;
-    final LineSpecifier _lineSpecifier;
+    final Locale _locale;
     final int _locationCounterIndex;
     final int _locationCounterOffset;
     final IntegerValue _value;
@@ -24,19 +24,19 @@ class GeneratedWord {
     /**
      * Tracks the location of the line of source code which produced this object
      * @param topLevelTextLine reference to the TextLine object responsible for generating this word
-     * @param lineSpecifier line specifier of the line of source code which directly produced this word
+     * @param locale line specifier of the line of source code which directly produced this word, and the corresponding column
      * @param locationCounterIndex what pool contains this
      * @param locationCounterOffset where is this within that pool
      * @param value IntegerValue defining the the various field values and references for this word
      */
     GeneratedWord(
         final TextLine topLevelTextLine,
-        final LineSpecifier lineSpecifier,
+        final Locale locale,
         final int locationCounterIndex,
         final int locationCounterOffset,
         final IntegerValue value
     ) {
-        _lineSpecifier = lineSpecifier;
+        _locale = locale;
         _topLevelTextLine = topLevelTextLine;
         _locationCounterIndex = locationCounterIndex;
         _locationCounterOffset = locationCounterOffset;
@@ -49,7 +49,7 @@ class GeneratedWord {
     GeneratedWord copy(
         final IntegerValue newValue
     ) {
-        return new GeneratedWord(_topLevelTextLine, _lineSpecifier, _locationCounterIndex, _locationCounterOffset, newValue);
+        return new GeneratedWord(_topLevelTextLine, _locale, _locationCounterIndex, _locationCounterOffset, newValue);
     }
 
     /**
@@ -79,12 +79,6 @@ class GeneratedWord {
 
     @Override
     public String toString() {
-        return "{" +
-               _lineSpecifier.toString() +
-               ":" +
-               _topLevelTextLine._text +
-               " -> " +
-               _value.toString() +
-               "}";
+        return String.format("{%s:%s -> %s}", _locale, _topLevelTextLine._text, _value);
     }
 }

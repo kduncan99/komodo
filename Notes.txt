@@ -10,12 +10,10 @@ kasm:$EQUF
   is then applied to the various subfields of the expression.
   This will be applied at parsing time, such that the actual evaluation need to concern itself with
   such annoyances... this is done by applying the following rules:
-    An EQUF reference can only be on the left side of a binary expression
-    Only one EQUF reference is allowed per expression
-    An EQUF reference may only be specified in a U or a D field
+    Multiple EQUF references are allowed
+    An EQUF reference may only be specified in a U, X, B, or D field
     When encountered in parsing, the EQUF is applied to all SubExpressions in the containing Expression.
-    Upon evaluation of a SubExpression, the EQUF value corresponding to that subexpression is added to
-      the result of the SubExpression's evaluation.
+    Upon evaluation of a SubExpression **TODO**
     I.... *think* this will work
 
 hwlib:
@@ -23,16 +21,6 @@ hwlib:
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
     Test_Linker: need to fix unit tests
-
-exlib:
-    external file formats for hosting SDFF and PF files (and maybe tape files?)
-    support sym, rel, and abs elements
-    support various tape file formats
-
-What happens when $(LIT) is the same as the generation LC, and we do:
-    LA       A0,(5,10)
-  Right now, we generate the literal in the code stream, which is a bad thing.
-  MASM holds off generating LC pools until end of assembly, and we should also.
 
 
 -- TODO BUGS
@@ -211,6 +199,12 @@ IP: search and masked search instructions (and unit tests)
   MSNW
   MASL
   MASG
+
+* exlib:
+    external file formats for hosting SDFF and PF files (and maybe tape files?)
+    support sym, rel, and abs elements
+    support various tape file formats
+    support SOS VT file format for import/export of tape files
 
 * kasm
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation

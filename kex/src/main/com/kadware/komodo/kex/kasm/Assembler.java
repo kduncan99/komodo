@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -35,6 +36,41 @@ import java.util.TreeSet;
  */
 @SuppressWarnings("Duplicates")
 public class Assembler {
+
+    //  ---------------------------------------------------------------------------------------------------------------------------
+    //  Inner classes
+    //  ---------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Entities which are not local to a particular assembler level
+     */
+    static class GlobalData {
+
+        final Diagnostics _diagnostics = new Diagnostics();
+        final Dictionary _globalDictionary = new Dictionary(new SystemDictionary());
+        final Set<AssemblerOption> _options;
+        final PrintStream _outputStream;
+
+        boolean _arithmeticFaultCompatibilityMode = false;
+        boolean _arithmeticFaultNonInterruptMode = false;
+        boolean _quarterWordMode = false;
+        boolean _thirdWordMode = false;
+
+        ProgramStart _programStart = null;
+
+        //  Map of LC indices to the various GeneratedPool objects...
+        //  Keyed by location counter index.
+        final GeneratedPools _generatedPools = new GeneratedPools();
+
+        GlobalData(
+            Set<AssemblerOption> options,
+            PrintStream outputStream
+        ) {
+            _options = options;
+            _outputStream = outputStream;
+        }
+    }
+
 
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Data
@@ -427,11 +463,11 @@ public class Assembler {
         for (int vx = 0; vx < values.length; ++vx) {
             IntegerValue iv = new IntegerValue.Builder().setLocale(locale).setValue(values[vx]).build();
             GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
-                                                 locale.getLineSpecifier(),
+                                                 locale,
                                                  lcIndex,
                                                  lcOffset + vx,
                                                  iv);
-            gp.store(gw);
+            gp.storeGeneratedWord(gw);
             gw._topLevelTextLine._generatedWords.add(gw);
         }
     }
@@ -451,8 +487,8 @@ public class Assembler {
     ) {
         GeneratedPool gp = obtainPool(lcIndex);
         int lcOffset = gp.getNextOffset();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale.getLineSpecifier(), lcIndex, lcOffset, value);
-        gp.store(gw);
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale, lcIndex, lcOffset, value);
+        gp.storeGeneratedWord(gw);
         gw._topLevelTextLine._generatedWords.add(gw);
     }
 
@@ -1270,76 +1306,6 @@ public class Assembler {
         }
     }
 
-    /**
-     * Resolves any lingering undefined references once initial assembly is complete, for one particular IntegerValue object.
-     * These will be the forward-references we picked up along the way.
-     * No point checking for loc ctr refs, those aren't resolved until link time.
-     */
-    private IntegerValue resolveReferences(
-        final Locale locale,
-        final IntegerValue originalValue
-    ) {
-        IntegerValue newValue = originalValue;
-        if (originalValue._references.length > 0) {
-            BigInteger newDiscreteValue = originalValue._value.get();
-            List<UndefinedReference> newURefs = new LinkedList<>();
-            for (UndefinedReference uRef : originalValue._references) {
-                if (uRef instanceof UndefinedReferenceToLabel) {
-                    UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
-                    try {
-                        Dictionary.ValueInfo vInfo = _dictionary.getValueInfo(lRef._label);
-                        Value lookupValue = vInfo._value;
-                        if (lookupValue.getType() != ValueType.Integer) {
-                            String msg = String.format("Reference '%s' does not resolve to an integer",
-                                                       lRef._label);
-                            appendDiagnostic(new ValueDiagnostic(locale, msg));
-                        } else {
-                            IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                            BigInteger addend = lookupIntegerValue._value.get();
-                            if (lRef._isNegative) { addend = addend.negate(); }
-                            newDiscreteValue = newDiscreteValue.add(addend);
-                            for (UndefinedReference urSub : lookupIntegerValue._references) {
-                                newURefs.add(urSub.copy(lRef._fieldDescriptor));
-                            }
-                        }
-                    } catch (NotFoundException ex) {
-                        //  reference is still not found - propagate it
-                        newURefs.add(uRef);
-                    }
-                } else {
-                    newURefs.add(uRef);
-                }
-            }
-
-            newValue = new IntegerValue.Builder().setLocale(locale)
-                                                 .setValue(new DoubleWord36(newDiscreteValue))
-                                                 .setForm(originalValue._form)
-                                                 .setReferences(newURefs)
-                                                 .build();
-        }
-
-        return newValue;
-    }
-
-    /**
-     * Resolves any lingering undefined references once initial assembly is complete...
-     * These will be the forward-references we picked up along the way.
-     * No point checking for loc ctr refs, those aren't resolved until link time.
-     */
-    private void resolveReferences() {
-        for (Map.Entry<Integer, GeneratedPool> poolEntry : _global._generatedPools.entrySet()) {
-            GeneratedPool pool = poolEntry.getValue();
-            for (Map.Entry<Integer, GeneratedWord> wordEntry : pool.entrySet()) {
-                GeneratedWord gw = wordEntry.getValue();
-                IntegerValue originalValue = gw._value;
-                IntegerValue newValue = resolveReferences(new Locale(gw._lineSpecifier, 1), originalValue);
-                if (newValue != originalValue) {
-                    pool.put(wordEntry.getKey(), wordEntry.getValue().copy(newValue));
-                }
-            }
-        }
-    }
-
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Public methods
     //  ---------------------------------------------------------------------------------------------------------------------------
@@ -1397,7 +1363,7 @@ public class Assembler {
             _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
         }
 
-        resolveReferences();
+        _global._generatedPools.resolveReferences(this);
         RelocatableModule module = createRelocatableModule(_moduleName);
 
         if (!_global._options.contains(AssemblerOption.SILENT)) {
@@ -1512,9 +1478,9 @@ public class Assembler {
                                                     .setForm(form)
                                                     .setReferences(newRefs)
                                                     .build();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale.getLineSpecifier(), lcIndex, lcOffset, iv);
+        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale, lcIndex, lcOffset, iv);
         gw._topLevelTextLine._generatedWords.add(gw);
-        gp.store(gw);
+        gp.storeGeneratedWord(gw);
 
         UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
         return new IntegerValue.Builder().setLocale(locale)
