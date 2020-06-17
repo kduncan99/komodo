@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A Value which represents a 36-bit signed integer. Note that this differs from the way MASM works.
+ * A Value which represents a 72-bit ones-complement signed integer expressed as a DoubleWord36 object.
  * Unlike other *Value objects, this one can have a form and multiple undefined reference objects attached.
  */
 @SuppressWarnings("Duplicates")
@@ -422,24 +422,35 @@ public class IntegerValue extends Value {
         final Locale locale
     ) {
         Diagnostics diags = new Diagnostics();
-        long workingValue = initialValue._value.get().longValue();
-        List<UnresolvedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
 
         if (fieldDescriptors.length != componentValues.length) {
             diags.append(new FatalDiagnostic(locale, "Internal error:Arrays of unequal length in integrateValues()"));
             return new IntegrateResult(initialValue, diags);
         }
 
+        //  All BigInteger values are ones-complement, so we cannot use the standard BigInteger arithmetic
+        //  (except in basic mask manipulation).  We use DoubleWord36 arithmetic instead.
+        BigInteger workingValue = initialValue._value.get();
+        List<UnresolvedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
         for (int fx = 0; fx < fieldDescriptors.length; ++fx) {
-            //  get subset of working value corresponding to the field descriptor, shifted right as necessary.
-            //  add the component value, and check whether we've overflowed the allowed field space.
+            //  Find the field descriptor info - FDs only apply to 36-bit values.
+            //  Develop a shift count for creating various masks.
             FieldDescriptor fd = fieldDescriptors[fx];
             int shiftCount = 36 - (fd._startingBit + fd._fieldSize);
-            long rightShiftedMask = (1L << fd._fieldSize) - 1;
-            long rightShiftedMSBit= 1L << (fd._fieldSize - 1);
-            long rightShiftedNotMask = rightShiftedMask ^ 0_777777_777777L;
-            long positionMask = rightShiftedMask << shiftCount;
-            long positionNotMask = positionMask ^ 0_777777_777777L;
+
+            BigInteger rightShiftedMask = BigInteger.ONE.shiftLeft(fd._fieldSize).subtract(BigInteger.ONE);
+            BigInteger rightShiftedMSBit= BigInteger.ONE.shiftLeft(fd._fieldSize - 1);
+            BigInteger rightShiftedNotMask = rightShiftedMask.xor(DoubleWord36.BIT_MASK);
+            BigInteger positionMask = rightShiftedMask.shiftLeft(shiftCount);
+            BigInteger positionNotMask = positionMask.xor(DoubleWord36.BIT_MASK);
+
+            //  Get a subset of the working value corresponding to the field descriptor, shifted right as necessary.
+            //  Add the component value, and check whether we've overflowed the allowed field space.
+            BigInteger tempValue = workingValue.shiftRight(shiftCount).and(rightShiftedMask);
+            if (!(tempValue.and(rightShiftedMSBit)).equals(BigInteger.ZERO)) {
+                //  original field value is negative...  sign-extend it.
+                tempValue = tempValue.or(rightShiftedNotMask);
+            }
 
             //  A special note - we recognize that the source word is in ones-complement.
             //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
@@ -447,19 +458,15 @@ public class IntegerValue extends Value {
             //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
             //  negative, convert to twos-complement, add or subtract the reference, then convert it
             //  back to ones-complement.  This works regardless, via magic.
-            long tempValue = (workingValue >> shiftCount) & rightShiftedMask;
-            if ((tempValue & rightShiftedMSBit) != 0) {
-                //  original field value is negative...  sign-extend it.
-                tempValue |= rightShiftedNotMask;
-            }
-            tempValue = Word36.addSimple(tempValue, componentValues[fx]._value.get().longValue());
+
+            tempValue = DoubleWord36.addSimple(tempValue, componentValues[fx]._value.get());
 
             //  Check for field overflow...
             boolean trunc;
-            if (Word36.isPositive(tempValue)) {
-                trunc = (tempValue & rightShiftedNotMask) != 0;
+            if (DoubleWord36.isPositive(tempValue)) {
+                trunc = !tempValue.and(rightShiftedNotMask).equals(BigInteger.ZERO);
             } else {
-                trunc = (tempValue | rightShiftedMask) != 0_777777_777777L;
+                trunc = !tempValue.or(rightShiftedMask).equals(DoubleWord36.BIT_MASK);
             }
 
             if (trunc) {
@@ -468,7 +475,7 @@ public class IntegerValue extends Value {
             }
 
             //  splice the temporary subvalue back into the working value.
-            workingValue = (workingValue & positionNotMask) | (tempValue << shiftCount);
+            workingValue = workingValue.and(positionNotMask).or(tempValue.and(rightShiftedMask).shiftLeft(shiftCount));
 
             //  Any references to look at?
             for (UnresolvedReference ur : componentValues[fx]._references) {
