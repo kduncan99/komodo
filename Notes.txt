@@ -1,7 +1,4 @@
 -- TODO InProgress
-Literals are supposed to be generated into the various LC pools at the end of compilation
-  We wrongly generate them at the point at which they are calculated
-
 Rebuilding all the hwlib unit tests
 
 Change kasm->exasm, klink->exlink

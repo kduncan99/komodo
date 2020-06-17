@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
+import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.LineSpecifier;
@@ -71,7 +72,47 @@ public class Test_IntegerValue {
         assertFalse(urlc1._isNegative);
     }
 
-    //  TODO need goodpath with negative numbers
+    @Test
+    public void integrate_good_negativeValues() {
+        FieldDescriptor fdur1 = new FieldDescriptor(18, 18);
+        UnresolvedReference[] initialRefs = {
+            new UnresolvedReferenceToLocationCounter(fdur1, false, 25)
+        };
+        IntegerValue initial = new IntegerValue.Builder().setValue(0_000776_010770L)
+                                                         .setReferences(initialRefs)
+                                                         .setForm(Form.EI$Form)
+                                                         .setFlagged(true)
+                                                         .build();
+
+        FieldDescriptor compFD1 = new FieldDescriptor(9, 9);
+        DoubleWord36 dw1 = new DoubleWord36(0L, 05L);
+        IntegerValue compValue1 = new IntegerValue.Builder().setValue(dw1).build();
+
+        FieldDescriptor compFD2 = new FieldDescriptor(18, 9);
+        DoubleWord36 dw2 = new DoubleWord36(0_777777_777777L, 0_777777_777774L);
+        IntegerValue compValue2 = new IntegerValue.Builder().setValue(dw2).build();
+
+        FieldDescriptor compFD3 = new FieldDescriptor(27, 9);
+        DoubleWord36 dw3 = new DoubleWord36(0_777777_777777L, 0_777777_777775L);
+        IntegerValue compValue3 = new IntegerValue.Builder().setValue(dw3).build();
+
+        FieldDescriptor[] compFDs = { compFD1, compFD2, compFD3 };
+        IntegerValue[] compValues = { compValue1, compValue2, compValue3 };
+
+        Locale intLocale = new Locale(new LineSpecifier(2, 25), 30);
+        IntegerValue.IntegrateResult result = IntegerValue.integrate(initial, compFDs ,compValues, intLocale);
+
+        for (Diagnostic d : result._diagnostics.getDiagnostics()) {
+            System.out.println(d.getMessage());
+        }
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertEquals(intLocale, result._value._locale);
+        assertEquals(Form.EI$Form, result._value._form);
+        assertFalse(result._value._flagged);
+        assertEquals(ValuePrecision.Default, result._value._precision);
+        assertEquals(0_000004_005766L, result._value._value.get().longValue());
+    }
 
     //  TODO need some negative test cases
 }

@@ -470,7 +470,7 @@ public class IntegerValue extends Value {
             }
 
             if (trunc) {
-                String msg = "Truncating value in subfield " + fd.toString();
+                String msg = String.format("Truncating value %01o in subfield %s", tempValue, fd.toString());
                 diags.append(new TruncationDiagnostic(locale, msg));
             }
 
