@@ -142,7 +142,12 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return assembler.generate(_locale, assembler.getCurrentLiteralLCIndex(), form, values);
+        return assembler.getGeneratedPools().generate(assembler.getTopLevelTextLine(),
+                                                      _locale,
+                                                      assembler.getCurrentLiteralLCIndex(),
+                                                      form,
+                                                      values,
+                                                      assembler);
     }
 
     @Override

@@ -13,6 +13,12 @@ public class UnresolvedReferenceToLabel extends UnresolvedReference {
 
     public final String _label;
 
+    /**
+     * constructor
+     * @param fieldDescriptor describes the subset of the containing value, to which this reference applies
+     * @param isNegative true if this value is to be arithmetically inverted when it is integrated into the containing value
+     * @param label label of interest
+     */
     public UnresolvedReferenceToLabel(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative,

@@ -444,54 +444,6 @@ public class Assembler {
     }
 
     /**
-     * Generates the multiple words for a given location counter index and offset,
-     * and places them into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * @param locale location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param values the values to be used
-     */
-    void generate(
-        final Locale locale,
-        final int lcIndex,
-        final long[] values
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-
-        for (int vx = 0; vx < values.length; ++vx) {
-            IntegerValue iv = new IntegerValue.Builder().setLocale(locale).setValue(values[vx]).build();
-            GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
-                                                 locale,
-                                                 lcIndex,
-                                                 lcOffset + vx,
-                                                 iv);
-            gp.storeGeneratedWord(gw);
-            gw._topLevelTextLine._generatedWords.add(gw);
-        }
-    }
-
-    /**
-     * Generates a word (with possibly a form attached) for a given location counter index and offset,
-     * and places it into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * @param locale location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param value the integer/intrinsic value to be used
-     */
-    void generate(
-        final Locale locale,
-        final int lcIndex,
-        final IntegerValue value
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale, lcIndex, lcOffset, value);
-        gp.storeGeneratedWord(gw);
-        gw._topLevelTextLine._generatedWords.add(gw);
-    }
-
-    /**
      * Generates data into the given context representing this value
      * @param fpValue value object
      * @param locale locale of the code which generated this word
@@ -504,13 +456,13 @@ public class Assembler {
             if (fpValue._precision == ValuePrecision.Single) {
                 Word36 w36 = fpValue._value.toWord36();
                 long[] word36 = { w36.getW() };
-                generate(locale, _currentGenerationLCIndex, word36);
+                _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             } else {
                 //  double precision generation is the default...
                 DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
                 Word36[] word36s = dw36.getWords();
                 long[] word36 = { word36s[0].getW(), word36s[1].getW() };
-                generate(locale, _currentGenerationLCIndex, word36);
+                _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             }
         } catch (CharacteristicOverflowException ex) {
             appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
@@ -581,7 +533,7 @@ public class Assembler {
                                                     .setForm(new Form(fieldSizes))
                                                     .setReferences(newRefs)
                                                     .build();
-        generate(operandField._locale, _currentGenerationLCIndex, iv);
+        _global._generatedPools.generate(getTopLevelTextLine(), operandField._locale, _currentGenerationLCIndex, iv);
     }
 
     /**
@@ -633,13 +585,13 @@ public class Assembler {
             slice = ArraySlice.stringToWord36Fieldata(effectiveString);
         }
 
-        generate(locale, _currentGenerationLCIndex, slice._array);
+        _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, slice._array);
     }
 
     /**
      * Determines the zero-level text line involved in this particular retrieval
      */
-    private TextLine getTopLevelTextLine() {
+    public TextLine getTopLevelTextLine() {
         if (_outerLevel != null) {
             return _outerLevel.getTopLevelTextLine();
         } else {
@@ -864,7 +816,12 @@ public class Assembler {
                 }
             }
 
-            generate(operandField._locale, _currentGenerationLCIndex, formValue._form, realValues);
+            _global._generatedPools.generate(getTopLevelTextLine(),
+                                             operandField._locale,
+                                             _currentGenerationLCIndex,
+                                             formValue._form,
+                                             realValues,
+                                             this);
         }
     }
 
@@ -961,7 +918,12 @@ public class Assembler {
             values[7] = uValue;
         }
 
-        generate(operationField._locale, _currentGenerationLCIndex, form, values);
+        _global._generatedPools.generate(getTopLevelTextLine(),
+                                         operationField._locale,
+                                         _currentGenerationLCIndex,
+                                         form,
+                                         values,
+                                         this);
         return true;
     }
 
@@ -1310,18 +1272,6 @@ public class Assembler {
     //  ---------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Advances the offset of a particular location counter by the given count value
-     * @param lcIndex index of the location counter
-     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
-     */
-    public void advanceLocation(
-        final int lcIndex,
-        final int count
-    ) {
-        obtainPool(lcIndex).advance(count);
-    }
-
-    /**
      * Convenience method - adds the diagnostic to the master Diagnostics object as well as the affected
      * top-level TextLine()
      * @param diag diagnostic to be added
@@ -1412,82 +1362,6 @@ public class Assembler {
         }
     }
 
-    /**
-     * Generates a word with a form attached for a given location counter index and offset,
-     * and places it into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
-     * The values parameter is an array with as many entities as there are fields in the form.
-     * Each value must fit within the size of that value's respective field.
-     * The overall integer portion of the generated value is the respective component integer values
-     * shifted into their field positions, and or'd together.
-     * The individual values should not have forms attached, but they may have undefined references.
-     * All such undefined references are adjusted to match the field description of the particular
-     * field to which the reference applies.
-     * @param locale location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param form form describing the fields for which values are specified in the values parameter
-     * @param values array of component values, each with potential undefined refereces but no attached forms
-     * @return value indicating the location which applies to the word which was just generated...
-     *          This value is used in generating literals, and is not used in other situations.
-     */
-    public IntegerValue generate(
-        final Locale locale,
-        final int lcIndex,
-        final Form form,
-        final IntegerValue[] values
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-        if (form._fieldSizes.length != values.length) {
-            appendDiagnostic(new FormDiagnostic(locale,
-                                                "Contradiction between number of values and number of fields in form"));
-            return new IntegerValue.Builder().setLocale(locale).setValue(lcOffset).build();
-        }
-
-        BigInteger genInt = BigInteger.ZERO;
-        int bit = form._leftSlop;
-        List<UnresolvedReference> newRefs = new LinkedList<>();
-        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
-            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
-            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
-            BigInteger fieldValue = values[fx]._value.get();
-            boolean trunc;
-            if (values[fx]._value.isPositive()) {
-                trunc = !fieldValue.and(mask).equals(fieldValue);
-            } else {
-                trunc = !fieldValue.or(mask).equals(DoubleWord36.BIT_MASK);
-            }
-
-            if (trunc) {
-                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
-                appendDiagnostic(new TruncationDiagnostic(locale, msg));
-            }
-
-            genInt = genInt.or(values[fx]._value.get().and(mask));
-            for (UnresolvedReference ur : values[fx]._references) {
-                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
-            }
-
-            bit += form._fieldSizes[fx];
-        }
-
-        IntegerValue iv = new IntegerValue.Builder().setLocale(locale)
-                                                    .setValue(genInt)
-                                                    .setForm(form)
-                                                    .setReferences(newRefs)
-                                                    .build();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), locale, lcIndex, lcOffset, iv);
-        gw._topLevelTextLine._generatedWords.add(gw);
-        gp.storeGeneratedWord(gw);
-
-        UnresolvedReference[] lcRefs = {new UnresolvedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setLocale(locale)
-                                         .setValue(lcOffset)
-                                         .setReferences(lcRefs)
-                                         .build();
-    }
-
     public boolean getArithmeticFaultCompatibilityMode() {
         return _global._arithmeticFaultCompatibilityMode;
     }
@@ -1529,11 +1403,14 @@ public class Assembler {
      */
     public IntegerValue getCurrentLocation(
     ) {
-        GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
+        GeneratedPool gp = _global._generatedPools.obtainPool(_currentGenerationLCIndex);
         int lcOffset = gp.getNextOffset();
-        UnresolvedReference[] refs = {new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 36),
-                                                                               false,
-                                                                               _currentGenerationLCIndex) };
+        UnresolvedReference[] refs = {
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                     false,
+                                                     _currentGenerationLCIndex)
+        };
+
         return new IntegerValue.Builder().setValue(lcOffset)
                                          .setReferences(refs)
                                          .build();
@@ -1548,6 +1425,13 @@ public class Assembler {
      * Retrieves the dictionary for this (sub)assembler
      */
     public Dictionary getDictionary() { return _dictionary; }
+
+    /**
+     * Retrieves our GeneratedPools object
+     */
+    public GeneratedPools getGeneratedPools() {
+        return _global._generatedPools;
+    }
 
     /**
      * Retrieves the assembler level - 0 is the top-level, or main assembly
@@ -1593,11 +1477,11 @@ public class Assembler {
 
     public boolean isFunctionSubAssembly() {
         return false;
-    };
+    }
 
     public boolean isProcedureSubAssembly() {
         return false;
-    };
+    }
 
     /**
      * Quick way to check for an option
@@ -1606,23 +1490,6 @@ public class Assembler {
         final AssemblerOption option
     ) {
         return _global._options.contains(option);
-    }
-
-    /**
-     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
-     * If such a pool does not exist, it is created.
-     * @param lcIndex index of the desired pool
-     * @return reference to the pool
-     */
-    public GeneratedPool obtainPool(
-        final int lcIndex
-    ) {
-        GeneratedPool gp = _global._generatedPools.get(lcIndex);
-        if (gp == null) {
-            gp = new GeneratedPool();
-            _global._generatedPools.put(lcIndex, gp);
-        }
-        return gp;
     }
 
     /**

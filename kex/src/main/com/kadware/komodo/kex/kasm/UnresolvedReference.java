@@ -20,6 +20,11 @@ public abstract class UnresolvedReference {
     public final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
+    /**
+     * constructor
+     * @param fieldDescriptor describes the subset of the containing value, to which this reference applies
+     * @param isNegative true if this value is to be arithmetically inverted when it is integrated into the containing value
+     */
     UnresolvedReference(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative

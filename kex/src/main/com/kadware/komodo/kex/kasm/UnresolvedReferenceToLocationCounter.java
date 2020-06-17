@@ -14,6 +14,12 @@ public class UnresolvedReferenceToLocationCounter extends UnresolvedReference {
 
     public final int _locationCounterIndex;
 
+    /**
+     * constructor
+     * @param fieldDescriptor describes the subset of the containing value, to which this reference applies
+     * @param isNegative true if this value is to be arithmetically inverted when it is integrated into the containing value
+     * @param locationCounterIndex index of the location counter which contains the literal of interest
+     */
     public UnresolvedReferenceToLocationCounter(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative,
