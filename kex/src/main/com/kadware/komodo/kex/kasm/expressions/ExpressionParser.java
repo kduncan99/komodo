@@ -147,7 +147,7 @@ public class ExpressionParser {
     private Expression parseExpression(
         final Assembler assembler
     ) throws ExpressionException {
-        List<IExpressionItem> expItems = new LinkedList<>();
+        List<ExpressionItem> expItems = new LinkedList<>();
 
         boolean allowInfixOperator = false;
         boolean allowPostfixOperator = false;
@@ -157,7 +157,7 @@ public class ExpressionParser {
         skipWhitespace();
         while (!atEnd()) {
             if (allowInfixOperator) {
-                IExpressionItem item = parseInfixOperator();
+                ExpressionItem item = parseInfixOperator();
                 if (item != null) {
                     expItems.add(item);
                     allowInfixOperator = false;
@@ -170,7 +170,7 @@ public class ExpressionParser {
             }
 
             if (allowOperand) {
-                IExpressionItem item = parseOperand(assembler);
+                ExpressionItem item = parseOperand(assembler);
                 if (item != null) {
                     expItems.add(item);
                     allowInfixOperator = true;
@@ -183,7 +183,7 @@ public class ExpressionParser {
             }
 
             if (allowPrefixOperator) {
-                IExpressionItem item = parsePrefixOperator();
+                ExpressionItem item = parsePrefixOperator();
                 if (item != null) {
                     expItems.add(item);
                     skipWhitespace();
@@ -192,7 +192,7 @@ public class ExpressionParser {
             }
 
             if (allowPostfixOperator) {
-                IExpressionItem item = parsePostfixOperator();
+                ExpressionItem item = parsePostfixOperator();
                 if (item != null) {
                     expItems.add(item);
                     skipWhitespace();
@@ -215,7 +215,7 @@ public class ExpressionParser {
             }
         }
 
-        return new Expression(expItems);
+        return new Expression(new Locale(_textLocale.getLineSpecifier(), _index), expItems);
     }
 
     /**
@@ -283,7 +283,7 @@ public class ExpressionParser {
             _index += m.end();
             FloatingPointComponents fpc = new FloatingPointComponents(value);
             FloatingPointValue fpValue = new FloatingPointValue.Builder().setValue(fpc).build();
-            return new ValueItem(getLocale(), fpValue);
+            return new ValueItem(fpValue);
         } catch (NumberFormatException ex) {
             assembler.appendDiagnostic(new ErrorDiagnostic(getLocale(), "Invalid floating point literal"));
             throw new ExpressionException();
@@ -373,7 +373,7 @@ public class ExpressionParser {
             ++digits;
         }
 
-        return new ValueItem(getLocale(), new IntegerValue.Builder().setValue(value).build());
+        return new ValueItem(new IntegerValue.Builder().setLocale(getLocale()).setValue(value).build());
     }
 
     /**
@@ -467,7 +467,12 @@ public class ExpressionParser {
             }
         }
 
-        return new ValueItem(getLocale(), assembler.getCurrentLocation());
+        IntegerValue locationValue = assembler.getCurrentLocation();
+        IntegerValue finalValue = new IntegerValue.Builder().setLocale(_textLocale)
+                                                            .setValue(locationValue._value)
+                                                            .setReferences(locationValue._references)
+                                                            .build();
+        return new ValueItem(finalValue);
     }
 
     /**
@@ -600,7 +605,9 @@ public class ExpressionParser {
             throw new ExpressionException();
         }
 
-        return new ValueItem(getLocale(), new StringValue.Builder().setValue(sb.toString()).build());
+        return new ValueItem(new StringValue.Builder().setLocale(getLocale())
+                                                      .setValue(sb.toString())
+                                                      .build());
     }
 
 
@@ -609,7 +616,7 @@ public class ExpressionParser {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Parses the given text, within the given assembler, into the IExpressionItem list in an Expression object
+     * Parses the given text, within the given assembler, into the ExpressionItem list in an Expression object
      * @param assembler Current (sub)assembler
      * @return A properly formatted Expression object which can subsequently be evaluated
      * @throws ExpressionException if we run into a problem while we are working on a valid expressoin

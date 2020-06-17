@@ -5,6 +5,9 @@
 package com.kadware.komodo.kex.kasm.expressions;
 
 import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.Locale;
+import com.kadware.komodo.kex.kasm.diagnostics.FatalDiagnostic;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.expressions.items.*;
 import com.kadware.komodo.kex.kasm.expressions.operators.Operator;
@@ -19,16 +22,19 @@ import java.util.Stack;
  */
 public class Expression {
 
-    final List<IExpressionItem> _items = new LinkedList<>();
+    final Locale _locale;
+    final List<ExpressionItem> _items;
 
     /**
      * constructor
      * @param items list of ExpressionItems which comprise this expression
      */
     public Expression(
-        final List<IExpressionItem> items
+        final Locale locale,
+        final List<ExpressionItem> items
     ) {
-        _items.addAll(items);
+        _locale = locale;
+        _items = new LinkedList<>(items);
     }
 
     /**
@@ -43,7 +49,7 @@ public class Expression {
         Stack<Value> valueStack = new Stack<>();
         Stack<Operator> operatorStack = new Stack<>();
 
-        for (IExpressionItem item : _items) {
+        for (ExpressionItem item : _items) {
             //  Take items off the item list...
             //  Operand items get resolved into values which are place on the value stack.
             //  Operator items get placed on the operator stack *after* all other operators
@@ -72,13 +78,19 @@ public class Expression {
 
         //  There should now be exactly one value on the value stack.
         if (valueStack.size() != 1) {
-            throw new RuntimeException("value stack does not have 1 item left at end of expression evaluation");
+            String msg = "value stack does not have exactly 1 item left at end of expression evaluation";
+            assembler.appendDiagnostic(new FatalDiagnostic(_locale, msg));
+            if (valueStack.size() > 0) {
+                return valueStack.pop();
+            } else {
+                return IntegerValue.POSITIVE_ZERO;
+            }
         }
 
         return valueStack.pop();
     }
 
-    public Collection<IExpressionItem> getItems() {
+    public Collection<ExpressionItem> getItems() {
         return new LinkedList<>(_items);
     }
 }

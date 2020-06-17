@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex.kasm.dictionary;
 
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,9 +24,15 @@ public class NodeValue extends Value {
 
     /**
      * Normal constructor
+     * @param locale where this was defined
      * @param flagged (i.e., has leading asterisk)
      */
-    private NodeValue(boolean flagged) { super(flagged); }
+    public NodeValue(
+        final Locale locale,
+        final boolean flagged
+    ) {
+        super(locale, flagged);
+    }
 
     /**
      * Compares an object to this object
@@ -44,11 +51,13 @@ public class NodeValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new attribute
      * @return new value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) throws TypeException {
         throw new TypeException();
@@ -56,12 +65,14 @@ public class NodeValue extends Value {
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      * @throws TypeException if object cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();
@@ -182,36 +193,6 @@ public class NodeValue extends Value {
         _values.put(key, value);
     }
 
-//    /**
-//     * Transform the value to an FloatingPointValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException because we cannot do this
-//     */
-//    @Override
-//    public FloatingPointValue toFloatingPointValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
-//    /**
-//     * Transform the value to an IntegerValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException because we cannot do this
-//     */
-//    @Override
-//    public IntegerValue toIntegerValue(
-//        final Locale locale,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
     /**
      * For display purposes
      * @return displayable string
@@ -220,37 +201,5 @@ public class NodeValue extends Value {
     public String toString(
     ) {
         return String.format("%s<node>", _flagged ? "*" : "");
-    }
-
-//    /**
-//     * Transform the value to a StringValue, if possible
-//     * @param locale locale of the instigating bit of text, for reporting diagnostics as necessary
-//     * @param diagnostics where we post any necessary diagnostics
-//     * @return new value
-//     * @throws TypeException because we cannot do this
-//     */
-//    @Override
-//    public StringValue toStringValue(
-//        final Locale locale,
-//        CharacterMode characterMode,
-//        Diagnostics diagnostics
-//    ) throws TypeException {
-//        throw new TypeException();
-//    }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Builder
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public static class Builder {
-
-        boolean _flagged = false;
-
-        public Builder setFlagged(boolean value) { _flagged = value; return this; }
-
-        public NodeValue build() {
-            return new NodeValue(_flagged);
-        }
     }
 }

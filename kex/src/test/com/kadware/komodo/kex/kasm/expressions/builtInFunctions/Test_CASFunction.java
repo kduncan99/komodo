@@ -12,7 +12,7 @@ import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.dictionary.*;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
-import com.kadware.komodo.kex.kasm.expressions.items.IExpressionItem;
+import com.kadware.komodo.kex.kasm.expressions.items.ExpressionItem;
 import com.kadware.komodo.kex.kasm.expressions.items.ValueItem;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,40 +28,45 @@ public class Test_CASFunction {
     public void test_single(
     ) throws ExpressionException {
 
-        List<IExpressionItem> items = new LinkedList<>();
-        IntegerValue iv = new IntegerValue.Builder().setValue(0_060_061_062_063L).build();
-        LineSpecifier ls01 = new LineSpecifier(0, 1);
-        items.add(new ValueItem(new Locale(ls01, 1), iv));
+        List<ExpressionItem> items = new LinkedList<>();
+
+        Locale expLocale = new Locale(new LineSpecifier(0, 1), 11);
+        IntegerValue iv = new IntegerValue.Builder().setLocale(expLocale).setValue(0_060_061_062_063L).build();
+        items.add(new ValueItem(iv));
 
         Expression[] expressions = new Expression[1];
-        expressions[0] = new Expression(items);
+        expressions[0] = new Expression(expLocale, items);
 
-        LineSpecifier ls10 = new LineSpecifier(0, 10);
-        BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
+        BuiltInFunction bif = new CASFunction(expLocale, expressions);
 
         Value result = bif.evaluate(new Assembler.Builder().build());
         StringValue expected = new StringValue.Builder().setValue("0123").setCharacterMode(CharacterMode.ASCII).build();
         assertEquals(expected, result);
+        assertEquals(expLocale, result._locale);
     }
 
     @Test
     public void test_double(
     ) throws ExpressionException {
 
-        List<IExpressionItem> items = new LinkedList<>();
+        List<ExpressionItem> items = new LinkedList<>();
+
+        Locale expLocale = new Locale(new LineSpecifier(0, 10), 11);
         DoubleWord36 dw36 = new DoubleWord36(0_060061062063L, 0_064065066067L);
-        IntegerValue iv = new IntegerValue.Builder().setValue(dw36).setPrecision(ValuePrecision.Double).build();
-        LineSpecifier ls01 = new LineSpecifier(0, 1);
-        items.add(new ValueItem(new Locale(ls01, 1), iv));
+        IntegerValue iv = new IntegerValue.Builder().setLocale(expLocale)
+                                                    .setValue(dw36)
+                                                    .setPrecision(ValuePrecision.Double)
+                                                    .build();
+        items.add(new ValueItem(iv));
 
         Expression[] expressions = new Expression[1];
-        expressions[0] = new Expression(items);
+        expressions[0] = new Expression(expLocale, items);
 
-        LineSpecifier ls10 = new LineSpecifier(0, 10);
-        BuiltInFunction bif = new CASFunction(new Locale(ls10, 16), expressions);
+        BuiltInFunction bif = new CASFunction(expLocale, expressions);
 
         Value result = bif.evaluate(new Assembler.Builder().build());
         StringValue expected = new StringValue.Builder().setValue("01234567").setCharacterMode(CharacterMode.ASCII).build();
         assertEquals(expected, result);
+        assertEquals(expLocale, result._locale);
     }
 }

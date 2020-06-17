@@ -1,36 +1,40 @@
 -- TODO InProgress
 Rebuilding all the hwlib unit tests
 
+Change kasm->exasm, klink->exlink
+
+kasm:$EQUF
+  We need the concept of a SubExpression, such that the main expression is made up of
+  various subfields in described by a form, and each subfield has a corresponding SubExpression.
+  Each SubExpression has a parent expression such that any reference to a label which is an $EQUF
+  is then applied to the various subfields of the expression.
+  This will be applied at parsing time, such that the actual evaluation need to concern itself with
+  such annoyances... this is done by applying the following rules:
+    Multiple EQUF references are allowed
+    An EQUF reference may only be specified in a U, X, B, or D field
+    When encountered in parsing, the EQUF is applied to all SubExpressions in the containing Expression.
+    Upon evaluation of a SubExpression **TODO**
+    I.... *think* this will work
+
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
     Test_Linker: need to fix unit tests
 
-exlib:
-    external file formats for hosting SDFF and PF files (and maybe tape files?)
-    support sym, rel, and abs elements
-    support various tape file formats
-
-What happens when $(LIT) is the same as the generation LC, and we do:
-    LA       A0,(5,10)
-  Right now, we generate the literal in the code stream, which is a bad thing.
-  But what does MASM do?
-  Because we *could* defer all literal generation to the end of the lc pool... i think.
 
 -- TODO BUGS
-* hwlib
-ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
-Check to ensure breakpoints are all working.
-
-everywhere:
-    Max real bank size is 0_077777_777777 (with large bit set), which requires a long.
-    We have code all over the place which uses an int for bank size, bank addresses, etc.
-
 * kasm
+Still a problem with address-of...
+  + (010)
+  is supposed to just generate the 010 value because of the leading '+'
+  We don't do that...
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
+
+* klink
+integrateValue() is maybe wrong. See IntegerValue for proper code.
 
 * klink/kasm
 Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool
@@ -38,6 +42,15 @@ Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset f
   What should we do about this?
     Maybe... klink should, in this case, clear out the field-descriptor described by the reference
     before integrating the BDI value...
+
+* hwlib
+ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests
+Check to ensure breakpoints are all working.
+UR instruction, bank manipulation, see TODO - need to account for UR to basic mode
+
+everywhere:
+    Max real bank size is 0_077777_777777 (with large bit set), which requires a long.
+    We have code all over the place which uses an int for bank size, bank addresses, etc.
 
 -- TODO Thoughts
 Do we need a high-level language for systems programming to supplement assembly?
@@ -184,6 +197,12 @@ IP: search and masked search instructions (and unit tests)
   MSNW
   MASL
   MASG
+
+* exlib:
+    external file formats for hosting SDFF and PF files (and maybe tape files?)
+    support sym, rel, and abs elements
+    support various tape file formats
+    support SOS VT file format for import/export of tape files
 
 * kasm
 Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation

@@ -747,6 +747,7 @@ public class Linker {
         //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
         //  negative, convert to twos-complement, add or subtract the reference, then convert it
         //  back to ones-complement.  This works regardless, via magic.
+        //TODO I think the following is wrong, we need to shift, THEN and...
         long tempValue = (initialValue & mask) >> shift;
         if ((tempValue & msbMask) != 0) {
             //  original field value is negative...  sign-extend it.

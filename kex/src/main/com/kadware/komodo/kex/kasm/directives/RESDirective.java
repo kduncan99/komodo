@@ -64,7 +64,7 @@ public class RESDirective extends Directive {
                     assembler.appendDiagnostic(new RelocationDiagnostic(expLocale));
                 }
 
-                assembler.advanceLocation(assembler.getCurrentGenerationLCIndex(), (int) intValue);
+                assembler.getGeneratedPools().advance(assembler.getCurrentGenerationLCIndex(), (int) intValue);
             } catch (ExpressionException ex) {
                 assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
                 return;

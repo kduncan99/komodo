@@ -47,6 +47,8 @@ public class SLFunction extends BuiltInFunction {
         }
 
         StringValue sarg = (StringValue) arguments[0];
-        return new IntegerValue.Builder().setValue(sarg._value.length()).build();
+        return new IntegerValue.Builder().setLocale(getLocale())
+                                         .setValue(sarg._value.length())
+                                         .build();
     }
 }

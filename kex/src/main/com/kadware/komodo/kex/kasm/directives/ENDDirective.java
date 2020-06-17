@@ -10,9 +10,9 @@ import com.kadware.komodo.kex.kasm.LabelFieldComponents;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
 import com.kadware.komodo.kex.kasm.TextSubfield;
-import com.kadware.komodo.kex.kasm.UndefinedReference;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLabel;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
+import com.kadware.komodo.kex.kasm.UnresolvedReference;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLabel;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.RelocationDiagnostic;
@@ -95,14 +95,14 @@ public class ENDDirective extends Directive {
                 return;
             }
 
-            UndefinedReference ur = iv._references[0];
-            if (ur instanceof UndefinedReferenceToLocationCounter) {
+            UnresolvedReference ur = iv._references[0];
+            if (ur instanceof UnresolvedReferenceToLocationCounter) {
                 //  This also is acceptable
                 assembler.setEndValue(iv);
-            } else if (ur instanceof UndefinedReferenceToLabel) {
+            } else if (ur instanceof UnresolvedReferenceToLabel) {
                 //  If it's a label, resolve it.  If we cannot resolve it, it's not local and we can't use it.
                 try {
-                    UndefinedReferenceToLabel url = (UndefinedReferenceToLabel) ur;
+                    UnresolvedReferenceToLabel url = (UnresolvedReferenceToLabel) ur;
                     Dictionary.ValueInfo vi = assembler.getDictionary().getValueInfo(url._label);
                     assembler.setEndValue(vi._value);
                 } catch (NotFoundException ex) {

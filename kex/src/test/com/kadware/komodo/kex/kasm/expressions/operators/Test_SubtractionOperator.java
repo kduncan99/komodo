@@ -10,9 +10,9 @@ import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.LineSpecifier;
 import com.kadware.komodo.kex.kasm.Locale;
-import com.kadware.komodo.kex.kasm.UndefinedReference;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLabel;
-import com.kadware.komodo.kex.kasm.UndefinedReferenceToLocationCounter;
+import com.kadware.komodo.kex.kasm.UnresolvedReference;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLabel;
+import com.kadware.komodo.kex.kasm.UnresolvedReferenceToLocationCounter;
 import com.kadware.komodo.kex.kasm.dictionary.*;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import java.math.BigInteger;
@@ -70,29 +70,29 @@ public class Test_SubtractionOperator {
     public void with_references(
     ) throws ExpressionException {
         Stack<Value> valueStack = new Stack<>();
-        UndefinedReference[] refs1 = {
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 18), false, 5),
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(18,18), false, 7),
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(18,18), false, 7),
-            new UndefinedReferenceToLabel(new FieldDescriptor(0, 18), false, "FEE"),
-            new UndefinedReferenceToLabel(new FieldDescriptor(18, 18),false,"FOO"),
-            new UndefinedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
+        UnresolvedReference[] refs1 = {
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 18), false, 5),
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(18, 18), false, 7),
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(18, 18), false, 7),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(0, 18), false, "FEE"),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(18, 18), false, "FOO"),
+            new UnresolvedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
         };
-        UndefinedReference[] refs2 = {
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(0,18), false, 5),
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(18,18), true, 7),
-            new UndefinedReferenceToLabel(new FieldDescriptor(0, 18),false,"FEE"),
-            new UndefinedReferenceToLabel(new FieldDescriptor(18, 18),true,"FOO"),
-            new UndefinedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
+        UnresolvedReference[] refs2 = {
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 18), false, 5),
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(18, 18), true, 7),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(0, 18), false, "FEE"),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(18, 18), true, "FOO"),
+            new UnresolvedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
         };
-        UndefinedReference[] expectedRefs = {
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(0,18), false, 5),
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(0,18), false, 5),
-            new UndefinedReferenceToLocationCounter(new FieldDescriptor(18,18), false, 7),
-            new UndefinedReferenceToLabel(new FieldDescriptor(0, 18),false,"FEE"),
-            new UndefinedReferenceToLabel(new FieldDescriptor(0, 18),false,"FEE"),
-            new UndefinedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
-            new UndefinedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
+        UnresolvedReference[] expectedRefs = {
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 18), false, 5),
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 18), false, 5),
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(18, 18), false, 7),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(0, 18), false, "FEE"),
+            new UnresolvedReferenceToLabel(new FieldDescriptor(0, 18), false, "FEE"),
+            new UnresolvedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
+            new UnresolvedReferenceToLabel(FieldDescriptor.W, false, "OMNI"),
         };
 
         DoubleWord36 dwValue1 = new DoubleWord36(BigInteger.valueOf(25));

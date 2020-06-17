@@ -12,11 +12,12 @@ import com.kadware.komodo.kex.kasm.diagnostics.*;
 import com.kadware.komodo.kex.kasm.exceptions.*;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A Value which represents a 36-bit signed integer. Note that this differs from the way MASM works.
+ * A Value which represents a 72-bit ones-complement signed integer expressed as a DoubleWord36 object.
  * Unlike other *Value objects, this one can have a form and multiple undefined reference objects attached.
  */
 @SuppressWarnings("Duplicates")
@@ -38,32 +39,47 @@ public class IntegerValue extends Value {
         }
     }
 
+    public static class IntegrateResult {
+        public final IntegerValue _value;
+        public final Diagnostics _diagnostics;
+
+        public IntegrateResult(
+            final IntegerValue value,
+            final Diagnostics diagnostics
+        ) {
+            _value = value;
+            _diagnostics = diagnostics;
+        }
+    }
+
     //  A useful IntegerValue containing zero, no flags, and no unidentified references.
     public static final IntegerValue POSITIVE_ZERO = new Builder().setValue(new DoubleWord36(DoubleWord36.POSITIVE_ZERO)).build();
 
     public final Form _form;
-    public final UndefinedReference[] _references;
+    public final UnresolvedReference[] _references;
     public final DoubleWord36 _value;
 
     /**
      * general constructor
+     * @param locale - where this was defined
      * @param flagged - leading asterisk
      * @param value - ones-complement integer value
      * @param precision - single, double, or default (used for generating code)
      * @param form - an attached form (null if none)
      * @param references - zero or more undefined references (null not allowed)
      */
-    protected IntegerValue(
+    private IntegerValue(
+        final Locale locale,
         final boolean flagged,
         final DoubleWord36 value,
         final ValuePrecision precision,
         final Form form,
-        final UndefinedReference[] references
+        final UnresolvedReference[] references
     ) {
-        super(flagged, precision);
+        super(locale, flagged, precision);
+        _value = value;
         _form = form;
         _references = Arrays.copyOf(references, references.length);
-        _value = value;
     }
 
     /**
@@ -91,7 +107,7 @@ public class IntegerValue extends Value {
                 throw new FormException();
             }
 
-            if (!UndefinedReference.equals(_references, iobj._references)) {
+            if (!UnresolvedReference.equals(_references, iobj._references)) {
                 throw new RelocationException();
             }
 
@@ -106,26 +122,30 @@ public class IntegerValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new attribute value
      * @return new value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) {
-        return new IntegerValue(newFlagged, _value, _precision, _form, _references);
+        return new IntegerValue(locale, newFlagged, _value, _precision, _form, _references);
     }
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) {
-        return new IntegerValue(_flagged, _value, newPrecision, _form, _references);
+        return new IntegerValue(locale, _flagged, _value, newPrecision, _form, _references);
     }
 
     /**
@@ -145,7 +165,7 @@ public class IntegerValue extends Value {
                 if (!_form.equals(iv._form)) { return false; }
             } else if (iv._form != null) { return false; }
 
-            return UndefinedReference.equals(_references, iv._references);
+            return UnresolvedReference.equals(_references, iv._references);
         }
 
         return false;
@@ -165,7 +185,7 @@ public class IntegerValue extends Value {
                                 _flagged ? "*" : "",
                                 _form == null ? "" : _form.toString(),
                                 _value.toString()));
-        for (UndefinedReference ur : _references) {
+        for (UnresolvedReference ur : _references) {
             sb.append(ur.toString());
             sb.append(ur._fieldDescriptor.toString());
         }
@@ -236,17 +256,18 @@ public class IntegerValue extends Value {
         }
 
         //  Now deal with the undefined references (if any).
-        UndefinedReference[] resultRefs = new UndefinedReference[operand1._references.length + operand2._references.length];
+        UnresolvedReference[] resultRefs = new UnresolvedReference[operand1._references.length + operand2._references.length];
         int tx = 0;
-        for (UndefinedReference ur : operand1._references) {
+        for (UnresolvedReference ur : operand1._references) {
             resultRefs[tx++] = ignoreReferenceFields ? ur.copy(FieldDescriptor.W) : ur;
         }
-        for (UndefinedReference ur : operand2._references) {
+        for (UnresolvedReference ur : operand2._references) {
             resultRefs[tx++] = ignoreReferenceFields ? ur.copy(FieldDescriptor.W) : ur;
         }
-        resultRefs = UndefinedReference.coalesce(resultRefs);
+        resultRefs = UnresolvedReference.coalesce(resultRefs);
 
-        return new IntegerValue.Builder().setValue(new DoubleWord36(biResult))
+        return new IntegerValue.Builder().setLocale(locale)
+                                         .setValue(new DoubleWord36(biResult))
                                          .setForm(resultForm)
                                          .setReferences(resultRefs)
                                          .build();
@@ -273,7 +294,12 @@ public class IntegerValue extends Value {
             resultForm = null;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        ValuePrecision resultPrecision = ValuePrecision.Default;
+        if (operand1._precision == ValuePrecision.Double || operand2._precision == ValuePrecision.Double) {
+            resultPrecision = ValuePrecision.Double;
+        }
+
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -281,9 +307,11 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalAnd(operand2._value);
-        return new IntegerValue.Builder().setForm(resultForm)
-                                         .setReferences(refList.toArray(new UndefinedReference[0]))
+        return new IntegerValue.Builder().setLocale(locale)
                                          .setValue(newValue)
+                                         .setPrecision(resultPrecision)
+                                         .setForm(resultForm)
+                                         .setReferences(refList)
                                          .build();
     }
 
@@ -292,10 +320,23 @@ public class IntegerValue extends Value {
      * @param newForm new form value
      * @return new value
      */
-    public IntegerValue copy(
+    public Value copy(
         final Form newForm
     ) {
-        return new IntegerValue(_flagged, _value, _precision, newForm, _references);
+        return new IntegerValue(_locale, _flagged, _value, _precision, newForm, _references);
+    }
+
+    /**
+     * Create a new copy of this object, with the given form and locale
+     * @param locale new locale value
+     * @param newForm new form value
+     * @return new value
+     */
+    public Value copy(
+        final Locale locale,
+        final Form newForm
+    ) {
+        return new IntegerValue(locale, _flagged, _value, _precision, newForm, _references);
     }
 
     /**
@@ -336,9 +377,9 @@ public class IntegerValue extends Value {
             dwCovered = new DoubleWord36(DoubleWord36.addSimple(dwRemainder.get(), BigInteger.ONE));
         }
 
-        return new DivisionResult(new IntegerValue.Builder().setValue(dwQuotient).build(),
-                                  new IntegerValue.Builder().setValue(dwRemainder).build(),
-                                  new IntegerValue.Builder().setValue(dwCovered).build());
+        return new DivisionResult(new IntegerValue.Builder().setLocale(locale).setValue(dwQuotient).build(),
+                                  new IntegerValue.Builder().setLocale(locale).setValue(dwRemainder).build(),
+                                  new IntegerValue.Builder().setLocale(locale).setValue(dwCovered).build());
     }
 
     /**
@@ -346,6 +387,109 @@ public class IntegerValue extends Value {
      */
     public boolean hasUndefinedReferences() {
         return _references.length > 0;
+    }
+
+    /**
+     * Integrates a set of component values, governed by corresponding field descriptors, into an initial value.
+     * The resulting value is not flagged.
+     * The reference set for the resulting value is the union of the initial value's reference set with the
+     *      component values' reference sets, suitably shifted to represent the component value field descriptor.
+     * The resulting value's form will be the initial value's form, if any.
+     * The integration is performed by adding the component value to a particular field of the initial value.
+     * This process is designed only for 36-bit integer values. If larger values are given, we might throw a diagnostic,
+     *      or we might just work through it - results are largely undefined.
+     * Resulting precision is always taken from the initial value (should be default or single, but whatever).
+     *
+     * So, if we have a base value of
+     *      0_111222_333444
+     * and two component values of
+     *      0_111111 (field corresponding to H1)
+     *  and 0_222222 (field corresponding to H2)
+     * The resulting value would be
+     *      0_222333_555666.
+     *
+     * @param initialValue the value into which all component values are integrated
+     * @param fieldDescriptors one per component value, each describes the field (the subset) of the initial value into which
+     *                         the corresponding component value is integrated
+     * @param componentValues the component values to be integrated
+     * @param locale location of the textual entity which is causing this integration to occur
+     * @return resulting value
+     */
+    public static IntegrateResult integrate(
+        final IntegerValue initialValue,
+        final FieldDescriptor[] fieldDescriptors,
+        final IntegerValue[] componentValues,
+        final Locale locale
+    ) {
+        Diagnostics diags = new Diagnostics();
+
+        if (fieldDescriptors.length != componentValues.length) {
+            diags.append(new FatalDiagnostic(locale, "Internal error:Arrays of unequal length in integrateValues()"));
+            return new IntegrateResult(initialValue, diags);
+        }
+
+        //  All BigInteger values are ones-complement, so we cannot use the standard BigInteger arithmetic
+        //  (except in basic mask manipulation).  We use DoubleWord36 arithmetic instead.
+        BigInteger workingValue = initialValue._value.get();
+        List<UnresolvedReference> references = new LinkedList<>(Arrays.asList(initialValue._references));
+        for (int fx = 0; fx < fieldDescriptors.length; ++fx) {
+            //  Find the field descriptor info - FDs only apply to 36-bit values.
+            //  Develop a shift count for creating various masks.
+            FieldDescriptor fd = fieldDescriptors[fx];
+            int shiftCount = 36 - (fd._startingBit + fd._fieldSize);
+
+            BigInteger rightShiftedMask = BigInteger.ONE.shiftLeft(fd._fieldSize).subtract(BigInteger.ONE);
+            BigInteger rightShiftedMSBit= BigInteger.ONE.shiftLeft(fd._fieldSize - 1);
+            BigInteger rightShiftedNotMask = rightShiftedMask.xor(DoubleWord36.BIT_MASK);
+            BigInteger positionMask = rightShiftedMask.shiftLeft(shiftCount);
+            BigInteger positionNotMask = positionMask.xor(DoubleWord36.BIT_MASK);
+
+            //  Get a subset of the working value corresponding to the field descriptor, shifted right as necessary.
+            //  Add the component value, and check whether we've overflowed the allowed field space.
+            BigInteger tempValue = workingValue.shiftRight(shiftCount).and(rightShiftedMask);
+            if (!(tempValue.and(rightShiftedMSBit)).equals(BigInteger.ZERO)) {
+                //  original field value is negative...  sign-extend it.
+                tempValue = tempValue.or(rightShiftedNotMask);
+            }
+
+            //  A special note - we recognize that the source word is in ones-complement.
+            //  The reference value *might* be negative - if that is the case, we have a bit of a dilemma,
+            //  as we don't know whether the field we slice out is signed or unsigned.
+            //  As it turns out, it doesn't matter.  We treat it as signed, sign-extend it if it is
+            //  negative, convert to twos-complement, add or subtract the reference, then convert it
+            //  back to ones-complement.  This works regardless, via magic.
+
+            tempValue = DoubleWord36.addSimple(tempValue, componentValues[fx]._value.get());
+
+            //  Check for field overflow...
+            boolean trunc;
+            if (DoubleWord36.isPositive(tempValue)) {
+                trunc = !tempValue.and(rightShiftedNotMask).equals(BigInteger.ZERO);
+            } else {
+                trunc = !tempValue.or(rightShiftedMask).equals(DoubleWord36.BIT_MASK);
+            }
+
+            if (trunc) {
+                String msg = String.format("Truncating value %01o in subfield %s", tempValue, fd.toString());
+                diags.append(new TruncationDiagnostic(locale, msg));
+            }
+
+            //  splice the temporary subvalue back into the working value.
+            workingValue = workingValue.and(positionNotMask).or(tempValue.and(rightShiftedMask).shiftLeft(shiftCount));
+
+            //  Any references to look at?
+            for (UnresolvedReference ur : componentValues[fx]._references) {
+                references.add(ur.copy(fd));
+            }
+        }
+
+        IntegerValue resultValue = new IntegerValue.Builder().setLocale(locale)
+                                                             .setValue(workingValue)
+                                                             .setForm(initialValue._form)
+                                                             .setPrecision(initialValue._precision)
+                                                             .setReferences(references)
+                                                             .build();
+        return new IntegrateResult(resultValue, diags);
     }
 
     /**
@@ -376,24 +520,23 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 dw = new DoubleWord36(mr._value);
-        return new IntegerValue.Builder().setValue(dw).build();
+        return new IntegerValue.Builder().setLocale(locale).setValue(dw).build();
     }
 
     /**
      * Produces an IV which is the additive inverse of this one
      */
-    public IntegerValue negate() {
-        UndefinedReference[] negRefs = new UndefinedReference[_references.length];
+    public IntegerValue negate(
+        final Locale locale
+    ) {
+        UnresolvedReference[] negRefs = new UnresolvedReference[_references.length];
         for (int ux = 0; ux < _references.length; ++ux) {
             negRefs[ux] = _references[ux].copy(!_references[ux]._isNegative);
         }
 
         DoubleWord36 newValue = _value.negate();
-        return new IntegerValue.Builder().setValue(newValue)
-                                         .setForm(_form)
-                                         .setReferences(negRefs)
-                                         .setPrecision(_precision)
-                                         .build();
+        return new IntegerValue(locale, _flagged, newValue, _precision, _form, negRefs);
+
     }
 
     /**
@@ -408,11 +551,7 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = _value.negate();
-        return new IntegerValue.Builder().setValue(newValue)
-                                         .setForm(_form)
-                                         .setReferences(_references)
-                                         .setPrecision(_precision)
-                                         .build();
+        return new IntegerValue(locale, _flagged, newValue, _precision, _form, _references);
     }
 
     /**
@@ -436,7 +575,12 @@ public class IntegerValue extends Value {
             resultForm = null;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        ValuePrecision resultPrecision = ValuePrecision.Default;
+        if (operand1._precision == ValuePrecision.Double || operand2._precision == ValuePrecision.Double) {
+            resultPrecision = ValuePrecision.Double;
+        }
+
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -444,10 +588,12 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalOr(operand2._value);
-        return new IntegerValue.Builder().setForm(resultForm)
-                                         .setReferences(refList.toArray(new UndefinedReference[0]))
-                                         .setValue(newValue)
-                                         .build();
+        return new IntegerValue(locale,
+                                false,
+                                newValue,
+                                resultPrecision,
+                                resultForm,
+                                refList.toArray(new UnresolvedReference[0]));
     }
 
     /**
@@ -471,7 +617,12 @@ public class IntegerValue extends Value {
             resultForm = null;
         }
 
-        List<UndefinedReference> refList = new LinkedList<>();
+        ValuePrecision resultPrecision = ValuePrecision.Default;
+        if (operand1._precision == ValuePrecision.Double || operand2._precision == ValuePrecision.Double) {
+            resultPrecision = ValuePrecision.Double;
+        }
+
+        List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
             diagnostics.append(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
@@ -479,10 +630,12 @@ public class IntegerValue extends Value {
         }
 
         DoubleWord36 newValue = operand1._value.logicalXor(operand2._value);
-        return new IntegerValue.Builder().setForm(resultForm)
-                                         .setReferences(refList.toArray(new UndefinedReference[0]))
-                                         .setValue(newValue)
-                                         .build();
+        return new IntegerValue(locale,
+                                false,
+                                newValue,
+                                resultPrecision,
+                                resultForm,
+                                refList.toArray(new UnresolvedReference[0]));
     }
 
 
@@ -491,10 +644,11 @@ public class IntegerValue extends Value {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Compares forms attached to the given values (if existing) for equality.
+     * Compares forms attached to the given values (if existing) for equality/compatibility.
      * If neither value has an attached form, the test passes.
      * @return true if the forms are equivalent, else false
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean checkValueForms(
         final IntegerValue value1,
         final IntegerValue value2
@@ -519,14 +673,25 @@ public class IntegerValue extends Value {
 
         boolean _flagged = false;
         Form _form = null;
+        Locale _locale = null;
         ValuePrecision _precision = ValuePrecision.Default;
-        UndefinedReference[] _references = new UndefinedReference[0];
+        UnresolvedReference[] _references = new UnresolvedReference[0];
         DoubleWord36 _value = null;
 
         public Builder setFlagged(boolean value)                    { _flagged = value; return this; }
-        public Builder setForm(Form value)                          {_form = value; return this; }
+        public Builder setForm(Form value)                          { _form = value; return this; }
+        public Builder setLocale(Locale value)                      { _locale = value; return this; }
         public Builder setPrecision(ValuePrecision value)           { _precision = value; return this; }
-        public Builder setReferences(UndefinedReference[] values)   { _references = Arrays.copyOf(values, values.length); return this; }
+        public Builder setReferences(UnresolvedReference[] values)   { _references = Arrays.copyOf(values, values.length); return this; }
+
+        public Builder setReferences(
+            Collection<UnresolvedReference> values
+        ) {
+            _references = values.toArray(new UnresolvedReference[0]);
+            return this;
+        }
+
+        public Builder setValue(BigInteger value)                   { _value = new DoubleWord36(value); return this; }
         public Builder setValue(DoubleWord36 value)                 { _value = value; return this; }
         public Builder setValue(Word36 value)                       { _value = new DoubleWord36(0, value.getW()); return this; }
         public Builder setValue(long value)                         { _value = new DoubleWord36(0, value); return this; }
@@ -537,7 +702,7 @@ public class IntegerValue extends Value {
                 throw new RuntimeException("Value not specified for IntegerValue builder");
             }
 
-            return new IntegerValue(_flagged, _value, _precision, _form, _references);
+            return new IntegerValue(_locale, _flagged, _value, _precision, _form, _references);
         }
     }
 }

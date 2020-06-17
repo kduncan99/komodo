@@ -62,8 +62,8 @@ public class ExpressionGroupItem extends OperandItem {
         //      Otherwise, it is a literal.
         if (expressions.length == 1) {
             for (Expression e : expressions) {
-                Collection<IExpressionItem> items = e.getItems();
-                for (IExpressionItem item : items) {
+                Collection<ExpressionItem> items = e.getItems();
+                for (ExpressionItem item : items) {
                     if (item instanceof OperatorItem) {
                         _isSubExpression = true;
                         break;
@@ -142,11 +142,12 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return assembler.generate(_locale.getLineSpecifier(),
-                                  assembler.getCurrentLiteralLCIndex(),
-                                  form,
-                                  values,
-                                  _locale);
+        return assembler.getGeneratedPools().generateLiteral(assembler.getTopLevelTextLine(),
+                                                             _locale,
+                                                             assembler.getCurrentLiteralLCIndex(),
+                                                             form,
+                                                             values,
+                                                             assembler);
     }
 
     @Override

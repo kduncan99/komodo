@@ -48,12 +48,14 @@ public class CASFunction extends BuiltInFunction {
         if (arguments[0] instanceof IntegerValue) {
             IntegerValue iv = (IntegerValue) arguments[0];
             if (iv._precision == ValuePrecision.Double) {
-                return new StringValue.Builder().setValue(iv._value.toStringFromASCII())
+                return new StringValue.Builder().setLocale(getLocale())
+                                                .setValue(iv._value.toStringFromASCII())
                                                 .setCharacterMode(CharacterMode.ASCII)
                                                 .build();
             } else {
                 String str = iv._value.getWords()[1].toStringFromASCII();
-                return new StringValue.Builder().setValue(str)
+                return new StringValue.Builder().setLocale(getLocale())
+                                                .setValue(str)
                                                 .setCharacterMode(CharacterMode.ASCII)
                                                 .build();
             }

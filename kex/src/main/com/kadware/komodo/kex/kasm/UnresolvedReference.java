@@ -15,12 +15,17 @@ import java.util.Map;
 /**
  * Base class for all undefined references
  */
-public abstract class UndefinedReference {
+public abstract class UnresolvedReference {
 
     public final FieldDescriptor _fieldDescriptor;
     public final boolean _isNegative;
 
-    UndefinedReference(
+    /**
+     * constructor
+     * @param fieldDescriptor describes the subset of the containing value, to which this reference applies
+     * @param isNegative true if this value is to be arithmetically inverted when it is integrated into the containing value
+     */
+    UnresolvedReference(
         final FieldDescriptor fieldDescriptor,
         final boolean isNegative
     ) {
@@ -28,8 +33,8 @@ public abstract class UndefinedReference {
         _isNegative = isNegative;
     }
 
-    public abstract UndefinedReference copy(boolean isNegative);
-    public abstract UndefinedReference copy(FieldDescriptor fieldDescriptor);
+    public abstract UnresolvedReference copy(boolean isNegative);
+    public abstract UnresolvedReference copy(FieldDescriptor fieldDescriptor);
 
     @Override public abstract boolean equals(final Object obj);
     @Override public abstract int hashCode();
@@ -41,12 +46,12 @@ public abstract class UndefinedReference {
      * We must use a LinkedHashMap so that the references retain their ordering, to the extend possible.
      * This is required for things such as LBDIREF$ to work.
      */
-    public static UndefinedReference[] coalesce(
-        final UndefinedReference[] array
+    public static UnresolvedReference[] coalesce(
+        final UnresolvedReference[] array
     ) {
-        Map<UndefinedReference, Integer> tallyMap = new LinkedHashMap<>();
-        for (UndefinedReference ur : array) {
-            UndefinedReference urAbs = ur.copy(false);
+        Map<UnresolvedReference, Integer> tallyMap = new LinkedHashMap<>();
+        for (UnresolvedReference ur : array) {
+            UnresolvedReference urAbs = ur.copy(false);
             int addend = ur._isNegative ? -1 : 1;
             Integer tally = tallyMap.get(urAbs);
             if (tally == null) {
@@ -57,36 +62,36 @@ public abstract class UndefinedReference {
             tallyMap.put(urAbs, tally);
         }
 
-        List<UndefinedReference> resultList = new LinkedList<>();
-        for (Map.Entry<UndefinedReference, Integer> entry : tallyMap.entrySet()) {
+        List<UnresolvedReference> resultList = new LinkedList<>();
+        for (Map.Entry<UnresolvedReference, Integer> entry : tallyMap.entrySet()) {
             if (entry.getValue() != 0) {
                 boolean isNegative = entry.getValue() < 0;
-                UndefinedReference newUR = entry.getKey().copy(isNegative);
+                UnresolvedReference newUR = entry.getKey().copy(isNegative);
                 for (int x = 0; x < Math.abs(entry.getValue()); ++x) {
                     resultList.add(newUR);
                 }
             }
         }
 
-        return resultList.toArray(new UndefinedReference[0]);
+        return resultList.toArray(new UnresolvedReference[0]);
     }
 
     /**
      * Tests two arrays of U'Rs, to see if they are equivalent
      */
     public static boolean equals(
-        final UndefinedReference[] array1,
-        final UndefinedReference[] array2
+        final UnresolvedReference[] array1,
+        final UnresolvedReference[] array2
     ) {
-        List<UndefinedReference> list1 = new LinkedList<>(Arrays.asList(array1));
-        List<UndefinedReference> list2 = new LinkedList<>(Arrays.asList(array2));
-        Iterator<UndefinedReference> iter1 = list1.iterator();
+        List<UnresolvedReference> list1 = new LinkedList<>(Arrays.asList(array1));
+        List<UnresolvedReference> list2 = new LinkedList<>(Arrays.asList(array2));
+        Iterator<UnresolvedReference> iter1 = list1.iterator();
 
         while (iter1.hasNext()) {
-            UndefinedReference ref1 = iter1.next();
-            Iterator<UndefinedReference> iter2 = list2.iterator();
+            UnresolvedReference ref1 = iter1.next();
+            Iterator<UnresolvedReference> iter2 = list2.iterator();
             while (iter2.hasNext()) {
-                UndefinedReference ref2 = iter2.next();
+                UnresolvedReference ref2 = iter2.next();
                 if (ref1.equals(ref2)) {
                     iter1.remove();
                     iter2.remove();

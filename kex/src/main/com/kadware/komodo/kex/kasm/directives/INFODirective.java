@@ -45,8 +45,7 @@ public class INFODirective extends Directive {
                     return;
                 }
 
-                GeneratedPool gp = assembler.obtainPool(lcIndex);
-                gp.setExtendedModeFlag(true);
+                assembler.getGeneratedPools().obtainPool(lcIndex).setExtendedModeFlag(true);
             } catch (ExpressionException ex) {
                 assembler.appendDiagnostic(new ErrorDiagnostic(sf._locale, "Syntax error"));
             }

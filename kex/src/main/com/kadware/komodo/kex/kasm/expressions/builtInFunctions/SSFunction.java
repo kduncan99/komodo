@@ -104,6 +104,9 @@ public class SSFunction extends BuiltInFunction {
             } while (sb.length() < ival2);
         }
 
-        return new StringValue.Builder().setValue(sb.toString()).setCharacterMode(sarg._characterMode).build();
+        return new StringValue.Builder().setLocale(getLocale())
+                                        .setValue(sb.toString())
+                                        .setCharacterMode(sarg._characterMode)
+                                        .build();
     }
 }

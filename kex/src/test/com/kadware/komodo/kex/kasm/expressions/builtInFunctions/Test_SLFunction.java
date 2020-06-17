@@ -13,7 +13,7 @@ import com.kadware.komodo.kex.kasm.dictionary.StringValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
-import com.kadware.komodo.kex.kasm.expressions.items.IExpressionItem;
+import com.kadware.komodo.kex.kasm.expressions.items.ExpressionItem;
 import com.kadware.komodo.kex.kasm.expressions.items.ValueItem;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,19 +29,19 @@ public class Test_SLFunction {
     public void test(
     ) throws ExpressionException {
 
-        List<IExpressionItem> items = new LinkedList<>();
+        List<ExpressionItem> items = new LinkedList<>();
         StringValue sv = new StringValue.Builder().setValue("Hello Stupid").setCharacterMode(CharacterMode.ASCII).build();
-        LineSpecifier ls01 = new LineSpecifier(0, 1);
-        items.add(new ValueItem(new Locale(ls01, 1), sv));
+        items.add(new ValueItem(sv));
 
+        Locale expLocale = new Locale(new LineSpecifier(0, 10), 11);
         Expression[] expressions = new Expression[1];
-        expressions[0] = new Expression(items);
+        expressions[0] = new Expression(expLocale, items);
 
-        LineSpecifier ls10 = new LineSpecifier(0, 10);
-        BuiltInFunction bif = new SLFunction(new Locale(ls10, 16), expressions);
+        BuiltInFunction bif = new SLFunction(expLocale, expressions);
 
         Value result = bif.evaluate(new Assembler.Builder().build());
         IntegerValue expected = new IntegerValue.Builder().setValue(12).build();
         assertEquals(expected, result);
+        assertEquals(expLocale, result._locale);
     }
 }

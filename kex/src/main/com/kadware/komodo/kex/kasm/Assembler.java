@@ -37,6 +37,41 @@ import java.util.TreeSet;
 public class Assembler {
 
     //  ---------------------------------------------------------------------------------------------------------------------------
+    //  Inner classes
+    //  ---------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Entities which are not local to a particular assembler level
+     */
+    static class GlobalData {
+
+        final Diagnostics _diagnostics = new Diagnostics();
+        final Dictionary _globalDictionary = new Dictionary(new SystemDictionary());
+        final Set<AssemblerOption> _options;
+        final PrintStream _outputStream;
+
+        boolean _arithmeticFaultCompatibilityMode = false;
+        boolean _arithmeticFaultNonInterruptMode = false;
+        boolean _quarterWordMode = false;
+        boolean _thirdWordMode = false;
+
+        ProgramStart _programStart = null;
+
+        //  Map of LC indices to the various GeneratedPool objects...
+        //  Keyed by location counter index.
+        final GeneratedPools _generatedPools = new GeneratedPools();
+
+        GlobalData(
+            Set<AssemblerOption> options,
+            PrintStream outputStream
+        ) {
+            _options = options;
+            _outputStream = outputStream;
+        }
+    }
+
+
+    //  ---------------------------------------------------------------------------------------------------------------------------
     //  Data
     //  ---------------------------------------------------------------------------------------------------------------------------
 
@@ -266,7 +301,7 @@ public class Assembler {
                 if ((iv._references == null) || (iv._references.length == 0)) {
                     ep = new RelocatableModule.AbsoluteEntryPoint(vInfo._label, iv._value.get().longValue());
                 } else {
-                    UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+                    UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) iv._references[0];
                     ep = new RelocatableModule.RelativeEntryPoint(vInfo._label,
                                                                   iv._value.get().intValue(),
                                                                   urlc._locationCounterIndex);
@@ -400,54 +435,12 @@ public class Assembler {
                 }
             }
         }
-    }
 
-    /**
-     * Generates the multiple words for a given location counter index and offset,
-     * and places them into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * @param lineSpecifier location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param values the values to be used
-     */
-    void generate(
-        final LineSpecifier lineSpecifier,
-        final int lcIndex,
-        final long[] values
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-
-        for (int vx = 0; vx < values.length; ++vx) {
-            IntegerValue iv = new IntegerValue.Builder().setValue(values[vx]).build();
-            GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(),
-                                                 lineSpecifier,
-                                                 lcIndex,
-                                                 lcOffset + vx,
-                                                 iv);
-            gp.store(gw);
-            gw._topLevelTextLine._generatedWords.add(gw);
+        for (Diagnostic d : _global._diagnostics.getDiagnostics()) {
+            if (d._locale == null) {
+                _global._outputStream.println(d.getMessage());
+            }
         }
-    }
-
-    /**
-     * Generates a word (with possibly a form attached) for a given location counter index and offset,
-     * and places it into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * @param lineSpecifier location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param value the integer/intrinsic value to be used
-     */
-    void generate(
-        final LineSpecifier lineSpecifier,
-        final int lcIndex,
-        final IntegerValue value
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, value);
-        gp.store(gw);
-        gw._topLevelTextLine._generatedWords.add(gw);
     }
 
     /**
@@ -463,13 +456,13 @@ public class Assembler {
             if (fpValue._precision == ValuePrecision.Single) {
                 Word36 w36 = fpValue._value.toWord36();
                 long[] word36 = { w36.getW() };
-                generate(locale.getLineSpecifier(), _currentGenerationLCIndex, word36);
+                _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             } else {
                 //  double precision generation is the default...
                 DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
                 Word36[] word36s = dw36.getWords();
                 long[] word36 = { word36s[0].getW(), word36s[1].getW() };
-                generate(locale.getLineSpecifier(), _currentGenerationLCIndex, word36);
+                _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             }
         } catch (CharacteristicOverflowException ex) {
             appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
@@ -483,7 +476,7 @@ public class Assembler {
      */
     private void generateInteger(
         final TextField operandField,
-        final Locale sf0Locale,
+        final Locale locale,
         final Value firstValue
     ) {
         int valueCount = (operandField._subfields.size());
@@ -499,7 +492,7 @@ public class Assembler {
         }
 
         BigInteger intValue = BigInteger.ZERO;
-        List<UndefinedReference> newRefs = new LinkedList<>();
+        List<UnresolvedReference> newRefs = new LinkedList<>();
         int startingBit = 0;
         for (int vx = 0; vx < valueCount; ++vx) {
             if (vx > 0) {
@@ -513,7 +506,7 @@ public class Assembler {
                 ExpressionParser pNext = new ExpressionParser(sfNextText, sfNextLocale);
                 Expression eNext = pNext.parse(this);
                 if (eNext == null) {
-                    appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Expression expected"));
+                    appendDiagnostic(new ErrorDiagnostic(locale, "Expression expected"));
                     continue;
                 }
 
@@ -521,7 +514,7 @@ public class Assembler {
                 if (vNext instanceof IntegerValue) {
                     IntegerValue ivNext = (IntegerValue) vNext;
                     FieldDescriptor fd = new FieldDescriptor(startingBit,fieldSizes[vx]);
-                    for (UndefinedReference ur : ((IntegerValue) vNext)._references) {
+                    for (UnresolvedReference ur : ((IntegerValue) vNext)._references) {
                         newRefs.add(ur.copy(fd));
                     }
                     intValue = intValue.or(ivNext._value.get());
@@ -529,17 +522,18 @@ public class Assembler {
                     appendDiagnostic(new ValueDiagnostic(sfNextLocale, "Expected integer value"));
                 }
             } catch (ExpressionException ex) {
-                appendDiagnostic(new ErrorDiagnostic(sf0Locale, "Syntax error in expression"));
+                appendDiagnostic(new ErrorDiagnostic(locale, "Syntax error in expression"));
             }
 
             startingBit += fieldSizes[vx];
         }
 
-        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(intValue))
+        IntegerValue iv = new IntegerValue.Builder().setLocale(locale)
+                                                    .setValue(new DoubleWord36(intValue))
                                                     .setForm(new Form(fieldSizes))
-                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
+                                                    .setReferences(newRefs)
                                                     .build();
-        generate(operandField._locale.getLineSpecifier(), _currentGenerationLCIndex, iv);
+        _global._generatedPools.generate(getTopLevelTextLine(), operandField._locale, _currentGenerationLCIndex, iv);
     }
 
     /**
@@ -591,13 +585,13 @@ public class Assembler {
             slice = ArraySlice.stringToWord36Fieldata(effectiveString);
         }
 
-        generate(locale.getLineSpecifier(), _currentGenerationLCIndex, slice._array);
+        _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, slice._array);
     }
 
     /**
      * Determines the zero-level text line involved in this particular retrieval
      */
-    private TextLine getTopLevelTextLine() {
+    public TextLine getTopLevelTextLine() {
         if (_outerLevel != null) {
             return _outerLevel.getTopLevelTextLine();
         } else {
@@ -822,8 +816,12 @@ public class Assembler {
                 }
             }
 
-            LineSpecifier lSpec = operandField._locale.getLineSpecifier();
-            generate(lSpec, _currentGenerationLCIndex, formValue._form, realValues, operandField._locale);
+            _global._generatedPools.generate(getTopLevelTextLine(),
+                                             operandField._locale,
+                                             _currentGenerationLCIndex,
+                                             formValue._form,
+                                             realValues,
+                                             this);
         }
     }
 
@@ -874,7 +872,7 @@ public class Assembler {
                                       && (iinfo._jFlag || (jField < 016));
 
         TextSubfield[] opSubfields = processMnemonicGetOperandSubfields(iinfo, operandField, baseSubfieldAllowed);
-        IntegerValue aValue = processMnemonicGetAField(iinfo, operandField, opSubfields[0]);
+        IntegerValue aValue = processMnemonicGetAField(iinfo, operationField, operandField, opSubfields[0]);
         IntegerValue uValue = processMnemonicGetUField(operandField, opSubfields[1]);
         IntegerValue xValue = processMnemonicGetXField(opSubfields[2]);
         IntegerValue bValue = baseSubfieldAllowed ? processMnemonicGetBField(opSubfields[3]) : IntegerValue.POSITIVE_ZERO;
@@ -882,68 +880,74 @@ public class Assembler {
         //  Create the instruction word
         Form form;
         IntegerValue[] values;
+        Locale jLocale = operandField._subfields.size() > 1 ? operandField._subfields.get(1)._locale : operandField._locale;
         if (!iinfo._jFlag && (jField >= 016)) {
             form = _fjaxuForm;
             values = new IntegerValue[5];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
             values[4] = uValue;
         } else if ((_codeMode == CodeMode.Basic) || iinfo._useBMSemantics) {
             form = _fjaxhiuForm;
             values = new IntegerValue[7];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
-            values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
+            values[4] = new IntegerValue.Builder().setLocale(xValue._locale).setValue(xValue._flagged ? 1 : 0).build();
+            values[5] = new IntegerValue.Builder().setLocale(uValue._locale).setValue(uValue._flagged ? 1 : 0).build();
             values[6] = uValue;
         } else {
             form = _fjaxhibdForm;
             values = new IntegerValue[8];
-            values[0] = new IntegerValue.Builder().setValue(iinfo._fField).build();
-            values[1] = new IntegerValue.Builder().setValue(jField).build();
+            values[0] = new IntegerValue.Builder().setLocale(operationField._locale).setValue(iinfo._fField).build();
+            values[1] = new IntegerValue.Builder().setLocale(jLocale).setValue(jField).build();
             values[2] = aValue;
             values[3] = xValue;
-            values[4] = new IntegerValue.Builder().setValue(xValue._flagged ? 1 : 0).build();
+            values[4] = new IntegerValue.Builder().setLocale(xValue._locale).setValue(xValue._flagged ? 1 : 0).build();
             int bInt = bValue._value.get().intValue();
             if (bInt < 017) {
-                values[5] = new IntegerValue.Builder().setValue(uValue._flagged ? 1 : 0).build();
+                values[5] = new IntegerValue.Builder().setLocale(uValue._locale).setValue(uValue._flagged ? 1 : 0).build();
                 values[6] = bValue;
             } else {
-                values[5] = new IntegerValue.Builder().setValue(1).build();
-                values[6] = new IntegerValue.Builder().setValue(bInt & 017).build();
+                values[5] = new IntegerValue.Builder().setLocale(bValue._locale).setValue(1).build();
+                values[6] = new IntegerValue.Builder().setLocale(bValue._locale).setValue(bInt & 017).build();
             }
             values[7] = uValue;
         }
 
-        generate(operationField._locale.getLineSpecifier(),
-                 _currentGenerationLCIndex,
-                 form,
-                 values,
-                 operationField._locale);
+        _global._generatedPools.generate(getTopLevelTextLine(),
+                                         operationField._locale,
+                                         _currentGenerationLCIndex,
+                                         form,
+                                         values,
+                                         this);
         return true;
     }
 
     /**
      * Determine the value for the instruction's a-field
      * @param instructionInfo InstructionInfo for the instruction we're generating
+     * @param operationField operator field in case we need that locale
      * @param operandField operand field in case we need that locale
      * @param registerSubfield register (a-field) subfield text
      * @return value representing the A-field (which might have a flagged value)
      */
     private IntegerValue processMnemonicGetAField(
         final InstructionWord.InstructionInfo instructionInfo,
+        final TextField operationField,
         final TextField operandField,
         final TextSubfield registerSubfield
     ) {
         IntegerValue aValue = IntegerValue.POSITIVE_ZERO;
 
         if (instructionInfo._aFlag) {
-            aValue = new IntegerValue.Builder().setValue(instructionInfo._aField).build();
+            //  a-field comes from the instruction info object
+            aValue = new IntegerValue.Builder().setLocale(operationField._locale).setValue(instructionInfo._aField).build();
         } else {
+            //  a-field comes from the first subfield in the operand field
             if ((registerSubfield == null) || (registerSubfield._text.isEmpty())) {
                 appendDiagnostic(new ErrorDiagnostic(operandField._locale,
                                                      "Missing register specification"));
@@ -964,15 +968,18 @@ public class Assembler {
                             aValue = (IntegerValue) v;
                             int aInteger = aValue._value.get().intValue();
                             aValue = switch (instructionInfo._aSemantics) {
-                                case A -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case A -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                    .setFlagged(aValue._flagged)
                                                                     .setValue(aInteger - 12)
                                                                     .setReferences(aValue._references)
                                                                     .build();
-                                case B_EXEC -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case B_EXEC -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                         .setFlagged(aValue._flagged)
                                                                          .setValue(aInteger - 16)
                                                                          .setReferences(aValue._references)
                                                                          .build();
-                                case R -> new IntegerValue.Builder().setFlagged(aValue._flagged)
+                                case R -> new IntegerValue.Builder().setLocale(registerSubfield._locale)
+                                                                    .setFlagged(aValue._flagged)
                                                                     .setValue(aInteger - 64)
                                                                     .setReferences(aValue._references)
                                                                     .build();
@@ -1221,28 +1228,32 @@ public class Assembler {
     ) {
         Assembler subAssembler = new ProcedureAssembler(this, procedureName, procedureValue._source);
 
-        NodeValue mainNode = new NodeValue.Builder().build();
+        //  Main node contains the proc name and operation subfields, and operand subfields,
+        //  and all subsequent fields thereafter.
+        //  Its locale corresponds to the operation field of the invoking text line
+        NodeValue mainNode = new NodeValue(textLine._fields.get(1)._locale, false);
         for (int fx = 1; fx < textLine._fields.size(); ++fx) {
-            NodeValue subNode = new NodeValue.Builder().build();
-            mainNode.setValue(new IntegerValue.Builder().setValue(fx - 1).build(), subNode);
             TextField field = textLine._fields.get(fx);
+            NodeValue subNode = new NodeValue(field._locale, false);
+            mainNode.setValue(new IntegerValue.Builder().setValue(fx - 1).build(), subNode);
             for (int sfx = 0; sfx < field._subfields.size(); ++sfx) {
                 TextSubfield subField = field._subfields.get(sfx);
                 if ((fx == 1) && (sfx == 0)) {
                     //  This is the proc name - handle it accordingly (no expression evaluation)
-                    subNode.setValue(IntegerValue.POSITIVE_ZERO,
-                                     new StringValue.Builder().setValue(subField._text)
-                                                              .setCharacterMode(CharacterMode.ASCII)
-                                                              .build());
+                    StringValue sValue = new StringValue.Builder().setLocale(subNode._locale)
+                                                                  .setValue(subField._text)
+                                                                  .build();
+                    subNode.setValue(IntegerValue.POSITIVE_ZERO, sValue);
                 } else {
+                    IntegerValue nodeIndex = new IntegerValue.Builder().setValue(sfx).build();
                     try {
                         //  Evaluate the given subfield, and place the result in the appropriate position of nv
                         ExpressionParser sfParser = new ExpressionParser(subField._text, subField._locale);
                         Expression sfExpression = sfParser.parse(this);
                         Value sfValue = sfExpression.evaluate(this);
-                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), sfValue);
+                        subNode.setValue(nodeIndex, sfValue);
                     } catch (ExpressionException ex) {
-                        subNode.setValue(new IntegerValue.Builder().setValue(sfx).build(), IntegerValue.POSITIVE_ZERO);
+                        subNode.setValue(nodeIndex, IntegerValue.POSITIVE_ZERO);
                         Diagnostic diag = new ErrorDiagnostic(subField._locale, "Syntax error");
                         appendDiagnostic(diag);
                     }
@@ -1256,90 +1267,9 @@ public class Assembler {
         }
     }
 
-    /**
-     * Resolves any lingering undefined references once initial assembly is complete, for one particular IntegerValue object.
-     * These will be the forward-references we picked up along the way.
-     * No point checking for loc ctr refs, those aren't resolved until link time.
-     */
-    private IntegerValue resolveReferences(
-        final Locale locale,
-        final IntegerValue originalValue
-    ) {
-        IntegerValue newValue = originalValue;
-        if (originalValue._references.length > 0) {
-            BigInteger newDiscreteValue = originalValue._value.get();
-            List<UndefinedReference> newURefs = new LinkedList<>();
-            for (UndefinedReference uRef : originalValue._references) {
-                if (uRef instanceof UndefinedReferenceToLabel) {
-                    UndefinedReferenceToLabel lRef = (UndefinedReferenceToLabel) uRef;
-                    try {
-                        Dictionary.ValueInfo vInfo = _dictionary.getValueInfo(lRef._label);
-                        Value lookupValue = vInfo._value;
-                        if (lookupValue.getType() != ValueType.Integer) {
-                            String msg = String.format("Reference '%s' does not resolve to an integer",
-                                                       lRef._label);
-                            appendDiagnostic(new ValueDiagnostic(locale, msg));
-                        } else {
-                            IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
-                            BigInteger addend = lookupIntegerValue._value.get();
-                            if (lRef._isNegative) { addend = addend.negate(); }
-                            newDiscreteValue = newDiscreteValue.add(addend);
-                            for (UndefinedReference urSub : lookupIntegerValue._references) {
-                                newURefs.add(urSub.copy(lRef._fieldDescriptor));
-                            }
-                        }
-                    } catch (NotFoundException ex) {
-                        //  reference is still not found - propagate it
-                        newURefs.add(uRef);
-                    }
-                } else {
-                    newURefs.add(uRef);
-                }
-            }
-
-            newValue = new IntegerValue.Builder().setValue(new DoubleWord36(newDiscreteValue))
-                                                 .setForm(originalValue._form)
-                                                 .setReferences(newURefs.toArray(new UndefinedReference[0]))
-                                                 .build();
-        }
-
-        return newValue;
-    }
-
-    /**
-     * Resolves any lingering undefined references once initial assembly is complete...
-     * These will be the forward-references we picked up along the way.
-     * No point checking for loc ctr refs, those aren't resolved until link time.
-     */
-    private void resolveReferences() {
-        for (Map.Entry<Integer, GeneratedPool> poolEntry : _global._generatedPools.entrySet()) {
-            GeneratedPool pool = poolEntry.getValue();
-            for (Map.Entry<Integer, GeneratedWord> wordEntry : pool.entrySet()) {
-                GeneratedWord gw = wordEntry.getValue();
-                IntegerValue originalValue = gw._value;
-                IntegerValue newValue = resolveReferences(new Locale(gw._lineSpecifier, 1), originalValue);
-                if (newValue != originalValue) {
-                    pool.put(wordEntry.getKey(), wordEntry.getValue().copy(newValue));
-                }
-            }
-        }
-    }
-
     //  ---------------------------------------------------------------------------------------------------------------------------
     //  Public methods
     //  ---------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Advances the offset of a particular location counter by the given count value
-     * @param lcIndex index of the location counter
-     * @param count amount by which the lc is to be offset - expected to be positive, but it works regardless
-     */
-    public void advanceLocation(
-        final int lcIndex,
-        final int count
-    ) {
-        obtainPool(lcIndex).advance(count);
-    }
 
     /**
      * Convenience method - adds the diagnostic to the master Diagnostics object as well as the affected
@@ -1378,11 +1308,11 @@ public class Assembler {
         if (_endValue != null) {
             //  ENDDiagnostic guarantees that the end value is a properly-relocated IntegerValue (for the main assembly)
             IntegerValue iv = (IntegerValue) _endValue;
-            UndefinedReferenceToLocationCounter urlc = (UndefinedReferenceToLocationCounter) iv._references[0];
+            UnresolvedReferenceToLocationCounter urlc = (UnresolvedReferenceToLocationCounter) iv._references[0];
             _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
         }
 
-        resolveReferences();
+        _global._generatedPools.resolveReferences(this);
         RelocatableModule module = createRelocatableModule(_moduleName);
 
         if (!_global._options.contains(AssemblerOption.SILENT)) {
@@ -1432,81 +1362,6 @@ public class Assembler {
         }
     }
 
-    /**
-     * Generates a word with a form attached for a given location counter index and offset,
-     * and places it into the appropriate location counter pool within the given context.
-     * Also associates it with the current top-level text line.
-     * The form describes 1 or more fields, the totality of which are expected to describe 36 bits.
-     * The values parameter is an array with as many entities as there are fields in the form.
-     * Each value must fit within the size of that value's respective field.
-     * The overall integer portion of the generated value is the respective component integer values
-     * shifted into their field positions, and or'd together.
-     * The individual values should not have forms attached, but they may have undefined references.
-     * All such undefined references are adjusted to match the field description of the particular
-     * field to which the reference applies.
-     * @param lineSpecifier location of the text entity generating this word
-     * @param lcIndex index of the location counter pool where-in the value is to be placed
-     * @param form form describing the fields for which values are specified in the values parameter
-     * @param values array of component values, each with potential undefined refereces but no attached forms
-     * @return value indicating the location which applies to the word which was just generated...
-     *          This value is used in generating literals, and is not used in other situations.
-     */
-    public IntegerValue generate(
-        final LineSpecifier lineSpecifier,
-        final int lcIndex,
-        final Form form,
-        final IntegerValue[] values,
-        final Locale locale
-    ) {
-        GeneratedPool gp = obtainPool(lcIndex);
-        int lcOffset = gp.getNextOffset();
-        if (form._fieldSizes.length != values.length) {
-            appendDiagnostic(new FormDiagnostic(locale,
-                                                "Contradiction between number of values and number of fields in form"));
-            return new IntegerValue.Builder().setValue(lcOffset).build();
-        }
-
-        BigInteger genInt = BigInteger.ZERO;
-        int bit = form._leftSlop;
-        List<UndefinedReference> newRefs = new LinkedList<>();
-        for (int fx = 0; fx < form._fieldSizes.length; ++fx) {
-            genInt = genInt.shiftLeft(form._fieldSizes[fx]);
-            BigInteger mask = BigInteger.valueOf((1L << form._fieldSizes[fx]) - 1);
-            BigInteger fieldValue = values[fx]._value.get();
-            boolean trunc;
-            if (values[fx]._value.isPositive()) {
-                trunc = !fieldValue.and(mask).equals(fieldValue);
-            } else {
-                trunc = !fieldValue.or(mask).equals(DoubleWord36.BIT_MASK);
-            }
-
-            if (trunc) {
-                String msg = String.format("Value %012o exceeds size of field in form %s", fieldValue, form.toString());
-                appendDiagnostic(new TruncationDiagnostic(locale, msg));
-            }
-
-            genInt = genInt.or(values[fx]._value.get().and(mask));
-            for (UndefinedReference ur : values[fx]._references) {
-                newRefs.add(ur.copy(new FieldDescriptor(bit, form._fieldSizes[fx])));
-            }
-
-            bit += form._fieldSizes[fx];
-        }
-
-        IntegerValue iv = new IntegerValue.Builder().setValue(new DoubleWord36(genInt))
-                                                    .setForm(form)
-                                                    .setReferences(newRefs.toArray(new UndefinedReference[0]))
-                                                    .build();
-        GeneratedWord gw = new GeneratedWord(getTopLevelTextLine(), lineSpecifier, lcIndex, lcOffset, iv);
-        gw._topLevelTextLine._generatedWords.add(gw);
-        gp.store(gw);
-
-        UndefinedReference[] lcRefs = { new UndefinedReferenceToLocationCounter(FieldDescriptor.W, false, lcIndex) };
-        return new IntegerValue.Builder().setValue(lcOffset)
-                                         .setReferences(lcRefs)
-                                         .build();
-    }
-
     public boolean getArithmeticFaultCompatibilityMode() {
         return _global._arithmeticFaultCompatibilityMode;
     }
@@ -1548,11 +1403,14 @@ public class Assembler {
      */
     public IntegerValue getCurrentLocation(
     ) {
-        GeneratedPool gp = obtainPool(_currentGenerationLCIndex);
+        GeneratedPool gp = _global._generatedPools.obtainPool(_currentGenerationLCIndex);
         int lcOffset = gp.getNextOffset();
-        UndefinedReference[] refs = { new UndefinedReferenceToLocationCounter(new FieldDescriptor(0, 36),
-                                                                              false,
-                                                                              _currentGenerationLCIndex) };
+        UnresolvedReference[] refs = {
+            new UnresolvedReferenceToLocationCounter(new FieldDescriptor(0, 36),
+                                                     false,
+                                                     _currentGenerationLCIndex)
+        };
+
         return new IntegerValue.Builder().setValue(lcOffset)
                                          .setReferences(refs)
                                          .build();
@@ -1567,6 +1425,13 @@ public class Assembler {
      * Retrieves the dictionary for this (sub)assembler
      */
     public Dictionary getDictionary() { return _dictionary; }
+
+    /**
+     * Retrieves our GeneratedPools object
+     */
+    public GeneratedPools getGeneratedPools() {
+        return _global._generatedPools;
+    }
 
     /**
      * Retrieves the assembler level - 0 is the top-level, or main assembly
@@ -1603,7 +1468,8 @@ public class Assembler {
      * What type of assembly is this?
      */
     public boolean isMainAssembly() {
-        return true; }
+        return true;
+    }
 
     public boolean isSubAssembly() {
         return false;
@@ -1611,11 +1477,11 @@ public class Assembler {
 
     public boolean isFunctionSubAssembly() {
         return false;
-    };
+    }
 
     public boolean isProcedureSubAssembly() {
         return false;
-    };
+    }
 
     /**
      * Quick way to check for an option
@@ -1624,23 +1490,6 @@ public class Assembler {
         final AssemblerOption option
     ) {
         return _global._options.contains(option);
-    }
-
-    /**
-     * Obtains a reference to the GeneratedPool corresponding to the given location counter index.
-     * If such a pool does not exist, it is created.
-     * @param lcIndex index of the desired pool
-     * @return reference to the pool
-     */
-    public GeneratedPool obtainPool(
-        final int lcIndex
-    ) {
-        GeneratedPool gp = _global._generatedPools.get(lcIndex);
-        if (gp == null) {
-            gp = new GeneratedPool();
-            _global._generatedPools.put(lcIndex, gp);
-        }
-        return gp;
     }
 
     /**

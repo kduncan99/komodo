@@ -37,12 +37,13 @@ public class NegativeOperator extends Operator {
         switch (operand.getType()) {
             case Integer -> {
                 IntegerValue ioperand = (IntegerValue) operand;
-                IntegerValue iresult = ioperand.negate();
+                IntegerValue iresult = ioperand.negate(_locale);
                 valueStack.push(iresult);
             }
             case FloatingPoint -> {
                 FloatingPointValue fpoperand = (FloatingPointValue) operand;
-                FloatingPointValue fpresult = new FloatingPointValue.Builder().setValue(fpoperand._value.negate())
+                FloatingPointValue fpresult = new FloatingPointValue.Builder().setLocale(_locale)
+                                                                              .setValue(fpoperand._value.negate())
                                                                               .setPrecision(fpoperand._precision)
                                                                               .build();
                 valueStack.push(fpresult);

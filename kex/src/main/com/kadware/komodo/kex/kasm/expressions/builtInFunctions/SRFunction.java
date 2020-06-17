@@ -70,7 +70,8 @@ public class SRFunction extends BuiltInFunction {
             throw new ExpressionException();
         }
 
-        return new StringValue.Builder().setValue(String.valueOf(sarg._value).repeat(Math.max(0, iarg._value.get().intValue())))
+        return new StringValue.Builder().setLocale(getLocale())
+                                        .setValue(String.valueOf(sarg._value).repeat(Math.max(0, iarg._value.get().intValue())))
                                         .setCharacterMode(sarg._characterMode)
                                         .build();
     }

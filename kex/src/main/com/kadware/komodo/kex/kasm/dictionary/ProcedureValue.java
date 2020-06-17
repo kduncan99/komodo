@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
+import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 
@@ -43,11 +44,13 @@ public class ProcedureValue extends Value {
 
     /**
      * Create a new copy of this object, with the given flagged value
+     * @param locale new value for Locale
      * @param newFlagged new value for Flagged attribute
      * @return new Value
      */
     @Override
     public Value copy(
+        final Locale locale,
         final boolean newFlagged
     ) throws TypeException {
         throw new TypeException();
@@ -55,12 +58,14 @@ public class ProcedureValue extends Value {
 
     /**
      * Create a new copy of this object, with the given precision value
+     * @param locale new value for Locale
      * @param newPrecision new value for precision attribute
      * @return new Value
      * @throws TypeException if object cannot be copied
      */
     @Override
     public Value copy(
+        final Locale locale,
         final ValuePrecision newPrecision
     ) throws TypeException {
         throw new TypeException();
