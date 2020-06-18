@@ -5,7 +5,9 @@
 package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.DoubleWord36;
+import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
+import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.FatalDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
@@ -201,11 +203,25 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
                         String msg = "Internal error resolving a reference to a literal";
                         assembler.appendDiagnostic(new FatalDiagnostic(null, msg));
                     } else {
+                        //  Create an offset value which represents the actual offset from the start of the location counter.
+                        //  Essentially, the literal pool offset (from the lc), added to the offset from the start of the lit pool.
+                        //  Then we have to integrate it into the discrete value.
                         int offset = referredPool.getLiteralPoolOffset() + litRef._literalOffset;
-                        newDiscreteValue = newDiscreteValue.add(BigInteger.valueOf(offset));
-                        newURefs.add(new UnresolvedReferenceToLocationCounter(litRef._fieldDescriptor,
-                                                                              litRef._isNegative,
-                                                                              litRef._locationCounterIndex));
+                        IntegerValue offsetValue = new IntegerValue.Builder().setValue(offset).build();
+                        IntegerValue ndValue = new IntegerValue.Builder().setValue(newDiscreteValue).build();
+                        FieldDescriptor[] fds = { litRef._fieldDescriptor };
+                        IntegerValue[] vals = { offsetValue };
+                        IntegerValue.IntegrateResult integrateResult = IntegerValue.integrate(ndValue, fds, vals, null);
+                        for (Diagnostic diag : integrateResult._diagnostics.getDiagnostics()) {
+                            assembler.appendDiagnostic(diag);
+                        }
+                        newDiscreteValue = integrateResult._value._value.get();
+
+                        //  Now create a new URtoLC to account for the location counter reference.
+                        UnresolvedReference urNew = new UnresolvedReferenceToLocationCounter(litRef._fieldDescriptor,
+                                                                                             litRef._isNegative,
+                                                                                             litRef._locationCounterIndex);
+                        newURefs.add(urNew);
                     }
                 } else {
                     newURefs.add(uRef);

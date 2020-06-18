@@ -1,4 +1,5 @@
 -- TODO InProgress
+
 Rebuilding all the hwlib unit tests
 
 Change kasm->exasm, klink->exlink
@@ -25,13 +26,10 @@ hwlib:
 
 -- TODO BUGS
 * kasm
-Still a problem with address-of...
-  + (010)
-  is supposed to just generate the 010 value because of the leading '+'
-  We don't do that...
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
+See 5.6 - label on a $LIT directive should create a function
 
 * klink
 integrateValue() is maybe wrong. See IntegerValue for proper code.

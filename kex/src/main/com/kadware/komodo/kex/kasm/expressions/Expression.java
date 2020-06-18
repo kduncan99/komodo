@@ -35,6 +35,14 @@ public class Expression {
     ) {
         _locale = locale;
         _items = new LinkedList<>(items);
+
+        //  Check to see if we have any ExpressionGroupItem objects,
+        //  and if so, whether they should be sub-expressions or literal expressions.
+        for (ExpressionItem item : _items) {
+            if (item instanceof ExpressionGroupItem) {
+                ((ExpressionGroupItem) item).setIsSubExpression (_items.size() > 1);
+            }
+        }
     }
 
     /**

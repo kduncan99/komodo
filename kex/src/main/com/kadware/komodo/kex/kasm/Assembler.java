@@ -404,9 +404,11 @@ public class Assembler {
     /**
      * Displays output upon the console
      * @param displayCode true to display generated code
+     * @param module the generated relocatable module
      */
     private void displayResults(
-        final boolean displayCode
+        final boolean displayCode,
+        final RelocatableModule module
     ) {
         //  This is inefficient, but it only applies when the caller wants to display source output.
         for (TextLine line : _sourceLines) {
@@ -416,21 +418,26 @@ public class Assembler {
                 _global._outputStream.println(d.getMessage());
             }
 
-            if (displayCode) {
+            if (displayCode && (module != null)) {
                 for (GeneratedWord gw : line._generatedWords) {
-                    RelocatableModule.RelocatableWord rw = gw.produceRelocatableWord();
-                    String gwBase = String.format("  $(%2d) %06o:  %012o",
-                                                  gw._locationCounterIndex,
-                                                  gw._locationCounterOffset,
-                                                  rw.getW());
-                    if (rw._relocatableItems.length == 0) {
-                        _global._outputStream.println(gwBase);
-                    } else {
-                        for (int urx = 0; urx < rw._relocatableItems.length; ++urx) {
-                            RelocatableModule.RelocatableItem ri = rw._relocatableItems[urx];
-                            _global._outputStream.println(gwBase + ri.toString());
-                            gwBase = "                             ";
+                    try {
+                        RelocatableModule.RelocatablePool pool = module.getLocationCounterPool(gw._locationCounterIndex);
+                        RelocatableModule.RelocatableWord rw = pool._content[gw._locationCounterOffset];
+                        String gwBase = String.format("  $(%2d) %06o:  %012o",
+                                                      gw._locationCounterIndex,
+                                                      gw._locationCounterOffset,
+                                                      rw.getW());
+                        if (rw._relocatableItems.length == 0) {
+                            _global._outputStream.println(gwBase);
+                        } else {
+                            for (int urx = 0; urx < rw._relocatableItems.length; ++urx) {
+                                RelocatableModule.RelocatableItem ri = rw._relocatableItems[urx];
+                                _global._outputStream.println(gwBase + ri.toString());
+                                gwBase = "                             ";
+                            }
                         }
+                    } catch (ParameterException ex) {
+                        //  should never happen
                     }
                 }
             }
@@ -1299,7 +1306,7 @@ public class Assembler {
             assembleTextLine(textLine);
             if (_global._diagnostics.hasFatal()) {
                 if (!_global._options.contains(AssemblerOption.SILENT)) {
-                    displayResults(false);
+                    displayResults(false, null);
                     return new AssemblerResult(_global._diagnostics, _sourceLines);
                 }
             }
@@ -1318,7 +1325,7 @@ public class Assembler {
         if (!_global._options.contains(AssemblerOption.SILENT)) {
             if (_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE)
                 || _global._options.contains(AssemblerOption.EMIT_SOURCE)) {
-                displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE));
+                displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE), module);
             }
             if (_global._options.contains(AssemblerOption.EMIT_MODULE_SUMMARY)) {
                 displayRelocatableModuleSummary(module);

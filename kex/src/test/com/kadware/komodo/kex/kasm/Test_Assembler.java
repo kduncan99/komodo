@@ -295,7 +295,8 @@ public class Test_Assembler {
     public void groupExpression(
     ) throws ParameterException {
         String[] source = {
-            "$(1)  + (5 + 3)*2"
+            "$(1)  + (5 + 3)*2",
+            "      (5 + 3)*2"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -308,8 +309,9 @@ public class Test_Assembler {
         assertNotNull(result._relocatableModule);
 
         RelocatableModule.RelocatablePool lcPool3 = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(1, lcPool3._content.length);
+        assertEquals(2, lcPool3._content.length);
         assertEquals(16, lcPool3._content[0].getW());
+        assertEquals(16, lcPool3._content[1].getW());
     }
 
     @Test
@@ -317,9 +319,9 @@ public class Test_Assembler {
     ) throws ParameterException {
         String[] source = {
             "$(0)  $LIT",
-            "$(1)  + 15",
-            "      + (077, 0777)",
-            "      + ((0111+FOO, 0111), 0111+FEE+FOE)"
+            "$(1)",
+            "      (077, 0777)",
+            "      ((0111+FOO, 0111), 0111+FEE+FOE)"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -336,14 +338,40 @@ public class Test_Assembler {
         assertEquals(3, lcPool0._content.length);
         assertEquals(0_000077_000777L, lcPool0._content[0].getW());
 
+        assertEquals(0_000111_000111L, lcPool0._content[1].getW());
+        RelocatableModule.RelocatableItem[] relItems = lcPool0._content[1]._relocatableItems;
+        assertEquals(1, relItems.length);
+        assertTrue(relItems[0] instanceof RelocatableModule.RelocatableItemSymbol);
+        RelocatableModule.RelocatableItemSymbol ris = (RelocatableModule.RelocatableItemSymbol) relItems[0];
+        assertEquals("FOO", ris._undefinedSymbol);
+        assertEquals(new FieldDescriptor(0, 18), ris._fieldDescriptor);
+        assertFalse(ris._subtraction);
+
+        assertEquals(0_000001_000111L, lcPool0._content[2].getW());
+        relItems = lcPool0._content[2]._relocatableItems;
+        assertEquals(3, relItems.length);
+        assertTrue(relItems[0] instanceof RelocatableModule.RelocatableItemLocationCounter);
+        RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) relItems[0];
+        assertEquals(0, rilc._locationCounterIndex);
+
+        assertTrue(relItems[1] instanceof RelocatableModule.RelocatableItemSymbol);
+        ris = (RelocatableModule.RelocatableItemSymbol) relItems[1];
+        assertEquals("FEE", ris._undefinedSymbol);
+        assertEquals(new FieldDescriptor(18, 18), ris._fieldDescriptor);
+        assertFalse(ris._subtraction);
+
+        assertTrue(relItems[2] instanceof RelocatableModule.RelocatableItemSymbol);
+        ris = (RelocatableModule.RelocatableItemSymbol) relItems[2];
+        assertEquals("FOE", ris._undefinedSymbol);
+        assertEquals(new FieldDescriptor(18, 18), ris._fieldDescriptor);
+        assertFalse(ris._subtraction);
+
         RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
         assertNotNull(lcPool1);
-        assertEquals(3, lcPool1._content.length);
-        assertEquals(0_017L, lcPool1._content[0].getW());
-        assertEquals(0, lcPool1._content[1].getW());
-        assertEquals(1, lcPool1._content[1]._relocatableItems.length);
+        assertEquals(2, lcPool1._content.length);
+        assertEquals(0, lcPool1._content[0].getW());
+        assertEquals(1, lcPool1._content[0]._relocatableItems.length);
     }
-
 
     @Test
     public void lit2(
@@ -352,11 +380,11 @@ public class Test_Assembler {
             "$(0)  $LIT",
             "$(1)  + 0777000777",
             "$(2)  $LIT",
-            "$(3)  + (0777000777)",
+            "$(3)  (0777000777)",
             "$(4)  $LIT",
-            "$(5)  + ((0777000777))",
+            "$(5)  ((0777000777))",
             "$(6)  $LIT",
-            "$(7)  + (((0777000777)))"
+            "$(7)  (((0777000777)))"
         };
         //  Expected:
         //  $(0) empty
@@ -454,87 +482,6 @@ public class Test_Assembler {
             RelocatableModule.RelocatableItemLocationCounter ri3lc = (RelocatableModule.RelocatableItemLocationCounter) ri2;
             assertEquals(6, ri3lc._locationCounterIndex);
         }
-    }
-
-    @Test
-    public void lit3(
-    ) throws ParameterException {
-        String[] source = {
-            "$(1)  + 15",
-            "      + ((077000777) + 5)"
-        };
-        //  Expected:
-        //  $(0) 000000: 000077000777
-        //  $(1) 000000: 000000000017
-        //       000001: 000000000005[0:35]$(0)
-
-        Assembler asm = new Assembler.Builder().setModuleName("TEST")
-                                               .setSource(source)
-                                               .setOptions(OPTION_SET)
-                                               .build();
-        AssemblerResult result = asm.assemble();
-
-        assertTrue(result._diagnostics.isEmpty());
-        assertNotNull(result._relocatableModule);
-        Set<Integer> lcIndices = result._relocatableModule.getEstablishedLocationCounterIndices();
-        assertEquals(2, lcIndices.size());
-        assertTrue(lcIndices.contains(0));
-        assertTrue(lcIndices.contains(1));
-
-        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
-        assertEquals(1, lcPool0._content.length);
-        assertEquals(0_77000777L, lcPool0._content[0].getW());
-
-        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(2, lcPool1._content.length);
-        assertEquals(0_017L, lcPool1._content[0].getW());
-        assertEquals(0_05L, lcPool1._content[1].getW());
-        assertEquals(1, lcPool1._content[1]._relocatableItems.length);
-        RelocatableModule.RelocatableItem ri = lcPool1._content[1]._relocatableItems[0];
-        assertTrue(ri instanceof RelocatableModule.RelocatableItemLocationCounter);
-        RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) ri;
-        assertEquals(new FieldDescriptor(0, 36), rilc._fieldDescriptor);
-        assertEquals(0, rilc._locationCounterIndex);
-        assertFalse(rilc._subtraction);
-    }
-
-    @Test
-    public void lit4(
-    ) throws ParameterException {
-        String[] source = {
-            "$(1)  + ((5, 013) + 5)"
-        };
-        //  Expected:
-        //  $(0) 000000: 000005000013
-        //  $(1) 000000: 000000000005[0:35]$(0)
-
-        Assembler asm = new Assembler.Builder().setModuleName("TEST")
-                                               .setSource(source)
-                                               .setOptions(OPTION_SET)
-                                               .build();
-        AssemblerResult result = asm.assemble();
-
-        assertTrue(result._diagnostics.isEmpty());
-        assertNotNull(result._relocatableModule);
-        Set<Integer> lcIndices = result._relocatableModule.getEstablishedLocationCounterIndices();
-        assertEquals(2, lcIndices.size());
-        assertTrue(lcIndices.contains(0));
-        assertTrue(lcIndices.contains(1));
-
-        RelocatableModule.RelocatablePool lcPool0 = result._relocatableModule.getLocationCounterPool(0);
-        assertEquals(1, lcPool0._content.length);
-        assertEquals(0_000005_000013L, lcPool0._content[0].getW());
-
-        RelocatableModule.RelocatablePool lcPool1 = result._relocatableModule.getLocationCounterPool(1);
-        assertEquals(1, lcPool1._content.length);
-        assertEquals(0_05L, lcPool1._content[0].getW());
-        assertEquals(1, lcPool1._content[0]._relocatableItems.length);
-        RelocatableModule.RelocatableItem ri = lcPool1._content[0]._relocatableItems[0];
-        assertTrue(ri instanceof RelocatableModule.RelocatableItemLocationCounter);
-        RelocatableModule.RelocatableItemLocationCounter rilc = (RelocatableModule.RelocatableItemLocationCounter) ri;
-        assertEquals(new FieldDescriptor(0, 36), rilc._fieldDescriptor);
-        assertEquals(0, rilc._locationCounterIndex);
-        assertFalse(rilc._subtraction);
     }
 
     @Test
