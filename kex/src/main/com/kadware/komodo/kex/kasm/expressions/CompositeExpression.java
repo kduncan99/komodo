@@ -123,10 +123,8 @@ public class CompositeExpression {
             }
         }
 
-        IntegerValue.IntegrateResult integrateResult = IntegerValue.integrate(IntegerValue.POSITIVE_ZERO,
-                                                                              fieldDescriptors,
-                                                                              discreteValues,
-                                                                              _locale);
+        IntegerValue.IntegrateResult integrateResult =
+            IntegerValue.integrate(IntegerValue.POSITIVE_ZERO, fieldDescriptors, discreteValues, _locale);
         for (Diagnostic diag : integrateResult._diagnostics.getDiagnostics()) {
             assembler.appendDiagnostic(diag);
         }

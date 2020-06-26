@@ -1,21 +1,14 @@
 -- TODO InProgress
 
+kasm:$EQUF
+  Fwd ref of $EQUF needs to work.
+  So at parse time, it is simply an unresolvedRefToLabel
+  At resolve time, we need to do some magic ahead of resolving the individual values
+  I error if we do 4 values in $BASIC mode on $EQUF
+
 Rebuilding all the hwlib unit tests
 
 Change kasm->exasm, klink->exlink
-
-kasm:$EQUF
-  We need the concept of a SubExpression, such that the main expression is made up of
-  various subfields in described by a form, and each subfield has a corresponding SubExpression.
-  Each SubExpression has a parent expression such that any reference to a label which is an $EQUF
-  is then applied to the various subfields of the expression.
-  This will be applied at parsing time, such that the actual evaluation need to concern itself with
-  such annoyances... this is done by applying the following rules:
-    Multiple EQUF references are allowed
-    An EQUF reference may only be specified in a U, X, B, or D field
-    When encountered in parsing, the EQUF is applied to all SubExpressions in the containing Expression.
-    Upon evaluation of a SubExpression **TODO**
-    I.... *think* this will work
 
 hwlib:
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
@@ -26,6 +19,9 @@ hwlib:
 
 -- TODO BUGS
 * kasm
+Code display needs to display generated code according to attached form (if any)
+Code display needs to display $EQU and $EQUF values
+I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
