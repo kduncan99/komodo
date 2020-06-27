@@ -18,6 +18,7 @@ import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
 import com.kadware.komodo.kex.kasm.expressions.ExpressionParser;
+import static java.lang.Integer.min;
 import java.util.Arrays;
 
 @SuppressWarnings("Duplicates")
@@ -51,10 +52,15 @@ public class EQUFDirective extends Directive {
 
             boolean basicMode = assembler.getCodeMode() == CodeMode.Basic;
             int maxSubfields = basicMode ? 3 : 4;
+            if (_operandField._subfields.size() > maxSubfields) {
+                assembler.appendDiagnostic(new ErrorDiagnostic(_operationField._locale, "Too many subfields"));
+            }
+
             IntegerValue[] fieldValues = new IntegerValue[maxSubfields];
             Arrays.fill(fieldValues, IntegerValue.POSITIVE_ZERO);
 
-            for (int opx = 0; opx < maxSubfields; ++opx) {
+            int limit = min(_operandField._subfields.size(), maxSubfields);
+            for (int opx = 0; opx < limit; ++opx) {
                 TextSubfield sf = _operandField._subfields.get(opx);
                 String expText = sf._text;
                 Locale expLocale = sf._locale;

@@ -11,10 +11,12 @@ import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.FatalDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
+import com.kadware.komodo.kex.kasm.dictionary.EqufValue;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.dictionary.ValueType;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -164,6 +166,12 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
         final Assembler assembler
     ) {
         IntegerValue newValue = originalValue;
+
+        //  Go through the unresolved references for the word, and resolve all that can be resolved.
+        //  Anything that cannot be, becomes an external reference.
+        //  If we find any references to $EQUFs, we note them in a temporary table and otherwise
+        //  resolved them to zero (for now).
+        List<EqufValue> equfValues = new LinkedList<>();
         if (originalValue._references.length > 0) {
             BigInteger newDiscreteValue = originalValue._value.get();
             List<UnresolvedReference> newURefs = new LinkedList<>();
@@ -173,20 +181,26 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
                     try {
                         Dictionary.ValueInfo vInfo = assembler.getDictionary().getValueInfo(lRef._label);
                         Value lookupValue = vInfo._value;
-                        if (lookupValue.getType() != ValueType.Integer) {
-                            String msg = String.format("Reference '%s' does not resolve to an integer",
-                                                       lRef._label);
-                            assembler.appendDiagnostic(new ValueDiagnostic(originalValue._locale, msg));
-                        } else {
+                        if (lookupValue.getType() == ValueType.Equf) {
+                            EqufValue eqVal = (EqufValue) lookupValue;
+                            if (lRef._isNegative) {
+                                eqVal.invert(assembler);
+                            }
+                            equfValues.add(eqVal);
+                        } else if (lookupValue.getType() == ValueType.Integer) {
                             IntegerValue lookupIntegerValue = (IntegerValue) lookupValue;
                             BigInteger addend = lookupIntegerValue._value.get();
                             if (lRef._isNegative) {
                                 addend = addend.negate();
                             }
+
                             newDiscreteValue = newDiscreteValue.add(addend);
                             for (UnresolvedReference urSub : lookupIntegerValue._references) {
                                 newURefs.add(urSub.copy(lRef._fieldDescriptor));
                             }
+                        } else {
+                            String msg = "Incorrect type for reference '%s'" + lRef._label;
+                            assembler.appendDiagnostic(new ValueDiagnostic(originalValue._locale, msg));
                         }
                     } catch (NotFoundException ex) {
                         //  reference is still not found - propagate it
@@ -233,6 +247,19 @@ public class GeneratedPools extends TreeMap<Integer, GeneratedPool> {
                                                  .setForm(originalValue._form)
                                                  .setReferences(newURefs)
                                                  .build();
+        }
+
+        //  If there are any equf values, apply them now
+        for (EqufValue ev : equfValues) {
+            IntegerValue.IntegrateResult ir = IntegerValue.integrate(newValue,
+                                                                     ev._form.getFieldDescriptors(),
+                                                                     ev._values,
+                                                                     ev._locale);
+            for (Diagnostic diag : ir._diagnostics.getDiagnostics()) {
+                assembler.appendDiagnostic(diag);
+            }
+
+            newValue = ir._value;
         }
 
         return newValue;

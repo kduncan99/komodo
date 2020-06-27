@@ -4,6 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
+import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
@@ -123,5 +124,16 @@ public class EqufValue extends Value {
             sb.append(String.format("%o ", value._value.get()));
         }
         return sb.toString();
+    }
+
+    /**
+     * Arithmetically inverts all the values we're holding
+     */
+    public void invert(
+        final Assembler assembler
+    ) {
+        for (int ivx = 0; ivx < _values.length; ++ivx) {
+            _values[ivx] = _values[ivx].not(_values[ivx]._locale, assembler);
+        }
     }
 }
