@@ -29,7 +29,7 @@ public class EQUFDirective extends Directive {
      * Once done, we attempt to fit them into an appropriate form, and store the whole thing
      * as an EqufValue with the various bit fields set according to the expression evaluations.
      * In basic mode, the format of the operands is u,x,j and they are placed into an I$ form.
-     * In extended mode, the format is u,x,j,b and they are placed into an EI$ form.
+     * In extended mode, the format is d,x,j,b and they are placed into an EI$ form.
      */
 
     @Override
@@ -87,8 +87,44 @@ public class EQUFDirective extends Directive {
                 }
             }
 
-            Form form = basicMode ? Form.I$Form : Form.EI$Form;
-            EqufValue equfValue = new EqufValue(_operandField._locale, fieldValues, form);
+            int uIndex = 0;
+            int dIndex = 0;
+            int xIndex = 1;
+            int jIndex = 2;
+            int bIndex = 3;
+
+            boolean hFlag = fieldValues[xIndex]._flagged;
+            boolean iFlag = fieldValues[uIndex]._flagged;
+            //  special check - for extended mode, B values > 16, truncate B and set i flag
+            if (maxSubfields == 4) {
+                long bInt = fieldValues[bIndex]._value.get().longValue();
+                if (bInt > 15) {
+                    fieldValues[bIndex] = new IntegerValue.Builder().setValue(bInt & 017).build();
+                    iFlag = true;
+                }
+            }
+            int hiInt = (hFlag ? 02 : 0) | (iFlag ? 01 : 0);
+
+            EqufValue equfValue;
+            if (basicMode) {
+                IntegerValue[] formValues = { IntegerValue.POSITIVE_ZERO,
+                                              fieldValues[jIndex],
+                                              IntegerValue.POSITIVE_ZERO,
+                                              fieldValues[xIndex],
+                                              new IntegerValue.Builder().setValue(hiInt).build(),
+                                              fieldValues[uIndex] };
+                equfValue = new EqufValue(_operandField._locale, formValues, Form.I$Form);
+            } else {
+                IntegerValue[] formValues = { IntegerValue.POSITIVE_ZERO,
+                                              fieldValues[jIndex],
+                                              IntegerValue.POSITIVE_ZERO,
+                                              fieldValues[xIndex],
+                                              new IntegerValue.Builder().setValue(hiInt).build(),
+                                              fieldValues[bIndex],
+                                              fieldValues[dIndex] };
+                equfValue = new EqufValue(_operandField._locale, formValues, Form.EI$Form);
+            }
+
             assembler.getDictionary().addValue(labelFieldComponents._labelLevel,
                                                labelFieldComponents._label,
                                                labelFieldComponents._labelLocale,

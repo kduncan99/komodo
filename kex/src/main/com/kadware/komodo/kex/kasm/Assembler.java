@@ -112,7 +112,7 @@ public class Assembler {
      * @param options includes options to be observed during the compilation process
      * @param outputStream where all diagnostics are emitted
      */
-    private Assembler(
+    Assembler(
         final String moduleName,
         final String[] source,
         final Set<AssemblerOption> options,
@@ -1140,10 +1140,13 @@ public class Assembler {
                     appendDiagnostic(new ErrorDiagnostic(valueSubfield._locale, "Syntax Error"));
                 } else {
                     Value v = e.evaluate(this);
-                    if (!(v instanceof IntegerValue)) {
-                        appendDiagnostic(new ValueDiagnostic(valueSubfield._locale, "Wrong value type"));
-                    } else {
+                    if (v instanceof IntegerValue) {
                         uValue = (IntegerValue) v;
+//                    } else if (v instanceof EqufValue) {
+//                        //TODO how to attach this to the result IntegerValue?
+//                        //TODO also, need to do this everywhere
+                    } else {
+                        appendDiagnostic(new ValueDiagnostic(valueSubfield._locale, "Wrong value type"));
                     }
                 }
             } catch (ExpressionException ex) {

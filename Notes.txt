@@ -1,13 +1,13 @@
 -- TODO InProgress
 
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-Use dictionary for j-field expressions
+kasm:
+    Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+    Use dictionary for j-field expressions in processMnemonic
 
-Rebuilding all the hwlib unit tests
-
-Change kasm->exasm, klink->exlink
+Change kasm->exasm, klink->exlink. maybe.
 
 hwlib:
+    Rebuilding all the hwlib unit tests
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
@@ -15,6 +15,9 @@ hwlib:
 
 
 -- TODO BUGS
+* baselib
+See InstructionWord BTHandler interpreting B16..B31
+
 * kasm
 Code display needs to display generated code according to attached form (if any)
 Code display needs to display $EQU and $EQUF values
