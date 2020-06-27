@@ -1,10 +1,7 @@
 -- TODO InProgress
 
-kasm:$EQUF
-  Fwd ref of $EQUF needs to work.
-  So at parse time, it is simply an unresolvedRefToLabel
-  At resolve time, we need to do some magic ahead of resolving the individual values
-  I error if we do 4 values in $BASIC mode on $EQUF
+Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
+Use dictionary for j-field expressions
 
 Rebuilding all the hwlib unit tests
 
@@ -199,7 +196,6 @@ IP: search and masked search instructions (and unit tests)
     support SOS VT file format for import/export of tape files
 
 * kasm
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Need to support "$(n)" as a relocated reference to location counter n offset by 0 (for expressions)
   Can we implement this as a built-in function?
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
@@ -210,7 +206,6 @@ unit tests for more built-in functions - we're missing a lot of them
 support special form for JGD instruction
 support special form for BT instruction
 support node references on LHS of $EQU statements
-need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
 remove UndefinedReferenceDiagnostic (I think...)
 use DiagnosticDirective for stuff.. now I forgot what this means
 do we need microstrings?

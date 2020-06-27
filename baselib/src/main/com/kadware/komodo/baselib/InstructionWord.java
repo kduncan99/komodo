@@ -511,9 +511,9 @@ public class InstructionWord extends Word36 {
         ER_NAMES.put(02055, "BT$ENA");
         ER_NAMES.put(02056, "FLAGBOX");
         ER_NAMES.put(02060, "RT$PSI");
-        //  TODO one of the following is wrong...
         ER_NAMES.put(02061, "RT$PSD");
-        ER_NAMES.put(02061, "TPLIB$");
+        ER_NAMES.put(02062, "TPFLG$");
+        ER_NAMES.put(02064, "TPLIB$");
         ER_NAMES.put(02065, "XFR$");
         ER_NAMES.put(02066, "CALL$");
         ER_NAMES.put(02067, "RTN$");
