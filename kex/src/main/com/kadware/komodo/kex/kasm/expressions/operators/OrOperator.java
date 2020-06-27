@@ -35,7 +35,7 @@ public class OrOperator extends LogicalOperator {
         Value[] operands = getOperands(valueStack, assembler);
         IntegerValue leftValue = (IntegerValue) operands[0];
         IntegerValue rightValue = (IntegerValue) operands[1];
-        IntegerValue result = IntegerValue.or(leftValue, rightValue, _locale, assembler.getDiagnostics());
+        IntegerValue result = IntegerValue.or(leftValue, rightValue, _locale, assembler);
         valueStack.push(result);
     }
 }

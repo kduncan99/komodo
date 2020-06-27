@@ -36,12 +36,12 @@ public class ConcatenationOperator extends Operator {
 
         boolean error = false;
         if (!(operands[0] instanceof StringValue)) {
-            postValueDiagnostic(true, assembler.getDiagnostics());
+            postValueDiagnostic(true, assembler);
             error = true;
         }
 
         if (!(operands[1] instanceof StringValue)) {
-            postValueDiagnostic(false, assembler.getDiagnostics());
+            postValueDiagnostic(false, assembler);
             error = true;
         }
 

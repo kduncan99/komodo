@@ -36,7 +36,7 @@ public class ShiftOperator extends ArithmeticOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, false, assembler);
 
             IntegerValue iopLeft = (IntegerValue)operands[0];
             IntegerValue iopRight = (IntegerValue)operands[1];

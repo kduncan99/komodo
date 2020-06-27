@@ -31,7 +31,7 @@ public class EqualityOperator extends RelationalOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, assembler);
             int result = (operands[0].equals(operands[1])) ? 1 : 0;
             valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (TypeException ex) {

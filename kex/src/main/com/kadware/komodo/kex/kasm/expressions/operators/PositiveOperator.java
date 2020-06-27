@@ -32,7 +32,7 @@ public class PositiveOperator extends Operator {
         switch (operand.getType()) {
             case Integer, FloatingPoint -> valueStack.push(operand);
             default -> {
-                postValueDiagnostic(false, assembler.getDiagnostics());
+                postValueDiagnostic(false, assembler);
                 throw new ExpressionException();
             }
         }

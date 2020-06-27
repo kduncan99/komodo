@@ -10,7 +10,6 @@ import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.FloatingPointValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.dictionary.ValueType;
-import com.kadware.komodo.kex.kasm.diagnostics.Diagnostics;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 import java.util.Stack;
@@ -42,15 +41,15 @@ public abstract class RelationalOperator extends Operator {
      *          If either operand is floating point, the other is converted to floating point.
      *          Else, if either operand is integer, the other is converted to integer.
      *      Else, the operands are returned unchanged
-     * If we find any invalid types, we post one or more diagnostics, and we throw TypeException.
+     * If we find any invalid types, we post one or more assembler, and we throw TypeException.
      * @param valueStack the value stack from which we get the operators
-     * @param diagnostics Diagnostics object to which we post any necessary diagnostics
+     * @param assembler object to which we post any necessary assembler
      * @return left-hand possibly adjusted operand in result[0], right-hand in result[1]
      * @throws TypeException if either operand is other than floating point, integer, or string
      */
     protected Value[] getTransformedOperands(
         final Stack<Value> valueStack,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) throws TypeException {
         Value[] operands = super.getOperands(valueStack);
         ValueType opType0 = operands[0].getType();
@@ -61,23 +60,23 @@ public abstract class RelationalOperator extends Operator {
                 if (opType1 == ValueType.Integer) {
                     operands[1] = FloatingPointValue.convertFromInteger(_locale, (IntegerValue) operands[1]);
                 } else {
-                    postValueDiagnostic(false, diagnostics);
+                    postValueDiagnostic(false, assembler);
                     throw new TypeException();
                 }
             } else if (opType0 == ValueType.Integer) {
                 if (opType1 == ValueType.FloatingPoint) {
                     operands[0] = FloatingPointValue.convertFromInteger(_locale, (IntegerValue) operands[0]);
                 } else {
-                    postValueDiagnostic(false, diagnostics);
+                    postValueDiagnostic(false, assembler);
                     throw new TypeException();
                 }
             } else if (opType0 == ValueType.String) {
                 //  RHS is  not acceptable for LHS of String
-                postValueDiagnostic(false, diagnostics);
+                postValueDiagnostic(false, assembler);
                 throw new TypeException();
             } else {
                 //  LHS is not acceptable, RHS may not be acceptable
-                postValueDiagnostic(true, diagnostics);
+                postValueDiagnostic(true, assembler);
                 switch (operands[1].getType()) {
                     case Integer:
                     case FloatingPoint:
@@ -85,7 +84,7 @@ public abstract class RelationalOperator extends Operator {
                         break;
 
                     default:
-                        postValueDiagnostic(false, diagnostics);
+                        postValueDiagnostic(false, assembler);
                 }
                 throw new TypeException();
             }
@@ -98,8 +97,8 @@ public abstract class RelationalOperator extends Operator {
                     break;
 
                 default:
-                    postValueDiagnostic(true, diagnostics);
-                    postValueDiagnostic(false, diagnostics);
+                    postValueDiagnostic(true, assembler);
+                    postValueDiagnostic(false, assembler);
                     throw new TypeException();
             }
         }

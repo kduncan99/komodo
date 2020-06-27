@@ -49,7 +49,7 @@ public class NegativeOperator extends Operator {
                 valueStack.push(fpresult);
             }
             default -> {
-                postValueDiagnostic(false, assembler.getDiagnostics());
+                postValueDiagnostic(false, assembler);
                 throw new ExpressionException();
             }
         }

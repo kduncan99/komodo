@@ -33,10 +33,10 @@ public class DivisionRemainderOperator extends ArithmeticOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, false, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, false, assembler);
             IntegerValue iopLeft = (IntegerValue) operands[0];
             IntegerValue iopRight = (IntegerValue) operands[1];
-            IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+            IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, assembler);
             valueStack.push(dres._remainder);
         } catch (TypeException ex) {
             throw new ExpressionException();

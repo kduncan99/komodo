@@ -34,19 +34,19 @@ public class MultiplicationOperator extends ArithmeticOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, true, assembler);
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
                 //  both ops are integer
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                opResult = IntegerValue.multiply(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+                opResult = IntegerValue.multiply(iopLeft, iopRight, _locale, assembler);
             } else {
                 //  both ops are floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                opResult = FloatingPointValue.multiply(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+                opResult = FloatingPointValue.multiply(iopLeft, iopRight, _locale, assembler);
             }
 
             valueStack.push(opResult);
