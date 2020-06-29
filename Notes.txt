@@ -1,11 +1,5 @@
 -- TODO InProgress
 
-kasm:
-    Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
-    Use dictionary for j-field expressions in processMnemonic
-
-Change kasm->exasm, klink->exlink. maybe.
-
 hwlib:
     Rebuilding all the hwlib unit tests
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes

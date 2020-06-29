@@ -1054,11 +1054,22 @@ public class Assembler {
             }
         } else if (operationField._subfields.size() > 1) {
             TextSubfield jSubField = operationField.getSubfield(1);
+
             try {
-                jField = InstructionWord.getJFieldValue(jSubField._text);
-            } catch ( NotFoundException e ) {
-                appendDiagnostic(new ErrorDiagnostic(jSubField._locale,
-                                                     "Invalid text for j-field of instruction"));
+                ExpressionParser p = new ExpressionParser(jSubField._text, jSubField._locale);
+                Expression e = p.parse(this);
+                if (e == null) {
+                    appendDiagnostic(new ErrorDiagnostic(jSubField._locale, "Syntax Error"));
+                } else {
+                    Value v = e.evaluate(this);
+                    if (!(v instanceof IntegerValue)) {
+                        appendDiagnostic(new ValueDiagnostic(jSubField._locale, "Wrong value type"));
+                    } else {
+                        jField = ((IntegerValue) v)._value.get().intValue();
+                    }
+                }
+            } catch (ExpressionException ex) {
+                appendDiagnostic(new ErrorDiagnostic(jSubField._locale, "Syntax Error"));
             }
 
             if (operationField._subfields.size() > 2) {
@@ -1142,9 +1153,6 @@ public class Assembler {
                     Value v = e.evaluate(this);
                     if (v instanceof IntegerValue) {
                         uValue = (IntegerValue) v;
-//                    } else if (v instanceof EqufValue) {
-//                        //TODO how to attach this to the result IntegerValue?
-//                        //TODO also, need to do this everywhere
                     } else {
                         appendDiagnostic(new ValueDiagnostic(valueSubfield._locale, "Wrong value type"));
                     }

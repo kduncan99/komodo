@@ -1485,23 +1485,4 @@ public class InstructionWord extends Word36 {
 
         throw new NotFoundException(mnemonic);
     }
-
-    /**
-     * Translates a j-field spec (such as "H1") to it's j-field integer value
-     * @throws NotFoundException if the fieldSpec is not a valid spec
-     */
-    public static int getJFieldValue(
-        final String fieldSpec
-    ) throws NotFoundException {
-        for (int jx = 0; jx < J_FIELD_NAMES.length; ++jx) {
-            String[] split = J_FIELD_NAMES[jx].split("/");
-            for (String splitSpec : split) {
-                if (splitSpec.equalsIgnoreCase(fieldSpec)) {
-                    return jx;
-                }
-            }
-        }
-
-        throw new NotFoundException(fieldSpec);
-    }
 }
