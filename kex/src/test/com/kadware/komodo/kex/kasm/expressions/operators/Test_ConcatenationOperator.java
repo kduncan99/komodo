@@ -7,6 +7,7 @@ package com.kadware.komodo.kex.kasm.expressions.operators;
 import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.CharacterMode;
+import com.kadware.komodo.kex.kasm.InstrumentedAssembler;
 import com.kadware.komodo.kex.kasm.LineSpecifier;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.diagnostics.*;
@@ -97,7 +98,7 @@ public class Test_ConcatenationOperator {
         valueStack.push(new StringValue.Builder().setValue("ABC").build());
         valueStack.push(new FloatingPointValue.Builder().setValue(new FloatingPointComponents(1.0)).build());
 
-        Assembler asm = new Assembler.Builder().build();
+        Assembler asm = new InstrumentedAssembler();
         LineSpecifier ls = new LineSpecifier(0, 123);
         Operator op = new ConcatenationOperator(new Locale(ls, 18));
         try {

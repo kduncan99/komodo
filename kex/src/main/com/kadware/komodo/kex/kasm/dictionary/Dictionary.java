@@ -112,7 +112,7 @@ public class Dictionary {
     }
 
     /**
-     * Retrieves a particular ValueEntry object
+     * Retrieves a particular ValueInfo object
      * @param label label of the object to be retrieved
      * @return object if found
      * @throws NotFoundException if the value is not found in this, or any upper-level dictionary

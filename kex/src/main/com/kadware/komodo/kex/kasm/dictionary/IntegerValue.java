@@ -203,22 +203,22 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the sum of the two addends
      */
     public static IntegerValue add(
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         //  If forms match, use the left-hand form in the result - otherwise, the result has no attached form
         Form resultForm = operand1._form;
         boolean ignoreReferenceFields = false;
         if (!checkValueForms(operand1, operand2)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
             if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-                diagnostics.append(new RelocationDiagnostic(locale));
+                assembler.appendDiagnostic(new RelocationDiagnostic(locale));
                 ignoreReferenceFields = true;
             }
             resultForm = null;
@@ -229,7 +229,7 @@ public class IntegerValue extends Value {
         if (resultForm == null) {
             DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(operand1._value.get(), operand2._value.get());
             if (sar._overflow) {
-                diagnostics.append(new TruncationDiagnostic(locale, "LinkResult of addition is truncated"));
+                assembler.appendDiagnostic(new TruncationDiagnostic(locale, "LinkResult of addition is truncated"));
             }
             biResult = sar._value;
         } else {
@@ -248,7 +248,7 @@ public class IntegerValue extends Value {
                 DoubleWord36.StaticAdditionResult sar = DoubleWord36.add(temp1, temp2);
                 if (sar._overflow || !((sar._value.and(notMask)).equals(BigInteger.ZERO))) {
                     String msg = String.format("LinkResult of addition is truncated in field %s", fd.toString());
-                    diagnostics.append(new TruncationDiagnostic(locale, msg));
+                    assembler.appendDiagnostic(new TruncationDiagnostic(locale, msg));
                 }
 
                 biResult = biResult.or(sar._value);
@@ -278,19 +278,19 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the logical AND of the two operands
      */
     public static IntegerValue and(
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         //  If forms match, use the left-hand form in the result - otherwise, the result has no attached form
         Form resultForm = operand1._form;
         if (!checkValueForms(operand1, operand2)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
             resultForm = null;
         }
 
@@ -301,7 +301,7 @@ public class IntegerValue extends Value {
 
         List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
             refList.addAll(Arrays.asList(operand2._references));
         }
@@ -344,7 +344,7 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the logical OR of the two operands
      * @throws ExpressionException on division by zero
      */
@@ -352,18 +352,18 @@ public class IntegerValue extends Value {
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) throws ExpressionException {
         if ((operand1._form != null) || (operand2._form != null)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
         }
 
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
         }
 
         if (operand2._value.isZero()) {
-            diagnostics.append(new TruncationDiagnostic(locale, "Division by zero"));
+            assembler.appendDiagnostic(new TruncationDiagnostic(locale, "Division by zero"));
             throw new ExpressionException();
         }
 
@@ -497,26 +497,26 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the logical OR of the two operands
      */
     public static IntegerValue multiply(
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         if ((operand1._form != null) || (operand2._form != null)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
         }
 
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
         }
 
         DoubleWord36.MultiplicationResult mr = operand1._value.multiply(operand2._value);
         if (mr._overflow) {
-            diagnostics.append(new TruncationDiagnostic(locale, "LinkResult of multiplication too large"));
+            assembler.appendDiagnostic(new TruncationDiagnostic(locale, "LinkResult of multiplication too large"));
         }
 
         DoubleWord36 dw = new DoubleWord36(mr._value);
@@ -541,13 +541,15 @@ public class IntegerValue extends Value {
 
     /**
      * Produces an IV which is the logical inverse of this one
+     * @param locale location of source code in case we need to raise a diagnostic
+     * @param assembler in case we need to raise a diagnostic
      */
     public IntegerValue not(
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         if (_references.length > 0) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
         }
 
         DoubleWord36 newValue = _value.negate();
@@ -559,19 +561,19 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the logical OR of the two operands
      */
     public static IntegerValue or(
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         //  If forms match, use the left-hand form in the result - otherwise, the result has no attached form
         Form resultForm = operand1._form;
         if (!checkValueForms(operand1, operand2)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
             resultForm = null;
         }
 
@@ -582,7 +584,7 @@ public class IntegerValue extends Value {
 
         List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
             refList.addAll(Arrays.asList(operand2._references));
         }
@@ -601,19 +603,19 @@ public class IntegerValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler in case we need to raise a diagnostic
      * @return new IntegerValue object representing the logical XOR of the two operands
      */
     public static IntegerValue xor(
         final IntegerValue operand1,
         final IntegerValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         //  If forms match, use the left-hand form in the result - otherwise, the result has no attached form
         Form resultForm = operand1._form;
         if (!checkValueForms(operand1, operand2)) {
-            diagnostics.append(new FormDiagnostic(locale));
+            assembler.appendDiagnostic(new FormDiagnostic(locale));
             resultForm = null;
         }
 
@@ -624,7 +626,7 @@ public class IntegerValue extends Value {
 
         List<UnresolvedReference> refList = new LinkedList<>();
         if (operand1.hasUndefinedReferences() || operand2.hasUndefinedReferences()) {
-            diagnostics.append(new RelocationDiagnostic(locale));
+            assembler.appendDiagnostic(new RelocationDiagnostic(locale));
             refList.addAll(Arrays.asList(operand1._references));
             refList.addAll(Arrays.asList(operand2._references));
         }

@@ -7,7 +7,6 @@ package com.kadware.komodo.kex.kasm.expressions.operators;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
-import com.kadware.komodo.kex.kasm.diagnostics.Diagnostics;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import java.util.Stack;
@@ -100,14 +99,14 @@ public abstract class Operator {
     /**
      * Posts a ValueDiagnostic for the case where an operand is of the wrong type
      * @param leftOperand true if the offending operand is on the left of the operator; otherwise, on the right
-     * @param diagnostics Diagnostics object to which the new Diagnostic is appended
+     * @param assembler object to which the new Diagnostic is appended
      */
     void postValueDiagnostic(
         final boolean leftOperand,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         String str = String.format("%s is of wrong type", leftOperand ? "left-hand" : "right-hand");
-        diagnostics.append(new ValueDiagnostic(_locale, str));
+        assembler.appendDiagnostic(new ValueDiagnostic(_locale, str));
     }
 
 

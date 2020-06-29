@@ -8,8 +8,8 @@ import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
 import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
+import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Locale;
-import com.kadware.komodo.kex.kasm.diagnostics.Diagnostics;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.TruncationDiagnostic;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
@@ -140,23 +140,23 @@ public class FloatingPointValue extends Value {
      * @param operand1 left-hand operand
      * @param operand2 right-hand operand
      * @param locale location of source code in case we need to raise a diagnostic
-     * @param diagnostics container of diagnostics in case we need to raise on
+     * @param assembler container of assembler in case we need to raise on
      * @return new IntegerValue object representing the sum of the two addends
      */
     public static FloatingPointValue add(
         final FloatingPointValue operand1,
         final FloatingPointValue operand2,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         try {
             FloatingPointComponents fpc = operand1._value.normalize().add(operand2._value.normalize());
             return new FloatingPointValue(locale, false, fpc, ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
             return FloatingPointValue.POSITIVE_ZERO;
         } catch (CharacteristicUnderflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic underflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic underflow"));
             return FloatingPointValue.POSITIVE_ZERO;
         }
     }
@@ -194,7 +194,7 @@ public class FloatingPointValue extends Value {
         final FloatingPointValue dividend,
         final FloatingPointValue divisor,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         try {
             FloatingPointComponents fpc = dividend._value.divide(divisor._value);
@@ -203,19 +203,19 @@ public class FloatingPointValue extends Value {
                                           fpc,
                                           ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
             return new FloatingPointValue(locale,
                                           false,
                                           FloatingPointComponents.COMP_POSITIVE_ZERO,
                                           ValuePrecision.Default);
         } catch (CharacteristicUnderflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic underflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic underflow"));
             return new FloatingPointValue(locale,
                                           false,
                                           FloatingPointComponents.COMP_POSITIVE_ZERO,
                                           ValuePrecision.Default);
         } catch (DivideByZeroException ex) {
-            diagnostics.append(new TruncationDiagnostic(locale, "Divide by zero"));
+            assembler.appendDiagnostic(new TruncationDiagnostic(locale, "Divide by zero"));
             return new FloatingPointValue(locale,
                                           false,
                                           FloatingPointComponents.COMP_POSITIVE_ZERO,
@@ -230,7 +230,7 @@ public class FloatingPointValue extends Value {
         final FloatingPointValue dividend,
         final FloatingPointValue divisor,
         final Locale locale,
-        final Diagnostics diagnostics
+        final Assembler assembler
     ) {
         try {
             FloatingPointComponents fpc = dividend._value.multiply(divisor._value);
@@ -239,13 +239,13 @@ public class FloatingPointValue extends Value {
                                           fpc,
                                           ValuePrecision.Default);
         } catch (CharacteristicOverflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic overflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic overflow"));
             return new FloatingPointValue(locale,
                                           false,
                                           FloatingPointComponents.COMP_POSITIVE_ZERO,
                                           ValuePrecision.Default);
         } catch (CharacteristicUnderflowException ex) {
-            diagnostics.append(new ErrorDiagnostic(locale, "Characteristic underflow"));
+            assembler.appendDiagnostic(new ErrorDiagnostic(locale, "Characteristic underflow"));
             return new FloatingPointValue(locale,
                                           false,
                                           FloatingPointComponents.COMP_POSITIVE_ZERO, ValuePrecision.Default);

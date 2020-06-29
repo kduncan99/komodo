@@ -35,17 +35,17 @@ public class DivisionOperator extends ArithmeticOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, true, assembler);
             if (operands[0].getType() == ValueType.Integer) {
                 IntegerValue iopLeft = (IntegerValue) operands[0];
                 IntegerValue iopRight = (IntegerValue) operands[1];
-                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+                IntegerValue.DivisionResult dres = IntegerValue.divide(iopLeft, iopRight, _locale, assembler);
                 valueStack.push(dres._quotient);
             } else {
                 //  both ops are floating point
                 FloatingPointValue iopLeft = (FloatingPointValue)operands[0];
                 FloatingPointValue iopRight = (FloatingPointValue)operands[1];
-                FloatingPointValue value = FloatingPointValue.divide(iopLeft, iopRight, _locale, assembler.getDiagnostics());
+                FloatingPointValue value = FloatingPointValue.divide(iopLeft, iopRight, _locale, assembler);
                 valueStack.push(value);
             }
         } catch (TypeException ex) {

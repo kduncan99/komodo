@@ -4,10 +4,9 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
+import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.Locale;
-import com.kadware.komodo.kex.kasm.exceptions.FormException;
-import com.kadware.komodo.kex.kasm.exceptions.RelocationException;
 import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 
 /**
@@ -19,23 +18,21 @@ import com.kadware.komodo.kex.kasm.exceptions.TypeException;
 public class EqufValue extends Value {
 
     public final Form _form;
-    public final IntegerValue _value;
+    public final IntegerValue[] _values;
 
     /**
      * constructor
      * @param locale - where this was defined
-     * @param flagged - leading asterisk
-     * @param value - integer value, with optional undefined references applied
-     * @param form - attached form (can be, but shouldn't be null)
+     * @param values - integer values, with optional undefined references applied - one per form field
+     * @param form - attached form
      */
-    private EqufValue(
+    public EqufValue(
         final Locale locale,
-        final boolean flagged,
-        final IntegerValue value,
+        final IntegerValue[] values,
         final Form form
     ) {
-        super(locale, flagged);
-        _value = value;
+        super(locale);
+        _values = values;
         _form = form;
     }
 
@@ -49,16 +46,7 @@ public class EqufValue extends Value {
     @Override
     public int compareTo(
         final Object obj
-    ) throws FormException,
-             TypeException,
-             RelocationException {
-        if (obj instanceof EqufValue) {
-            EqufValue ev = (EqufValue) obj;
-            if (ev._form.equals(_form)) {
-                return ev._value.compareTo(ev._value);
-            }
-        }
-
+    ) throws TypeException {
         throw new TypeException();
     }
 
@@ -72,8 +60,8 @@ public class EqufValue extends Value {
     public Value copy(
         final Locale locale,
         final boolean newFlagged
-    ) {
-        return new EqufValue(locale, newFlagged, _value, _form);
+    ) throws TypeException {
+        throw new TypeException();
     }
 
     /**
@@ -97,14 +85,30 @@ public class EqufValue extends Value {
     ) {
         if (obj instanceof EqufValue) {
             EqufValue ev = (EqufValue) obj;
-            return _value.equals(ev._value) && _form.equals(ev._form);
+            if (_values.length != ev._values.length) {
+                return false;
+            }
+
+            for (int ax = 0; ax < _values.length; ++ax) {
+                if (!_values[ax].equals(ev._values[ax])) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         return false;
     }
 
     @Override public ValueType getType() { return ValueType.Equf; }
-    @Override public int hashCode() { return _value.hashCode(); }
+
+    @Override public int hashCode() {
+        int result = _values.length << 30;
+        for (IntegerValue value : _values) {
+            result += value.hashCode();
+        }
+        return result;
+    }
 
     /**
      * For display purposes
@@ -112,8 +116,24 @@ public class EqufValue extends Value {
      */
     @Override
     public String toString() {
-        return (_flagged ? "*" : "")
-            + (_form == null ? "" : _form.toString())
-            + _value.toString();
+        StringBuilder sb = new StringBuilder();
+        if (_flagged) {
+            sb.append("* ");
+        }
+        for (IntegerValue value : _values) {
+            sb.append(String.format("%o ", value._value.get()));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Arithmetically inverts all the values we're holding
+     */
+    public void invert(
+        final Assembler assembler
+    ) {
+        for (int ivx = 0; ivx < _values.length; ++ivx) {
+            _values[ivx] = _values[ivx].not(_values[ivx]._locale, assembler);
+        }
     }
 }

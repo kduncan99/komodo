@@ -106,6 +106,16 @@ public class ReferenceItem extends OperandItem {
                 case BuiltInFunction:
                     return resolveFunction(assembler, v);
 
+                case Equf:
+                    //  It's an EQUF, but we cannot resolve it here.
+                    //  Turn it into an UnresolvedReference
+                    UnresolvedReference[] refs = {
+                        new UnresolvedReferenceToLabel(new FieldDescriptor(0, 36),
+                                                       false,
+                                                       _reference)
+                    };
+                    return new IntegerValue.Builder().setValue(0).setReferences(refs).build();
+
                 case Node:
                     return resolveNode(assembler, v);
 

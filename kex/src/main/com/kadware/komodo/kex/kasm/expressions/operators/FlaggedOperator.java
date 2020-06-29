@@ -35,7 +35,7 @@ public class FlaggedOperator extends Operator {
         try {
             valueStack.push(operand.copy(true));
         } catch (TypeException ex) {
-            postValueDiagnostic(false, assembler.getDiagnostics());
+            postValueDiagnostic(false, assembler);
             throw new ExpressionException();
         }
     }

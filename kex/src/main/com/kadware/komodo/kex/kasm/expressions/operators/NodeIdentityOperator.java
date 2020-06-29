@@ -43,12 +43,12 @@ public class NodeIdentityOperator extends RelationalOperator {
         Value[] operands = getOperands(valueStack);
 
         if (operands[0].getType() != ValueType.Node) {
-            postValueDiagnostic(true, assembler.getDiagnostics());
+            postValueDiagnostic(true, assembler);
             throw new ExpressionException();
         }
 
         if (operands[1].getType() != ValueType.Node) {
-            postValueDiagnostic(false, assembler.getDiagnostics());
+            postValueDiagnostic(false, assembler);
             throw new ExpressionException();
         }
 

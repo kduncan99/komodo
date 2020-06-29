@@ -36,7 +36,7 @@ public class DoublePrecisionOperator extends Operator {
         try {
             valueStack.push(operand.copy(ValuePrecision.Double));
         } catch (TypeException ex) {
-            postValueDiagnostic(false, assembler.getDiagnostics());
+            postValueDiagnostic(false, assembler);
             throw new ExpressionException();
         }
     }

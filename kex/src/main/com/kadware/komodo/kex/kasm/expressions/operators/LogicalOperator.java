@@ -49,7 +49,7 @@ public abstract class LogicalOperator extends Operator {
         boolean error = false;
         for (int vx = 0; vx < result.length; ++vx) {
             if (!(result[vx] instanceof IntegerValue)) {
-                postValueDiagnostic((result.length > 1) && (vx == 0), assembler.getDiagnostics());
+                postValueDiagnostic((result.length > 1) && (vx == 0), assembler);
                 error = true;
             }
         }

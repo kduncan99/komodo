@@ -13,7 +13,6 @@ import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
 import com.kadware.komodo.kex.kasm.expressions.Expression;
 import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * expression item containing zero or more sub-expressions.
@@ -25,23 +24,23 @@ import java.util.Collection;
 public class ExpressionGroupItem extends OperandItem {
 
     //  This should contain one or more sub-expressions.
-    //  Syntactically, this represents zero or more expressions, inter-delimited by commas,
-    //  presented inside parenthesis.
+    //  Syntactically, this represents one or more expressions, inter-delimited by commas, presented inside parenthesis.
     //
     //  Case 1:
     //  If this exists inside a context of another expression where-in it is not the only entity,
     //  it is merely a sub-expression delimited by grouping symbols, which should be evaluated
     //  entirely before being used in the containing expression.
-    //  In this context, it must contain exactly one expressionl
+    //  In this context, it must contain exactly one expression.
     //
     //  Case 2:
     //  If the containing expression has no binary operators, then this entity represents a value
-    //  to be placed into the literal pool, and the address of that value is returned as the
-    //  value of the evaluation.
+    //  to be placed into the current literal pool, and the address of that value is returned as the
+    //  value of the evaluation (via a suitable UnresolvedReferenceToLiteral object).
     //
     //  This entity does not know which of the above two cases apply, nor does the creating entity.
     //  Prior to evaluation, the calling code must make that determination and set the sub-expression
     //  flag accordingly - it defaults to true.
+
     private final Expression[] _expressions;
     private boolean _isSubExpression = false;       //  true if case 1 applies (above), false for case 2.
 
@@ -56,21 +55,6 @@ public class ExpressionGroupItem extends OperandItem {
     ) {
         super(locale);
         _expressions = expressions;
-
-        //  Is this a literal or a sub-expression?
-        //      If it has one expression and that expression contains any operators, it's a subgroup.
-        //      Otherwise, it is a literal.
-        if (expressions.length == 1) {
-            for (Expression e : expressions) {
-                Collection<ExpressionItem> items = e.getItems();
-                for (ExpressionItem item : items) {
-                    if (item instanceof OperatorItem) {
-                        _isSubExpression = true;
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -142,12 +126,16 @@ public class ExpressionGroupItem extends OperandItem {
         }
 
         Form form = new Form(fieldSizes);
-        return assembler.getGeneratedPools().generateLiteral(assembler.getTopLevelTextLine(),
-                                                             _locale,
-                                                             assembler.getCurrentLiteralLCIndex(),
-                                                             form,
-                                                             values,
-                                                             assembler);
+        return assembler.generateLiteral(_locale, form, values);
+    }
+
+    /**
+     * Determines the behavior of this object at resolution time
+     */
+    public void setIsSubExpression(
+        final boolean value
+    ) {
+        _isSubExpression = value;
     }
 
     @Override

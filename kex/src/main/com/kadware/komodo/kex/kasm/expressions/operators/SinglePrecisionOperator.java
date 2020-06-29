@@ -36,7 +36,7 @@ public class SinglePrecisionOperator extends Operator {
         try {
             valueStack.push(operand.copy(ValuePrecision.Single));
         } catch (TypeException ex) {
-            postValueDiagnostic(false, assembler.getDiagnostics());
+            postValueDiagnostic(false, assembler);
             throw new ExpressionException();
         }
     }

@@ -34,7 +34,7 @@ public class SubtractionOperator extends ArithmeticOperator {
         final Stack<Value> valueStack
     ) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, true, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, true, assembler);
             Value opResult;
 
             if (operands[0].getType() == ValueType.Integer) {
@@ -66,7 +66,7 @@ public class SubtractionOperator extends ArithmeticOperator {
                 opResult = FloatingPointValue.add(iopLeft,
                                                   FloatingPointValue.negate(_locale, iopRight),
                                                   _locale,
-                                                  assembler.getDiagnostics());
+                                                  assembler);
             }
 
             valueStack.push(opResult);

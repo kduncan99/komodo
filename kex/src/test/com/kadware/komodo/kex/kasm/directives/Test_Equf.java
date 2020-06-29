@@ -4,9 +4,11 @@
 
 package com.kadware.komodo.kex.kasm.directives;
 
+import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.AssemblerResult;
+import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,11 +27,12 @@ public class Test_Equf {
 
     @Test
     public void simple_basic(
-    ) {
+    ) throws ParameterException {
         String[] source = {
             "          $BASIC",
-            "LABEL     $EQUF *5,*X3,S1,B12",
-            //TODO generate something
+            "$(1)",
+            "LABEL     $EQUF   *5,*X3,S1",
+            "          LA      A2,LABEL"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -38,7 +41,10 @@ public class Test_Equf {
                                                .build();
         AssemblerResult result = asm.assemble();
         assertTrue(result._diagnostics.isEmpty());
-        //TODO test generated value
+        assertNotNull(result._relocatableModule);
+        RelocatableModule.RelocatablePool pool = result._relocatableModule.getLocationCounterPool(1);
+        assertEquals(1, pool._content.length);
+        assertEquals(0_106443_600005L, pool._content[0].getW());
     }
 
     @Test

@@ -1,22 +1,7 @@
 -- TODO InProgress
-Rebuilding all the hwlib unit tests
-
-Change kasm->exasm, klink->exlink
-
-kasm:$EQUF
-  We need the concept of a SubExpression, such that the main expression is made up of
-  various subfields in described by a form, and each subfield has a corresponding SubExpression.
-  Each SubExpression has a parent expression such that any reference to a label which is an $EQUF
-  is then applied to the various subfields of the expression.
-  This will be applied at parsing time, such that the actual evaluation need to concern itself with
-  such annoyances... this is done by applying the following rules:
-    Multiple EQUF references are allowed
-    An EQUF reference may only be specified in a U, X, B, or D field
-    When encountered in parsing, the EQUF is applied to all SubExpressions in the containing Expression.
-    Upon evaluation of a SubExpression **TODO**
-    I.... *think* this will work
 
 hwlib:
+    Rebuilding all the hwlib unit tests
     InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
@@ -24,14 +9,17 @@ hwlib:
 
 
 -- TODO BUGS
+* baselib
+See InstructionWord BTHandler interpreting B16..B31
+
 * kasm
-Still a problem with address-of...
-  + (010)
-  is supposed to just generate the 010 value because of the leading '+'
-  We don't do that...
+Code display needs to display generated code according to attached form (if any)
+Code display needs to display $EQU and $EQUF values
+I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
   Need to add some unit testing to cover this
+See 5.6 - label on a $LIT directive should create a function
 
 * klink
 integrateValue() is maybe wrong. See IntegerValue for proper code.
@@ -205,7 +193,6 @@ IP: search and masked search instructions (and unit tests)
     support SOS VT file format for import/export of tape files
 
 * kasm
-Support $EQUF - need to review all of Appendix A of MASM ref, then work on mnemonic generation
 Need to support "$(n)" as a relocated reference to location counter n offset by 0 (for expressions)
   Can we implement this as a built-in function?
 Do we emit diagnostics at the point where 'S' post-fix operator is applied to a value larger than 36 bits? Or only when we generate code?
@@ -216,7 +203,6 @@ unit tests for more built-in functions - we're missing a lot of them
 support special form for JGD instruction
 support special form for BT instruction
 support node references on LHS of $EQU statements
-need to put partial-words into the dictionary - and should we allow these as expressions in j-field?
 remove UndefinedReferenceDiagnostic (I think...)
 use DiagnosticDirective for stuff.. now I forgot what this means
 do we need microstrings?
@@ -243,7 +229,6 @@ directives
   $DO / $ENDD
   $REPEAT / $ENDR
   $GEN
-  $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
 
 * klink

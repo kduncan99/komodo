@@ -33,7 +33,7 @@ public class GreaterThanOperator extends RelationalOperator {
     public void evaluate(
         Assembler assembler, Stack<Value> valueStack) throws ExpressionException {
         try {
-            Value[] operands = getTransformedOperands(valueStack, assembler.getDiagnostics());
+            Value[] operands = getTransformedOperands(valueStack, assembler);
             int result = (operands[0].compareTo(operands[1]) > 0) ? 1 : 0;
             valueStack.push(new IntegerValue.Builder().setValue(result).build());
         } catch (FormException ex) {

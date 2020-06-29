@@ -14,6 +14,7 @@ import com.kadware.komodo.kex.kasm.directives.EXTENDDirective;
 import com.kadware.komodo.kex.kasm.directives.FDATADirective;
 import com.kadware.komodo.kex.kasm.directives.FORMDirective;
 import com.kadware.komodo.kex.kasm.directives.GFORMDirective;
+import com.kadware.komodo.kex.kasm.directives.INCLUDEDirective;
 import com.kadware.komodo.kex.kasm.directives.INFODirective;
 import com.kadware.komodo.kex.kasm.directives.LITDirective;
 import com.kadware.komodo.kex.kasm.directives.PROCDirective;
@@ -35,6 +36,8 @@ public class SystemDictionary extends Dictionary {
 
     private static final Map<String, Value> _initialValues = new TreeMap<>();
     static {
+        //  register names - normally these come in via MAXR$, but every conceivable use of this assembler
+        //  would include that proc, so it's easier just to put this stuff into the system dictionary at the outset.
         for (int rx = 0; rx < 16; ++rx) {
             _initialValues.put(String.format("X%d", rx), new IntegerValue.Builder().setValue(rx).build());
             _initialValues.put(String.format("EX%d", rx), new IntegerValue.Builder().setValue(rx).build());
@@ -48,6 +51,28 @@ public class SystemDictionary extends Dictionary {
             _initialValues.put(String.format("B%d", rx), new IntegerValue.Builder().setValue(rx).build());
         }
 
+        //  partial-word designators
+        _initialValues.put("W", new IntegerValue.Builder().setValue(0).build());
+        _initialValues.put("H2", new IntegerValue.Builder().setValue(1).build());
+        _initialValues.put("H1", new IntegerValue.Builder().setValue(2).build());
+        _initialValues.put("XH2", new IntegerValue.Builder().setValue(3).build());
+        _initialValues.put("XH1", new IntegerValue.Builder().setValue(4).build());
+        _initialValues.put("Q2", new IntegerValue.Builder().setValue(4).build());
+        _initialValues.put("T3", new IntegerValue.Builder().setValue(5).build());
+        _initialValues.put("Q4", new IntegerValue.Builder().setValue(5).build());
+        _initialValues.put("T2", new IntegerValue.Builder().setValue(6).build());
+        _initialValues.put("Q3", new IntegerValue.Builder().setValue(6).build());
+        _initialValues.put("T1", new IntegerValue.Builder().setValue(7).build());
+        _initialValues.put("Q1", new IntegerValue.Builder().setValue(7).build());
+        _initialValues.put("S6", new IntegerValue.Builder().setValue(8).build());
+        _initialValues.put("S5", new IntegerValue.Builder().setValue(9).build());
+        _initialValues.put("S4", new IntegerValue.Builder().setValue(10).build());
+        _initialValues.put("S3", new IntegerValue.Builder().setValue(11).build());
+        _initialValues.put("S2", new IntegerValue.Builder().setValue(12).build());
+        _initialValues.put("S1", new IntegerValue.Builder().setValue(13).build());
+        _initialValues.put("U", new IntegerValue.Builder().setValue(14).build());
+        _initialValues.put("XU", new IntegerValue.Builder().setValue(15).build());
+
         //  directives
         _initialValues.put("$ASCII", new DirectiveValue(ASCIIDirective.class));
         _initialValues.put("$BASIC", new DirectiveValue(BASICDirective.class));
@@ -58,6 +83,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$FDATA", new DirectiveValue(FDATADirective.class));
         _initialValues.put("$FORM", new DirectiveValue(FORMDirective.class));
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
+        _initialValues.put("$INCLUDE", new DirectiveValue(INCLUDEDirective.class));
         _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
         _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
         _initialValues.put("$PROC", new DirectiveValue(PROCDirective.class));

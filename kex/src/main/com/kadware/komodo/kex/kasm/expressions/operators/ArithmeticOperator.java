@@ -5,7 +5,6 @@
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
 import com.kadware.komodo.kex.kasm.Assembler;
-import com.kadware.komodo.kex.kasm.diagnostics.Diagnostics;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.FloatingPointValue;
@@ -45,14 +44,14 @@ public abstract class ArithmeticOperator extends Operator {
      * If we find any invalid types, we post one or more diagnostics, and we throw TypeException.
      * @param valueStack the value stack from which we get the operators
      * @param allowFloatingPoint true to allow floating operands
-     * @param diagnostics Diagnostics object to which we post any necessary diagnostics
+     * @param assembler object to which we post any necessary diagnostics
      * @return left-hand possibly adjusted operand in result[0], right-hand in result[1]
      * @throws TypeException if either operand is other than floating point, integer, or string
      */
     protected Value[] getTransformedOperands(
         Stack<Value> valueStack,
         final boolean allowFloatingPoint,
-        Diagnostics diagnostics
+        Assembler assembler
     ) throws TypeException {
         Value[] operands = super.getOperands(valueStack);
         ValueType opType0 = operands[0].getType();
@@ -61,7 +60,7 @@ public abstract class ArithmeticOperator extends Operator {
         //  If at least one operator is floating point, then we make both of them floating point (if possible)
         if ((opType0 == ValueType.FloatingPoint) || (opType1 == ValueType.FloatingPoint)) {
             if (!allowFloatingPoint) {
-                diagnostics.append(new ValueDiagnostic(_locale, "Floating point not allowed"));
+                assembler.appendDiagnostic(new ValueDiagnostic(_locale, "Floating point not allowed"));
                 throw new TypeException();
             }
 
@@ -70,7 +69,7 @@ public abstract class ArithmeticOperator extends Operator {
                     IntegerValue iv = (IntegerValue) operands[0];
                     operands[0] = FloatingPointValue.convertFromInteger(_locale, iv);
                 } else {
-                    diagnostics.append(new ValueDiagnostic(_locale, "Incompatible operands"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(_locale, "Incompatible operands"));
                     throw new TypeException();
                 }
             }
@@ -80,7 +79,7 @@ public abstract class ArithmeticOperator extends Operator {
                     IntegerValue iv = (IntegerValue) operands[1];
                     operands[1] = FloatingPointValue.convertFromInteger(_locale, iv);
                 } else {
-                    diagnostics.append(new ValueDiagnostic(_locale, "Incompatible operands"));
+                    assembler.appendDiagnostic(new ValueDiagnostic(_locale, "Incompatible operands"));
                     throw new TypeException();
                 }
             }
@@ -91,12 +90,12 @@ public abstract class ArithmeticOperator extends Operator {
         //  None of the operands are floating point - they'd better all be integer
         boolean error = false;
         if (opType0 != ValueType.Integer) {
-            postValueDiagnostic(true, diagnostics);
+            postValueDiagnostic(true, assembler);
             error = true;
         }
 
         if (opType1 != ValueType.Integer) {
-            postValueDiagnostic(false, diagnostics);
+            postValueDiagnostic(false, assembler);
             error = true;
         }
 
