@@ -10,6 +10,7 @@ import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextField;
 import com.kadware.komodo.kex.kasm.TextLine;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.WarningDiagnostic;
 
 public abstract class Directive {
 
@@ -43,14 +44,14 @@ public abstract class Directive {
             }
 
             if (_operationField._subfields.size() > 1) {
-                assembler.appendDiagnostic(new ErrorDiagnostic(_operationField._subfields.get(1)._locale,
-                                                               "Extranous subfields on operation field ignored"));
+                assembler.appendDiagnostic(new WarningDiagnostic(_operationField._subfields.get(1)._locale,
+                                                                 "Extranous subfields on operation field ignored"));
             }
         }
 
         if (textLine._fields.size() > maxFields) {
-            assembler.appendDiagnostic(new ErrorDiagnostic(textLine._fields.get(maxFields)._locale,
-                                                           "Extraneous fields in directive are ignored"));
+            assembler.appendDiagnostic(new WarningDiagnostic(textLine._fields.get(maxFields)._locale,
+                                                             "Extraneous fields in directive are ignored"));
         }
 
         return true;

@@ -14,6 +14,7 @@ import com.kadware.komodo.kex.kasm.directives.EXTENDDirective;
 import com.kadware.komodo.kex.kasm.directives.FDATADirective;
 import com.kadware.komodo.kex.kasm.directives.FORMDirective;
 import com.kadware.komodo.kex.kasm.directives.GFORMDirective;
+import com.kadware.komodo.kex.kasm.directives.INCLUDEDirective;
 import com.kadware.komodo.kex.kasm.directives.INFODirective;
 import com.kadware.komodo.kex.kasm.directives.LITDirective;
 import com.kadware.komodo.kex.kasm.directives.PROCDirective;
@@ -82,6 +83,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$FDATA", new DirectiveValue(FDATADirective.class));
         _initialValues.put("$FORM", new DirectiveValue(FORMDirective.class));
         _initialValues.put("$GFORM", new DirectiveValue(GFORMDirective.class));
+        _initialValues.put("$INCLUDE", new DirectiveValue(INCLUDEDirective.class));
         _initialValues.put("$INFO", new DirectiveValue(INFODirective.class));
         _initialValues.put("$LIT", new DirectiveValue(LITDirective.class));
         _initialValues.put("$PROC", new DirectiveValue(PROCDirective.class));

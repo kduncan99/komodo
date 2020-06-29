@@ -166,7 +166,7 @@ public class Assembler {
      */
     public static class Builder {
 
-        private final Map<String, Dictionary> _definitionSets = new HashMap<>();
+        private Map<String, Dictionary> _definitionSets = new HashMap<>();
         private String _moduleName = "<unnamed>";
         private HashSet<AssemblerOption> _options = new HashSet<>();
         private OutputStream _outputStream = System.out;
@@ -181,6 +181,7 @@ public class Assembler {
         }
 
         public Builder addOption(AssemblerOption option) { _options.add(option); return this; }
+        public Builder setDefinitionSets(Map<String, Dictionary> value) { _definitionSets = value; return this; }
         public Builder setModuleName(String moduleName) { _moduleName = moduleName; return this; }
         public Builder setOptions(AssemblerOption[] options) { _options = new HashSet<>(Arrays.asList(options)); return this; }
         public Builder setOptions(Collection<AssemblerOption> options) { _options = new HashSet<>(options); return this; }

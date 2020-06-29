@@ -7,10 +7,6 @@ hwlib:
     Test_SystemProcessor: absolute_load test - improve how this works
     Test_Linker: need to fix unit tests
 
-kasm:
-    Definition mode assembly
-    $INCLUDE directive
-
 
 -- TODO BUGS
 * baselib
@@ -233,7 +229,6 @@ directives
   $DO / $ENDD
   $REPEAT / $ENDR
   $GEN
-  $INCLUDE (what does this mean for us?)
   $INFO finish the various groups we're going to implement
 
 * klink

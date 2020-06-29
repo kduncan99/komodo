@@ -26,7 +26,7 @@ public class INCLUDEDirective extends Directive {
         final TextLine textLine,
         final LabelFieldComponents labelFieldComponents
     ) {
-        if (extractFields(assembler, textLine, true, 1)) {
+        if (extractFields(assembler, textLine, true, 3)) {
             if (labelFieldComponents._label != null) {
                 assembler.appendDiagnostic(new WarningDiagnostic(labelFieldComponents._labelLocale,
                                                                  "Label ignored for $INCLUDE directive"));
