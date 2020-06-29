@@ -13,7 +13,7 @@ public class InstrumentedAssembler extends Assembler {
     private static Set<AssemblerOption> noOptions = new HashSet<>();
 
     public InstrumentedAssembler() {
-        super("TEST", dummySource, noOptions, System.out);
+        super("TEST", dummySource, noOptions, null, System.out);
     }
 
     @Override

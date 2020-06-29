@@ -36,7 +36,7 @@ public abstract class Directive {
         _additionalOperandField = textLine._fields.size() > 3 ? textLine._fields.get(3) : null;
 
         if (requiresOperand) {
-        if ((_operandField == null) || _operandField._subfields.isEmpty()) {
+            if ((_operandField == null) || _operandField._subfields.isEmpty()) {
                 assembler.appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineSpecifier, 1),
                                                                "Directive requires an operand field"));
                 return false;

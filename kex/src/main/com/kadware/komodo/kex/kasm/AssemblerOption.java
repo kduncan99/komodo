@@ -5,6 +5,7 @@
 package com.kadware.komodo.kex.kasm;
 
 public enum AssemblerOption {
+    DEFINITION_MODE,
     EMIT_DICTIONARY,
     EMIT_GENERATED_CODE,
     EMIT_MODULE_SUMMARY,

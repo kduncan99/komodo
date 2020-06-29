@@ -6,6 +6,9 @@ package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.RelocatableModule;
+import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
+import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
+import com.kadware.komodo.kex.kasm.dictionary.StringValue;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,6 +16,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -631,5 +635,66 @@ public class Test_Assembler {
         assertEquals(2, lcPool1._content.length);
         assertEquals(0_100120_200000L, lcPool1._content[0].getW());
         assertEquals(0_100140_370000L, lcPool1._content[1].getW());
+    }
+
+    @Test
+    public void definitionMode_good() {
+        String[] source = {
+            "LOCAL1    $EQU      0123",
+            "EXTERN1*  $EQU      'SomeString'",
+            "EXTERN2*  $EQU      0777",
+            "          $END"
+        };
+
+        Set<AssemblerOption> options = new HashSet<>(OPTION_SET);
+        options.add(AssemblerOption.DEFINITION_MODE);
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(options)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.isEmpty());
+        assertNull(result._relocatableModule);
+        assertNotNull(result._definitions);
+
+        Dictionary.ValueInfo[] valueInfos = result._definitions.getAllValueInfos();
+        assertEquals(2, result._definitions.getAllValueInfos().length);
+
+        Dictionary.ValueInfo vi1 = null;
+        Dictionary.ValueInfo vi2 = null;
+        for (Dictionary.ValueInfo vi : valueInfos) {
+            if (vi._label.equals("EXTERN1")) {
+                vi1 = vi;
+            } else if (vi._label.equals("EXTERN2")) {
+                vi2 = vi;
+            }
+        }
+        assertNotNull(vi1);
+        assertNotNull(vi2);
+        assertTrue(vi1._value instanceof StringValue);
+        assertTrue(vi2._value instanceof IntegerValue);
+        assertEquals("SomeString", ((StringValue) vi1._value)._value);
+        assertEquals(0777L, ((IntegerValue) vi2._value)._value.get().longValue());
+    }
+
+    @Test
+    public void definitionMode_bad() {
+        String[] source = {
+            "          + 0",
+            "EXTERN1*  $EQU      (0777)",
+            "          $END 0"
+        };
+
+        Set<AssemblerOption> options = new HashSet<>(OPTION_SET);
+        options.add(AssemblerOption.DEFINITION_MODE);
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setSource(source)
+                                               .setOptions(options)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+
+        assertTrue(result._diagnostics.hasError());
+        assertNull(result._relocatableModule);
     }
 }

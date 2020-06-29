@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,11 +62,16 @@ public class Assembler {
         //  Keyed by location counter index.
         final GeneratedPools _generatedPools = new GeneratedPools();
 
+        //  Map of include file names to the dictionary which contains the definitions for that include file
+        final Map<String, Dictionary> _definitionSets;
+
         GlobalData(
             Set<AssemblerOption> options,
+            Map<String, Dictionary> definitionSets,
             PrintStream outputStream
         ) {
             _options = options;
+            _definitionSets = definitionSets;
             _outputStream = outputStream;
         }
     }
@@ -110,15 +116,17 @@ public class Assembler {
      * @param moduleName name of the module being created
      * @param source body of source code to be assembled
      * @param options includes options to be observed during the compilation process
+     * @param definitionSets library of definition sets for $INCLUDE
      * @param outputStream where all diagnostics are emitted
      */
     Assembler(
         final String moduleName,
         final String[] source,
         final Set<AssemblerOption> options,
+        final Map<String, Dictionary> definitionSets,
         final OutputStream outputStream
     ) {
-        _global = new GlobalData(options, new PrintStream(outputStream));
+        _global = new GlobalData(options, definitionSets, new PrintStream(outputStream));
         _level = 0;
         _moduleName = moduleName;
         _outerLevel = null;
@@ -153,12 +161,24 @@ public class Assembler {
         _codeMode = outerLevel._codeMode;
     }
 
+    /**
+     * Builder class
+     */
     public static class Builder {
 
+        private final Map<String, Dictionary> _definitionSets = new HashMap<>();
         private String _moduleName = "<unnamed>";
         private HashSet<AssemblerOption> _options = new HashSet<>();
         private OutputStream _outputStream = System.out;
         private String[] _source = new String[0];
+
+        public Builder addDefinitionSet(
+            final String includeName,
+            final Dictionary definitions
+        ) {
+            _definitionSets.put(includeName.toUpperCase(), definitions);
+            return this;
+        }
 
         public Builder addOption(AssemblerOption option) { _options.add(option); return this; }
         public Builder setModuleName(String moduleName) { _moduleName = moduleName; return this; }
@@ -169,7 +189,7 @@ public class Assembler {
         public Builder setSource(Collection<String> source) { _source = source.toArray(new String[0]); return this; }
 
         public Assembler build() {
-            return new Assembler(_moduleName, _source, _options ,_outputStream);
+            return new Assembler(_moduleName, _source, _options, _definitionSets, _outputStream);
         }
     }
 
@@ -459,16 +479,21 @@ public class Assembler {
         final FloatingPointValue fpValue,
         final Locale locale
     ) {
+        if (isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            appendDiagnostic(new ErrorDiagnostic(locale, "Attempted to generate code in definition mode"));
+            return;
+        }
+
         try {
             if (fpValue._precision == ValuePrecision.Single) {
                 Word36 w36 = fpValue._value.toWord36();
-                long[] word36 = { w36.getW() };
+                long[] word36 = {w36.getW()};
                 _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             } else {
                 //  double precision generation is the default...
                 DoubleWord36 dw36 = fpValue._value.toDoubleWord36();
                 Word36[] word36s = dw36.getWords();
-                long[] word36 = { word36s[0].getW(), word36s[1].getW() };
+                long[] word36 = {word36s[0].getW(), word36s[1].getW()};
                 _global._generatedPools.generate(getTopLevelTextLine(), locale, _currentGenerationLCIndex, word36);
             }
         } catch (CharacteristicOverflowException ex) {
@@ -486,6 +511,11 @@ public class Assembler {
         final Locale locale,
         final Value firstValue
     ) {
+        if (isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            appendDiagnostic(new ErrorDiagnostic(locale, "Attempted to generate code in definition mode"));
+            return;
+        }
+
         int valueCount = (operandField._subfields.size());
         if (valueCount > 36) {
             appendDiagnostic(new ErrorDiagnostic(operandField._locale, "Improper number of data fields"));
@@ -553,6 +583,11 @@ public class Assembler {
         final StringValue sValue,
         final Locale locale
     ) {
+        if (isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            appendDiagnostic(new ErrorDiagnostic(locale, "Attempted to generate code in definition mode"));
+            return;
+        }
+
         CharacterMode generateMode =
             sValue._characterMode == CharacterMode.Default ? _characterMode : sValue._characterMode;
         int charsPerWord = generateMode == CharacterMode.ASCII ? 4 : 6;
@@ -857,6 +892,12 @@ public class Assembler {
         if (operandField == null) {
             appendDiagnostic(new ErrorDiagnostic(operationField._locale,
                                                  "Instruction mnemonic requires an operand field"));
+            return true;
+        }
+
+        if (isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            appendDiagnostic(new ErrorDiagnostic(operationField._locale,
+                                                 "Attempted to generate code in definition mode"));
             return true;
         }
 
@@ -1330,34 +1371,51 @@ public class Assembler {
             _global._programStart = new ProgramStart(urlc._locationCounterIndex, iv._value.get().intValue());
         }
 
-        _global._generatedPools.resolveReferences(this);
-        RelocatableModule module = createRelocatableModule(_moduleName);
+        AssemblerResult result;
+        if (!isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            _global._generatedPools.resolveReferences(this);
+            RelocatableModule module = createRelocatableModule(_moduleName);
 
-        if (!_global._options.contains(AssemblerOption.SILENT)) {
-            if (_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE)
-                || _global._options.contains(AssemblerOption.EMIT_SOURCE)) {
-                displayResults(_global._options.contains(AssemblerOption.EMIT_GENERATED_CODE), module);
-            }
-            if (_global._options.contains(AssemblerOption.EMIT_MODULE_SUMMARY)) {
-                displayRelocatableModuleSummary(module);
-            }
-            if (_global._options.contains(AssemblerOption.EMIT_DICTIONARY)) {
-                displayDictionary(_dictionary);
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
-            for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
-                if (entry.getValue() > 0) {
-                    sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+            if (!isOptionSet(AssemblerOption.SILENT)) {
+                if (isOptionSet(AssemblerOption.EMIT_GENERATED_CODE) || isOptionSet(AssemblerOption.EMIT_SOURCE)) {
+                    displayResults(isOptionSet(AssemblerOption.EMIT_GENERATED_CODE), module);
+                }
+                if (isOptionSet(AssemblerOption.EMIT_MODULE_SUMMARY)) {
+                    displayRelocatableModuleSummary(module);
+                }
+                if (isOptionSet(AssemblerOption.EMIT_DICTIONARY)) {
+                    displayDictionary(_dictionary);
                 }
             }
-            _global._outputStream.println(sb.toString());
 
-            _global._outputStream.println("Assembly Ends ------------------------------------------");
+            result = new AssemblerResult(module, _global._diagnostics, _sourceLines);
+        } else {
+            if (!isOptionSet(AssemblerOption.SILENT)) {
+                if (isOptionSet(AssemblerOption.EMIT_GENERATED_CODE)
+                    || isOptionSet(AssemblerOption.EMIT_SOURCE)) {
+                    displayResults(false, null);
+                }
+                if (isOptionSet(AssemblerOption.EMIT_DICTIONARY)) {
+                    displayDictionary(_dictionary);
+                }
+            }
+
+            if (!isOptionSet(AssemblerOption.SILENT)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
+                for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
+                    if (entry.getValue() > 0) {
+                        sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+                    }
+                }
+                _global._outputStream.println(sb.toString());
+                _global._outputStream.println("Assembly Ends ------------------------------------------");
+            }
+
+            result = new AssemblerResult(_global._globalDictionary, _global._diagnostics, _sourceLines);
         }
 
-        return new AssemblerResult(module, _global._diagnostics, _sourceLines);
+        return result;
     }
 
     /**
@@ -1377,6 +1435,31 @@ public class Assembler {
             appendDiagnostic(new DuplicateDiagnostic(locale, "Label " + label + " duplicated"));
         } else {
             _dictionary.addValue(labelLevel, label, locale, value);
+        }
+    }
+
+    /**
+     * Generates a value into the current literal pool
+     * @param locale locale where the literal was instigated
+     * @param form form applying to the literal
+     * @param values integer values of each component of the literal, as described by the form
+     * @return indication of where this literal will be placed
+     */
+    public IntegerValue generateLiteral(
+        final Locale locale,
+        final Form form,
+        final IntegerValue[] values
+    ) {
+        if (isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+            appendDiagnostic(new ErrorDiagnostic(locale, "Attempted to generate code in definition mode"));
+            return IntegerValue.POSITIVE_ZERO;
+        } else {
+            return _global._generatedPools.generateLiteral(getTopLevelTextLine(),
+                                                           locale,
+                                                           _currentGenerationLCIndex,
+                                                           form,
+                                                           values,
+                                                           this);
         }
     }
 
@@ -1405,13 +1488,6 @@ public class Assembler {
      */
     public int getCurrentGenerationLCIndex() {
         return _currentGenerationLCIndex;
-    }
-
-    /**
-     * Retrieves the current LC index for code generation for this (sub)assembly
-     */
-    public int getCurrentLiteralLCIndex() {
-        return _currentLiteralLCIndex;
     }
 
     /**
@@ -1480,6 +1556,30 @@ public class Assembler {
      */
     public boolean hasNextSourceLine() {
         return _nextSourceIndex < _sourceLines.length;
+    }
+
+    /**
+     * Imports the global definitions from the indicated DefinitionSet into the current global dictionary.
+     * @param definitionSetName name of the requested DefinitionSet
+     * @param locale locale of the source code instigating this operation
+     */
+    public void importDefinitions(
+        final String definitionSetName,
+        final Locale locale
+    ) {
+        Dictionary dsDictionary = _global._definitionSets.get(definitionSetName.toUpperCase());
+        if (dsDictionary == null) {
+            appendDiagnostic(new ErrorDiagnostic(locale, "No such definition set exists"));
+        } else {
+            for (Dictionary.ValueInfo valueInfo : dsDictionary.getAllValueInfos()) {
+                if (_dictionary.hasValue(valueInfo._label)) {
+                    String msg = "Definition '" + valueInfo._label + "' already exists.";
+                    appendDiagnostic(new DuplicateDiagnostic(locale, msg));
+                } else {
+                    _dictionary.addValue(0, valueInfo._label, locale, valueInfo._value);
+                }
+            }
+        }
     }
 
     /*

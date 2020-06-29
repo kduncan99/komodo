@@ -6,6 +6,7 @@ package com.kadware.komodo.kex.kasm.directives;
 
 import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.LabelFieldComponents;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
@@ -53,12 +54,17 @@ public class ENDDirective extends Directive {
 
                     Value v = e.evaluate(assembler);
 
-                    if (assembler.isProcedureSubAssembly()) {
-                        assembler.appendDiagnostic(new WarningDiagnostic(expLocale, "Return value for $PROC ignored"));
-                    } else if (assembler.isFunctionSubAssembly()) {
-                        assembler.setEndValue(v);
-                    } else if (assembler.isMainAssembly()) {
-                        resolveEntryPoint(assembler, v, expLocale);
+                    if (assembler.isOptionSet(AssemblerOption.DEFINITION_MODE)) {
+                        String msg = "$END cannot have an operand in definition mode";
+                        assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, msg));
+                    } else {
+                        if (assembler.isProcedureSubAssembly()) {
+                            assembler.appendDiagnostic(new WarningDiagnostic(expLocale, "Return value for $PROC ignored"));
+                        } else if (assembler.isFunctionSubAssembly()) {
+                            assembler.setEndValue(v);
+                        } else if (assembler.isMainAssembly()) {
+                            resolveEntryPoint(assembler, v, expLocale);
+                        }
                     }
                 } catch (ExpressionException ex) {
                     assembler.appendDiagnostic(new ErrorDiagnostic(expLocale, "Syntax error"));
