@@ -7,7 +7,7 @@ package com.kadware.komodo.kexec.include;
 /**
  * Source code describing the config bank for kexec
  */
-public class I$ConfigBank {
+public class BankDescriptor {
 
     /*  Description of configuration bank:
      *
@@ -39,16 +39,16 @@ public class I$ConfigBank {
         ". .....................................",
         ". Configuration bank equfs",
         ".",
-        "CFGBNK$IPLSP     $EQUF      0,,S1",
-        "CFGBNK$IPLIP     $EQUF      0,,S2",
-        "CFGBNK$IPLIOP    $EQUF      0,,S3",
-        "CFGBNK$IPLMSP    $EQUF      0,,S4",
-        "CFGBNK$IPLCHMOD  $EQUF      0,,S5",
-        "CFGBNK$IPLDEVNM  $EQUF      0,,S6",
-        "CFGBNK$IPLFLAGS  $EQUF      1,,S1",
-        "CFGBNK$IPLPREPF  $EQUF      1,,H2",
-        "CFGBNK$JUMPKEYS  $EQUF      2,,W",
-        "CFGBNK$MBOXADDR  $EQUF      3",
+        "CB$IPLSP     $EQUF      0,,S1",
+        "CB$IPLIP     $EQUF      0,,S2",
+        "CB$IPLIOP    $EQUF      0,,S3",
+        "CB$IPLMSP    $EQUF      0,,S4",
+        "CB$IPLCHMOD  $EQUF      0,,S5",
+        "CB$IPLDEVNM  $EQUF      0,,S6",
+        "CB$IPLFLAGS  $EQUF      1,,S1",
+        "CB$IPLPREPF  $EQUF      1,,H2",
+        "CB$JUMPKEYS  $EQUF      2,,W",
+        "CB$MBOXADDR  $EQUF      3",
         ". ....................................."
     };
 }

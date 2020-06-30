@@ -6666,17 +6666,55 @@ public class InstructionProcessor extends Processor implements Worker {
                         status = SS_BAD_UPI;
                     }
                     operands[0] = Word36.setS2(operands[0], status);
-                    //  ignore the warning - devAddr cannot be null here since we cannot be in the GRS
+                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }
 
                 case SF_CONSOLE_CANCEL_READ_REPLY: {
-                    //TODO figure this out
+                    //  Packet size is 3 words
+                    //  U+0,S1:         Subfunction
+                    //  U+0,S2:         Status
+                    //  U+0,S3:         Message identifier
+                    //  U+0,Q3:         Length of replacement message in characters
+                    //  U+1:            Console identifier - 0 for all consoles (bottom 32 bits only)
+                    //  U+2:            Virtual address of buffer containing replacement message in ASCII
+                    long[] operands = new long[3];
+                    DevelopedAddresses devAddr = getConsecutiveOperands(false, operands, true);
+
+                    int status = SS_SUCCESSFUL;
+                    int messageId = (int) Word36.getS3(operands[0]);
+                    int chars = (int) Word36.getQ3(operands[0]);
+                    int words = (chars / 4) + ((chars % 4 == 0) ? 0 : 1);
+                    int consoleId = (int) operands[1];
+                    VirtualAddressInfo vaInfo = verifyVirtualAddress(new VirtualAddress(operands[2]),
+                                                                     true,
+                                                                     false,
+                                                                     words);
+                    if (vaInfo._status == SS_SUCCESSFUL) {
+                        try {
+                            ArraySlice as = getStorageValues(vaInfo._bankDescriptor.getBaseAddress(),
+                                                             vaInfo._virtualAddress.getOffset(),
+                                                             words);
+                            String msg = "  " + as.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                            _systemProcessor.consoleCancelReadReplyMessage(consoleId, messageId, msg);
+                        } catch (AddressLimitsException
+                            | UPINotAssignedException
+                            | UPIProcessorTypeException ex) {
+                            raiseInterrupt(new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                            vaInfo._virtualAddress.getLevel(),
+                                                                            vaInfo._virtualAddress.getBankDescriptorIndex()));
+                            status = SS_INVALID_ADDRESS;
+                        }
+                        operands[0] = Word36.setS2(operands[0], vaInfo._status);
+                    }
+
+                    //noinspection ConstantConditions
+                    storeConsecutiveOperands(devAddr, operands);
+                    break;
                 }
 
                 case SF_CONSOLE_SEND_STATUS: {
-                    //TODO this is wrong - addressing is foo'd
                     //  Packet size is 3 - 8 words depending upon the value of U+0,S3
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
@@ -6711,14 +6749,29 @@ public class InstructionProcessor extends Processor implements Worker {
                     String[] messages = new String[msgCount];
                     for (int vax = 0; vax < msgCount; ++vax) {
                         msgLenWords[vax] = (msgLenChars[vax] / 4) + ((msgLenChars[vax] % 4 == 0) ? 0 : 1);
-                        vaInfos[vax] = verifyVirtualAddress(new VirtualAddress(operands[2]), true, false, msgLenWords[vax]);
+                        vaInfos[vax] = verifyVirtualAddress(new VirtualAddress(operands[2]),
+                                                            true,
+                                                            false,
+                                                            msgLenWords[vax]);
                         if (vaInfos[vax]._status != SS_SUCCESSFUL) {
                             status = vaInfos[vax]._status;
                         } else {
-                            int offset = vaInfos[vax]._virtualAddress.getOffset();
-                            int words = msgLenWords[vax];
-                            String asciiString = vaInfos[vax]._bankDescriptor.toASCII(offset, words);
-                            messages[vax] = asciiString.substring(0, msgLenChars[vax]);
+                            try {
+                                ArraySlice as = getStorageValues(vaInfos[vax]._bankDescriptor.getBaseAddress(),
+                                                                 vaInfos[vax]._virtualAddress.getOffset(),
+                                                                 msgLenWords[vax]);
+                                int offset = vaInfos[vax]._virtualAddress.getOffset();
+                                int words = msgLenWords[vax];
+                                int chars = msgLenChars[vax];
+                                messages[vax] = "  " + as.toASCII(offset, words).substring(0, chars);
+                            } catch (AddressLimitsException
+                                     | UPINotAssignedException
+                                     | UPIProcessorTypeException ex) {
+                                raiseInterrupt(new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                                vaInfos[vax]._virtualAddress.getLevel(),
+                                                                                vaInfos[vax]._virtualAddress.getBankDescriptorIndex()));
+                                status = SS_INVALID_ADDRESS;
+                            }
                         }
                     }
 
@@ -6761,8 +6814,7 @@ public class InstructionProcessor extends Processor implements Worker {
                             ArraySlice as = getStorageValues(vaInfo._bankDescriptor.getBaseAddress(),
                                                              vaInfo._virtualAddress.getOffset(),
                                                              words);
-                            String msg =
-                                "  " + as.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                            String msg = "  " + as.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
                             Boolean rightJust = (flags & 0x02) != 0;
                             Boolean cached = (flags & 0x01) == 0;
                             _systemProcessor.consoleSendReadOnlyMessage(consoleId, msg, rightJust, cached);
@@ -6783,7 +6835,6 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_SEND_READ_REPLY: {
-                    //TODO this is wrong - addressing is foo'd
                     //  Packet size is 3 words
                     //  U+0,S1:         Subfunction
                     //  U+0,S2:         Status
@@ -6804,10 +6855,23 @@ public class InstructionProcessor extends Processor implements Worker {
                                                                      true,
                                                                      false,
                                                                      words);
+
+                    int status = vaInfo._status;
                     if (vaInfo._status == SS_SUCCESSFUL) {
-                        String msg =
-                            "  " + vaInfo._bankDescriptor.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
-                        _systemProcessor.consoleSendReadReplyMessage(consoleId, messageId, msg, maxReplyChars);
+                        try {
+                            ArraySlice as = getStorageValues(vaInfo._bankDescriptor.getBaseAddress(),
+                                                             vaInfo._virtualAddress.getOffset(),
+                                                             words);
+                            String msg = "  " + as.toASCII(vaInfo._virtualAddress.getOffset(), words).substring(0, chars);
+                            _systemProcessor.consoleSendReadReplyMessage(consoleId, messageId, msg, maxReplyChars);
+                        } catch (AddressLimitsException
+                            | UPINotAssignedException
+                            | UPIProcessorTypeException ex) {
+                            raiseInterrupt(new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                            vaInfo._virtualAddress.getLevel(),
+                                                                            vaInfo._virtualAddress.getBankDescriptorIndex()));
+                            status = SS_INVALID_ADDRESS;
+                        }
                         operands[0] = Word36.setS2(operands[0], vaInfo._status);
                     }
 
@@ -6817,7 +6881,6 @@ public class InstructionProcessor extends Processor implements Worker {
                 }
 
                 case SF_CONSOLE_POLL_INPUT: {
-                    //TODO this is probably wrong - addressing is foo'd
                     //  Packet size is 4 words
                     //  U+0,S1          Subfunction
                     //  U+0,S2:         Status
@@ -6840,13 +6903,20 @@ public class InstructionProcessor extends Processor implements Worker {
                         SystemProcessorInterface.ConsoleInputMessage consInput
                             = _systemProcessor.consolePollInputMessage(waitMillis);
                         if (consInput != null) {
-                            operands[0] = Word36.setQ4(operands[0], consInput._text.length());
-                            operands[2] = consInput._consoleIdentifier;
-                            for (int wx = 0, bdx = vaInfo._virtualAddress.getOffset(), ssx = 0, ssy = 4;
-                                 wx < words && ssx < consInput._text.length();
-                                 ++wx, ++bdx, ssx += 4, ssy += 4) {
-                                Word36 w36 = Word36.stringToWordASCII(consInput._text.substring(ssx, ssy));
-                                vaInfo._bankDescriptor.set(bdx, w36.getW());
+                            try {
+                                operands[0] = Word36.setQ4(operands[0], consInput._text.length());
+                                operands[2] = consInput._consoleIdentifier;
+                                ArraySlice as = ArraySlice.stringToWord36ASCII(null);
+                                setStorageValues(vaInfo._bankDescriptor.getBaseAddress(),
+                                                 vaInfo._virtualAddress.getOffset(),
+                                                 as._array);
+                            } catch (AddressLimitsException
+                                     | UPINotAssignedException
+                                     | UPIProcessorTypeException ex) {
+                                raiseInterrupt(new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException,
+                                                                                vaInfo._virtualAddress.getLevel(),
+                                                                                vaInfo._virtualAddress.getBankDescriptorIndex()));
+                                status = SS_INVALID_ADDRESS;
                             }
                         } else {
                             status = SS_NO_DATA;
@@ -6856,7 +6926,6 @@ public class InstructionProcessor extends Processor implements Worker {
                     }
 
                     operands[0] = Word36.setS2(operands[0], status);
-                    //noinspection ConstantConditions
                     storeConsecutiveOperands(devAddr, operands);
                     break;
                 }

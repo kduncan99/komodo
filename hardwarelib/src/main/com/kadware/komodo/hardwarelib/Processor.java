@@ -375,6 +375,7 @@ public abstract class Processor extends Node implements Worker {
      * Retrieves a slice of storage beginning at the indicated absolute address,
      * an extending for the indicated count
      * @param absoluteAddress MSP UPI and address of the first word within the MSP, to be retrieved
+     * @param offset from the provided absolute address, where we begin retrieving values
      * @param count Number of words to be retrieved
      * @return new ArraySlice
      * @throws AddressingExceptionInterrupt for an invalid MSP or segment reference
@@ -427,6 +428,40 @@ public abstract class Processor extends Node implements Worker {
         }
 
         msp.getStorage(absoluteAddress._segment).set(absoluteAddress._offset, value);
+    }
+
+    /**
+     * Sets consecutive values in main storage
+     * @param absoluteAddress MSP UPI and address of the word within the MSP
+     * @param offset from the provided absolute address, where we begin storing values
+     * @param values values to be stored
+     * @throws AddressingExceptionInterrupt for an invalid MSP or segment reference
+     * @throws AddressLimitsException if the address is invalid
+     * @throws UPIProcessorTypeException if the UPI is not for an MSP
+     * @throws UPINotAssignedException if no processor exists for the given UPI
+     */
+    static void setStorageValues(
+        final AbsoluteAddress absoluteAddress,
+        final int offset,
+        final long[] values
+    ) throws AddressingExceptionInterrupt,
+             AddressLimitsException,
+             UPIProcessorTypeException,
+             UPINotAssignedException {
+        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(absoluteAddress._upiIndex);
+        if ((absoluteAddress._offset + offset < 0)
+            || (absoluteAddress._offset + offset > msp.getStorage(absoluteAddress._segment).getSize())) {
+            throw new AddressLimitsException(absoluteAddress);
+        }
+
+        ArraySlice mspStorage = msp.getStorage(absoluteAddress._segment);
+        if (absoluteAddress._offset + offset + values.length >= mspStorage.getSize()) {
+            throw new AddressLimitsException(absoluteAddress);
+        }
+
+        for (int sx = 0, dx = absoluteAddress._offset + offset; sx < values.length; ++sx, ++dx) {
+            mspStorage.set(dx, values[sx]);
+        }
     }
 
     /**

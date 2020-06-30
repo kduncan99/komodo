@@ -2,7 +2,6 @@
 
 hwlib:
     Rebuilding all the hwlib unit tests
-    InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
     Test_Linker: need to fix unit tests
