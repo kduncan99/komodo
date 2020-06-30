@@ -290,7 +290,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $BASIC",
+            "          $EXTEND",
+            "          $INFO 10 1",
             "",
             "$(2)      . BDI 100005, starts at 02000",
             ". RETURN CONTROL STACK",
@@ -307,8 +308,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          . since we are the IPL interrupt handler.",
             "          . Just CALL into a basic mode bank for the real test.",
             "          . Of course, we need an RCS first...",
-            "          $EXTEND",
-            "          $INFO 10 1",
             "START",
             "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
             "          LD        DESREG1,,B0",
@@ -1452,7 +1451,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
             "          $EXTEND",
             "          $INFO 10 1",
             "",
-            "$(4)      . BDI 100006, starts at 0",
+            "$(4)      . BDI 100006",
             ". RETURN CONTROL STACK",
             "RCDEPTH   $EQU      32",
             "RCSSIZE   $EQU      2*RCDEPTH",

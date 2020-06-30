@@ -4,13 +4,16 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.InventoryManager;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -20,132 +23,204 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_SpecialInstructions extends BaseFunctions {
 
-//    @Test
-//    public void nop_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,4",
-//            "          LXM,U     X2,2",
-//            "          NOP       040000,*X2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(4, processors._instructionProcessor.getGeneralRegister(2).getH1());
-//        assertEquals(6, processors._instructionProcessor.getGeneralRegister(2).getH2());
-//    }
-//
-//    @Test
-//    public void nop_basic_indirect_violation(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,4",
-//            "          LXM,U     X2,2",
-//            "          NOP       *040000,*X2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-//    @Test
-//    public void nop_basic_indirect_noViolation(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "$(0)",
-//            "DATA      + 0",
-//            "DATA      + 0",
-//            "DATA      + 055000",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,4",
-//            "          LXM,U     X2,2",
-//            "          NOP       *DATA,*X2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(4, processors._instructionProcessor.getGeneralRegister(2).getH1());
-//        assertEquals(6, processors._instructionProcessor.getGeneralRegister(2).getH2());
-//    }
-//
-//    @Test
-//    public void nop_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "$(0)",
-//            "DATA      + 0",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,4",
-//            "          LXM,U     X2,2",
-//            "          NOP       040000,*X2,B2  . U is out of limits, be we shouldn't care",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(4, processors._instructionProcessor.getGeneralRegister(2).getH1());
-//        assertEquals(6, processors._instructionProcessor.getGeneralRegister(2).getH2());
-//    }
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    @Test
+    public void nop_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1)",
+            "          $LIT",
+            "START",
+            "          LD        (0)",
+            "          GOTO      (LBDIREF$+BMSTART,BMSTART)",
+            "",
+            "          $BASIC",
+            "$(3)",
+            "          $LIT",
+            "BMSTART",
+            "          LXI,U     X2,4",
+            "          LXM,U     X2,2",
+            "          NOP       040000,*X2",
+            "          HALT      0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, false, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
+        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+    }
+
+    @Test
+    public void nop_basic_indirect_violation(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(4)      . BDI 100006",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1)      . extended mode i-bank 0100004",
+            "          $LIT",
+            "START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        (000001,000000),,B0 . ext mode, exec regs, pp=0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,(LBDIREF$+RCSTACK,0)",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        (0,0),,B0 . ext mode, user regs, pp=0",
+            ".",
+            "          . ESTABLISH INTERRUPT HANDLER VECTOR",
+            "          CALL      (LBDIREF$+IH$INIT,IH$INIT)",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "",
+            "          CALL      (LBDIREF$+BMSTART, BMSTART)",
+            "",
+            "          $BASIC",
+            "$(3)      . basic mode i-bank 0100005",
+            "BMSTART",
+            "          LXI,U     X2,4",
+            "          LXM,U     X2,2",
+            "          NOP       *040000,*X2",
+            "          HALT      0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void nop_basic_indirect_noViolation(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(4)      . BDI 100006",
+            ". RETURN CONTROL STACK",
+            "RCDEPTH   $EQU      32",
+            "RCSSIZE   $EQU      2*RCDEPTH",
+            "RCSTACK   $RES      RCSSIZE",
+            ".",
+            "$(1)      . extended mode i-bank 0100004",
+            "          $LIT",
+            "START",
+            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
+            "          LD        (000001,000000),,B0 . ext mode, exec regs, pp=0",
+            ".",
+            "          . ESTABLISH RCS ON B25/EX0",
+            "          LBE       B25,(LBDIREF$+RCSTACK,0)",
+            "          LXI,U     EX0,0",
+            "          LXM,U     EX0,RCSTACK+RCSSIZE",
+            "",
+            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
+            "          LD        (0,0),,B0 . ext mode, user regs, pp=0",
+            ".",
+            "          . ESTABLISH INTERRUPT HANDLER VECTOR",
+            "          CALL      (LBDIREF$+IH$INIT,IH$INIT)",
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,15",
+            "",
+            "          CALL      (LBDIREF$+BMSTART, BMSTART)",
+            "",
+            "          $BASIC",
+            "$(3)      . basic mode i-bank 0100005",
+            "BMSTART",
+            "          LXI,U     X2,4",
+            "          LXM,U     X2,2",
+            "          NOP       *DATA,*X2",
+            "          HALT      0",
+            "",
+            "DATA      $RES      8",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
+        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+    }
+
+    @Test
+    public void nop_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "",
+            "$(1)      . extended mode i-bank 0100004",
+            "          $LIT",
+            "START",
+            "          LD        (0)",
+            "          LXI,U     X2,4",
+            "          LXM,U     X2,2",
+            "          NOP       04000,*X2,B2",
+            "          HALT      0",
+            "DATA      + 0",
+            "",
+            "          $END      START"
+        };
+
+        buildMultiBank(source, false, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
+        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+    }
 }
