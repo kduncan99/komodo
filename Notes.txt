@@ -6,6 +6,10 @@ hwlib:
     Test_SystemProcessor: absolute_load test - improve how this works
     Test_Linker: need to fix unit tests
 
+Boot query:
+    Can I just do 'UR 0,*EX1,B26' to return from interrupts?
+    Yes, yes I can. That simplifies many things.
+
 
 -- TODO BUGS
 * baselib
@@ -82,13 +86,12 @@ CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFER
 Need a SystemLogTapeDevice
 Redo all the node and subclasses tests, many of which are commented out (Node has been done)
 For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
-Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
+Need some unit tests of proper DesReg settings across interrupts, returns, and UR instruction
 RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
 RAMTapeDevice byte interface, optional compression, optional backing store
 PrinterDevice
 CardReaderDevice
 CardPunchDevice
-IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
 IP: extended mode procedure call unit tests for GOTO, CALL to basic mode

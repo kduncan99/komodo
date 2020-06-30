@@ -22,8 +22,6 @@ import org.junit.*;
  */
 public class Test_Algorithms extends BaseFunctions {
 
-    //TODO fibonacci numbers less than 1000
-
     @Test
     public void factorial(
     ) throws BinaryLoadException,
