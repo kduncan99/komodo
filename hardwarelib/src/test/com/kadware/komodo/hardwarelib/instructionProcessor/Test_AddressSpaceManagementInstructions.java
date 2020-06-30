@@ -18,6 +18,7 @@ import com.kadware.komodo.hardwarelib.interrupts.InvalidInstructionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import java.util.Arrays;
+import org.junit.After;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +29,12 @@ import org.junit.Test;
  * Unit tests for InstructionProcessor class
  */
 public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
+
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
 
     @Test
     public void decelerateActiveBaseTable_extended(
@@ -101,8 +108,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         long[] dataBank = getBankByBaseRegister(2);
         long[] subset = Arrays.copyOfRange(dataBank, 15, 30);
         Assert.assertArrayEquals(expected, subset);
-
-        clear();
     }
 
     @Test
@@ -159,8 +164,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
         assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -216,8 +219,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass().getCode());
         assertEquals(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4,
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -277,8 +278,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -352,8 +351,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         InstructionProcessor.BaseRegister b29 = _instructionProcessor.getBaseRegister(29);
         assertTrue(b29._voidFlag);
-
-        clear();
     }
 
     @Test
@@ -397,8 +394,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
         assertTrue(br29._voidFlag);
-
-        clear();
     }
 
     @Test
@@ -470,8 +465,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -528,8 +521,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -610,8 +601,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -677,8 +666,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -768,8 +755,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(01, br29.getLowerLimit());
         assertEquals(01777, br29.getUpperLimit());
         Assert.assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
-
-        clear();
     }
 
     @Test
@@ -833,8 +818,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         assertEquals(01, br29.getLowerLimit());
         assertEquals(01777, br29.getUpperLimit());
         assertEquals(new AbsoluteAddress((short)1, 0, 070000), br29._baseAddress);
-
-        clear();
     }
 
     @Test
@@ -907,8 +890,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -975,8 +956,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -1163,8 +1142,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         Assert.assertEquals(0_200001_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X6).getW());
         Assert.assertEquals(0_200002_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X7).getW());
         Assert.assertEquals(0_200007_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X8).getW());
-
-        clear();
     }
 
     @Test
@@ -1228,8 +1205,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -1293,8 +1268,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -1361,8 +1334,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         InstructionProcessor.BaseRegister br8 = _instructionProcessor.getBaseRegister(8);
         assertTrue(br8._voidFlag);
-
-        clear();
     }
 
     @Test
@@ -1405,8 +1376,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         InstructionProcessor.BaseRegister br9 = _instructionProcessor.getBaseRegister(9);
         assertTrue(br9._voidFlag);
-
-        clear();
     }
 
     @Test
@@ -1468,8 +1437,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getInterruptClass());
         assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
-
-        clear();
     }
 
     @Test
@@ -1526,8 +1493,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -1579,8 +1544,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(01011, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     //TODO
