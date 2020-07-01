@@ -198,7 +198,7 @@ public class Test_Linker {
         AccessPermissions gap = new AccessPermissions(false, true, false);
         AccessPermissions sap = new AccessPermissions(false, true, true);
 
-        LCPoolSpecification lcPoolSpecs[] = {
+        LCPoolSpecification[] lcPoolSpecs = {
             new LCPoolSpecification(asmResult._relocatableModule, 0),
             new LCPoolSpecification(asmResult._relocatableModule, 1),
         };
@@ -256,90 +256,76 @@ public class Test_Linker {
     //  TODO partial-word mode sensitive tests
 
 
-//    @Test
-//    public void test_multipleRelocatablesBasicMode() {
-//        //  simple basic mode program
-//        String[] source1 = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LMJ       X11,SUB1",
-//            "          LMJ       X11,SUB2",
-//            "          HALT      0",
-//        };
-//
-//        String[] source2 = {
-//            "          $BASIC",
-//            "",
-//            "$(1),SUB1*",
-//            "          J         0,X11",
-//        };
-//
-//        String[] source3 = {
-//            "          $BASIC",
-//            "",
-//            "$(1),SUB2*",
-//            "          J         0,X11",
-//        };
-//
-//        Assembler.AssemblerResult result1 = Assembler.assemble("TESTREL1", source1);
-//        Assembler.AssemblerResult result2 = Assembler.assemble("TESTREL2", source2);
-//        Assembler.AssemblerResult result3 = Assembler.assemble("TESTREL3", source3);
-//
-//        LCPoolSpecification[] ibankPoolSpecs = {
-//            new LCPoolSpecification(result3._relocatableModule, 1),
-//            new LCPoolSpecification(result2._relocatableModule, 1),
-//            new LCPoolSpecification(result1._relocatableModule, 1),
-//        };
-//        LCPoolSpecification[] dbankPoolSpecs = { };
-//
-//        BankDeclaration[] bds = {
-//            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-//                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-//                                         .setSpecialAccessPermissions(new AccessPermissions(true, true, true))
-//                                         .setInitialBaseRegister(12)
-//                                         .setBankLevel(0)
-//                                         .setBankDescriptorIndex(04)
-//                                         .setBankName("I1")
-//                                         .setPoolSpecifications(ibankPoolSpecs)
-//                                         .setStartingAddress(022000)
-//                .build(),
-//
-//            new BankDeclaration.Builder().setAccessInfo(new AccessInfo((byte)0, (short)0))
-//                                         .setGeneralAccessPermissions(new AccessPermissions(false, false, false))
-//                                         .setSpecialAccessPermissions(new AccessPermissions(false, true, true))
-//                                         .setInitialBaseRegister(13)
-//                                         .setBankLevel(0)
-//                                         .setBankDescriptorIndex(05)
-//                                         .setBankName("D1")
-//                                         .setPoolSpecifications(dbankPoolSpecs)
-//                                         .setStartingAddress(040000)
-//                .build(),
-//        };
-//
-//        LinkOption[] options = {
-//            LinkOption.EMIT_SUMMARY,
-//            LinkOption.EMIT_DICTIONARY,
-//            LinkOption.EMIT_GENERATED_CODE,
-//            };
-//
-//        Linker linker = new Linker();
-//        OldAbsoluteModule abs = linker.link("TEST_ASM", bds, 0, options);
-//
-//        assertNotNull(abs);
-//        assertEquals(2, abs._loadableBanks.size());
-//
-//        LoadableBank ibank = abs._loadableBanks.get(04);
-//        assertFalse(ibank._isExtendedMode);
-//        assertEquals(5, ibank._content.getSize());
-//        assertEquals(0_742013_000000L, ibank._content.get(0));
-//        assertEquals(0_742013_000000L, ibank._content.get(1));
-//        assertEquals(0_745660_022001L, ibank._content.get(2));
-//        assertEquals(0_745660_022000L, ibank._content.get(3));
-//        assertEquals(0_777760_000000L, ibank._content.get(4));
-//
-//        LoadableBank dbank = abs._loadableBanks.get(05);
-//        assertFalse(dbank._isExtendedMode);
-//        assertEquals(0, dbank._content.getSize());
-//    }
+    @Test
+    public void test_multipleRelocatablesBasicMode() {
+        //  simple basic mode program
+        String[] source1 = {
+            "          $EXTEND",
+            "          $INFO 10 1",
+            "$(1)      $LIT",
+            "START",
+            "",
+            "          $BASIC",
+            "$(3)",
+            "BMSTART",
+            "          LMJ       X11,SUB1",
+            "          LMJ       X11,SUB2",
+            "          HALT      0"
+        };
+
+        String[] source2 = {
+            "          $BASIC",
+            "",
+            "$(1),SUB1*",
+            "          J         0,X11"
+        };
+
+        String[] source3 = {
+            "          $BASIC",
+            "",
+            "$(1),SUB2*",
+            "          J         0,X11"
+        };
+
+        AssemblerOption[] asmOpts = {
+            AssemblerOption.EMIT_SOURCE,
+            AssemblerOption.EMIT_GENERATED_CODE,
+            AssemblerOption.EMIT_DICTIONARY,
+            AssemblerOption.EMIT_MODULE_SUMMARY
+        };
+
+        Assembler asm1 = new Assembler.Builder().setModuleName("TESTREL1").setSource(source1).setOptions(asmOpts).build();
+        Assembler asm2 = new Assembler.Builder().setModuleName("TESTREL1").setSource(source2).setOptions(asmOpts).build();
+        Assembler asm3 = new Assembler.Builder().setModuleName("TESTREL1").setSource(source3).setOptions(asmOpts).build();
+
+        AssemblerResult asmResult1 = asm1.assemble();
+        AssemblerResult asmResult2 = asm2.assemble();
+        AssemblerResult asmResult3 = asm3.assemble();
+
+        assertFalse(asmResult1._diagnostics.hasError());
+        assertFalse(asmResult2._diagnostics.hasError());
+        assertFalse(asmResult3._diagnostics.hasError());
+
+        RelocatableModule[] relModules = {
+            asmResult1._relocatableModule,
+            asmResult2._relocatableModule,
+            asmResult3._relocatableModule
+        };
+
+        LinkOption[] linkOpts = {
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_DICTIONARY,
+            LinkOption.EMIT_GENERATED_CODE
+        };
+
+        Linker linker = new Linker.Builder().setOptions(linkOpts).setRelocatableModules(relModules).build();
+        LinkResult linkResult = linker.link(LinkType.BINARY);
+
+        assertNotNull(linkResult._loadableBanks);
+        assertEquals(1, linkResult._loadableBanks.length);
+
+        LoadableBank ibank = linkResult._loadableBanks[0];
+        assertEquals(ibank._bankType, BankType.ExtendedMode);
+        assertEquals(5, ibank._content.length);
+    }
 }

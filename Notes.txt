@@ -4,7 +4,6 @@ hwlib:
     Rebuilding all the hwlib unit tests
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
-    Test_Linker: need to fix unit tests
 
 Boot query:
     Can I just do 'UR 0,*EX1,B26' to return from interrupts?
@@ -16,6 +15,7 @@ Boot query:
 See InstructionWord BTHandler interpreting B16..B31
 
 * kasm
+Some problem with unit tests lit1 and lit2 in Test_Assembler
 Code display needs to display generated code according to attached form (if any)
 Code display needs to display $EQU and $EQUF values
 I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?

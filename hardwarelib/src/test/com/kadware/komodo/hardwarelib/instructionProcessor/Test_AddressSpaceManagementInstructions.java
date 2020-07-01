@@ -2956,7 +2956,6 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Processors processors = loadModule(absoluteModule);
 //
 //        startAndWait(_instructionProcessor);
-//        showDebugInfo(processors);//TODO
 //
 //        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
 //        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
