@@ -15,7 +15,6 @@ Boot query:
 See InstructionWord BTHandler interpreting B16..B31
 
 * kasm
-Some problem with unit tests lit1 and lit2 in Test_Assembler
 Code display needs to display generated code according to attached form (if any)
 Code display needs to display $EQU and $EQUF values
 I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?

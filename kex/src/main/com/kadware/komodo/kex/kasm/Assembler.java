@@ -1457,7 +1457,7 @@ public class Assembler {
         } else {
             return _global._generatedPools.generateLiteral(getTopLevelTextLine(),
                                                            locale,
-                                                           _currentGenerationLCIndex,
+                                                           _currentLiteralLCIndex,
                                                            form,
                                                            values,
                                                            this);
