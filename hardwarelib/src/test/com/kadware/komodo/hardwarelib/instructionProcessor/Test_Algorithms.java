@@ -22,6 +22,12 @@ import org.junit.*;
  */
 public class Test_Algorithms extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
     @Test
     public void factorial(
     ) throws BinaryLoadException,
@@ -121,8 +127,6 @@ public class Test_Algorithms extends BaseFunctions {
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
         Assert.assertEquals(3628800, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-
-        clear();
     }
 
     /**
@@ -260,7 +264,5 @@ public class Test_Algorithms extends BaseFunctions {
 
         long[] result = getBankByBaseRegister(3);
         assertArrayEquals(Arrays.copyOf(expected, result.length), result);
-
-        clear();
     }
 }

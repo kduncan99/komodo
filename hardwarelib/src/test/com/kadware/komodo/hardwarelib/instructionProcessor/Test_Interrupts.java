@@ -12,6 +12,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -19,6 +20,12 @@ import static org.junit.Assert.*;
  * Unit tests for InstructionProcessor class
  */
 public class Test_Interrupts extends BaseFunctions {
+
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
 
     @Test
     public void illegalOperation(
@@ -53,8 +60,6 @@ public class Test_Interrupts extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     //  TODO make sure maskable interrupts are prevented by PAIJ
