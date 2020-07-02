@@ -49,14 +49,17 @@ public class InstructionWord extends Word36 {
          * Interprets the given instruction
          */
         public abstract String interpret(
-            final long instruction
+            final long instruction,
+            final int processorPrivilege
         );
     }
 
     /**
      * BT instruction for extended mode has a special syntax...
      *      BT,j a,bd,*x,bs,*d
+     * a is x-register for destination
      * bd is base register for destination, bits 24-28 (MSB bit 0)
+     * x is x-register for source
      * bs is base register for source, bits 20-23
      * d is displacement, bits 29-35
      */
@@ -64,13 +67,14 @@ public class InstructionWord extends Word36 {
 
         @Override
         public String interpret(
-            final long instruction
+            final long instruction,
+            final int processorPrivilege
         ) {
             StringBuilder builder = new StringBuilder();
             builder.append("BT");
 
             int j = (int)getJ(instruction);
-            if ( j != 0 ) {
+            if (j != 0) {
                 builder.append(",");
                 builder.append(J_FIELD_NAMES[j]);
             }
@@ -80,19 +84,24 @@ public class InstructionWord extends Word36 {
                 builder.append(" ");
             }
 
-            //TODO:BUG Fix this:
-            //    When operating at PP < 2, the F0.i is used as an extension to
-            //    F0.bs but not F0.bd.
+            //  Destination x-register and base register
             builder.append(String.format("X%d,", getA(instruction)));
             builder.append(String.format("B%d,", (instruction & 07600) >> 7));
 
+            //  Source register x-increment
             if (getH(instruction) > 0) {
                 builder.append("*");
             }
+            //  Source x-register and base register
+            //  If PP < 2, i-field is used as an extention to bs
             builder.append(String.format("X%d,", getX(instruction)));
-            builder.append(String.format("B%d,", getS4(instruction) & 017));
+            long sourceBaseReg = getS4(instruction) & 017;
+            if ((processorPrivilege < 2) && (getI(instruction) > 0)) {
+                sourceBaseReg |= 020;
+            }
+            builder.append(String.format("B%d,", sourceBaseReg));
 
-            if (getI(instruction) > 0) {
+            if ((processorPrivilege >= 2) && (getI(instruction) > 0)) {
                 builder.append("*");
             }
             builder.append(String.format("0%o", instruction & 0177));
@@ -108,7 +117,8 @@ public class InstructionWord extends Word36 {
 
         @Override
         public String interpret(
-            final long instruction
+            final long instruction,
+            final int processorPrivilege
         ) {
             StringBuilder builder = new StringBuilder();
             builder.append("ER          ");
@@ -143,7 +153,8 @@ public class InstructionWord extends Word36 {
 
         @Override
         public String interpret(
-            final long instruction
+            final long instruction,
+            final int processorPrivilege
         ) {
             long j = getJ(instruction);
             long a = getA(instruction);
@@ -1048,12 +1059,14 @@ public class InstructionWord extends Word36 {
      * Interprets this instruction word into a displayable string
      * @param extendedMode assume extended mode - false implies basic mode
      * @param execModeRegistersFlag true to display exec registers instead of user registers for a and x fields
+     * @param processorPrivilege effective processor privilege 0 to 3
      */
     public String interpret(
         final boolean extendedMode,
-        final boolean execModeRegistersFlag
+        final boolean execModeRegistersFlag,
+        final int processorPrivilege
     ) {
-        return interpret(_value, extendedMode, execModeRegistersFlag);
+        return interpret(_value, extendedMode, execModeRegistersFlag, processorPrivilege);
     }
 
 
@@ -1403,11 +1416,13 @@ public class InstructionWord extends Word36 {
      * @param instruction 36-bit instruction to be interpreted
      * @param extendedMode assume extended mode - false implies basic mode
      * @param execModeRegistersFlag true to display exec registers instead of user registers for a and x fields
+     * @param processorPrivilege current processor privilege
      */
     public static String interpret(
         final long instruction,
         final boolean extendedMode,
-        final boolean execModeRegistersFlag
+        final boolean execModeRegistersFlag,
+        final int processorPrivilege
     ) {
         long f = getF(instruction);
         long j = getJ(instruction);
@@ -1428,7 +1443,7 @@ public class InstructionWord extends Word36 {
 
                     //  If there's a handler, use that.  Othewise, use the normal interpreter
                     if (iInfo._handler != null) {
-                        return iInfo._handler.interpret(instruction);
+                        return iInfo._handler.interpret(instruction, processorPrivilege);
                     } else {
                         boolean jField = !iInfo._jFlag;
                         return interpretNormal( instruction,

@@ -283,7 +283,7 @@ public class Test_InstructionWord {
 
         for (InterpretInfo info : infoArray) {
             assertEquals(info._mnemonic, info._instructionWord.getMnemonic(info._extendedModeFlag));
-            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false));
+            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false, 3));
         }
     }
 
@@ -298,7 +298,7 @@ public class Test_InstructionWord {
 
         for (InterpretInfo info : infoArray) {
             assertEquals(info._mnemonic, info._instructionWord.getMnemonic(info._extendedModeFlag));
-            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false));
+            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false, 3));
         }
     }
 
@@ -315,7 +315,7 @@ public class Test_InstructionWord {
 
         for (InterpretInfo info : infoArray) {
             assertEquals(info._mnemonic, info._instructionWord.getMnemonic(info._extendedModeFlag));
-            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false));
+            assertEquals(info._expectedString, info._instructionWord.interpret(info._extendedModeFlag, false, 3));
         }
     }
 }

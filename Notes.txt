@@ -11,9 +11,6 @@ Boot query:
 
 
 -- TODO BUGS
-* baselib
-See InstructionWord BTHandler interpreting B16..B31
-
 * kasm
 Code display needs to display $EQU and $EQUF values
 I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?

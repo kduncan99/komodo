@@ -8606,10 +8606,12 @@ public class InstructionProcessor extends Processor implements Worker {
         //      * detect and restore instruction mid-point state if it is subsequently called
         //          after returning in mid-point state.
         if (_traceInstructions) {
+            boolean execMode = !getDesignatorRegister().getBasicModeEnabled();
+            boolean execRegs = getDesignatorRegister().getExecRegisterSetSelected();
+            int privilege = getDesignatorRegister().getProcessorPrivilege();
             String msg = String.format("Executing Instruction at %012o --> %s",
                                        getProgramAddressRegister().get(),
-                                       _currentInstruction.interpret(!getDesignatorRegister().getBasicModeEnabled(),
-                                                                     getDesignatorRegister().getExecRegisterSetSelected()));
+                                       _currentInstruction.interpret(execMode, execRegs, privilege));
             _logger.trace(msg);
         }
 
