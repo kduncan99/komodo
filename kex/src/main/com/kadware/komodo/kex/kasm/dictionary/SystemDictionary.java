@@ -106,6 +106,7 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("PF$FJAXHIU", new FormValue(Form.FJAXHIU$Form));
         _initialValues.put("PF$FJAXU", new FormValue(Form.FJAXU$Form));
         _initialValues.put("PF$FJAXHIBD", new FormValue(Form.FJAXHIBD$Form));
+        _initialValues.put("PF$W", new FormValue(Form.W$Form));
     }
 
     /**

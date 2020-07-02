@@ -444,18 +444,13 @@ public class Assembler {
                     try {
                         RelocatableModule.RelocatablePool pool = module.getLocationCounterPool(gw._locationCounterIndex);
                         RelocatableModule.RelocatableWord rw = pool._content[gw._locationCounterOffset];
-                        String gwBase = String.format("  $(%2d) %06o:  %012o",
-                                                      gw._locationCounterIndex,
-                                                      gw._locationCounterOffset,
-                                                      rw.getW());
-                        if (rw._relocatableItems.length == 0) {
-                            _global._outputStream.println(gwBase);
-                        } else {
-                            for (int urx = 0; urx < rw._relocatableItems.length; ++urx) {
-                                RelocatableModule.RelocatableItem ri = rw._relocatableItems[urx];
-                                _global._outputStream.println(gwBase + ri.toString());
-                                gwBase = "                             ";
-                            }
+                        _global._outputStream.println(String.format("  $(%2d) %06o:  %s",
+                                                                    gw._locationCounterIndex,
+                                                                    gw._locationCounterOffset,
+                                                                    rw.toString()));
+                        for (int urx = 0; urx < rw._relocatableItems.length; ++urx) {
+                            RelocatableModule.RelocatableItem ri = rw._relocatableItems[urx];
+                            _global._outputStream.println("                 " + ri.toString());
                         }
                     } catch (ParameterException ex) {
                         //  should never happen
@@ -967,6 +962,7 @@ public class Assembler {
             values[7] = uValue;
         }
 
+        System.out.println("Assembler.processMnemonic form=" + form.toString());//TODO remove
         _global._generatedPools.generate(getTopLevelTextLine(),
                                          operationField._locale,
                                          _currentGenerationLCIndex,

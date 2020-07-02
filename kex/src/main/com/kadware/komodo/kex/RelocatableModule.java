@@ -6,6 +6,7 @@ package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,14 +35,33 @@ public class RelocatableModule {
      */
     public static class RelocatableWord extends Word36 {
 
+        public final Form _form;
         public final RelocatableItem[] _relocatableItems;
 
         public RelocatableWord(
             final Word36 baseValue,
+            final Form form,
             final RelocatableItem[] relocatableItems
         ) {
             super(baseValue);
+            _form = form;
             _relocatableItems = relocatableItems;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            String delimit = "";
+            for (FieldDescriptor fd : _form.getFieldDescriptors()) {
+                long mask = (1L << fd._fieldSize) - 1;
+                int shift = 36 - (fd._startingBit + fd._fieldSize);
+                long partial = (_value >> shift) & mask;
+                int dispWidth = (fd._fieldSize + 2) / 3;
+                String format = String.format("%%s%%0%do", dispWidth);
+                sb.append(String.format(format, delimit, partial));
+                delimit = " ";
+            }
+            return sb.toString();
         }
     }
 
@@ -80,7 +100,7 @@ public class RelocatableModule {
 
         @Override
         public String toString() {
-            return _fieldDescriptor.toString() + (_subtraction ? "-" : "+") + "$(" + _locationCounterIndex + ")";
+            return (_subtraction ? "-" : "+") + _fieldDescriptor.toString() + "$(" + _locationCounterIndex + ")";
         }
     }
 
@@ -102,7 +122,7 @@ public class RelocatableModule {
 
         @Override
         public String toString() {
-            return _fieldDescriptor.toString() + (_subtraction ? "-" : "+") + _undefinedSymbol;
+            return (_subtraction ? "-" : "+") + _fieldDescriptor.toString() + _undefinedSymbol;
         }
     }
 

@@ -152,7 +152,11 @@ public class GeneratedPool {
         }
 
         int lcOffset = _nextOffset++;
-        GeneratedWord gw = new GeneratedWord(textLine, locale, _locationCounterIndex, lcOffset, integrateResult._value);
+        GeneratedWord gw = new GeneratedWord(textLine,
+                                             locale,
+                                             _locationCounterIndex,
+                                             lcOffset,
+                                             (IntegerValue) integrateResult._value.copy(form));
         gw._topLevelTextLine._generatedWords.add(gw);
         _generatedWords.put(lcOffset, gw);
 

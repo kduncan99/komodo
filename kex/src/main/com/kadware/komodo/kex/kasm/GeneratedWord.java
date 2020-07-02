@@ -66,8 +66,8 @@ class GeneratedWord {
             }
         }
 
-        //  TODO should we verify that _value is within 36 bits?
         return new RelocatableModule.RelocatableWord(new Word36(_value._value.get().longValue()),
+                                                     (_value._form == null) ? Form.W$Form : _value._form,
                                                      relItems.toArray(new RelocatableModule.RelocatableItem[0]));
     }
 

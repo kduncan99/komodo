@@ -21,8 +21,8 @@ public class Test_Form {
         AssemblerOption.EMIT_MODULE_SUMMARY,
         AssemblerOption.EMIT_SOURCE,
         AssemblerOption.EMIT_GENERATED_CODE,
-        AssemblerOption.EMIT_DICTIONARY,
-        };
+        AssemblerOption.EMIT_DICTIONARY
+    };
     private static final Set<AssemblerOption> OPTION_SET = new HashSet<>(Arrays.asList(OPTIONS));
 
     @Test
