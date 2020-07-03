@@ -962,7 +962,6 @@ public class Assembler {
             values[7] = uValue;
         }
 
-        System.out.println("Assembler.processMnemonic form=" + form.toString());//TODO remove
         _global._generatedPools.generate(getTopLevelTextLine(),
                                          operationField._locale,
                                          _currentGenerationLCIndex,
@@ -1397,19 +1396,19 @@ public class Assembler {
                 }
             }
 
-            if (!isOptionSet(AssemblerOption.SILENT)) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
-                for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
-                    if (entry.getValue() > 0) {
-                        sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
-                    }
-                }
-                _global._outputStream.println(sb.toString());
-                _global._outputStream.println("Assembly Ends ------------------------------------------");
-            }
-
             result = new AssemblerResult(_global._globalDictionary, _global._diagnostics, _sourceLines);
+        }
+
+        if (!isOptionSet(AssemblerOption.SILENT)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Summary: Lines=%d", _sourceLines.length));
+            for (Map.Entry<Diagnostic.Level, Integer> entry : _global._diagnostics.getCounters().entrySet()) {
+                if (entry.getValue() > 0) {
+                    sb.append(String.format(" %c=%d", Diagnostic.getLevelIndicator(entry.getKey()), entry.getValue()));
+                }
+            }
+            _global._outputStream.println(sb.toString());
+            _global._outputStream.println("Assembly Ends ------------------------------------------");
         }
 
         return result;
