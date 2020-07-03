@@ -30,7 +30,11 @@ public class InitialProgramLoadInterrupt extends MachineInterrupt {
      */
     public InitialProgramLoadInterrupt(
     ) {
-        super(InterruptClass.InitialProgramLoad, ConditionCategory.NonFault, Synchrony.None, Deferrability.None, InterruptPoint.MidExecution);
+        super(InterruptClass.InitialProgramLoad,
+              ConditionCategory.NonFault,
+              Synchrony.None,
+              Deferrability.None,
+              InterruptPoint.MidExecution);
     }
 
 
