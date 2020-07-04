@@ -16,6 +16,7 @@ import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -24,45 +25,52 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_SystemControlInstructions extends BaseFunctions {
 
-//    private String[] compose(
-//        String[][] sourceSet
-//    ) {
-//        List<String> list = new LinkedList<>();
-//        for (String[] source : sourceSet) {
-//            list.addAll(Arrays.asList(source));
-//        }
-//
-//        return list.toArray(new String[0]);
-//    }
-//
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//    //  SYSC general stuff
-//    //  ----------------------------------------------------------------------------------------------------------------------------
-//
-//    private static final String[] definitions = {
-//        "SYSC$CREATE  $EQU 020",
-//        "SYSC$DELETE  $EQU 021",
-//        "SYSC$RESIZE  $EQU 022",
-//        "",
-//        "SYSC$CNSTAT  $EQU 030",
-//        "SYSC$CNREAD  $EQU 031",
-//        "SYSC$CNRDREP $EQU 032",
-//        "SYSC$CNPOLL  $EQU 033",
-//        "SYSC$CNRESET $EQU 034",
-//        "",
-//        "SYSC$OK      $EQU 0    . Request successful",
-//        "SYSC$BADUPI  $EQU 01   . Given UPI is not a main storage processor",
-//        "SYSC$BADSEG  $EQU 02   . Given segment index is unknown to the given MSP",
-//        "SYSC$INVADDR $EQU 03   . Given address is invalid or does not exist",
-//        "SYSC$INVSIZE $EQU 04   . Requested size is out of range or invalid",
-//        "SYSC$NACCESS $EQU 05   . Access denied",
-//        "",
-//        "SYSC$FORM    $FORM 6,6,6,18",
-//        "",
-//        "DEFAULT$MSP  $EQU 01",
-//        "",
-//    };
-//
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    private String[] compose(
+        String[][] sourceSet
+    ) {
+        List<String> list = new LinkedList<>();
+        for (String[] source : sourceSet) {
+            list.addAll(Arrays.asList(source));
+        }
+
+        return list.toArray(new String[0]);
+    }
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  SYSC general stuff
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    private static final String[] definitions = {
+        "SYSC$CREATE  $EQU 020",
+        "SYSC$DELETE  $EQU 021",
+        "SYSC$RESIZE  $EQU 022",
+        "",
+        "SYSC$CNSTAT  $EQU 030",
+        "SYSC$CNREAD  $EQU 031",
+        "SYSC$CNRDREP $EQU 032",
+        "SYSC$CNPOLL  $EQU 033",
+        "SYSC$CNRESET $EQU 034",
+        "",
+        "SYSC$OK      $EQU 0    . Request successful",
+        "SYSC$BADUPI  $EQU 01   . Given UPI is not a main storage processor",
+        "SYSC$BADSEG  $EQU 02   . Given segment index is unknown to the given MSP",
+        "SYSC$INVADDR $EQU 03   . Given address is invalid or does not exist",
+        "SYSC$INVSIZE $EQU 04   . Requested size is out of range or invalid",
+        "SYSC$NACCESS $EQU 05   . Access denied",
+        "",
+        "SYSC$FORM    $FORM 6,6,6,18",
+        "",
+        "DEFAULT$MSP  $EQU 01",
+        "",
+    };
+
+    //TODO
 //    @Test
 //    public void sysc_badSubfunction(
 //    ) throws MachineInterrupt,
@@ -117,6 +125,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //    //      U+1,W:      Newly-assigned segment index if status is zero
 //    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
 //
+    //TODO
 //    @Test
 //    public void sysc_create_good(
 //    ) throws MachineInterrupt,
@@ -172,6 +181,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        assertEquals(32768, slice._length);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_create_badUPI(
 //    ) throws MachineInterrupt,
@@ -220,6 +230,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_create_badSize(
 //    ) throws MachineInterrupt,
@@ -274,6 +285,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //    //      U+0,S3:     UPI of target MSP
 //    //      U+1,W:      Segment index of block to be released
 //
+    //TODO
 //    @Test (expected = AddressingExceptionInterrupt.class)
 //    public void sysc_delete_good(
 //    ) throws MachineInterrupt,
@@ -341,6 +353,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        processors._mainStorageProcessor.getStorage(segment);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_delete_badUPI(
 //    ) throws MachineInterrupt,
@@ -408,6 +421,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        processors._mainStorageProcessor.getStorage(segment);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_delete_badSegment(
 //    ) throws MachineInterrupt,
@@ -484,6 +498,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //    //      U+1,W:      Segment index of block to be resized
 //    //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
 //
+    //TODO
 //    @Test
 //    public void sysc_resize_good(
 //    ) throws MachineInterrupt,
@@ -553,6 +568,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        assertEquals(65536, slice._length);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_resize_badUPI(
 //    ) throws MachineInterrupt,
@@ -622,6 +638,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        assertEquals(32768, slice._length);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_resize_badSegment(
 //    ) throws MachineInterrupt,
@@ -692,6 +709,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 //        assertEquals(32768, slice._length);
 //    }
 //
+    //TODO
 //    @Test
 //    public void sysc_resize_badSize(
 //    ) throws MachineInterrupt,

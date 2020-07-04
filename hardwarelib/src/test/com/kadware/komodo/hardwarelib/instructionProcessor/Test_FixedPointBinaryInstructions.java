@@ -21,6 +21,13 @@ import static org.junit.Assert.*;
  */
 public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void addAccumulator(
 //    ) throws MachineInterrupt,
@@ -57,6 +64,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addAccumulator_posZeros(
 //    ) throws MachineInterrupt,
@@ -93,6 +101,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addAccumulator_negZeros(
 //    ) throws MachineInterrupt,
@@ -130,6 +139,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeAccumulator(
 //    ) throws MachineInterrupt,
@@ -167,6 +177,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addMagnitudeAccumulator_positive(
 //    ) throws MachineInterrupt,
@@ -204,6 +215,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addMagnitudeAccumulator_negative(
 //    ) throws MachineInterrupt,
@@ -241,6 +253,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeMagnitudeAccumulator(
 //    ) throws MachineInterrupt,
@@ -278,6 +291,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addAccumulatorUpper(
 //    ) throws MachineInterrupt,
@@ -312,6 +326,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeAccumulatorUpper(
 //    ) throws MachineInterrupt,
@@ -346,6 +361,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addIndexRegister(
 //    ) throws MachineInterrupt,
@@ -379,6 +395,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeIndexRegister(
 //    ) throws MachineInterrupt,
@@ -412,6 +429,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addAccumulator_Overflow(
 //    ) throws MachineInterrupt,
@@ -446,6 +464,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01022, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addHalves(
 //    ) throws MachineInterrupt,
@@ -481,6 +500,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeHalves(
 //    ) throws MachineInterrupt,
@@ -518,6 +538,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addThirds(
 //    ) throws MachineInterrupt,
@@ -556,6 +577,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void addNegativeThirds(
 //    ) throws MachineInterrupt,
@@ -594,6 +616,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideInteger(
 //    ) throws MachineInterrupt,
@@ -633,6 +656,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_000000_244613L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideInteger_byZero(
 //    ) throws MachineInterrupt,
@@ -668,6 +692,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideInteger_byZero_noInterrupt(
 //    ) throws MachineInterrupt,
@@ -708,6 +733,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertTrue(processors._instructionProcessor.getDesignatorRegister().getDivideCheck());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideInteger_byNegativeZero(
 //    ) throws MachineInterrupt,
@@ -744,6 +770,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideSingleFractional(
 //    ) throws MachineInterrupt,
@@ -781,6 +808,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_001733_765274L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideSingleFractional_byZero(
 //    ) throws MachineInterrupt,
@@ -816,6 +844,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideSingleFractional_byZero_noInterrupt(
 //    ) throws MachineInterrupt,
@@ -855,6 +884,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertTrue(processors._instructionProcessor.getDesignatorRegister().getDivideCheck());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideSingleFractional_byNegativeZero(
 //    ) throws MachineInterrupt,
@@ -890,6 +920,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideFractional(
 //    ) throws MachineInterrupt,
@@ -929,6 +960,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_000000_000056L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideFractional_byZero(
 //    ) throws MachineInterrupt,
@@ -966,6 +998,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideFractional_byZero_noInterrupt(
 //    ) throws MachineInterrupt,
@@ -1006,6 +1039,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertTrue(processors._instructionProcessor.getDesignatorRegister().getDivideCheck());
 //    }
 //
+    //TODO
 //    @Test
 //    public void divideFractional_byNegativeZero(
 //    ) throws MachineInterrupt,
@@ -1041,6 +1075,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01020, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void doubleAdd(
 //    ) throws MachineInterrupt,
@@ -1082,6 +1117,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void doubleAddNegative(
 //    ) throws MachineInterrupt,
@@ -1123,6 +1159,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void multiplyInteger(
 //    ) throws MachineInterrupt,
@@ -1164,6 +1201,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_775533_664422L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void multiplySingleInteger(
 //    ) throws MachineInterrupt,
@@ -1199,6 +1237,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(200 * 520L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void multiplySingleInteger_overflow(
 //    ) throws MachineInterrupt,
@@ -1233,6 +1272,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01022, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void multiplyFractional(
 //    ) throws MachineInterrupt,
@@ -1274,6 +1314,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_044444_444444L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void add1(
 //    ) throws MachineInterrupt,
@@ -1319,6 +1360,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void add1_badPrivilege(
 //    ) throws MachineInterrupt,
@@ -1354,6 +1396,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void sub1(
 //    ) throws MachineInterrupt,
@@ -1400,6 +1443,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getOverflow());
 //    }
 //
+    //TODO
 //    @Test
 //    public void sub1_badPrivilege(
 //    ) throws MachineInterrupt,
@@ -1435,6 +1479,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void inc(
 //    ) throws MachineInterrupt,
@@ -1486,6 +1531,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_1L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void dec(
 //    ) throws MachineInterrupt,
@@ -1537,6 +1583,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_1L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void inc2(
 //    ) throws MachineInterrupt,
@@ -1587,6 +1634,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_1L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void dec2(
 //    ) throws MachineInterrupt,
@@ -1637,8 +1685,9 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_1L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
 //    }
 //
+    //TODO
 //    @Test
-//    public void ienz(
+//    public void enz(
 //    ) throws MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,

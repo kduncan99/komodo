@@ -13,6 +13,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import org.junit.After;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -21,6 +22,12 @@ import org.junit.Test;
  * Unit tests for InstructionProcessor class
  */
 public class Test_ExtendedModeAddressing extends BaseFunctions {
+
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Tests for addressing modes
@@ -55,8 +62,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -88,8 +93,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -122,8 +125,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -156,8 +157,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(0_777777_777776L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -190,8 +189,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -228,8 +225,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(0_112233_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-
-        clear();
     }
 
     @Test
@@ -265,8 +260,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(0, _instructionProcessor.getLatestStopDetail());
         assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
         assertEquals(0_000002_000006L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-
-        clear();
     }
 
     @Test
@@ -389,8 +382,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(010, bank5Data[1]);
         assertEquals(0, bank5Data[2]);
         assertEquals(0, bank5Data[3]);
-
-        clear();
     }
 
     @Test
@@ -468,8 +459,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         assertEquals(03, bankData[2]);
         assertEquals(05, bankData[3]);
         assertEquals(010, bankData[4]);
-
-        clear();
     }
 
     @Test
@@ -508,8 +497,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EA5).getW());
         Assert.assertEquals(05, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX5).getW());
         Assert.assertEquals(077, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.ER5).getW());
-
-        clear();
     }
 
     @Test
@@ -568,8 +555,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -622,8 +607,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -677,8 +660,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -730,8 +711,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -798,8 +777,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -869,8 +846,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -924,8 +899,6 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 
     @Test
@@ -979,7 +952,5 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         assertEquals(01010, _instructionProcessor.getLatestStopDetail());
-
-        clear();
     }
 }

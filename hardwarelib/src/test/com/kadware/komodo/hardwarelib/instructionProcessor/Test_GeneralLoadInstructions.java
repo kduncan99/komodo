@@ -23,6 +23,13 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     //  Testing Load Instructions
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void generalLoadImmediate_Extended(
 //    ) throws MachineInterrupt,
@@ -83,6 +90,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_003300_444444L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X7).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void X_A_RegisterOverlap(
 //    ) throws MachineInterrupt,
@@ -123,6 +131,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(04000L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X15).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void partialWordLoad_ThirdWordMode(
 //    ) throws MachineInterrupt,
@@ -195,6 +204,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(0_777777_774444L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void partialWordLoad_QuarterWordMode(
 //    ) throws MachineInterrupt,
@@ -248,11 +258,12 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(022, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R8).getW());
 //        Assert.assertEquals(011, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.R9).getW());
 //    }
-//
-//    //TODO need some various register-to-register loads
-//
-//    //TODO need to minalib partial word x-fers (that they transfer the full word)
-//
+
+    //TODO need some various register-to-register loads
+
+    //TODO need to minalib partial word x-fers (that they transfer the full word)
+
+    //TODO
 //    @Test
 //    public void loadRegisterSet_normal(
 //    ) throws MachineInterrupt,
@@ -309,6 +320,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(012, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadRegisterSet_count1Empty(
 //    ) throws MachineInterrupt,
@@ -363,6 +375,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(06, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadRegisterSet_nop(
 //    ) throws MachineInterrupt,
@@ -420,6 +433,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void generalLoadFromStorage_Extended(
 //    ) throws MachineInterrupt,
@@ -513,8 +527,8 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 //        Assert.assertEquals(0555, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A14).getW());
 //        Assert.assertEquals(0777, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A15).getW());
 //    }
-//
-//    //TODO minalib generating various interrupts
-//
-//    //TODO storage limits testing for load operand, store value, double load operand, LRS
+
+    //TODO minalib generating various interrupts
+
+    //TODO storage limits testing for load operand, store value, double load operand, LRS
 }

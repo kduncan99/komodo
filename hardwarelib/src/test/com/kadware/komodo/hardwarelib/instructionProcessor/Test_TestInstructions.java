@@ -19,6 +19,13 @@ import org.junit.*;
  */
 public class Test_TestInstructions extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void testEvenParityBasic(
 //    ) throws MachineInterrupt,
@@ -60,6 +67,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testEvenParityExtended(
 //    ) throws MachineInterrupt,
@@ -102,6 +110,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testOddParityBasic(
 //    ) throws MachineInterrupt,
@@ -139,6 +148,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testOddParityExtended(
 //    ) throws MachineInterrupt,
@@ -177,6 +187,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testZeroBasic(
 //    ) throws MachineInterrupt,
@@ -220,6 +231,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testZeroExtended(
 //    ) throws MachineInterrupt,
@@ -264,6 +276,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNonZeroBasic(
 //    ) throws MachineInterrupt,
@@ -309,6 +322,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNonZeroExtended(
 //    ) throws MachineInterrupt,
@@ -355,6 +369,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testPosZeroExtended(
 //    ) throws MachineInterrupt,
@@ -403,6 +418,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  There is no TMZ for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMinusZeroExtended(
 //    ) throws MachineInterrupt,
@@ -449,6 +465,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testPosBasic(
 //    ) throws MachineInterrupt,
@@ -488,6 +505,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testPosExtended(
 //    ) throws MachineInterrupt,
@@ -528,6 +546,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNegBasic(
 //    ) throws MachineInterrupt,
@@ -566,6 +585,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNegExtended(
 //    ) throws MachineInterrupt,
@@ -607,6 +627,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No basic mode version of TNOP
 //
+    //TODO
 //    @Test
 //    public void testNOPExtended(
 //    ) throws MachineInterrupt,
@@ -647,6 +668,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No basic mode version of TSKP
 //
+    //TODO
 //    @Test
 //    public void testSkipExtended(
 //    ) throws MachineInterrupt,
@@ -682,6 +704,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testEqualBasic(
 //    ) throws MachineInterrupt,
@@ -718,6 +741,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testEqualExtended(
 //    ) throws MachineInterrupt,
@@ -755,6 +779,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNotEqualBasic(
 //    ) throws MachineInterrupt,
@@ -791,6 +816,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNotEqualExtended(
 //    ) throws MachineInterrupt,
@@ -828,6 +854,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testLessOrEqualToModifierBasic(
 //    ) throws MachineInterrupt,
@@ -865,6 +892,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(061240, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testLessOrEqualToModifierExtended(
 //    ) throws MachineInterrupt,
@@ -905,6 +933,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TGZ
 //
+    //TODO
 //    @Test
 //    public void testGreaterThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -941,6 +970,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TMZG
 //
+    //TODO
 //    @Test
 //    public void testMinusZeroOrGreaterThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -977,6 +1007,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TNLZ
 //
+    //TODO
 //    @Test
 //    public void testNotLessThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1013,6 +1044,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TLZ
 //
+    //TODO
 //    @Test
 //    public void testLessThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1049,6 +1081,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TPZL
 //
+    //TODO
 //    @Test
 //    public void testPositiveZeroOrLessThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1084,6 +1117,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TNMZ
 //
+    //TODO
 //    @Test
 //    public void testNotMinusZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1120,6 +1154,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TNPZ
 //
+    //TODO
 //    @Test
 //    public void testNotPositiveZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1156,6 +1191,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  no basic mode version of TNGZ
 //
+    //TODO
 //    @Test
 //    public void testNotGreaterThanZeroExtended(
 //    ) throws MachineInterrupt,
@@ -1190,6 +1226,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testLessThanOrEqualBasic(
 //    ) throws MachineInterrupt,
@@ -1224,6 +1261,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testLessThanOrEqualExtended(
 //    ) throws MachineInterrupt,
@@ -1259,6 +1297,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testGreaterBasic(
 //    ) throws MachineInterrupt,
@@ -1297,6 +1336,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testGreaterExtended(
 //    ) throws MachineInterrupt,
@@ -1338,6 +1378,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No TGM for basic mode
 //
+    //TODO
 //    @Test
 //    public void testGreaterMagnitudeExtended(
 //    ) throws MachineInterrupt,
@@ -1372,6 +1413,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testWithinRangeBasic(
 //    ) throws MachineInterrupt,
@@ -1423,6 +1465,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testWithinRangeExtended(
 //    ) throws MachineInterrupt,
@@ -1475,6 +1518,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNotWithinRangeBasic(
 //    ) throws MachineInterrupt,
@@ -1526,6 +1570,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testNotWithinRangeExtended(
 //    ) throws MachineInterrupt,
@@ -1579,6 +1624,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No DTGM for basic mode
 //
+    //TODO
 //    @Test
 //    public void testDoubleTestGreaterMagnitudeExtended(
 //    ) throws MachineInterrupt,
@@ -1621,6 +1667,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MTE for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestEqualExtended(
 //    ) throws MachineInterrupt,
@@ -1658,6 +1705,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MTNE for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestNotEqualExtended(
 //    ) throws MachineInterrupt,
@@ -1696,6 +1744,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //    //  No MTLE for basic mode
 //    //  MTNG is an alias for MTLE
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestLessThanOrEqualExtended(
 //    ) throws MachineInterrupt,
@@ -1735,6 +1784,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MTG for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestGreaterExtended(
 //    ) throws MachineInterrupt,
@@ -1772,6 +1822,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MTW for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestWithinRangeExtended(
 //    ) throws MachineInterrupt,
@@ -1810,6 +1861,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MTNW for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedTestNotWithinRangeExtended(
 //    ) throws MachineInterrupt,
@@ -1848,6 +1900,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MATL for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedAlphaTestLessThanOrEqualExtended(
 //    ) throws MachineInterrupt,
@@ -1885,6 +1938,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //
 //    //  No MATG for basic mode
 //
+    //TODO
 //    @Test
 //    public void testMaskedAlphaTestGreaterExtended(
 //    ) throws MachineInterrupt,
@@ -1920,6 +1974,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndSetBasic(
 //    ) throws MachineInterrupt,
@@ -1956,6 +2011,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndSetExtended(
 //    ) throws MachineInterrupt,
@@ -1993,6 +2049,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndSetAndSkipBasic(
 //    ) throws MachineInterrupt,
@@ -2031,6 +2088,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndSetAndSkipExtended(
 //    ) throws MachineInterrupt,
@@ -2070,6 +2128,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndClearAndSkipBasic(
 //    ) throws MachineInterrupt,
@@ -2108,6 +2167,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_007777_777777L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testAndClearAndSkipExtended(
 //    ) throws MachineInterrupt,
@@ -2147,6 +2207,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(0_007777_777777L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testConditionalReplaceBasic(
 //    ) throws MachineInterrupt,
@@ -2190,6 +2251,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(014L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testConditionalReplaceBasicBadPP(
 //    ) throws MachineInterrupt,
@@ -2229,6 +2291,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testConditionalReplaceExtended(
 //    ) throws MachineInterrupt,
@@ -2273,6 +2336,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        assertEquals(014L, bank[1]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void testReferenceViolationBasic1(
 //    ) throws MachineInterrupt,
@@ -2307,6 +2371,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testReferenceViolationBasic2(
 //    ) throws MachineInterrupt,
@@ -2339,6 +2404,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testReferenceViolationExtended1(
 //    ) throws MachineInterrupt,
@@ -2374,6 +2440,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testReferenceViolationExtended2(
 //    ) throws MachineInterrupt,
@@ -2408,6 +2475,7 @@ public class Test_TestInstructions extends BaseFunctions {
 //        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void testReferenceViolationExtended3(
 //    ) throws MachineInterrupt,

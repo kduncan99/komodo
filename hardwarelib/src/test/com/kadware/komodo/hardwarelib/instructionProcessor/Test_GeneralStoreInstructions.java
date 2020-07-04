@@ -23,6 +23,13 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     //  Testing Instructions which store data
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void generalStore_PartialWords_QuarterWordMode(
 //    ) throws MachineInterrupt,
@@ -88,6 +95,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 //        assertEquals(0_440000_000000L, bankData[13]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void generalStore_PartialWords_ThirdWordMode(
 //    ) throws MachineInterrupt,
@@ -135,6 +143,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 //        assertEquals(0_000000_000000L, bankData[5]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void generalStore(
 //    ) throws MachineInterrupt,
@@ -204,6 +213,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 //        assertEquals(0_000000_000444L, bankData[19]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void generalStore_FixedValues(
 //    ) throws MachineInterrupt,
@@ -261,6 +271,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 //        assertEquals(0_060060_060060L, bankData[7]);
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeRegisterSet(
 //    ) throws MachineInterrupt,

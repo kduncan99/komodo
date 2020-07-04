@@ -13,6 +13,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.RCSGenericStackUnderflowOverflowInterrupt;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,8 +24,16 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_ProcedureControlInstructions extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
     //TODO need unit tests for LBJ, LDJ, LIJ
     //TODO need unit tests for indirect banks, gate banks, etc
+
+    //TODO
 //    @Test
 //    public void callNormal(
 //    ) throws MachineInterrupt,
@@ -71,6 +80,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 //        Assert.assertEquals(256 - 4, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void gotoNormal(
 //    ) throws MachineInterrupt,
@@ -114,6 +124,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loclNormal(
 //    ) throws MachineInterrupt,
@@ -155,6 +166,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 //        Assert.assertEquals(256 - 4, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void rtnToCall(
 //    ) throws MachineInterrupt,
@@ -198,6 +210,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 //        Assert.assertEquals(7, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void rtnToLocl(
 //    ) throws MachineInterrupt,
@@ -241,6 +254,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 //        Assert.assertEquals(7, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void rtnNoFrame(
 //    ) throws MachineInterrupt,

@@ -9,6 +9,7 @@ import com.kadware.komodo.hardwarelib.*;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
 import com.kadware.komodo.kex.kasm.*;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,6 +19,13 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void jump_basic(
 //    ) throws MachineInterrupt,
@@ -53,6 +61,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_bankSelection(
 //    ) throws MachineInterrupt,
@@ -173,6 +182,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(2, processors._instructionProcessor.getExecOrUserARegister(2).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_indexed_basic(
 //    ) throws MachineInterrupt,
@@ -212,6 +222,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(01_000006L, processors._instructionProcessor.getGeneralRegister(3).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_indirect_basic(
 //    ) throws MachineInterrupt,
@@ -250,6 +261,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_indexed_indirect_basic(
 //    ) throws MachineInterrupt,
@@ -297,6 +309,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(01_000002, processors._instructionProcessor.getGeneralRegister(3).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_extended(
 //    ) throws MachineInterrupt,
@@ -334,6 +347,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_indexed_extended(
 //    ) throws MachineInterrupt,
@@ -373,6 +387,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(02_000005, processors._instructionProcessor.getGeneralRegister(5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_key_basic(
 //    ) throws MachineInterrupt,
@@ -411,6 +426,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(01_000004L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void haltJump_74_05_normal_basic(
 //    ) throws MachineInterrupt,
@@ -446,6 +462,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void haltJump_74_15_05_normal_basic(
 //    ) throws MachineInterrupt,
@@ -479,6 +496,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
 //    }
 //
+    //TODO
 //    @Test
 //    public void haltJump_74_15_05_normal_extended(
 //    ) throws MachineInterrupt,
@@ -513,6 +531,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
 //    }
 //
+    //TODO
 //    @Test
 //    public void haltJump_74_15_05_pp1_basic(
 //    ) throws MachineInterrupt,
@@ -541,6 +560,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
 //    }
 //
+    //TODO
 //    @Test
 //    public void haltJump_74_15_05_pp1_extended(
 //    ) throws MachineInterrupt,
@@ -576,6 +596,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //
 //    //  no extended mode version of SLJ
 //
+    //TODO
 //    @Test
 //    public void storeLocationAndJump(
 //    ) throws MachineInterrupt,
@@ -614,6 +635,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void storeLocationAndJump_indirect(
 //    ) throws MachineInterrupt,
@@ -654,6 +676,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadModifierAndJump_basic(
 //    ) throws MachineInterrupt,
@@ -690,6 +713,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadModifierAndJump_indirect_basic(
 //    ) throws MachineInterrupt,
@@ -728,6 +752,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void loadModifierAndJump_extended(
 //    ) throws MachineInterrupt,
@@ -766,6 +791,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_basic_referenceViolation1(
 //    ) throws MachineInterrupt,
@@ -797,6 +823,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_basic_referenceViolation2(
 //    ) throws MachineInterrupt,
@@ -830,6 +857,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 //        assertEquals(010_000110L, processors._instructionProcessor.getGeneralRegister(3).getW());
 //    }
 //
+    //TODO
 //    @Test
 //    public void jump_extended_referenceViolation1(
 //    ) throws MachineInterrupt,

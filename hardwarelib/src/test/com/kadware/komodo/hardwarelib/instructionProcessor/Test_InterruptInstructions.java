@@ -11,6 +11,7 @@ import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -22,6 +23,13 @@ import static org.junit.Assert.assertTrue;
  */
 public class Test_InterruptInstructions extends BaseFunctions {
 
+    @After
+    public void after(
+    ) throws UPINotAssignedException {
+        clear();
+    }
+
+    //TODO
 //    @Test
 //    public void erBasic(
 //    ) throws MachineInterrupt,
@@ -52,6 +60,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertEquals(0L, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void signalBasic(
 //    ) throws MachineInterrupt,
@@ -81,6 +90,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertEquals(01L, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void signalExtended(
 //    ) throws MachineInterrupt,
@@ -111,6 +121,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertEquals(01L, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void allowInterruptsAndJumpBasic(
 //    ) throws MachineInterrupt,
@@ -145,6 +156,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertTrue(processors._instructionProcessor.getDesignatorRegister().getDeferrableInterruptEnabled());
 //    }
 //
+    //TODO
 //    @Test
 //    public void allowInterruptsAndJumpExtended(
 //    ) throws MachineInterrupt,
@@ -181,6 +193,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertTrue(processors._instructionProcessor.getDesignatorRegister().getDeferrableInterruptEnabled());
 //    }
 //
+    //TODO
 //    @Test
 //    public void allowInterruptsAndJumpExtendedBadPP(
 //    ) throws MachineInterrupt,
@@ -216,6 +229,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertEquals(1, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void preventInterruptsAndJumpBasic(
 //    ) throws MachineInterrupt,
@@ -251,6 +265,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getDeferrableInterruptEnabled());
 //    }
 //
+    //TODO
 //    @Test
 //    public void preventInterruptsAndJumpBasicBadPP(
 //    ) throws MachineInterrupt,
@@ -285,6 +300,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertEquals(1, processors._instructionProcessor.getLastInterrupt().getShortStatusField());
 //    }
 //
+    //TODO
 //    @Test
 //    public void preventInterruptsAndJumpExtended(
 //    ) throws MachineInterrupt,
@@ -321,6 +337,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
 //        assertFalse(processors._instructionProcessor.getDesignatorRegister().getDeferrableInterruptEnabled());
 //    }
 //
+    //TODO
 //    @Test
 //    public void preventInterruptsAndJumpExtendedBadPP(
 //    ) throws MachineInterrupt,
