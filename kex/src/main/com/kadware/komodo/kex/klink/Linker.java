@@ -1072,7 +1072,10 @@ public class Linker {
             RelocatableModule.RelocatableItemSymbol usri = (RelocatableModule.RelocatableItemSymbol) ri;
             SymbolEntry se = _symbolTable.get(usri._undefinedSymbol);
             if (se == null) {
-                raise("Undefined symbol for BDIREF$ in module " + lcpSpecification._module.getModuleName());
+                raise("Undefined symbol '"
+                      + usri._undefinedSymbol
+                      + "' for (L)BDIREF$ in module "
+                      + lcpSpecification._module.getModuleName());
                 return 0;
             }
 
