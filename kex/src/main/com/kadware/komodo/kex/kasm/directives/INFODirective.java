@@ -156,8 +156,8 @@ public class INFODirective extends Directive {
             }
 
             if (_operandField._subfields.size() > 1) {
-                assembler.appendDiagnostic(new ErrorDiagnostic(_operandField._subfields.get(1)._locale,
-                                                                "Extraneous subfields ignored"));
+                assembler.appendDiagnostic(new WarningDiagnostic(_operandField._subfields.get(1)._locale,
+                                                                 "Extraneous subfields ignored"));
             }
         }
     }

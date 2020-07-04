@@ -8,7 +8,7 @@ import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.LabelFieldComponents;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.TextLine;
-import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.WarningDiagnostic;
 
 @SuppressWarnings("Duplicates")
 public class LITDirective extends Directive {
@@ -21,7 +21,7 @@ public class LITDirective extends Directive {
     ) {
         if (labelFieldComponents._label != null) {
             Locale loc = new Locale(textLine._lineSpecifier, 1);
-            assembler.appendDiagnostic(new ErrorDiagnostic(loc, "Label ignored for $LIT directive"));
+            assembler.appendDiagnostic(new WarningDiagnostic(loc, "Label ignored for $LIT directive"));
         }
 
         if (extractFields(assembler, textLine, false, 2)) {

@@ -12,6 +12,7 @@ import com.kadware.komodo.kex.kasm.TextSubfield;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.RelocationDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;
+import com.kadware.komodo.kex.kasm.diagnostics.WarningDiagnostic;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import com.kadware.komodo.kex.kasm.dictionary.Value;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;
@@ -72,7 +73,7 @@ public class RESDirective extends Directive {
 
             if (_operandField._subfields.size() > 1) {
                 Locale loc = _operandField._subfields.get(1)._locale;
-                assembler.appendDiagnostic(new ErrorDiagnostic(loc, "Extraneous subfields ignored"));
+                assembler.appendDiagnostic(new WarningDiagnostic(loc, "Extraneous subfields ignored"));
             }
         }
     }

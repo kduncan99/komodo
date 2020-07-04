@@ -262,8 +262,8 @@ public class Assembler {
         //  Does this line of code represent an instruction mnemonic?  (or a label on an otherwise empty line)...
         if (processMnemonic(lfc, operationField, operandField)) {
             if (textLine._fields.size() > 3) {
-                appendDiagnostic(new ErrorDiagnostic(textLine.getField(3)._locale,
-                                                     "Extraneous fields ignored"));
+                appendDiagnostic(new WarningDiagnostic(textLine.getField(3)._locale,
+                                                       "Extraneous fields ignored"));
             }
             return;
         }
@@ -272,8 +272,8 @@ public class Assembler {
         //  In this case, the operation field actually contains the operand, while the operand field should be empty.
         if (processDataGeneration(lfc, operationField)) {
             if (textLine._fields.size() > 2) {
-                appendDiagnostic(new ErrorDiagnostic(textLine.getField(2)._locale,
-                                                     "Extraneous fields ignored"));
+                appendDiagnostic(new WarningDiagnostic(textLine.getField(2)._locale,
+                                                       "Extraneous fields ignored"));
             }
             return;
         }
@@ -694,7 +694,7 @@ public class Assembler {
             if (sfx < labelField._subfields.size()) {
                 TextSubfield lcSubField = labelField._subfields.get(sfx);
                 Locale sfLocale = lcSubField._locale;
-                appendDiagnostic(new ErrorDiagnostic(sfLocale, "Extraneous label subfields ignored"));
+                appendDiagnostic(new WarningDiagnostic(sfLocale, "Extraneous label subfields ignored"));
             }
         }
 
@@ -1158,8 +1158,8 @@ public class Assembler {
         }
 
         if (sfc > sfx) {
-            appendDiagnostic(new ErrorDiagnostic( operandField.getSubfield( sfx )._locale,
-                                                  "Extraneous subfields in operand field ignored"));
+            appendDiagnostic(new WarningDiagnostic( operandField.getSubfield( sfx )._locale,
+                                                    "Extraneous subfields in operand field ignored"));
         }
 
         return new TextSubfield[]{sfRegister, sfValue, sfIndex, sfBase };
