@@ -95,7 +95,6 @@ IP: unit tests
   LIJ, LBJ, LDJ
   LD, SD, LPD, SPD, LUD, SUD, LAE, UR, ACEL, DCEL, SKQT, KCHG
   LRD, SMD, RMD, LMC, SDMN, SDMS, SDMF, RDC
-Change unit test extended mode dbanks to start at lower-limit 0 - this *should* work...
 For basic mode, no need really to test the bank limits on every fetch - set it once, then save it and use it...
   what to do when we run off the end of the bank?
 need some conditional jump tests which would incur reference violation if they jumped
