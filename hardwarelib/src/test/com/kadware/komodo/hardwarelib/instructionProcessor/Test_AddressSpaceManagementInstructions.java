@@ -2639,7 +2639,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
     //TODO
 //    @Test
-//    public void storeBaseRegisterUser_basic_errorPP(
+//    public void storeBaseRegisterUser_basic_badPP(
 //    ) throws MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
@@ -2917,7 +2917,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //
     //TODO
 //    @Test
-//    public void storeBaseRegisterUserDirect_BadPP_extended(
+//    public void storeBaseRegisterUserDirect_extended_badPP(
 //    ) throws MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
