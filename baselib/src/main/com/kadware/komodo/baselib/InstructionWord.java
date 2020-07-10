@@ -776,9 +776,9 @@ public class InstructionWord extends Word36 {
         new InstructionInfo(Mode.EXTENDED, 072, 010, 000, true,  false, false, false, ASemantics.A,     "BDE",   false),
 
         //  second one is for the assembler
-        new InstructionInfo(Mode.BASIC,    072, 011, 000, true,  false, false, false, ASemantics.NONE,  "ER",    false, new ERHandler()),
         new InstructionInfo(Mode.BASIC,    072, 011, 000, true,  true,  false, false, ASemantics.NONE,  "ER",    false, new ERHandler()),
-
+        new InstructionInfo(Mode.BASIC,    072, 011, 000, true,  false, false, false, ASemantics.NONE,  "ER",    false, new ERHandler()),
+//        new InstructionInfo(Mode.EITHER,   073, 015, 017, true,  true,  false, false, ASemantics.NONE,  "SGNL",  false),//TODO remove
         new InstructionInfo(Mode.EXTENDED, 072, 011, 000, true,  false, false, false, ASemantics.A,     "DEB",   false),
         new InstructionInfo(Mode.EITHER,   072, 012, 000, true,  false, true,  false, ASemantics.X,     "BN",    false),
         new InstructionInfo(Mode.EXTENDED, 072, 013, 000, true,  false, false, false, ASemantics.A,     "BAO",   false),
