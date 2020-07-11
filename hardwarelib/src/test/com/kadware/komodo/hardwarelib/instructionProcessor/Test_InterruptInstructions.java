@@ -6,7 +6,6 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -90,7 +89,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
              UPIProcessorTypeException {
         String[] source = {
             "          SGNL      077",
-            "          HALT      0",
+            "          HALT      0"
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
@@ -154,7 +153,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
+            "          HALT      0"
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
@@ -186,8 +185,8 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
-            };
+            "          HALT      0"
+        };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
         ipl(true);
@@ -217,7 +216,7 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
+            "          HALT      0"
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
@@ -248,8 +247,8 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
-            };
+            "          HALT      0"
+        };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
         ipl(true);
@@ -279,8 +278,8 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
-            };
+            "          HALT      0"
+        };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
         ipl(true);
@@ -310,8 +309,8 @@ public class Test_InterruptInstructions extends BaseFunctions {
             "          HALT      077",
             "TARGET",
             "          HALT      076",
-            "          HALT      0",
-            };
+            "          HALT      0"
+        };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
         ipl(true);
