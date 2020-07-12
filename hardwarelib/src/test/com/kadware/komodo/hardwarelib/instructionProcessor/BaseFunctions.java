@@ -11,15 +11,18 @@ import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
 import com.kadware.komodo.kex.klink.BankDeclaration;
 import com.kadware.komodo.kex.klink.LCPoolSpecification;
 import com.kadware.komodo.kex.klink.LinkOption;
 import com.kadware.komodo.kex.klink.LinkResult;
 import com.kadware.komodo.kex.klink.LinkType;
 import com.kadware.komodo.kex.klink.Linker;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import static org.junit.Assert.*;
 
@@ -358,17 +361,20 @@ class BaseFunctions {
      * @param source source code to be built
      * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
      * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
+     * @param definitionSets dictionaries produced by definition mode assemblies for inclusion in this build
      */
     void buildMultiBank(
         final String[] source,
         final boolean includeInterruptHandlers,
-        final boolean avoidDBankCollision
+        final boolean avoidDBankCollision,
+        final Map<String, Dictionary> definitionSets
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
+                                            .setDefinitionSets(definitionSets)
                                             .build();
         _assemblerResult = _assembler.assemble();
         assertNotNull(_assemblerResult._relocatableModule);
@@ -450,6 +456,25 @@ class BaseFunctions {
         assertEquals(0, _linkResult._errorCount);
 
         createProcessors();
+    }
+
+    /**
+     * Builds a binary executable consisting of one bank per location counter -
+     * for builds which require no definition sets. See above.
+     * Odd-number BDIs are static read-only
+     * Even-number BDIs are dynamic dbanks, read-write, no enter
+     * @param source source code to be built
+     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
+     * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
+     */
+    void buildMultiBank(
+        final String[] source,
+        final boolean includeInterruptHandlers,
+        final boolean avoidDBankCollision
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        buildMultiBank(source, includeInterruptHandlers, avoidDBankCollision, new HashMap<String, Dictionary>());
     }
 
     /**
