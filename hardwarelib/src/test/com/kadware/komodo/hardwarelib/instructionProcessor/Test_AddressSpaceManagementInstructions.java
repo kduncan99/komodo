@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
@@ -47,58 +48,53 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
              UPIProcessorTypeException {
         String[] source = {
             "          $EXTEND",
-            "          $INFO 10 1",
             "",
-            "$(2)",
-            "DATA      $RES 30",
-            "",
-            "$(1)",
-            "          $LIT",
-            "START",
             "          LD        (000024,0) . ext mode, normal regs, processor privilege 1",
             "",
-            "          LBU       B2,DBANKBDI,,B0",
-            "          LBU       B3,DBANKBDI,,B0",
-            "          LBU       B4,DBANKBDI,,B0",
-            "          LBU       B5,DBANKBDI,,B0",
-            "          LBU       B6,DBANKBDI,,B0",
-            "          LBU       B7,DBANKBDI,,B0",
-            "          LBU       B8,DBANKBDI,,B0",
-            "          LBU       B9,DBANKBDI,,B0",
-            "          LBU       B10,DBANKBDI,,B0",
-            "          LBU       B11,DBANKBDI,,B0",
-            "          LBU       B12,DBANKBDI,,B0",
-            "          LBU       B13,DBANKBDI,,B0",
-            "          LBU       B14,DBANKBDI,,B0",
-            "          LBU       B15,DBANKBDI,,B0",
+            "          LBU       B2,DBANKBDI",
+            "          LBU       B3,DBANKBDI",
+            "          LBU       B4,DBANKBDI",
+            "          LBU       B5,DBANKBDI",
+            "          LBU       B6,DBANKBDI",
+            "          LBU       B7,DBANKBDI",
+            "          LBU       B8,DBANKBDI",
+            "          LBU       B9,DBANKBDI",
+            "          LBU       B10,DBANKBDI",
+            "          LBU       B11,DBANKBDI",
+            "          LBU       B12,DBANKBDI",
+            "          LBU       B13,DBANKBDI",
+            "          LBU       B14,DBANKBDI",
+            "          LBU       B15,DBANKBDI",
             "          LXI,U     X2,1",
             "          LXM,U     X2,15 . NOTE the offset here!",
             "          DABT      DATA,*X2,B2",
             "          HALT      0",
             "",
             "DBANKBDI  + LBDIREF$+DATA,0",
-            "          $END      START",
+            "",
+            "$(0)",
+            "DATA      $RES 30",
         };
 
-        buildDualBank(source);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         long[] expected = {
             0,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
-            0_100005_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
+            0_100004_000000L,
         };
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2548,46 +2544,19 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            ".",
-            "$(2)",
-            ". RETURN CONTROL STACK",
-            "RCDEPTH   $EQU      32",
-            "RCSSIZE   $EQU      2*RCDEPTH",
-            "RCSTACK   $RES      RCSSIZE",
-            ".",
-            "$(1)      . extended mode i-bank",
-            "          $LIT",
-            "START",
-            "          . GET DESIGNATOR REGISTER FOR EXEC REGISTER SET SELECTION",
-            "          LD        (000001,000000),,B0 . ext mode, exec regs, pp=0",
-            ".",
-            "          . ESTABLISH RCS ON B25/EX0",
-            "          LBE       B25,(LBDIREF$+RCSTACK,0)",
-            "          LXI,U     EX0,0",
-            "          LXM,U     EX0,RCSTACK+RCSSIZE",
-            ".",
-            "          . GET DESIGNATOR REGISTER FOR NO EXEC REGISTER SET SELECTION",
-            "          LD        (0,0),,B0 . ext mode, user regs, pp=0",
-            ".",
-            "          . ESTABLISH INTERRUPT HANDLER VECTOR",
-            "          CALL      (LBDIREF$+IH$INIT,IH$INIT)",
-            "",
-            "          LBU       B2,(LBDIREF$+DATA,0)",
-            "          LD        (014,0)",
-            "          LXI,U     X8,4",
-            "          LXM,U     X8,0",
-            "          SBED      B16,DATA,*X8,B2",
-            "          HALT      0",
-            ".",
-            "$(4)      . basic mode d-bank",
+            "$(4)",
             "DATA      $RES      64",
             ".",
-            "          $END      START"
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+DATA, 0)",
+            "          LD        (014, 0)",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBED      B16,DATA,*X8,B3",
+            "          HALT      0"
         };
 
-        buildMultiBank(source, true, true);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2598,362 +2567,283 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
                      _instructionProcessor.getLastInterrupt().getShortStatusField());
     }
 
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUser_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 2",
-//            "",
-//            "$(1),START$*",
-//            "          SBU       B12,DATA",
-//            "          LXM,U     X2,1",
-//            "          SBU       B13,DATA,X2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] data = getBank(_instructionProcessor, 13);
-//        assertEquals(0_600004_000000L, data[0]);
-//        assertEquals(0_600005_000000L, data[1]);
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUser_basic_badPP(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 2",
-//            "",
-//            "$(1),START$*",
-//            "          SBU       B12,DATA",
-//            "          LXM,U     X2,1",
-//            "          SBU       B13,DATA,X2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUser_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 2",
-//            "",
-//            "$(1),START$*",
-//            "          SBU       B0,DATA,,B2",
-//            "          LXM,U     X2,1",
-//            "          SBU       B2,DATA,X2,B2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] data = getBank(_instructionProcessor, 2);
-//        assertEquals(0_600004_000000L, data[0]);
-//        assertEquals(0_600005_000000L, data[1]);
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUserDirect_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 64",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X8,4",
-//            "          LXM,U     X8,0",
-//            "          SBUD      B0,DATA,*X8",
-//            "          SBUD      B1,DATA,*X8",
-//            "          SBUD      B2,DATA,*X8",
-//            "          SBUD      B3,DATA,*X8",
-//            "          SBUD      B4,DATA,*X8",
-//            "          SBUD      B5,DATA,*X8",
-//            "          SBUD      B6,DATA,*X8",
-//            "          SBUD      B7,DATA,*X8",
-//            "          SBUD      B8,DATA,*X8",
-//            "          SBUD      B9,DATA,*X8",
-//            "          SBUD      B10,DATA,*X8",
-//            "          SBUD      B11,DATA,*X8",
-//            "          SBUD      B12,DATA,*X8",
-//            "          SBUD      B13,DATA,*X8",
-//            "          SBUD      B14,DATA,*X8",
-//            "          SBUD      B15,DATA,*X8",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        //  set up some fake banks - leave 12 and 13 alone
-//        for (int bx = 0; bx < 16; ++bx) {
-//            if ((bx < 12) || (bx > 13)) {
-//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
-//                InstructionProcessor.BaseRegister br =
-//                    new InstructionProcessor.BaseRegister(addr,
-//                                                          false,
-//                                                          bx * 512,
-//                                                          bx * 512 + 511,
-//                                                          new AccessInfo(0, bx),
-//                                                          new AccessPermissions(false, true, true),
-//                                                          new AccessPermissions(false, true, true));
-//                _instructionProcessor.setBaseRegister(bx, br);
-//            }
-//        }
-//
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
-//        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
-//        long[] data = getBank(_instructionProcessor, 13);
-//        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
-//            long[] subData = new long[4];
-//            subData[0] = data[dx];
-//            subData[1] = data[dx + 1];
-//            subData[2] = data[dx + 2];
-//            subData[3] = data[dx + 3];
-//            baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
-//        }
-//
-//        for (int bx = 0; bx < 16; ++bx) {
-//            Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
-//        }
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUserDirect_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 64",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X8,4",
-//            "          LXM,U     X8,0",
-//            "          SBUD      B0,DATA,*X8,B2",
-//            "          SBUD      B1,DATA,*X8,B2",
-//            "          SBUD      B2,DATA,*X8,B2",
-//            "          SBUD      B3,DATA,*X8,B2",
-//            "          SBUD      B4,DATA,*X8,B2",
-//            "          SBUD      B5,DATA,*X8,B2",
-//            "          SBUD      B6,DATA,*X8,B2",
-//            "          SBUD      B7,DATA,*X8,B2",
-//            "          SBUD      B8,DATA,*X8,B2",
-//            "          SBUD      B9,DATA,*X8,B2",
-//            "          SBUD      B10,DATA,*X8,B2",
-//            "          SBUD      B11,DATA,*X8,B2",
-//            "          SBUD      B12,DATA,*X8,B2",
-//            "          SBUD      B13,DATA,*X8,B2",
-//            "          SBUD      B14,DATA,*X8,B2",
-//            "          SBUD      B15,DATA,*X8,B2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        //  set up some fake banks - leave 0 through 2 alone
-//        for (int bx = 0; bx < 16; ++bx) {
-//            if (bx > 2) {
-//                AbsoluteAddress addr = new AbsoluteAddress(_mainStorageProcessor._upiIndex, 0, bx * 1024);
-//                InstructionProcessor.BaseRegister br =
-//                    new InstructionProcessor.BaseRegister(addr,
-//                                                          false,
-//                                                          bx * 512,
-//                                                          bx * 512 + 511,
-//                                                          new AccessInfo(0, bx),
-//                                                          new AccessPermissions(false, true, true),
-//                                                          new AccessPermissions(false, true, true));
-//                _instructionProcessor.setBaseRegister(bx, br);
-//            }
-//        }
-//
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        Assert.assertEquals(0_000004_000100, _instructionProcessor.getExecOrUserXRegister(8).getW());
-//        InstructionProcessor.BaseRegister[] baseRegisters = new InstructionProcessor.BaseRegister[16];
-//        long[] data = getBank(_instructionProcessor, 2);
-//        for (int bx = 0, dx = 0; bx < 16; ++bx, dx += 4) {
-//            long[] subData = new long[4];
-//            subData[0] = data[dx];
-//            subData[1] = data[dx + 1];
-//            subData[2] = data[dx + 2];
-//            subData[3] = data[dx + 3];
-//            baseRegisters[bx] = new InstructionProcessor.BaseRegister(subData);
-//        }
-//
-//        for (int bx = 0; bx < 16; ++bx) {
-//            Assert.assertEquals(_instructionProcessor.getBaseRegister(bx), baseRegisters[bx]);
-//        }
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUserDirect_BadPP_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 64",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X8,4",
-//            "          LXM,U     X8,0",
-//            "          SBUD      B0,DATA,*X8",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeBaseRegisterUserDirect_extended_badPP(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      $RES 64",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X8,4",
-//            "          LXM,U     X8,0",
-//            "          SBED      B8,DATA,*X8,B2",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
-//        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
-//                     _instructionProcessor.getLastInterrupt().getInterruptClass());
-//        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
-//                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
+    @Test
+    public void storeBaseRegisterUser_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(4)",
+            "DATA      $RES 2",
+            "",
+            "$(3)",
+            "          LBU       B13,(LBDIREF$+DATA, 0)",
+            "          SBU       B12,DATA",
+            "          LXM,U     X2,1",
+            "          SBU       B13,DATA,X2",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] data = getBankByBaseRegister(13);
+        assertEquals(0_100007_000000L, data[0]);
+        assertEquals(0_100010_000000L, data[1]);
+    }
+
+    @Test
+    public void storeBaseRegisterUser_basic_badPP(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(4)",
+            "DATA      $RES 2",
+            "",
+            "$(3)      $LIT",
+            "          LD        (016,0) . basic mode, pp=3",
+            "          LBU       B13,(LBDIREF$+DATA, 0)",
+            "          SBU       B12,DATA",
+            "          LXM,U     X2,1",
+            "          SBU       B13,DATA,X2",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     _instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void storeBaseRegisterUser_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "$(4)",
+            "DATA      $RES 2",
+            "",
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+DATA, 0)",
+            "          SBU       B0,DATA,,B3",
+            "          LXM,U     X2,1",
+            "          SBU       B3,DATA,X2,B3",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] data = getBankByBaseRegister(3);
+        assertEquals(0_100005_000000L, data[0]);
+        assertEquals(0_100007_000000L, data[1]);
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(4)",
+            "DATA      $RES 64",
+            "",
+            "$(3)      $LIT",
+            "          LBU       B13,(LBDIREF$+DATA, 0)",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B12,DATA,*X8,B3",
+            "          SBUD      B13,DATA,*X8,B3",
+            "          SBUD      B14,DATA,*X8,B3",
+            "          SBUD      B15,DATA,*X8,B3",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        Assert.assertEquals(0_000004_000020, _instructionProcessor.getExecOrUserXRegister(8).getW());
+        long[] data = getBankByBaseRegister(13);
+
+        //  B12
+        Assert.assertEquals(002, Word36.getS1(data[0]));
+        Assert.assertEquals(1, Word36.getQ1(data[1]));
+        Assert.assertEquals(01010, Word36.getH2(data[1]));
+
+        //  B13
+        Assert.assertEquals(003, Word36.getS1(data[4]));
+        Assert.assertEquals(03, Word36.getQ1(data[5]));
+        Assert.assertEquals(03077, Word36.getH2(data[5]));
+
+        //  B14 (void)
+        Assert.assertEquals(02, Word36.getS2(data[8]) | 02); //check for void flag
+
+        //  B15 (void)
+        Assert.assertEquals(02, Word36.getS2(data[12]) | 02); //check for void flag
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "$(0) . force at least one word into this bank",
+            "DUMMY     + 0",
+            "",
+            "$(4)",
+            "DATA      $RES 64",
+            ".",
+            "$(1)",
+            "          GOTO      (LBDIREF$+TARGET, TARGET)",
+            ".",
+            "          $INFO 10 5",
+            "$(5)      $LIT",
+            "TARGET*",
+            "          LBU       B3,(LBDIREF$+DATA, 0)",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B0,DATA,*X8,B3",
+            "          SBUD      B2,DATA,*X8,B3",
+            "          SBUD      B3,DATA,*X8,B3",
+            "          SBUD      B4,DATA,*X8,B3",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        Assert.assertEquals(0_000004_000020, _instructionProcessor.getExecOrUserXRegister(8).getW());
+        long[] data = getBankByBaseRegister(3);
+
+        //  B0
+        Assert.assertEquals(002, Word36.getS1(data[0]));
+        Assert.assertEquals(1, Word36.getQ1(data[1]));
+        Assert.assertEquals(01010, Word36.getH2(data[1]));
+
+        //  B2
+        Assert.assertEquals(003, Word36.getS1(data[4]));
+        Assert.assertEquals(0, Word36.getQ1(data[5]));
+
+        //  B3
+        Assert.assertEquals(003, Word36.getS1(data[8]));
+        Assert.assertEquals(0, Word36.getQ1(data[9]));
+        Assert.assertEquals(077, Word36.getH2(data[9]));
+
+        //  B4 (void)
+        Assert.assertEquals(02, Word36.getS2(data[12]) | 02); //check for void flag
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_BadPP_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $BASIC",
+            "",
+            "$(4)",
+            "DATA      $RES 64",
+            "",
+            "$(3)",
+            "          LD        (016,0) . basic mode, pp=3",
+            "          LBU       B13,(LBDIREF$+DATA, 0)",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B0,DATA,*X8",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void storeBaseRegisterUserDirect_extended_badPP(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "$(0)",
+            "DATA      $RES 64",
+            "",
+            "$(1)",
+            "          LD        (014,0)",
+            "          LXI,U     X8,4",
+            "          LXM,U     X8,0",
+            "          SBUD      B8,DATA,*X8,B3",
+            "          HALT      077"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(MachineInterrupt.InterruptClass.InvalidInstruction,
+                     _instructionProcessor.getLastInterrupt().getInterruptClass());
+        assertEquals(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege.getCode(),
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
     //TODO
 //    @Test
 //    public void testRelativeAddress_basic(
@@ -3008,7 +2898,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0500000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
 //        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
-//
+
     //TODO
 //    @Test
 //    public void testRelativeAddressIndirect_basic(
@@ -3052,7 +2942,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0, _instructionProcessor.getExecOrUserXRegister(5).getW());
 //        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(12).getW());
 //    }
-//
+
     //TODO
 //    @Test
 //    public void testRelativeAddress_extended(
@@ -3108,7 +2998,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
 //        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
-//
+
     //TODO
 //    @Test
 //    public void testRelativeAddressNonRWBanks_basic(
@@ -3241,7 +3131,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
 //        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
-//
+
     //TODO
 //    @Test
 //    public void testRelativeAddressNonRWBanks_extended(
@@ -3394,8 +3284,8 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 //        Assert.assertEquals(0600000_000000L, _instructionProcessor.getExecOrUserXRegister(14).getW());
 //        Assert.assertEquals(0700000_000000L, _instructionProcessor.getExecOrUserXRegister(15).getW());
 //    }
-//
-//    //  TODO testRelativeAddressRange ... some day when we care more about it
-//
-//    //  TODO lots of testVirtualAddress tests
+
+    //  TODO testRelativeAddressRange ... some day when we care more about it
+
+    //  TODO lots of testVirtualAddress tests
 }
