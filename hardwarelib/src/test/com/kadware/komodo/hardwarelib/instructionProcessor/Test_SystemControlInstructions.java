@@ -422,284 +422,216 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     //      U+1,W:      Segment index of block to be resized
     //      U+2,W:      Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
 
-    //TODO
-//    @Test
-//    public void sysc_resize_good(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source1 = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//        };
-//
-//        String[] source2 = {
-//            "$(0)      .",
-//            "ALLOCPACKET",
-//            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 32768",
-//            "",
-//            "RESIZEPACKET",
-//            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 65536",
-//            "",
-//            "$(1),START$*",
-//            "          SYSC      ALLOCPACKET,,B2",
-//            "          LA,U      A5,SYSC$OK",
-//            "          TE,S2     A5,ALLOCPACKET,,B2",
-//            "          HALT      077",
-//            ".",
-//            "          LA        A5,ALLOCPACKET+1,,B2",
-//            "          SA        A5,RESIZEPACKET+1,,B2",
-//            "          SYSC      RESIZEPACKET,,B2",
-//            "          LA,U      A5,SYSC$OK",
-//            "          TE,S2     A5,RESIZEPACKET,,B2",
-//            "          HALT      076",
-//            ".",
-//            "          HALT      0",
-//        };
-//
-//        String[][] sourceSet = {
-//            source1,
-//            definitions,
-//            source2
-//        };
-//
-//        String[] source = compose(sourceSet);
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] bank = getBank(_instructionProcessor, 2);
-//        int segment = (int) bank[1];
-//        assertEquals(1, segment);
-//
-//        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
-//        assertEquals(65536, slice._length);
-//    }
-//
-    //TODO
-//    @Test
-//    public void sysc_resize_badUPI(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source1 = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//        };
-//
-//        String[] source2 = {
-//            "$(0)      .",
-//            "ALLOCPACKET",
-//            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 32768",
-//            "",
-//            "RESIZEPACKET",
-//            "          SYSC$FORM SYSC$RESIZE,0,077,0",
-//            "          + 0",
-//            "          + 65536",
-//            "",
-//            "$(1),START$*",
-//            "          SYSC      ALLOCPACKET,,B2",
-//            "          LA,U      A5,SYSC$OK",
-//            "          TE,S2     A5,ALLOCPACKET,,B2",
-//            "          HALT      077",
-//            ".",
-//            "          LA        A5,ALLOCPACKET+1,,B2",
-//            "          SA        A5,RESIZEPACKET+1,,B2",
-//            "          SYSC      RESIZEPACKET,,B2",
-//            "          LA,U      A5,SYSC$BADUPI",
-//            "          TE,S2     A5,RESIZEPACKET,,B2",
-//            "          HALT      076",
-//            ".",
-//            "          HALT      0",
-//        };
-//
-//        String[][] sourceSet = {
-//            source1,
-//            definitions,
-//            source2
-//        };
-//
-//        String[] source = compose(sourceSet);
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] bank = getBank(_instructionProcessor, 2);
-//        int segment = (int) bank[1];
-//        assertEquals(1, segment);
-//
-//        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
-//        assertEquals(32768, slice._length);
-//    }
-//
-    //TODO
-//    @Test
-//    public void sysc_resize_badSegment(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source1 = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//        };
-//
-//        String[] source2 = {
-//            "$(0)      .",
-//            "ALLOCPACKET",
-//            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 32768",
-//            "",
-//            "RESIZEPACKET",
-//            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 65536",
-//            "",
-//            "$(1),START$*",
-//            "          SYSC      ALLOCPACKET,,B2",
-//            "          LA,U      A5,SYSC$OK",
-//            "          TE,S2     A5,ALLOCPACKET,,B2",
-//            "          HALT      077",
-//            ".",
-//            "          LA        A5,ALLOCPACKET+1,,B2",
-//            "          LSSL      A5,2",
-//            "          SA        A5,RESIZEPACKET+1,,B2",
-//            "          SYSC      RESIZEPACKET,,B2",
-//            "          LA,U      A5,SYSC$BADSEG",
-//            "          TE,S2     A5,RESIZEPACKET,,B2",
-//            "          HALT      076",
-//            ".",
-//            "          HALT      0",
-//        };
-//
-//        String[][] sourceSet = {
-//            source1,
-//            definitions,
-//            source2
-//        };
-//
-//        String[] source = compose(sourceSet);
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] bank = getBank(_instructionProcessor, 2);
-//        int segment = (int) bank[1];
-//        assertEquals(1, segment);
-//
-//        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
-//        assertEquals(32768, slice._length);
-//    }
-//
-    //TODO
-//    @Test
-//    public void sysc_resize_badSize(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source1 = {
-//            "          $EXTEND",
-//            "          $INFO 1 3",
-//            "          $INFO 10 1",
-//            "",
-//        };
-//
-//        String[] source2 = {
-//            "$(0)      .",
-//            "ALLOCPACKET",
-//            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          + 32768",
-//            "",
-//            "RESIZEPACKET",
-//            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
-//            "          + 0",
-//            "          - 1",
-//            "",
-//            "$(1),START$*",
-//            "          SYSC      ALLOCPACKET,,B2",
-//            "          LA,U      A5,SYSC$OK",
-//            "          TE,S2     A5,ALLOCPACKET,,B2",
-//            "          HALT      077",
-//            ".",
-//            "          LA        A5,ALLOCPACKET+1,,B2",
-//            "          SA        A5,RESIZEPACKET+1,,B2",
-//            "          SYSC      RESIZEPACKET,,B2",
-//            "          LA,U      A5,SYSC$INVSIZE",
-//            "          TE,S2     A5,RESIZEPACKET,,B2",
-//            "          HALT      076",
-//            ".",
-//            "          HALT      0",
-//        };
-//
-//        String[][] sourceSet = {
-//            source1,
-//            definitions,
-//            source2
-//        };
-//
-//        String[] source = compose(sourceSet);
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-//        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-//
-//        long[] bank = getBank(_instructionProcessor, 2);
-//        int segment = (int) bank[1];
-//        assertEquals(1, segment);
-//
-//        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
-//        assertEquals(32768, slice._length);
-//    }
+    @Test
+    public void sysc_resize_good(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'DEFINITIONS'",
+            "",
+            "$(4)",
+            "ALLOCPACKET",
+            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 32768",
+            "",
+            "RESIZEPACKET",
+            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 65536",
+            "",
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+ALLOCPACKET, 0)",
+            ".",
+            "          SYSC      ALLOCPACKET,,B3",
+            "          LA,U      A5,SYSC$OK",
+            "          TE        A5,ALLOCPACKET+SYSC$STATUS,,B3",
+            "          HALT      077",
+            ".",
+            "          LA        A5,ALLOCPACKET+SYSC$MEMSEG,,B3",
+            "          SA        A5,RESIZEPACKET+SYSC$MEMSEG,,B3",
+            "          SYSC      RESIZEPACKET,,B3",
+            "          LA,U      A5,SYSC$OK",
+            "          TE        A5,RESIZEPACKET+SYSC$STATUS,,B3",
+            "          HALT      076",
+            ".",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(3);
+        int segment = (int) bank[1];
+        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        assertEquals(65536, slice._length);
+    }
+
+    @Test
+    public void sysc_resize_badUPI(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'DEFINITIONS'",
+            "",
+            "$(4)",
+            "ALLOCPACKET",
+            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 32768",
+            "",
+            "RESIZEPACKET",
+            "          SYSC$FORM SYSC$RESIZE,0,077,0",
+            "          + 0",
+            "          + 65536",
+            "",
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+ALLOCPACKET, 0)",
+            ".",
+            "          SYSC      ALLOCPACKET,,B3",
+            "          LA,U      A5,SYSC$OK",
+            "          TE        A5,ALLOCPACKET+SYSC$STATUS,,B3",
+            "          HALT      077",
+            ".",
+            "          LA        A5,ALLOCPACKET+SYSC$MEMSEG,,B3",
+            "          SA        A5,RESIZEPACKET+SYSC$MEMSEG,,B3",
+            "          SYSC      RESIZEPACKET,,B3",
+            "          LA,U      A5,SYSC$BADUPI",
+            "          TE        A5,RESIZEPACKET+SYSC$STATUS,,B3",
+            "          HALT      076",
+            ".",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(3);
+        int segment = (int) bank[1];
+        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        assertEquals(32768, slice._length);
+    }
+
+    @Test
+    public void sysc_resize_badSegment(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'DEFINITIONS'",
+            "",
+            "$(4)",
+            "ALLOCPACKET",
+            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 32768",
+            "",
+            "RESIZEPACKET",
+            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 65536",
+            "",
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+ALLOCPACKET, 0)",
+            ".",
+            "          SYSC      ALLOCPACKET,,B3",
+            "          LA,U      A5,SYSC$OK",
+            "          TE        A5,ALLOCPACKET+SYSC$STATUS,,B3",
+            "          HALT      077",
+            ".",
+            "          LA        A5,ALLOCPACKET+SYSC$MEMSEG,,B3",
+            "          LSSL      A5,2",
+            "          SA        A5,RESIZEPACKET+SYSC$MEMSEG,,B3",
+            "          SYSC      RESIZEPACKET,,B3",
+            "          LA,U      A5,SYSC$BADSEG",
+            "          TE        A5,RESIZEPACKET+SYSC$STATUS,,B3",
+            "          HALT      076",
+            ".",
+            "          HALT      0",
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(3);
+        int segment = (int) bank[1];
+        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        assertEquals(32768, slice._length);
+    }
+
+    @Test
+    public void sysc_resize_badSize(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'DEFINITIONS'",
+            "",
+            "$(4)",
+            "ALLOCPACKET",
+            "          SYSC$FORM SYSC$CREATE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          + 32768",
+            "",
+            "RESIZEPACKET",
+            "          SYSC$FORM SYSC$RESIZE,0,DEFAULT$MSP,0",
+            "          + 0",
+            "          - 1",
+            "",
+            "$(1)",
+            "          LBU       B3,(LBDIREF$+ALLOCPACKET, 0)",
+            ".",
+            "          SYSC      ALLOCPACKET,,B3",
+            "          LA,U      A5,SYSC$OK",
+            "          TE        A5,ALLOCPACKET+SYSC$STATUS,,B3",
+            "          HALT      077",
+            ".",
+            "          LA        A5,ALLOCPACKET+SYSC$MEMSEG,,B3",
+            "          SA        A5,RESIZEPACKET+SYSC$MEMSEG,,B3",
+            "          SYSC      RESIZEPACKET,,B3",
+            "          LA,U      A5,SYSC$INVSIZE",
+            "          TE        A5,RESIZEPACKET+SYSC$STATUS,,B3",
+            "          HALT      076",
+            ".",
+            "          HALT      0",
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(3);
+        int segment = (int) bank[1];
+        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        assertEquals(32768, slice._length);
+    }
 }
