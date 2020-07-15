@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Assert;
 import static org.junit.Assert.*;
 
 /**
@@ -60,6 +61,58 @@ class BaseFunctions {
     InstrumentedMainStorageProcessor _mainStorageProcessor = null;
     SystemProcessor _systemProcessor = null;
 
+    private static final String[] GEN_DEFS_SOURCE = {
+        "DR$SETPP03* $PROC",
+        "          SD        A14",
+        "          OR        A14,(014,0)",
+        "          LD        A15",
+        "          $END",
+        ".",
+        "DR$SETQWORD* $PROC",
+        "          SD        A14",
+        "          OR,U      A14,010",
+        "          LD        A15",
+        "          $END",
+        ".",
+        "          $END"
+    };
+
+    private static final String[] SYSC_DEFS_SOURCE = {
+        "SYSC$CREATE*  $EQU 020",
+        "SYSC$DELETE*  $EQU 021",
+        "SYSC$RESIZE*  $EQU 022",
+        "",
+        "SYSC$CNSTAT*  $EQU 030",
+        "SYSC$CNREAD*  $EQU 031",
+        "SYSC$CNRDREP* $EQU 032",
+        "SYSC$CNPOLL*  $EQU 033",
+        "SYSC$CNRESET* $EQU 034",
+        "",
+        "SYSC$OK*      $EQU 0    . Request successful",
+        "SYSC$BADUPI*  $EQU 01   . Given UPI is not a main storage processor",
+        "SYSC$BADSEG*  $EQU 02   . Given segment index is unknown to the given MSP",
+        "SYSC$INVADDR* $EQU 03   . Given address is invalid or does not exist",
+        "SYSC$INVSIZE* $EQU 04   . Requested size is out of range or invalid",
+        "SYSC$NACCESS* $EQU 05   . Access denied",
+        "",
+        "SYSC$FORM*    $FORM 6,6,6,18",
+        "SYSC$SUBFUNC* $EQUF 0,,S1",
+        "SYSC$STATUS*  $EQUF 0,,S2",
+        "SYSC$MSPUPI*  $EQUF 0,,S3",
+        "SYSC$MEMSEG*  $EQUF 1,,W",
+        "SYSC$MEMSIZE* $EQUF 2,,W",
+        //  U+0,S1          Subfunction
+        //  U+0,S2:         Status
+        //  U+0,S3:         UPI of target MSP
+        //  U+1,W:          Newly-assigned segment index if status is zero
+        //  U+2,W:          Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
+        "",
+        "DEFAULT$MSP*  $EQU 01",
+        "",
+        "             $END"
+    };
+
+    private static final Map<String, Dictionary> _definitionSets = new HashMap<>();
 
     //  Assembler source for the interrupt handlers
     static private final String[] IH_CODE = {
@@ -269,6 +322,77 @@ class BaseFunctions {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Private things
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Builds a particular definition set and inserts it into our container of definition sets
+     */
+    private static void buildDefinitionSet(
+        final String name,
+        final String[] source
+    ) {
+        Set<AssemblerOption> defOptions = new HashSet<>(DEFAULT_ASSEMBLER_OPTIONS);
+        defOptions.add(AssemblerOption.DEFINITION_MODE);
+        Assembler asm = new Assembler.Builder().setModuleName(name)
+                                               .setOptions(defOptions)
+                                               .setSource(source)
+                                               .build();
+        AssemblerResult asmResult = asm.assemble();
+        Assert.assertFalse(asmResult._diagnostics.hasError());
+        _definitionSets.put(name, asmResult._definitions);
+    }
+
+    /**
+     * Builds all the canned definition sets for future $INCLUDE in test code
+     */
+    private static Map<String, Dictionary> buildDefinitionSets() {
+        if (_definitionSets.isEmpty()) {
+            buildDefinitionSet("SYSC$DEFS", SYSC_DEFS_SOURCE);
+            buildDefinitionSet("GEN$DEFS", GEN_DEFS_SOURCE);
+        }
+
+        return _definitionSets;
+    }
+
+    /**
+     * Builds the interrupt handler relocatable module for any unit test needing to use it
+     */
+    private void buildInterruptHandlerModule() {
+        if (_ihRelocatable == null) {
+            Assembler asm = new Assembler.Builder().setModuleName("IH")
+                                                   .setSource(IH_CODE)
+                                                   .setOptions(DEFAULT_ASSEMBLER_OPTIONS)
+                                                   .build();
+            AssemblerResult asmResult = asm.assemble();
+            assertNotNull(asmResult._relocatableModule);
+            _ihRelocatable = asmResult._relocatableModule;
+        }
+    }
+
+    /**
+     * Common processor creation code
+     */
+    private void createProcessors(
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        _inventoryManager = InventoryManager.getInstance();
+        _systemProcessor = _inventoryManager.createSystemProcessor("SP0",
+                                                                   8080,
+                                                                   null,
+                                                                   new Credentials("test", "test"));
+        _instructionProcessor = _inventoryManager.createInstructionProcessor("IP0");
+        _mainStorageProcessor = new InstrumentedMainStorageProcessor("MSP0",
+                                                                     (short) 1,
+                                                                     8 * 1024 * 1024);
+        _inventoryManager.addMainStorageProcessor(_mainStorageProcessor);
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Package-private things for unit tests to invoke
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Builds a binary executable consisting of a code bank and a data bank, which contains all the code generated from source.
@@ -283,6 +407,7 @@ class BaseFunctions {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
+                                            .setDefinitionSets(buildDefinitionSets())
                                             .build();
         _assemblerResult = _assembler.assemble();
         assertNotNull(_assemblerResult._relocatableModule);
@@ -342,18 +467,6 @@ class BaseFunctions {
         createProcessors();
     }
 
-    private void buildInterruptHandlerModule() {
-        if (_ihRelocatable == null) {
-            Assembler asm = new Assembler.Builder().setModuleName("IH")
-                                                   .setSource(IH_CODE)
-                                                   .setOptions(DEFAULT_ASSEMBLER_OPTIONS)
-                                                   .build();
-            AssemblerResult asmResult = asm.assemble();
-            assertNotNull(asmResult._relocatableModule);
-            _ihRelocatable = asmResult._relocatableModule;
-        }
-    }
-
     /**
      * Builds a binary executable consisting of one bank per location counter.
      * Odd-number BDIs are static read-only
@@ -361,20 +474,18 @@ class BaseFunctions {
      * @param source source code to be built
      * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
      * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
-     * @param definitionSets dictionaries produced by definition mode assemblies for inclusion in this build
      */
     void buildMultiBank(
         final String[] source,
         final boolean includeInterruptHandlers,
-        final boolean avoidDBankCollision,
-        final Map<String, Dictionary> definitionSets
+        final boolean avoidDBankCollision
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
-                                            .setDefinitionSets(definitionSets)
+                                            .setDefinitionSets(buildDefinitionSets())
                                             .build();
         _assemblerResult = _assembler.assemble();
         assertNotNull(_assemblerResult._relocatableModule);
@@ -459,25 +570,6 @@ class BaseFunctions {
     }
 
     /**
-     * Builds a binary executable consisting of one bank per location counter -
-     * for builds which require no definition sets. See above.
-     * Odd-number BDIs are static read-only
-     * Even-number BDIs are dynamic dbanks, read-write, no enter
-     * @param source source code to be built
-     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
-     * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
-     */
-    void buildMultiBank(
-        final String[] source,
-        final boolean includeInterruptHandlers,
-        final boolean avoidDBankCollision
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        buildMultiBank(source, includeInterruptHandlers, avoidDBankCollision, new HashMap<String, Dictionary>());
-    }
-
-    /**
      * Builds a binary executable consisting of a single bank, which contains all the code generated from source
      * @param source source code to be built
      */
@@ -489,6 +581,7 @@ class BaseFunctions {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
+                                            .setDefinitionSets(buildDefinitionSets())
                                             .build();
         _assemblerResult = _assembler.assemble();
         assertNotNull(_assemblerResult._relocatableModule);
@@ -541,25 +634,6 @@ class BaseFunctions {
         _linker = null;
         _linkOptions = DEFAULT_LINK_OPTIONS;
         _linkResult = null;
-    }
-
-    /**
-     * Common processor creation code
-     */
-    private void createProcessors(
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
-        _inventoryManager = InventoryManager.getInstance();
-        _systemProcessor = _inventoryManager.createSystemProcessor("SP0",
-                                                                   8080,
-                                                                   null,
-                                                                   new Credentials("test", "test"));
-        _instructionProcessor = _inventoryManager.createInstructionProcessor("IP0");
-        _mainStorageProcessor = new InstrumentedMainStorageProcessor("MSP0",
-                                                                     (short) 1,
-                                                                     8 * 1024 * 1024);
-        _inventoryManager.addMainStorageProcessor(_mainStorageProcessor);
     }
 
     /**
