@@ -1491,6 +1491,13 @@ public class Assembler {
     }
 
     /**
+     * Retrieves the current literal LC index for this (sub)assembly
+     */
+    public int getCurrentLiteralLCIndex() {
+        return _currentLiteralLCIndex;
+    }
+
+    /**
      * Creates an IntegerValue object with an appropriate undefined reference to represent the current location of the
      * current generation location counter (e.g., for interpreting '$' or whatever).
      * @return IntegerValue object as described

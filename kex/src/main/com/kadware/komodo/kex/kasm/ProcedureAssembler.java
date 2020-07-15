@@ -12,6 +12,10 @@ public class ProcedureAssembler extends SubAssembler {
         final TextLine[] sourceLines
     ) {
         super(outerLevel, subModuleName, sourceLines);
+        setCurrentGenerationLCIndex(outerLevel.getCurrentGenerationLCIndex());
+        setCurrentLitLCIndex(outerLevel.getCurrentLiteralLCIndex());
+        setCharacterMode(outerLevel.getCharacterMode());
+        setCodeMode(outerLevel.getCodeMode());
     }
 
     @Override
