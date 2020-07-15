@@ -12,7 +12,9 @@ Boot query:
 
 -- TODO BUGS
 * kasm
-Code display needs to display $EQU and $EQUF values
+$PROC directive needs to parse code and assemble it without generating code
+  in order to detect syntax errors ahead of time,
+  and to recognized the $END directive, which it surprisingly does not do at the moment
 I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
@@ -217,6 +219,7 @@ functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 directives
+  $NAME (has implications for $PROC)
   $FUNC (user-defined functions)
   $USE (implicit base register)
   $INSERT (maybe)

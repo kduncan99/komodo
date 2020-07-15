@@ -49,10 +49,6 @@ public class PROCDirective extends Directive {
     }
 
     /**
-     * We handle $PROC slightly differently than convention.
-     * The label is always assumed to be specified at the outer level, so it does not need to be externalized
-     * to be accessible to the assembly which contains it.  Also, we do not (at least currently) implement the
-     * $NAME, so it makes no sense to have a $PROC label accessible only within the proc.
      * @param assembler reference to the assembler in which this directive is to execute
      * @param textLine contains the basic parse into fields/subfields - we cannot drill down further, as various directives
      *                 make different usages of the fields - and $INFO even uses an extra field
@@ -69,6 +65,7 @@ public class PROCDirective extends Directive {
             int nesting = 1;
             while (assembler.hasNextSourceLine() && (nesting > 0)) {
                 TextLine nestedLine = assembler.getNextSourceLine();
+                nestedLine.parseFields(assembler.getDiagnostics());
                 nesting += checkNesting(nestedLine);
                 if (nesting > 0) {
                     textLines.add(nestedLine);
@@ -77,8 +74,10 @@ public class PROCDirective extends Directive {
 
             if (nesting > 0) {
                 Locale loc = new Locale(new LineSpecifier(0, assembler.sourceLineCount() + 1), 1);
-                assembler.appendDiagnostic((new ErrorDiagnostic(loc,
-                                                                "Reached end of file before end of proc")));
+                String msg = String.format("Reached end of file before end of proc '%s' in module '%s'",
+                                           labelFieldComponents._label,
+                                           assembler.getModuleName());
+                assembler.appendDiagnostic((new ErrorDiagnostic(loc, msg)));
             }
 
             ProcedureValue procValue = new ProcedureValue.Builder().setValue(textLines.toArray(new TextLine[0]))

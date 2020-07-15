@@ -91,7 +91,7 @@ public class Assembler {
 
     private final int _level;
     private final String _moduleName;
-    private final Assembler _outerLevel;    //  parent to this assembler, if this is not the top level
+    private final Assembler _outerLevel;        //  parent to this assembler, if this is not the top level
     private final TextLine[] _sourceLines;
 
     private final Dictionary _dictionary;
@@ -100,8 +100,9 @@ public class Assembler {
     private CodeMode _codeMode = CodeMode.Basic;
     private int _currentGenerationLCIndex = 0;
     private int _currentLiteralLCIndex = 0;
-    private boolean _endFound = false;      //  true if this (sub)assembly has processed an $END directive
-    private Value _endValue = null;         //  the value of {e} on the $END directive which ends this (sub)assembly (if any)
+    private boolean _endFound = false;          //  true if this (sub)assembly has processed an $END directive
+    private boolean _endFoundMessage = false;   //  true if a diagnostic has been created for code found after $END
+    private Value _endValue = null;             //  the value of {e} on the $END directive which ends this (sub)assembly (if any)
     private int _nextSourceIndex = 0;
 
     private final GlobalData _global;
@@ -215,7 +216,10 @@ public class Assembler {
         TextField operandField = textLine.getField(2);
 
         if (_endFound) {
-            appendDiagnostic(new ErrorDiagnostic(labelField._locale, "Label and/or Code follows $END directive"));
+            if (!_endFoundMessage) {
+                appendDiagnostic(new ErrorDiagnostic(labelField._locale, "Label and/or Code follows $END directive"));
+                _endFoundMessage = true;
+            }
             return;
         }
 
@@ -1529,6 +1533,11 @@ public class Assembler {
     public int getLevel() {
         return _level;
     }
+
+    /**
+     * Retrieves the module name for this (sub) assembly
+     */
+    public String getModuleName() { return _moduleName; }
 
     /**
      * Retrieves the next source line from the source array

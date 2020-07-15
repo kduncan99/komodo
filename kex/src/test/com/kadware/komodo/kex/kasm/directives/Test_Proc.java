@@ -33,12 +33,14 @@ public class Test_Proc {
             "          SA        A0,R5",
             "          $END",
             "",
-            "$(1),START*",
+            "$(1)",
             "          HALT 0",
             "          FOO",
             "          FOO",
             "          FOO",
             "          HALT 0",
+            "",
+            "          $END"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")
@@ -69,6 +71,30 @@ public class Test_Proc {
             "$(1),START*",
             "          LA,H2  A0,DATA",
             "          FOO,H2 A0,A1,A2 DATA,DATA1",
+            "",
+            "          $END"
+        };
+
+        Assembler asm = new Assembler.Builder().setModuleName("TEST")
+                                               .setOptions(OPTION_SET)
+                                               .setSource(source)
+                                               .build();
+        AssemblerResult result = asm.assemble();
+        Assert.assertNotNull(result._relocatableModule);
+        //TODO check values
+    }
+
+    @Test
+    public void multipleProcs(
+    ) {
+        String[] source = {
+            "FEE       $PROC",
+            "          + 0",
+            "          $END",
+            "FOO       $PROC",
+            "          + 1",
+            "          $END",
+            "          $END"
         };
 
         Assembler asm = new Assembler.Builder().setModuleName("TEST")

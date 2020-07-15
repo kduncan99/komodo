@@ -61,7 +61,7 @@ public class TextLine {
     /**
      * Parses the text into TextField objects
      */
-    void parseFields(
+    public void parseFields(
         final Diagnostics diagnostics
     ) {
         //  We should only ever be called once, but just in case...
