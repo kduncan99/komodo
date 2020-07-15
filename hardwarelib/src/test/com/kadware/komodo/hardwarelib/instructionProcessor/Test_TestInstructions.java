@@ -4,12 +4,13 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.InventoryManager;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -25,56 +26,47 @@ public class Test_TestInstructions extends BaseFunctions {
         clear();
     }
 
+    @Test
+    public void testEvenParityBasic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE  'GEN$DEFS'",
+            "",
+            "          DR$SETQWORD                   . set q-word mode",
+            "          LA        A1,DATA",
+            "          TEP,Q4    A1,DATA+1",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TEP       A1,DATA+1",
+            "          HALT      0                   . should not be skipped",
+            "          HALT      076",
+            "",
+            "DATA      + 0777777771356",
+            "          + 000000007777"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
     //TODO
 //    @Test
-//    public void testEvenParityBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "          $INFO 1 3",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      + 0777777771356",
-//            "          + 0000000007777",
-//            "",
-//            "$(1)",
-//            "          HALT      075",
-//            "          HALT      075",
-//            "          HALT      075",
-//            "START$*",
-//            "          LA        A1,DATA",
-//            "          TEP,Q4    A1,DATA+1",
-//            "          HALT      077                 . this should be skipped",
-//            "",
-//            "          TEP       A1,DATA+1",
-//            "          HALT      0                   . should not be skipped",
-//            "          HALT      076",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, true);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void testEvenParityExtended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -101,61 +93,57 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
-    //TODO
-//    @Test
-//    public void testOddParityBasic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "          $INFO 1 3",
-//            "",
-//            "$(0)      $LIT",
-//            "DATA      + 0777777771356",
-//            "          + 0000000007777",
-//            "",
-//            "$(1),START$*",
-//            "          LA        A1,DATA",
-//            "          TOP,H2    A1,DATA+1",
-//            "          HALT      077                 . this should be skipped",
-//            "",
-//            "          TOP,Q4    A1,DATA+1",
-//            "          HALT      0                   . should not be skipped",
-//            "          HALT      076"
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
+    @Test
+    public void testOddParityBasic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE  'GEN$DEFS'",
+            "",
+            "          DR$SETQWORD                   . set q-word mode",
+            "          LA        A1,DATA",
+            "          TOP,H2    A1,DATA+1",
+            "          HALT      077                 . this should be skipped",
+            "",
+            "          TOP,Q4    A1,DATA+1",
+            "          HALT      0                   . should not be skipped",
+            "          HALT      076",
+            "",
+            "DATA      + 0777777771356",
+            "          + 000000007777"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
     //TODO
 //    @Test
 //    public void testOddParityExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -178,23 +166,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testZeroBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -222,23 +212,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -267,23 +259,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNonZeroBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -313,23 +307,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNonZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -360,23 +356,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testPosZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -407,13 +405,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  There is no TMZ for basic mode
@@ -421,11 +419,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMinusZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -456,23 +456,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testPosBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -496,23 +498,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testPosExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -537,23 +541,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNegBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -576,23 +582,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNegExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -616,13 +624,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No basic mode version of TNOP
@@ -630,11 +638,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testNOPExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -657,13 +667,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No basic mode version of TSKP
@@ -671,11 +681,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testSkipExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -695,23 +707,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testEqualBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -732,23 +746,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -770,23 +786,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNotEqualBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -807,23 +825,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNotEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -845,23 +865,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testLessOrEqualToModifierBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -881,25 +903,27 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(2, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
-//        Assert.assertEquals(061240, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(2, _instructionProcessor.getExecOrUserXRegister(5).getXI());
+//        Assert.assertEquals(061240, _instructionProcessor.getExecOrUserXRegister(5).getXM());
 //    }
 //
     //TODO
 //    @Test
 //    public void testLessOrEqualToModifierExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -920,15 +944,15 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        Assert.assertEquals(2, processors._instructionProcessor.getExecOrUserXRegister(5).getXI());
-//        Assert.assertEquals(061240, processors._instructionProcessor.getExecOrUserXRegister(5).getXM());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(2, _instructionProcessor.getExecOrUserXRegister(5).getXI());
+//        Assert.assertEquals(061240, _instructionProcessor.getExecOrUserXRegister(5).getXM());
 //    }
 //
 //    //  no basic mode version of TGZ
@@ -936,11 +960,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testGreaterThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -959,13 +985,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TMZG
@@ -973,11 +999,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMinusZeroOrGreaterThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -996,13 +1024,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TNLZ
@@ -1010,11 +1038,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testNotLessThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1033,13 +1063,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TLZ
@@ -1047,11 +1077,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testLessThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1070,13 +1102,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TPZL
@@ -1084,11 +1116,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testPositiveZeroOrLessThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1106,13 +1140,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TNMZ
@@ -1120,11 +1154,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testNotMinusZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1143,13 +1179,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TNPZ
@@ -1157,11 +1193,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testNotPositiveZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1180,13 +1218,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  no basic mode version of TNGZ
@@ -1194,11 +1232,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testNotGreaterThanZeroExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1217,23 +1257,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testLessThanOrEqualBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -1252,23 +1294,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testLessThanOrEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1288,23 +1332,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testGreaterBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -1327,23 +1373,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testGreaterExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1367,13 +1415,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No TGM for basic mode
@@ -1381,11 +1429,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testGreaterMagnitudeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1404,23 +1454,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testWithinRangeBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -1456,23 +1508,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testWithinRangeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1509,23 +1563,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNotWithinRangeBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        //Skip NI if (U) ≤ (Aa) or (U) > (Aa+1)
 //        String[] source = {
 //            "          $BASIC",
@@ -1561,23 +1617,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testNotWithinRangeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1613,13 +1671,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No DTGM for basic mode
@@ -1627,11 +1685,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testDoubleTestGreaterMagnitudeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1656,13 +1716,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTE for basic mode
@@ -1670,11 +1730,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1694,13 +1756,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTNE for basic mode
@@ -1708,11 +1770,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestNotEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1732,13 +1796,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTLE for basic mode
@@ -1747,11 +1811,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestLessThanOrEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1773,13 +1839,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTG for basic mode
@@ -1787,11 +1853,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestGreaterExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1811,13 +1879,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTW for basic mode
@@ -1825,11 +1893,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestWithinRangeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1850,13 +1920,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MTNW for basic mode
@@ -1864,11 +1934,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedTestNotWithinRangeExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1889,13 +1961,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MATL for basic mode
@@ -1903,11 +1975,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedAlphaTestLessThanOrEqualExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1927,13 +2001,13 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
 //    //  No MATG for basic mode
@@ -1941,11 +2015,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testMaskedAlphaTestGreaterExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -1965,23 +2041,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, true);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testAndSetBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -1999,14 +2077,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01000 + 13, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 13);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01000 + 13, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 13);
 //        assertEquals(0_010000_000000L, bank[0]);
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
@@ -2014,11 +2092,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testAndSetExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -2037,14 +2117,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01000 + 13, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 2);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01000 + 13, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 2);
 //        assertEquals(0_010000_000000L, bank[0]);
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
@@ -2052,11 +2132,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testAndSetAndSkipBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2076,14 +2158,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 13);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 13);
 //        assertEquals(0_010000_000000L, bank[0]);
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
@@ -2091,11 +2173,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testAndSetAndSkipExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 1 3",
@@ -2116,14 +2200,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 2);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 2);
 //        assertEquals(0_010000_000000L, bank[0]);
 //        assertEquals(0_0770000_000000L, bank[1]);
 //    }
@@ -2131,11 +2215,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testAndClearAndSkipBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2155,14 +2241,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 13);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 13);
 //        assertEquals(0L, bank[0]);
 //        assertEquals(0_007777_777777L, bank[1]);
 //    }
@@ -2170,11 +2256,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testAndClearAndSkipExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -2195,14 +2283,14 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 2);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 2);
 //        assertEquals(0L, bank[0]);
 //        assertEquals(0_007777_777777L, bank[1]);
 //    }
@@ -2210,11 +2298,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testConditionalReplaceBasic(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2238,15 +2328,15 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 13);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 13);
 //        assertEquals(020L, bank[0]);
 //        assertEquals(014L, bank[1]);
 //    }
@@ -2254,11 +2344,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testConditionalReplaceBasicBadPP(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2282,23 +2374,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testConditionalReplaceExtended(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -2323,15 +2417,15 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
+//        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        long[] bank = getBank(processors._instructionProcessor, 2);
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+//        long[] bank = getBank(_instructionProcessor, 2);
 //        assertEquals(020L, bank[0]);
 //        assertEquals(014L, bank[1]);
 //    }
@@ -2339,11 +2433,13 @@ public class Test_TestInstructions extends BaseFunctions {
     //TODO
 //    @Test
 //    public void testReferenceViolationBasic1(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2362,23 +2458,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testReferenceViolationBasic2(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $BASIC",
 //            "          $INFO 1 3",
@@ -2395,23 +2493,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testReferenceViolationExtended1(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -2431,23 +2531,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testReferenceViolationExtended2(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -2466,23 +2568,25 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 //    }
 //
     //TODO
 //    @Test
 //    public void testReferenceViolationExtended3(
-//    ) throws MachineInterrupt,
+//    ) throws BinaryLoadException,
+//             MachineInterrupt,
 //             MaxNodesException,
 //             NodeNameConflictException,
 //             UPIConflictException,
-//             UPINotAssignedException {
+//             UPINotAssignedException,
+//             UPIProcessorTypeException {
 //        String[] source = {
 //            "          $EXTEND",
 //            "          $INFO 10 1",
@@ -2500,12 +2604,12 @@ public class Test_TestInstructions extends BaseFunctions {
 //        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
 //        assert(absoluteModule != null);
 //        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
+//        startAndWait(_instructionProcessor);
 //
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 //
-//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        Assert.assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
+//        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+//        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
 //    }
 }

@@ -14,16 +14,7 @@ import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import com.kadware.komodo.kex.kasm.Assembler;
-import com.kadware.komodo.kex.kasm.AssemblerOption;
-import com.kadware.komodo.kex.kasm.AssemblerResult;
-import com.kadware.komodo.kex.kasm.dictionary.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.After;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -32,79 +23,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_SystemControlInstructions extends BaseFunctions {
 
-    private static Map<String, Dictionary> definitionSets = null;
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  primitives
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    @BeforeClass
-    public static void beforeClass() {
-        if (definitionSets == null) {
-            String[] source = {
-                "SYSC$CREATE*  $EQU 020",
-                "SYSC$DELETE*  $EQU 021",
-                "SYSC$RESIZE*  $EQU 022",
-                "",
-                "SYSC$CNSTAT*  $EQU 030",
-                "SYSC$CNREAD*  $EQU 031",
-                "SYSC$CNRDREP* $EQU 032",
-                "SYSC$CNPOLL*  $EQU 033",
-                "SYSC$CNRESET* $EQU 034",
-                "",
-                "SYSC$OK*      $EQU 0    . Request successful",
-                "SYSC$BADUPI*  $EQU 01   . Given UPI is not a main storage processor",
-                "SYSC$BADSEG*  $EQU 02   . Given segment index is unknown to the given MSP",
-                "SYSC$INVADDR* $EQU 03   . Given address is invalid or does not exist",
-                "SYSC$INVSIZE* $EQU 04   . Requested size is out of range or invalid",
-                "SYSC$NACCESS* $EQU 05   . Access denied",
-                "",
-                "SYSC$FORM*    $FORM 6,6,6,18",
-                "SYSC$SUBFUNC* $EQUF 0,,S1",
-                "SYSC$STATUS*  $EQUF 0,,S2",
-                "SYSC$MSPUPI*  $EQUF 0,,S3",
-                "SYSC$MEMSEG*  $EQUF 1,,W",
-                "SYSC$MEMSIZE* $EQUF 2,,W",
-                //  U+0,S1          Subfunction
-                //  U+0,S2:         Status
-                //  U+0,S3:         UPI of target MSP
-                //  U+1,W:          Newly-assigned segment index if status is zero
-                //  U+2,W:          Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
-                "",
-                "DEFAULT$MSP*  $EQU 01",
-                "",
-                "             $END"
-            };
-
-            AssemblerOption[] options = {
-                AssemblerOption.EMIT_DICTIONARY,
-                AssemblerOption.EMIT_SOURCE,
-                AssemblerOption.DEFINITION_MODE
-            };
-
-            Assembler asm = new Assembler.Builder().setOptions(options)
-                                                   .setModuleName("Definitions")
-                                                   .setSource(source)
-                                                   .build();
-            AssemblerResult result = asm.assemble();
-            assertFalse(result._diagnostics.hasError());
-            assertNotNull(result._definitions);
-            definitionSets = new HashMap<>();
-            definitionSets.put("DEFINITIONS", result._definitions);
-        }
-    }
-
     @After
     public void after(
     ) throws UPINotAssignedException {
         clear();
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  SYSC general stuff
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     @Test
     public void sysc_badSubfunction(
@@ -116,7 +39,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(0)",
             "PACKET",
@@ -128,7 +51,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      077"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -156,7 +79,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "PACKET",
@@ -173,7 +96,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -195,7 +118,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "PACKET",
@@ -212,7 +135,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -229,7 +152,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "PACKET",
@@ -246,7 +169,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -269,7 +192,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -299,7 +222,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -321,7 +244,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -351,7 +274,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -372,7 +295,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -404,7 +327,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -432,7 +355,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -463,7 +386,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -485,7 +408,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -516,7 +439,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -538,7 +461,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -570,7 +493,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -592,7 +515,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
              UPINotAssignedException,
              UPIProcessorTypeException {
         String[] source = {
-            "          $INCLUDE 'DEFINITIONS'",
+            "          $INCLUDE 'SYSC$DEFS'",
             "",
             "$(4)",
             "ALLOCPACKET",
@@ -623,7 +546,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false, definitionSets);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
