@@ -97,9 +97,6 @@ public class SystemDictionary extends Dictionary {
         _initialValues.put("$SS", new BuiltInFunctionValue(SSFunction.class));
         _initialValues.put("$TYPE", new BuiltInFunctionValue(TYPEFunction.class));
 
-        //  built-in procs
-        //TODO
-
         //  forms
         _initialValues.put("I$", new FormValue(Form.I$Form));
         _initialValues.put("EI$", new FormValue(Form.EI$Form));

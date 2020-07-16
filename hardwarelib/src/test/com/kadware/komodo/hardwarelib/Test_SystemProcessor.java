@@ -21,23 +21,32 @@ public class Test_SystemProcessor {
     }
 
     private static final Word36 NONE = new Word36();
-    private static final Word36 ALL = new Word36(0_777777_777777L);
 
     @Test
     public void jktest_composite(
     ) {
         SystemProcessor sp = new TestSystemProcessor();
+        sp.initialize();
+        while (!sp.isReady()) {
+            Thread.onSpinWait();
+        }
         sp.setJumpKeys(NONE);
 
         Word36 jkw = new Word36(0123456_701234L);
         sp.setJumpKeys(jkw);
         Assert.assertEquals(jkw, sp.getJumpKeys());
+
+        sp.terminate();
     }
 
     @Test
     public void jktest_composite_set_component_get(
     ) {
         SystemProcessor sp = new TestSystemProcessor();
+        sp.initialize();
+        while (!sp.isReady()) {
+            Thread.onSpinWait();
+        }
         sp.setJumpKeys(NONE);
 
         Word36 jkw = new Word36(0123456_700001L);
@@ -83,12 +92,18 @@ public class Test_SystemProcessor {
         Assert.assertFalse(sp.getJumpKey(34));
         Assert.assertFalse(sp.getJumpKey(35));
         Assert.assertTrue(sp.getJumpKey(36));
+
+        sp.terminate();
     }
 
     @Test
     public void jktest_component(
     ) {
         SystemProcessor sp = new TestSystemProcessor();
+        sp.initialize();
+        while (!sp.isReady()) {
+            Thread.onSpinWait();
+        }
         sp.setJumpKeys(NONE);
 
         sp.setJumpKey(3, true);
@@ -97,12 +112,18 @@ public class Test_SystemProcessor {
         for (int jkid = 1; jkid < 37; ++jkid) {
             Assert.assertEquals(jkid == 3 || jkid == 4 || jkid == 13, sp.getJumpKey(jkid));
         }
+
+        sp.terminate();
     }
 
     @Test
     public void jktest_component_set_composite_get(
     ) {
         SystemProcessor sp = new TestSystemProcessor();
+        sp.initialize();
+        while (!sp.isReady()) {
+            Thread.onSpinWait();
+        }
         sp.setJumpKeys(NONE);
 
         sp.setJumpKey(3, true);
@@ -110,5 +131,7 @@ public class Test_SystemProcessor {
         sp.setJumpKey(13, true);
         Word36 jktest = new Word36(0_140040_000000L);
         Assert.assertEquals(jktest, sp.getJumpKeys());
+
+        sp.terminate();
     }
 }

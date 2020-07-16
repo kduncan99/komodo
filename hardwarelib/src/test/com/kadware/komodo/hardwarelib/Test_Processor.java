@@ -4,8 +4,8 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Unit tests for Processor class

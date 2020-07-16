@@ -412,7 +412,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     SystemProcessorInterface.ConsoleInputMessage consolePollInputMessage(
         final long waitMilliseconds
     ) {
-        EntryMessage em = _logger.traceEntry("consolePollInputMessage(waitMilliseconds=%d)", waitMilliseconds);
+        EntryMessage em = _logger.traceEntry("consolePollInputMessage(waitMilliseconds={}})", waitMilliseconds);
         SystemProcessorInterface.ConsoleInputMessage result = _systemConsoleInterface.pollInputMessage(waitMilliseconds);
         _logger.traceExit(em, result);
         return result;
@@ -457,7 +457,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final int consoleId,
         final String message
     ) {
-        EntryMessage em = _logger.traceEntry("consoleSendReadOnlyMessage(consoleId=%d message='%s')", consoleId, message);
+        EntryMessage em = _logger.traceEntry("consoleSendReadOnlyMessage(consoleId={} message='{}')", consoleId, message);
         _systemConsoleInterface.postReadOnlyMessage(consoleId, message, false, true);
         _logger.traceExit(em);
     }
@@ -747,9 +747,9 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         }
 
         //  Create and base the config bank
-        if (createConfigBank) {
-            //  TODO
-        }
+        //  TODO
+//        if (createConfigBank) {
+//        }
 
         //  Set up a small interrupt control stack (ICS).
         int icsFrameSize = 16;

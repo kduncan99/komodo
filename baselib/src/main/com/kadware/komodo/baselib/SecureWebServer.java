@@ -407,7 +407,9 @@ public class SecureWebServer {
      * Stops the server
      */
     public void stop() {
-        _server.stop(0);
+        if (_server != null) {
+            _server.stop(0);
+        }
     }
 
 

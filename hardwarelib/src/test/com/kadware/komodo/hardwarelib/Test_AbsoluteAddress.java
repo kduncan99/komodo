@@ -5,12 +5,13 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.AbsoluteAddress;
-import static org.junit.Assert.*;
-
-import org.junit.*;
-
 import java.util.HashSet;
 import java.util.Set;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Tests AbsoluteAddress class - not much to minalib here

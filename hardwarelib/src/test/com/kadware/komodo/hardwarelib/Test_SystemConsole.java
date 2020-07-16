@@ -11,16 +11,20 @@ import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
-import org.junit.Assert;
-import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
+import org.junit.Test;
 
 /**
  * For testing the SystemProcessorInterface (presumably the RESTSystemConsole, but good for any implementor)
@@ -734,7 +738,8 @@ public class Test_SystemConsole {
     //  Here is the main code
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    @Test
+    // only manual testing should be done, as this waits forever for console input
+    // @Test
     public void exercise(
     ) throws MaxNodesException,
              IOException,

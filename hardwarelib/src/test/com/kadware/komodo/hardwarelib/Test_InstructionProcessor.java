@@ -10,8 +10,10 @@ import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.*;
 import java.util.Random;
-import static org.junit.Assert.*;
-import org.junit.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -84,6 +86,7 @@ public class Test_InstructionProcessor {
                 if (sap._write) {
                     data[0] |= 0_010000_000000L;
                 }
+                //noinspection ConstantConditions
                 if (largeSize) {
                     data[0] |= 0_000004_000000L;
                 }
@@ -97,6 +100,7 @@ public class Test_InstructionProcessor {
                 assertEquals(sap, br._specialAccessPermissions);
                 assertEquals(accessLock, br._accessLock);
                 assertEquals(br._lowerLimitNormalized > br._upperLimitNormalized, br._voidFlag);
+                //noinspection ConstantConditions
                 assertEquals(largeSize, br._largeSizeFlag);
                 assertEquals(lowerLimitNorm, br._lowerLimitNormalized);
                 assertEquals(upperLimitNorm, br._upperLimitNormalized);
@@ -113,7 +117,7 @@ public class Test_InstructionProcessor {
     @Test
     public void ikr_creator_1(
     ) {
-        Assert.assertEquals(0, (new InstructionProcessor.IndicatorKeyRegister()).getW());
+        assertEquals(0, (new InstructionProcessor.IndicatorKeyRegister()).getW());
     }
 
     @Test

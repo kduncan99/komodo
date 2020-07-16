@@ -4,8 +4,11 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.exceptions.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.PrepFactor;
+import com.kadware.komodo.baselib.Word36;
+import com.kadware.komodo.hardwarelib.exceptions.InvalidBlockSizeException;
+import com.kadware.komodo.hardwarelib.exceptions.InvalidTrackCountException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -16,8 +19,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.Assert;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for FileSystemDiskDevice class
@@ -109,7 +116,12 @@ public class Test_FileSystemDiskDevice {
     private static String getTestFileName(
     ) {
         String pathName = System.getProperty("java.io.tmpdir");
-        return String.format("%sTEST%04d.pack", pathName == null ? "" : pathName, nextFileIndex++);
+        if (pathName == null) {
+            pathName = "";
+        } else if (!pathName.endsWith("/")) {
+            pathName += "/";
+        }
+        return String.format("%sTEST%04d.pack", pathName, nextFileIndex++);
     }
 
     /**

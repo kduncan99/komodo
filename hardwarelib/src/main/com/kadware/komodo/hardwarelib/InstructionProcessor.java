@@ -2474,8 +2474,8 @@ public class InstructionProcessor extends Processor implements Worker {
             new DCELFunctionHandler(),  //  004
             new SPIDFunctionHandler(),  //  005
             null,           //  006
-            null,           //  007
-            null,           //  010
+            new SENDFunctionHandler(),  //  007
+            new ACKFunctionHandler(),   //  010
             null,           //  011
             null,           //  012
             null,           //  013
@@ -3006,8 +3006,8 @@ public class InstructionProcessor extends Processor implements Worker {
             new DCELFunctionHandler(),  //  004
             new SPIDFunctionHandler(),  //  005
             new DABTFunctionHandler(),  //  006
-            null,           //  007
-            null,           //  010
+            new SENDFunctionHandler(),  //  007
+            new ACKFunctionHandler(),   //  010
             null,           //  011
             new LAEFunctionHandler(),   //  012
             new SKQTFunctionHandler(),  //  013
@@ -3362,6 +3362,27 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         @Override public Instruction getInstruction() { return Instruction.ACEL; }
+    }
+
+    /**
+     * Handles the ACK instruction f=073, j=015, a=010
+     */
+    private class ACKFunctionHandler extends InstructionHandler {
+
+        @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
+            if (_designatorRegister.getProcessorPrivilege() > 0) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            int upiIndex = (int) _currentInstruction.getT3();
+            try {
+                upiAcknowledge(upiIndex);
+            } catch (UPINotAssignedException ex) {
+                _logger.error("Caught %s for ACK to UPI index %d", ex.getMessage(), upiIndex);
+            }
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.ACK; }
     }
 
     /**
@@ -6118,6 +6139,27 @@ public class InstructionProcessor extends Processor implements Worker {
         }
 
         @Override public Instruction getInstruction() { return Instruction.SELL; }
+    }
+
+    /**
+     * Handles the SEND instruction f=073, j=015, a=007
+     */
+    private class SENDFunctionHandler extends InstructionHandler {
+
+        @Override public void handle() throws MachineInterrupt, UnresolvedAddressException {
+            if (_designatorRegister.getProcessorPrivilege() > 0) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+            }
+
+            int upiIndex = (int) _currentInstruction.getT3();
+            try {
+                upiSendDirected(upiIndex);
+            } catch (UPINotAssignedException ex) {
+                _logger.error("Caught %s for SEND to UPI index %d", ex.getMessage(), upiIndex);
+            }
+        }
+
+        @Override public Instruction getInstruction() { return Instruction.SEND; }
     }
 
     /**

@@ -13,8 +13,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for ByteChannelModule class
@@ -190,13 +193,10 @@ public class Test_InputOutputProcessor {
     private void setup(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             UPIConflictException,
-             NodeNameConflictException {
+             MaxNodesException {
         InventoryManager im = InventoryManager.getInstance();
         TestSystemProcessor sp = new TestSystemProcessor();
         sp.initialize();
-        im.addSystemProcessor(sp);
 
         _ip = im.createInstructionProcessor("IP0");
         _iop = im.createInputOutputProcessor("IOP0");
@@ -239,9 +239,7 @@ public class Test_InputOutputProcessor {
     public void canConnect_failure(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
         InputOutputProcessor iop = new InputOutputProcessor("IOP0", 2);
         assertFalse(iop.canConnect(new FileSystemDiskDevice("DISK0")));
@@ -257,9 +255,7 @@ public class Test_InputOutputProcessor {
     public void threadAlive_true(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
 
         try {
@@ -276,9 +272,7 @@ public class Test_InputOutputProcessor {
     public void unconfiguredChannelModule(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
 
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -300,9 +294,7 @@ public class Test_InputOutputProcessor {
     public void simpleRead(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
 
         int blockSize = 224;
@@ -343,9 +335,7 @@ public class Test_InputOutputProcessor {
     public void simpleWrite(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
 
         long[] baseData = new long[224];
@@ -390,9 +380,7 @@ public class Test_InputOutputProcessor {
     public void gatherWrite(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
 
         long[] baseData0 = new long[80];
@@ -467,9 +455,7 @@ public class Test_InputOutputProcessor {
     public void scatterRead(
     ) throws AddressingExceptionInterrupt,
              CannotConnectException,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+             MaxNodesException {
         setup();
         //TODO
         teardown();

@@ -7,8 +7,10 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import java.util.Map;
 import java.util.Set;
-import org.junit.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for Node class

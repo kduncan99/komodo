@@ -31,6 +31,8 @@ import org.apache.logging.log4j.message.EntryMessage;
 @SuppressWarnings("Duplicates")
 public class MainStorageProcessor extends Processor {
 
+    public static final int MIN_FIXED_SIZE = 256 * 1024;
+
     private final ArraySlice _fixedStorage;
     private final Map<Integer, ArraySlice> _dynamicStorage = new HashMap<>();
     private static final Logger LOGGER = LogManager.getLogger(MainStorageProcessor.class.getSimpleName());
@@ -47,7 +49,7 @@ public class MainStorageProcessor extends Processor {
         final int fixedStorageSize
     ) {
         super(ProcessorType.MainStorageProcessor, name, upi);
-        if (fixedStorageSize < 256 * 1024) {
+        if (fixedStorageSize < MIN_FIXED_SIZE) {
             throw new RuntimeException(String.format("Bad size for MSP:%d words", fixedStorageSize));
         }
         _fixedStorage = new ArraySlice(new long[fixedStorageSize]);
@@ -167,6 +169,7 @@ public class MainStorageProcessor extends Processor {
      * @param storageSize new size of the segment
      * @return (probably new) ArraySlice associated with the segment
      */
+    @SuppressWarnings("UnusedReturnValue")
     synchronized ArraySlice resizeSegment(
         final int segmentIndex,
         final int storageSize

@@ -1,12 +1,8 @@
 -- TODO InProgress
 
-hwlib:
-    SystemProcessor: loadBinary() Completely rework this
-    Test_SystemProcessor: absolute_load test - improve how this works
-
-Boot query:
-    Can I just do 'UR 0,*EX1,B26' to return from interrupts?
-    Yes, yes I can. That simplifies many things.
+IP: operations control instructions (and unit tests)
+  SEND
+  ACK
 
 
 -- TODO BUGS
@@ -35,6 +31,10 @@ UR instruction, bank manipulation, see TODO - need to account for UR to basic mo
 everywhere:
     Max real bank size is 0_077777_777777 (with large bit set), which requires a long.
     We have code all over the place which uses an int for bank size, bank addresses, etc.
+    However, Java array indicies must be int, so we would need to re-architect all memory manipulation
+    to use multiple arrays - the max array size is 2^31 - {n} where {n} is some very small number
+    such as 2 or 4 or 8.
+    This is significant work, and I'm not sure it's worth doing.
 
 
 -- TODO Thoughts
@@ -42,6 +42,11 @@ Do we need a high-level language for systems programming to supplement assembly?
 It appears that collector-generated absolute elements must always start in Basic mode. ?
   "For absolutes that are executed as programs, the Exec loads all banks produced by the Collector at level 2."
   Or... can the first IBank be marked extended mode? If so, then that is all we need to load it properly.
+
+Boot query:
+    Can I just do 'UR 0,*EX1,B26' to return from interrupts?
+    Yes, yes I can. That simplifies many things.
+
 
 -- TODO implement
 *html/css/javascript
@@ -73,6 +78,7 @@ Set logger name to foo.class.getSimpleName()
 more FloatingPointComponent tests
 
 * hardwarelib
+Test_SystemProcessor: absolute_load test - improve how this works
 SP: Move dayclock architecture to SystemProcessor
 IP: SYSC subfunctions need unit tests
 CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
@@ -100,9 +106,6 @@ need some conditional jump tests which would incur reference violation if they j
 IP: BT instruction and unit tests
 IP: UNLK instruction
 IP: SPID see new info in newest PRM
-IP: operations control instructions (and unit tests)
-  SEND
-  ACK
 IP: special instructions (and unit tests)
   EX
   EXR
@@ -215,16 +218,15 @@ functions
   $LCV
   $NODE (an empty node - this is maybe a built-in value, not a function?)
 directives
-  $NAME (has implications for $PROC)
   $FUNC (user-defined functions)
   $USE (implicit base register)
-  $INSERT (maybe)
   $BASE (maybe)
   $IF / $ELSE / $ELSF / $ENDF
   $DO / $ENDD
   $REPEAT / $ENDR
   $GEN
   $INFO finish the various groups we're going to implement
+  $NAME (maybe - has implications for $PROC, $FUNC)
 
 * klink
   Create absolute modules

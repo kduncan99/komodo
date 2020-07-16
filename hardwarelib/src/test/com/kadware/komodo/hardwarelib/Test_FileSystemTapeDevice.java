@@ -4,7 +4,8 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.Word36;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -15,9 +16,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import org.junit.Assert;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for FileSystemDiskDevice class
@@ -103,7 +106,12 @@ public class Test_FileSystemTapeDevice {
     private static String getTestFileName(
     ) {
         String pathName = System.getProperty("java.io.tmpdir");
-        return String.format("%sTEST%04d.vol", pathName == null ? "" : pathName, nextFileIndex++);
+        if (pathName == null) {
+            pathName = "";
+        } else if (!pathName.endsWith("/")) {
+            pathName += "/";
+        }
+        return String.format("%sTEST%04d.vol", pathName, nextFileIndex++);
     }
 
     /**
@@ -135,7 +143,7 @@ public class Test_FileSystemTapeDevice {
         FileSystemTapeDevice d = new FileSystemTapeDevice("TAPE0");
         assertEquals("TAPE0", d._name);
         assertEquals(Node.NodeCategory.Device, d._category);
-        Assert.assertEquals(Device.Model.FileSystemTape, d._deviceModel);
+        assertEquals(Device.Model.FileSystemTape, d._deviceModel);
         assertEquals(Device.Type.Tape, d._deviceType);
     }
 

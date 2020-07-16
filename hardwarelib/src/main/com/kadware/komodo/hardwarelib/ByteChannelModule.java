@@ -10,8 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Implements a word channel module.
- * Designed for connected devices which do IO on long integers, of which the lower 36 bits are significant.
+ * Implements a byte channel module.
+ * Designed for connected devices which do IO on blocks of 8-bit bytes.
  */
 
 /*
@@ -79,7 +79,7 @@ public class ByteChannelModule extends ChannelModule {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
+    //  methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -155,27 +155,21 @@ public class ByteChannelModule extends ChannelModule {
         ChannelProgram cp = tracker._channelProgram;
         byte[] result = null;
         switch (cp.getByteTranslationFormat()) {
-            case QuarterWordPerByte:                //  Format A quarter word -> frame
-            case QuarterWordPerByteNoTermination:   //  Format D quarter word -> frame
-            {
+            case QuarterWordPerByte, QuarterWordPerByteNoTermination -> {
                 //  Format A might stop short of the end of the word buffer based on bit 9 of any quarter word being set.
                 //  We create a byte[] of the longest length we'll need, but we might truncate it due to stopping short.
                 result = new byte[tracker._compositeBuffer._length * 4];
                 tracker._compositeBuffer.packQuarterWords(result);
                 cp.setWordsTransferred(tracker._compositeBuffer._length);
-                break;
             }
 
-            case SixthWordByte:                     //  Format B sixth word -> frame
-            {
+            case SixthWordByte -> {
                 result = new byte[tracker._compositeBuffer._length * 6];
                 tracker._compositeBuffer.packSixthWords(result);
                 cp.setWordsTransferred(tracker._compositeBuffer._length);
-                break;
             }
 
-            case QuarterWordPacked:              //  Format C two words -> 9 frames
-            {
+            case QuarterWordPacked -> {
                 int bytes = tracker._compositeBuffer._length * 9 / 2;
                 if (tracker._compositeBuffer._length % 2 > 0) {
                     ++bytes;
@@ -183,7 +177,6 @@ public class ByteChannelModule extends ChannelModule {
                 result = new byte[bytes];
                 tracker._compositeBuffer.pack(result);
                 cp.setWordsTransferred(tracker._compositeBuffer._length);
-                break;
             }
         }
 
@@ -296,9 +289,7 @@ public class ByteChannelModule extends ChannelModule {
     ) {
         ChannelProgram cp = tracker._channelProgram;
         switch (cp.getByteTranslationFormat()) {
-            case QuarterWordPerByte:                //  Format A
-            case QuarterWordPerByteNoTermination:   //  Format D
-            {
+            case QuarterWordPerByte, QuarterWordPerByteNoTermination -> {
                 int frames = tracker._compositeBuffer.unpackQuarterWords(tracker._ioInfo._byteBuffer,
                                                                          0,
                                                                          tracker._ioInfo._transferredCount,
@@ -310,8 +301,7 @@ public class ByteChannelModule extends ChannelModule {
                 return frames < tracker._ioInfo._transferredCount;
             }
 
-            case SixthWordByte:                     //  Format B
-            {
+            case SixthWordByte -> {
                 int frames = tracker._compositeBuffer.unpackSixthWords(tracker._ioInfo._byteBuffer,
                                                                        0,
                                                                        tracker._ioInfo._transferredCount,
@@ -323,8 +313,7 @@ public class ByteChannelModule extends ChannelModule {
                 return frames < tracker._ioInfo._transferredCount;
             }
 
-            case QuarterWordPacked:              //  Format C
-            {
+            case QuarterWordPacked -> {
                 int bytesRead = tracker._ioInfo._transferCount;
                 int wordsRequired = bytesRead * 2 / 9;
                 wordsRequired += (bytesRead * 2) % 9 == 0 ? 0 : 1;
