@@ -4,12 +4,27 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.hardwarelib.*;
-import com.kadware.komodo.hardwarelib.exceptions.*;
-import com.kadware.komodo.hardwarelib.interrupts.*;
-import com.kadware.komodo.kex.kasm.*;
+import com.kadware.komodo.baselib.AccessInfo;
+import com.kadware.komodo.baselib.AccessPermissions;
+import com.kadware.komodo.baselib.GeneralRegisterSet;
+import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
+import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
+import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
+import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
+import com.kadware.komodo.kex.kasm.Assembler;
+import com.kadware.komodo.kex.kasm.AssemblerOption;
+import com.kadware.komodo.kex.klink.BankDeclaration;
+import com.kadware.komodo.kex.klink.LCPoolSpecification;
+import com.kadware.komodo.kex.klink.LinkOption;
+import com.kadware.komodo.kex.klink.LinkType;
+import com.kadware.komodo.kex.klink.Linker;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -25,866 +40,785 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         clear();
     }
 
-    //TODO
-//    @Test
-//    public void jump_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          NOP",
-//            "          J         TARGET",
-//            "          HALT      0",
-//            "          HALT      1",
-//            "          HALT      2",
-//            "TARGET",
-//            "          HALT      3",
-//            "          HALT      4",
-//            "          HALT      5",
-//            "          HALT      6",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_bankSelection(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "$(0) . this will be 0600005 based on B14", // primary DBank for DB31=0
-//            "DATA      + 1",
-//            "",
-//            "$(1) . this will be 0600004 based on B12", // primary IBank for DB31=0,
-//            "START$*",
-//            "          LA        A1,DATA . should get value from $(0)",
-//            "          J         TARGET",
-//            "",
-//            "DONE",
-//            "          HALT      0",
-//            "",
-//            "$(2) . this will be 0600007 based on B15", // primary DBank for DB31=1
-//            "          + 2 . will be linked so as to overlap DATA in $(0)",
-//            "",
-//            "$(3) . this will be 0600006 based on B13", // primary IBank for DB31=1
-//            "TARGET",
-//            "          LA        A2,DATA . should get value from $(2)",
-//            "          J         DONE",
-//            "          HALT 077",
-//        };
-//
-//        //  Special construction of the absolute
-//        Assembler.Option[] asmOptions = {};
-//        Assembler asm = new Assembler();
-//        OldRelocatableModule relModule = asm.assemble("TEST", source, asmOptions);
-//
-//        Linker.LCPoolSpecification[] bank4PoolSpecs = {
-//            new Linker.LCPoolSpecification(relModule, 1),
-//        };
-//
-//        Linker.LCPoolSpecification[] bank5PoolSpecs = {
-//            new Linker.LCPoolSpecification(relModule, 0),
-//        };
-//
-//        Linker.LCPoolSpecification[] bank6PoolSpecs = {
-//            new Linker.LCPoolSpecification(relModule, 3),
-//        };
-//
-//        Linker.LCPoolSpecification[] bank7PoolSpecs = {
-//            new Linker.LCPoolSpecification(relModule, 2),
-//        };
-//
-//        AccessInfo lock = new AccessInfo((short)3, 100);
-//        AccessPermissions iBankPerms = new AccessPermissions(true, true, false);
-//        AccessPermissions dBankPerms = new AccessPermissions(false, true, false);
-//
-//        Linker.BankDeclaration[] bankDeclarations = {
-//            new Linker.BankDeclaration.Builder()
-//                .setBankLevel(6)
-//                .setBankDescriptorIndex(4)
-//                .setBankName("I1")
-//                .setStartingAddress(01000)
-//                .setInitialBaseRegister(12)
-//                .setGeneralAccessPermissions(iBankPerms)
-//                .setSpecialAccessPermissions(iBankPerms)
-//                .setAccessInfo(lock)
-//                .setPoolSpecifications(bank4PoolSpecs)
-//                .build(),
-//            new Linker.BankDeclaration.Builder()
-//                .setBankLevel(6)
-//                .setBankDescriptorIndex(5)
-//                .setBankName("D1")
-//                .setStartingAddress(022000)
-//                .setInitialBaseRegister(14)
-//                .setGeneralAccessPermissions(dBankPerms)
-//                .setSpecialAccessPermissions(dBankPerms)
-//                .setAccessInfo(lock)
-//                .setPoolSpecifications(bank5PoolSpecs)
-//                .build(),
-//            new Linker.BankDeclaration.Builder()
-//                .setBankLevel(6)
-//                .setBankDescriptorIndex(6)
-//                .setBankName("I2")
-//                .setStartingAddress(02000)
-//                .setInitialBaseRegister(13)
-//                .setGeneralAccessPermissions(iBankPerms)
-//                .setSpecialAccessPermissions(iBankPerms)
-//                .setAccessInfo(lock)
-//                .setPoolSpecifications(bank6PoolSpecs)
-//                .build(),
-//            new Linker.BankDeclaration.Builder()
-//                .setBankLevel(6)
-//                .setBankDescriptorIndex(7)
-//                .setBankName("D2")
-//                .setStartingAddress(022000)
-//                .setInitialBaseRegister(15)
-//                .setGeneralAccessPermissions(dBankPerms)
-//                .setSpecialAccessPermissions(dBankPerms)
-//                .setAccessInfo(lock)
-//                .setPoolSpecifications(bank7PoolSpecs)
-//                .build(),
-//        };
-//
-//        Linker.Option[] linkerOptions = {};
-//        Linker linker = new Linker();
-//        AbsoluteModule absoluteModule = linker.link("TEST", bankDeclarations, 0, linkerOptions);
-//
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//
-//        assertEquals(1, processors._instructionProcessor.getExecOrUserARegister(1).getW());
-//        assertEquals(2, processors._instructionProcessor.getExecOrUserARegister(2).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_indexed_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          NOP",
-//            "          LXI,U     X3,1",
-//            "          LXM,U     X3,5",
-//            "          J         TARGET,*X3",
-//            "          HALT      077",
-//            "",
-//            "TARGET",
-//            "          HALT      076",
-//            "          HALT      075",
-//            "          HALT      074",
-//            "          HALT      073",
-//            "          HALT      072",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(01_000006L, processors._instructionProcessor.getGeneralRegister(3).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_indirect_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          J         *TARGET2",
-//            "          HALT      077",
-//            "",
-//            "TARGET1",
-//            "          J         DONE",
-//            "          HALT      075",
-//            "",
-//            "TARGET2",
-//            "          J         *TARGET1",
-//            "          HALT      076",
-//            "",
-//            "DONE",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_indexed_indirect_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X2,1",
-//            "          LXM,U     X2,2",
-//            "          LXI,U     X3,1",
-//            "          LXM,U     X3,1",
-//            "          J         *TARGET2,*X2",
-//            "          HALT      077",
-//            "",
-//            "TARGET1",
-//            "          HALT      073",
-//            "          J         DONE",
-//            "          HALT      072",
-//            "",
-//            "TARGET2",
-//            "          HALT      076",
-//            "          HALT      075",
-//            "          J         *TARGET1,*X3",
-//            "          HALT      074",
-//            "",
-//            "DONE",
-//            "          HALT      0",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(01_000003, processors._instructionProcessor.getGeneralRegister(2).getW());
-//        assertEquals(01_000002, processors._instructionProcessor.getGeneralRegister(3).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          NOP",
-//            "          J         TARGET",
-//            "          HALT      0",
-//            "          HALT      1",
-//            "          HALT      2",
-//            "          $RES      040000 . use large jump to ensure we use U, not D",
-//            "TARGET",
-//            "          HALT      3",
-//            "          HALT      4",
-//            "          HALT      5",
-//            "          HALT      6",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_indexed_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X5,2",
-//            "          LXM,U     X5,3",
-//            "          J         TARGET,*X5",
-//            "",
-//            "TARGET",
-//            "          HALT      0",
-//            "          HALT      1",
-//            "          HALT      2",
-//            "          HALT      3 . Jump here",
-//            "          HALT      4",
-//            "          HALT      5",
-//            "          HALT      6",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(02_000005, processors._instructionProcessor.getGeneralRegister(5).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_key_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LXM,U     X5,3",
-//            "          LXI,U     X5,1",
-//            "          JK        TARGET,*X5 . Will not conditionalJump, will drop through",
-//            "",
-//            "TARGET",
-//            "          HALT      0",
-//            "          HALT      1",
-//            "          HALT      2",
-//            "          HALT      3",
-//            "          HALT      4",
-//            "          HALT      5",
-//            "          HALT      6",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(01_000004L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void haltJump_74_05_normal_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          NOP",
-//            "          HJ        TARGET",
-//            "          HALT      0",
-//            "          HALT      1",
-//            "          HALT      2",
-//            "TARGET",
-//            "          HALT      3",
-//            "          HALT      4",
-//            "          HALT      5",
-//            "          HALT      6",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(3, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void haltJump_74_15_05_normal_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0",
-//            "          HLTJ      TARGET",
-//            "          LA,U      A0,5",
-//            "          HALT      0",
-//            "",
-//            "TARGET",
-//            "          HALT      1",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-    //TODO
-//    @Test
-//    public void haltJump_74_15_05_normal_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0",
-//            "          HLTJ      TARGET",
-//            "          LA,U      A0,5",
-//            "          HALT      0",
-//            "",
-//            "TARGET",
-//            "          HALT      1",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        processors._instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(absoluteModule._entryPointAddress + 4, processors._instructionProcessor.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-    //TODO
-//    @Test
-//    public void haltJump_74_15_05_pp1_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          HLTJ      TARGET . should throw interrupt",
-//            "          HALT      077    . should not get here",
-//            "TARGET "
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-    //TODO
-//    @Test
-//    public void haltJump_74_15_05_pp1_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0",
-//            "          HLTJ      TARGET",
-//            "          LA,U      A0,5",
-//            "          HALT      0",
-//            "",
-//            "TARGET",
-//            "          HALT      1",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01016, processors._instructionProcessor.getLatestStopDetail());
-//    }
-//
-//    //  no extended mode version of SLJ
-//
-    //TODO
-//    @Test
-//    public void storeLocationAndJump(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0         . set up initial values",
-//            "          LA,U      A1,0",
-//            "          SLJ       SUBROUTINE",
-//            "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
-//            "          LA,U      A1,5         . change A1 value post-subroutine",
-//            "          HALT      0            . done",
-//            "",
-//            "SUBROUTINE .",
-//            "          + 0                    . where return address is stored",
-//            "          LA,U      A0,5         . update A0 value",
-//            "          J         *SUBROUTINE  . return to caller",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void storeLocationAndJump_indirect(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0),VECTOR  + SUBROUTINE",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0         . set up initial values",
-//            "          LA,U      A1,0",
-//            "          SLJ       *VECTOR",
-//            "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
-//            "          LA,U      A1,5         . change A1 value post-subroutine",
-//            "          HALT      0            . done",
-//            "",
-//            "SUBROUTINE .",
-//            "          + 0                    . where return address is stored",
-//            "          LA,U      A0,5         . update A0 value",
-//            "          J         *SUBROUTINE  . return to caller",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void loadModifierAndJump_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0         . set up initial values",
-//            "          LA,U      A1,0",
-//            "          LMJ       X11,SUBROUTINE",
-//            "          LA,U      A1,5         . change A1 value post-subroutine",
-//            "          HALT      0            . done",
-//            "",
-//            "SUBROUTINE .",
-//            "          LA,U      A0,5         . update A0 value",
-//            "          J         0,X11        . return to caller",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void loadModifierAndJump_indirect_basic(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(0),VECTOR  + SUBROUTINE",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0         . set up initial values",
-//            "          LA,U      A1,0",
-//            "          LMJ       X11,*VECTOR",
-//            "          LA,U      A1,5         . change A1 value post-subroutine",
-//            "          HALT      0            . done",
-//            "",
-//            "SUBROUTINE .",
-//            "          LA,U      A0,5         . update A0 value",
-//            "          J         0,X11        . return to caller",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void loadModifierAndJump_extended(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          LA,U      A0,0         . set up initial values",
-//            "          LA,U      A1,0",
-//            "          LMJ       X11,SUBROUTINE",
-//            "          LA,U      A1,5         . change A1 value post-subroutine",
-//            "          HALT      0            . done",
-//            "          $RES      020000       . use large jump to ensure we use U, not D",
-//            "",
-//            "SUBROUTINE .",
-//            "          LA,U      A0,5         . update A0 value",
-//            "          J         0,X11        . return to caller",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(0, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-//        assertEquals(05L, processors._instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_basic_referenceViolation1(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        //  address out of limits
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          NOP",
-//            "          J         050000",
-//            "          HALT      077",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_basic_referenceViolation2(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        //  address out of limits
-//        String[] source = {
-//            "          $BASIC",
-//            "",
-//            "$(1),START$*",
-//            "          LXI,U     X3,010",
-//            "          LXM,U     X3,0100",
-//            "          J         0,*X3",
-//            "          HALT      077",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeBasic(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//        assertEquals(010_000110L, processors._instructionProcessor.getGeneralRegister(3).getW());
-//    }
-//
-    //TODO
-//    @Test
-//    public void jump_extended_referenceViolation1(
-//    ) throws MachineInterrupt,
-//             MaxNodesException,
-//             NodeNameConflictException,
-//             UPIConflictException,
-//             UPINotAssignedException {
-//        String[] source = {
-//            "          $EXTEND",
-//            "          $INFO 10 1",
-//            "",
-//            "$(1),START$*",
-//            "          J         START$+02000",
-//            "          HALT      077",
-//        };
-//
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        startAndWait(processors._instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(processors._instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(processors._mainStorageProcessor._upiIndex);
-//
-//        assertEquals(InstructionProcessor.StopReason.Debug, processors._instructionProcessor.getLatestStopReason());
-//        assertEquals(01010, processors._instructionProcessor.getLatestStopDetail());
-//        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-//                     processors._instructionProcessor.getLastInterrupt().getShortStatusField());
-//    }
+    @Test
+    public void jump_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          J         TARGET",
+            "          HALT      077",
+            "          HALT      076",
+            "          HALT      075",
+            "TARGET",
+            "          HALT      0",
+            "          HALT      074",
+            "          HALT      073",
+            "          HALT      072"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jump_bankSelection(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $EXTEND",
+            "          $INFO 1 3",
+            "          $INFO 10 1",
+            "",
+            "$(1)  . extended mode ibank 0100004 - start here",
+            "          $LIT",
+            "START",
+            "          LD        (000001,000000)     . ext mode, exec regs, pp=0",
+            ".",
+            "          LD        (0,0)               . ext mode, user regs, pp=0",
+            "          GOTO      (LBDIREF$+BMSTART, BMSTART)",
+            "",
+            "          $BASIC",
+            "$(11) . this will be 0100011 based on B12", // primary IBank for DB31=0,
+            "          $LIT",
+            "BMSTART*",
+            "          LBU       B13,(LBDIREF$+TARGET, 0)",
+            "          LBU       B14,(LBDIREF$+DATA, 0)",
+            "          LBU       B15,(LBDIREF$+OTHERDATA, 0)",
+            "          LA        A1,DATA . should get value from $(10)",
+            "          J         TARGET",
+            "",
+            "DONE",
+            "          HALT      0",
+            "",
+            "$(10) . this will be 0100010 based on B14", // primary DBank for DB31=0
+            "DATA*     + 1",
+            "",
+            "$(12) . this will be 0100012 based on B15", // primary DBank for DB31=1
+            "OTHERDATA* + 2 . will be linked so as to overlap DATA in $(10)",
+            "",
+            "$(13) . this will be 0100013 based on B13", // primary IBank for DB31=1
+            "TARGET*",
+            "          LA        A2,DATA . should get value from $(12)",
+            "          J         DONE",
+            "          HALT 077",
+            "",
+            "          $END START"
+        };
+
+        //  Special construction of the absolute
+        AssemblerOption[] asmOpts = {
+            AssemblerOption.EMIT_SOURCE,
+            AssemblerOption.EMIT_GENERATED_CODE,
+            AssemblerOption.EMIT_MODULE_SUMMARY
+        };
+        _assembler = new Assembler.Builder().setSource(source)
+                                            .setOptions(asmOpts)
+                                            .setModuleName("TEST")
+                                            .build();
+        _assemblerResult = _assembler.assemble();
+        Assert.assertFalse(_assemblerResult._diagnostics.hasError());
+
+        LCPoolSpecification[] poolSpecs100004 = {
+            new LCPoolSpecification(_assemblerResult._relocatableModule,1)
+        };
+
+        LCPoolSpecification[] poolSpecs100010 = {
+            new LCPoolSpecification(_assemblerResult._relocatableModule, 10)
+        };
+
+        LCPoolSpecification[] poolSpecs100011 = {
+            new LCPoolSpecification(_assemblerResult._relocatableModule, 11)
+        };
+
+        LCPoolSpecification[] poolSpecs100012 = {
+            new LCPoolSpecification(_assemblerResult._relocatableModule, 12)
+        };
+
+        LCPoolSpecification[] poolSpecs100013 = {
+            new LCPoolSpecification(_assemblerResult._relocatableModule, 13)
+        };
+
+        AccessInfo accessInfo = new AccessInfo(0, 0);
+        AccessPermissions gap = new AccessPermissions(false, false, false);
+        AccessPermissions codeSap = new AccessPermissions(true, true, false);
+        AccessPermissions dataSap = new AccessPermissions(false, true, true);
+        BankDeclaration.BankDeclarationOption[] extCodeOpts = {
+            BankDeclaration.BankDeclarationOption.EXTENDED_MODE,
+            BankDeclaration.BankDeclarationOption.WRITE_PROTECT
+        };
+        BankDeclaration.BankDeclarationOption[] basicCodeOpts = {
+            BankDeclaration.BankDeclarationOption.WRITE_PROTECT,
+        };
+        BankDeclaration.BankDeclarationOption[] dataOpts = {
+            BankDeclaration.BankDeclarationOption.DYNAMIC,
+            BankDeclaration.BankDeclarationOption.DBANK
+        };
+
+        BankDeclaration bd100004 = new BankDeclaration.Builder().setBankLevel(1)
+                                                                .setBankDescriptorIndex(4)
+                                                                .setBankName("EMIBANK")
+                                                                .setAccessInfo(accessInfo)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setSpecialAccessPermissions(codeSap)
+                                                                .setPoolSpecifications(poolSpecs100004)
+                                                                .setStartingAddress(01000)
+                                                                .setOptions(extCodeOpts)
+                                                                .build();
+        BankDeclaration bd100010 = new BankDeclaration.Builder().setBankLevel(1)
+                                                                .setBankDescriptorIndex(010)
+                                                                .setBankName("BM-B14")
+                                                                .setAccessInfo(accessInfo)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setSpecialAccessPermissions(dataSap)
+                                                                .setPoolSpecifications(poolSpecs100010)
+                                                                .setStartingAddress(022000)
+                                                                .setOptions(dataOpts)
+                                                                .build();
+        BankDeclaration bd100011 = new BankDeclaration.Builder().setBankLevel(1)
+                                                                .setBankDescriptorIndex(011)
+                                                                .setBankName("BM-B12")
+                                                                .setAccessInfo(accessInfo)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setSpecialAccessPermissions(codeSap)
+                                                                .setPoolSpecifications(poolSpecs100011)
+                                                                .setStartingAddress(01000)
+                                                                .setOptions(basicCodeOpts)
+                                                                .build();
+        BankDeclaration bd100012 = new BankDeclaration.Builder().setBankLevel(1)
+                                                                .setBankDescriptorIndex(012)
+                                                                .setBankName("BM-B15")
+                                                                .setAccessInfo(accessInfo)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setSpecialAccessPermissions(dataSap)
+                                                                .setPoolSpecifications(poolSpecs100012)
+                                                                .setStartingAddress(022000)
+                                                                .setOptions(dataOpts)
+                                                                .build();
+        BankDeclaration bd100013 = new BankDeclaration.Builder().setBankLevel(1)
+                                                                .setBankDescriptorIndex(013)
+                                                                .setBankName("BM-B13")
+                                                                .setAccessInfo(accessInfo)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setSpecialAccessPermissions(codeSap)
+                                                                .setPoolSpecifications(poolSpecs100013)
+                                                                .setStartingAddress(05000)
+                                                                .setOptions(basicCodeOpts)
+                                                                .build();
+        BankDeclaration[] bankDeclarations = {
+            bd100004,
+            bd100010,
+            bd100011,
+            bd100012,
+            bd100013
+        };
+
+        LinkOption[] linkOpts = {
+            LinkOption.EMIT_SUMMARY,
+            LinkOption.EMIT_LCPOOL_MAP
+        };
+        Linker linker = new Linker.Builder().setOptions(linkOpts)
+                                            .setBankDeclarations(bankDeclarations)
+                                            .build();
+        _linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
+        Assert.assertEquals(0, _linkResult._errorCount);
+
+        createProcessors();
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+
+        assertEquals(1, _instructionProcessor.getExecOrUserARegister(1).getW());
+        assertEquals(2, _instructionProcessor.getExecOrUserARegister(2).getW());
+    }
+
+    @Test
+    public void jump_indexed_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LXI,U     X3,1",
+            "          LXM,U     X3,5",
+            "          J         TARGET,*X3",
+            "          HALT      077",
+            "",
+            "TARGET",
+            "          HALT      076",
+            "          HALT      075",
+            "          HALT      074",
+            "          HALT      073",
+            "          HALT      072",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000006L, _instructionProcessor.getGeneralRegister(3).getW());
+    }
+
+    @Test
+    public void jump_indirect_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          J         *TARGET2",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          J         DONE",
+            "          HALT      075",
+            "",
+            "TARGET2",
+            "          J         *TARGET1",
+            "          HALT      076",
+            "",
+            "DONE",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jump_indexed_indirect_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LXI,U     X2,1",
+            "          LXM,U     X2,2",
+            "          LXI,U     X3,1",
+            "          LXM,U     X3,1",
+            "          J         *TARGET2,*X2",
+            "          HALT      077",
+            "",
+            "TARGET1",
+            "          HALT      073",
+            "          J         DONE",
+            "          HALT      072",
+            "",
+            "TARGET2",
+            "          HALT      076",
+            "          HALT      075",
+            "          J         *TARGET1,*X3",
+            "          HALT      074",
+            "",
+            "DONE",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000003, _instructionProcessor.getGeneralRegister(2).getW());
+        assertEquals(01_000002, _instructionProcessor.getGeneralRegister(3).getW());
+    }
+
+    @Test
+    public void jump_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          GOTO      (LBDIREF$+TEST, TEST)",
+            "",
+            "          $INFO 10 7",
+            "$(7)      $LIT",
+            "TEST",
+            "          J         TARGET",
+            "          $RES      040000 . use large jump to ensure we use U, not D",
+            "TARGET",
+            "          HALT      0",
+            "          HALT      077",
+            "          HALT      076",
+            "          HALT      075"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void jump_indexed_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LXI,U     X5,2",
+            "          LXM,U     X5,3",
+            "          J         TARGET,*X5",
+            "",
+            "TARGET",
+            "          HALT      077",
+            "          HALT      076",
+            "          HALT      075",
+            "          HALT      0 . Jump here",
+            "          HALT      074",
+            "          HALT      073",
+            "          HALT      072"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(02_000005, _instructionProcessor.getGeneralRegister(5).getW());
+    }
+
+    @Test
+    public void jump_key_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LXM,U     X5,3",
+            "          LXI,U     X5,1",
+            "          JK        TARGET,*X5 . Will not jump, will drop through",
+            "",
+            "TARGET",
+            "          HALT      0",
+            "          HALT      077",
+            "          HALT      076",
+            "          HALT      075",
+            "          HALT      074",
+            "          HALT      073",
+            "          HALT      072"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(01_000004L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+    }
+
+    @Test
+    public void haltJump_74_05_normal_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          HJ        TARGET",
+            "          HALT      077",
+            "TARGET",
+            "          HALT      0"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void haltJump_74_15_05_normal_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LA,U      A0,0",
+            "          HLTJ      TARGET",
+            "          LA,U      A0,5",
+            "          HALT      0",
+            "",
+            "TARGET",
+            "          HALT      1"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
+    }
+
+    @Test
+    public void haltJump_74_15_05_normal_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          GOTO      (LBDIREF$+TEST, TEST)",
+            "",
+            "          $INFO 10 7",
+            "$(7)      $LIT",
+            "TEST",
+            "          LA,U      A0,0",
+            "          HLTJ      TARGET",
+            "          LA,U      A0,5",
+            "          HALT      0",
+            "",
+            "TARGET",
+            "          HALT      1         . offset 04 from bank start"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
+        assertEquals(01004, _instructionProcessor.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void haltJump_74_15_05_pp1_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'GEN$DEFS'",
+            "",
+            "          DR$SETPP01       . set proc priv = 1",
+            "          HLTJ      TARGET . should throw interrupt",
+            "          HALT      077    . should not get here",
+            "TARGET    HALT      076    . should not get here either"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+    }
+
+    @Test
+    public void haltJump_74_15_05_pp1_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          $INCLUDE 'GEN$DEFS'",
+            "",
+            "          DR$SETPP01       . set proc priv = 1",
+            "          LA,U      A0,0",
+            "          HLTJ      TARGET",
+            "          LA,U      A0,5",
+            "          HALT      0",
+            "",
+            "TARGET",
+            "          HALT      1",
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+    }
+
+    //  no extended mode version of SLJ
+
+    @Test
+    public void storeLocationAndJump(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          SLJ       SUBROUTINE",
+            "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          + 0                    . where return address is stored",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         *SUBROUTINE  . return to caller"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void storeLocationAndJump_indirect(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "$(4),VECTOR  + SUBROUTINE",
+            "",
+            "$(3)",
+            "          LBU       B13,(LBDIREF$+VECTOR, 0)",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          SLJ       *VECTOR",
+            "          $GFORM    6,072,4,01,4,0,4,0,1,0,1,0,16,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          + 0                    . where return address is stored",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         *SUBROUTINE  . return to caller"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void loadModifierAndJump_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          LMJ       X11,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         0,X11        . return to caller"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void loadModifierAndJump_indirect_basic(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "$(4),VECTOR  + SUBROUTINE",
+            "",
+            "$(3)",
+            "          LBU       B13,(LBDIREF$+VECTOR, 0)",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          LMJ       X11,*VECTOR",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "",
+            "SUBROUTINE .",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         0,X11        . return to caller"
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void loadModifierAndJump_extended(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          CALL      (LBDIREF$+TEST, TEST) . because of the large ibank",
+            "",
+            "          $INFO 10 5",
+            "$(5)      $LIT",
+            "TEST",
+            "          LA,U      A0,0         . set up initial values",
+            "          LA,U      A1,0",
+            "          LMJ       X11,SUBROUTINE",
+            "          LA,U      A1,5         . change A1 value post-subroutine",
+            "          HALT      0            . done",
+            "          $RES      020000       . use large jump to ensure we use U, not D",
+            "",
+            "SUBROUTINE .",
+            "          LA,U      A0,5         . update A0 value",
+            "          J         0,X11        . return to caller",
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+    }
+
+    @Test
+    public void jump_basic_referenceViolation1(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //  address out of limits
+        String[] source = {
+            "          J         050000",
+            "          HALT      077",
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
+
+    @Test
+    public void jump_basic_referenceViolation2(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        //  address out of limits
+        String[] source = {
+            "          LXI,U     X3,010",
+            "          LXM,U     X3,0100",
+            "          J         0,*X3",
+            "          HALT      077",
+        };
+
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+        assertEquals(010_000110L, _instructionProcessor.getGeneralRegister(3).getW());
+    }
+
+    @Test
+    public void jump_extended_referenceViolation1(
+    ) throws BinaryLoadException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
+        String[] source = {
+            "          J         $+02000",
+            "          HALT      077",
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false);
+        ipl(true);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
+        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
+                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+    }
 }

@@ -62,6 +62,13 @@ class BaseFunctions {
     SystemProcessor _systemProcessor = null;
 
     private static final String[] GEN_DEFS_SOURCE = {
+        "DR$SETPP01* $PROC",
+        "          SD        A13",
+        "          AND       A13,(0777763,0777777)",
+        "          OR        A14,(04,0)",
+        "          LD        A15",
+        "          $END",
+        ".",
         "DR$SETPP03* $PROC",
         "          SD        A14",
         "          OR        A14,(014,0)",
@@ -379,7 +386,7 @@ class BaseFunctions {
     /**
      * Common processor creation code
      */
-    private void createProcessors(
+    void createProcessors(
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
@@ -474,9 +481,7 @@ class BaseFunctions {
     }
 
     /**
-     * Builds a binary executable consisting of one bank per location counter.
-     * Odd-number BDIs are static read-only
-     * Even-number BDIs are dynamic dbanks, read-write, no enter
+     * Convenience method for below
      * @param source source code to be built
      * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
      * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
@@ -485,6 +490,26 @@ class BaseFunctions {
         final String[] source,
         final boolean includeInterruptHandlers,
         final boolean avoidDBankCollision
+    ) throws MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException {
+        buildMultiBank(source, includeInterruptHandlers, avoidDBankCollision, false);
+    }
+
+    /**
+     * Builds a binary executable consisting of one bank per location counter.
+     * Odd-number BDIs are static read-only
+     * Even-number BDIs are dynamic dbanks, read-write, no enter
+     * @param source source code to be built
+     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
+     * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
+     * @param writeableCodeBanks true if code banks are to be marked as writeable (for SLJ instruction tests)
+     */
+    void buildMultiBank(
+        final String[] source,
+        final boolean includeInterruptHandlers,
+        final boolean avoidDBankCollision,
+        final boolean writeableCodeBanks
     ) throws MaxNodesException,
              NodeNameConflictException,
              UPIConflictException {
@@ -499,15 +524,19 @@ class BaseFunctions {
 
         List<BankDeclaration> bankDeclarations = new LinkedList<>();
 
-        BankDeclaration.BankDeclarationOption[] codeBankOpts = {
-            BankDeclaration.BankDeclarationOption.WRITE_PROTECT,
-        };
+        Set<BankDeclaration.BankDeclarationOption> codeBankOptsSet = new HashSet<>();
+        if (!writeableCodeBanks) {
+            codeBankOptsSet.add(BankDeclaration.BankDeclarationOption.WRITE_PROTECT);
+        }
+        BankDeclaration.BankDeclarationOption[] codeBankOpts =
+            codeBankOptsSet.toArray(new BankDeclaration.BankDeclarationOption[0]);
+
         BankDeclaration.BankDeclarationOption[] dataBankOpts = {
             BankDeclaration.BankDeclarationOption.DBANK,
             BankDeclaration.BankDeclarationOption.DYNAMIC
         };
 
-        AccessPermissions codeSAP = new AccessPermissions(true, true, false);
+        AccessPermissions codeSAP = new AccessPermissions(true, true, writeableCodeBanks);
         AccessPermissions dataSAP = new AccessPermissions(false, true, true);
         AccessPermissions gap = new AccessPermissions(false, false, false);
         AccessInfo accessLock = new AccessInfo(0, 0);
