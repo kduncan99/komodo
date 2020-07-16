@@ -74,6 +74,12 @@ class BaseFunctions {
         "          LD        A15",
         "          $END",
         ".",
+        "DR$CLRQWORD* $PROC",
+        "          SD        A14",
+        "          AND       A14,(0777777,0777767)",
+        "          LD        A15",
+        "          $END",
+        ".",
         "          $END"
     };
 
