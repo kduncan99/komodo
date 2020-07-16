@@ -670,10 +670,12 @@ public class HTTPSystemProcessorInterface implements SystemProcessorInterface {
             LOGGER.traceExit(em);
         }
 
-        private void stop() {
+        private synchronized void stop() {
             EntryMessage em = LOGGER.traceEntry("stop()");
-            _schedule.cancel(false);
-            _schedule = null;
+            if (_schedule != null) {
+                _schedule.cancel(false);
+                _schedule = null;
+            }
             LOGGER.traceExit(em);
         }
     }

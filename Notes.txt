@@ -1,7 +1,6 @@
 -- TODO InProgress
 
 hwlib:
-    Rebuilding all the hwlib unit tests
     SystemProcessor: loadBinary() Completely rework this
     Test_SystemProcessor: absolute_load test - improve how this works
 
@@ -12,9 +11,6 @@ Boot query:
 
 -- TODO BUGS
 * kasm
-$PROC directive needs to parse code and assemble it without generating code
-  in order to detect syntax errors ahead of time,
-  and to recognized the $END directive, which it surprisingly does not do at the moment
 I$ and EI$ forms - should h and i fields be one field? How does that affect mnemonic generation?
 String concatenation does not honor precision per MASM 5.3.1
 Locale columns are wrongly all over the place for parsed expressions
@@ -25,7 +21,7 @@ See 5.6 - label on a $LIT directive should create a function
 integrateValue() is maybe wrong. See IntegerValue for proper code.
 
 * klink/kasm
-Coding LBDIREF$+tag creates a relocated word with a base value of tag's offset from it's LC pool
+Coding LBDIREF$+tag creates a relocated word with a base value of tags offset from its LC pool
   When klink resolves it, it adds the BDI to the base value instead of just overlaying it.
   What should we do about this?
     Maybe... klink should, in this case, clear out the field-descriptor described by the reference
@@ -42,10 +38,10 @@ everywhere:
 
 
 -- TODO Thoughts
-Do we need a high-level language for systems programming to supplement assembly? Maybe... GoLang?
+Do we need a high-level language for systems programming to supplement assembly?  A subset of golang?
 It appears that collector-generated absolute elements must always start in Basic mode. ?
-"For absolutes that are executed as programs, the Exec loads all banks produced by the Collector at level 2."
-
+  "For absolutes that are executed as programs, the Exec loads all banks produced by the Collector at level 2."
+  Or... can the first IBank be marked extended mode? If so, then that is all we need to load it properly.
 
 -- TODO implement
 *html/css/javascript
