@@ -5,50 +5,20 @@
 package com.kadware.komodo.kexec.include;
 
 /**
- * Source code describing the config bank for kexec
+ * Source code describing a bank descriptor
  */
 public class BankDescriptor {
 
-    /*  Description of configuration bank:
-     *
-     *       +---------+---------+---------+---------+---------+---------+
-     *  +00  | IPL_SP  | IPL_IP  | IPL_IOP | IPL_MSP |IPL_CHMOD|IPL_DEVNM|
-     *       +---------+---------+---------+---------+---------+---------+
-     *  +01  |IPL_FLAGS|                   |          IPL_PREPF          |
-     *       +---------+---------+---------+---------+---------+---------+
-     *  +02  |                         JUMP KEYS                         |
-     *       +---------+---------+---------+---------+---------+---------+
-     *  +03  |                      MAILBOX_ADDRESS                      |
-     *  +04  |                                                           |
-     *       +---------+---------+---------+---------+---------+---------+
-     *
-     *  IPL_SP:          UPI of the SP which is controlling the IPL
-     *  IPL_IP:          UPI of the IP which is in control of the IPL
-     *  IPL_IOP:         UPI of the IOP which we are using for the IPL
-     *  IPL_MSP:         UPI of the MSP into which we load the OS
-     *  IPL_CHMOD:       Channel module index for the boot path
-     *  IPL_DEVNM:       Device number from which we are booting
-     *  IPL_FLAGS:
-     *    Bit5:          true for tape boot, false for disk boot
-     *  IPL_PREPF:       For disk boots, the block size of a single IO for the pack which we are booting from.
-     *  JUMP_KEYS:       Jump keys which control the IPL and startup processes
-     *  MAILBOX_ADDRESS: Absolute address of block of memory containing the UPI mailboxes
-     */
-
     public static final String[] SOURCE = {
         ". .....................................",
-        ". Configuration bank equfs",
+        ". Bank descriptor equfs",
         ".",
-        "CB$IPLSP     $EQUF      0,,S1",
-        "CB$IPLIP     $EQUF      0,,S2",
-        "CB$IPLIOP    $EQUF      0,,S3",
-        "CB$IPLMSP    $EQUF      0,,S4",
-        "CB$IPLCHMOD  $EQUF      0,,S5",
-        "CB$IPLDEVNM  $EQUF      0,,S6",
-        "CB$IPLFLAGS  $EQUF      1,,S1",
-        "CB$IPLPREPF  $EQUF      1,,H2",
-        "CB$JUMPKEYS  $EQUF      2,,W",
-        "CB$MBOXADDR  $EQUF      3",
+        "BD_GAPSAP    $EQUF      0,,S1",
+        "BD_TYPE      $EQUF      0,,S2",
+        "BD_ACCLOCK   $EQUF      0,,H2",
+        "BD_LOWER     $EQUF      1,,Q1",
+        "BD_UPPER     $EQUF      1,,W     . Actually, only bits 9-35",
+        "BD_ADDR      $EQUF      2        . Abs Address 2 words",
         ". ....................................."
     };
 }
