@@ -1056,8 +1056,8 @@ public class Linker {
                                                                      lcri._locationCounterIndex);
             VirtualAddress bankVAddr = _poolMap.get(targetSpec);
             if (bankVAddr == null) {
-                raise(String.format("Internal error cannot find bank for module %s LC $%d",
-                                    lcpSpecification._module,
+                raise(String.format("Cannot find bank for module %s LC $%d",
+                                    lcpSpecification._module.getModuleName(),
                                     lcri._locationCounterIndex));
                 return 0;
             }
@@ -1089,8 +1089,8 @@ public class Linker {
                 LocationCounterRelativeSymbolEntry lcrse = (LocationCounterRelativeSymbolEntry) se;
                 VirtualAddress bankVAddr = _poolMap.get(lcrse._lcPoolSpecification);
                 if (bankVAddr == null) {
-                    raise(String.format("Internal error cannot find bank for module %s LC $%d",
-                                        lcrse._lcPoolSpecification._module,
+                    raise(String.format("Cannot find bank for module %s LC $%d",
+                                        lcrse._lcPoolSpecification._module.getModuleName(),
                                         lcrse._lcPoolSpecification._lcIndex));
                     return 0;
                 }
