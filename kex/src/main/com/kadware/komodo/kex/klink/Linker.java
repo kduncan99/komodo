@@ -628,6 +628,9 @@ public class Linker {
                                                    bankDesc._lowerLimit,
                                                    bankDesc._upperLimit,
                                                    bankDesc._upperLimit - bankDesc._lowerLimit + 1));
+                _printStream.println(String.format("    SAP:%s GAP:%s",
+                                                   bankDesc._specialPermissions.toString(),
+                                                   bankDesc._generalPermissions.toString()));
 
                 for (Map.Entry<Integer, LCPoolSpecification> entry : bankDesc._contentMap.entrySet()) {
                     _printStream.println(String.format("    %08o: %s", entry.getKey(), entry.getValue()));
