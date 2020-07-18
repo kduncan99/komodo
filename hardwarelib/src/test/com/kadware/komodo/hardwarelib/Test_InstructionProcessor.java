@@ -31,7 +31,7 @@ public class Test_InstructionProcessor {
     @Test
     public void canConnect(
     ) {
-        InstructionProcessor ip = new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX);
+        InstructionProcessor ip = new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX);
         assertFalse(ip.canConnect(ip));
     }
 
@@ -42,7 +42,7 @@ public class Test_InstructionProcessor {
     @Test
     public void baseRegister_voidBankConstructor(
     ) {
-        InstructionProcessor.BaseRegister br = new InstructionProcessor.BaseRegister();
+        BaseRegister br = new BaseRegister();
         assertTrue(br._voidFlag);
     }
 
@@ -95,7 +95,7 @@ public class Test_InstructionProcessor {
                 data[2] = baseAddress._segment;
                 data[3] = ((long) baseAddress._upiIndex) << 32 | baseAddress._offset;
 
-                InstructionProcessor.BaseRegister br = new InstructionProcessor.BaseRegister(data);
+                BaseRegister br = new BaseRegister(data);
                 assertEquals(gap, br._generalAccessPermissions);
                 assertEquals(sap, br._specialAccessPermissions);
                 assertEquals(accessLock, br._accessLock);

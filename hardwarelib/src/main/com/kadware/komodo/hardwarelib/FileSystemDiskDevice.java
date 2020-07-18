@@ -17,8 +17,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * Class describing and implementing a DiskDevice which uses the native host filesystem for storage
@@ -123,7 +121,6 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         }
     }
 
-    private static final Logger LOGGER = LogManager.getLogger(FileSystemDiskDevice.class);
     private AsynchronousFileChannel _channel;
     private String _fileName;       //  only valid if mounted
 
@@ -164,7 +161,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     public void failed(Throwable t, IOInfo attachment) {
         attachment._status = IOStatus.SystemException;
         attachment._source.signal();
-        LOGGER.error(String.format("Device %s IO failed:%s", _name, t.getMessage()));
+        _logger.error(String.format("IO failed:%s", t.getMessage()));
     }
 
 
@@ -431,7 +428,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         final String mediaName
     ) {
         if (_isMounted) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Already mounted", _name, mediaName));
+            _logger.error(String.format("Cannot mount %s:Already mounted", mediaName));
             return false;
         }
 
@@ -449,17 +446,14 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             //  So... knowing smallest block size, we use that for the size of our IO.  It should work...
             ScratchPad scratchPad = readScratchPad();
             if (scratchPad == null) {
-                LOGGER.error(String.format("Device %s Cannot mount %s:Failed to read some or all of scratch pad",
-                                           _name,
-                                           mediaName));
+                _logger.error(String.format("Cannot mount %s:Failed to read some or all of scratch pad", mediaName));
                 _channel.close();
                 _channel = null;
                 return false;
             }
 
             if (!scratchPad._identifier.equals(ScratchPad.EXPECTED_IDENTIFIER)) {
-                LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad identifier expected:'%s' got:'%s'",
-                                           _name,
+                _logger.error(String.format("Cannot mount %s:ScratchPad identifier expected:'%s' got:'%s'",
                                            mediaName,
                                            ScratchPad.EXPECTED_IDENTIFIER,
                                            scratchPad._identifier));
@@ -469,8 +463,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             }
 
             if (scratchPad._majorVersion != ScratchPad.EXPECTED_MAJOR_VERSION) {
-                LOGGER.error(String.format("Device %s Cannot mount %s:ScratchPad MajorVersion expected:%d got:%d",
-                                           _name,
+                _logger.error(String.format("Cannot mount %s:ScratchPad MajorVersion expected:%d got:%d",
                                            mediaName,
                                            ScratchPad.EXPECTED_MAJOR_VERSION,
                                            scratchPad._majorVersion));
@@ -480,8 +473,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             }
 
             if (scratchPad._minorVersion != ScratchPad.EXPECTED_MINOR_VERSION) {
-                LOGGER.info(String.format("Device %s:ScratchPad MinorVersion expected:%d got:%d",
-                                          _name,
+                _logger.info(String.format("ScratchPad MinorVersion expected:%d got:%d",
                                           ScratchPad.EXPECTED_MINOR_VERSION,
                                           scratchPad._minorVersion));
             }
@@ -490,9 +482,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
             _blockCount = scratchPad._blockCount;
             _isMounted = true;
             _fileName = mediaName;
-            LOGGER.info(String.format("Device %s Mount %s successful", _name, mediaName));
+            _logger.info(String.format("Mount of %s successful", mediaName));
         } catch (IOException ex) {
-            LOGGER.error(String.format("Device %s Cannot mount %s:Caught %s", _name, mediaName, ex.getMessage()));
+            _logger.error(String.format("Cannot mount %s:Caught %s", mediaName, ex.getMessage()));
             _channel = null;
             return false;
         }
@@ -543,9 +535,9 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  File Name:       %s\n", String.valueOf(_fileName)));
+            writer.write(String.format("  File Name:       %s\n", _fileName));
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
         }
     }
 
@@ -556,7 +548,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
     boolean unmount(
     ) {
         if (!_isMounted) {
-            LOGGER.error(String.format("Device %s Cannot unmount pack - no pack mounted", _name));
+            _logger.error("Cannot unmount pack - no pack mounted");
             return false;
         }
 
@@ -567,7 +559,7 @@ public class FileSystemDiskDevice extends DiskDevice implements CompletionHandle
         try {
             _channel.close();
         } catch (IOException ex) {
-            LOGGER.catching(ex);
+            _logger.catching(ex);
             return false;
         }
 

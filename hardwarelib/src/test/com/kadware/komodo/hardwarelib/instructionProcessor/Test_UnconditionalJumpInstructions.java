@@ -9,6 +9,7 @@ import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -43,6 +44,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -62,6 +64,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -71,6 +74,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_bankSelection(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -248,6 +252,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -270,6 +275,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -280,6 +286,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -303,6 +310,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -312,6 +320,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_indirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -342,6 +351,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -353,6 +363,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -375,6 +386,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -384,6 +396,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_indexed_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -406,6 +419,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -416,6 +430,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_key_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -438,6 +453,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -448,6 +464,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_05_normal_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -462,6 +479,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -471,6 +489,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_normal_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -488,6 +507,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
@@ -496,6 +516,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_normal_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -518,6 +539,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
@@ -527,6 +549,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_pp1_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -543,6 +566,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -552,6 +576,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void haltJump_74_15_05_pp1_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -572,6 +597,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -583,6 +609,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void storeLocationAndJump(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -604,6 +631,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -615,6 +643,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void storeLocationAndJump_indirect(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -640,6 +669,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -651,6 +681,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -670,6 +701,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -681,6 +713,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_indirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -704,6 +737,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -715,6 +749,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void loadModifierAndJump_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -740,6 +775,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -751,6 +787,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic_referenceViolation1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -764,6 +801,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -775,6 +813,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_basic_referenceViolation2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -790,6 +829,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -802,6 +842,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
     @Test
     public void jump_extended_referenceViolation1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -814,6 +855,7 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

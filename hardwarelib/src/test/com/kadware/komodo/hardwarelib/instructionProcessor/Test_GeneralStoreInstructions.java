@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -33,6 +34,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_PartialWords_QuarterWordMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -70,6 +72,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -95,6 +98,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_PartialWords_ThirdWordMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -120,6 +124,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -136,6 +141,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -176,6 +182,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -199,6 +206,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void generalStore_FixedValues(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -230,6 +238,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -249,6 +258,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     @Test
     public void storeRegisterSet(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -292,6 +302,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

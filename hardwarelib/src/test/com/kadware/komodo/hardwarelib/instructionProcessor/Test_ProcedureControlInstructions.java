@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -37,6 +38,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void callNormal(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -60,6 +62,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -72,6 +75,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void gotoNormal(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -95,6 +99,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -104,6 +109,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void loclNormal(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -124,6 +130,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -136,6 +143,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnToCall(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -158,6 +166,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -172,6 +181,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnToLocl(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -191,6 +201,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -205,6 +216,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
     @Test
     public void rtnNoFrame(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -217,6 +229,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

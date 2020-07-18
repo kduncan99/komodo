@@ -48,15 +48,15 @@ public class InventoryManager {
     //  The following are only useful for the create* routines.
     //  It is highly recommended that these be used for creation of processors, however that is not enforced.
     //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
-    private final static int MAX_INPUT_OUTPUT_PROCESSORS = 2;
-    private final static int MAX_INSTRUCTION_PROCESSORS = 8;
-    private final static int MAX_MAIN_STORAGE_PROCESSORS = 2;
-    private final static int MAX_SYSTEM_PROCESSORS = 1;
+    private final static int MAX_IOPS = 2;
+    private final static int MAX_IPS = 8;
+    private final static int MAX_MSPS = 4;
+    private final static int MAX_SPS = 1;
 
-    final static int FIRST_SYSTEM_PROCESSOR_UPI_INDEX = 0;
-    final static int FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX = FIRST_SYSTEM_PROCESSOR_UPI_INDEX + MAX_SYSTEM_PROCESSORS;
-    final static int FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX + MAX_MAIN_STORAGE_PROCESSORS;
-    public final static int FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX + MAX_INPUT_OUTPUT_PROCESSORS;
+    final static int FIRST_SP_UPI_INDEX = 0;
+    final static int FIRST_MSP_UPI_INDEX = FIRST_SP_UPI_INDEX + MAX_SPS;            //  currently 1
+    final static int FIRST_IOP_UPI_INDEX = FIRST_MSP_UPI_INDEX + MAX_MSPS;          //  currently 5
+    public final static int FIRST_IP_UPI_INDEX = FIRST_IOP_UPI_INDEX + MAX_IOPS;    //  currently 7
 
     private final Map<Integer, Processor> _processors = new HashMap<>();
     private final List<ChannelModule> _channelModules = new LinkedList<>();
@@ -91,6 +91,18 @@ public class InventoryManager {
     //  Public methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    private void putProcessor(
+        final Processor processor
+    ) {
+        _processors.put(processor._upiIndex, processor);
+        LOGGER.info(String.format("Processor %s inserted at upi %d", processor._name, processor._upiIndex));
+    }
+
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
+    //  Public methods
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     /**
      * Adds an existing InputOutputProcessor to our inventory.
      * The existing IOP should not yet have been initialized.
@@ -113,7 +125,7 @@ public class InventoryManager {
             }
         }
 
-        _processors.put(iop._upiIndex, iop);
+        putProcessor(iop);
         iop.initialize();
     }
 
@@ -139,7 +151,7 @@ public class InventoryManager {
             }
         }
 
-        _processors.put(ip._upiIndex, ip);
+        putProcessor(ip);
         ip.initialize();
     }
 
@@ -165,7 +177,7 @@ public class InventoryManager {
             }
         }
 
-        _processors.put(msp._upiIndex, msp);
+        putProcessor(msp);
         msp.initialize();
     }
 
@@ -191,7 +203,7 @@ public class InventoryManager {
             }
         }
 
-        _processors.put(sp._upiIndex, sp);
+        putProcessor(sp);
         sp.initialize();
     }
 
@@ -236,11 +248,11 @@ public class InventoryManager {
     public InputOutputProcessor createInputOutputProcessor(
         final String name
     ) throws MaxNodesException {
-        int upiIndex = FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX;
-        for (int px = 0; px < MAX_INPUT_OUTPUT_PROCESSORS; ++px, ++upiIndex) {
+        int upiIndex = FIRST_IOP_UPI_INDEX;
+        for (int px = 0; px < MAX_IOPS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 InputOutputProcessor iop = new InputOutputProcessor(name, upiIndex);
-                _processors.put(upiIndex, iop);
+                putProcessor(iop);
                 iop.initialize();
                 return iop;
             }
@@ -257,11 +269,11 @@ public class InventoryManager {
     public InstructionProcessor createInstructionProcessor(
         final String name
     ) throws MaxNodesException {
-        int upiIndex = FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX;
-        for (int px = 0; px < MAX_INSTRUCTION_PROCESSORS; ++px, ++upiIndex) {
+        int upiIndex = FIRST_IP_UPI_INDEX;
+        for (int px = 0; px < MAX_IPS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 InstructionProcessor ip = new InstructionProcessor(name, upiIndex);
-                _processors.put(upiIndex, ip);
+                putProcessor(ip);
                 ip.initialize();
                 return ip;
             }
@@ -281,11 +293,11 @@ public class InventoryManager {
         final String name,
         final int fixedStorageSize
     ) throws MaxNodesException {
-        int upiIndex = FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX;
-        for (int px = 0; px < MAX_MAIN_STORAGE_PROCESSORS; ++px, ++upiIndex) {
+        int upiIndex = FIRST_MSP_UPI_INDEX;
+        for (int px = 0; px < MAX_MSPS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 MainStorageProcessor msp = new MainStorageProcessor(name, upiIndex, fixedStorageSize);
-                _processors.put(upiIndex, msp);
+                putProcessor(msp);
                 msp.initialize();
                 return msp;
             }
@@ -309,11 +321,11 @@ public class InventoryManager {
         final Integer httpsPort,
         final Credentials credentials
     ) throws MaxNodesException {
-        int upiIndex = FIRST_SYSTEM_PROCESSOR_UPI_INDEX;
-        for (int px = 0; px < MAX_SYSTEM_PROCESSORS; ++px, ++upiIndex) {
+        int upiIndex = FIRST_SP_UPI_INDEX;
+        for (int px = 0; px < MAX_SPS; ++px, ++upiIndex) {
             if (_processors.get(upiIndex) == null) {
                 SystemProcessor sp = new SystemProcessor(name, httpPort, httpsPort, credentials);
-                _processors.put(upiIndex, sp);
+                putProcessor(sp);
                 sp.initialize();
                 return sp;
             }

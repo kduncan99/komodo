@@ -114,7 +114,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final Integer httpsPort,
         final Credentials credentials
     ) {
-        super(ProcessorType.SystemProcessor, name, InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        super(ProcessorType.SystemProcessor, name, InventoryManager.FIRST_SP_UPI_INDEX);
         _httpPort = httpPort;
         _httpsPort = httpsPort;
         _credentials = credentials;
@@ -129,7 +129,7 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
      * constructor for testing
      */
     public SystemProcessor() {
-        super(ProcessorType.SystemProcessor, "SP0", InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        super(ProcessorType.SystemProcessor, "SP0", InventoryManager.FIRST_SP_UPI_INDEX);
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -734,14 +734,14 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
             int highestBDI = bdtVector[bdtLevel];
             if (highestBDI >= 0) {
                 int bdtSize = 8 * (highestBDI + 1);
-                InstructionProcessor.BaseRegister br =
-                    new InstructionProcessor.BaseRegister(bdtAddresses[bdtLevel],
-                                                          false,
-                                                          0,
+                BaseRegister br =
+                    new BaseRegister(bdtAddresses[bdtLevel],
+                                     false,
+                                     0,
                                                           bdtSize - 1,
-                                                          new AccessInfo(0, 0),
-                                                          new AccessPermissions(false, false, false),
-                                                          new AccessPermissions(true, true, true));
+                                     new AccessInfo(0, 0),
+                                     new AccessPermissions(false, false, false),
+                                     new AccessPermissions(true, true, true));
                 ip.setBaseRegister(16 + bdtLevel, br);
             }
         }
@@ -756,14 +756,14 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         int icsStackEntries = 4;
         int icsSize = icsFrameSize * icsStackEntries;
         AbsoluteAddress icsAddr = iplAllocate(moduleName, msp, icsSize, useFixedStorage);
-        InstructionProcessor.BaseRegister icsBaseReg =
-            new InstructionProcessor.BaseRegister(icsAddr,
-                                                  false,
-                                                  0,
+        BaseRegister icsBaseReg =
+            new BaseRegister(icsAddr,
+                             false,
+                             0,
                                                   icsSize - 1,
-                                                  new AccessInfo(0, 0),
-                                                  new AccessPermissions(false, false, false),
-                                                  new AccessPermissions(true, true, false));
+                             new AccessInfo(0, 0),
+                             new AccessPermissions(false, false, false),
+                             new AccessPermissions(true, true, false));
         ip.setBaseRegister(InstructionProcessor.ICS_BASE_REGISTER, icsBaseReg);
         ip.setGeneralRegister(InstructionProcessor.ICS_INDEX_REGISTER, (icsFrameSize << 18) | icsSize);
 

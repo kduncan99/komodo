@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -33,6 +34,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void generalLoadImmediate_Extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -71,6 +73,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -94,6 +97,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void X_A_RegisterOverlap(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -118,6 +122,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -133,6 +138,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void partialWordLoad_ThirdWordMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -183,6 +189,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -205,6 +212,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void partialWordLoad_QuarterWordMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -241,6 +249,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -264,6 +273,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_normal(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -303,6 +313,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -322,6 +333,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_count1Empty(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -361,6 +373,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -378,6 +391,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void loadRegisterSet_nop(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -418,6 +432,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -437,6 +452,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     @Test
     public void generalLoadFromStorage_Extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -516,6 +532,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

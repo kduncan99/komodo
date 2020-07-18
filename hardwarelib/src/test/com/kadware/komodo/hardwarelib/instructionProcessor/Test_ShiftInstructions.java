@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -30,6 +31,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftAlgebraic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -52,6 +54,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -62,6 +65,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftAlgebraic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -85,6 +89,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -96,6 +101,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftCircular(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -120,6 +126,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -130,6 +137,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftCircular(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -153,6 +161,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -164,6 +173,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void singleShiftLogical(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -186,6 +196,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -196,6 +207,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleShiftLogical(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -219,6 +231,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -230,6 +243,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void loadShiftAndCount(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -263,6 +277,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -282,6 +297,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void doubleLoadShiftAndCount(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -320,6 +336,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -344,6 +361,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftSingleShiftCircular(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -366,6 +384,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -376,6 +395,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftDoubleShiftCircular(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -403,6 +423,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -414,6 +435,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftSingleShiftLogical(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -440,6 +462,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -450,6 +473,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
     @Test
     public void leftDoubleShiftLogical(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -477,6 +501,7 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

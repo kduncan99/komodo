@@ -314,7 +314,7 @@ public abstract class Processor extends Node implements Worker {
     final boolean upiSendDirected(
         final int upiIndex
     ) throws UPINotAssignedException  {
-        EntryMessage em = _logger.traceEntry("upSendDirected(upiIndex={}})", upiIndex);
+        EntryMessage em = _logger.traceEntry("upiSendDirected(from={} to upiIndex={})", _upiIndex, upiIndex);
         Processor destProc = InventoryManager.getInstance().getProcessor(upiIndex);
         boolean result;
         synchronized (destProc._upiPendingInterrupts) {

@@ -14,13 +14,30 @@ import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
 import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for InstructionProcessor class
  */
-public class Test_Interrupts extends BaseFunctions {
+public class Test_UPIOperationsControlInstructions extends BaseFunctions {
+
+//    private static String[] CHANNEL_PROGRAM_DEFINITIONS = {
+//        "CHP_IOPUPI   $EQUF 0,,S1",
+//        "CHP_CHMOD    $EQUF 0,,S2",
+//        "CHP_DEVNUM   $EQUF 0,,S3",
+//        "CHP_FUNCTION $EQUF 0,,S4",
+//        "CHP_FORMAT   $EQUF 0,,S5",
+//        "CHP_ACWS     $EQUF 0,,S6",
+//        "CHP_BLKADDR  $EQUF 1,,W",
+//        "CHP_CHANSTAT $EQUF 2,,S1",
+//        "CHP_DEVSTAT  $EQUF 2,,S2",
+//        "CHP_RESBYTES $EQUF 2,,S3",
+//        "CHP_WORDS    $EQUF 3,,H2",
+//        "CHP_ACWS     $EQUF 4",
+//    };
+
+    //  ----------------------------------------------------------------------------------------------------------------------------
 
     @After
     public void after(
@@ -28,8 +45,10 @@ public class Test_Interrupts extends BaseFunctions {
         clear();
     }
 
+    //  ----------------------------------------------------------------------------------------------------------------------------
+
     @Test
-    public void illegalOperation(
+    public void send_to_ourself(
     ) throws BinaryLoadException,
              CannotConnectException,
              MachineInterrupt,
@@ -38,33 +57,21 @@ public class Test_Interrupts extends BaseFunctions {
              UPIConflictException,
              UPINotAssignedException,
              UPIProcessorTypeException {
-
         String[] source = {
-            "          $EXTEND",
-            "          $INFO 10 1",
-            "$(1),START",
-            "          . Set up IH for interrupt class 016",
-            "          LXI,U     A0,LBDI$",
-            "          LXM,U     A0,ih",
-            "          SA        A0,016,,B16",
+            "          $INCLUDE 'CHP$DEFS'",
             "",
-            "          . Perform the illegal operation",
-            "          +0 . illegal operation",
-            "          HALT      07777 . should not get here",
+            "IP_UPI    $EQU      7 . hard-coded in InventoryManager.java",
             "",
-            "ih        . Interrupt handler",
-            "          HALT      01016 . should stop here",
-            "          $END      START"
+            "CODE",
+            "          SEND      IP_UPI . should NOT cause an interrupt since we're not stopped",
+            "          HALT      0 . should stop here"
         };
 
-        buildSimple(source);
+        buildMultiBank(wrapForExtendedMode(source), true, false);
         createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        assertEquals(0, _instructionProcessor.getLatestStopDetail());
     }
-
-    //  TODO make sure maskable interrupts are prevented by PAIJ
-
 }

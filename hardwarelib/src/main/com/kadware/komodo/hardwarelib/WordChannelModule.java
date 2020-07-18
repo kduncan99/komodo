@@ -51,7 +51,7 @@ public class WordChannelModule extends ChannelModule {
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    protected WordChannelModule(
+    public WordChannelModule(
         final String name
     ) {
         super(ChannelModuleType.Word, name);

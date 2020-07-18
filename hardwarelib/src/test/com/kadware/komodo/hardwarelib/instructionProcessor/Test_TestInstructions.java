@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -28,6 +29,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEvenParityBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -51,6 +53,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -60,6 +63,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEvenParityExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -85,6 +89,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -94,6 +99,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testOddParityBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -117,6 +123,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -126,6 +133,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testOddParityExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -151,6 +159,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -160,6 +169,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testZeroBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -186,6 +196,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -195,6 +206,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -223,6 +235,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -232,6 +245,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNonZeroBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -260,6 +274,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -269,6 +284,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNonZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -299,6 +315,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -308,6 +325,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -338,6 +356,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -349,6 +368,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMinusZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -379,6 +399,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -388,6 +409,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -410,6 +432,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -419,6 +442,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPosExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -443,6 +467,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -452,6 +477,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNegBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -473,6 +499,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -482,6 +509,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNegExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -505,6 +533,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -516,6 +545,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNOPExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -538,6 +568,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -549,6 +580,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testSkipExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -568,6 +600,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -577,6 +610,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEqualBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -596,6 +630,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -605,6 +640,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -626,6 +662,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -635,6 +672,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotEqualBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -654,6 +692,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -663,6 +702,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -684,6 +724,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -693,6 +734,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessOrEqualToModifierBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -711,6 +753,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -722,6 +765,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessOrEqualToModifierExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -742,6 +786,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -755,6 +800,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -776,6 +822,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -787,6 +834,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMinusZeroOrGreaterThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -808,6 +856,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -819,6 +868,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotLessThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -840,6 +890,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -851,6 +902,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -872,6 +924,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -883,6 +936,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testPositiveZeroOrLessThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -901,6 +955,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -912,6 +967,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotMinusZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -933,6 +989,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -944,6 +1001,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotPositiveZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -965,6 +1023,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -976,6 +1035,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotGreaterThanZeroExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -997,6 +1057,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1006,6 +1067,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanOrEqualBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1023,6 +1085,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1032,6 +1095,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testLessThanOrEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1054,6 +1118,7 @@ public class Test_TestInstructions extends BaseFunctions {
             };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1063,6 +1128,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1084,6 +1150,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1093,6 +1160,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1116,6 +1184,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1127,6 +1196,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testGreaterMagnitudeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1145,6 +1215,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1154,6 +1225,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testWithinRangeBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1188,6 +1260,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1197,6 +1270,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testWithinRangeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1233,6 +1307,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1242,6 +1317,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotWithinRangeBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1275,6 +1351,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1284,6 +1361,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testNotWithinRangeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1319,6 +1397,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1330,6 +1409,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testDoubleTestGreaterMagnitudeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1354,6 +1434,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1365,6 +1446,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1384,6 +1466,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1395,6 +1478,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestNotEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1414,6 +1498,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1426,6 +1511,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestLessThanOrEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1447,6 +1533,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1458,6 +1545,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestGreaterExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1477,6 +1565,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1488,6 +1577,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestWithinRangeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1508,6 +1598,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1519,6 +1610,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedTestNotWithinRangeExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1539,6 +1631,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1550,6 +1643,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedAlphaTestLessThanOrEqualExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1569,6 +1663,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1580,6 +1675,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testMaskedAlphaTestGreaterExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1599,6 +1695,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1608,6 +1705,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1626,6 +1724,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1638,6 +1737,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1656,6 +1756,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1668,6 +1769,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetAndSkipBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1688,6 +1790,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1700,6 +1803,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndSetAndSkipExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1720,6 +1824,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1732,6 +1837,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndClearAndSkipBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1752,6 +1858,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1764,6 +1871,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testAndClearAndSkipExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1784,6 +1892,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1796,6 +1905,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1820,6 +1930,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1832,6 +1943,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceBasicBadPP(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1858,6 +1970,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1867,6 +1980,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testConditionalReplaceExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1891,6 +2005,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1903,6 +2018,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationBasic1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1920,6 +2036,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1929,6 +2046,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationBasic2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1947,6 +2065,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1956,6 +2075,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1975,6 +2095,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1984,6 +2105,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2002,6 +2124,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2011,6 +2134,7 @@ public class Test_TestInstructions extends BaseFunctions {
     @Test
     public void testReferenceViolationExtended3(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2028,6 +2152,7 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

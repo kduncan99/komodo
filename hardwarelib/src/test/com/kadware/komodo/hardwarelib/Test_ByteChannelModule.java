@@ -448,7 +448,7 @@ public class Test_ByteChannelModule {
         assertFalse(cm.canConnect(new ByteChannelModule("CM1-0")));
         assertFalse(cm.canConnect(new WordChannelModule("CM1-1")));
         assertFalse(cm.canConnect(_msp));
-        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
+        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX)));
         teardown();
     }
 

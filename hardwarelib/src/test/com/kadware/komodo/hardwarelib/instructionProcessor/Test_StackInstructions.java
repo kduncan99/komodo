@@ -5,6 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -30,6 +31,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buySimple18(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -58,6 +60,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -69,6 +72,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buySimple24(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -98,6 +102,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -109,6 +114,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellSimple18(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -137,6 +143,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -148,6 +155,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellSimple24(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -177,6 +185,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -188,6 +197,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buyWithDisplacement(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -216,6 +226,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -227,6 +238,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void buyOverflow(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -273,6 +285,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -285,6 +298,7 @@ public class Test_StackInstructions extends BaseFunctions {
     @Test
     public void sellUnderflow(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -331,6 +345,7 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(01013, _instructionProcessor.getLatestStopDetail());

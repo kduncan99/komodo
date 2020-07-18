@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -29,6 +30,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalANDBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -57,6 +59,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -68,6 +71,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalANDExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -90,6 +94,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -101,6 +106,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalMLUBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -130,6 +136,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -141,6 +148,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalMLUExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -164,6 +172,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -175,6 +184,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalORBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -203,6 +213,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -214,6 +225,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalORExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -236,6 +248,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -247,6 +260,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalXORBasic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -275,6 +289,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -286,6 +301,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
     @Test
     public void logicalXORExtended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -308,6 +324,7 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -32,6 +33,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_badSubfunction(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -52,6 +54,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -72,6 +75,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_good(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -97,6 +101,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -111,6 +116,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_badUPI(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -136,6 +142,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -145,6 +152,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_create_badSize(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -170,6 +178,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -185,6 +194,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test (expected = AddressingExceptionInterrupt.class)
     public void sysc_delete_good(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -223,6 +233,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -237,6 +248,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_delete_badUPI(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -275,6 +287,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -288,6 +301,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_delete_badSegment(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -328,6 +342,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -348,6 +363,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_good(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -387,6 +403,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -401,6 +418,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badUPI(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -440,6 +458,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -454,6 +473,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badSegment(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -494,6 +514,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -508,6 +529,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
     @Test
     public void sysc_resize_badSize(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -547,6 +569,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

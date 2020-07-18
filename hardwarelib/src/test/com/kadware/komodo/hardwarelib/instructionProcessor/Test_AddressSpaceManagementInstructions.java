@@ -9,7 +9,9 @@ import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.hardwarelib.BaseRegister;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -40,6 +42,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -77,6 +80,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         long[] expected = {
@@ -109,6 +113,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -152,6 +157,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -165,6 +171,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -207,6 +214,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -220,6 +228,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void decelerateActiveBaseTable_extended_error3(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -266,6 +275,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -279,6 +289,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -333,24 +344,26 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
-        InstructionProcessor.BaseRegister b28 = _instructionProcessor.getBaseRegister(28);
+        BaseRegister b28 = _instructionProcessor.getBaseRegister(28);
         assertFalse(b28._voidFlag);
         assertFalse(b28._largeSizeFlag);
         assertEquals(03000, b28._lowerLimitNormalized);
         assertEquals(03017, b28._upperLimitNormalized);
 
-        InstructionProcessor.BaseRegister b29 = _instructionProcessor.getBaseRegister(29);
+        BaseRegister b29 = _instructionProcessor.getBaseRegister(29);
         assertTrue(b29._voidFlag);
     }
 
     @Test
     public void loadBaseRegisterExec_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -376,24 +389,26 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
         assertFalse(br27._voidFlag);
         assertFalse(br27._largeSizeFlag);
         assertEquals(0, br27._lowerLimitNormalized);
         assertEquals(017, br27._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 0, 0), br27._accessLock);
 
-        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
         assertTrue(br29._voidFlag);
     }
 
     @Test
     public void loadBaseRegisterExec_BadBank_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -456,6 +471,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -465,6 +481,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadBank_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -512,6 +529,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -521,6 +539,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -588,6 +607,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -601,6 +621,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExec_BadPP_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -653,6 +674,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -666,6 +688,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -730,20 +753,21 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
-        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
         assertTrue(br27._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
 
-        InstructionProcessor.BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
+        BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
 
-        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
         assertFalse(br29._voidFlag);
         assertFalse(br29._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
@@ -755,6 +779,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -793,20 +818,21 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
-        InstructionProcessor.BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
+        BaseRegister br27 = _instructionProcessor.getBaseRegister(27);
         assertTrue(br27._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br27._accessLock);
 
-        InstructionProcessor.BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
+        BaseRegister br28 = _instructionProcessor.getBaseRegister(28);
         assertTrue(br28._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br28._accessLock);
 
-        InstructionProcessor.BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
+        BaseRegister br29 = _instructionProcessor.getBaseRegister(29);
         assertFalse(br29._voidFlag);
         assertFalse(br29._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br29._accessLock);
@@ -818,6 +844,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_BadPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -877,6 +904,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -890,6 +918,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterExecDirect_BadPP_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -943,6 +972,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -956,6 +986,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBankName_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1125,6 +1156,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1142,6 +1174,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBankName_bad_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1196,6 +1229,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1205,6 +1239,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBankName_badPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1255,6 +1290,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1268,6 +1304,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1317,24 +1354,26 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
+        BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(02000, br7._lowerLimitNormalized);
         assertEquals(02077, br7._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 0, 0), br7._accessLock);
 
-        InstructionProcessor.BaseRegister br8 = _instructionProcessor.getBaseRegister(8);
+        BaseRegister br8 = _instructionProcessor.getBaseRegister(8);
         assertTrue(br8._voidFlag);
     }
 
     @Test
     public void loadBaseRegisterUser_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1359,24 +1398,26 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
+        BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(02000, br7._lowerLimitNormalized);
         assertEquals(02017, br7._upperLimitNormalized);
         assertEquals(new AccessInfo((short) 0, 0), br7._accessLock);
 
-        InstructionProcessor.BaseRegister br9 = _instructionProcessor.getBaseRegister(9);
+        BaseRegister br9 = _instructionProcessor.getBaseRegister(9);
         assertTrue(br9._voidFlag);
     }
 
     @Test
     public void loadBaseRegisterUser_BadPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1425,6 +1466,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1438,6 +1480,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_BadBank_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1486,6 +1529,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1495,6 +1539,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_BadBank_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1537,6 +1582,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1546,6 +1592,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBank_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1594,6 +1641,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1603,6 +1651,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBank_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1645,6 +1694,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1654,6 +1704,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR0_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1702,6 +1753,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1715,6 +1767,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR0_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1757,6 +1810,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1770,6 +1824,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR1_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1818,6 +1873,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1831,6 +1887,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUser_InvalidBR1_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1873,6 +1930,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1886,6 +1944,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1949,20 +2008,21 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
-        InstructionProcessor.BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
+        BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
         assertTrue(br5._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 
-        InstructionProcessor.BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
+        BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
         assertTrue(br6._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 
-        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
+        BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertFalse(br7._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -1974,6 +2034,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2016,20 +2077,21 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
 
-        InstructionProcessor.BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
+        BaseRegister br5 = _instructionProcessor.getBaseRegister(5);
         assertTrue(br5._voidFlag);
         assertEquals(new AccessInfo((short) 3, 010), br5._accessLock);
 
-        InstructionProcessor.BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
+        BaseRegister br6 = _instructionProcessor.getBaseRegister(6);
         assertTrue(br6._voidFlag);
         assertEquals(new AccessInfo((short) 0, 014), br6._accessLock);
 
-        InstructionProcessor.BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
+        BaseRegister br7 = _instructionProcessor.getBaseRegister(7);
         assertFalse(br7._voidFlag);
         assertTrue(br7._largeSizeFlag);
         assertEquals(new AccessInfo((short) 2, 0100), br7._accessLock);
@@ -2041,6 +2103,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_BadPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2096,6 +2159,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2109,6 +2173,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_BadPP_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2159,6 +2224,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2172,6 +2238,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_InvalidBR0_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2226,6 +2293,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2239,6 +2307,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void loadBaseRegisterUserDirect_InvalidBR0_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2288,6 +2357,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2301,6 +2371,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2359,6 +2430,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2366,10 +2438,10 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(0_000004_000020, _instructionProcessor.getExecOrUserXRegister(8).getW());
         long[] data = getBankByBaseRegister(15);
-        InstructionProcessor.BaseRegister br16 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  0, 4));
-        InstructionProcessor.BaseRegister br25 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  4, 8));
-        InstructionProcessor.BaseRegister br26 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  8, 12));
-        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  12, 16));
+        BaseRegister br16 = new BaseRegister(Arrays.copyOfRange(data, 0, 4));
+        BaseRegister br25 = new BaseRegister(Arrays.copyOfRange(data, 4, 8));
+        BaseRegister br26 = new BaseRegister(Arrays.copyOfRange(data, 8, 12));
+        BaseRegister br30 = new BaseRegister(Arrays.copyOfRange(data, 12, 16));
 
         assertFalse(br16._voidFlag);
         assertEquals(0, br16._lowerLimitNormalized);
@@ -2389,6 +2461,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2438,6 +2511,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2445,10 +2519,10 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         Assert.assertEquals(0_000004_000020, _instructionProcessor.getExecOrUserXRegister(8).getW());
         long[] data = getBankByBaseRegister(2);
-        InstructionProcessor.BaseRegister br16 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  0, 4));
-        InstructionProcessor.BaseRegister br25 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  4, 8));
-        InstructionProcessor.BaseRegister br26 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  8, 12));
-        InstructionProcessor.BaseRegister br30 = new InstructionProcessor.BaseRegister(Arrays.copyOfRange(data,  12, 16));
+        BaseRegister br16 = new BaseRegister(Arrays.copyOfRange(data, 0, 4));
+        BaseRegister br25 = new BaseRegister(Arrays.copyOfRange(data, 4, 8));
+        BaseRegister br26 = new BaseRegister(Arrays.copyOfRange(data, 8, 12));
+        BaseRegister br30 = new BaseRegister(Arrays.copyOfRange(data, 12, 16));
 
         assertFalse(br16._voidFlag);
         assertEquals(0, br16._lowerLimitNormalized);
@@ -2468,12 +2542,13 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_BadPP_basic(
     ) throws BinaryLoadException,
-            MachineInterrupt,
-            MaxNodesException,
-            NodeNameConflictException,
-            UPIConflictException,
-            UPINotAssignedException,
-            UPIProcessorTypeException {
+             CannotConnectException,
+             MachineInterrupt,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPINotAssignedException,
+             UPIProcessorTypeException {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -2524,6 +2599,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2537,6 +2613,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterExecDirect_BadPP_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2557,6 +2634,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2570,6 +2648,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2591,6 +2670,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2604,6 +2684,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_basic_badPP(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2626,6 +2707,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2639,6 +2721,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUser_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2658,6 +2741,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2671,6 +2755,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2695,6 +2780,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2723,6 +2809,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2753,6 +2840,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2782,6 +2870,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_BadPP_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2804,6 +2893,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2815,6 +2905,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void storeBaseRegisterUserDirect_extended_badPP(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2834,6 +2925,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2847,6 +2939,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddress_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2888,6 +2981,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
 
         //  code banks need to be writeable for the skip to work
         buildMultiBank(wrapForBasicMode(source), true, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2903,6 +2997,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressIndirect_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2932,6 +3027,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2944,6 +3040,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddress_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -2977,6 +3074,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -2992,6 +3090,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressNonRWBanks_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -3005,6 +3104,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -3015,6 +3115,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
     @Test
     public void testRelativeAddressNonRWBanks_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -3038,6 +3139,7 @@ public class Test_AddressSpaceManagementInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

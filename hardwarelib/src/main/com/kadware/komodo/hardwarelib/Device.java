@@ -42,7 +42,9 @@ public abstract class Device extends Node {
         FileSystemPunch(3),     //  Virtual card punch, storing output to the native host filesystem
         FileSystemReader(4),    //  Virtual card reader, taking input from the native host filesystem
         FileSystemTape(5),      //  Tape drive which uses native host filesystem for volume persistence
-        RAMDisk(6);             //  Disk drive implemented entirely in memory, with persisted backing storage
+        RAMDisk(6),             //  Disk drive implemented entirely in memory, with persisted backing storage
+        ScratchDisk(076),       //  Disk drive implemented in volatile storage, mostly for testing
+        ScratchTape(077);       //  Tape drive implemented in volatile storage, mostly for testing
 
         private final int _code;
 
@@ -59,6 +61,8 @@ public abstract class Device extends Node {
                 case 4 -> FileSystemReader;
                 case 5 -> FileSystemTape;
                 case 6 -> RAMDisk;
+                case 076 -> ScratchDisk;
+                case 077 -> ScratchTape;
                 default -> None;
             };
         }

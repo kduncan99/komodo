@@ -71,7 +71,7 @@ public class ByteChannelModule extends ChannelModule {
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    ByteChannelModule(
+    public ByteChannelModule(
         final String name
     ) {
         super(ChannelModuleType.Byte, name);

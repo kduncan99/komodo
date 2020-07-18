@@ -37,7 +37,7 @@ public class Test_WordChannelModule {
     public void canConnect_success(
     ) {
         WordChannelModule cm = new WordChannelModule("CM1-1");
-        assertTrue(cm.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_INPUT_OUTPUT_PROCESSOR_UPI_INDEX)));
+        assertTrue(cm.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_IOP_UPI_INDEX)));
     }
 
     @Test
@@ -49,9 +49,9 @@ public class Test_WordChannelModule {
         assertFalse(cm.canConnect(new ByteChannelModule("CM1-0")));
         assertFalse(cm.canConnect(new WordChannelModule("CM1-1")));
         assertFalse(cm.canConnect(new MainStorageProcessor("MSP0",
-                                                           InventoryManager.FIRST_MAIN_STORAGE_PROCESSOR_UPI_INDEX,
+                                                           InventoryManager.FIRST_MSP_UPI_INDEX,
                                                            MainStorageProcessor.MIN_FIXED_SIZE)));
-        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_INSTRUCTION_PROCESSOR_UPI_INDEX)));
+        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX)));
     }
 
     @Test

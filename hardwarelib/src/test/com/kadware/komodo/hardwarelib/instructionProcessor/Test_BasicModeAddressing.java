@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -36,6 +37,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateUnsigned_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -85,6 +87,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -95,6 +98,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Positive_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -144,6 +148,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -154,6 +159,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_NegativeZero_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -204,6 +210,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -214,6 +221,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Negative_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -263,6 +271,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -273,6 +282,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -323,6 +333,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -333,6 +344,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_indexed_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -385,6 +397,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -396,6 +409,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void grs_indirect_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -449,6 +463,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -459,6 +474,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -542,6 +558,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -557,6 +574,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_indirect_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -621,6 +639,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -631,6 +650,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void execRegisterSelection_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -685,6 +705,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -698,6 +719,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
     @Test
     public void storage_BasicMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -748,6 +770,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

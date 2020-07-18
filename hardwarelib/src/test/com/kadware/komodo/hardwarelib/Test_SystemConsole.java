@@ -24,7 +24,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
 import org.apache.logging.log4j.LogManager;
-import org.junit.Test;
 
 /**
  * For testing the SystemProcessorInterface (presumably the RESTSystemConsole, but good for any implementor)
@@ -754,7 +753,7 @@ public class Test_SystemConsole {
         HardwareConfiguration hc = (HardwareConfiguration) config.getConfiguration(Configurator.Domain.KOMODO_HARDWARE);
         InventoryManager im = InventoryManager.getInstance();
         im.importConfiguration(hc);
-        SystemProcessor sp = im.getSystemProcessor(InventoryManager.FIRST_SYSTEM_PROCESSOR_UPI_INDEX);
+        SystemProcessor sp = im.getSystemProcessor(InventoryManager.FIRST_SP_UPI_INDEX);
         Context context = new Context(sp);
 
         //noinspection LoopConditionNotUpdatedInsideLoop

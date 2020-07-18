@@ -8,6 +8,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -31,6 +32,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -53,6 +55,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -65,6 +68,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_posZeros(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -87,6 +91,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -99,6 +104,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_negZeros(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -122,6 +128,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -134,6 +141,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeAccumulator(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -161,6 +169,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -173,6 +182,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addMagnitudeAccumulator_positive(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -200,6 +210,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -212,6 +223,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addMagnitudeAccumulator_negative(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -239,6 +251,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -251,6 +264,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeMagnitudeAccumulator(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -278,6 +292,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -290,6 +305,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulatorUpper(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -312,6 +328,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -325,6 +342,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeAccumulatorUpper(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -347,6 +365,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -360,6 +379,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addIndexRegister(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -382,6 +402,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -394,6 +415,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeIndexRegister(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -416,6 +438,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -428,6 +451,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addAccumulator_Overflow(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -467,6 +491,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -476,6 +501,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addHalves(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -503,6 +529,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -515,6 +542,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeHalves(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -542,6 +570,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -554,6 +583,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addThirds(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -581,6 +611,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -593,6 +624,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void addNegativeThirds(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -620,6 +652,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -632,6 +665,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -661,6 +695,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -672,6 +707,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -713,6 +749,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -722,6 +759,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byZero_noInterrupt(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -751,6 +789,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -763,6 +802,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideInteger_byNegativeZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -805,6 +845,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -814,6 +855,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -843,16 +885,8 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
-
-//        AbsoluteModule absoluteModule = buildCodeExtended(source, false);
-//        assert(absoluteModule != null);
-//        Processors processors = loadModule(absoluteModule);
-//        _instructionProcessor.getDesignatorRegister().setArithmeticExceptionEnabled(true);
-//        startAndWait(_instructionProcessor);
-//
-//        InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
-//        InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
         Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
@@ -862,6 +896,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -904,6 +939,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -913,6 +949,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byZero_noInterrupt(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -942,6 +979,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -953,6 +991,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideSingleFractional_byNegativeZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -994,6 +1033,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1003,6 +1043,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1033,6 +1074,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1044,6 +1086,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1086,6 +1129,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1095,6 +1139,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byZero_noInterrupt(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1125,6 +1170,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1137,6 +1183,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void divideFractional_byNegativeZero(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1179,6 +1226,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1188,6 +1236,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void doubleAdd(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1218,6 +1267,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1231,6 +1281,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void doubleAddNegative(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1261,6 +1312,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1274,6 +1326,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplyInteger(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1299,6 +1352,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1312,6 +1366,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplySingleInteger(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1335,6 +1390,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1345,6 +1401,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplySingleInteger_overflow(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1383,6 +1440,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1392,6 +1450,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void multiplyFractional(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1423,6 +1482,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1434,6 +1494,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void add1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1464,6 +1525,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1481,6 +1543,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void add1_badPrivilege(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1522,6 +1585,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1531,6 +1595,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void sub1(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1561,6 +1626,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1579,6 +1645,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void sub1_badPrivilege(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1620,6 +1687,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1629,6 +1697,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void inc(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1665,6 +1734,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1682,6 +1752,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void dec(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1718,6 +1789,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1735,6 +1807,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void inc2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1771,6 +1844,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1788,6 +1862,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void dec2(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1824,6 +1899,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -1841,6 +1917,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
     @Test
     public void enz(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -1877,6 +1954,7 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

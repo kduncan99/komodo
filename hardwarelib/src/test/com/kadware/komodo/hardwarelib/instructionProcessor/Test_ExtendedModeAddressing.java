@@ -7,6 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -36,6 +37,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateUnsigned_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -57,6 +59,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -67,6 +70,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Positive_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -88,6 +92,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -98,6 +103,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_NegativeZero_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -120,6 +126,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -130,6 +137,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void immediateSignedExtended_Negative_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -152,6 +160,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -162,6 +171,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void grs_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -184,6 +194,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -194,6 +205,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -220,6 +232,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -230,6 +243,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void grs_indexed_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -254,6 +268,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildDualBank(source);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -265,6 +280,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_18BitModifier_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -354,6 +370,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -387,6 +404,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void storage_indexed_24BitModifier_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -449,6 +467,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -464,6 +483,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void execRegisterSelection_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -489,6 +509,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, false, true);
+        createProcessors();
         ipl(true);
 
         Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -502,6 +523,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationGAPExecute_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -551,6 +573,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -560,6 +583,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationGAPRead_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -603,6 +627,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -612,6 +637,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationGAPWrite_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -656,6 +682,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -665,6 +692,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceOutOfLimits_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -707,6 +735,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -716,6 +745,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationSAPExecute_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -773,6 +803,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -782,6 +813,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationSAPRead_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -842,6 +874,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -851,6 +884,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationSAPWrite_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -895,6 +929,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -904,6 +939,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
     @Test
     public void referenceViolationUnbasedBaseRegisterRef_ExtendedMode(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -948,6 +984,7 @@ public class Test_ExtendedModeAddressing extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

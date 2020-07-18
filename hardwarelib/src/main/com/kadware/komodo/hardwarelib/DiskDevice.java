@@ -4,7 +4,8 @@
 
 package com.kadware.komodo.hardwarelib;
 
-import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.baselib.ArraySlice;
+import com.kadware.komodo.baselib.PrepFactor;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import org.apache.logging.log4j.Level;
@@ -85,10 +86,10 @@ public abstract class DiskDevice extends Device {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  Block Size:      %s\n", String.valueOf(_blockSize)));
-            writer.write(String.format("  Block Count:     %s\n", String.valueOf(_blockCount)));
-            writer.write(String.format("  Mounted:         %s\n", String.valueOf(_isMounted)));
-            writer.write(String.format("  Write Protected: %s\n", String.valueOf(_isWriteProtected)));
+            writer.write(String.format("  Block Size:      %s\n", _blockSize));
+            writer.write(String.format("  Block Count:     %s\n", _blockCount));
+            writer.write(String.format("  Mounted:         %s\n", _isMounted));
+            writer.write(String.format("  Write Protected: %s\n", _isWriteProtected));
         } catch (IOException ex) {
             LOGGER.catching(ex);
         }
@@ -153,36 +154,22 @@ public abstract class DiskDevice extends Device {
         synchronized(this) {
             ioStart(ioInfo);
             switch (ioInfo._ioFunction) {
-                case None:
+                case None -> {
                     ++_miscCount;
                     ioInfo._status = IOStatus.Successful;
                     ioEnd(ioInfo);
                     return false;
-
-                case GetInfo:
-                    ioGetInfo(ioInfo);
-                    break;
-
-                case Read:
-                    ioRead(ioInfo);
-                    break;
-
-                case Reset:
-                    ioReset(ioInfo);
-                    break;
-
-                case Unload:
-                    ioUnload(ioInfo);
-                    break;
-
-                case Write:
-                    ioWrite(ioInfo);
-                    break;
-
-                default:
+                }
+                case GetInfo -> ioGetInfo(ioInfo);
+                case Read -> ioRead(ioInfo);
+                case Reset -> ioReset(ioInfo);
+                case Unload -> ioUnload(ioInfo);
+                case Write -> ioWrite(ioInfo);
+                default -> {
                     ioInfo._status = IOStatus.InvalidFunction;
                     ioEnd(ioInfo);
                     return false;
+                }
             }
 
             return true;
@@ -195,7 +182,10 @@ public abstract class DiskDevice extends Device {
      * that the pack *is* prepped - after all, it cannot have a block size until we prep it with a prep factor.
      * We don't check to see if the pack is mounted - if it isn't, then block size is zero anyway, and we still return false
      */
-    boolean isPrepped() { return (_blockSize != null) && (_blockSize != 0); }
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    boolean isPrepped() {
+        return (_blockSize != null) && (_blockSize != 0);
+    }
 
     /**
      * Makes sure the requested state change is allowable, then calls the superclass to effect said change.
@@ -218,11 +208,10 @@ public abstract class DiskDevice extends Device {
 
     /**
      * Sets or clears the write protected flag.  Will not set the flag if a pack is not mounted.
-     * <p>
      * @param flag true to set write protect, false to clear
-     * <p>
      * @return true if state change was successful, else false
      */
+    @SuppressWarnings("UnusedReturnValue")
     boolean setIsWriteProtected(
         final boolean flag
     ) {
@@ -264,17 +253,10 @@ public abstract class DiskDevice extends Device {
     static boolean isValidBlockSize(
         final int blockSize
     ) {
-        switch (blockSize) {
-            case 128:
-            case 256:
-            case 512:
-            case 1024:
-            case 2048:
-            case 4096:
-            case 8192:
-                return true;
-        }
+        return switch (blockSize) {
+            case 128, 256, 512, 1024, 2048, 4096, 8192 -> true;
+            default -> false;
+        };
 
-        return false;
     }
 }

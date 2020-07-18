@@ -107,7 +107,18 @@ public class ArraySlice {
     public ArraySlice copyOf(
         final int newSize
     ) {
-        return new ArraySlice(Arrays.copyOf(_array, newSize));
+        //  We need to account for being a slice of a possibly larger underlying bit of storage.
+        return new ArraySlice(Arrays.copyOfRange(_array, _offset, _offset + newSize));
+    }
+
+    /**
+     * Creates a new ArraySlice as requested, accounting for the offset
+     */
+    public ArraySlice copyOfRange(
+        final int start,
+        final int end
+    ) {
+        return new ArraySlice(Arrays.copyOfRange(_array, _offset + start, _offset + end));
     }
 
     /**
@@ -312,27 +323,17 @@ public class ArraySlice {
             int wordBufferSize = Math.min(remainingWords, wordsPerRow);
             ArraySlice subset = new ArraySlice(this, bufferIndex, wordBufferSize);
 
-            //  Build octal string
-            StringBuilder octalBuilder = new StringBuilder();
-            octalBuilder.append(subset.toOctal(true));
-            octalBuilder.append("             ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
-
-            //  Build fieldata string
-            StringBuilder fieldataBuilder = new StringBuilder();
-            fieldataBuilder.append(subset.toFieldata(true));
-            fieldataBuilder.append("       ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
-
-            //  Build ASCII string
-            StringBuilder asciiBuilder = new StringBuilder();
-            asciiBuilder.append(subset.toASCII(true));
-            asciiBuilder.append("     ".repeat(Math.max(0, wordsPerRow - subset.getSize())));
-
-            //  Log the output
+            String octalBuilder = subset.toOctal(true) +
+                                  "             ".repeat(Math.max(0, wordsPerRow - subset.getSize()));
+            String fieldataBuilder = subset.toFieldata(true) +
+                                     "       ".repeat(Math.max(0, wordsPerRow - subset.getSize()));
+            String asciiBuilder = subset.toASCII(true) +
+                                  "     ".repeat(Math.max(0, wordsPerRow - subset.getSize()));
             logger.printf(logLevel, String.format("%06o:%s  %s  %s",
                                                   rowIndex,
-                                                  octalBuilder.toString(),
-                                                  fieldataBuilder.toString(),
-                                                  asciiBuilder.toString()));
+                                                  octalBuilder,
+                                                  fieldataBuilder,
+                                                  asciiBuilder));
         }
     }
 
@@ -389,60 +390,52 @@ public class ArraySlice {
 
         while ((wordsLeft > 0) && (bytesLeft > 0)) {
             switch (partial) {
-                case 0:
-                    destination[dx++] = (byte)(get(sx) >> 28);
+                case 0 -> {
+                    destination[dx++] = (byte) (get(sx) >> 28);
                     --bytesLeft;
-                    break;
-
-                case 1:
-                    destination[dx++] = (byte)(get(sx) >> 20);
+                }
+                case 1 -> {
+                    destination[dx++] = (byte) (get(sx) >> 20);
                     --bytesLeft;
-                    break;
-
-                case 2:
-                    destination[dx++] = (byte)(get(sx) >> 12);
+                }
+                case 2 -> {
+                    destination[dx++] = (byte) (get(sx) >> 12);
                     --bytesLeft;
-                    break;
-
-                case 3:
-                    destination[dx++] = (byte)(get(sx) >> 4);
+                }
+                case 3 -> {
+                    destination[dx++] = (byte) (get(sx) >> 4);
                     --bytesLeft;
-                    break;
-
-                case 4:
-                    destination[dx] = (byte)((get(sx) & 017) << 4);
+                }
+                case 4 -> {
+                    destination[dx] = (byte) ((get(sx) & 017) << 4);
                     --bytesLeft;
                     ++sx;
                     --wordsLeft;
                     ++count;
                     if (wordsLeft > 0) {
-                        destination[dx] |= (byte)(get(sx) >> 32);
+                        destination[dx] |= (byte) (get(sx) >> 32);
                     }
                     ++dx;
-                    break;
-
-                case 5:
-                    destination[dx++] = (byte)(get(sx) >> 24);
+                }
+                case 5 -> {
+                    destination[dx++] = (byte) (get(sx) >> 24);
                     --bytesLeft;
-                    break;
-
-                case 6:
-                    destination[dx++] = (byte)(get(sx) >> 16);
+                }
+                case 6 -> {
+                    destination[dx++] = (byte) (get(sx) >> 16);
                     --bytesLeft;
-                    break;
-
-                case 7:
-                    destination[dx++] = (byte)(get(sx) >> 8);
+                }
+                case 7 -> {
+                    destination[dx++] = (byte) (get(sx) >> 8);
                     --bytesLeft;
-                    break;
-
-                case 8:
-                    destination[dx++] = (byte)get(sx);
+                }
+                case 8 -> {
+                    destination[dx++] = (byte) get(sx);
                     --bytesLeft;
                     ++sx;
                     --wordsLeft;
                     ++count;
-                    break;
+                }
             }
 
             ++partial;
@@ -533,6 +526,7 @@ public class ArraySlice {
      * @param destination array where we store bytes
      * @return number of bytes written
      */
+    @SuppressWarnings("UnusedReturnValue")
     public int packQuarterWords(
         byte[] destination
     ) {
@@ -555,38 +549,32 @@ public class ArraySlice {
         int swx = 0;
         while ((sx < _length) && (dx < destination.length)) {
             switch (swx++) {
-                case 0:
+                case 0 -> {
                     destination[dx++] = (byte) (Word36.getS1(_array[sx]) & 0x3F);
                     ++count;
-                    break;
-
-                case 1:
+                }
+                case 1 -> {
                     destination[dx++] = (byte) (Word36.getS2(_array[sx]) & 0x3F);
                     ++count;
-                    break;
-
-                case 2:
+                }
+                case 2 -> {
                     destination[dx++] = (byte) (Word36.getS3(_array[sx]) & 0x3F);
                     ++count;
-                    break;
-
-                case 3:
+                }
+                case 3 -> {
                     destination[dx++] = (byte) (Word36.getS4(_array[sx]) & 0x3F);
                     ++count;
-                    break;
-
-                case 4:
+                }
+                case 4 -> {
                     destination[dx++] = (byte) (Word36.getS5(_array[sx]) & 0x3F);
                     ++count;
-                    break;
-
-                case 6:
+                }
+                case 6 -> {
                     destination[dx++] = (byte) (Word36.getS6(_array[sx]) & 0x3F);
                     ++count;
                     ++sx;
                     swx = 0;
-                    break;
-
+                }
             }
         }
 
@@ -598,6 +586,7 @@ public class ArraySlice {
      * @param destination array where we store bytes
      * @return number of bytes written
      */
+    @SuppressWarnings("UnusedReturnValue")
     public int packSixthWords(
         byte[] destination
     ) {
@@ -783,66 +772,58 @@ public class ArraySlice {
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
             if (backward) --sx;
             switch (partial) {
-                case 0:
-                    set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx] & 0xFF)  << 28));
+                case 0 -> {
+                    set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx] & 0xFF) << 28));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 1:
+                }
+                case 1 -> {
                     set(dx, (get(dx) & 0_776003_777777L) | (((long) source[sx] & 0xFF) << 20));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 2:
+                }
+                case 2 -> {
                     set(dx, (get(dx) & 0_777774_007777L) | (((long) source[sx] & 0xFF) << 12));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 3:
+                }
+                case 3 -> {
                     set(dx, (get(dx) & 0_777777_770017L) | (((long) source[sx] & 0xFF) << 4));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 4:
-                    set(dx, (get(dx) & 0_777777_777760L) | (((long)source[sx] & 0xF0) >> 4));
+                }
+                case 4 -> {
+                    set(dx, (get(dx) & 0_777777_777760L) | (((long) source[sx] & 0xF0) >> 4));
                     ++dx;
                     --wordsLeft;
                     if (wordsLeft > 0) {
-                        set(dx, (get(dx) & 0_037777_777777L) | (((long)source[sx] & 0x0F) << 32));
+                        set(dx, (get(dx) & 0_037777_777777L) | (((long) source[sx] & 0x0F) << 32));
                         ++count;
                     }
                     --bytesLeft;
-                    break;
-
-                case 5:
-                    set(dx, (get(dx) & 0_740077_777777L) | (((long)source[sx] & 0xFF) << 24));
+                }
+                case 5 -> {
+                    set(dx, (get(dx) & 0_740077_777777L) | (((long) source[sx] & 0xFF) << 24));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 6:
-                    set(dx, (get(dx) & 0_777700_177777L) | (((long)source[sx] & 0xFF) << 16));
+                }
+                case 6 -> {
+                    set(dx, (get(dx) & 0_777700_177777L) | (((long) source[sx] & 0xFF) << 16));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 7:
-                    set(dx, (get(dx) & 0_777777_600377L) | (((long)source[sx] & 0xFF) << 8));
+                }
+                case 7 -> {
+                    set(dx, (get(dx) & 0_777777_600377L) | (((long) source[sx] & 0xFF) << 8));
                     ++count;
                     --bytesLeft;
-                    break;
-
-                case 8:
-                    set(dx, (get(dx) & 0_777777_777400L) | ((long)source[sx] & 0xFF));
+                }
+                case 8 -> {
+                    set(dx, (get(dx) & 0_777777_777400L) | ((long) source[sx] & 0xFF));
                     ++count;
                     --bytesLeft;
                     ++dx;
                     --wordsLeft;
-                    break;
+                }
             }
 
             if (!backward) ++sx;
@@ -890,26 +871,24 @@ public class ArraySlice {
 
             if (backward) --sx;
             switch (qw) {
-                case 0:
+                case 0 -> {
                     _array[dx] = (((long) source[sx]) & 0377) << 27;
                     ++qw;
-                    break;
-
-                case 1:
+                }
+                case 1 -> {
                     _array[dx] = Word36.setQ2(_array[dx], source[sx] & 0377);
                     ++qw;
-                    break;
-
-                case 2:
+                }
+                case 2 -> {
                     _array[dx] = Word36.setQ3(_array[dx], source[sx] & 0377);
                     ++qw;
-                    break;
-
-                case 3:
+                }
+                case 3 -> {
                     _array[dx] = Word36.setQ4(_array[dx], source[sx] & 0377);
                     ++dx;
                     ++dcount;
                     qw = 0;
+                }
             }
             ++bcount;
             if (!backward) ++sx;
@@ -923,6 +902,7 @@ public class ArraySlice {
      * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
      * @return number of sixth words processed
      */
+    @SuppressWarnings("UnusedReturnValue")
     public int unpackQuarterWords(
         final byte[] source,
         final boolean backward
@@ -950,38 +930,34 @@ public class ArraySlice {
             }
 
             if (backward) --sx;
-            long bval = (long) (source[sx] & 077);
+            long bval = source[sx] & 077;
             switch (sw) {
-                case 0:
+                case 0 -> {
                     _array[dx] = (bval << 30);
                     ++sw;
-                    break;
-
-                case 1:
+                }
+                case 1 -> {
                     _array[dx] = Word36.setS2(_array[dx], bval);
                     ++sw;
-                    break;
-
-                case 2:
+                }
+                case 2 -> {
                     _array[dx] = Word36.setS3(_array[dx], bval);
                     ++sw;
-                    break;
-
-                case 3:
+                }
+                case 3 -> {
                     _array[dx] = Word36.setS4(_array[dx], bval);
                     ++sw;
-                    break;
-
-                case 4:
+                }
+                case 4 -> {
                     _array[dx] = Word36.setS5(_array[dx], bval);
                     ++sw;
-                    break;
-
-                case 5:
+                }
+                case 5 -> {
                     _array[dx] = Word36.setS6(_array[dx], bval);
                     ++dx;
                     ++dcount;
                     sw = 0;
+                }
             }
             if (!backward) ++sx;
         }
@@ -994,6 +970,7 @@ public class ArraySlice {
      * We'll obviously stop if we hit the end of said underlying array, so plz don't make us do that.
      * @return number of sixth words processed
      */
+    @SuppressWarnings("UnusedReturnValue")
     public int unpackSixthWords(
         final byte[] source,
         final boolean backward

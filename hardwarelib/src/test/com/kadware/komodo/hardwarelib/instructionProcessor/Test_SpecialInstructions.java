@@ -6,6 +6,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
 import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
 import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
@@ -31,6 +32,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -60,6 +62,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -71,6 +74,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic_indirect_violation(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -120,6 +124,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -129,6 +134,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_basic_indirect_noViolation(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -180,6 +186,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
@@ -191,6 +198,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
     @Test
     public void nop_extended(
     ) throws BinaryLoadException,
+             CannotConnectException,
              MachineInterrupt,
              MaxNodesException,
              NodeNameConflictException,
@@ -215,6 +223,7 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
+        createProcessors();
         ipl(true);
 
         assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());

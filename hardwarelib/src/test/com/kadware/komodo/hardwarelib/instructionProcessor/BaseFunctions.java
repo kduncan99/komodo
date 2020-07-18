@@ -58,10 +58,17 @@ class BaseFunctions {
 
     InventoryManager _inventoryManager = null;
     InstructionProcessor _instructionProcessor = null;
+    InputOutputProcessor _inputOutputProcessor = null;
     InstrumentedMainStorageProcessor _mainStorageProcessor = null;
     SystemProcessor _systemProcessor = null;
+    ByteChannelModule _byteChannelModule = null;
+    WordChannelModule _wordChannelModule = null;
+    ScratchDiskDevice _scratchDiskDevice = null;
 
     private static final String[] GEN_DEFS_SOURCE = {
+        ". ................................",
+        ". Generally Useful Definitions",
+        ".",
         "DR$SETPP01* $PROC",
         "          SD        A13",
         "          AND       A13,(0777763,0777777)",
@@ -90,38 +97,56 @@ class BaseFunctions {
         "          $END"
     };
 
+    private static final String[] CHP_DEFS_SOURCE = {
+        ". ................................",
+        ". Channel Program Definitions",
+        ".",
+        "CHP_IOPUPI   $EQUF 0,,S1",
+        "CHP_CHMOD    $EQUF 0,,S2",
+        "CHP_DEVNUM   $EQUF 0,,S3",
+        "CHP_FUNCTION $EQUF 0,,S4",
+        "CHP_FORMAT   $EQUF 0,,S5",
+        "CHP_ACWS     $EQUF 0,,S6",
+        "CHP_BLKADDR  $EQUF 1,,W",
+        "CHP_CHANSTAT $EQUF 2,,S1",
+        "CHP_DEVSTAT  $EQUF 2,,S2",
+        "CHP_RESBYTES $EQUF 2,,S3",
+        "CHP_WORDS    $EQUF 3,,H2",
+        "CHP_ACWS     $EQUF 4",
+        ".",
+        "             $END"
+    };
+
     private static final String[] SYSC_DEFS_SOURCE = {
+        ". ................................",
+        ". SYSC Instruction Definitions",
+        ".",
         "SYSC$CREATE*  $EQU 020",
         "SYSC$DELETE*  $EQU 021",
         "SYSC$RESIZE*  $EQU 022",
-        "",
+        ".",
         "SYSC$CNSTAT*  $EQU 030",
         "SYSC$CNREAD*  $EQU 031",
         "SYSC$CNRDREP* $EQU 032",
         "SYSC$CNPOLL*  $EQU 033",
         "SYSC$CNRESET* $EQU 034",
-        "",
+        ".",
         "SYSC$OK*      $EQU 0    . Request successful",
         "SYSC$BADUPI*  $EQU 01   . Given UPI is not a main storage processor",
         "SYSC$BADSEG*  $EQU 02   . Given segment index is unknown to the given MSP",
         "SYSC$INVADDR* $EQU 03   . Given address is invalid or does not exist",
         "SYSC$INVSIZE* $EQU 04   . Requested size is out of range or invalid",
         "SYSC$NACCESS* $EQU 05   . Access denied",
-        "",
+        ".",
         "SYSC$FORM*    $FORM 6,6,6,18",
         "SYSC$SUBFUNC* $EQUF 0,,S1",
         "SYSC$STATUS*  $EQUF 0,,S2",
         "SYSC$MSPUPI*  $EQUF 0,,S3",
         "SYSC$MEMSEG*  $EQUF 1,,W",
         "SYSC$MEMSIZE* $EQUF 2,,W",
-        //  U+0,S1          Subfunction
-        //  U+0,S2:         Status
-        //  U+0,S3:         UPI of target MSP
-        //  U+1,W:          Newly-assigned segment index if status is zero
-        //  U+2,W:          Requested size of memory in words, range 0:0x7FFFFFF = 0_17777_777777 (31 bits)
-        "",
+        ".",
         "DEFAULT$MSP*  $EQU 01",
-        "",
+        ".",
         "             $END"
     };
 
@@ -361,8 +386,9 @@ class BaseFunctions {
      */
     private static Map<String, Dictionary> buildDefinitionSets() {
         if (_definitionSets.isEmpty()) {
-            buildDefinitionSet("SYSC$DEFS", SYSC_DEFS_SOURCE);
             buildDefinitionSet("GEN$DEFS", GEN_DEFS_SOURCE);
+            buildDefinitionSet("CHP$DEFS", CHP_DEFS_SOURCE);
+            buildDefinitionSet("SYSC$DEFS", SYSC_DEFS_SOURCE);
         }
 
         return _definitionSets;
@@ -385,21 +411,42 @@ class BaseFunctions {
 
     /**
      * Common processor creation code
+     * Creates the following configuration:
+     *      1 System Processor
+     *      1 Instruction Processor
+     *      1 Input Output Processor with
+     *          1 Byte Channel Module at index 0 with
+     *              1 Scratch Disk Device at index 0
+     *          1 Word Channel Module at index 1
+     *      1 Main Storage Processor
      */
     void createProcessors(
     ) throws MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException {
+             UPIConflictException, CannotConnectException {
         _inventoryManager = InventoryManager.getInstance();
         _systemProcessor = _inventoryManager.createSystemProcessor("SP0",
                                                                    8080,
                                                                    null,
                                                                    new Credentials("test", "test"));
         _instructionProcessor = _inventoryManager.createInstructionProcessor("IP0");
+        _inputOutputProcessor = _inventoryManager.createInputOutputProcessor("IOP0");
         _mainStorageProcessor = new InstrumentedMainStorageProcessor("MSP0",
                                                                      (short) 1,
                                                                      8 * 1024 * 1024);
         _inventoryManager.addMainStorageProcessor(_mainStorageProcessor);
+
+        _byteChannelModule = new ByteChannelModule("CHM00");
+        Node.connect(_inputOutputProcessor, 0, _byteChannelModule);
+        _byteChannelModule.initialize();
+
+        _wordChannelModule = new WordChannelModule("CHM01");
+        Node.connect(_inputOutputProcessor, 1, _wordChannelModule);
+        _wordChannelModule.initialize();
+
+        _scratchDiskDevice = new ScratchDiskDevice("DISK0");
+        Node.connect(_byteChannelModule, 0, _scratchDiskDevice);
+        _scratchDiskDevice.initialize();
     }
 
 
@@ -414,9 +461,7 @@ class BaseFunctions {
      */
     void buildDualBank(
         final String[] source
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+    ) {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
@@ -476,8 +521,6 @@ class BaseFunctions {
         assertNotNull(_linkResult._loadableBanks);
         assertNotEquals(0, _linkResult._loadableBanks.length);
         assertEquals(0, _linkResult._errorCount);
-
-        createProcessors();
     }
 
     /**
@@ -490,9 +533,7 @@ class BaseFunctions {
         final String[] source,
         final boolean includeInterruptHandlers,
         final boolean avoidDBankCollision
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+    ) {
         buildMultiBank(source, includeInterruptHandlers, avoidDBankCollision, false);
     }
 
@@ -510,9 +551,7 @@ class BaseFunctions {
         final boolean includeInterruptHandlers,
         final boolean avoidDBankCollision,
         final boolean writeableCodeBanks
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+    ) {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
@@ -600,8 +639,6 @@ class BaseFunctions {
         assertNotNull(_linkResult._loadableBanks);
         assertNotEquals(0, _linkResult._loadableBanks.length);
         assertEquals(0, _linkResult._errorCount);
-
-        createProcessors();
     }
 
     /**
@@ -610,9 +647,7 @@ class BaseFunctions {
      */
     void buildSimple(
         final String[] source
-    ) throws MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException {
+    ) {
         _assembler = new Assembler.Builder().setSource(source)
                                             .setOptions(_assemblerOptions)
                                             .setModuleName("BINARY-REL")
@@ -631,8 +666,6 @@ class BaseFunctions {
         assertNotNull(_linkResult._loadableBanks);
         assertNotEquals(0, _linkResult._loadableBanks.length);
         assertEquals(0, _linkResult._errorCount);
-
-        createProcessors();
     }
 
     /**
@@ -640,25 +673,49 @@ class BaseFunctions {
      */
     void clear(
     ) throws UPINotAssignedException {
+        if (_scratchDiskDevice != null) {
+            _scratchDiskDevice.terminate();
+            _scratchDiskDevice.disconnect();
+            _scratchDiskDevice = null;
+        }
+
+        if (_byteChannelModule != null) {
+            _byteChannelModule.terminate();
+            _byteChannelModule.disconnect();
+            _byteChannelModule = null;
+        }
+
+        if (_wordChannelModule != null) {
+            _wordChannelModule.terminate();
+            _wordChannelModule.disconnect();
+            _wordChannelModule = null;
+        }
+
         if (_instructionProcessor != null) {
             _instructionProcessor.stop(InstructionProcessor.StopReason.Cleared, 0);
             while (!_instructionProcessor.isStopped()) {
                 Thread.onSpinWait();
             }
             _instructionProcessor.terminate();
-            InventoryManager.getInstance().deleteProcessor(_instructionProcessor._upiIndex);
+            _inventoryManager.deleteProcessor(_instructionProcessor._upiIndex);
             _instructionProcessor = null;
+        }
+
+        if (_inputOutputProcessor != null) {
+            _inputOutputProcessor.terminate();
+            _inventoryManager.deleteProcessor(_inputOutputProcessor._upiIndex);
+            _inputOutputProcessor = null;
         }
 
         if (_mainStorageProcessor != null) {
             _mainStorageProcessor.terminate();
-            InventoryManager.getInstance().deleteProcessor(_mainStorageProcessor._upiIndex);
+            _inventoryManager.deleteProcessor(_mainStorageProcessor._upiIndex);
             _mainStorageProcessor = null;
         }
 
         if (_systemProcessor != null) {
             _systemProcessor.terminate();
-            InventoryManager.getInstance().deleteProcessor(_systemProcessor._upiIndex);
+            _inventoryManager.deleteProcessor(_systemProcessor._upiIndex);
             _systemProcessor = null;
         }
 
@@ -737,7 +794,7 @@ class BaseFunctions {
     void showDebugInfo() {
         InstructionProcessor ip = _instructionProcessor;
         InstrumentedMainStorageProcessor msp = _mainStorageProcessor;
-        InstructionProcessor.DesignatorRegister dr = ip.getDesignatorRegister();
+        DesignatorRegister dr = ip.getDesignatorRegister();
         int oldpp = dr.getProcessorPrivilege();
         dr.setProcessorPrivilege(0);
 
@@ -810,7 +867,7 @@ class BaseFunctions {
 
             System.out.println("  Base Registers:");
             for (int bx = 0; bx < 32; ++bx) {
-                InstructionProcessor.BaseRegister br = ip.getBaseRegister(bx);
+                BaseRegister br = ip.getBaseRegister(bx);
                 System.out.println(String.format("    B%d base:%s(%s) lower:%d upper:%d",
                                                  bx,
                                                  br._voidFlag ? "(VOID)" : "",
@@ -864,7 +921,7 @@ class BaseFunctions {
             }
 
             for (int level = 0; level < 8; ++level) {
-                InstructionProcessor.BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
+                BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
                 System.out.println(String.format("  Level %d Banks:%s", level, (br == null) ? "<BR not set>" : ""));
                 if (br != null) {
                     int firstBDI = (level == 0) ? 32 : 0;

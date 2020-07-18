@@ -64,13 +64,13 @@ public abstract class Node {
         public static NodeCategory getValue(
             final int code
         ) {
-            switch (code) {
-                case 1:     return Processor;
-                case 2:     return ChannelModule;
-                //  We do not model Control Units, but if we did, they'd be case 3
-                case 4:     return Device;
-                default:    return InvalidCategory;
-            }
+            //  We do not model Control Units, but if we did, they'd be case 3
+            return switch (code) {
+                case 1 -> Processor;
+                case 2 -> ChannelModule;
+                case 4 -> Device;
+                default -> InvalidCategory;
+            };
         }
     }
 
@@ -217,7 +217,7 @@ public abstract class Node {
         final int nodeAddress,
         final Node descendant
     ) throws CannotConnectException {
-        EntryMessage em = LOGGER.traceEntry("connect(ancestor=%s nodeAddress=%d descendant=%s",
+        EntryMessage em = LOGGER.traceEntry("connect(ancestor={} nodeAddress={} descendant={}",
                                             ancestor._name,
                                             nodeAddress,
                                             descendant._name);
@@ -276,13 +276,11 @@ public abstract class Node {
     /**
      * Disconnects the given nodes
      */
-    static void disconnect(
+    public static void disconnect(
         final Node ancestor,
         final Node descendant
     ) {
-        EntryMessage em = LOGGER.traceEntry("disconnect(ancestor=%s descendant=%s",
-                                            ancestor._name,
-                                            descendant._name);
+        EntryMessage em = LOGGER.traceEntry("disconnect(ancestor={} descendant={}", ancestor._name, descendant._name);
 
         descendant._ancestors.remove(ancestor);
         for (Map.Entry<Integer, Node> entry : ancestor._descendants.entrySet()) {
@@ -293,6 +291,25 @@ public abstract class Node {
         }
 
         LOGGER.traceExit(em);
+    }
+
+    /**
+     * Convenience wrapper which disconnects the given descendant node from this ancestor node
+     */
+    public void disconnect(
+        final Node descendant
+    ) {
+        disconnect(this, descendant);
+    }
+
+    /**
+     * Convenience wrapper which disconnects this node from its ancestor nodes
+     */
+    public void disconnect() {
+        Set<Node> ancestors = new HashSet<>(_ancestors);
+        for (Node ancestor : ancestors) {
+            disconnect(ancestor, this);
+        }
     }
 
     /**
